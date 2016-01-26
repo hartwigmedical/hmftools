@@ -1,3 +1,6 @@
 # Ignore intellij project files
 *.iml
 .idea/*
+
+# Ignore target directies
+hmftools-sullivan/target
