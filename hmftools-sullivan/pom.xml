@@ -10,5 +10,13 @@
 
     <artifactId>hmftools-sullivan</artifactId>
     <packaging>jar</packaging>
+    <name>HMF Tools - Sullivan</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.samtools</groupId>
+            <artifactId>htsjdk</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
