@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import java.net.URL;
 
+import static org.junit.Assert.assertTrue;
+
 public class SullivanAlgoTest {
 
     @Test
@@ -15,6 +17,6 @@ public class SullivanAlgoTest {
         URL recreatedFastqURL = Resources.getResource("fastq/recreated.fastq");
         String recreatedFastqPath = recreatedFastqURL.getPath();
 
-        SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath);
+        assertTrue(SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath));
     }
 }

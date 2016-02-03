@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sullivan;
 
-import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
@@ -9,11 +8,10 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public final class SullivanAlgo {
 
-    public static void runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath) {
+    public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath) {
         Set<SullivanRecord> originalFastq = createFromFastqFile(originalFastqPath, true);
         System.out.println("Finished reading original fastq file from " + originalFastqPath +
                 ". Created " + originalFastq.size() + " records.");
@@ -26,9 +24,19 @@ public final class SullivanAlgo {
         Sets.SetView<SullivanRecord> uniqueInRecreatedSet = Sets.difference(recreatedFastq, originalFastq);
 
         System.out.println("Found " + uniqueInOriginalSet.size() +
-                " records in original that are not present in recreated");
+                " records in original that are not present in recreated:");
+        for (SullivanRecord record : uniqueInOriginalSet) {
+            System.out.println("  " + record);
+        }
+
         System.out.println("Found " + uniqueInRecreatedSet.size() +
-                " records in recreated that are not present in original");
+                " records in recreated that are not present in original:");
+
+        for (SullivanRecord record : uniqueInRecreatedSet) {
+            System.out.println("  " + record);
+        }
+
+        return uniqueInOriginalSet.size() == 0 && uniqueInRecreatedSet.size() == 0;
     }
 
     @NotNull

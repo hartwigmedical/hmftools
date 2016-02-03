@@ -12,7 +12,8 @@ public class SullivanRecord {
     @NotNull
     private final String qualityScores;
 
-    public static SullivanRecord createFromFastqRecord(FastqRecord record, FastqHeaderParser parser) {
+    @NotNull
+    public static SullivanRecord createFromFastqRecord(@NotNull FastqRecord record, @NotNull FastqHeaderParser parser) {
         return new SullivanRecord(parser.apply(record.getReadHeader()),
                 record.getReadString(), record.getBaseQualityString());
     }
@@ -30,10 +31,7 @@ public class SullivanRecord {
 
         SullivanRecord that = (SullivanRecord) o;
 
-        if (!header.equals(that.header)) return false;
-        if (!sequence.equals(that.sequence)) return false;
-        return qualityScores.equals(that.qualityScores);
-
+        return header.equals(that.header) && sequence.equals(that.sequence) && qualityScores.equals(that.qualityScores);
     }
 
     @Override
@@ -46,10 +44,10 @@ public class SullivanRecord {
 
     @Override
     public String toString() {
-        return "SullivanRecord{" +
-                "header='" + header + '\'' +
-                ", sequence='" + sequence + '\'' +
-                ", qualityScores='" + qualityScores + '\'' +
+        return "FastQ {" +
+                "Header='" + header + '\'' +
+                ", Sequence='" + sequence + '\'' +
+                ", QualityScores='" + qualityScores + '\'' +
                 '}';
     }
 }
