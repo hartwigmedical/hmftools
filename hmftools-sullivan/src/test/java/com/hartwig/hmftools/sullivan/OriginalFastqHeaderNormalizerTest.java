@@ -4,14 +4,14 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class OriginalFastqHeaderParserTest {
+public class OriginalFastqHeaderNormalizerTest {
 
     @Test
-    public void parsesCorrectly() {
-        FastqHeaderParser parser = new OriginalFastqHeaderParser();
+    public void normalizesCorrectly() {
+        FastqHeaderNormalizer normalizer = new OriginalFastqHeaderNormalizer();
         String header = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182 1:N:0:ATCACG";
         String expectedParsed = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182";
 
-        assertEquals(expectedParsed, parser.apply(header));
+        assertEquals(expectedParsed, normalizer.apply(header));
     }
 }

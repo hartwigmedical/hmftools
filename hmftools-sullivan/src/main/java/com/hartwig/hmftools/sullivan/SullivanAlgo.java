@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sullivan;
 
-import com.google.common.collect.Sets;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import org.jetbrains.annotations.NotNull;
@@ -13,20 +12,25 @@ import java.util.*;
 public final class SullivanAlgo {
 
     private static final DateFormat DTF = new SimpleDateFormat("hh:mm:ss");
+    private static final FastqHeaderNormalizer ORIGINAL_HEADER_NORMALIZER = new OriginalFastqHeaderNormalizer();
+    private static final FastqHeaderNormalizer RECREATED_HEADER_NORMALIZER = new RecreatedFastqHeaderNormalizer();
 
     public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath) {
+        String refHeader = referenceHeader(originalFastqPath);
+        log("Generated ref header: " + refHeader);
+
         log("Start reading original fastq file from " + originalFastqPath);
-        Map<String, FastqRecord> originalFastq = createFromFastqFile(originalFastqPath, true);
+        Map<FastqHeaderKey, FastqRecord> originalFastq = createFromFastqFile(originalFastqPath, refHeader, true);
         log("Finished reading original fastq file. Created " + originalFastq.size() + " records.");
 
         log("Start reading recreated fastq file from " + recreatedFastqPath);
-        Map<String, FastqRecord> recreatedFastq = createFromFastqFile(recreatedFastqPath, false);
+        Map<FastqHeaderKey, FastqRecord> recreatedFastq = createFromFastqFile(recreatedFastqPath, refHeader, false);
         log("Finished reading recreated fastq file. Created " + recreatedFastq.size() + " records.");
 
         boolean success = true;
         int recordCount = 0;
 
-        for (Map.Entry<String, FastqRecord> originalMapEntry : originalFastq.entrySet()) {
+        for (Map.Entry<FastqHeaderKey, FastqRecord> originalMapEntry : originalFastq.entrySet()) {
             FastqRecord originalEntry = originalMapEntry.getValue();
             FastqRecord recreatedEntry = recreatedFastq.get(originalMapEntry.getKey());
             if (recreatedEntry == null) {
@@ -48,29 +52,43 @@ public final class SullivanAlgo {
             }
         }
 
-        for (Map.Entry<String, FastqRecord> recreatedMapEntry : recreatedFastq.entrySet()) {
-            log("Could not find key from recreated fastQ in original fastQ: " + recreatedMapEntry.getKey());
+        for (Map.Entry<FastqHeaderKey, FastqRecord> recreatedMapEntry : recreatedFastq.entrySet()) {
+            log("Could not find key from recreated fastQ in original fastQ: " +
+                    recreatedMapEntry.getValue().getReadHeader());
             success = false;
         }
-
 
         return success;
     }
 
     @NotNull
-    private static Map<String, FastqRecord> createFromFastqFile(@NotNull String path, boolean isOriginalFastq) {
-        FastqHeaderParser parser = isOriginalFastq ? new OriginalFastqHeaderParser() : new RecreatedFastqHeaderParser();
-        Map<String, FastqRecord> records = new HashMap<String, FastqRecord>();
+    private static String referenceHeader(@NotNull String originalFastqPath) {
+        FastqReader fastqReader = new FastqReader(new File(originalFastqPath));
+        FastqHeader header = FastqHeader.parseFromFastqRecord(fastqReader.next(), new OriginalFastqHeaderNormalizer());
+        fastqReader.close();
+        return header.reference();
+    }
+
+    @NotNull
+    private static Map<FastqHeaderKey, FastqRecord> createFromFastqFile(
+            @NotNull String path, @NotNull String refHeader, boolean isOriginalFastq) {
+        FastqHeaderNormalizer normalizer =
+                isOriginalFastq ? new OriginalFastqHeaderNormalizer() : new RecreatedFastqHeaderNormalizer();
+        Map<FastqHeaderKey, FastqRecord> records = new HashMap<FastqHeaderKey, FastqRecord>();
 
         FastqReader fastqReader = new FastqReader(new File(path));
 
         for (FastqRecord record : fastqReader) {
             int recordCount = records.size();
-            String convertedHeader = parser.apply(record.getReadHeader());
+            FastqHeader header = FastqHeader.parseFromFastqRecord(record, normalizer);
 
-            records.put(convertedHeader, record);
+            records.put(header.key(), record);
             if (recordCount == records.size()) {
-                System.out.println("WARN: Duplicate record found: " + record);
+                log("  WARN: Duplicate record found: " + record);
+            }
+
+            if (!header.reference().equals(refHeader)) {
+                log("  WARN: Header mismatch with reference header: " + header.reference());
             }
 
             if (records.size() % 1E6 == 0) {
