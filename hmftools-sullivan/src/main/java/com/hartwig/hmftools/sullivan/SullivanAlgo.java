@@ -6,56 +6,83 @@ import htsjdk.samtools.fastq.FastqRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public final class SullivanAlgo {
 
+    private static final DateFormat DTF = new SimpleDateFormat("hh:mm:ss");
+
     public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath) {
-        Set<SullivanRecord> originalFastq = createFromFastqFile(originalFastqPath, true);
-        System.out.println("Finished reading original fastq file from " + originalFastqPath +
-                ". Created " + originalFastq.size() + " records.");
+        log("Start reading original fastq file from " + originalFastqPath);
+        Map<String, FastqRecord> originalFastq = createFromFastqFile(originalFastqPath, true);
+        log("Finished reading original fastq file. Created " + originalFastq.size() + " records.");
 
-        Set<SullivanRecord> recreatedFastq = createFromFastqFile(recreatedFastqPath, false);
-        System.out.println("Finished reading recreated fastq file from " + recreatedFastqPath +
-                ". Created " + recreatedFastq.size() + " records.");
+        log("Start reading recreated fastq file from " + recreatedFastqPath);
+        Map<String, FastqRecord> recreatedFastq = createFromFastqFile(recreatedFastqPath, false);
+        log("Finished reading recreated fastq file. Created " + recreatedFastq.size() + " records.");
 
-        Sets.SetView<SullivanRecord> uniqueInOriginalSet = Sets.difference(originalFastq, recreatedFastq);
-        Sets.SetView<SullivanRecord> uniqueInRecreatedSet = Sets.difference(recreatedFastq, originalFastq);
+        boolean success = true;
+        int recordCount = 0;
 
-        System.out.println("Found " + uniqueInOriginalSet.size() +
-                " records in original that are not present in recreated:");
-        for (SullivanRecord record : uniqueInOriginalSet) {
-            System.out.println("  " + record);
+        for (Map.Entry<String, FastqRecord> originalMapEntry : originalFastq.entrySet()) {
+            FastqRecord originalEntry = originalMapEntry.getValue();
+            FastqRecord recreatedEntry = recreatedFastq.get(originalMapEntry.getKey());
+            if (recreatedEntry == null) {
+                log("  Could not find following original entry in recreated fastq: " + originalMapEntry.getKey());
+                success = false;
+            } else if (!recreatedEntry.getReadString().equals(originalEntry.getReadString()) ||
+                    !recreatedEntry.getBaseQualityString().equals(originalEntry.getBaseQualityString())) {
+                log("  Mismatch in entry for header " + originalMapEntry.getKey());
+                success = false;
+            }
+
+            if (recreatedEntry != null) {
+                recreatedFastq.remove(originalMapEntry.getKey());
+            }
+
+            recordCount++;
+            if (recordCount % 1E6 == 0) {
+                log("  Finished comparing " + recordCount + " records.");
+            }
         }
 
-        System.out.println("Found " + uniqueInRecreatedSet.size() +
-                " records in recreated that are not present in original:");
-
-        for (SullivanRecord record : uniqueInRecreatedSet) {
-            System.out.println("  " + record);
+        for (Map.Entry<String, FastqRecord> recreatedMapEntry : recreatedFastq.entrySet()) {
+            log("Could not find key from recreated fastQ in original fastQ: " + recreatedMapEntry.getKey());
+            success = false;
         }
 
-        return uniqueInOriginalSet.size() == 0 && uniqueInRecreatedSet.size() == 0;
+
+        return success;
     }
 
     @NotNull
-    private static Set<SullivanRecord> createFromFastqFile(@NotNull String path, boolean isOriginalFastq) {
+    private static Map<String, FastqRecord> createFromFastqFile(@NotNull String path, boolean isOriginalFastq) {
         FastqHeaderParser parser = isOriginalFastq ? new OriginalFastqHeaderParser() : new RecreatedFastqHeaderParser();
-        Set<SullivanRecord> records = new HashSet<SullivanRecord>();
+        Map<String, FastqRecord> records = new HashMap<String, FastqRecord>();
 
         FastqReader fastqReader = new FastqReader(new File(path));
 
         for (FastqRecord record : fastqReader) {
             int recordCount = records.size();
-            SullivanRecord convertedRecord = SullivanRecord.createFromFastqRecord(record, parser);
-            records.add(convertedRecord);
+            String convertedHeader = parser.apply(record.getReadHeader());
+
+            records.put(convertedHeader, record);
             if (recordCount == records.size()) {
-                System.out.println("WARN: Duplicate record found: " + convertedRecord);
+                System.out.println("WARN: Duplicate record found: " + record);
+            }
+
+            if (records.size() % 1E6 == 0) {
+                log("  Finished reading " + records.size() + " records");
             }
         }
 
         fastqReader.close();
         return records;
+    }
+
+    private static void log(@NotNull String info) {
+        System.out.println(DTF.format(new Date()) + ": " + info);
     }
 }
