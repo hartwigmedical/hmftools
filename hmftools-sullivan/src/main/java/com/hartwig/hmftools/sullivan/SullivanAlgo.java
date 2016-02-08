@@ -61,6 +61,8 @@ public final class SullivanAlgo {
                 log("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
             }
         }
+        int recordsFound = originalSize - originalFastq.size();
+        log("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
 
         log("Finished mapping records. " + originalFastq.size() + " unmapped records remaining in original fastq");
 

@@ -14,9 +14,8 @@ class FastqHeader {
     @NotNull
     private final String flowcellId;
     private final int flowcellLane;
-    private final int tileNumber;
-    private final int xCoordinate;
-    private final int yCoordinate;
+    @NotNull
+    private final FastqHeaderKey key;
 
     public static FastqHeader parseFromFastqRecord(@NotNull FastqRecord record,
                                                    @NotNull FastqHeaderNormalizer normalizer) {
@@ -34,14 +33,12 @@ class FastqHeader {
         this.runId = runId;
         this.flowcellId = flowcellId;
         this.flowcellLane = flowcellLane;
-        this.tileNumber = tileNumber;
-        this.xCoordinate = xCoordinate;
-        this.yCoordinate = yCoordinate;
+        this.key = new FastqHeaderKey(tileNumber, xCoordinate, yCoordinate);
     }
 
     @NotNull
     public FastqHeaderKey key() {
-        return new FastqHeaderKey(tileNumber, xCoordinate, yCoordinate);
+        return key;
     }
 
     @NotNull
@@ -59,11 +56,9 @@ class FastqHeader {
 
         if (runId != that.runId) return false;
         if (flowcellLane != that.flowcellLane) return false;
-        if (tileNumber != that.tileNumber) return false;
-        if (xCoordinate != that.xCoordinate) return false;
-        if (yCoordinate != that.yCoordinate) return false;
         if (!instrumentName.equals(that.instrumentName)) return false;
-        return flowcellId.equals(that.flowcellId);
+        if (!flowcellId.equals(that.flowcellId)) return false;
+        return key.equals(that.key);
     }
 
     @Override
@@ -72,9 +67,7 @@ class FastqHeader {
         result = 31 * result + runId;
         result = 31 * result + flowcellId.hashCode();
         result = 31 * result + flowcellLane;
-        result = 31 * result + tileNumber;
-        result = 31 * result + xCoordinate;
-        result = 31 * result + yCoordinate;
+        result = 31 * result + key.hashCode();
         return result;
     }
 }
