@@ -19,4 +19,15 @@ public class SullivanAlgoTest {
 
         assertTrue(SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath));
     }
+
+    @Test
+    public void sullivanAlgoRunsOnPartialData() {
+        URL originalFastqURL = Resources.getResource("fastq/original.fastq");
+        String originalFastqPath = originalFastqURL.getPath();
+
+        URL recreatedFastqURL = Resources.getResource("fastq/recreated.fastq");
+        String recreatedFastqPath = recreatedFastqURL.getPath();
+
+        assertTrue(SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath, 1000));
+    }
 }
