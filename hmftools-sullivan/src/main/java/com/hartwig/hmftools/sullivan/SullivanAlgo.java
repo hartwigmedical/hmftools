@@ -30,7 +30,8 @@ public final class SullivanAlgo {
 
         log("Start reading original fastq file from " + originalFastqPath);
         Map<FastqHeaderKey, FastqRecord> originalFastq = mapOriginalFastqFile(originalFastqPath, refHeader, numRecords);
-        log("Finished reading original fastq file. Created " + originalFastq.size() + " records.");
+        int originalSize = originalFastq.size();
+        log("Finished reading original fastq file. Created " + originalSize + " records.");
 
         FastqReader recreatedFastqReader = createFastqReader(recreatedFastqPath);
         FastqHeaderNormalizer recreatedNormalizer = new RecreatedFastqHeaderNormalizer();
@@ -56,7 +57,8 @@ public final class SullivanAlgo {
             }
             recordCount++;
             if (recordCount % 1E6 == 0) {
-                log("  Finished mapping " + recordCount + " records.");
+                int recordsFound = originalSize - originalFastq.size();
+                log("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
             }
         }
 
