@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 public class SullivanRunner {
 
     private static final String ORIGINAL_FASTQ_PATH_VAR = "origpath";
+    private static final String MERGE_ORIGINAL_FASTQ_PATH_VAR = "mergeorigpath";
     private static final String RECREATED_FASTQ_PATH_VAR = "recpath";
     private static final String DIRECTORY_MODE_VAR = "d";
     private static final String NUM_RECORDS_VAR = "n";
@@ -25,9 +26,9 @@ public class SullivanRunner {
         } else {
             int numRecords =
                     Integer.parseInt(cmd.getOptionValue(NUM_RECORDS_VAR, Integer.toString(DEFAULT_NUM_RECORDS)));
-            boolean isDirectoryMode = cmd.getOptionValue(DIRECTORY_MODE_VAR) != null;
-
-            SullivanAlgo.runSullivanAlgo(originalPath, recreatedPath, isDirectoryMode, numRecords);
+            boolean isDirectoryMode = cmd.hasOption(DIRECTORY_MODE_VAR);
+            String mergeOrigPath = cmd.getOptionValue(MERGE_ORIGINAL_FASTQ_PATH_VAR);
+            SullivanAlgo.runSullivanAlgo(originalPath, recreatedPath, mergeOrigPath, isDirectoryMode, numRecords);
         }
     }
 
@@ -42,6 +43,7 @@ public class SullivanRunner {
     private static Options createOptions() {
         Options options = new Options();
         options.addOption(ORIGINAL_FASTQ_PATH_VAR, true, "Path towards the original fastq file(s)");
+        options.addOption(MERGE_ORIGINAL_FASTQ_PATH_VAR, true, "Extra path towards the original fastq file(s), for merge runs");
         options.addOption(RECREATED_FASTQ_PATH_VAR, true, "Path towards the recreated fastq file(s)");
         options.addOption(NUM_RECORDS_VAR, "num-records", true, "Number of records from original file(s) to validate");
         options.addOption(DIRECTORY_MODE_VAR, "directory-mode", false, "If set, run sullivan on every file in the provided paths");

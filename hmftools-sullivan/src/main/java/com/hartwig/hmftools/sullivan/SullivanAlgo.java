@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sullivan;
 
+import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import org.jetbrains.annotations.NotNull;
@@ -15,23 +16,43 @@ public final class SullivanAlgo {
     private static final DateFormat DTF = new SimpleDateFormat("hh:mm:ss");
 
     public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath,
-                                          boolean isDirectoryMode, int numRecords) {
+                                          @Nullable String mergeOrigFastqPath, boolean isDirectoryMode, int numRecords) {
         File originalPath = new File(originalFastqPath);
         File recreatedPath = new File(recreatedFastqPath);
 
         File[] originalFiles;
         File[] recreatedFiles;
         if (isDirectoryMode) {
+            log("Running sullivan algo in directory mode");
             assert originalPath.isDirectory() && recreatedPath.isDirectory();
             originalFiles = originalPath.listFiles();
-            recreatedFiles = recreatedPath.listFiles();
+            assert originalFiles != null;
+
+            File[] mergeOrigFiles = new File[]{};
+            if (mergeOrigFastqPath != null) {
+                mergeOrigFiles = (new File(mergeOrigFastqPath)).listFiles();
+                assert mergeOrigFiles != null;
+            }
+
+            recreatedFiles = new File[originalFiles.length + mergeOrigFiles.length];
+            for (int i = 0; i < originalFiles.length; i++) {
+                recreatedFiles[i] = new File(recreatedFastqPath + File.separator +
+                        fromOriginalToRecreatedFileName(originalFiles[i].getName()));
+                log("Mapped " + originalFiles[i].getPath() + " to " + recreatedFiles[i].getPath());
+            }
+
+            for (int i = 0; i < mergeOrigFiles.length; i++) {
+                recreatedFiles[i + originalFiles.length] = new File(recreatedFastqPath + File.separator +
+                        fromOriginalToRecreatedFileName(mergeOrigFiles[i].getName()));
+                log("Mapped " + originalFiles[i].getPath() + " to " + mergeOrigFiles[i].getPath());
+            }
         } else {
+            log("Running sullivan algo in file mode");
             assert originalPath.isFile() && recreatedPath.isFile();
             originalFiles = new File[]{originalPath};
             recreatedFiles = new File[]{recreatedPath};
         }
 
-        assert originalFiles != null && recreatedFiles != null;
         assert originalFiles.length == recreatedFiles.length;
 
         boolean success = true;
@@ -40,7 +61,18 @@ public final class SullivanAlgo {
                     runSullivanOnTwoFiles(originalFiles[i], recreatedFiles[i], numRecords);
         }
         return success;
+    }
 
+    @VisibleForTesting
+    @NotNull
+    static String fromOriginalToRecreatedFileName(@NotNull String name) {
+        String nameWithoutExtension = name.substring(0, name.indexOf("."));
+
+        String splitRegExp = "_";
+        String[] parts = nameWithoutExtension.split(splitRegExp);
+        String readGroup = parts[4].equals("R1") ? "1" : "2";
+        return parts[0] + splitRegExp + parts[1] + splitRegExp + parts[2] + splitRegExp + parts[3] +
+                splitRegExp + parts[5] + splitRegExp + readGroup + ".fastq";
     }
 
     private static boolean runSullivanOnTwoFiles(@NotNull File originalFastqFile, @NotNull File recreatedFastqFile,
