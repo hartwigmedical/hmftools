@@ -44,7 +44,8 @@ public final class SullivanAlgo {
             for (int i = 0; i < mergeOrigFiles.length; i++) {
                 recreatedFiles[i + originalFiles.length] = new File(recreatedFastqPath + File.separator +
                         fromOriginalToRecreatedFileName(mergeOrigFiles[i].getName()));
-                log("Mapped " + originalFiles[i].getPath() + " to " + mergeOrigFiles[i].getPath());
+                log("Mapped " + mergeOrigFiles[i].getPath() + " to " +
+                        recreatedFiles[i + originalFiles.length].getPath());
             }
         } else {
             log("Running sullivan algo in file mode");
