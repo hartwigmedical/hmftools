@@ -17,7 +17,7 @@ public class SullivanAlgoTest {
         URL recreatedFastqURL = Resources.getResource("fastq/recreated.fastq");
         String recreatedFastqPath = recreatedFastqURL.getPath();
 
-        assertTrue(SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath));
+        assertTrue(SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath, false, 100000));
     }
 
     @Test
@@ -28,6 +28,7 @@ public class SullivanAlgoTest {
         URL recreatedFastqURL = Resources.getResource("fastq/recreated.fastq");
         String recreatedFastqPath = recreatedFastqURL.getPath();
 
-        assertTrue(SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath, 1000));
+        // KODU: Assume that test files have 25k records.
+        assertTrue(SullivanAlgo.runSullivanAlgo(originalFastqPath, recreatedFastqPath, false, 1000));
     }
 }

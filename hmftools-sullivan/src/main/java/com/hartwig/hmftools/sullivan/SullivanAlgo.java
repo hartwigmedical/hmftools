@@ -14,26 +14,53 @@ public final class SullivanAlgo {
 
     private static final DateFormat DTF = new SimpleDateFormat("hh:mm:ss");
 
-    public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath) {
-        return runSullivanAlgo(originalFastqPath, recreatedFastqPath, Integer.MAX_VALUE);
+    public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath,
+                                          boolean isDirectoryMode, int numRecords) {
+        File originalPath = new File(originalFastqPath);
+        File recreatedPath = new File(recreatedFastqPath);
+
+        File[] originalFiles;
+        File[] recreatedFiles;
+        if (isDirectoryMode) {
+            assert originalPath.isDirectory() && recreatedPath.isDirectory();
+            originalFiles = originalPath.listFiles();
+            recreatedFiles = recreatedPath.listFiles();
+        } else {
+            assert originalPath.isFile() && recreatedPath.isFile();
+            originalFiles = new File[]{originalPath};
+            recreatedFiles = new File[]{recreatedPath};
+        }
+
+        assert originalFiles != null && recreatedFiles != null;
+        assert originalFiles.length == recreatedFiles.length;
+
+        boolean success = true;
+        for (int i = 0; i < originalFiles.length; i++) {
+            success = success &&
+                    runSullivanOnTwoFiles(originalFiles[i], recreatedFiles[i], numRecords);
+        }
+        return success;
+
     }
 
-    public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath,
-                                          int numRecords) {
-        String refHeader = referenceHeader(originalFastqPath);
+    private static boolean runSullivanOnTwoFiles(@NotNull File originalFastqFile, @NotNull File recreatedFastqFile,
+                                         int numRecords) {
+        assert originalFastqFile.isFile() && recreatedFastqFile.isFile();
+
+        String refHeader = referenceHeader(originalFastqFile);
         if (refHeader == null) {
-            log("No ref header could be isolated from fastq file on " + originalFastqPath);
+            log("No ref header could be isolated from fastq file on " + originalFastqFile.getName());
             return false;
         } else {
             log("Generated ref header: " + refHeader);
         }
 
-        log("Start reading original fastq file from " + originalFastqPath);
-        Map<FastqHeaderKey, FastqRecord> originalFastq = mapOriginalFastqFile(originalFastqPath, refHeader, numRecords);
+        log("Start reading original fastq file from " + originalFastqFile.getPath());
+        Map<FastqHeaderKey, FastqRecord> originalFastq = mapOriginalFastqFile(originalFastqFile, refHeader, numRecords);
         int originalSize = originalFastq.size();
         log("Finished reading original fastq file. Created " + originalSize + " records.");
 
-        FastqReader recreatedFastqReader = createFastqReader(recreatedFastqPath);
+        FastqReader recreatedFastqReader = new FastqReader(recreatedFastqFile);
         FastqHeaderNormalizer recreatedNormalizer = new RecreatedFastqHeaderNormalizer();
 
         boolean success = true;
@@ -48,7 +75,7 @@ public final class SullivanAlgo {
                 FastqRecord originalMatch = originalFastq.get(header.key());
                 if (originalMatch != null) {
                     if (!originalMatch.getReadString().equals(recreatedRecord.getReadString()) ||
-                        !originalMatch.getBaseQualityString().equals(recreatedRecord.getBaseQualityString())) {
+                            !originalMatch.getBaseQualityString().equals(recreatedRecord.getBaseQualityString())) {
                         log("  Mismatch between original and recreated fastq on record: " + recreatedRecord);
                         success = false;
                     }
@@ -70,8 +97,8 @@ public final class SullivanAlgo {
     }
 
     @Nullable
-    private static String referenceHeader(@NotNull String originalFastqPath) {
-        FastqReader fastqReader = createFastqReader(originalFastqPath);
+    private static String referenceHeader(@NotNull File originalFastqFile) {
+        FastqReader fastqReader = new FastqReader(originalFastqFile);
         if (fastqReader.hasNext()) {
             FastqHeader header = FastqHeader.parseFromFastqRecord(fastqReader.next(), new OriginalFastqHeaderNormalizer());
             fastqReader.close();
@@ -83,11 +110,11 @@ public final class SullivanAlgo {
 
     @NotNull
     private static Map<FastqHeaderKey, FastqRecord> mapOriginalFastqFile(
-            @NotNull String path, @NotNull String refHeader, int numRecords) {
+            @NotNull File file, @NotNull String refHeader, int numRecords) {
         FastqHeaderNormalizer normalizer = new OriginalFastqHeaderNormalizer();
-        Map<FastqHeaderKey, FastqRecord> records = new HashMap<FastqHeaderKey, FastqRecord>();
+        Map<FastqHeaderKey, FastqRecord> records = new HashMap<FastqHeaderKey, FastqRecord>(numRecords);
 
-        FastqReader fastqReader = createFastqReader(path);
+        FastqReader fastqReader = new FastqReader(file);
 
         while (fastqReader.hasNext() && records.size() < numRecords) {
             FastqRecord record = fastqReader.next();
@@ -110,11 +137,6 @@ public final class SullivanAlgo {
 
         fastqReader.close();
         return records;
-    }
-
-    @NotNull
-    private static FastqReader createFastqReader(@NotNull String path) {
-        return new FastqReader(new File(path));
     }
 
     private static void log(@NotNull String info) {

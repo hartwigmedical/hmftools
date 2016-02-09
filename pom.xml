@@ -42,7 +42,7 @@
             </dependency>
             <dependency>
                 <groupId>commons-cli</groupId>
-                <artifactId>apache.commons.cli.version-cli</artifactId>
+                <artifactId>commons-cli</artifactId>
                 <version>${apache.commons.cli.version}</version>
             </dependency>
 

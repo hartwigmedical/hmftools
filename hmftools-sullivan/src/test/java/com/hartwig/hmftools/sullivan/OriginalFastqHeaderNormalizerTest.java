@@ -10,8 +10,8 @@ public class OriginalFastqHeaderNormalizerTest {
     public void normalizesCorrectly() {
         FastqHeaderNormalizer normalizer = new OriginalFastqHeaderNormalizer();
         String header = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182 1:N:0:ATCACG";
-        String expectedParsed = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182";
+        String normalized = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182";
 
-        assertEquals(expectedParsed, normalizer.apply(header));
+        assertEquals(normalized, normalizer.apply(header));
     }
 }
