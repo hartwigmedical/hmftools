@@ -115,7 +115,7 @@ public final class SullivanAlgo {
                 }
             }
             recordCount++;
-            if (recordCount % 1E6 == 0) {
+            if (recordCount % 1E7 == 0) {
                 int recordsFound = originalSize - originalFastq.size();
                 log("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
             }
@@ -162,7 +162,7 @@ public final class SullivanAlgo {
                 log("  WARN: Header mismatch with reference header: " + header.reference());
             }
 
-            if (records.size() % 1E6 == 0) {
+            if (records.size() % 1E7 == 0) {
                 log("  Finished reading " + records.size() + " records");
             }
         }
