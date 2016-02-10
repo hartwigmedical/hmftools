@@ -80,6 +80,8 @@ public final class SullivanAlgo {
                                          int numRecords) {
         assert originalFastqFile.isFile() && recreatedFastqFile.isFile();
 
+        log("Start reading original fastq file from " + originalFastqFile.getPath());
+
         String refHeader = referenceHeader(originalFastqFile);
         if (refHeader == null) {
             log("No ref header could be isolated from fastq file on " + originalFastqFile.getName());
@@ -88,7 +90,6 @@ public final class SullivanAlgo {
             log("Generated ref header: " + refHeader);
         }
 
-        log("Start reading original fastq file from " + originalFastqFile.getPath());
         Map<FastqHeaderKey, FastqRecord> originalFastq = mapOriginalFastqFile(originalFastqFile, refHeader, numRecords);
         int originalSize = originalFastq.size();
         log("Finished reading original fastq file. Created " + originalSize + " records.");
