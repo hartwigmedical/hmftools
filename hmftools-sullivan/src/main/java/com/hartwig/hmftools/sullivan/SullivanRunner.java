@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sullivan;
 import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
+import static com.hartwig.hmftools.sullivan.Logger.log;
+
 public class SullivanRunner {
 
     private static final String ORIGINAL_FASTQ_PATH_VAR = "origpath";
@@ -28,7 +30,14 @@ public class SullivanRunner {
                     Integer.parseInt(cmd.getOptionValue(NUM_RECORDS_VAR, Integer.toString(DEFAULT_NUM_RECORDS)));
             boolean isDirectoryMode = cmd.hasOption(DIRECTORY_MODE_VAR);
             String mergeOrigPath = cmd.getOptionValue(MERGE_ORIGINAL_FASTQ_PATH_VAR);
-            SullivanAlgo.runSullivanAlgo(originalPath, recreatedPath, mergeOrigPath, isDirectoryMode, numRecords);
+            boolean success =
+                    SullivanAlgo.runSullivanAlgo(originalPath, recreatedPath, mergeOrigPath, isDirectoryMode, numRecords);
+
+            if (success) {
+                log("Sullivan ran successfully!");
+            } else {
+                log("Sullivan not successful!");
+            }
         }
     }
 

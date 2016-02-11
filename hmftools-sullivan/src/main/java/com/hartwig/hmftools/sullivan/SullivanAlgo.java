@@ -7,65 +7,53 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.hartwig.hmftools.sullivan.Logger.log;
 
 public final class SullivanAlgo {
 
-    private static final DateFormat DTF = new SimpleDateFormat("hh:mm:ss");
-
     public static boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath,
                                           @Nullable String mergeOrigFastqPath, boolean isDirectoryMode, int numRecords) {
-        File originalPath = new File(originalFastqPath);
-        File recreatedPath = new File(recreatedFastqPath);
-
-        File[] originalFiles;
-        File[] recreatedFiles;
-        File[] mergeOrigFiles = new File[]{};
+        boolean success;
         if (isDirectoryMode) {
             log("Running sullivan algo in directory mode");
-            assert originalPath.isDirectory() && recreatedPath.isDirectory();
-            originalFiles = originalPath.listFiles();
-            assert originalFiles != null;
-
+            success = runSullivanOnTwoDirectories(originalFastqPath, recreatedFastqPath, numRecords);
             if (mergeOrigFastqPath != null) {
-                mergeOrigFiles = (new File(mergeOrigFastqPath)).listFiles();
-                assert mergeOrigFiles != null;
-            }
-
-            recreatedFiles = new File[originalFiles.length + mergeOrigFiles.length];
-            for (int i = 0; i < originalFiles.length; i++) {
-                recreatedFiles[i] = new File(recreatedFastqPath + File.separator +
-                        fromOriginalToRecreatedFileName(originalFiles[i].getName()));
-                log("Mapped " + originalFiles[i].getPath() + " to " + recreatedFiles[i].getPath());
-            }
-
-            for (int i = 0; i < mergeOrigFiles.length; i++) {
-                recreatedFiles[i + originalFiles.length] = new File(recreatedFastqPath + File.separator +
-                        fromOriginalToRecreatedFileName(mergeOrigFiles[i].getName()));
-                log("Mapped " + mergeOrigFiles[i].getPath() + " to " +
-                        recreatedFiles[i + originalFiles.length].getPath());
+                log("Running sullivan in merge-run mode");
+                success = success && runSullivanOnTwoDirectories(mergeOrigFastqPath, recreatedFastqPath, numRecords);
             }
         } else {
             log("Running sullivan algo in file mode");
-            assert originalPath.isFile() && recreatedPath.isFile();
-            originalFiles = new File[]{originalPath};
-            recreatedFiles = new File[]{recreatedPath};
+            success = runSullivanOnTwoFiles(new File(originalFastqPath), new File(recreatedFastqPath), numRecords);
         }
 
-        assert originalFiles.length == recreatedFiles.length;
+        return success;
+    }
+
+    private static boolean runSullivanOnTwoDirectories(@NotNull String originalFastqPath,
+                                                       @NotNull String recreatedFastqPath,
+                                                        int numRecords) {
+        File originalPath = new File(originalFastqPath);
+        File recreatedPath = new File(recreatedFastqPath);
+        assert originalPath.isDirectory() && recreatedPath.isDirectory();
+
+        File[] originalFiles = originalPath.listFiles();
+
+        assert originalFiles != null;
+        File[] recreatedFiles = new File[originalFiles.length];
+
+        for (int i = 0; i < originalFiles.length; i++) {
+            recreatedFiles[i] = new File(recreatedFastqPath + File.separator +
+                    fromOriginalToRecreatedFileName(originalFiles[i].getName()));
+            log("Mapped " + originalFiles[i].getPath() + " to " + recreatedFiles[i].getPath());
+        }
 
         boolean success = true;
         for (int i = 0; i < originalFiles.length; i++) {
-            success = success &&
-                    runSullivanOnTwoFiles(originalFiles[i], recreatedFiles[i], numRecords);
+            success = success && runSullivanOnTwoFiles(originalFiles[i], recreatedFiles[i], numRecords);
         }
 
-        for (int i = 0; i < mergeOrigFiles.length; i++) {
-            success = success &&
-                    runSullivanOnTwoFiles(mergeOrigFiles[i], recreatedFiles[i + originalFiles.length], numRecords);
-        }
         return success;
     }
 
@@ -176,9 +164,5 @@ public final class SullivanAlgo {
 
         fastqReader.close();
         return records;
-    }
-
-    private static void log(@NotNull String info) {
-        System.out.println(DTF.format(new Date()) + ": " + info);
     }
 }
