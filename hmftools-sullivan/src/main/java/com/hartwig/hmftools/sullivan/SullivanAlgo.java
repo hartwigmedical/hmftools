@@ -22,13 +22,13 @@ public final class SullivanAlgo {
 
         File[] originalFiles;
         File[] recreatedFiles;
+        File[] mergeOrigFiles = new File[]{};
         if (isDirectoryMode) {
             log("Running sullivan algo in directory mode");
             assert originalPath.isDirectory() && recreatedPath.isDirectory();
             originalFiles = originalPath.listFiles();
             assert originalFiles != null;
 
-            File[] mergeOrigFiles = new File[]{};
             if (mergeOrigFastqPath != null) {
                 mergeOrigFiles = (new File(mergeOrigFastqPath)).listFiles();
                 assert mergeOrigFiles != null;
@@ -60,6 +60,11 @@ public final class SullivanAlgo {
         for (int i = 0; i < originalFiles.length; i++) {
             success = success &&
                     runSullivanOnTwoFiles(originalFiles[i], recreatedFiles[i], numRecords);
+        }
+
+        for (int i = 0; i < mergeOrigFiles.length; i++) {
+            success = success &&
+                    runSullivanOnTwoFiles(mergeOrigFiles[i], recreatedFiles[i + originalFiles.length], numRecords);
         }
         return success;
     }
