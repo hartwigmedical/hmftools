@@ -60,6 +60,7 @@ public final class SullivanAlgo {
     @VisibleForTesting
     @NotNull
     static String fromOriginalToRecreatedFileName(@NotNull String name) {
+        // KODU: Example: CPCT02010015R_BHKCWVCCXX_S3_L001_R1_001.fastq.gz
         String nameWithoutExtension = name.substring(0, name.indexOf("."));
 
         String splitRegExp = "_";
