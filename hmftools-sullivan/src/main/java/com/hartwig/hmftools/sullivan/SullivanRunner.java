@@ -11,6 +11,7 @@ public class SullivanRunner {
     private static final String MERGE_ORIGINAL_FASTQ_PATH_VAR = "mergeorigpath";
     private static final String RECREATED_FASTQ_PATH_VAR = "recpath";
     private static final String DIRECTORY_MODE_VAR = "d";
+    private static final String ANCIENT_FILE_NAME_MODE_VAR = "a";
     private static final String NUM_RECORDS_VAR = "n";
 
     private static final int DEFAULT_NUM_RECORDS = 100000;
@@ -30,8 +31,13 @@ public class SullivanRunner {
                     Integer.parseInt(cmd.getOptionValue(NUM_RECORDS_VAR, Integer.toString(DEFAULT_NUM_RECORDS)));
             boolean isDirectoryMode = cmd.hasOption(DIRECTORY_MODE_VAR);
             String mergeOrigPath = cmd.getOptionValue(MERGE_ORIGINAL_FASTQ_PATH_VAR);
+            boolean isAncientFileNameMode = cmd.hasOption(ANCIENT_FILE_NAME_MODE_VAR);
+
+            FileNameConverter converter =
+                    isAncientFileNameMode ? new AncientNameConverter() : new DefaultNameConverter();
+            SullivanAlgo algo = new SullivanAlgo(converter);
             boolean success =
-                    SullivanAlgo.runSullivanAlgo(originalPath, recreatedPath, mergeOrigPath, isDirectoryMode, numRecords);
+                    algo.runSullivanAlgo(originalPath, recreatedPath, mergeOrigPath, isDirectoryMode, numRecords);
 
             if (success) {
                 log("Sullivan ran successfully!");
@@ -56,6 +62,7 @@ public class SullivanRunner {
         options.addOption(RECREATED_FASTQ_PATH_VAR, true, "Path towards the recreated fastq file(s)");
         options.addOption(NUM_RECORDS_VAR, "num-records", true, "Number of records from original file(s) to validate");
         options.addOption(DIRECTORY_MODE_VAR, "directory-mode", false, "If set, run sullivan on every file in the provided paths");
+        options.addOption(ANCIENT_FILE_NAME_MODE_VAR, "ancient-file-name-mode", false, "If set, sullivan expects an ancient format for file names.");
         return options;
     }
 }
