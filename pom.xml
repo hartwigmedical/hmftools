@@ -10,6 +10,7 @@
 
     <modules>
         <module>hmftools-sullivan</module>
+        <module>hmftools-boggs</module>
     </modules>
 
     <properties>
