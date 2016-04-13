@@ -9,7 +9,7 @@ import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 
-public class SambambaFlagstatParserTest2 {
+public class SambambaFlagStatParserTest {
 
     @Test
     public void canParseExampleFile() throws IOException {
