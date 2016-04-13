@@ -57,6 +57,6 @@ public class MappingHealthChecker implements HealthChecker {
 
     @NotNull
     private static String toPercentage(double percentage){
-        return (Math.round(percentage * 10000) / 100) + "%";
+        return (Math.round(percentage * 10000L) / 100D) + "%";
     }
 }
