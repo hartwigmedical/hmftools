@@ -17,6 +17,7 @@ public class PatientExtractor {
     private static final String SAMPLE_PREFIX = "CPCT";
     private static final String REF_SAMPLE_SUFFIX = "R";
     private static final String TUMOR_SAMPLE_SUFFIX = "T";
+
     private static final String FLAGSTAT_SUFFIX = ".flagstat";
 
     @NotNull
