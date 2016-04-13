@@ -4,11 +4,8 @@ import com.google.common.io.Resources;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.net.URL;
-import java.io.File;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class SullivanAlgoTest {
