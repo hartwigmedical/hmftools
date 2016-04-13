@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.boggs.runreader;
+package com.hartwig.hmftools.boggs.io;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.boggs.PatientData;

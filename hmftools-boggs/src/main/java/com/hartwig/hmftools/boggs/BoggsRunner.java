@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.boggs;
 
 import com.hartwig.hmftools.boggs.flagstatreader.SambambaFlagstatParser;
-import com.hartwig.hmftools.boggs.runreader.PatientExtractor;
+import com.hartwig.hmftools.boggs.io.PatientExtractor;
 import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
