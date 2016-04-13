@@ -13,6 +13,5 @@ public final class FlagStatTestFactory {
         builder.setMapped(10);
         builder.setTotal(25);
         return new FlagStatData("AnyPath", builder.build(), builder.build());
-
     }
 }
