@@ -13,10 +13,10 @@ public class SambambaFlagstatParser implements FlagstatParser {
     }
 
     @NotNull
-    public Flagstat parse(@NotNull File file) throws IOException {
+    public FlagstatData parse(@NotNull File file) throws IOException {
         BufferedReader fileReader  = new BufferedReader(new FileReader(file));
-        StatsBuilder qcPassedReadsBuilder = new StatsBuilder();
-        StatsBuilder qcFailedReadsBuilder = new StatsBuilder();
+        FlagStatsBuilder qcPassedReadsBuilder = new FlagStatsBuilder();
+        FlagStatsBuilder qcFailedReadsBuilder = new FlagStatsBuilder();
 
         int lineNr = 0;
         String line;
@@ -98,6 +98,6 @@ public class SambambaFlagstatParser implements FlagstatParser {
 
         fileReader.close();
 
-        return new Flagstat(file.getPath(), qcPassedReadsBuilder.build(), qcFailedReadsBuilder.build());
+        return new FlagstatData(file.getPath(), qcPassedReadsBuilder.build(), qcFailedReadsBuilder.build());
     }
 }

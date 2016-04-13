@@ -13,6 +13,16 @@ public class PatientData {
         this.tumorSample = tumorSample;
     }
 
+    @NotNull
+    public SampleData refSample() {
+        return refSample;
+    }
+
+    @NotNull
+    public SampleData tumorSample() {
+        return tumorSample;
+    }
+
     @Override
     public String toString() {
         return "PatientData{" +

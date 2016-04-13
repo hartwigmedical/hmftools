@@ -2,9 +2,9 @@ package com.hartwig.hmftools.boggs.io;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.boggs.PatientData;
-import com.hartwig.hmftools.boggs.flagstatreader.Flagstat;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagstatData;
 import com.hartwig.hmftools.boggs.flagstatreader.FlagstatParser;
-import com.hartwig.hmftools.boggs.flagstatreader.StatsBuilder;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagStatsBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -29,9 +29,9 @@ public class PatientExtractorTest {
     private static class DummyFlagstatParser implements FlagstatParser {
 
         @NotNull
-        public Flagstat parse(@NotNull File file) throws IOException {
+        public FlagstatData parse(@NotNull File file) throws IOException {
             // KODU (TODO): Mock this.
-            return new Flagstat(file.getPath(), new StatsBuilder().build(), new StatsBuilder().build());
+            return new FlagstatData(file.getPath(), new FlagStatsBuilder().build(), new FlagStatsBuilder().build());
         }
     }
 }

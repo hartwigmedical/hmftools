@@ -3,7 +3,7 @@ package com.hartwig.hmftools.boggs.io;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.boggs.PatientData;
 import com.hartwig.hmftools.boggs.SampleData;
-import com.hartwig.hmftools.boggs.flagstatreader.Flagstat;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagstatData;
 import com.hartwig.hmftools.boggs.flagstatreader.FlagstatParser;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,25 +48,25 @@ public class PatientExtractor {
         File flagstatDir = new File(samples[0].getPath() + File.separator + "mapping" + File.separator);
         File[] flagstats = flagstatDir.listFiles(flagstatFilter());
 
-        Collection<Flagstat> mappingFlagstats = Lists.newArrayList();
-        Flagstat markdupFlagstat = null;
-        Flagstat realignedFlagstat = null;
+        Collection<FlagstatData> mappingFlagstatDatas = Lists.newArrayList();
+        FlagstatData markdupFlagstatData = null;
+        FlagstatData realignedFlagstatData = null;
         for (File flagstat : flagstats) {
-            Flagstat parsedFlagstat = flagstatParser.parse(flagstat);
+            FlagstatData parsedFlagstatData = flagstatParser.parse(flagstat);
             String name = flagstat.getName();
             if (name.contains("dedup.realigned")) {
-                realignedFlagstat = parsedFlagstat;
+                realignedFlagstatData = parsedFlagstatData;
             } else if (name.contains("dedup")) {
-                markdupFlagstat = parsedFlagstat;
+                markdupFlagstatData = parsedFlagstatData;
             } else {
-                mappingFlagstats.add(parsedFlagstat);
+                mappingFlagstatDatas.add(parsedFlagstatData);
             }
         }
 
-        assert markdupFlagstat != null;
-        assert realignedFlagstat != null;
+        assert markdupFlagstatData != null;
+        assert realignedFlagstatData != null;
 
-        return new SampleData(externalID, mappingFlagstats, markdupFlagstat, realignedFlagstat);
+        return new SampleData(externalID, mappingFlagstatDatas, markdupFlagstatData, realignedFlagstatData);
     }
 
     @NotNull

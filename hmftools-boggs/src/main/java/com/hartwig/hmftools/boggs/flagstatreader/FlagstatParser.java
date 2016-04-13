@@ -8,5 +8,5 @@ import java.io.IOException;
 public interface FlagstatParser {
 
     @NotNull
-    Flagstat parse(@NotNull File file) throws IOException;
+    FlagstatData parse(@NotNull File file) throws IOException;
 }

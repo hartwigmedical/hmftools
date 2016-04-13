@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.boggs;
 
-import com.hartwig.hmftools.boggs.flagstatreader.Flagstat;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagstatData;
 import org.jetbrains.annotations.NotNull;
 
 public class SampleData {
@@ -10,18 +10,43 @@ public class SampleData {
     @NotNull
     private final String externalID;
     @NotNull
-    private final Iterable<Flagstat> mappingFlagstats;
+    private final Iterable<FlagstatData> mappingFlagstats;
     @NotNull
-    private final Flagstat markdupFlagstat;
+    private final FlagstatData markdupFlagstatData;
     @NotNull
-    private final Flagstat realignFlagstat;
+    private final FlagstatData realignFlagstatData;
 
-    public SampleData(@NotNull String externalID, @NotNull Iterable<Flagstat> mappingFlagstats,
-                      @NotNull Flagstat markdupFlagstat, @NotNull Flagstat realignFlagstat) {
+    public SampleData(@NotNull String externalID, @NotNull Iterable<FlagstatData> mappingFlagstats,
+                      @NotNull FlagstatData markdupFlagstatData, @NotNull FlagstatData realignFlagstatData) {
         this.externalID = externalID;
         this.mappingFlagstats = mappingFlagstats;
-        this.markdupFlagstat = markdupFlagstat;
-        this.realignFlagstat = realignFlagstat;
+        this.markdupFlagstatData = markdupFlagstatData;
+        this.realignFlagstatData = realignFlagstatData;
+    }
+
+    @NotNull
+    public String sampleID() {
+        return sampleID;
+    }
+
+    @NotNull
+    public String externalID() {
+        return externalID;
+    }
+
+    @NotNull
+    public Iterable<FlagstatData> mappingFlagstats() {
+        return mappingFlagstats;
+    }
+
+    @NotNull
+    public FlagstatData markdupFlagstat() {
+        return markdupFlagstatData;
+    }
+
+    @NotNull
+    public FlagstatData realignFlagstat() {
+        return realignFlagstatData;
     }
 
     @Override
@@ -30,8 +55,8 @@ public class SampleData {
                 "sampleID='" + sampleID + '\'' +
                 ", externalID='" + externalID + '\'' +
                 ", mappingFlagstats=" + mappingFlagstats +
-                ", markdupFlagstat=" + markdupFlagstat +
-                ", realignFlagstat=" + realignFlagstat +
+                ", markdupFlagstatData=" + markdupFlagstatData +
+                ", realignFlagstatData=" + realignFlagstatData +
                 '}';
     }
 }

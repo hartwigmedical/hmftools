@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.boggs.flagstatreader;
 
-public class Stats {
+public class FlagStats {
     private final long total;
     private final long secondary;
     private final long supplementary;
@@ -15,9 +15,9 @@ public class Stats {
     private final long mateMappedToDifferentChr;
     private final long mateMappedToDifferentChrMapQ5;
 
-    public Stats(long total, long secondary, long supplementary, long duplicates, long mapped, long pairedInSequencing,
-                 long read1, long read2, long properlyPaired, long itselfAndMateMapped, long singletons,
-                 long mateMappedToDifferentChr, long mateMappedToDifferentChrMapQ5) {
+    public FlagStats(long total, long secondary, long supplementary, long duplicates, long mapped, long pairedInSequencing,
+                     long read1, long read2, long properlyPaired, long itselfAndMateMapped, long singletons,
+                     long mateMappedToDifferentChr, long mateMappedToDifferentChrMapQ5) {
         this.total = total;
         this.secondary = secondary;
         this.supplementary = supplementary;
@@ -33,61 +33,61 @@ public class Stats {
         this.mateMappedToDifferentChrMapQ5 = mateMappedToDifferentChrMapQ5;
     }
 
-    public long getTotal() {
+    public long total() {
         return total;
     }
 
-    public long getSecondary() {
+    public long secondary() {
         return secondary;
     }
 
-    public long getSupplementary() {
+    public long supplementary() {
         return supplementary;
     }
 
-    public long getDuplicates() {
+    public long duplicates() {
         return duplicates;
     }
 
-    public long getMapped() {
+    public long mapped() {
         return mapped;
     }
 
-    public long getPairedInSequencing() {
+    public long pairedInSequencing() {
         return pairedInSequencing;
     }
 
-    public long getRead1() {
+    public long read1() {
         return read1;
     }
 
-    public long getRead2() {
+    public long read2() {
         return read2;
     }
 
-    public long getProperlyPaired() {
+    public long properlyPaired() {
         return properlyPaired;
     }
 
-    public long getItselfAndMateMapped() {
+    public long itselfAndMateMapped() {
         return itselfAndMateMapped;
     }
 
-    public long getSingletons() {
+    public long singletons() {
         return singletons;
     }
 
-    public long getMateMappedToDifferentChr() {
+    public long mateMappedToDifferentChr() {
         return mateMappedToDifferentChr;
     }
 
-    public long getMateMappedToDifferentChrMapQ5() {
+    public long mateMappedToDifferentChrMapQ5() {
         return mateMappedToDifferentChrMapQ5;
     }
 
     @Override
     public String toString() {
-        return "Stats{" +
+        return "FlagStats{" +
                 "total=" + total +
                 ", secondary=" + secondary +
                 ", supplementary=" + supplementary +

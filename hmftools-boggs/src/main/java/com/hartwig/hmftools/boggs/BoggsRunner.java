@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.boggs;
 
 import com.hartwig.hmftools.boggs.flagstatreader.SambambaFlagstatParser;
+import com.hartwig.hmftools.boggs.healthcheck.HealthChecker;
+import com.hartwig.hmftools.boggs.healthcheck.MappingHealthChecker;
 import com.hartwig.hmftools.boggs.io.PatientExtractor;
 import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +25,10 @@ public class BoggsRunner {
         } else {
             PatientExtractor extractor = new PatientExtractor(new SambambaFlagstatParser());
             PatientData patient = extractor.extractFromRunDirectory(runDirectory);
-            System.out.println(patient);
+
+            HealthChecker checker = new MappingHealthChecker();
+
+            checker.isHealthy(patient);
         }
     }
 
