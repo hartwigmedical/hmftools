@@ -1,23 +1,23 @@
 package com.hartwig.hmftools.boggs.flagstatreader;
 
 public class Stats {
-    private final int total;
-    private final int secondary;
-    private final int supplementary;
-    private final int duplicates;
-    private final int mapped;
-    private final int pairedInSequencing;
-    private final int read1;
-    private final int read2;
-    private final int properlyPaired;
-    private final int itselfAndMateMapped;
-    private final int singletons;
-    private final int mateMappedToDifferentChr;
-    private final int mateMappedToDifferentChrMapQ5;
+    private final long total;
+    private final long secondary;
+    private final long supplementary;
+    private final long duplicates;
+    private final long mapped;
+    private final long pairedInSequencing;
+    private final long read1;
+    private final long read2;
+    private final long properlyPaired;
+    private final long itselfAndMateMapped;
+    private final long singletons;
+    private final long mateMappedToDifferentChr;
+    private final long mateMappedToDifferentChrMapQ5;
 
-    Stats(int total, int secondary, int supplementary, int duplicates, int mapped,
-                 int pairedInSequencing, int read1, int read2, int properlyPaired, int itselfAndMateMapped,
-                 int singletons, int mateMappedToDifferentChr, int mateMappedToDifferentChrMapQ5) {
+    public Stats(long total, long secondary, long supplementary, long duplicates, long mapped, long pairedInSequencing,
+                 long read1, long read2, long properlyPaired, long itselfAndMateMapped, long singletons,
+                 long mateMappedToDifferentChr, long mateMappedToDifferentChrMapQ5) {
         this.total = total;
         this.secondary = secondary;
         this.supplementary = supplementary;
@@ -33,55 +33,74 @@ public class Stats {
         this.mateMappedToDifferentChrMapQ5 = mateMappedToDifferentChrMapQ5;
     }
 
-    public int getTotal() {
+    public long getTotal() {
         return total;
     }
 
-    public int getSecondary() {
+    public long getSecondary() {
         return secondary;
     }
 
-    public int getSupplementary() {
+    public long getSupplementary() {
         return supplementary;
     }
 
-    public int getDuplicates() {
+    public long getDuplicates() {
         return duplicates;
     }
 
-    public int getMapped() {
+    public long getMapped() {
         return mapped;
     }
 
-    public int getPairedInSequencing() {
+    public long getPairedInSequencing() {
         return pairedInSequencing;
     }
 
-    public int getRead1() {
+    public long getRead1() {
         return read1;
     }
 
-    public int getRead2() {
+    public long getRead2() {
         return read2;
     }
 
-    public int getProperlyPaired() {
+    public long getProperlyPaired() {
         return properlyPaired;
     }
 
-    public int getItselfAndMateMapped() {
+    public long getItselfAndMateMapped() {
         return itselfAndMateMapped;
     }
 
-    public int getSingletons() {
+    public long getSingletons() {
         return singletons;
     }
 
-    public int getMateMappedToDifferentChr() {
+    public long getMateMappedToDifferentChr() {
         return mateMappedToDifferentChr;
     }
 
-    public int getMateMappedToDifferentChrMapQ5() {
+    public long getMateMappedToDifferentChrMapQ5() {
         return mateMappedToDifferentChrMapQ5;
+    }
+
+    @Override
+    public String toString() {
+        return "Stats{" +
+                "total=" + total +
+                ", secondary=" + secondary +
+                ", supplementary=" + supplementary +
+                ", duplicates=" + duplicates +
+                ", mapped=" + mapped +
+                ", pairedInSequencing=" + pairedInSequencing +
+                ", read1=" + read1 +
+                ", read2=" + read2 +
+                ", properlyPaired=" + properlyPaired +
+                ", itselfAndMateMapped=" + itselfAndMateMapped +
+                ", singletons=" + singletons +
+                ", mateMappedToDifferentChr=" + mateMappedToDifferentChr +
+                ", mateMappedToDifferentChrMapQ5=" + mateMappedToDifferentChrMapQ5 +
+                '}';
     }
 }

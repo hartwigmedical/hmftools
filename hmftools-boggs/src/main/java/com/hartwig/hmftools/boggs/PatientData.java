@@ -4,22 +4,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class PatientData {
     @NotNull
-    private final String pipelineRunDir;
+    private final SampleData refSample;
     @NotNull
-    private final String refSampleID;
-    @NotNull
-    private final String refExternalID;
-    @NotNull
-    private final String tumorSampleID;
-    @NotNull
-    private final String tumorExternalID;
+    private final SampleData tumorSample;
 
-    public PatientData(@NotNull String pipelineRunDir, @NotNull String refSampleID,
-                       @NotNull String refExternalID, @NotNull String tumorSampleID, @NotNull String tumorExternalID) {
-        this.pipelineRunDir = pipelineRunDir;
-        this.refSampleID = refSampleID;
-        this.refExternalID = refExternalID;
-        this.tumorSampleID = tumorSampleID;
-        this.tumorExternalID = tumorExternalID;
+    public PatientData(@NotNull SampleData refSample, @NotNull SampleData tumorSample) {
+        this.refSample = refSample;
+        this.tumorSample = tumorSample;
+    }
+
+    @Override
+    public String toString() {
+        return "PatientData{" +
+                "refSample=" + refSample +
+                ", tumorSample=" + tumorSample +
+                '}';
     }
 }

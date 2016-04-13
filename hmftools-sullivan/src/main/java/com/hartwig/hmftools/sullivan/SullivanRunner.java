@@ -51,7 +51,7 @@ public class SullivanRunner {
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options)
             throws ParseException {
         CommandLineParser parser = new DefaultParser();
-        return parser.parse(createOptions(), args);
+        return parser.parse(options, args);
     }
 
     @NotNull

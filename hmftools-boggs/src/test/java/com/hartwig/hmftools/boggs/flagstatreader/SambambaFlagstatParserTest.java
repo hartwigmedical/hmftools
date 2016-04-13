@@ -3,19 +3,21 @@ package com.hartwig.hmftools.boggs.flagstatreader;
 import com.google.common.io.Resources;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 
-public class FlagstatParserTest {
+public class SambambaFlagstatParserTest {
 
     @Test
     public void canParseExampleFile() throws IOException {
         URL exampleFlagstatURL = Resources.getResource("flagstats/example.flagstat");
         String exampleFlagstatFile = exampleFlagstatURL.getPath();
 
-        Flagstat flagstat = FlagstatParser.parse(exampleFlagstatFile);
+        FlagstatParser parser = new SambambaFlagstatParser();
+        Flagstat flagstat = parser.parse(new File(exampleFlagstatFile));
 
         assertEquals(0, flagstat.qcPassedReads().getTotal());
         assertEquals(1, flagstat.qcPassedReads().getSecondary());
