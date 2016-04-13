@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.boggs;
 
-import com.hartwig.hmftools.boggs.flagstatreader.FlagstatData;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagstatData2;
 import org.jetbrains.annotations.NotNull;
 
 public class SampleData {
@@ -10,14 +10,14 @@ public class SampleData {
     @NotNull
     private final String externalID;
     @NotNull
-    private final Iterable<FlagstatData> mappingFlagstats;
+    private final Iterable<FlagstatData2> mappingFlagstats;
     @NotNull
-    private final FlagstatData markdupFlagstatData;
+    private final FlagstatData2 markdupFlagstatData;
     @NotNull
-    private final FlagstatData realignFlagstatData;
+    private final FlagstatData2 realignFlagstatData;
 
-    public SampleData(@NotNull String externalID, @NotNull Iterable<FlagstatData> mappingFlagstats,
-                      @NotNull FlagstatData markdupFlagstatData, @NotNull FlagstatData realignFlagstatData) {
+    public SampleData(@NotNull String externalID, @NotNull Iterable<FlagstatData2> mappingFlagstats,
+                      @NotNull FlagstatData2 markdupFlagstatData, @NotNull FlagstatData2 realignFlagstatData) {
         this.externalID = externalID;
         this.mappingFlagstats = mappingFlagstats;
         this.markdupFlagstatData = markdupFlagstatData;
@@ -35,17 +35,17 @@ public class SampleData {
     }
 
     @NotNull
-    public Iterable<FlagstatData> mappingFlagstats() {
+    public Iterable<FlagstatData2> mappingFlagstats() {
         return mappingFlagstats;
     }
 
     @NotNull
-    public FlagstatData markdupFlagstat() {
+    public FlagstatData2 markdupFlagstat() {
         return markdupFlagstatData;
     }
 
     @NotNull
-    public FlagstatData realignFlagstat() {
+    public FlagstatData2 realignFlagstat() {
         return realignFlagstatData;
     }
 

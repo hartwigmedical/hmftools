@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 
-public interface FlagstatParser {
+public interface FlagstatParser2 {
 
     @NotNull
-    FlagstatData parse(@NotNull File file) throws IOException;
+    FlagstatData2 parse(@NotNull File file) throws IOException;
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.boggs.flagstatreader;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FlagstatData {
+public class FlagstatData2 {
 
     @NotNull
     private final String path;
@@ -11,7 +11,7 @@ public class FlagstatData {
     @NotNull
     private final FlagStats qcFailedReads;
 
-    public FlagstatData(@NotNull String path, @NotNull FlagStats qcPassedReads, @NotNull FlagStats qcFailedReads) {
+    public FlagstatData2(@NotNull String path, @NotNull FlagStats qcPassedReads, @NotNull FlagStats qcFailedReads) {
         this.path = path;
         this.qcPassedReads = qcPassedReads;
         this.qcFailedReads = qcFailedReads;
@@ -34,7 +34,7 @@ public class FlagstatData {
 
     @Override
     public String toString() {
-        return "FlagstatData{" +
+        return "FlagstatData2{" +
                 "path='" + path + '\'' +
                 ", qcPassedReads=" + qcPassedReads +
                 ", qcFailedReads=" + qcFailedReads +

@@ -16,8 +16,8 @@ public class SambambaFlagstatParserTest {
         URL exampleFlagstatURL = Resources.getResource("flagstats/example.flagstat");
         String exampleFlagstatFile = exampleFlagstatURL.getPath();
 
-        FlagstatParser parser = new SambambaFlagstatParser();
-        FlagstatData flagstatData = parser.parse(new File(exampleFlagstatFile));
+        FlagstatParser2 parser = new SambambaFlagstatParser2();
+        FlagstatData2 flagstatData = parser.parse(new File(exampleFlagstatFile));
 
         assertEquals(0, flagstatData.qcPassedReads().total());
         assertEquals(1, flagstatData.qcPassedReads().secondary());
