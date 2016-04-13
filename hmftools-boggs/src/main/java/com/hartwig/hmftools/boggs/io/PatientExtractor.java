@@ -3,8 +3,8 @@ package com.hartwig.hmftools.boggs.io;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.boggs.PatientData;
 import com.hartwig.hmftools.boggs.SampleData;
-import com.hartwig.hmftools.boggs.flagstatreader.FlagstatData2;
-import com.hartwig.hmftools.boggs.flagstatreader.FlagstatParser2;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagStatData;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagStatParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -20,9 +20,9 @@ public class PatientExtractor {
     private static final String FLAGSTAT_SUFFIX = ".flagstat";
 
     @NotNull
-    private final FlagstatParser2 flagstatParser;
+    private final FlagStatParser flagstatParser;
 
-    public PatientExtractor(@NotNull FlagstatParser2 flagstatParser) {
+    public PatientExtractor(@NotNull FlagStatParser flagstatParser) {
         this.flagstatParser = flagstatParser;
     }
 
@@ -48,11 +48,11 @@ public class PatientExtractor {
         File flagstatDir = new File(samples[0].getPath() + File.separator + "mapping" + File.separator);
         File[] flagstats = flagstatDir.listFiles(flagstatFilter());
 
-        Collection<FlagstatData2> mappingFlagstatDatas = Lists.newArrayList();
-        FlagstatData2 markdupFlagstatData = null;
-        FlagstatData2 realignedFlagstatData = null;
+        Collection<FlagStatData> mappingFlagstatDatas = Lists.newArrayList();
+        FlagStatData markdupFlagstatData = null;
+        FlagStatData realignedFlagstatData = null;
         for (File flagstat : flagstats) {
-            FlagstatData2 parsedFlagstatData = flagstatParser.parse(flagstat);
+            FlagStatData parsedFlagstatData = flagstatParser.parse(flagstat);
             String name = flagstat.getName();
             if (name.contains("dedup.realigned")) {
                 realignedFlagstatData = parsedFlagstatData;

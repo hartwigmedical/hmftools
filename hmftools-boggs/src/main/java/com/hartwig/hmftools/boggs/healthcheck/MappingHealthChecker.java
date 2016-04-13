@@ -2,7 +2,7 @@ package com.hartwig.hmftools.boggs.healthcheck;
 
 import com.hartwig.hmftools.boggs.PatientData;
 import com.hartwig.hmftools.boggs.SampleData;
-import com.hartwig.hmftools.boggs.flagstatreader.FlagstatData2;
+import com.hartwig.hmftools.boggs.flagstatreader.FlagStatData;
 import com.hartwig.hmftools.boggs.flagstatreader.FlagStats;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +21,7 @@ public class MappingHealthChecker implements HealthChecker {
 
     private void checkSample(@NotNull SampleData sample) {
         System.out.println("Checking mapping health for " + sample.externalID());
-        for (FlagstatData2 flagstatData : sample.mappingFlagstats()) {
+        for (FlagStatData flagstatData : sample.mappingFlagstats()) {
             System.out.println(" Verifying " + flagstatData.path());
             FlagStats passed = flagstatData.qcPassedReads();
             double mappedPercentage =  passed.mapped() / (double) passed.total();

@@ -7,13 +7,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class SambambaFlagstatParser2 implements FlagstatParser2 {
+public class SambambaFlagStatParser implements FlagStatParser {
 
-    public SambambaFlagstatParser2() {
+    public SambambaFlagStatParser() {
     }
 
     @NotNull
-    public FlagstatData2 parse(@NotNull File file) throws IOException {
+    public FlagStatData parse(@NotNull File file) throws IOException {
         BufferedReader fileReader  = new BufferedReader(new FileReader(file));
         FlagStatsBuilder qcPassedReadsBuilder = new FlagStatsBuilder();
         FlagStatsBuilder qcFailedReadsBuilder = new FlagStatsBuilder();
@@ -98,6 +98,6 @@ public class SambambaFlagstatParser2 implements FlagstatParser2 {
 
         fileReader.close();
 
-        return new FlagstatData2(file.getPath(), qcPassedReadsBuilder.build(), qcFailedReadsBuilder.build());
+        return new FlagStatData(file.getPath(), qcPassedReadsBuilder.build(), qcFailedReadsBuilder.build());
     }
 }

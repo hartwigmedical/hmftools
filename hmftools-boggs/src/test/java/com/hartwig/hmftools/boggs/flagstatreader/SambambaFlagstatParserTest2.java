@@ -9,15 +9,15 @@ import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 
-public class SambambaFlagstatParserTest {
+public class SambambaFlagstatParserTest2 {
 
     @Test
     public void canParseExampleFile() throws IOException {
         URL exampleFlagstatURL = Resources.getResource("flagstats/example.flagstat");
         String exampleFlagstatFile = exampleFlagstatURL.getPath();
 
-        FlagstatParser2 parser = new SambambaFlagstatParser2();
-        FlagstatData2 flagstatData = parser.parse(new File(exampleFlagstatFile));
+        FlagStatParser parser = new SambambaFlagStatParser();
+        FlagStatData flagstatData = parser.parse(new File(exampleFlagstatFile));
 
         assertEquals(0, flagstatData.qcPassedReads().total());
         assertEquals(1, flagstatData.qcPassedReads().secondary());

@@ -2,17 +2,17 @@ package com.hartwig.hmftools.boggs.flagstatreader;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class FlagstatsTestFactory2 {
+public final class FlagStatTestFactory {
 
-    private FlagstatsTestFactory2() {
+    private FlagStatTestFactory() {
     }
 
     @NotNull
-    public static FlagstatData2 createTestData() {
+    public static FlagStatData createTestData() {
         FlagStatsBuilder builder = new FlagStatsBuilder();
         builder.setMapped(10);
         builder.setTotal(25);
-        return new FlagstatData2("AnyPath", builder.build(), builder.build());
+        return new FlagStatData("AnyPath", builder.build(), builder.build());
 
     }
 }
