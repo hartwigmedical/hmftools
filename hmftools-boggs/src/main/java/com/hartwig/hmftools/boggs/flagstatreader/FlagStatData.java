@@ -11,7 +11,7 @@ public class FlagStatData {
     @NotNull
     private final FlagStats qcFailedReads;
 
-    public FlagStatData(@NotNull String path, @NotNull FlagStats qcPassedReads, @NotNull FlagStats qcFailedReads) {
+    FlagStatData(@NotNull String path, @NotNull FlagStats qcPassedReads, @NotNull FlagStats qcFailedReads) {
         this.path = path;
         this.qcPassedReads = qcPassedReads;
         this.qcFailedReads = qcFailedReads;

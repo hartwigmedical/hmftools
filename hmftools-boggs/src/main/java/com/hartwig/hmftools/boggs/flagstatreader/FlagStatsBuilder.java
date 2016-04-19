@@ -2,7 +2,7 @@ package com.hartwig.hmftools.boggs.flagstatreader;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FlagStatsBuilder {
+class FlagStatsBuilder {
     private long total;
     private long secondary;
     private long supplementary;

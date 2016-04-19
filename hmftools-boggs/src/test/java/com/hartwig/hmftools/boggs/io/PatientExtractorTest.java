@@ -4,7 +4,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.boggs.PatientData;
 import com.hartwig.hmftools.boggs.flagstatreader.FlagStatData;
 import com.hartwig.hmftools.boggs.flagstatreader.FlagStatParser;
-import com.hartwig.hmftools.boggs.flagstatreader.FlagStatsBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -13,6 +12,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 public class PatientExtractorTest {
 
@@ -30,8 +30,7 @@ public class PatientExtractorTest {
 
         @NotNull
         public FlagStatData parse(@NotNull File file) throws IOException {
-            // KODU (TODO): Mock this.
-            return new FlagStatData(file.getPath(), new FlagStatsBuilder().build(), new FlagStatsBuilder().build());
+            return mock(FlagStatData.class);
         }
     }
 }

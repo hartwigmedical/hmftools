@@ -15,7 +15,7 @@ public class FlagStats {
     private final long mateMappedToDifferentChr;
     private final long mateMappedToDifferentChrMapQ5;
 
-    public FlagStats(long total, long secondary, long supplementary, long duplicates, long mapped, long pairedInSequencing,
+    FlagStats(long total, long secondary, long supplementary, long duplicates, long mapped, long pairedInSequencing,
                      long read1, long read2, long properlyPaired, long itselfAndMateMapped, long singletons,
                      long mateMappedToDifferentChr, long mateMappedToDifferentChrMapQ5) {
         this.total = total;
