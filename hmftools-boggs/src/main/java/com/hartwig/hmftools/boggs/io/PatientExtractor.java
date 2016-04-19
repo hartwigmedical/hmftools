@@ -49,25 +49,30 @@ public class PatientExtractor {
         File flagstatDir = new File(samples[0].getPath() + File.separator + "mapping" + File.separator);
         File[] flagstats = flagstatDir.listFiles(flagstatFilter());
 
-        Collection<FlagStatData> mappingFlagstatDatas = Lists.newArrayList();
-        FlagStatData markdupFlagstatData = null;
-        FlagStatData realignedFlagstatData = null;
+        Collection<FlagStatData> rawMappingFlagstats = Lists.newArrayList();
+        Collection<FlagStatData> sortedMappingFlagstats = Lists.newArrayList();
+        FlagStatData markdupFlagstats = null;
+        FlagStatData realignedFlagstats = null;
         for (File flagstat : flagstats) {
             FlagStatData parsedFlagstatData = flagstatParser.parse(flagstat);
             String name = flagstat.getName();
-            if (name.contains("dedup.realigned")) {
-                realignedFlagstatData = parsedFlagstatData;
+            if (name.contains("realign")) {
+                realignedFlagstats = parsedFlagstatData;
             } else if (name.contains("dedup")) {
-                markdupFlagstatData = parsedFlagstatData;
-            } else {
-                mappingFlagstatDatas.add(parsedFlagstatData);
+                markdupFlagstats = parsedFlagstatData;
+            } else if (name.contains("sorted")) {
+                sortedMappingFlagstats.add(parsedFlagstatData);
+            }
+            else {
+                rawMappingFlagstats.add(parsedFlagstatData);
             }
         }
 
-        assert markdupFlagstatData != null;
-        assert realignedFlagstatData != null;
+        assert markdupFlagstats != null;
+        assert realignedFlagstats != null;
 
-        return new SampleData(externalID, mappingFlagstatDatas, markdupFlagstatData, realignedFlagstatData);
+        return new SampleData(externalID, rawMappingFlagstats,
+                sortedMappingFlagstats, markdupFlagstats, realignedFlagstats);
     }
 
     @NotNull

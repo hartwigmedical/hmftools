@@ -26,7 +26,8 @@ public class MappingHealthCheckerTest {
     @NotNull
     private static SampleData dummyData() {
         FlagStatData testData = FlagStatTestFactory.createTestData();
-        return new SampleData("DUMMY", Lists.newArrayList(testData), testData, testData);
+        return new SampleData("DUMMY", Lists.newArrayList(testData),
+                Lists.newArrayList(testData), testData, testData);
 
     }
 }

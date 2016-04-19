@@ -21,7 +21,7 @@ public class MappingHealthChecker implements HealthChecker {
 
     private void checkSample(@NotNull SampleData sample) {
         System.out.println("Checking mapping health for " + sample.externalID());
-        for (FlagStatData flagstatData : sample.mappingFlagstats()) {
+        for (FlagStatData flagstatData : sample.rawMappingFlagstats()) {
             if (!flagstatData.path().contains("sorted")) {
                 System.out.println(" Verifying " + flagstatData.path());
                 FlagStats passed = flagstatData.qcPassedReads();

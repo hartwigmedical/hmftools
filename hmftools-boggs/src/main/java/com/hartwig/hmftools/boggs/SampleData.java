@@ -10,18 +10,22 @@ public class SampleData {
     @NotNull
     private final String externalID;
     @NotNull
-    private final Iterable<FlagStatData> mappingFlagstats;
+    private final Iterable<FlagStatData> rawMappingFlagstats;
     @NotNull
-    private final FlagStatData markdupFlagstatData;
+    private final Iterable<FlagStatData> sortedMappingFlagstats;
     @NotNull
-    private final FlagStatData realignFlagstatData;
+    private final FlagStatData markdupFlagstats;
+    @NotNull
+    private final FlagStatData realignFlagstats;
 
-    public SampleData(@NotNull String externalID, @NotNull Iterable<FlagStatData> mappingFlagstats,
-                      @NotNull FlagStatData markdupFlagstatData, @NotNull FlagStatData realignFlagstatData) {
+    public SampleData(@NotNull String externalID, @NotNull Iterable<FlagStatData> rawMappingFlagstats,
+                      @NotNull Iterable<FlagStatData> sortedMappingFlagstats, @NotNull FlagStatData markdupFlagstats,
+                      @NotNull FlagStatData realignFlagstats) {
         this.externalID = externalID;
-        this.mappingFlagstats = mappingFlagstats;
-        this.markdupFlagstatData = markdupFlagstatData;
-        this.realignFlagstatData = realignFlagstatData;
+        this.rawMappingFlagstats = rawMappingFlagstats;
+        this.sortedMappingFlagstats = sortedMappingFlagstats;
+        this.markdupFlagstats = markdupFlagstats;
+        this.realignFlagstats = realignFlagstats;
     }
 
     @NotNull
@@ -35,18 +39,23 @@ public class SampleData {
     }
 
     @NotNull
-    public Iterable<FlagStatData> mappingFlagstats() {
-        return mappingFlagstats;
+    public Iterable<FlagStatData> rawMappingFlagstats() {
+        return rawMappingFlagstats;
+    }
+
+    @NotNull
+    public Iterable<FlagStatData> sortedMappingFlagstats() {
+        return sortedMappingFlagstats;
     }
 
     @NotNull
     public FlagStatData markdupFlagstat() {
-        return markdupFlagstatData;
+        return markdupFlagstats;
     }
 
     @NotNull
     public FlagStatData realignFlagstat() {
-        return realignFlagstatData;
+        return realignFlagstats;
     }
 
     @Override
@@ -54,9 +63,10 @@ public class SampleData {
         return "SampleData{" +
                 "sampleID='" + sampleID + '\'' +
                 ", externalID='" + externalID + '\'' +
-                ", mappingFlagstats=" + mappingFlagstats +
-                ", markdupFlagstatData=" + markdupFlagstatData +
-                ", realignFlagstatData=" + realignFlagstatData +
+                ", rawMappingFlagstats=" + rawMappingFlagstats +
+                ", sortedMappingFlagstats=" + sortedMappingFlagstats +
+                ", markdupFlagstats=" + markdupFlagstats +
+                ", realignFlagstats=" + realignFlagstats +
                 '}';
     }
 }
