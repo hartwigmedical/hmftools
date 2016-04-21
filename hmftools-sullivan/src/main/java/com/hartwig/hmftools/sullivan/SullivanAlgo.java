@@ -2,15 +2,17 @@ package com.hartwig.hmftools.sullivan;
 
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.*;
 
-import static com.hartwig.hmftools.sullivan.Logger.log;
-
 public class SullivanAlgo {
+
+    private static final Logger LOGGER = LogManager.getLogger(SullivanAlgo.class);
 
     @NotNull
     private final FileNameConverter originalFileNameConverter;
@@ -19,19 +21,12 @@ public class SullivanAlgo {
         this.originalFileNameConverter = originalFileNameConverter;
     }
 
-    public boolean runSullivanAlgo(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath,
-                                   @Nullable String mergeOrigFastqPath, boolean isDirectoryMode, int numRecords) {
-        boolean success;
-        if (isDirectoryMode) {
-            log("Running sullivan algo in directory mode");
-            success = runSullivanOnTwoDirectories(originalFastqPath, recreatedFastqPath, numRecords);
-            if (mergeOrigFastqPath != null) {
-                log("Running sullivan in merge-run mode");
-                success = success && runSullivanOnTwoDirectories(mergeOrigFastqPath, recreatedFastqPath, numRecords);
-            }
-        } else {
-            log("Running sullivan algo in file mode");
-            success = runSullivanOnTwoFiles(new File(originalFastqPath), new File(recreatedFastqPath), numRecords);
+    public boolean runSullivanAlgo(@NotNull Iterable<String> fastqPaths,
+                                   @NotNull String recreatedFastqPath, int numRecords) {
+        boolean success = true;
+
+        for (String fastqPath : fastqPaths) {
+            success = success && runSullivanOnTwoDirectories(fastqPath, recreatedFastqPath, numRecords);
         }
 
         return success;
@@ -52,7 +47,7 @@ public class SullivanAlgo {
         for (int i = 0; i < originalFiles.length; i++) {
             recreatedFiles[i] = new File(recreatedFastqPath + File.separator +
                     originalFileNameConverter.apply(originalFiles[i].getName()));
-            log("Mapped " + originalFiles[i].getPath() + " to " + recreatedFiles[i].getPath());
+            LOGGER.info("Mapped " + originalFiles[i].getPath() + " to " + recreatedFiles[i].getPath());
         }
 
         boolean success = true;
@@ -67,19 +62,19 @@ public class SullivanAlgo {
                                                  int numRecords) {
         assert originalFastqFile.isFile() && recreatedFastqFile.isFile();
 
-        log("Start reading original fastq file from " + originalFastqFile.getPath());
+        LOGGER.info("Start reading original fastq file from " + originalFastqFile.getPath());
 
         String refHeader = referenceHeader(originalFastqFile);
         if (refHeader == null) {
-            log("No ref header could be isolated from fastq file on " + originalFastqFile.getName());
+            LOGGER.warn("No ref header could be isolated from fastq file on " + originalFastqFile.getName());
             return false;
         } else {
-            log("Generated ref header: " + refHeader);
+            LOGGER.info("Generated ref header: " + refHeader);
         }
 
         Map<FastqHeaderKey, FastqRecord> originalFastq = mapOriginalFastqFile(originalFastqFile, refHeader, numRecords);
         int originalSize = originalFastq.size();
-        log("Finished reading original fastq file. Created " + originalSize + " records.");
+        LOGGER.info("Finished reading original fastq file. Created " + originalSize + " records.");
 
         FastqReader recreatedFastqReader = new FastqReader(recreatedFastqFile);
         FastqHeaderNormalizer recreatedNormalizer = new RecreatedFastqHeaderNormalizer();
@@ -87,17 +82,17 @@ public class SullivanAlgo {
         boolean success = true;
         int recordCount = 0;
 
-        log("Start mapping process from recreated to original fastq");
+        LOGGER.info("Start mapping process from recreated to original fastq");
         for (FastqRecord recreatedRecord : recreatedFastqReader) {
             FastqHeader header = FastqHeader.parseFromFastqRecord(recreatedRecord, recreatedNormalizer);
             if (!header.reference().equals(refHeader)) {
-                log("  Invalid header in recreated fastq file. Record = " + recreatedRecord);
+                LOGGER.warn("  Invalid header in recreated fastq file. Record = " + recreatedRecord);
             } else {
                 FastqRecord originalMatch = originalFastq.get(header.key());
                 if (originalMatch != null) {
                     if (!originalMatch.getReadString().equals(recreatedRecord.getReadString()) ||
                             !originalMatch.getBaseQualityString().equals(recreatedRecord.getBaseQualityString())) {
-                        log("  Mismatch between original and recreated fastq on record: " + recreatedRecord);
+                        LOGGER.warn("  Mismatch between original and recreated fastq on record: " + recreatedRecord);
                         success = false;
                     }
                     originalFastq.remove(header.key());
@@ -106,13 +101,13 @@ public class SullivanAlgo {
             recordCount++;
             if (recordCount % 1E7 == 0) {
                 int recordsFound = originalSize - originalFastq.size();
-                log("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
+                LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
             }
         }
         int recordsFound = originalSize - originalFastq.size();
-        log("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
+        LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
 
-        log("Finished mapping records. " + originalFastq.size() + " unmapped records remaining in original fastq");
+        LOGGER.info("Finished mapping records. " + originalFastq.size() + " unmapped records remaining in original fastq");
 
         return success && originalFastq.size() == 0;
     }
@@ -142,17 +137,17 @@ public class SullivanAlgo {
             FastqHeader header = FastqHeader.parseFromFastqRecord(record, normalizer);
 
             if (records.containsKey(header.key())) {
-                log("  WARN: Duplicate record found: " + record);
+                LOGGER.warn("  Duplicate record found: " + record);
             }
 
             records.put(header.key(), record);
 
             if (!header.reference().equals(refHeader)) {
-                log("  WARN: Header mismatch with reference header: " + header.reference());
+                LOGGER.warn("  Header mismatch with reference header: " + header.reference());
             }
 
             if (records.size() % 1E7 == 0) {
-                log("  Finished reading " + records.size() + " records");
+                LOGGER.info("  Finished reading " + records.size() + " records");
             }
         }
 
