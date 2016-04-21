@@ -62,61 +62,62 @@ public class SullivanAlgo {
                                                  int numRecords) {
         assert originalFastqFile.isFile() && recreatedFastqFile.isFile();
 
-        LOGGER.info("Start reading original fastq file from " + originalFastqFile.getPath());
+        LOGGER.info("Start reading recreated fastq file from " + recreatedFastqFile.getPath());
 
-        String refHeader = referenceHeader(originalFastqFile);
+        String refHeader = referenceHeader(recreatedFastqFile);
         if (refHeader == null) {
-            LOGGER.warn("No ref header could be isolated from fastq file on " + originalFastqFile.getName());
+            LOGGER.warn("No ref header could be isolated from fastq file on " + recreatedFastqFile.getName());
             return false;
         } else {
             LOGGER.info("Generated ref header: " + refHeader);
         }
 
-        Map<FastqHeaderKey, FastqRecord> originalFastq = mapOriginalFastqFile(originalFastqFile, refHeader, numRecords);
-        int originalSize = originalFastq.size();
-        LOGGER.info("Finished reading original fastq file. Created " + originalSize + " records.");
+        Map<FastqHeaderKey, FastqRecord> recreatedFastq = mapRecreatedFastqFile(recreatedFastqFile, refHeader, numRecords);
+        int recreatedSize = recreatedFastq.size();
+        LOGGER.info("Finished reading recreated fastq file. Created " + recreatedSize + " records.");
 
-        FastqReader recreatedFastqReader = new FastqReader(recreatedFastqFile);
-        FastqHeaderNormalizer recreatedNormalizer = new RecreatedFastqHeaderNormalizer();
+        FastqReader originalFastqReader = new FastqReader(originalFastqFile);
+        FastqHeaderNormalizer originalNormalizer = new OriginalFastqHeaderNormalizer();
 
         boolean success = true;
         int recordCount = 0;
 
         LOGGER.info("Start mapping process from recreated to original fastq");
-        for (FastqRecord recreatedRecord : recreatedFastqReader) {
-            FastqHeader header = FastqHeader.parseFromFastqRecord(recreatedRecord, recreatedNormalizer);
+        for (FastqRecord originalRecord : originalFastqReader) {
+            FastqHeader header = FastqHeader.parseFromFastqRecord(originalRecord, originalNormalizer);
             if (!header.reference().equals(refHeader)) {
-                LOGGER.warn("  Invalid header in recreated fastq file. Record = " + recreatedRecord);
+                LOGGER.warn("  Invalid header in original fastq file. Record = " + originalRecord);
             } else {
-                FastqRecord originalMatch = originalFastq.get(header.key());
-                if (originalMatch != null) {
-                    if (!originalMatch.getReadString().equals(recreatedRecord.getReadString()) ||
-                            !originalMatch.getBaseQualityString().equals(recreatedRecord.getBaseQualityString())) {
-                        LOGGER.warn("  Mismatch between original and recreated fastq on record: " + recreatedRecord);
+                FastqRecord recreatedMatch = recreatedFastq.get(header.key());
+                if (recreatedMatch != null) {
+                    if (!recreatedMatch.getReadString().equals(originalRecord.getReadString()) ||
+                            !recreatedMatch.getBaseQualityString().equals(originalRecord.getBaseQualityString())) {
+                        LOGGER.warn("  Mismatch between original and recreated fastq on record: " + originalRecord);
                         success = false;
                     }
-                    originalFastq.remove(header.key());
+                    recreatedFastq.remove(header.key());
                 }
             }
             recordCount++;
             if (recordCount % 1E7 == 0) {
-                int recordsFound = originalSize - originalFastq.size();
+                int recordsFound = recreatedSize - recreatedFastq.size();
                 LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
             }
         }
-        int recordsFound = originalSize - originalFastq.size();
-        LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
+        int recordsFound = recreatedSize - recreatedFastq.size();
+        LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " recreated records");
 
-        LOGGER.info("Finished mapping records. " + originalFastq.size() + " unmapped records remaining in original fastq");
+        LOGGER.info("Finished mapping records. " + recreatedFastq.size() + " unmapped records remaining in recreated fastq");
 
-        return success && originalFastq.size() == 0;
+        return success && recreatedFastq.size() == 0;
     }
 
     @Nullable
-    private static String referenceHeader(@NotNull File originalFastqFile) {
-        FastqReader fastqReader = new FastqReader(originalFastqFile);
+    private static String referenceHeader(@NotNull File recreatedFastqFile) {
+        FastqReader fastqReader = new FastqReader(recreatedFastqFile);
         if (fastqReader.hasNext()) {
-            FastqHeader header = FastqHeader.parseFromFastqRecord(fastqReader.next(), new OriginalFastqHeaderNormalizer());
+            FastqHeader header = FastqHeader.parseFromFastqRecord(fastqReader.next(),
+                    new RecreatedFastqHeaderNormalizer());
             fastqReader.close();
             return header.reference();
         }
@@ -125,9 +126,9 @@ public class SullivanAlgo {
     }
 
     @NotNull
-    private static Map<FastqHeaderKey, FastqRecord> mapOriginalFastqFile(
+    private static Map<FastqHeaderKey, FastqRecord> mapRecreatedFastqFile(
             @NotNull File file, @NotNull String refHeader, int numRecords) {
-        FastqHeaderNormalizer normalizer = new OriginalFastqHeaderNormalizer();
+        FastqHeaderNormalizer normalizer = new RecreatedFastqHeaderNormalizer();
         Map<FastqHeaderKey, FastqRecord> records = new HashMap<FastqHeaderKey, FastqRecord>(numRecords);
 
         FastqReader fastqReader = new FastqReader(file);
