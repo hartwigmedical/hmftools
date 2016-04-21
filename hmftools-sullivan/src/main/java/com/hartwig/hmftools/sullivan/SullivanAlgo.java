@@ -82,7 +82,7 @@ public class SullivanAlgo {
         boolean success = true;
         int recordCount = 0;
 
-        LOGGER.info("Start mapping process from recreated to original fastq");
+        LOGGER.info("Start mapping process from original to recreated fastq");
         for (FastqRecord originalRecord : originalFastqReader) {
             FastqHeader header = FastqHeader.parseFromFastqRecord(originalRecord, originalNormalizer);
             if (!header.reference().equals(refHeader)) {
@@ -101,7 +101,7 @@ public class SullivanAlgo {
             recordCount++;
             if (recordCount % 1E7 == 0) {
                 int recordsFound = recreatedSize - recreatedFastq.size();
-                LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " original records");
+                LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " recreated records");
             }
         }
         int recordsFound = recreatedSize - recreatedFastq.size();
