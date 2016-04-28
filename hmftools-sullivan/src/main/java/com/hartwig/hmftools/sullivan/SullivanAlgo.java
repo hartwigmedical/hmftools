@@ -37,6 +37,14 @@ public class SullivanAlgo {
                                                 int numRecords) {
         File originalPath = new File(originalFastqPath);
         File recreatedPath = new File(recreatedFastqPath);
+        if (!originalPath.exists()) {
+            LOGGER.warn("Original fastq path does not exist: " + originalFastqPath);
+            return false;
+        } else if (!recreatedPath.exists()) {
+            LOGGER.warn("Recreated fastq path does not exist: " + recreatedFastqPath);
+            return false;
+        }
+
         assert originalPath.isDirectory() && recreatedPath.isDirectory();
 
         File[] originalFiles = originalPath.listFiles();
