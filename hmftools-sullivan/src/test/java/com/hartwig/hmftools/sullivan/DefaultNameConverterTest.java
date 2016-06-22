@@ -14,5 +14,6 @@ public class DefaultNameConverterTest {
         FileNameConverter converter = new DefaultNameConverter();
 
         assertEquals(expectedConvertedName, converter.apply(originalFileName));
+        assertEquals(expectedConvertedName, converter.apply(expectedConvertedName));
     }
 }
