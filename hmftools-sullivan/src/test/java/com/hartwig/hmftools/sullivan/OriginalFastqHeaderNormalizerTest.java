@@ -13,5 +13,8 @@ public class OriginalFastqHeaderNormalizerTest {
         String normalized = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182";
 
         assertEquals(normalized, normalizer.apply(header));
+
+        String convertedHeader = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182/1";
+        assertEquals(normalized, normalizer.apply(convertedHeader));
     }
 }
