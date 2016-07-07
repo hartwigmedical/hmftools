@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.util.*;
 
 public class SullivanAlgo {
@@ -47,7 +49,11 @@ public class SullivanAlgo {
 
         assert originalPath.isDirectory() && recreatedPath.isDirectory();
 
-        File[] originalFiles = originalPath.listFiles();
+        File[] originalFiles = originalPath.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.indexOf(".fastq") > 0;
+            }
+        });
 
         assert originalFiles != null;
         File[] recreatedFiles = new File[originalFiles.length];
