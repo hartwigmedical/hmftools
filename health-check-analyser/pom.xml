@@ -25,6 +25,14 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -50,7 +58,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.healthcheckeranalyser.HealthCheckerAnalyserRunner
+                            <mainClass>com.hartwig.hmftools.healthcheckeranalyser.HealthCheckerAnalysisApplication
                             </mainClass>
                         </manifest>
                     </archive>

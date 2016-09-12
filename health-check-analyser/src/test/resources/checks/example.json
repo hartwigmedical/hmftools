@@ -1,0 +1,895 @@
+{
+  "health_checks": [
+    {
+      "RunDate": "2016-09-06",
+      "PipelineVersion": "v1.8"
+    },
+    {
+      "SLICED": {
+        "check": {
+          "sample_id": "CPCT02070013T",
+          "check_name": "SLICED_NUMBER_OF_VARIANTS",
+          "value": "54"
+        },
+        "check_type": "SLICED"
+      }
+    },
+    {
+      "SUMMARY_METRICS": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PF_INDEL_RATE",
+            "value": "0.000316"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PCT_ADAPTER",
+            "value": "0.000764"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PCT_CHIMERA",
+            "value": "0.015907"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PF_MISMATCH_RATE",
+            "value": "0.009762"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_STRAND_BALANCE",
+            "value": "0.500729"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PF_INDEL_RATE",
+            "value": "0.000316"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PCT_ADAPTER",
+            "value": "0.001345"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PCT_CHIMERA",
+            "value": "0.017398"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PF_MISMATCH_RATE",
+            "value": "0.009382"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_STRAND_BALANCE",
+            "value": "0.500693"
+          }
+        ],
+        "check_type": "SUMMARY_METRICS"
+      }
+    },
+    {
+      "SOMATIC": {
+        "checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "VARIANTS_SOMATIC_SNP",
+            "value": "43352"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PRECISION_MUTECT_2+_CALLERS",
+            "value": "0.4226563900340563"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PRECISION_VARSCAN_2+_CALLERS",
+            "value": "0.6609307359307359"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PRECISION_STRELKA_2+_CALLERS",
+            "value": "0.551883056095629"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PRECISION_FREEBAYES_2+_CALLERS",
+            "value": "0.11753172485158761"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_MUTECT_VARIANTS_2+_CALLERS",
+            "value": "0.870110701107011"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_VARSCAN_VARIANTS_2+_CALLERS",
+            "value": "0.7511685116851169"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_STRELKA_VARIANTS_2+_CALLERS",
+            "value": "0.9426814268142681"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_FREEBAYES_VARIANTS_2+_CALLERS",
+            "value": "0.2654366543665437"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_1_CALLERS",
+            "value": "0.8124653995202067"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_2_CALLERS",
+            "value": "0.06687119394722274"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_3_CALLERS",
+            "value": "0.08578612290090423"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_4_CALLERS",
+            "value": "0.03487728363166636"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "VARIANTS_SOMATIC_INDELS",
+            "value": "6444"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PRECISION_MUTECT_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PRECISION_VARSCAN_2+_CALLERS",
+            "value": "0.22969187675070027"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PRECISION_STRELKA_2+_CALLERS",
+            "value": "0.7838874680306905"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PRECISION_FREEBAYES_2+_CALLERS",
+            "value": "0.09098250336473755"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_MUTECT_VARIANTS_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_VARSCAN_VARIANTS_2+_CALLERS",
+            "value": "0.9398280802292264"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_STRELKA_VARIANTS_2+_CALLERS",
+            "value": "0.8782234957020058"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_FREEBAYES_VARIANTS_2+_CALLERS",
+            "value": "0.48424068767908307"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_1_CALLERS",
+            "value": "0.8916821849782743"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_2_CALLERS",
+            "value": "0.0755741775294848"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_3_CALLERS",
+            "value": "0.032743637492240844"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_4_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_MUTECT_LOWER_SD",
+            "value": "0.15934584906606386"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_MUTECT_MEDIAN",
+            "value": "0.5024155956683771"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_MUTECT_UPPER_SD",
+            "value": "0.8435051902904529"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_VARSCAN_LOWER_SD",
+            "value": "0.15863148201259147"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_VARSCAN_MEDIAN",
+            "value": "0.4997629575117337"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_VARSCAN_UPPER_SD",
+            "value": "0.8397374029583532"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_STRELKA_LOWER_SD",
+            "value": "0.15863148201259147"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_STRELKA_MEDIAN",
+            "value": "0.49625970566510047"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_STRELKA_UPPER_SD",
+            "value": "0.8420092277914714"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_FREEBAYES_LOWER_SD",
+            "value": "0.16218484224470764"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_FREEBAYES_MEDIAN",
+            "value": "0.5065861426943923"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "SOMATIC_AF_FREEBAYES_UPPER_SD",
+            "value": "0.8411796442331434"
+          }
+        ],
+        "check_type": "SOMATIC"
+      }
+    },
+    {
+      "MAPPING": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PROPORTION_READ_VS_TOTAL_SEQUENCES",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PERCENTAGE_MAPPED",
+            "value": "0.9950134285877827"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PROPERLY_PAIRED_PROPORTION_OF_MAPPED",
+            "value": "0.9667543956838531"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PROPORTION_SINGLETON",
+            "value": "0.0027873083678472297"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_PROPORTION_MAPPED_DIFFERENT_CHR",
+            "value": "0.013034631615846306"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_MARKDUP_PROPORTION_DUPLICATES",
+            "value": "0.12181826619346801"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PROPORTION_READ_VS_TOTAL_SEQUENCES",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PERCENTAGE_MAPPED",
+            "value": "0.9950901270041501"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PROPERLY_PAIRED_PROPORTION_OF_MAPPED",
+            "value": "0.9649645274121981"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PROPORTION_SINGLETON",
+            "value": "0.002524858445149737"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_PROPORTION_MAPPED_DIFFERENT_CHR",
+            "value": "0.014319263255991529"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_MARKDUP_PROPORTION_DUPLICATES",
+            "value": "0.12505675133113836"
+          }
+        ],
+        "check_type": "MAPPING"
+      }
+    },
+    {
+      "COPYNUMBER": {
+        "checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COPYNUMBER_GENOME_GAIN",
+            "value": "1189340037"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COPYNUMBER_GENOME_LOSS",
+            "value": "244704566"
+          }
+        ],
+        "check_type": "COPYNUMBER"
+      }
+    },
+    {
+      "INSERT_SIZE": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_MEDIAN_INSERT_SIZE",
+            "value": "424"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_WIDTH_OF_70_PERCENT",
+            "value": "239"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_MEDIAN_INSERT_SIZE",
+            "value": "403"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_WIDTH_OF_70_PERCENT",
+            "value": "231"
+          }
+        ],
+        "check_type": "INSERT_SIZE"
+      }
+    },
+    {
+      "KINSHIP": {
+        "check": {
+          "sample_id": "CPCT02070013T",
+          "check_name": "KINSHIP_TEST",
+          "value": "0.4707"
+        },
+        "check_type": "KINSHIP"
+      }
+    },
+    {
+      "PRESTATS": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_WARN",
+            "value": "9"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_PASS",
+            "value": "7"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_KMER_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_KMER_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "PRESTATS_NUMBER_OF_READS",
+            "value": "1138782946"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_WARN",
+            "value": "9"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_PASS",
+            "value": "7"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_WARN",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_WARN",
+            "value": "7"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_PASS",
+            "value": "9"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
+            "value": "16"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_KMER_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_KMER_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "PRESTATS_NUMBER_OF_READS",
+            "value": "2862435020"
+          }
+        ],
+        "check_type": "PRESTATS"
+      }
+    },
+    {
+      "WGS_METRICS": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_MEAN",
+            "value": "47.456877"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_MEDIAN",
+            "value": "47"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_SD",
+            "value": "19.361764"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_PCT_EXC_BASEQ",
+            "value": "0.002049"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_PCT_EXC_DUPE",
+            "value": "0.102007"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_PCT_EXC_MAPQ",
+            "value": "0.05968"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_PCT_EXC_OVERLAP",
+            "value": "0.011407"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_PCT_EXC_TOTAL",
+            "value": "0.189799"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "COVERAGE_PCT_EXC_UNPAIRED",
+            "value": "0.001566"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_MEAN",
+            "value": "117.163135"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_MEDIAN",
+            "value": "113"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_SD",
+            "value": "39.221607"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_PCT_EXC_BASEQ",
+            "value": "0.002242"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_PCT_EXC_DUPE",
+            "value": "0.105681"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_PCT_EXC_MAPQ",
+            "value": "0.057481"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_PCT_EXC_OVERLAP",
+            "value": "0.016514"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_PCT_EXC_TOTAL",
+            "value": "0.20613"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "COVERAGE_PCT_EXC_UNPAIRED",
+            "value": "0.000981"
+          }
+        ],
+        "check_type": "WGS_METRICS"
+      }
+    },
+    {
+      "GERMLINE": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "VARIANTS_GERMLINE_SNP",
+            "value": "3447736"
+          },
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "VARIANTS_GERMLINE_INDELS",
+            "value": "917334"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "VARIANTS_GERMLINE_SNP",
+            "value": "3453790"
+          },
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "VARIANTS_GERMLINE_INDELS",
+            "value": "930936"
+          }
+        ],
+        "check_type": "GERMLINE"
+      }
+    },
+    {
+      "REALIGNER": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT02070013R",
+            "check_name": "MAPPING_REALIGNER_CHANGED_ALIGNMENTS",
+            "value": "0.00115"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT02070013T",
+            "check_name": "MAPPING_REALIGNER_CHANGED_ALIGNMENTS",
+            "value": "0.00105"
+          }
+        ],
+        "check_type": "REALIGNER"
+      }
+    }
+  ]
+}
