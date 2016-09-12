@@ -33,4 +33,39 @@ public class HealthCheckReport {
         this.tumorChecks = tumorChecks;
         this.patientChecks = patientChecks;
     }
+
+    @NotNull
+    public String runDate() {
+        return runDate;
+    }
+
+    @NotNull
+    public String pipelineVersion() {
+        return pipelineVersion;
+    }
+
+    @NotNull
+    public String refSample() {
+        return refSample;
+    }
+
+    @NotNull
+    public String tumorSample() {
+        return tumorSample;
+    }
+
+    @NotNull
+    public Map<String, String> refChecks() {
+        return refChecks;
+    }
+
+    @NotNull
+    public Map<String, String> tumorChecks() {
+        return tumorChecks;
+    }
+
+    @NotNull
+    public Map<String, String> patientChecks() {
+        return patientChecks;
+    }
 }

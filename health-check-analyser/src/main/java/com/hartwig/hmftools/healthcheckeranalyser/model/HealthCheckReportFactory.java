@@ -78,7 +78,7 @@ public final class HealthCheckReportFactory {
             LOGGER.error("Size of ref checks and tumor checks do not match");
         }
 
-        return new HealthCheckReport(runDate, refSample, tumorSample, pipelineVersion, refChecks, tumorChecks,
+        return new HealthCheckReport(runDate, pipelineVersion, refSample, tumorSample, refChecks, tumorChecks,
                 patientChecks);
     }
 

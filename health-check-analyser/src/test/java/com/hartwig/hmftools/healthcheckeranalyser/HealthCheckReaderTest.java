@@ -12,12 +12,12 @@ import org.junit.Test;
 
 public class HealthCheckReaderTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("checks").getPath();
-    private static final String EXAMPLE_REPORT = RUN_DIRECTORY + File.separator + "example.json";
+    private static final String EXAMPLE_REPORT_PATH =
+            Resources.getResource("checks").getPath() + File.separator + "example.json";
 
     @Test
     public void canConvertReportToJavaModel() throws IOException {
-        HealthCheckReport report = HealthCheckReader.readHealthCheckOutput(EXAMPLE_REPORT);
+        HealthCheckReport report = HealthCheckReader.readHealthCheckOutput(EXAMPLE_REPORT_PATH);
         assertNotNull(report);
     }
 }

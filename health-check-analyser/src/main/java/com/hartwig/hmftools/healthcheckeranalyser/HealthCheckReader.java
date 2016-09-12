@@ -24,5 +24,4 @@ final class HealthCheckReader {
 
         return HealthCheckReportFactory.fromHealthCheckReport(json);
     }
-
 }
