@@ -14,6 +14,7 @@ public class HealthCheckerAnalysisApplicationTest {
 
     @Test
     public void canRunAnalysis() throws IOException {
-        new HealthCheckerAnalysisApplication(EXAMPLE_REPORT_PATH).runAnalysis();
+        String csvOut = "/Users/kduyvesteyn/hmf/tmp/checks.csv";
+        new HealthCheckerAnalysisApplication(EXAMPLE_REPORT_PATH, csvOut).runAnalysis();
     }
 }
