@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.healthcheckeranalyser;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthcheckeranalyser.model.HealthCheckReport;
 
 import org.apache.commons.cli.CommandLine;
@@ -70,17 +73,29 @@ public class HealthCheckerAnalysisApplication {
     }
 
     void runAnalysis() throws IOException {
-        HealthCheckReport report = HealthCheckReader.readHealthCheckOutput(reportsPath);
-        LOGGER.info(HealthCheckDataToCSV.header(report));
-        LOGGER.info(HealthCheckDataToCSV.refSample(report));
-        LOGGER.info(HealthCheckDataToCSV.tumorSample(report));
+        List<HealthCheckReport> reports = Lists.newArrayList();
+        File[] runs = new File(reportsPath).listFiles();
+        if (runs != null) {
+            for (File runDirectory : runs) {
+                HealthCheckReport report = HealthCheckReader.readHealthCheckOutput(runDirectory.getPath());
+                LOGGER.info(HealthCheckDataToCSV.header(report));
+                LOGGER.info(HealthCheckDataToCSV.refSample(report));
+                LOGGER.info(HealthCheckDataToCSV.tumorSample(report));
+                reports.add(report);
+            }
+        } else {
+            LOGGER.warn(String.format("%s contains no runs!", reportsPath));
+        }
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOut, false));
-        writer.write(HealthCheckDataToCSV.header(report));
-        writer.newLine();
-        writer.write(HealthCheckDataToCSV.refSample(report));
-        writer.newLine();
-        writer.write(HealthCheckDataToCSV.tumorSample(report));
+        writer.write(HealthCheckDataToCSV.header(reports.get(0)));
+
+        for (HealthCheckReport report : reports) {
+            writer.newLine();
+            writer.write(HealthCheckDataToCSV.refSample(report));
+            writer.newLine();
+            writer.write(HealthCheckDataToCSV.tumorSample(report));
+        }
         writer.close();
     }
 }
