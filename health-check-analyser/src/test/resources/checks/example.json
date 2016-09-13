@@ -1,15 +1,15 @@
 {
   "health_checks": [
     {
-      "RunDate": "2016-09-06",
-      "PipelineVersion": "v1.8"
+      "RunDate": "2016-09-13",
+      "PipelineVersion": "v1.9"
     },
     {
       "SLICED": {
         "check": {
           "sample_id": "sample2",
           "check_name": "SLICED_NUMBER_OF_VARIANTS",
-          "value": "54"
+          "value": "26"
         },
         "check_type": "SLICED"
       }
@@ -20,54 +20,54 @@
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PF_INDEL_RATE",
-            "value": "0.000316"
+            "value": "0.000147"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PCT_ADAPTER",
-            "value": "0.000764"
+            "value": "0"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PCT_CHIMERA",
-            "value": "0.015907"
+            "value": "0"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PF_MISMATCH_RATE",
-            "value": "0.009762"
+            "value": "0.005496"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_STRAND_BALANCE",
-            "value": "0.500729"
+            "value": "0.5"
           }
         ],
         "tumor_sample_checks": [
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PF_INDEL_RATE",
-            "value": "0.000316"
+            "value": "0.000161"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PCT_ADAPTER",
-            "value": "0.001345"
+            "value": "0.000056"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PCT_CHIMERA",
-            "value": "0.017398"
+            "value": "0.000112"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PF_MISMATCH_RATE",
-            "value": "0.009382"
+            "value": "0.005024"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_STRAND_BALANCE",
-            "value": "0.500693"
+            "value": "0.499972"
           }
         ],
         "check_type": "SUMMARY_METRICS"
@@ -79,72 +79,72 @@
           {
             "sample_id": "sample2",
             "check_name": "VARIANTS_SOMATIC_SNP",
-            "value": "43352"
+            "value": "17"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PRECISION_MUTECT_2+_CALLERS",
-            "value": "0.4226563900340563"
+            "value": "1.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PRECISION_VARSCAN_2+_CALLERS",
-            "value": "0.6609307359307359"
+            "value": "1.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PRECISION_STRELKA_2+_CALLERS",
-            "value": "0.551883056095629"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PRECISION_FREEBAYES_2+_CALLERS",
-            "value": "0.11753172485158761"
+            "value": "0.9411764705882353"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_SENSITIVITY_MUTECT_VARIANTS_2+_CALLERS",
-            "value": "0.870110701107011"
+            "value": "0.5"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_SENSITIVITY_VARSCAN_VARIANTS_2+_CALLERS",
-            "value": "0.7511685116851169"
+            "value": "1.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_SENSITIVITY_STRELKA_VARIANTS_2+_CALLERS",
-            "value": "0.9426814268142681"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_SENSITIVITY_FREEBAYES_VARIANTS_2+_CALLERS",
-            "value": "0.2654366543665437"
+            "value": "1.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_1_CALLERS",
-            "value": "0.8124653995202067"
+            "value": "0.058823529411764705"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_2_CALLERS",
-            "value": "0.06687119394722274"
+            "value": "0.47058823529411764"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_3_CALLERS",
-            "value": "0.08578612290090423"
+            "value": "0.47058823529411764"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_4_CALLERS",
-            "value": "0.03487728363166636"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "VARIANTS_SOMATIC_INDELS",
-            "value": "6444"
+            "value": "2"
           },
           {
             "sample_id": "sample2",
@@ -154,17 +154,17 @@
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_PRECISION_VARSCAN_2+_CALLERS",
-            "value": "0.22969187675070027"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_PRECISION_STRELKA_2+_CALLERS",
-            "value": "0.7838874680306905"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_PRECISION_FREEBAYES_2+_CALLERS",
-            "value": "0.09098250336473755"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
@@ -174,32 +174,32 @@
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_SENSITIVITY_VARSCAN_VARIANTS_2+_CALLERS",
-            "value": "0.9398280802292264"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_SENSITIVITY_STRELKA_VARIANTS_2+_CALLERS",
-            "value": "0.8782234957020058"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_SENSITIVITY_FREEBAYES_VARIANTS_2+_CALLERS",
-            "value": "0.48424068767908307"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_1_CALLERS",
-            "value": "0.8916821849782743"
+            "value": "1.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_2_CALLERS",
-            "value": "0.0755741775294848"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_3_CALLERS",
-            "value": "0.032743637492240844"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
@@ -209,62 +209,62 @@
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_MUTECT_LOWER_SD",
-            "value": "0.15934584906606386"
+            "value": "0.3611111111111111"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_MUTECT_MEDIAN",
-            "value": "0.5024155956683771"
+            "value": "0.5"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_MUTECT_UPPER_SD",
-            "value": "0.8435051902904529"
+            "value": "1.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_VARSCAN_LOWER_SD",
-            "value": "0.15863148201259147"
+            "value": "0.40540540540540543"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_VARSCAN_MEDIAN",
-            "value": "0.4997629575117337"
+            "value": "0.5"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_VARSCAN_UPPER_SD",
-            "value": "0.8397374029583532"
+            "value": "0.7222222222222222"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_STRELKA_LOWER_SD",
-            "value": "0.15863148201259147"
+            "value": "-"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_STRELKA_MEDIAN",
-            "value": "0.49625970566510047"
+            "value": "-"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_STRELKA_UPPER_SD",
-            "value": "0.8420092277914714"
+            "value": "-"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_FREEBAYES_LOWER_SD",
-            "value": "0.16218484224470764"
+            "value": "0.40540540540540543"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_FREEBAYES_MEDIAN",
-            "value": "0.5065861426943923"
+            "value": "0.5263157894736842"
           },
           {
             "sample_id": "sample2",
             "check_name": "SOMATIC_AF_FREEBAYES_UPPER_SD",
-            "value": "0.8411796442331434"
+            "value": "0.7222222222222222"
           }
         ],
         "check_type": "SOMATIC"
@@ -281,27 +281,27 @@
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PERCENTAGE_MAPPED",
-            "value": "0.9950134285877827"
+            "value": "0.9957586918912886"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PROPERLY_PAIRED_PROPORTION_OF_MAPPED",
-            "value": "0.9667543956838531"
+            "value": "0.994451605671692"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PROPORTION_SINGLETON",
-            "value": "0.0027873083678472297"
+            "value": "0.004259373423751611"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_PROPORTION_MAPPED_DIFFERENT_CHR",
-            "value": "0.013034631615846306"
+            "value": "0.0"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_MARKDUP_PROPORTION_DUPLICATES",
-            "value": "0.12181826619346801"
+            "value": "0.06350800825938947"
           }
         ],
         "tumor_sample_checks": [
@@ -313,27 +313,27 @@
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PERCENTAGE_MAPPED",
-            "value": "0.9950901270041501"
+            "value": "0.9969342251950948"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PROPERLY_PAIRED_PROPORTION_OF_MAPPED",
-            "value": "0.9649645274121981"
+            "value": "0.9956947162426615"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PROPORTION_SINGLETON",
-            "value": "0.002524858445149737"
+            "value": "0.0030752026838132512"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_PROPORTION_MAPPED_DIFFERENT_CHR",
-            "value": "0.014319263255991529"
+            "value": "0.0"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_MARKDUP_PROPORTION_DUPLICATES",
-            "value": "0.12505675133113836"
+            "value": "0.05953177257525084"
           }
         ],
         "check_type": "MAPPING"
@@ -341,18 +341,7 @@
     },
     {
       "COPYNUMBER": {
-        "checks": [
-          {
-            "sample_id": "sample2",
-            "check_name": "COPYNUMBER_GENOME_GAIN",
-            "value": "1189340037"
-          },
-          {
-            "sample_id": "sample2",
-            "check_name": "COPYNUMBER_GENOME_LOSS",
-            "value": "244704566"
-          }
-        ],
+        "error": "com.hartwig.healthchecks.common.exception.EmptyFileException",
         "check_type": "COPYNUMBER"
       }
     },
@@ -362,24 +351,24 @@
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_MEDIAN_INSERT_SIZE",
-            "value": "424"
+            "value": "425"
           },
           {
             "sample_id": "sample1",
             "check_name": "MAPPING_WIDTH_OF_70_PERCENT",
-            "value": "239"
+            "value": "215"
           }
         ],
         "tumor_sample_checks": [
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_MEDIAN_INSERT_SIZE",
-            "value": "403"
+            "value": "409"
           },
           {
             "sample_id": "sample2",
             "check_name": "MAPPING_WIDTH_OF_70_PERCENT",
-            "value": "231"
+            "value": "195"
           }
         ],
         "check_type": "INSERT_SIZE"
@@ -390,7 +379,7 @@
         "check": {
           "sample_id": "sample2",
           "check_name": "KINSHIP_TEST",
-          "value": "0.4707"
+          "value": "0.2743"
         },
         "check_type": "KINSHIP"
       }
@@ -400,37 +389,32 @@
         "ref_sample_checks": [
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
-            "value": "0"
-          },
-          {
-            "sample_id": "sample1",
             "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_WARN",
             "value": "0"
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
-            "value": "16"
-          },
-          {
-            "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
             "value": "0"
           },
           {
             "sample_id": "sample1",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "sample1",
             "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_WARN",
-            "value": "9"
+            "value": "1"
+          },
+          {
+            "sample_id": "sample1",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "value": "1"
           },
           {
             "sample_id": "sample1",
             "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_PASS",
-            "value": "7"
-          },
-          {
-            "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
             "value": "0"
           },
           {
@@ -440,8 +424,18 @@
           },
           {
             "sample_id": "sample1",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "sample1",
             "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_PASS",
-            "value": "16"
+            "value": "2"
+          },
+          {
+            "sample_id": "sample1",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
+            "value": "0"
           },
           {
             "sample_id": "sample1",
@@ -450,18 +444,8 @@
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
-            "value": "16"
-          },
-          {
-            "sample_id": "sample1",
             "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_PASS",
-            "value": "0"
-          },
-          {
-            "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_FAIL",
-            "value": "0"
+            "value": "2"
           },
           {
             "sample_id": "sample1",
@@ -470,12 +454,12 @@
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_FAIL",
+            "value": "2"
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_PASS",
             "value": "0"
           },
           {
@@ -485,13 +469,13 @@
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
-            "value": "0"
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample1",
@@ -500,13 +484,13 @@
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
-            "value": "0"
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample1",
@@ -515,13 +499,13 @@
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_FAIL",
-            "value": "0"
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample1",
@@ -530,13 +514,13 @@
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
-            "value": "0"
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample1",
@@ -545,17 +529,22 @@
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample1",
-            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
-            "value": "16"
+            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample1",
             "check_name": "PRESTATS_KMER_CONTENT_WARN",
+            "value": "2"
+          },
+          {
+            "sample_id": "sample1",
+            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
             "value": "0"
           },
           {
@@ -566,43 +555,38 @@
           {
             "sample_id": "sample1",
             "check_name": "PRESTATS_NUMBER_OF_READS",
-            "value": "1138782946"
+            "value": "17904"
           }
         ],
         "tumor_sample_checks": [
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
-            "value": "0"
-          },
-          {
-            "sample_id": "sample2",
             "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_WARN",
             "value": "0"
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
-            "value": "16"
-          },
-          {
-            "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
             "value": "0"
           },
           {
             "sample_id": "sample2",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "sample2",
             "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_WARN",
-            "value": "9"
+            "value": "1"
+          },
+          {
+            "sample_id": "sample2",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "value": "1"
           },
           {
             "sample_id": "sample2",
             "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_PASS",
-            "value": "7"
-          },
-          {
-            "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
             "value": "0"
           },
           {
@@ -612,8 +596,18 @@
           },
           {
             "sample_id": "sample2",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "sample2",
             "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_PASS",
-            "value": "16"
+            "value": "2"
+          },
+          {
+            "sample_id": "sample2",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
+            "value": "1"
           },
           {
             "sample_id": "sample2",
@@ -622,32 +616,22 @@
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
-            "value": "16"
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_PASS",
+            "value": "1"
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_PASS",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_WARN",
             "value": "0"
           },
           {
             "sample_id": "sample2",
             "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_FAIL",
-            "value": "0"
-          },
-          {
-            "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_WARN",
-            "value": "16"
+            "value": "2"
           },
           {
             "sample_id": "sample2",
             "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_PASS",
-            "value": "0"
-          },
-          {
-            "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
             "value": "0"
           },
           {
@@ -657,13 +641,13 @@
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
-            "value": "0"
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample2",
@@ -672,13 +656,13 @@
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
-            "value": "0"
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample2",
@@ -687,8 +671,18 @@
           },
           {
             "sample_id": "sample2",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "sample2",
             "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_PASS",
-            "value": "16"
+            "value": "2"
+          },
+          {
+            "sample_id": "sample2",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_WARN",
+            "value": "0"
           },
           {
             "sample_id": "sample2",
@@ -697,18 +691,8 @@
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_WARN",
-            "value": "7"
-          },
-          {
-            "sample_id": "sample2",
             "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_PASS",
-            "value": "9"
-          },
-          {
-            "sample_id": "sample2",
-            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
-            "value": "0"
+            "value": "2"
           },
           {
             "sample_id": "sample2",
@@ -717,28 +701,33 @@
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
-            "value": "16"
+            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
+            "value": "0"
           },
           {
             "sample_id": "sample2",
-            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
-            "value": "16"
+            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
+            "value": "2"
           },
           {
             "sample_id": "sample2",
             "check_name": "PRESTATS_KMER_CONTENT_WARN",
+            "value": "1"
+          },
+          {
+            "sample_id": "sample2",
+            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
             "value": "0"
           },
           {
             "sample_id": "sample2",
             "check_name": "PRESTATS_KMER_CONTENT_PASS",
-            "value": "0"
+            "value": "1"
           },
           {
             "sample_id": "sample2",
             "check_name": "PRESTATS_NUMBER_OF_READS",
-            "value": "2862435020"
+            "value": "17920"
           }
         ],
         "check_type": "PRESTATS"
@@ -750,94 +739,94 @@
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_MEAN",
-            "value": "47.456877"
+            "value": "0.000844"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_MEDIAN",
-            "value": "47"
+            "value": "0"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_SD",
-            "value": "19.361764"
+            "value": "0.156968"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_PCT_EXC_BASEQ",
-            "value": "0.002049"
+            "value": "0.002504"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_PCT_EXC_DUPE",
-            "value": "0.102007"
+            "value": "0.063508"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_PCT_EXC_MAPQ",
-            "value": "0.05968"
+            "value": "0.000785"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_PCT_EXC_OVERLAP",
-            "value": "0.011407"
+            "value": "0.023719"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_PCT_EXC_TOTAL",
-            "value": "0.189799"
+            "value": "0.095866"
           },
           {
             "sample_id": "sample1",
             "check_name": "COVERAGE_PCT_EXC_UNPAIRED",
-            "value": "0.001566"
+            "value": "0.003147"
           }
         ],
         "tumor_sample_checks": [
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_MEAN",
-            "value": "117.163135"
+            "value": "0.000856"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_MEDIAN",
-            "value": "113"
+            "value": "0"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_SD",
-            "value": "39.221607"
+            "value": "0.157469"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_PCT_EXC_BASEQ",
-            "value": "0.002242"
+            "value": "0.002378"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_PCT_EXC_DUPE",
-            "value": "0.105681"
+            "value": "0.059484"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_PCT_EXC_MAPQ",
-            "value": "0.057481"
+            "value": "0.000585"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_PCT_EXC_OVERLAP",
-            "value": "0.016514"
+            "value": "0.020675"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_PCT_EXC_TOTAL",
-            "value": "0.20613"
+            "value": "0.086479"
           },
           {
             "sample_id": "sample2",
             "check_name": "COVERAGE_PCT_EXC_UNPAIRED",
-            "value": "0.000981"
+            "value": "0.002331"
           }
         ],
         "check_type": "WGS_METRICS"
@@ -849,24 +838,24 @@
           {
             "sample_id": "sample1",
             "check_name": "VARIANTS_GERMLINE_SNP",
-            "value": "3447736"
+            "value": "103"
           },
           {
             "sample_id": "sample1",
             "check_name": "VARIANTS_GERMLINE_INDELS",
-            "value": "917334"
+            "value": "28"
           }
         ],
         "tumor_sample_checks": [
           {
             "sample_id": "sample2",
             "check_name": "VARIANTS_GERMLINE_SNP",
-            "value": "3453790"
+            "value": "109"
           },
           {
             "sample_id": "sample2",
             "check_name": "VARIANTS_GERMLINE_INDELS",
-            "value": "930936"
+            "value": "29"
           }
         ],
         "check_type": "GERMLINE"
@@ -874,20 +863,7 @@
     },
     {
       "REALIGNER": {
-        "ref_sample_checks": [
-          {
-            "sample_id": "sample1",
-            "check_name": "MAPPING_REALIGNER_CHANGED_ALIGNMENTS",
-            "value": "0.00115"
-          }
-        ],
-        "tumor_sample_checks": [
-          {
-            "sample_id": "sample2",
-            "check_name": "MAPPING_REALIGNER_CHANGED_ALIGNMENTS",
-            "value": "0.00105"
-          }
-        ],
+        "error": "java.io.FileNotFoundException",
         "check_type": "REALIGNER"
       }
     }
