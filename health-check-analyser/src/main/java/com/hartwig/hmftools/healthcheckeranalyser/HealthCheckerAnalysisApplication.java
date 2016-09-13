@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthcheckeranalyser.model.HealthCheckReport;
+import com.hartwig.hmftools.healthcheckeranalyser.model.HealthCheckReportFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -77,7 +78,7 @@ public class HealthCheckerAnalysisApplication {
         File[] runs = new File(reportsPath).listFiles();
         if (runs != null) {
             for (File runDirectory : runs) {
-                HealthCheckReport report = HealthCheckReader.readHealthCheckOutput(runDirectory.getPath());
+                HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(runDirectory.getPath());
                 LOGGER.info(HealthCheckDataToCSV.header(report));
                 LOGGER.info(HealthCheckDataToCSV.refSample(report));
                 LOGGER.info(HealthCheckDataToCSV.tumorSample(report));

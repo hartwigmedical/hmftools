@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.healthcheckeranalyser.model;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public final class HealthCheckReportFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthCheckReportFactory.class);
+    private static final Gson GSON = new GsonBuilder().create();
 
     // KODU: The format of health checks depends on github health-checks project.
     private static final String HEALTH_CHECK_MAIN_OBJECT = "health_checks";
@@ -35,8 +40,9 @@ public final class HealthCheckReportFactory {
     }
 
     @NotNull
-    public static HealthCheckReport fromHealthCheckReport(@NotNull JsonObject report) {
-        JsonArray checks = report.get(HEALTH_CHECK_MAIN_OBJECT).getAsJsonArray();
+    public static HealthCheckReport fromHealthCheckReport(@NotNull String path) throws FileNotFoundException {
+        JsonObject json = GSON.fromJson(new FileReader(path), JsonObject.class);
+        JsonArray checks = json.get(HEALTH_CHECK_MAIN_OBJECT).getAsJsonArray();
 
         JsonObject metadata = checks.get(METADATA_INDEX).getAsJsonObject();
         String runDate = metadata.get(METADATA_RUN_DATE).getAsString();
