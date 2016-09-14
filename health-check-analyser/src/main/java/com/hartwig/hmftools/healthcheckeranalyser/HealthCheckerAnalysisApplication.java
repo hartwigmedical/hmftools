@@ -35,7 +35,7 @@ public class HealthCheckerAnalysisApplication {
     @NotNull
     private final String csvOut;
 
-    public static void main(final String... args) throws ParseException {
+    public static void main(final String... args) throws ParseException, IOException {
         Options options = createOptions();
         CommandLine cmd = createCommandLine(options, args);
 
@@ -48,7 +48,7 @@ public class HealthCheckerAnalysisApplication {
             System.exit(1);
         }
 
-        new HealthCheckerAnalysisApplication(reportsPath, csvOut);
+        new HealthCheckerAnalysisApplication(reportsPath, csvOut).runAnalysis();
     }
 
     @NotNull
@@ -78,10 +78,8 @@ public class HealthCheckerAnalysisApplication {
         File[] runs = new File(reportsPath).listFiles();
         if (runs != null) {
             for (File runDirectory : runs) {
+                LOGGER.info("Processing " + runDirectory.getPath());
                 HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(runDirectory.getPath());
-                LOGGER.info(HealthCheckDataToCSV.header(report));
-                LOGGER.info(HealthCheckDataToCSV.refSample(report));
-                LOGGER.info(HealthCheckDataToCSV.tumorSample(report));
                 reports.add(report);
             }
         } else {
