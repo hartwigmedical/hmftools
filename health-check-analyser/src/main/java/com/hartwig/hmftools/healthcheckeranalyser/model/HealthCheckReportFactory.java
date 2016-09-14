@@ -23,9 +23,6 @@ public final class HealthCheckReportFactory {
 
     // KODU: The format of health checks depends on github health-checks project.
     private static final String HEALTH_CHECK_MAIN_OBJECT = "health_checks";
-    private static final int METADATA_INDEX = 0;
-    private static final String METADATA_RUN_DATE = "RunDate";
-    private static final String METADATA_PIPELINE_VERSION = "PipelineVersion";
 
     private static final String PATIENT_CHECKS_IDENTIFIER_1 = "check";
     private static final String PATIENT_CHECKS_IDENTIFIER_2 = "checks";
@@ -44,10 +41,6 @@ public final class HealthCheckReportFactory {
         JsonObject json = GSON.fromJson(new FileReader(path), JsonObject.class);
         JsonArray checks = json.get(HEALTH_CHECK_MAIN_OBJECT).getAsJsonArray();
 
-        JsonObject metadata = checks.get(METADATA_INDEX).getAsJsonObject();
-        String runDate = metadata.get(METADATA_RUN_DATE).getAsString();
-        String pipelineVersion = metadata.get(METADATA_PIPELINE_VERSION).getAsString();
-
         String refSample = Strings.EMPTY;
         String tumorSample = Strings.EMPTY;
         Map<String, String> refChecks = Maps.newHashMap();
@@ -55,27 +48,24 @@ public final class HealthCheckReportFactory {
         Map<String, String> patientChecks = Maps.newHashMap();
 
         for (int i = 0; i < checks.size(); i++) {
-            if (i != METADATA_INDEX) {
-                JsonObject category = checks.get(i).getAsJsonObject();
-                for (Map.Entry<String, JsonElement> entry : category.entrySet()) {
-                    JsonObject values = entry.getValue().getAsJsonObject();
-                    if (values.has(PATIENT_CHECKS_IDENTIFIER_1)) {
-                        patientChecks.putAll(extractChecks(values.get(PATIENT_CHECKS_IDENTIFIER_1)));
-                    } else if (values.has(PATIENT_CHECKS_IDENTIFIER_2)) {
-                        patientChecks.putAll(extractChecks(values.get(PATIENT_CHECKS_IDENTIFIER_2)));
-                    } else if (values.has(REF_SAMPLE_CHECKS_IDENTIFIER) && values.has(
-                            TUMOR_SAMPLE_CHECKS_IDENTIFIER)) {
-                        if (refSample.equals(Strings.EMPTY)) {
-                            refSample = extractSampleId(values.get(REF_SAMPLE_CHECKS_IDENTIFIER));
-                        }
-                        refChecks.putAll(extractChecks(values.get(REF_SAMPLE_CHECKS_IDENTIFIER)));
-                        if (tumorSample.equals(Strings.EMPTY)) {
-                            tumorSample = extractSampleId(values.get(TUMOR_SAMPLE_CHECKS_IDENTIFIER));
-                        }
-                        tumorChecks.putAll(extractChecks(values.get(TUMOR_SAMPLE_CHECKS_IDENTIFIER)));
-                    } else {
-                        LOGGER.error("Unrecognized category: " + values);
+            JsonObject category = checks.get(i).getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : category.entrySet()) {
+                JsonObject values = entry.getValue().getAsJsonObject();
+                if (values.has(PATIENT_CHECKS_IDENTIFIER_1)) {
+                    patientChecks.putAll(extractChecks(values.get(PATIENT_CHECKS_IDENTIFIER_1)));
+                } else if (values.has(PATIENT_CHECKS_IDENTIFIER_2)) {
+                    patientChecks.putAll(extractChecks(values.get(PATIENT_CHECKS_IDENTIFIER_2)));
+                } else if (values.has(REF_SAMPLE_CHECKS_IDENTIFIER) && values.has(TUMOR_SAMPLE_CHECKS_IDENTIFIER)) {
+                    if (refSample.equals(Strings.EMPTY)) {
+                        refSample = extractSampleId(values.get(REF_SAMPLE_CHECKS_IDENTIFIER));
                     }
+                    refChecks.putAll(extractChecks(values.get(REF_SAMPLE_CHECKS_IDENTIFIER)));
+                    if (tumorSample.equals(Strings.EMPTY)) {
+                        tumorSample = extractSampleId(values.get(TUMOR_SAMPLE_CHECKS_IDENTIFIER));
+                    }
+                    tumorChecks.putAll(extractChecks(values.get(TUMOR_SAMPLE_CHECKS_IDENTIFIER)));
+                } else {
+                    LOGGER.error("Unrecognized category: " + values);
                 }
             }
         }
@@ -84,8 +74,7 @@ public final class HealthCheckReportFactory {
             LOGGER.error("Size of ref checks and tumor checks do not match");
         }
 
-        return new HealthCheckReport(runDate, pipelineVersion, refSample, tumorSample, refChecks, tumorChecks,
-                patientChecks);
+        return new HealthCheckReport(refSample, tumorSample, refChecks, tumorChecks, patientChecks);
     }
 
     @NotNull

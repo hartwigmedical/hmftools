@@ -20,7 +20,7 @@ final class HealthCheckDataToCSV {
     @NotNull
     static String header(@NotNull HealthCheckReport report) {
         // KODU: We assume every report generates the same header.
-        String header = "SAMPLE,RUN_DATE,PIPELINE_VERSION";
+        String header = "SAMPLE";
         for (String check : getSampleChecks(report)) {
             header += ("," + check);
         }
@@ -34,7 +34,7 @@ final class HealthCheckDataToCSV {
 
     @NotNull
     static String refSample(@NotNull HealthCheckReport report) {
-        String refSample = report.refSample() + "," + report.runDate() + "," + report.pipelineVersion();
+        String refSample = report.refSample();
         for (String check : getSampleChecks(report)) {
             refSample += ("," + report.refChecks().get(check));
         }
@@ -47,7 +47,7 @@ final class HealthCheckDataToCSV {
 
     @NotNull
     static String tumorSample(@NotNull HealthCheckReport report) {
-        String tumorSample = report.tumorSample() + "," + report.runDate() + "," + report.pipelineVersion();
+        String tumorSample = report.tumorSample();
         for (String check : getSampleChecks(report)) {
             tumorSample += ("," + report.tumorChecks().get(check));
         }
