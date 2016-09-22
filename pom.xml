@@ -9,7 +9,7 @@
     <name>HMF Genomics Tools</name>
 
     <modules>
-        <module>hmftools-sullivan</module>
+        <module>retention-checker</module>
         <module>health-check-analyser</module>
     </modules>
 

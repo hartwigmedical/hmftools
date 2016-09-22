@@ -1,0 +1,10 @@
+com/hartwig/hmftools/retentionchecker/RetentionCheckAlgo$1.class
+com/hartwig/hmftools/retentionchecker/FastqHeaderNormalizer.class
+com/hartwig/hmftools/retentionchecker/RetentionCheckRunner.class
+com/hartwig/hmftools/retentionchecker/OriginalFastqHeaderNormalizer.class
+com/hartwig/hmftools/retentionchecker/RetentionCheckAlgo.class
+com/hartwig/hmftools/retentionchecker/DefaultNameConverter.class
+com/hartwig/hmftools/retentionchecker/FastqHeaderKey.class
+com/hartwig/hmftools/retentionchecker/FileNameConverter.class
+com/hartwig/hmftools/retentionchecker/RecreatedFastqHeaderNormalizer.class
+com/hartwig/hmftools/retentionchecker/FastqHeader.class

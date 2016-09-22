@@ -3,4 +3,5 @@
 .idea/*
 
 # Ignore target directies
-hmftools-sullivan/target
+retention-checker/target
+health-check-analyser/target
