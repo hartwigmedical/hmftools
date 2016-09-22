@@ -11,6 +11,7 @@
     <modules>
         <module>retention-checker</module>
         <module>health-check-analyser</module>
+        <module>ecrf-analyser</module>
     </modules>
 
     <properties>
