@@ -5,3 +5,4 @@
 # Ignore target directies
 retention-checker/target
 health-check-analyser/target
+ecrf-analyser/target
