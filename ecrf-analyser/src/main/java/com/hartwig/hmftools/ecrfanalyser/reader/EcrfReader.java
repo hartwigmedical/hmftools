@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.ecrfanalyser.reader;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -8,6 +9,7 @@ import javax.xml.stream.events.XMLEvent;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 
 import org.apache.logging.log4j.LogManager;
@@ -62,11 +64,28 @@ public final class EcrfReader {
     static List<EcrfField> odmToEcrfFields(@NotNull ODMContainer container) {
         List<EcrfField> fields = Lists.newArrayListWithCapacity(container.itemDefs().size());
         for (ItemDef item : container.itemDefs()) {
+            Map<Integer, String> values = Maps.newHashMap();
+            if (item.codeListOID() != null) {
+                values = findValuesForCodeList(container.codeLists(), item.codeListOID());
+            }
+            String category = ItemDefToEcrfField.category(item);
+            String fieldName = ItemDefToEcrfField.fieldName(item);
+            String description = ItemDefToEcrfField.description(item);
 
-            //
+            fields.add(new EcrfField(category, fieldName, description, values));
         }
-        return Lists.newArrayList();
+        return fields;
+    }
 
+    @NotNull
+    private static Map<Integer,String> findValuesForCodeList(final List<CodeList> codeLists, final String codeListOID) {
+        for (CodeList codeList : codeLists) {
+            if (codeList.OID().equals(codeListOID)) {
+                return codeList.values();
+            }
+        }
+
+        throw new IllegalStateException("Could not find code list : " + codeListOID);
     }
 
     @NotNull

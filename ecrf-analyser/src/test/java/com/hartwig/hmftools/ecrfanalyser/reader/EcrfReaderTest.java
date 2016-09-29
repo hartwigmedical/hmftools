@@ -35,7 +35,6 @@ public class EcrfReaderTest {
     }
 
     @Test
-    @Ignore
     public void canConvertODMContainerToEcrfFields() {
         String category = "blaCategory";
         String fieldName = "blaName";
