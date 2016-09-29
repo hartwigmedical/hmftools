@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ODM>
+    <ItemDef OID="FLD.text" Name="this is a text field" DataType="text" Length="80" SASFieldName="whatever"/>
+    <ItemDef OID="FLD.int" Name="this is an int field"
+             DataType="integer" Length="10" SASFieldName="whatever">
+        <CodeListRef CodeListOID="FLD.list"/>
+    </ItemDef>
+    <ClinicalData>
+        <ItemDef OID="do_not_read_this!"/>
+    </ClinicalData>
+</ODM>
+

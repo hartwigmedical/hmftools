@@ -38,30 +38,27 @@ public class EcrfAnalysisApplication {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
         int count = 0;
-        while (reader.hasNext() && count < 10) {
+        while (reader.hasNext() && count < 100000) {
             reader.next();
-            LOGGER.info("ElementType " + count + ": " + getEventTypeString(reader.getEventType()));
-            if (reader.getEventType() != XMLEvent.CHARACTERS) {
-                LOGGER.info("ElementName " + count + ": " + reader.getName());
-            }
-
             if (reader.getEventType() == XMLEvent.START_ELEMENT) {
-                if (reader.hasText()) {
-                    LOGGER.info(reader.getElementText());
+//                LOGGER.info(count + " Type=" + getEventTypeString(reader.getEventType()) + ", Name=" + reader.getName()
+//                        + ", Count=" + reader.getAttributeCount());
+                if (reader.getName().toString().equals("TranslatedText")) {
+                    int x = 1;
                 }
-                LOGGER.info(reader.getAttributeCount());
             }
 
-            reader.next();
+            if (reader.hasText()) {
+                LOGGER.info("Text: " + reader.getText());
+            }
             count++;
         }
-        LOGGER.info(count);
 
-//        int namespaces = reader.getNamespaceCount();
-//        for (int i = 0; i < namespaces; i++) {
-//            LOGGER.info("NamespacePrefix " + i + ": " + reader.getNamespacePrefix(i));
-//            LOGGER.info("NamespaceURI " + i + ": " + reader.getNamespaceURI(i));
-//        }
+        //        int namespaces = reader.getNamespaceCount();
+        //        for (int i = 0; i < namespaces; i++) {
+        //            LOGGER.info("NamespacePrefix " + i + ": " + reader.getNamespacePrefix(i));
+        //            LOGGER.info("NamespaceURI " + i + ": " + reader.getNamespaceURI(i));
+        //        }
         reader.close();
 
         //        XMLEventReader eventReader = factory.createXMLEventReader(new FileInputStream(ecrfXmlPath));
@@ -71,34 +68,5 @@ public class EcrfAnalysisApplication {
         //        }
     }
 
-    @NotNull
-    private static String getEventTypeString(int eventType) {
-        switch (eventType) {
-            case XMLEvent.START_ELEMENT:
-                return "START_ELEMENT";
-            case XMLEvent.END_ELEMENT:
-                return "END_ELEMENT";
-            case XMLEvent.PROCESSING_INSTRUCTION:
-                return "PROCESSING_INSTRUCTION";
-            case XMLEvent.CHARACTERS:
-                return "CHARACTERS";
-            case XMLEvent.COMMENT:
-                return "COMMENT";
-            case XMLEvent.START_DOCUMENT:
-                return "START_DOCUMENT";
-            case XMLEvent.END_DOCUMENT:
-                return "END_DOCUMENT";
-            case XMLEvent.ENTITY_REFERENCE:
-                return "ENTITY_REFERENCE";
-            case XMLEvent.ATTRIBUTE:
-                return "ATTRIBUTE";
-            case XMLEvent.DTD:
-                return "DTD";
-            case XMLEvent.CDATA:
-                return "CDATA";
-            case XMLEvent.SPACE:
-                return "SPACE";
-        }
-        return "UNKNOWN_EVENT_TYPE , " + eventType;
-    }
+
 }
