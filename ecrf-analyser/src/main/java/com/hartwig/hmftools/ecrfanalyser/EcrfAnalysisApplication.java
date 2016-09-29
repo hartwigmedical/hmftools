@@ -11,6 +11,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
+import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
+import com.hartwig.hmftools.ecrfanalyser.reader.EcrfReader;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,36 +40,10 @@ public class EcrfAnalysisApplication {
             throws FileNotFoundException, XMLStreamException {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
-        int count = 0;
-        while (reader.hasNext() && count < 100000) {
-            reader.next();
-            if (reader.getEventType() == XMLEvent.START_ELEMENT) {
-//                LOGGER.info(count + " Type=" + getEventTypeString(reader.getEventType()) + ", Name=" + reader.getName()
-//                        + ", Count=" + reader.getAttributeCount());
-                if (reader.getName().toString().equals("TranslatedText")) {
-                    int x = 1;
-                }
-            }
 
-            if (reader.hasText()) {
-                LOGGER.info("Text: " + reader.getText());
-            }
-            count++;
-        }
+        List<EcrfField> datamodel = EcrfReader.extractFields(reader);
+        int x = 1;
 
-        //        int namespaces = reader.getNamespaceCount();
-        //        for (int i = 0; i < namespaces; i++) {
-        //            LOGGER.info("NamespacePrefix " + i + ": " + reader.getNamespacePrefix(i));
-        //            LOGGER.info("NamespaceURI " + i + ": " + reader.getNamespaceURI(i));
-        //        }
-        reader.close();
-
-        //        XMLEventReader eventReader = factory.createXMLEventReader(new FileInputStream(ecrfXmlPath));
-        //        while (eventReader.hasNext()) {
-        //            XMLEvent e = eventReader.nextEvent();
-        //            LOGGER.info(e.toString());
-        //        }
     }
-
 
 }

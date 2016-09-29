@@ -36,7 +36,7 @@ public final class EcrfReader {
     }
 
     @NotNull
-    static List<EcrfField> extractFields(@NotNull XMLStreamReader reader) throws XMLStreamException {
+    public static List<EcrfField> extractFields(@NotNull XMLStreamReader reader) throws XMLStreamException {
         ODMContainer container = extractODM(reader);
         return odmToEcrfFields(container);
     }
@@ -157,6 +157,9 @@ public final class EcrfReader {
         String message = getEventTypeString(reader.getEventType());
         if (reader.getEventType() == XMLEvent.START_ELEMENT || reader.getEventType() == XMLEvent.END_ELEMENT) {
             message += ": " + reader.getName().toString();
+            if (isCodeListStart(reader) || isItemDefStart(reader)) {
+                message += " - " + reader.getAttributeValue("", "OID");
+            }
         }
         LOGGER.info(message);
     }
