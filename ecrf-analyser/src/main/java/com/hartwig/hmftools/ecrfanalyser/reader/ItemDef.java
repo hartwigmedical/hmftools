@@ -17,6 +17,21 @@ class ItemDef {
         this.codeListOID = codeListOID;
     }
 
+    @NotNull
+    String OID() {
+        return OID;
+    }
+
+    @NotNull
+    String name() {
+        return name;
+    }
+
+    @Nullable
+    String codeListOID() {
+        return codeListOID;
+    }
+
     @Override
     public String toString() {
         return "ItemDef{" + "OID='" + OID + '\'' + ", name='" + name + '\'' + ", codeListOID='" + codeListOID + '\''

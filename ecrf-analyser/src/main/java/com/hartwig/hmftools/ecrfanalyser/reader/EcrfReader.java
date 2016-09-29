@@ -60,7 +60,11 @@ public final class EcrfReader {
     @NotNull
     @VisibleForTesting
     static List<EcrfField> odmToEcrfFields(@NotNull ODMContainer container) {
+        List<EcrfField> fields = Lists.newArrayListWithCapacity(container.itemDefs().size());
+        for (ItemDef item : container.itemDefs()) {
 
+            //
+        }
         return Lists.newArrayList();
 
     }

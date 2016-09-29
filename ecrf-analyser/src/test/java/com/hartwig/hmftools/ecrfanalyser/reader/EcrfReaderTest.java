@@ -46,7 +46,7 @@ public class EcrfReaderTest {
         String option2 = "y";
 
         List<ItemDef> itemDefs = Lists.newArrayList(
-                new ItemDef(toItemDefName(category, fieldName), description, codeListOID));
+                new ItemDef(ItemDefTestFunctions.toOID(category, fieldName), description, codeListOID));
         Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
@@ -65,10 +65,5 @@ public class EcrfReaderTest {
         Map<Integer, String> values = field.values();
         assertEquals(option1, values.get(1));
         assertEquals(option2, values.get(2));
-    }
-
-    @NotNull
-    private static String toItemDefName(@NotNull String category, @NotNull String name) {
-        return "FLD." + category + "." + name;
     }
 }
