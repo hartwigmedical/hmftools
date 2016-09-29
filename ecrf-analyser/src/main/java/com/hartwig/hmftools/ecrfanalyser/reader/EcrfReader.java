@@ -8,7 +8,6 @@ import javax.xml.stream.events.XMLEvent;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ecrfanalyser.EcrfAnalysisApplication;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,12 +18,17 @@ public final class EcrfReader {
 
     private static final Logger LOGGER = LogManager.getLogger(EcrfReader.class);
 
-    private static final String START_CLINICAL_DATA_TAG = "ClinicalData";
-    private static final String START_ITEM_DEF_TAG = "ItemDef";
+    private static final String CLINICAL_DATA_TAG = "ClinicalData";
+
+    private static final String ITEM_DEF_TAG = "ItemDef";
     private static final String ITEM_DEF_OID_ATTRIBUTE = "OID";
     private static final String ITEM_DEF_NAME_ATTRIBUTE = "Name";
     private static final String ITEM_DEF_CODE_LIST_REF = "CodeListRef";
     private static final String ITEM_DEF_CODE_LIST_OID = "CodeListOID";
+
+    private static final String CODE_LIST_TAG = "CodeList";
+    private static final String CODE_LIST_OID_ATTRIBUTE = "OID";
+    private static final String CODE_LIST_ITEM = "TranslatedText";
 
     private EcrfReader() {
     }
@@ -44,6 +48,9 @@ public final class EcrfReader {
             if (isItemDefStart(reader)) {
                 itemDefs.add(extractItemDef(reader));
             }
+            if (isCodeListStart(reader)) {
+                codeLists.add(extractCodeList(reader));
+            }
             next(reader);
         }
 
@@ -53,23 +60,9 @@ public final class EcrfReader {
     @NotNull
     @VisibleForTesting
     static List<EcrfField> odmToEcrfFields(@NotNull ODMContainer container) {
+
         return Lists.newArrayList();
 
-    }
-
-    private static boolean isClinicalDataStart(@NotNull XMLStreamReader reader) {
-        return reader.getEventType() == XMLEvent.START_ELEMENT && reader.getName().getLocalPart().equals(
-                START_CLINICAL_DATA_TAG);
-    }
-
-    private static boolean isItemDefStart(@NotNull XMLStreamReader reader) {
-        return reader.getEventType() == XMLEvent.START_ELEMENT && reader.getName().getLocalPart().equals(
-                START_ITEM_DEF_TAG);
-    }
-
-    private static boolean isCodeListRefStart(@NotNull XMLStreamReader reader) {
-        return reader.getEventType() == XMLEvent.START_ELEMENT && reader.getName().getLocalPart().equals(
-                ITEM_DEF_CODE_LIST_REF);
     }
 
     @NotNull
@@ -77,7 +70,7 @@ public final class EcrfReader {
         String OID = reader.getAttributeValue("", ITEM_DEF_OID_ATTRIBUTE);
         String name = reader.getAttributeValue("", ITEM_DEF_NAME_ATTRIBUTE);
         String codeListOID = null;
-        while (reader.getEventType() != XMLEvent.END_ELEMENT) {
+        while (!isItemDefEnd(reader)) {
             next(reader);
             if (isCodeListRefStart(reader)) {
                 codeListOID = reader.getAttributeValue("", ITEM_DEF_CODE_LIST_OID);
@@ -87,10 +80,59 @@ public final class EcrfReader {
         return new ItemDef(OID, name, codeListOID);
     }
 
+    @NotNull
+    private static CodeList extractCodeList(@NotNull XMLStreamReader reader) throws XMLStreamException {
+        String OID = reader.getAttributeValue("", CODE_LIST_OID_ATTRIBUTE);
+        List<String> codeListItems = Lists.newArrayList();
+        while (!isCodeListEnd(reader)) {
+            next(reader);
+            if (isCodeListItem(reader)) {
+                // KODU: The item content for the code lists is held in text in the next event!
+                next(reader);
+                codeListItems.add(reader.getText());
+            }
+        }
+        return new CodeList(OID, CodeListFactory.extractValuesFromStrings(codeListItems));
+    }
+
+    private static boolean isClinicalDataStart(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CLINICAL_DATA_TAG);
+    }
+
+    private static boolean isItemDefStart(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_DEF_TAG);
+    }
+
+    private static boolean isItemDefEnd(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, ITEM_DEF_TAG);
+    }
+
+    private static boolean isCodeListRefStart(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_DEF_CODE_LIST_REF);
+    }
+
+    private static boolean isCodeListStart(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_TAG);
+    }
+
+    private static boolean isCodeListEnd(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, CODE_LIST_TAG);
+    }
+
+    private static boolean isCodeListItem(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_ITEM);
+    }
+
+
+    private static boolean isOfTypeWithName(@NotNull XMLStreamReader reader, int event,
+            @NotNull String name) {
+        return reader.getEventType() == event && reader.getName().getLocalPart().equals(name);
+    }
+
     private static void next(@NotNull XMLStreamReader reader) throws XMLStreamException {
         reader.next();
         String message = getEventTypeString(reader.getEventType());
-        if (reader.getEventType() == XMLEvent.START_ELEMENT) {
+        if (reader.getEventType() == XMLEvent.START_ELEMENT || reader.getEventType() == XMLEvent.END_ELEMENT) {
             message += ": " + reader.getName().toString();
         }
         LOGGER.info(message);

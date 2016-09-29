@@ -3,8 +3,27 @@
     <ItemDef OID="FLD.text" Name="this is a text field" DataType="text" Length="80" SASFieldName="whatever"/>
     <ItemDef OID="FLD.int" Name="this is an int field"
              DataType="integer" Length="10" SASFieldName="whatever">
-        <CodeListRef CodeListOID="FLD.list"/>
+        <CodeListRef CodeListOID="code.list"/>
     </ItemDef>
+    <CodeList OID="code.list" Name="this is a code list" DataType="integer" SASFormatName="whatever">
+        <CodeListItem CodedValue="1">
+            <Decode>
+                <TranslatedText xml:lang="en">1= x</TranslatedText>
+            </Decode>
+        </CodeListItem>
+        <CodeListItem CodedValue="2">
+            <Decode>
+                <TranslatedText xml:lang="en">2= y</TranslatedText>
+            </Decode>
+        </CodeListItem>
+    </CodeList>
+    <CodeList OID="code.list2" Name="this is another code list" DataType="integer" SASFormatName="whatever">
+        <CodeListItem CodedValue="1">
+            <Decode>
+                <TranslatedText xml:lang="en">1=z</TranslatedText>
+            </Decode>
+        </CodeListItem>
+    </CodeList>
     <ClinicalData>
         <ItemDef OID="do_not_read_this!"/>
     </ClinicalData>
