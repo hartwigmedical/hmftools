@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.ecrfanalyser;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.FileNotFoundException;
 import java.util.List;
 

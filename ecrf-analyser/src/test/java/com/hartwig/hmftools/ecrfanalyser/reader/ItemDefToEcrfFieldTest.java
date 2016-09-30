@@ -2,7 +2,6 @@ package com.hartwig.hmftools.ecrfanalyser.reader;
 
 import static org.junit.Assert.assertEquals;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ItemDefToEcrfFieldTest {
@@ -18,6 +17,4 @@ public class ItemDefToEcrfFieldTest {
         assertEquals(fieldName, ItemDefToEcrfField.fieldName(def));
         assertEquals(description, ItemDefToEcrfField.description(def));
     }
-
-
 }

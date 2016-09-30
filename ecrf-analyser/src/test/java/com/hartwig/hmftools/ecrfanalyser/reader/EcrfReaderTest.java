@@ -16,8 +16,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 
-import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class EcrfReaderTest {
