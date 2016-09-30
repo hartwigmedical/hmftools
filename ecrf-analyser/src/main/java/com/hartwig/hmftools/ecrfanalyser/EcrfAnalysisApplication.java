@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.ecrfanalyser;
 
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 import javax.xml.stream.XMLInputFactory;
@@ -34,11 +36,32 @@ public class EcrfAnalysisApplication {
     }
 
     void generateCsv(@NotNull List<String> patients, @NotNull List<String> fields)
-            throws FileNotFoundException, XMLStreamException {
+            throws IOException, XMLStreamException {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
 
         List<EcrfField> datamodel = EcrfReader.extractFields(reader);
-        int x = 1;
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
+        writer.write("CATEGORY, FIELDNAME, DESCRIPTION, VALUES");
+
+        for (EcrfField field : datamodel) {
+            writer.newLine();
+            writer.write(toCSV(field));
+        }
+        writer.close();
+    }
+
+    @NotNull
+    private static String toCSV(@NotNull EcrfField field) {
+        String valuesString = "";
+        for (String value : field.values().values()) {
+            valuesString += value.replaceAll(",", ":") + "; ";
+        }
+        if (valuesString.length() > 0) {
+            valuesString = valuesString.substring(0, valuesString.length() - 2);
+        }
+        return field.category() + ", " + field.fieldName() + ", " + field.description().replaceAll(",", ":") + ", "
+                + valuesString;
     }
 }

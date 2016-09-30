@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ecrfanalyser;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
@@ -16,7 +16,7 @@ public class EcrfAnalysisApplicationTest {
     private static final String CSV_OUT = "/Users/kduyvesteyn/hmf/tmp/ecrf.csv";
 
     @Test
-    public void tryIt() throws FileNotFoundException, XMLStreamException {
+    public void tryIt() throws IOException, XMLStreamException {
         EcrfAnalysisApplication app = new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT);
 
         List<String> patients = Lists.newArrayList();

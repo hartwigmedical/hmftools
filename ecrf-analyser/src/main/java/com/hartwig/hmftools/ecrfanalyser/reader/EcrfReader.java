@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public final class EcrfReader {
 
     private static final Logger LOGGER = LogManager.getLogger(EcrfReader.class);
+    private static final boolean LOG_EVENTS = false;
 
     private static final String CLINICAL_DATA_TAG = "ClinicalData";
 
@@ -33,7 +34,6 @@ public final class EcrfReader {
     private static final String CODE_LIST_ITEM_TAG = "CodeListItem";
     private static final String CODE_LIST_ITEM_VALUE_ATTRIBUTE = "CodedValue";
     private static final String CODE_LIST_ITEM_CONTENT = "TranslatedText";
-
 
     private EcrfReader() {
     }
@@ -81,7 +81,8 @@ public final class EcrfReader {
     }
 
     @NotNull
-    private static Map<Integer,String> findValuesForCodeList(final List<CodeList> codeLists, final String codeListOID) {
+    private static Map<Integer, String> findValuesForCodeList(final List<CodeList> codeLists,
+            final String codeListOID) {
         for (CodeList codeList : codeLists) {
             if (codeList.OID().equals(codeListOID)) {
                 return codeList.values();
@@ -157,21 +158,22 @@ public final class EcrfReader {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_ITEM_CONTENT);
     }
 
-    private static boolean isOfTypeWithName(@NotNull XMLStreamReader reader, int event,
-            @NotNull String name) {
+    private static boolean isOfTypeWithName(@NotNull XMLStreamReader reader, int event, @NotNull String name) {
         return reader.getEventType() == event && reader.getName().getLocalPart().equals(name);
     }
 
     private static void next(@NotNull XMLStreamReader reader) throws XMLStreamException {
         reader.next();
-        String message = getEventTypeString(reader.getEventType());
-        if (reader.getEventType() == XMLEvent.START_ELEMENT || reader.getEventType() == XMLEvent.END_ELEMENT) {
-            message += ": " + reader.getName().toString();
-            if (isCodeListStart(reader) || isItemDefStart(reader)) {
-                message += " - " + reader.getAttributeValue("", "OID");
+        if (LOG_EVENTS) {
+            String message = getEventTypeString(reader.getEventType());
+            if (reader.getEventType() == XMLEvent.START_ELEMENT || reader.getEventType() == XMLEvent.END_ELEMENT) {
+                message += ": " + reader.getName().toString();
+                if (isCodeListStart(reader) || isItemDefStart(reader)) {
+                    message += " - " + reader.getAttributeValue("", "OID");
+                }
             }
+            LOGGER.info(message);
         }
-        LOGGER.info(message);
     }
 
     @NotNull

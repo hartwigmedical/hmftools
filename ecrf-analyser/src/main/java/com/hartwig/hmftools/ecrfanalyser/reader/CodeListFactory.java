@@ -2,7 +2,6 @@ package com.hartwig.hmftools.ecrfanalyser.reader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 final class CodeListFactory {
@@ -18,8 +17,8 @@ final class CodeListFactory {
         // KODU: Convert "1=x" to "x".
         int marker = codeListItemString.indexOf(CODE_LIST_MARKER);
         if (marker < 0) {
-            LOGGER.warn("Cannot parse code list string: " + codeListItemString);
-            return Strings.EMPTY;
+            LOGGER.warn("Invalid code list item, expected a \"" + CODE_LIST_MARKER + "\" in " + codeListItemString);
+            return codeListItemString;
         }
 
         return codeListItemString.substring(marker + 1).trim();
