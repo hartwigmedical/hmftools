@@ -40,7 +40,5 @@ public class EcrfAnalysisApplication {
 
         List<EcrfField> datamodel = EcrfReader.extractFields(reader);
         int x = 1;
-
     }
-
 }

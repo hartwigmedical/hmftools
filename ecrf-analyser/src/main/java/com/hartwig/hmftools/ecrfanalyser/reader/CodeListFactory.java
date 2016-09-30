@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.ecrfanalyser.reader;
 
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 final class CodeListFactory {
@@ -18,24 +14,14 @@ final class CodeListFactory {
     }
 
     @NotNull
-    static Map<Integer, String> extractValuesFromStrings(@NotNull List<String> codeListItems) {
-        Map<Integer, String> values = Maps.newHashMap();
-
-        for (String codeListString : codeListItems) {
-            int marker = codeListString.indexOf(CODE_LIST_MARKER);
-            if (marker < 0) {
-                LOGGER.warn("Cannot parse code list string: " + codeListString);
-            } else {
-                String index = codeListString.substring(0, marker).trim();
-                String value = codeListString.substring(marker + 1).trim();
-
-                try {
-                    values.put(Integer.valueOf(index), value);
-                } catch (NumberFormatException exception) {
-                    LOGGER.warn("Could not convert index to Integer: " + index);
-                }
-            }
+    static String fromText(@NotNull String codeListItemString) {
+        // KODU: Convert "1=x" to "x".
+        int marker = codeListItemString.indexOf(CODE_LIST_MARKER);
+        if (marker < 0) {
+            LOGGER.warn("Cannot parse code list string: " + codeListItemString);
+            return Strings.EMPTY;
         }
-        return values;
+
+        return codeListItemString.substring(marker + 1).trim();
     }
 }

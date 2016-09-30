@@ -30,7 +30,10 @@ public final class EcrfReader {
 
     private static final String CODE_LIST_TAG = "CodeList";
     private static final String CODE_LIST_OID_ATTRIBUTE = "OID";
-    private static final String CODE_LIST_ITEM = "TranslatedText";
+    private static final String CODE_LIST_ITEM_TAG = "CodeListItem";
+    private static final String CODE_LIST_ITEM_VALUE_ATTRIBUTE = "CodedValue";
+    private static final String CODE_LIST_ITEM_CONTENT = "TranslatedText";
+
 
     private EcrfReader() {
     }
@@ -106,16 +109,20 @@ public final class EcrfReader {
     @NotNull
     private static CodeList extractCodeList(@NotNull XMLStreamReader reader) throws XMLStreamException {
         String OID = reader.getAttributeValue("", CODE_LIST_OID_ATTRIBUTE);
-        List<String> codeListItems = Lists.newArrayList();
+        Map<Integer, String> codeListItems = Maps.newHashMap();
         while (!isCodeListEnd(reader)) {
             next(reader);
             if (isCodeListItem(reader)) {
+                int index = Integer.valueOf(reader.getAttributeValue("", CODE_LIST_ITEM_VALUE_ATTRIBUTE));
+                while (!isCodeListItemContent(reader)) {
+                    next(reader);
+                }
                 // KODU: The item content for the code lists is held in text in the next event!
                 next(reader);
-                codeListItems.add(reader.getText());
+                codeListItems.put(index, CodeListFactory.fromText(reader.getText()));
             }
         }
-        return new CodeList(OID, CodeListFactory.extractValuesFromStrings(codeListItems));
+        return new CodeList(OID, codeListItems);
     }
 
     private static boolean isClinicalDataStart(@NotNull XMLStreamReader reader) {
@@ -143,9 +150,12 @@ public final class EcrfReader {
     }
 
     private static boolean isCodeListItem(@NotNull XMLStreamReader reader) {
-        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_ITEM);
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_ITEM_TAG);
     }
 
+    private static boolean isCodeListItemContent(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_ITEM_CONTENT);
+    }
 
     private static boolean isOfTypeWithName(@NotNull XMLStreamReader reader, int event,
             @NotNull String name) {
