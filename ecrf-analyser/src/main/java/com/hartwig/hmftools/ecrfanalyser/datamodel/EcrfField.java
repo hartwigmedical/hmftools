@@ -41,4 +41,8 @@ public class EcrfField {
     public Map<Integer, String> values() {
         return values;
     }
+
+    public boolean isFreeText() {
+        return values.size() == 0;
+    }
 }

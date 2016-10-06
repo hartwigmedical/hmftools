@@ -20,7 +20,6 @@ public class EcrfAnalysisApplicationTest {
         EcrfAnalysisApplication app = new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT);
 
         List<String> patients = Lists.newArrayList();
-        List<String> fields = Lists.newArrayList();
-        app.generateCsv(patients, fields);
+        app.generateCsv(patients);
     }
 }

@@ -18,7 +18,7 @@ import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 
 import org.junit.Test;
 
-public class EcrfReaderTest {
+public class EcrfFieldReaderTest {
 
     private static final String TEST_ECRF = Resources.getResource("tests/datamodel.xml").getPath();
 
@@ -27,7 +27,7 @@ public class EcrfReaderTest {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(TEST_ECRF));
 
-        ODMContainer container = EcrfReader.extractODM(reader);
+        ODMContainer container = EcrfFieldReader.extractODM(reader);
         assertEquals(2, container.itemDefs().size());
         assertEquals(2, container.codeLists().size());
     }
@@ -43,7 +43,7 @@ public class EcrfReaderTest {
         String option2 = "y";
 
         List<ItemDef> itemDefs = Lists.newArrayList(
-                new ItemDef(ItemDefTestFunctions.toOID(category, fieldName), description, codeListOID));
+                new ItemDef(OIDFunctions.toOID(category, fieldName), description, codeListOID));
         Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
@@ -51,7 +51,7 @@ public class EcrfReaderTest {
         List<CodeList> codeLists = Lists.newArrayList(new CodeList(codeListOID, codeListItems));
         ODMContainer matchingContainer = new ODMContainer(itemDefs, codeLists);
 
-        List<EcrfField> fields = EcrfReader.odmToEcrfFields(matchingContainer);
+        List<EcrfField> fields = EcrfFieldReader.odmToEcrfFields(matchingContainer);
 
         assertEquals(1, fields.size());
         EcrfField field = fields.get(0);

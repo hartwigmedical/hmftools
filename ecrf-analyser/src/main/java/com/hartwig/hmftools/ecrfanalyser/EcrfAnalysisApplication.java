@@ -11,7 +11,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
-import com.hartwig.hmftools.ecrfanalyser.reader.EcrfReader;
+import com.hartwig.hmftools.ecrfanalyser.reader.EcrfFieldReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,17 +35,18 @@ public class EcrfAnalysisApplication {
         this.csvOutPath = csvOutPath;
     }
 
-    void generateCsv(@NotNull List<String> patients, @NotNull List<String> fields)
+    void generateCsv(@NotNull List<String> patients)
             throws IOException, XMLStreamException {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
 
-        List<EcrfField> datamodel = EcrfReader.extractFields(reader);
+        List<EcrfField> allFields = EcrfFieldReader.readFields(reader);
+        //        EcrfPatientReader.readPatients(reader, allFields);
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("CATEGORY, FIELDNAME, DESCRIPTION, VALUES");
 
-        for (EcrfField field : datamodel) {
+        for (EcrfField field : allFields) {
             writer.newLine();
             writer.write(toCSV(field));
         }
