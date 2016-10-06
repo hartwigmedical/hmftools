@@ -12,13 +12,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class EcrfPatientReader extends EcrfReader {
-
-    private static final Logger LOGGER = LogManager.getLogger(EcrfPatientReader.class);
 
     private static final String PATIENT_TAG = "SubjectData";
     private static final String PATIENT_ID_ATTRIBUTE = "SubjectKey";
@@ -66,11 +62,7 @@ public final class EcrfPatientReader extends EcrfReader {
                 String OID = reader.getAttributeValue("", FIELD_OID_ATTRIBUTE);
                 EcrfField field = OIDtoEcrfFieldMap.get(OID);
                 if (field != null) {
-                    String value = reader.getAttributeValue("", FIELD_VALUE_ATTRIBUTE);
-                    if (!field.isFreeText()) {
-                        value = field.values().get(Integer.valueOf(value));
-                    }
-                    fieldValues.put(field, value);
+                    fieldValues.put(field, field.resolveValue(reader.getAttributeValue("", FIELD_VALUE_ATTRIBUTE)));
                 }
             }
             reader.next();

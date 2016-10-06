@@ -37,19 +37,23 @@ public class EcrfPatientReaderTest {
         field1Values.put(3, "three");
         EcrfField field1 = new EcrfField("CATEGORY", "field1", "", field1Values);
         EcrfField field2 = new EcrfField("CATEGORY", "field2", "", Maps.<Integer, String>newHashMap());
+        EcrfField birthDate = new EcrfField("CATEGORY", "BIRTHDTC", "", Maps.<Integer, String>newHashMap());
 
-        List<EcrfPatient> patients = EcrfPatientReader.readPatients(reader, Lists.newArrayList(field1, field2));
+        List<EcrfPatient> patients = EcrfPatientReader.readPatients(reader,
+                Lists.newArrayList(field1, field2, birthDate));
 
         assertEquals(2, patients.size());
 
-        assertEquals(2, patients.get(0).fields().size());
+        assertEquals(3, patients.get(0).fields().size());
         assertEquals(PATIENT_1, patients.get(0).patientId());
         assertEquals("one", patients.get(0).fieldValue(field1));
         assertEquals("hi", patients.get(0).fieldValue(field2));
+        assertEquals("2016-01-01", patients.get(0).fieldValue(birthDate));
 
-        assertEquals(2, patients.get(1).fields().size());
+        assertEquals(3, patients.get(1).fields().size());
         assertEquals(PATIENT_2, patients.get(1).patientId());
         assertEquals("two", patients.get(1).fieldValue(field1));
         assertEquals("hi there", patients.get(1).fieldValue(field2));
+        assertEquals("2016-01-01", patients.get(1).fieldValue(birthDate));
     }
 }

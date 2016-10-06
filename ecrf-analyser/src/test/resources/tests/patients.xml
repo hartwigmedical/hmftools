@@ -8,6 +8,7 @@
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                         <ItemData ItemOID="FLD.CATEGORY.field1" Value="1"/>
                         <ItemData ItemOID="FLD.CATEGORY.field2" Value="hi"/>
+                        <ItemData ItemOID="FLD.CATEGORY.BIRTHDTC" Value="2016-02-02"/>
                     </ItemGroupData>
                 </FormData>
             </StudyEventData>
@@ -19,6 +20,7 @@
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                         <ItemData ItemOID="FLD.CATEGORY.field1" Value="2"/>
                         <ItemData ItemOID="FLD.CATEGORY.field2" Value="hi there"/>
+                        <ItemData ItemOID="FLD.CATEGORY.BIRTHDTC" Value="2016-03-03"/>
                     </ItemGroupData>
                 </FormData>
             </StudyEventData>

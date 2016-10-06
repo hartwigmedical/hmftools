@@ -2,9 +2,16 @@ package com.hartwig.hmftools.ecrfanalyser.datamodel;
 
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class EcrfField {
+
+    private static final Logger LOGGER = LogManager.getLogger(EcrfField.class);
+    private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
+
     @NotNull
     private final String category;
     @NotNull
@@ -42,7 +49,23 @@ public class EcrfField {
         return values;
     }
 
-    public boolean isFreeText() {
-        return values.size() == 0;
+    @NotNull
+    public String resolveValue(@NotNull String ecrfValue) {
+        String value;
+        if (values.size() > 0) {
+            value = values.get(Integer.valueOf(ecrfValue));
+            if (value == null) {
+                LOGGER.warn("Could not find value in dropdown for " + fieldName() + ": " + ecrfValue);
+                value = Strings.EMPTY;
+            }
+        } else {
+            value = ecrfValue;
+        }
+
+        if (fieldName().contains(BIRTH_DATE_IDENTIFIER)) {
+            value = value.substring(0, 4) + "-01-01";
+        }
+
+        return value;
     }
 }
