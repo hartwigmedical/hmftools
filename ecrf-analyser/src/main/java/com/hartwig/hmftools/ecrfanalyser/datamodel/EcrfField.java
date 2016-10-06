@@ -68,7 +68,11 @@ public class EcrfField implements Comparable<EcrfField> {
         }
 
         if (fieldName.contains(BIRTH_DATE_IDENTIFIER)) {
-            value = value.substring(0, 4) + "-01-01";
+            if (value.length() < 4) {
+                LOGGER.warn("Weird " + BIRTH_DATE_IDENTIFIER + " value: " + value);
+            } else {
+                value = value.substring(0, 4) + "-01-01";
+            }
         }
 
         return value;
