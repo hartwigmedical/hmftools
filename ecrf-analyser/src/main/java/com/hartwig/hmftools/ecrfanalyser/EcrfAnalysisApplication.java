@@ -54,29 +54,36 @@ public class EcrfAnalysisApplication {
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
 
-        String header = "PATIENT";
         Set<EcrfField> fields = Sets.newTreeSet(patients.get(0).fields());
-        for (EcrfField field : fields) {
-            header += (", " + field.category() + "." + field.fieldName());
+
+        String header = "PATIENT";
+
+        for (EcrfPatient patient : patients) {
+            header += (", " + patient.patientId());
         }
         writer.write(header);
 
-        for (EcrfPatient patient : patients) {
+        for (EcrfField field : fields) {
             writer.newLine();
             // KODU: Pass fields of first patient to enforce consistency across all patients.
-            writer.write(patientToCSV(patient, fields));
+            writer.write(fieldDataToCSV(field, patients));
         }
         writer.close();
     }
 
     @NotNull
-    private static String patientToCSV(@NotNull EcrfPatient patient, @NotNull Set<EcrfField> fields) {
-        String patientCSV = patient.patientId();
-        for (EcrfField field : fields) {
+    private static String fieldDataToCSV(@NotNull EcrfField field, @NotNull List<EcrfPatient> patients) {
+        String fieldCSV = toFieldName(field);
+        for (EcrfPatient patient : patients) {
             String value = patient.fieldValue(field);
-            patientCSV += ", " + value.replaceAll(",", ":");
+            fieldCSV += ", " + value.replaceAll(",", ":");
         }
-        return patientCSV;
+        return fieldCSV;
+    }
+
+    @NotNull
+    private static String toFieldName(@NotNull EcrfField field) {
+        return field.category() + "." + field.fieldName();
     }
 
     @SuppressWarnings("unused")
