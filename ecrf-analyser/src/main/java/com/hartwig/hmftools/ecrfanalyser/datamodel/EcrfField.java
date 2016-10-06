@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class EcrfField {
+public class EcrfField implements Comparable<EcrfField> {
 
     private static final Logger LOGGER = LogManager.getLogger(EcrfField.class);
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
@@ -53,19 +53,40 @@ public class EcrfField {
     public String resolveValue(@NotNull String ecrfValue) {
         String value;
         if (values.size() > 0) {
-            value = values.get(Integer.valueOf(ecrfValue));
-            if (value == null) {
-                LOGGER.warn("Could not find value in dropdown for " + fieldName() + ": " + ecrfValue);
+            if (isInteger(ecrfValue)) {
+                value = values.get(Integer.valueOf(ecrfValue));
+                if (value == null) {
+                    LOGGER.warn("Could not find value in dropdown for " + fieldName + ": " + ecrfValue);
+                    value = Strings.EMPTY;
+                }
+            } else {
+                LOGGER.warn("Could not convert value from list to integer for " + fieldName + ": " + ecrfValue);
                 value = Strings.EMPTY;
             }
         } else {
             value = ecrfValue;
         }
 
-        if (fieldName().contains(BIRTH_DATE_IDENTIFIER)) {
+        if (fieldName.contains(BIRTH_DATE_IDENTIFIER)) {
             value = value.substring(0, 4) + "-01-01";
         }
 
         return value;
+    }
+
+    private static boolean isInteger(@NotNull String integerString) {
+        try {
+            return Integer.valueOf(integerString) != null;
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+    }
+
+    public int compareTo(@NotNull EcrfField other) {
+        if (category.equals(other.category)) {
+            return fieldName.compareTo(other.fieldName);
+        } else {
+            return category.compareTo(other.category);
+        }
     }
 }
