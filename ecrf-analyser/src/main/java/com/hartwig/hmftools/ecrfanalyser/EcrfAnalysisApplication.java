@@ -63,7 +63,7 @@ public class EcrfAnalysisApplication {
 
         for (EcrfPatient patient : patients) {
             writer.newLine();
-            // KODU: Pass fields of first patient to enforce consistency accross all patients.
+            // KODU: Pass fields of first patient to enforce consistency across all patients.
             writer.write(patientToCSV(patient, fields));
         }
         writer.close();
