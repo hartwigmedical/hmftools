@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class EcrfPatient {
 
@@ -27,7 +28,7 @@ public class EcrfPatient {
         return fields.keySet();
     }
 
-    @NotNull
+    @Nullable
     public String fieldValue(@NotNull EcrfField field) {
         return fields.get(field);
     }

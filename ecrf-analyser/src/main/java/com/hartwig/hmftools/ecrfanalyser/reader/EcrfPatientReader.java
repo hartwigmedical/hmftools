@@ -27,7 +27,7 @@ public final class EcrfPatientReader extends EcrfReader {
     }
 
     @NotNull
-    public static List<EcrfPatient> readPatients(@NotNull XMLStreamReader reader, @NotNull List<EcrfField> fields)
+    public static List<EcrfPatient> readPatients(@NotNull XMLStreamReader reader, @NotNull Iterable<EcrfField> fields)
             throws XMLStreamException {
         List<EcrfPatient> patients = Lists.newArrayList();
         Map<String, EcrfField> OIDToEcrfFields = mapOIDToEcrfFields(fields);
@@ -43,7 +43,7 @@ public final class EcrfPatientReader extends EcrfReader {
     }
 
     @NotNull
-    private static Map<String, EcrfField> mapOIDToEcrfFields(@NotNull List<EcrfField> fields) {
+    private static Map<String, EcrfField> mapOIDToEcrfFields(@NotNull Iterable<EcrfField> fields) {
         Map<String, EcrfField> mapping = Maps.newHashMap();
         for (EcrfField field : fields) {
             mapping.put(OIDFunctions.toOID(field.category(), field.fieldName()), field);
