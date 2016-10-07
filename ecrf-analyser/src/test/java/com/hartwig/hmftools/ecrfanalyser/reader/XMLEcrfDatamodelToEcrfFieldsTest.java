@@ -15,30 +15,35 @@ public class XMLEcrfDatamodelToEcrfFieldsTest {
 
     @Test
     public void canConvertXMLObjectContainerToEcrfFields() {
-        String fieldName = "blaCategory.blaName";
+        String studyOID = "Study";
+        String formOID = "Form";
+        String itemGroupOID = "ItemGroup";
+        String itemOID = "Item";
         String description = "bla";
 
         String codeListOID = "list";
         String option1 = "x";
         String option2 = "y";
 
-        List<Item> items = Lists.newArrayList(new Item(OIDFunctions.toOID(fieldName), description, codeListOID));
+        List<StudyEvent> studyEvents = Lists.newArrayList(new StudyEvent(studyOID, Lists.newArrayList(formOID)));
+        List<Form> forms = Lists.newArrayList(new Form(formOID, Lists.newArrayList(itemGroupOID)));
+        List<ItemGroup> itemGroups = Lists.newArrayList(new ItemGroup(itemGroupOID, Lists.newArrayList(itemOID)));
+        List<Item> items = Lists.newArrayList(new Item(itemOID, description, codeListOID));
         Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
 
         List<CodeList> codeLists = Lists.newArrayList(new CodeList(codeListOID, codeListItems));
-        XMLEcrfDatamodel matchingContainer = new XMLEcrfDatamodel(Lists.<StudyEvent>newArrayList(),
-                Lists.<Form>newArrayList(), Lists.<ItemGroup>newArrayList(), items, codeLists);
+        XMLEcrfDatamodel datamodel = new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
 
-        List<EcrfField> fields = XMLEcrfDatamodelToEcrfFields.convert(matchingContainer);
+        List<EcrfField> fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);
 
         assertEquals(1, fields.size());
         EcrfField field = fields.get(0);
-        assertEquals(fieldName, field.name());
+        assertEquals(itemOID, field.name());
         assertEquals(description, field.description());
 
-        Map<Integer, String> values = field.values();
+        Map<Integer, String> values = field.codeList();
         assertEquals(option1, values.get(1));
         assertEquals(option2, values.get(2));
     }

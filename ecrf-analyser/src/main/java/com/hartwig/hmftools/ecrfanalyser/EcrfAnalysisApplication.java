@@ -15,8 +15,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
-import com.hartwig.hmftools.ecrfanalyser.reader.XMLDatamodelReader;
 import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodel;
+import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodelReader;
 import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodelToEcrfFields;
 import com.hartwig.hmftools.ecrfanalyser.reader.XMLPatientReader;
 
@@ -96,7 +96,7 @@ public class EcrfAnalysisApplication {
     void run() throws IOException, XMLStreamException {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
-        XMLEcrfDatamodel datamodel = XMLDatamodelReader.readXMLDatamodel(reader);
+        XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
 
         Iterable<EcrfField> allFields = Sets.newTreeSet(XMLEcrfDatamodelToEcrfFields.convert(datamodel));
         Iterable<EcrfPatient> allPatients = XMLPatientReader.readPatients(reader, allFields);
@@ -165,7 +165,7 @@ public class EcrfAnalysisApplication {
     @NotNull
     private static String fieldToCSV(@NotNull EcrfField field) {
         String valuesString = "";
-        for (String value : field.values().values()) {
+        for (String value : field.codeList().values()) {
             valuesString += value.replaceAll(",", ":") + ", ";
         }
         if (valuesString.length() > 0) {

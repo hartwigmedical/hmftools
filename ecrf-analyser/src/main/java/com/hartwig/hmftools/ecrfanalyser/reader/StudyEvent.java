@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-class StudyEvent {
+class StudyEvent implements OIDObject {
 
     @NotNull
     private final String OID;
@@ -14,5 +14,15 @@ class StudyEvent {
     StudyEvent(@NotNull final String OID, @NotNull final List<String> formOIDs) {
         this.OID = OID;
         this.formOIDs = formOIDs;
+    }
+
+    @NotNull
+    public String OID() {
+        return OID;
+    }
+
+    @NotNull
+    List<String> formOIDs() {
+        return formOIDs;
     }
 }

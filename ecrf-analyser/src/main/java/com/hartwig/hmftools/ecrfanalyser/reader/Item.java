@@ -3,7 +3,8 @@ package com.hartwig.hmftools.ecrfanalyser.reader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class Item {
+class Item implements OIDObject {
+
     @NotNull
     private final String OID;
     @NotNull
@@ -18,7 +19,7 @@ class Item {
     }
 
     @NotNull
-    String OID() {
+    public String OID() {
         return OID;
     }
 
@@ -32,9 +33,4 @@ class Item {
         return codeListOID;
     }
 
-    @Override
-    public String toString() {
-        return "Item{" + "OID='" + OID + '\'' + ", name='" + name + '\'' + ", codeListOID='" + codeListOID + '\''
-                + '}';
-    }
 }

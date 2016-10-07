@@ -28,17 +28,17 @@ public class XMLEcrfDatamodel {
     }
 
     @NotNull
-    public List<StudyEvent> studyEvents() {
+    List<StudyEvent> studyEvents() {
         return studyEvents;
     }
 
     @NotNull
-    public List<Form> forms() {
+    List<Form> forms() {
         return forms;
     }
 
     @NotNull
-    public List<ItemGroup> itemGroups() {
+    List<ItemGroup> itemGroups() {
         return itemGroups;
     }
 

@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
-class CodeList {
+class CodeList implements OIDObject {
 
     @NotNull
     private final String OID;
@@ -17,7 +17,7 @@ class CodeList {
     }
 
     @NotNull
-    String OID() {
+    public String OID() {
         return OID;
     }
 
@@ -28,6 +28,6 @@ class CodeList {
 
     @Override
     public String toString() {
-        return "CodeList{" + "OID='" + OID + '\'' + ", values=" + values + '}';
+        return "CodeList{" + "OID='" + OID + '\'' + ", codeList=" + values + '}';
     }
 }

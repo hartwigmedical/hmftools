@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-class ItemGroup {
+class ItemGroup implements OIDObject {
 
     @NotNull
     private final String OID;
@@ -14,5 +14,15 @@ class ItemGroup {
     ItemGroup(@NotNull final String OID, @NotNull final List<String> itemOIDs) {
         this.OID = OID;
         this.itemOIDs = itemOIDs;
+    }
+
+    @NotNull
+    public String OID() {
+        return OID;
+    }
+
+    @NotNull
+    List<String> itemOIDs() {
+        return itemOIDs;
     }
 }

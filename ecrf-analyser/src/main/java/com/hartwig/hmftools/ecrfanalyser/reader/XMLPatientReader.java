@@ -58,7 +58,7 @@ public final class XMLPatientReader extends EcrfReader {
     private static Map<String, EcrfField> mapOIDToEcrfFields(@NotNull Iterable<EcrfField> fields) {
         Map<String, EcrfField> mapping = Maps.newHashMap();
         for (EcrfField field : fields) {
-            mapping.put(OIDFunctions.toOID(field.name()), field);
+            mapping.put(field.itemOID(), field);
         }
         return mapping;
     }
