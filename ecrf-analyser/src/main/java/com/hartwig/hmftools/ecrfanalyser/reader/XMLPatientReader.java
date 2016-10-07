@@ -10,6 +10,7 @@ import javax.xml.stream.events.XMLEvent;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
+import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfFieldFunctions;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfResolveException;
 
@@ -85,7 +86,8 @@ public final class XMLPatientReader extends EcrfReader {
                 if (field != null) {
                     String value = Strings.EMPTY;
                     try {
-                        value = field.resolveValue(reader.getAttributeValue("", FIELD_VALUE_ATTRIBUTE));
+                        value = EcrfFieldFunctions.resolveValue(field,
+                                reader.getAttributeValue("", FIELD_VALUE_ATTRIBUTE));
                     } catch (EcrfResolveException exception) {
                         LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
                     }

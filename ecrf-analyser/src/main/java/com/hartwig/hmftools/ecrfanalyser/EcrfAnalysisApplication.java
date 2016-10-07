@@ -109,14 +109,15 @@ public class EcrfAnalysisApplication {
             patientIds.remove(patient.patientId());
         }
 
-        // KODU: Add empty patient in case we want to filter on non-existing patient!
         for (String patientId : patientIds) {
+            LOGGER.warn("Did not find ECRF record for " + patientId);
             filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, String>newHashMap()));
         }
 
-        writePatientsToCSV(filteredPatients, allFields, csvOutPath);
+        writeDatamodelToCSV(allFields, csvOutPath);
     }
 
+    @SuppressWarnings("unused")
     private static void writePatientsToCSV(@NotNull List<EcrfPatient> patients, @NotNull Iterable<EcrfField> fields,
             @NotNull String csvOutPath) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
@@ -150,10 +151,10 @@ public class EcrfAnalysisApplication {
     }
 
     @SuppressWarnings("unused")
-    private static void writeDatamodelToCSV(@NotNull List<EcrfField> fields, @NotNull String csvOutPath)
+    private static void writeDatamodelToCSV(@NotNull Iterable<EcrfField> fields, @NotNull String csvOutPath)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
-        writer.write("FIELD, DESCRIPTION, VALUES");
+        writer.write("STUDY, FORM, GROUP, FIELD, DESCRIPTION, VALUES");
 
         for (EcrfField field : fields) {
             writer.newLine();
@@ -171,6 +172,7 @@ public class EcrfAnalysisApplication {
         if (valuesString.length() > 0) {
             valuesString = valuesString.substring(0, valuesString.length() - 2);
         }
-        return field.name() + ", " + field.description().replaceAll(",", ":") + ", " + valuesString;
+        return field.studyEventOID() + ", " + field.formOID() + ", " + field.itemGroupOID() + ", " + field.itemOID()
+                + ", " + field.description().replaceAll(",", ":") + ", " + valuesString;
     }
 }

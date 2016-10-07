@@ -6,8 +6,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class EcrfField implements Comparable<EcrfField> {
 
-    private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
-
     @NotNull
     private final String studyEventOID;
     @NotNull
@@ -65,43 +63,6 @@ public class EcrfField implements Comparable<EcrfField> {
     @NotNull
     public Map<Integer, String> codeList() {
         return codeList;
-    }
-
-    @NotNull
-    public String resolveValue(@NotNull String ecrfValue) throws EcrfResolveException {
-        String value;
-        if (codeList.size() > 0 && ecrfValue.length() > 0) {
-            if (isInteger(ecrfValue)) {
-                value = codeList.get(Integer.valueOf(ecrfValue));
-                if (value == null) {
-                    throw new EcrfResolveException(
-                            "Could not find value in dropdown for " + itemOID + ": " + ecrfValue);
-                }
-            } else {
-                throw new EcrfResolveException(
-                        "Could not convert value from list to integer for " + itemOID + ": " + ecrfValue);
-            }
-        } else {
-            value = ecrfValue;
-        }
-
-        if (itemOID.contains(BIRTH_DATE_IDENTIFIER) && value.length() > 0) {
-            if (value.length() < 4) {
-                throw new EcrfResolveException("Could not convert " + name() + ": " + value);
-            } else {
-                value = value.substring(0, 4) + "-01-01";
-            }
-        }
-
-        return value;
-    }
-
-    private static boolean isInteger(@NotNull String integerString) {
-        try {
-            return Integer.valueOf(integerString) != null;
-        } catch (NumberFormatException exception) {
-            return false;
-        }
     }
 
     public int compareTo(@NotNull EcrfField other) {
