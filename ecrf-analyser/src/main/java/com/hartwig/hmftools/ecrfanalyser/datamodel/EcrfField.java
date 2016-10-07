@@ -9,30 +9,22 @@ public class EcrfField implements Comparable<EcrfField> {
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
 
     @NotNull
-    private final String category;
-    @NotNull
-    private final String fieldName;
+    private final String name;
     @NotNull
     private final String description;
     @NotNull
     private final Map<Integer, String> values;
 
-    public EcrfField(@NotNull final String category, @NotNull final String fieldName,
-            @NotNull final String description, @NotNull final Map<Integer, String> values) {
-        this.category = category;
-        this.fieldName = fieldName;
+    public EcrfField(@NotNull final String name, @NotNull final String description,
+            @NotNull final Map<Integer, String> values) {
+        this.name = name;
         this.description = description;
         this.values = values;
     }
 
     @NotNull
-    public String category() {
-        return category;
-    }
-
-    @NotNull
-    public String fieldName() {
-        return fieldName;
+    public String name() {
+        return name;
     }
 
     @NotNull
@@ -52,20 +44,19 @@ public class EcrfField implements Comparable<EcrfField> {
             if (isInteger(ecrfValue)) {
                 value = values.get(Integer.valueOf(ecrfValue));
                 if (value == null) {
-                    throw new EcrfResolveException(
-                            "Could not find value in dropdown for " + fieldName + ": " + ecrfValue);
+                    throw new EcrfResolveException("Could not find value in dropdown for " + name + ": " + ecrfValue);
                 }
             } else {
                 throw new EcrfResolveException(
-                        "Could not convert value from list to integer for " + fieldName + ": " + ecrfValue);
+                        "Could not convert value from list to integer for " + name + ": " + ecrfValue);
             }
         } else {
             value = ecrfValue;
         }
 
-        if (fieldName.contains(BIRTH_DATE_IDENTIFIER) && value.length() > 0) {
+        if (name.contains(BIRTH_DATE_IDENTIFIER) && value.length() > 0) {
             if (value.length() < 4) {
-                throw new EcrfResolveException("Could not convert " + fieldName() + ": " + value);
+                throw new EcrfResolveException("Could not convert " + name() + ": " + value);
             } else {
                 value = value.substring(0, 4) + "-01-01";
             }
@@ -83,10 +74,6 @@ public class EcrfField implements Comparable<EcrfField> {
     }
 
     public int compareTo(@NotNull EcrfField other) {
-        if (category.equals(other.category)) {
-            return fieldName.compareTo(other.fieldName);
-        } else {
-            return category.compareTo(other.category);
-        }
+        return name.compareTo(other.name);
     }
 }

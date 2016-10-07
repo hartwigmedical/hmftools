@@ -34,8 +34,7 @@ public class EcrfFieldReaderTest {
 
     @Test
     public void canConvertODMContainerToEcrfFields() {
-        String category = "blaCategory";
-        String fieldName = "blaName";
+        String fieldName = "blaCategory.blaName";
         String description = "bla";
 
         String codeListOID = "list";
@@ -43,7 +42,7 @@ public class EcrfFieldReaderTest {
         String option2 = "y";
 
         List<ItemDef> itemDefs = Lists.newArrayList(
-                new ItemDef(OIDFunctions.toOID(category, fieldName), description, codeListOID));
+                new ItemDef(OIDFunctions.toOID(fieldName), description, codeListOID));
         Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
@@ -55,8 +54,7 @@ public class EcrfFieldReaderTest {
 
         assertEquals(1, fields.size());
         EcrfField field = fields.get(0);
-        assertEquals(category, field.category());
-        assertEquals(fieldName, field.fieldName());
+        assertEquals(fieldName, field.name());
         assertEquals(description, field.description());
 
         Map<Integer, String> values = field.values();

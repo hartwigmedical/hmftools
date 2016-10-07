@@ -25,6 +25,12 @@ public final class EcrfPatientReader extends EcrfReader {
     private static final String PATIENT_TAG = "SubjectData";
     private static final String PATIENT_ID_ATTRIBUTE = "SubjectKey";
 
+    private static final String STUDY_EVENT_TAG = "StudyEventData";
+    private static final String STUDY_EVENT_OID_ATTRIBUTE = "StudyEventOID";
+    private static final String FORM_TAG = "FormData";
+    private static final String FORM_OID_ATTRIBUTE = "FormOID";
+    private static final String ITEM_GROUP_TAG = "ItemGroupData";
+    private static final String ITEM_GROUP_OID_ATTRIBUTE = "ItemGroupOID";
     private static final String FIELD_TAG = "ItemData";
     private static final String FIELD_OID_ATTRIBUTE = "ItemOID";
     private static final String FIELD_VALUE_ATTRIBUTE = "Value";
@@ -52,7 +58,7 @@ public final class EcrfPatientReader extends EcrfReader {
     private static Map<String, EcrfField> mapOIDToEcrfFields(@NotNull Iterable<EcrfField> fields) {
         Map<String, EcrfField> mapping = Maps.newHashMap();
         for (EcrfField field : fields) {
-            mapping.put(OIDFunctions.toOID(field.category(), field.fieldName()), field);
+            mapping.put(OIDFunctions.toOID(field.name()), field);
         }
         return mapping;
     }
@@ -63,8 +69,17 @@ public final class EcrfPatientReader extends EcrfReader {
         String patientId = toCPCTPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
         Map<EcrfField, String> fieldValues = Maps.newHashMap();
 
+        String currentStudyEvent;
+        String currentForm;
+        String currentItemGroup;
         while (reader.hasNext() && !isPatientEnd(reader)) {
-            if (isFieldStart(reader)) {
+            if (isStudyEventStart(reader)) {
+                currentStudyEvent = reader.getAttributeValue("", STUDY_EVENT_OID_ATTRIBUTE);
+            } else if (isFormStart(reader)) {
+                currentForm = reader.getAttributeValue("", FORM_OID_ATTRIBUTE);
+            } else if (isItemGroupStart(reader)) {
+                currentItemGroup = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
+            } else if (isFieldStart(reader)) {
                 String OID = reader.getAttributeValue("", FIELD_OID_ATTRIBUTE);
                 EcrfField field = OIDtoEcrfFieldMap.get(OID);
                 if (field != null) {
@@ -97,5 +112,17 @@ public final class EcrfPatientReader extends EcrfReader {
 
     private static boolean isFieldStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, FIELD_TAG);
+    }
+
+    private static boolean isStudyEventStart(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, STUDY_EVENT_TAG);
+    }
+
+    private static boolean isFormStart(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, FORM_TAG);
+    }
+
+    private static boolean isItemGroupStart(@NotNull XMLStreamReader reader) {
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_GROUP_TAG);
     }
 }

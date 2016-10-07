@@ -135,7 +135,7 @@ public class EcrfAnalysisApplication {
 
     @NotNull
     private static String fieldDataToCSV(@NotNull EcrfField field, @NotNull List<EcrfPatient> patients) {
-        String fieldCSV = toFieldName(field);
+        String fieldCSV = field.name();
         for (EcrfPatient patient : patients) {
             String value = patient.fieldValue(field);
             if (value == null) {
@@ -146,16 +146,11 @@ public class EcrfAnalysisApplication {
         return fieldCSV;
     }
 
-    @NotNull
-    private static String toFieldName(@NotNull EcrfField field) {
-        return field.category() + "." + field.fieldName();
-    }
-
     @SuppressWarnings("unused")
     private static void writeDatamodelToCSV(@NotNull List<EcrfField> fields, @NotNull String csvOutPath)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
-        writer.write("CATEGORY, FIELDNAME, DESCRIPTION, VALUES");
+        writer.write("FIELD, DESCRIPTION, VALUES");
 
         for (EcrfField field : fields) {
             writer.newLine();
@@ -173,7 +168,6 @@ public class EcrfAnalysisApplication {
         if (valuesString.length() > 0) {
             valuesString = valuesString.substring(0, valuesString.length() - 2);
         }
-        return field.category() + ", " + field.fieldName() + ", " + field.description().replaceAll(",", ":") + ", "
-                + valuesString;
+        return field.name() + ", " + field.description().replaceAll(",", ":") + ", " + valuesString;
     }
 }

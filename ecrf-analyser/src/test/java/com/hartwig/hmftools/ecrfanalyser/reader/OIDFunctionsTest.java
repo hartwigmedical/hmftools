@@ -7,24 +7,20 @@ import org.junit.Test;
 public class OIDFunctionsTest {
 
     @Test
-    public void canExtractEcrfFields() {
-        String category = "cat";
-        String fieldName = "fldName";
+    public void canConvertBetweenFieldNameAndOID() {
+        String ecrfFieldName = "cat.fldName";
 
-        String OID = OIDFunctions.toOID(category, fieldName);
+        String OID = OIDFunctions.toOID(ecrfFieldName);
 
-        assertEquals(category, OIDFunctions.category(OID));
-        assertEquals(fieldName, OIDFunctions.fieldName(OID));
+        assertEquals(ecrfFieldName, OIDFunctions.toEcrfFieldName(OID));
     }
 
     @Test
     public void canExtractNoCategory() {
-        String category = OIDFunctions.NO_CATEGORY;
-        String fieldName = "fldName";
+        String name = OIDFunctions.NO_CATEGORY + OIDFunctions.OID_SEPARATOR + "fldName";
 
-        String OID = OIDFunctions.toOID(category, fieldName);
+        String OID = OIDFunctions.toOID(name);
 
-        assertEquals(category, OIDFunctions.category(OID));
-        assertEquals(fieldName, OIDFunctions.fieldName(OID));
+        assertEquals(name, OIDFunctions.toEcrfFieldName(OID));
     }
 }

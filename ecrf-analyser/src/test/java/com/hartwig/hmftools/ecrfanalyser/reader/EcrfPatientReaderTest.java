@@ -35,9 +35,9 @@ public class EcrfPatientReaderTest {
         field1Values.put(1, "one");
         field1Values.put(2, "two");
         field1Values.put(3, "three");
-        EcrfField field1 = new EcrfField("CATEGORY", "field1", "", field1Values);
-        EcrfField field2 = new EcrfField("CATEGORY", "field2", "", Maps.<Integer, String>newHashMap());
-        EcrfField birthDate = new EcrfField("CATEGORY", "BIRTHDTC", "", Maps.<Integer, String>newHashMap());
+        EcrfField field1 = new EcrfField("CATEGORY.field1", "", field1Values);
+        EcrfField field2 = new EcrfField("CATEGORY.field2", "", Maps.<Integer, String>newHashMap());
+        EcrfField birthDate = new EcrfField("CATEGORY.BIRTHDTC", "", Maps.<Integer, String>newHashMap());
 
         List<EcrfPatient> patients = EcrfPatientReader.readPatients(reader,
                 Lists.newArrayList(field1, field2, birthDate));

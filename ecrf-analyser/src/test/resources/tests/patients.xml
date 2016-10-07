@@ -2,9 +2,9 @@
 <ODM>
     <ClinicalData StudyOID="CPCT2" MetaDataVersionOID="24">
         <SubjectData SubjectKey="CPCT-02-02-0202">
-            <StudyEventData StudyEventOID="SE.BASELINE" StudyEventRepeatKey="0">
-                <FormData FormOID="FRM.whatever" FormRepeatKey="0">
-                    <ItemGroupData ItemGroupOID="whatever" ItemGroupRepeatKey="1">
+            <StudyEventData StudyEventOID="SE.TOPIC" StudyEventRepeatKey="0">
+                <FormData FormOID="FRM.SUBTOPIC" FormRepeatKey="0">
+                    <ItemGroupData ItemGroupOID="GRP.SUBTOPIC.CATEGORY" ItemGroupRepeatKey="1">
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                         <ItemData ItemOID="FLD.CATEGORY.field1" Value="1"/>
                         <ItemData ItemOID="FLD.CATEGORY.field2" Value="hi"/>
@@ -14,9 +14,9 @@
             </StudyEventData>
         </SubjectData>
         <SubjectData SubjectKey="CPCT-03-03-0303">
-            <StudyEventData StudyEventOID="SE.BASELINE" StudyEventRepeatKey="0">
-                <FormData FormOID="FRM.whatever" FormRepeatKey="0">
-                    <ItemGroupData ItemGroupOID="whatever" ItemGroupRepeatKey="1">
+            <StudyEventData StudyEventOID="SE.TOPIC" StudyEventRepeatKey="0">
+                <FormData FormOID="FRM.SUBTOPIC" FormRepeatKey="0">
+                    <ItemGroupData ItemGroupOID="GRP.SUBTOPIC.CATEGORY" ItemGroupRepeatKey="1">
                         <ItemData ItemOID="FLD.FormStatus" Value="1"/>
                         <ItemData ItemOID="FLD.CATEGORY.field1" Value="2"/>
                         <ItemData ItemOID="FLD.CATEGORY.field2" Value="hi there"/>

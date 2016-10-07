@@ -7,8 +7,9 @@ import org.jetbrains.annotations.NotNull;
 final class OIDFunctions {
 
     private static final String OID_PREFIX = "FLD";
-    private static final String OID_SEPARATOR = ".";
 
+    @VisibleForTesting
+    static final String OID_SEPARATOR = ".";
     @VisibleForTesting
     static final String NO_CATEGORY = "GENERAL";
 
@@ -16,27 +17,25 @@ final class OIDFunctions {
     }
 
     @NotNull
-    static String category(@NotNull String OID) {
+    static String toEcrfFieldName(@NotNull String OID) {
         String[] fields = OID.split("\\" + OID_SEPARATOR);
+        String name = fields[fields.length - 1];
         if (fields.length == 2) {
-            return NO_CATEGORY;
+            return NO_CATEGORY + OID_SEPARATOR + name;
+        } else {
+            assert fields.length == 3;
+            return fields[1] + OID_SEPARATOR + name;
         }
-
-        assert fields.length == 3;
-        return fields[1];
     }
 
     @NotNull
-    static String fieldName(@NotNull String OID) {
-        String[] fields = OID.split("\\" + OID_SEPARATOR);
-        return fields[fields.length - 1];
-    }
-
-    @NotNull
-    static String toOID(@NotNull String category, @NotNull String fieldName) {
+    static String toOID(@NotNull String ecrfFieldName) {
+        String[] fields = ecrfFieldName.split("\\" + OID_SEPARATOR);
+        String category = fields[0];
+        String name = fields[1];
         if (category.equals(NO_CATEGORY)) {
-            return OID_PREFIX + OID_SEPARATOR + fieldName;
+            return OID_PREFIX + OID_SEPARATOR + name;
         }
-        return OID_PREFIX + OID_SEPARATOR + category + OID_SEPARATOR + fieldName;
+        return OID_PREFIX + OID_SEPARATOR + category + OID_SEPARATOR + name;
     }
 }

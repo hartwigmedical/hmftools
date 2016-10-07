@@ -64,11 +64,8 @@ public final class EcrfFieldReader extends EcrfReader {
             if (item.codeListOID() != null) {
                 values = findValuesForCodeList(container.codeLists(), item.codeListOID());
             }
-            String category = OIDFunctions.category(item.OID());
-            String fieldName = OIDFunctions.fieldName(item.OID());
-            String description = item.name();
-
-            fields.add(new EcrfField(category, fieldName, description, values));
+            String name = OIDFunctions.toEcrfFieldName(item.OID());
+            fields.add(new EcrfField(name, item.name(), values));
         }
         return fields;
     }
