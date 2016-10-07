@@ -23,7 +23,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
     private static final String FORM_OID_ATTRIBUTE = "OID";
     private static final String FORM_ITEM_GROUP_REF = "ItemGroupRef";
     private static final String FORM_ITEM_GROUP_OID = "ItemGroupOID";
-    // KODU: This item group is referenced from forms but lacks a proper definition!
+    // KODU: This item group is referenced from forms but lacks definition!
     private static final String FORM_ITEM_GROUP_OID_IGNORE = "GRP.AuditData";
 
     private static final String ITEM_GROUP_TAG = "ItemGroupDef";

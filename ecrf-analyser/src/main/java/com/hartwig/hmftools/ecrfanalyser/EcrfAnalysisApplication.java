@@ -154,7 +154,7 @@ public class EcrfAnalysisApplication {
     private static void writeDatamodelToCSV(@NotNull Iterable<EcrfField> fields, @NotNull String csvOutPath)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
-        writer.write("STUDY, FORM, GROUP, FIELD, DESCRIPTION, VALUES");
+        writer.write("FIELD, DESCRIPTION, VALUES");
 
         for (EcrfField field : fields) {
             writer.newLine();
@@ -172,7 +172,6 @@ public class EcrfAnalysisApplication {
         if (valuesString.length() > 0) {
             valuesString = valuesString.substring(0, valuesString.length() - 2);
         }
-        return field.studyEventOID() + ", " + field.formOID() + ", " + field.itemGroupOID() + ", " + field.itemOID()
-                + ", " + field.description().replaceAll(",", ":") + ", " + valuesString;
+        return field.name() + ", " + field.description().replaceAll(",", ":") + ", " + valuesString;
     }
 }

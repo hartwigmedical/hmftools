@@ -5,8 +5,25 @@ import org.jetbrains.annotations.NotNull;
 public final class EcrfFieldFunctions {
 
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
+    private static final String OID_SEPARATOR = ".";
 
     private EcrfFieldFunctions() {
+    }
+
+    @NotNull
+    public static String name(@NotNull EcrfField field) {
+        String study = lastElement(field.studyEventOID());
+        String form = lastElement(field.formOID());
+        String itemGroup = lastElement(field.itemGroupOID());
+        String item = lastElement(field.itemOID());
+
+        return (study + OID_SEPARATOR + form + OID_SEPARATOR + itemGroup + OID_SEPARATOR + item).toUpperCase();
+    }
+
+    @NotNull
+    private static String lastElement(@NotNull String OID) {
+        String[] elements = OID.split("\\" + OID_SEPARATOR);
+        return elements[elements.length - 1];
     }
 
     @NotNull

@@ -32,7 +32,7 @@ public class EcrfField implements Comparable<EcrfField> {
 
     @NotNull
     public String name() {
-        return itemOID;
+        return EcrfFieldFunctions.name(this);
     }
 
     @NotNull
