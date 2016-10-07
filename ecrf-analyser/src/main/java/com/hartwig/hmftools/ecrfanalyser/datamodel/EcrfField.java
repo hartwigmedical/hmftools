@@ -52,7 +52,7 @@ public class EcrfField implements Comparable<EcrfField> {
     @NotNull
     public String resolveValue(@NotNull String ecrfValue) {
         String value;
-        if (values.size() > 0) {
+        if (values.size() > 0 && ecrfValue.length() > 0) {
             if (isInteger(ecrfValue)) {
                 value = values.get(Integer.valueOf(ecrfValue));
                 if (value == null) {
@@ -67,7 +67,7 @@ public class EcrfField implements Comparable<EcrfField> {
             value = ecrfValue;
         }
 
-        if (fieldName.contains(BIRTH_DATE_IDENTIFIER)) {
+        if (fieldName.contains(BIRTH_DATE_IDENTIFIER) && value.length() > 0) {
             if (value.length() < 4) {
                 LOGGER.warn("Weird " + BIRTH_DATE_IDENTIFIER + " value: " + value);
             } else {
