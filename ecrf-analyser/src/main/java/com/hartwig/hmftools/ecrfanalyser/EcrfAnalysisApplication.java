@@ -15,8 +15,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
-import com.hartwig.hmftools.ecrfanalyser.reader.EcrfFieldReader;
-import com.hartwig.hmftools.ecrfanalyser.reader.EcrfPatientReader;
+import com.hartwig.hmftools.ecrfanalyser.reader.XMLDatamodelReader;
+import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodel;
+import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodelToEcrfFields;
+import com.hartwig.hmftools.ecrfanalyser.reader.XMLPatientReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -94,9 +96,10 @@ public class EcrfAnalysisApplication {
     void run() throws IOException, XMLStreamException {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
+        XMLEcrfDatamodel datamodel = XMLDatamodelReader.readXMLDatamodel(reader);
 
-        Iterable<EcrfField> allFields = Sets.newTreeSet(EcrfFieldReader.readFields(reader));
-        Iterable<EcrfPatient> allPatients = EcrfPatientReader.readPatients(reader, allFields);
+        Iterable<EcrfField> allFields = Sets.newTreeSet(XMLEcrfDatamodelToEcrfFields.convert(datamodel));
+        Iterable<EcrfPatient> allPatients = XMLPatientReader.readPatients(reader, allFields);
 
         List<EcrfPatient> filteredPatients = Lists.newArrayList();
         for (EcrfPatient patient : allPatients) {

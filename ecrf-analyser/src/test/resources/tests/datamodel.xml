@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ODM>
-    <ItemDef OID="FLD.text" Name="this is a text field" DataType="text" Length="80" SASFieldName="whatever"/>
-    <ItemDef OID="FLD.int" Name="this is an int field"
+    <StudyEventDef OID="SE.CATEGORY" Name="whatever" Repeating="No" Type="Common">
+        <FormRef FormOID="FRM.CATEGORY" OrderNumber="1" Mandatory="No"/>
+    </StudyEventDef>
+    <FormDef OID="FRM.CATEGORY" Name="whatever" Repeating="No">
+        <ItemGroupRef ItemGroupOID="GRP.CATEGORY" Mandatory="No"/>
+    </FormDef>
+    <ItemGroupDef OID="GRP.CATEGORY" Name="ANTICOAGULANTS" Repeating="Yes"
+                  SASDatasetName="whatever">
+        <ItemRef ItemOID="FLD.CATEGORY.text" Mandatory="No"/>
+        <ItemRef ItemOID="FLD.CATEGORY.int" Mandatory="No"/>
+    </ItemGroupDef>
+    <ItemDef OID="FLD.CATEGORY.text" Name="this is a text field" DataType="text" Length="80" SASFieldName="whatever"/>
+    <ItemDef OID="FLD.CATEGORY.int" Name="this is an int field"
              DataType="integer" Length="10" SASFieldName="whatever">
         <CodeListRef CodeListOID="code.list"/>
     </ItemDef>

@@ -19,7 +19,7 @@ import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
 
 import org.junit.Test;
 
-public class EcrfPatientReaderTest {
+public class XMLPatientReaderTest {
 
     private static final String TEST_ECRF = Resources.getResource("tests/patients.xml").getPath();
 
@@ -39,7 +39,7 @@ public class EcrfPatientReaderTest {
         EcrfField field2 = new EcrfField("CATEGORY.field2", "", Maps.<Integer, String>newHashMap());
         EcrfField birthDate = new EcrfField("CATEGORY.BIRTHDTC", "", Maps.<Integer, String>newHashMap());
 
-        List<EcrfPatient> patients = EcrfPatientReader.readPatients(reader,
+        List<EcrfPatient> patients = XMLPatientReader.readPatients(reader,
                 Lists.newArrayList(field1, field2, birthDate));
 
         assertEquals(2, patients.size());

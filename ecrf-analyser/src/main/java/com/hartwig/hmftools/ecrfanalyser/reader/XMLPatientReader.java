@@ -18,9 +18,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class EcrfPatientReader extends EcrfReader {
+public final class XMLPatientReader extends EcrfReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(EcrfPatientReader.class);
+    private static final Logger LOGGER = LogManager.getLogger(XMLPatientReader.class);
 
     private static final String PATIENT_TAG = "SubjectData";
     private static final String PATIENT_ID_ATTRIBUTE = "SubjectKey";
@@ -35,7 +35,7 @@ public final class EcrfPatientReader extends EcrfReader {
     private static final String FIELD_OID_ATTRIBUTE = "ItemOID";
     private static final String FIELD_VALUE_ATTRIBUTE = "Value";
 
-    private EcrfPatientReader() {
+    private XMLPatientReader() {
     }
 
     @NotNull
