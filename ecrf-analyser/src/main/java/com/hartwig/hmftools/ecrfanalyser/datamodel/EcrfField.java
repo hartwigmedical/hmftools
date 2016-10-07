@@ -2,14 +2,10 @@ package com.hartwig.hmftools.ecrfanalyser.datamodel;
 
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class EcrfField implements Comparable<EcrfField> {
 
-    private static final Logger LOGGER = LogManager.getLogger(EcrfField.class);
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
 
     @NotNull
@@ -50,18 +46,18 @@ public class EcrfField implements Comparable<EcrfField> {
     }
 
     @NotNull
-    public String resolveValue(@NotNull String ecrfValue) {
+    public String resolveValue(@NotNull String ecrfValue) throws EcrfResolveException {
         String value;
         if (values.size() > 0 && ecrfValue.length() > 0) {
             if (isInteger(ecrfValue)) {
                 value = values.get(Integer.valueOf(ecrfValue));
                 if (value == null) {
-                    LOGGER.warn("Could not find value in dropdown for " + fieldName + ": " + ecrfValue);
-                    value = Strings.EMPTY;
+                    throw new EcrfResolveException(
+                            "Could not find value in dropdown for " + fieldName + ": " + ecrfValue);
                 }
             } else {
-                LOGGER.warn("Could not convert value from list to integer for " + fieldName + ": " + ecrfValue);
-                value = Strings.EMPTY;
+                throw new EcrfResolveException(
+                        "Could not convert value from list to integer for " + fieldName + ": " + ecrfValue);
             }
         } else {
             value = ecrfValue;
@@ -69,7 +65,7 @@ public class EcrfField implements Comparable<EcrfField> {
 
         if (fieldName.contains(BIRTH_DATE_IDENTIFIER) && value.length() > 0) {
             if (value.length() < 4) {
-                LOGGER.warn("Weird " + BIRTH_DATE_IDENTIFIER + " value: " + value);
+                throw new EcrfResolveException("Could not convert " + fieldName() + ": " + value);
             } else {
                 value = value.substring(0, 4) + "-01-01";
             }

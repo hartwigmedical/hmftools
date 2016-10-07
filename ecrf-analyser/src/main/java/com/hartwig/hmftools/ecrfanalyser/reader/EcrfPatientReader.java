@@ -11,10 +11,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
+import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfResolveException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EcrfPatientReader extends EcrfReader {
+
+    private static final Logger LOGGER = LogManager.getLogger(EcrfPatientReader.class);
 
     private static final String PATIENT_TAG = "SubjectData";
     private static final String PATIENT_ID_ATTRIBUTE = "SubjectKey";
@@ -62,7 +68,13 @@ public final class EcrfPatientReader extends EcrfReader {
                 String OID = reader.getAttributeValue("", FIELD_OID_ATTRIBUTE);
                 EcrfField field = OIDtoEcrfFieldMap.get(OID);
                 if (field != null) {
-                    fieldValues.put(field, field.resolveValue(reader.getAttributeValue("", FIELD_VALUE_ATTRIBUTE)));
+                    String value = Strings.EMPTY;
+                    try {
+                        value = field.resolveValue(reader.getAttributeValue("", FIELD_VALUE_ATTRIBUTE));
+                    } catch (EcrfResolveException exception) {
+                        LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
+                    }
+                    fieldValues.put(field, value);
                 }
             }
             reader.next();
