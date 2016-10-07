@@ -167,7 +167,7 @@ public class EcrfAnalysisApplication {
     private static String fieldToCSV(@NotNull EcrfField field) {
         String valuesString = "";
         for (String value : field.codeList().values()) {
-            valuesString += value.replaceAll(",", ":") + ", ";
+            valuesString += value.replaceAll(",", ":") + "; ";
         }
         if (valuesString.length() > 0) {
             valuesString = valuesString.substring(0, valuesString.length() - 2);
