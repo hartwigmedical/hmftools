@@ -11,11 +11,12 @@ public final class EcrfFieldFunctions {
     }
 
     @NotNull
-    public static String name(@NotNull EcrfField field) {
-        String study = lastElement(field.studyEventOID());
-        String form = lastElement(field.formOID());
-        String itemGroup = lastElement(field.itemGroupOID());
-        String item = lastElement(field.itemOID());
+    public static String name(@NotNull String studyEventOID, @NotNull String formOID, @NotNull String itemGroupOID,
+            @NotNull String itemOID) {
+        String study = lastElement(studyEventOID);
+        String form = lastElement(formOID);
+        String itemGroup = lastElement(itemGroupOID);
+        String item = lastElement(itemOID);
 
         return (study + OID_SEPARATOR + form + OID_SEPARATOR + itemGroup + OID_SEPARATOR + item).toUpperCase();
     }

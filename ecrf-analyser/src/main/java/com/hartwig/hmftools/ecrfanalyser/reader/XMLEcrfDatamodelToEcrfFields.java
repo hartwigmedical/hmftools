@@ -30,7 +30,6 @@ public final class XMLEcrfDatamodelToEcrfFields {
                             CodeList codeListObj = findByOID(datamodel.codeLists(), codeListOID);
                             codeList = codeListObj.values();
                         }
-                        //                        String name = OIDFunctions.toEcrfFieldName(item.OID());
                         fields.add(
                                 new EcrfField(studyEvent.OID(), form.OID(), itemGroup.OID(), item.OID(), item.name(),
                                         codeList));

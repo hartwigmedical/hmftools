@@ -32,22 +32,7 @@ public class EcrfField implements Comparable<EcrfField> {
 
     @NotNull
     public String name() {
-        return EcrfFieldFunctions.name(this);
-    }
-
-    @NotNull
-    public String studyEventOID() {
-        return studyEventOID;
-    }
-
-    @NotNull
-    public String formOID() {
-        return formOID;
-    }
-
-    @NotNull
-    public String itemGroupOID() {
-        return itemGroupOID;
+        return EcrfFieldFunctions.name(studyEventOID, formOID, itemGroupOID, itemOID);
     }
 
     @NotNull
