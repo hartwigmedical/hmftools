@@ -15,10 +15,10 @@ public class XMLEcrfDatamodelToEcrfFieldsTest {
 
     @Test
     public void canConvertXMLObjectContainerToEcrfFields() {
-        String studyOID = "Study";
-        String formOID = "Form";
-        String itemGroupOID = "ItemGroup";
-        String itemOID = "Item";
+        String studyOID = "SE.Study";
+        String formOID = "FRM.Form";
+        String itemGroupOID = "GRP.ItemGroup";
+        String itemOID = "GRP.ItemGroup.Item";
         String description = "bla";
 
         String codeListOID = "list";
@@ -40,7 +40,7 @@ public class XMLEcrfDatamodelToEcrfFieldsTest {
 
         assertEquals(1, fields.size());
         EcrfField field = fields.get(0);
-        assertEquals(itemOID, field.name());
+        assertEquals("STUDY.FORM.ITEMGROUP.ITEM", field.name());
         assertEquals(description, field.description());
 
         Map<Integer, String> values = field.codeList();
