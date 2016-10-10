@@ -30,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class EcrfAnalysisApplication {
 
@@ -102,20 +103,26 @@ public class EcrfAnalysisApplication {
         Iterable<EcrfPatient> allPatients = XMLPatientReader.readPatients(reader, allFields);
 
         List<EcrfPatient> filteredPatients = Lists.newArrayList();
-        for (EcrfPatient patient : allPatients) {
-            if (patientIds.contains(patient.patientId())) {
-                filteredPatients.add(patient);
-            }
-            patientIds.remove(patient.patientId());
-        }
-
         for (String patientId : patientIds) {
-            LOGGER.warn("Did not find ECRF record for " + patientId);
-            filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, List<String>>newHashMap()));
+            EcrfPatient patient = findPatient(allPatients, patientId);
+            if (patient == null) {
+                LOGGER.warn("Did not find ECRF record for " + patientId);
+                filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, List<String>>newHashMap()));
+            }
         }
 
         //        writeDatamodelToCSV(allFields, csvOutPath);
         writePatientsToCSV(filteredPatients, allFields, csvOutPath);
+    }
+
+    @Nullable
+    private EcrfPatient findPatient(@NotNull Iterable<EcrfPatient> patients, @NotNull String patientIdToFind) {
+        for (EcrfPatient patient : patients) {
+            if (patient.patientId().equals(patientIdToFind)) {
+                return patient;
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unused")
