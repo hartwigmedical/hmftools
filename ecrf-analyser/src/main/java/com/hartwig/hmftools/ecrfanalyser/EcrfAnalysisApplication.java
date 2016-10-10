@@ -105,7 +105,7 @@ public class EcrfAnalysisApplication {
         List<EcrfPatient> filteredPatients = Lists.newArrayList();
         for (String patientId : patientIds) {
             EcrfPatient patient = findPatient(allPatients, patientId);
-            if (patient == null) {
+            if (patient != null) {
                 LOGGER.warn("Did not find ECRF record for " + patientId);
                 filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, List<String>>newHashMap()));
             }
