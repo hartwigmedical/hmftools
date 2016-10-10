@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.ecrfanalyser.datamodel;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class EcrfFieldFunctions {
@@ -7,7 +11,16 @@ public final class EcrfFieldFunctions {
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
     private static final String OID_SEPARATOR = ".";
 
+    private static final List<String> IRRELEVANT_ITEM_GROUP_OIDS = Lists.newArrayList("AuditTrailEntries", "MetaData",
+            "AuditData", "Query", "ValidationEntries");
+    private static final String IRRELEVANT_ITEM_OID_PATTERN = "GROUP";
+
     private EcrfFieldFunctions() {
+    }
+
+    public static boolean isRelevant(@NotNull EcrfField field) {
+        return !(IRRELEVANT_ITEM_GROUP_OIDS.contains(field.itemGroupOID()) || field.itemOID().toUpperCase().contains(
+                IRRELEVANT_ITEM_OID_PATTERN));
     }
 
     @NotNull

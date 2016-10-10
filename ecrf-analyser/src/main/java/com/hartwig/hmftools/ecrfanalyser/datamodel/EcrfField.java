@@ -36,11 +36,6 @@ public class EcrfField implements Comparable<EcrfField> {
     }
 
     @NotNull
-    public String itemOID() {
-        return itemOID;
-    }
-
-    @NotNull
     public String description() {
         return description;
     }
@@ -48,6 +43,16 @@ public class EcrfField implements Comparable<EcrfField> {
     @NotNull
     public Map<Integer, String> codeList() {
         return codeList;
+    }
+
+    @NotNull
+    String itemOID() {
+        return itemOID;
+    }
+
+    @NotNull
+    String itemGroupOID() {
+        return itemGroupOID;
     }
 
     public int compareTo(@NotNull EcrfField other) {
