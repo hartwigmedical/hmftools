@@ -142,13 +142,17 @@ public class EcrfAnalysisApplication {
         String fieldCSV = field.name();
         for (EcrfPatient patient : patients) {
             List<String> values = patient.fieldValues(field);
-            String value;
-            if (values == null || values.size() == 0) {
-                value = Strings.EMPTY;
-            } else {
-                value = values.get(0);
+            String finalValue = Strings.EMPTY;
+            if (values != null) {
+                for (String value : values) {
+                    if (finalValue.isEmpty()) {
+                        finalValue = value;
+                    } else {
+                        finalValue += ("; " + value);
+                    }
+                }
             }
-            fieldCSV += ", " + value.replaceAll(",", ":");
+            fieldCSV += ", " + finalValue.replaceAll(",", ":");
         }
         return fieldCSV;
     }

@@ -32,9 +32,12 @@ public final class XMLPatientReader extends EcrfReader {
     private static final String FORM_OID_ATTRIBUTE = "FormOID";
     private static final String ITEM_GROUP_TAG = "ItemGroupData";
     private static final String ITEM_GROUP_OID_ATTRIBUTE = "ItemGroupOID";
-    private static final String FIELD_TAG = "ItemData";
-    private static final String FIELD_OID_ATTRIBUTE = "ItemOID";
-    private static final String FIELD_VALUE_ATTRIBUTE = "Value";
+    private static final String ITEM_TAG = "ItemData";
+    private static final String ITEM_OID_ATTRIBUTE = "ItemOID";
+    private static final String ITEM_VALUE_ATTRIBUTE = "Value";
+
+    private static final List<String> ITEMS_OID_IGNORE = Lists.newArrayList("FLD.FormStatus",
+            "FLD.DNA.audit_comments");
 
     private XMLPatientReader() {
     }
@@ -81,19 +84,19 @@ public final class XMLPatientReader extends EcrfReader {
             } else if (isItemGroupStart(reader)) {
                 currentItemGroupOID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
             } else if (isFieldStart(reader)) {
-                String OID = reader.getAttributeValue("", FIELD_OID_ATTRIBUTE);
+                String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
                 String name = EcrfFieldFunctions.name(currentStudyEventOID, currentFormOID, currentItemGroupOID, OID);
                 EcrfField field = nameToEcrfFieldMap.get(name);
                 if (field != null) {
                     String value = Strings.EMPTY;
                     try {
                         value = EcrfFieldFunctions.resolveValue(field,
-                                reader.getAttributeValue("", FIELD_VALUE_ATTRIBUTE));
+                                reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
                     } catch (EcrfResolveException exception) {
                         LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
                     }
                     fieldValues.get(field).add(value);
-                } else {
+                } else if (!ITEMS_OID_IGNORE.contains(OID)) {
                     LOGGER.warn("Could not resolve field with name " + name);
                 }
             }
@@ -125,7 +128,7 @@ public final class XMLPatientReader extends EcrfReader {
     }
 
     private static boolean isFieldStart(@NotNull XMLStreamReader reader) {
-        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, FIELD_TAG);
+        return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_TAG);
     }
 
     private static boolean isStudyEventStart(@NotNull XMLStreamReader reader) {
