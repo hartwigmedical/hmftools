@@ -15,7 +15,7 @@ public class EcrfAnalysisApplicationTest {
     private static final String TEST_ECRF = Resources.getResource("example/ecrf.xml").getPath();
     private static final String CSV_OUT = "/Users/kduyvesteyn/hmf/tmp/ecrf.csv";
 
-    private static final List<String> PATIENTS = Lists.newArrayList("CPCT0225250025");
+    private static final List<String> PATIENTS = Lists.newArrayList("CPCT02252500");
 
     @Test
     public void tryIt() throws IOException, XMLStreamException {

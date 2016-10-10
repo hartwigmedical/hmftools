@@ -114,7 +114,7 @@ public class EcrfAnalysisApplication {
             filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, List<String>>newHashMap()));
         }
 
-        writeDatamodelToCSV(allFields, csvOutPath);
+        writePatientsToCSV(filteredPatients, allFields, csvOutPath);
     }
 
     @SuppressWarnings("unused")
@@ -131,7 +131,6 @@ public class EcrfAnalysisApplication {
 
         for (EcrfField field : fields) {
             writer.newLine();
-            // KODU: Pass fields of first patient to enforce consistency across all patients.
             writer.write(fieldDataToCSV(field, patients));
         }
         writer.close();
@@ -143,18 +142,27 @@ public class EcrfAnalysisApplication {
         for (EcrfPatient patient : patients) {
             List<String> values = patient.fieldValues(field);
             String finalValue = Strings.EMPTY;
-            if (values != null) {
-                for (String value : values) {
-                    if (finalValue.isEmpty()) {
-                        finalValue = value;
+            if (values != null && containsSomeValue(values)) {
+                for (int i = 0; i < values.size(); i++) {
+                    if (i == 0) {
+                        finalValue = values.get(i);
                     } else {
-                        finalValue += ("; " + value);
+                        finalValue += ("; " + values.get(i));
                     }
                 }
             }
             fieldCSV += ", " + finalValue.replaceAll(",", ":");
         }
         return fieldCSV;
+    }
+
+    private static boolean containsSomeValue(@NotNull Iterable<String> strings) {
+        for (String value : strings) {
+            if (!value.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @SuppressWarnings("unused")
