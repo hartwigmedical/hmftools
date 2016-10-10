@@ -94,7 +94,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
             if (isItemGroupRefStart(reader)) {
                 String subOID = reader.getAttributeValue("", FORM_ITEM_GROUP_OID);
                 if (!subOID.equals(FORM_ITEM_GROUP_OID_IGNORE)) {
-                    subOIDs.add(reader.getAttributeValue("", FORM_ITEM_GROUP_OID));
+                    subOIDs.add(subOID);
                 }
             }
         }

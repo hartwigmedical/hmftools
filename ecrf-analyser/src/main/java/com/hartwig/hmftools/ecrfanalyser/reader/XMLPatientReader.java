@@ -36,9 +36,6 @@ public final class XMLPatientReader extends EcrfReader {
     private static final String ITEM_OID_ATTRIBUTE = "ItemOID";
     private static final String ITEM_VALUE_ATTRIBUTE = "Value";
 
-    private static final List<String> ITEMS_OID_IGNORE = Lists.newArrayList("FLD.FormStatus",
-            "FLD.DNA.audit_comments");
-
     private XMLPatientReader() {
     }
 
@@ -86,18 +83,20 @@ public final class XMLPatientReader extends EcrfReader {
             } else if (isFieldStart(reader)) {
                 String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
                 String name = EcrfFieldFunctions.name(currentStudyEventOID, currentFormOID, currentItemGroupOID, OID);
-                EcrfField field = nameToEcrfFieldMap.get(name);
-                if (field != null) {
-                    String value = Strings.EMPTY;
-                    try {
-                        value = EcrfFieldFunctions.resolveValue(field,
-                                reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
-                    } catch (EcrfResolveException exception) {
-                        LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
+                if (EcrfFieldFunctions.isRelevant(name)) {
+                    EcrfField field = nameToEcrfFieldMap.get(name);
+                    if (field != null) {
+                        String value = Strings.EMPTY;
+                        try {
+                            value = EcrfFieldFunctions.resolveValue(field,
+                                    reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
+                        } catch (EcrfResolveException exception) {
+                            LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
+                        }
+                        fieldValues.get(field).add(value);
+                    } else {
+                        LOGGER.warn("Could not resolve field with name " + name);
                     }
-                    fieldValues.get(field).add(value);
-                } else if (!ITEMS_OID_IGNORE.contains(OID)) {
-                    LOGGER.warn("Could not resolve field with name " + name);
                 }
             }
             reader.next();

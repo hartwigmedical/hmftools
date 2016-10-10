@@ -11,16 +11,24 @@ public final class EcrfFieldFunctions {
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
     private static final String OID_SEPARATOR = ".";
 
-    private static final List<String> IRRELEVANT_ITEM_GROUP_OIDS = Lists.newArrayList("AuditTrailEntries", "MetaData",
-            "AuditData", "Query", "ValidationEntries");
+    private static final List<String> IRRELEVANT_ITEM_GROUP_OIDS = Lists.newArrayList("AUDITTRAILENTRIES", "METADATA",
+            "AUDITDATA", "QUERY", "VALIDATIONENTRIES");
+    private static final List<String> IRRELEVANT_ITEM_OIDS = Lists.newArrayList("AUDIT_ENTRIES", "FORMSTATUS");
     private static final String IRRELEVANT_ITEM_OID_PATTERN = "GROUP";
 
     private EcrfFieldFunctions() {
     }
 
     public static boolean isRelevant(@NotNull EcrfField field) {
-        return !(IRRELEVANT_ITEM_GROUP_OIDS.contains(field.itemGroupOID()) || field.itemOID().toUpperCase().contains(
-                IRRELEVANT_ITEM_OID_PATTERN));
+        return isRelevant(field.name());
+    }
+
+    public static boolean isRelevant(@NotNull String name) {
+        String parts[] = name.split("\\" + OID_SEPARATOR);
+        String itemGroup = parts[2];
+        String item = parts[3];
+        return !(IRRELEVANT_ITEM_GROUP_OIDS.contains(itemGroup) || IRRELEVANT_ITEM_OIDS.contains(item)
+                || item.contains(IRRELEVANT_ITEM_OID_PATTERN));
     }
 
     @NotNull

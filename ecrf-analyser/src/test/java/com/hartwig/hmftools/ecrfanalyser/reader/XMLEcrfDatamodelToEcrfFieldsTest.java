@@ -18,7 +18,7 @@ public class XMLEcrfDatamodelToEcrfFieldsTest {
         String studyOID = "SE.Study";
         String formOID = "FRM.Form";
         String itemGroupOID = "GRP.ItemGroup";
-        String itemOID = "GRP.ItemGroup.Item";
+        String itemOID = "GRP.Item";
         String description = "bla";
 
         String codeListOID = "list";
