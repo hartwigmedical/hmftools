@@ -114,6 +114,7 @@ public class EcrfAnalysisApplication {
             filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, List<String>>newHashMap()));
         }
 
+        //        writeDatamodelToCSV(allFields, csvOutPath);
         writePatientsToCSV(filteredPatients, allFields, csvOutPath);
     }
 
