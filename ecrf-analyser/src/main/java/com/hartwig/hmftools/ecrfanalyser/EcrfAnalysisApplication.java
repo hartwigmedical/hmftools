@@ -111,7 +111,7 @@ public class EcrfAnalysisApplication {
 
         for (String patientId : patientIds) {
             LOGGER.warn("Did not find ECRF record for " + patientId);
-            filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, String>newHashMap()));
+            filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, List<String>>newHashMap()));
         }
 
         writeDatamodelToCSV(allFields, csvOutPath);
@@ -141,9 +141,12 @@ public class EcrfAnalysisApplication {
     private static String fieldDataToCSV(@NotNull EcrfField field, @NotNull List<EcrfPatient> patients) {
         String fieldCSV = field.name();
         for (EcrfPatient patient : patients) {
-            String value = patient.fieldValue(field);
-            if (value == null) {
+            List<String> values = patient.fieldValues(field);
+            String value;
+            if (values == null || values.size() == 0) {
                 value = Strings.EMPTY;
+            } else {
+                value = values.get(0);
             }
             fieldCSV += ", " + value.replaceAll(",", ":");
         }

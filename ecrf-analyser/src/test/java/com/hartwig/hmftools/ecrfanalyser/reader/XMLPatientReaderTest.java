@@ -17,6 +17,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
 import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class XMLPatientReaderTest {
@@ -51,14 +53,19 @@ public class XMLPatientReaderTest {
 
         assertEquals(3, patients.get(0).fields().size());
         assertEquals(PATIENT_1, patients.get(0).patientId());
-        assertEquals("one", patients.get(0).fieldValue(field1));
-        assertEquals("hi", patients.get(0).fieldValue(field2));
-        assertEquals("2016-01-01", patients.get(0).fieldValue(birthDate));
+        verifyFirstFieldValue("one", patients.get(0).fieldValues(field1));
+        verifyFirstFieldValue("hi", patients.get(0).fieldValues(field2));
+        verifyFirstFieldValue("2016-01-01", patients.get(0).fieldValues(birthDate));
 
         assertEquals(3, patients.get(1).fields().size());
         assertEquals(PATIENT_2, patients.get(1).patientId());
-        assertEquals("two", patients.get(1).fieldValue(field1));
-        assertEquals("hi there", patients.get(1).fieldValue(field2));
-        assertEquals("2016-01-01", patients.get(1).fieldValue(birthDate));
+        verifyFirstFieldValue("two", patients.get(1).fieldValues(field1));
+        verifyFirstFieldValue("hi there", patients.get(1).fieldValues(field2));
+        verifyFirstFieldValue("2016-01-01", patients.get(1).fieldValues(birthDate));
+    }
+
+    private static void verifyFirstFieldValue(@NotNull String expected, @Nullable List<String> values) {
+        assert values != null && values.size() == 1;
+        assertEquals(expected, values.get(0));
     }
 }

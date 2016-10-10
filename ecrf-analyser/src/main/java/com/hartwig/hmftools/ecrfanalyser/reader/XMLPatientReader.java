@@ -68,7 +68,7 @@ public final class XMLPatientReader extends EcrfReader {
     private static EcrfPatient readPatient(@NotNull XMLStreamReader reader,
             @NotNull Map<String, EcrfField> nameToEcrfFieldMap) throws XMLStreamException {
         String patientId = toCPCTPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
-        Map<EcrfField, String> fieldValues = Maps.newHashMap();
+        Map<EcrfField, List<String>> fieldValues = initializeFieldValues(nameToEcrfFieldMap.values());
 
         String currentStudyEventOID = Strings.EMPTY;
         String currentFormOID = Strings.EMPTY;
@@ -92,7 +92,7 @@ public final class XMLPatientReader extends EcrfReader {
                     } catch (EcrfResolveException exception) {
                         LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
                     }
-                    fieldValues.put(field, value);
+                    fieldValues.get(field).add(value);
                 } else {
                     LOGGER.warn("Could not resolve field with name " + name);
                 }
@@ -100,6 +100,15 @@ public final class XMLPatientReader extends EcrfReader {
             reader.next();
         }
         return new EcrfPatient(patientId, fieldValues);
+    }
+
+    @NotNull
+    private static Map<EcrfField, List<String>> initializeFieldValues(@NotNull Iterable<EcrfField> fields) {
+        Map<EcrfField, List<String>> fieldValues = Maps.newHashMap();
+        for (EcrfField field : fields) {
+            fieldValues.put(field, Lists.<String>newArrayList());
+        }
+        return fieldValues;
     }
 
     @NotNull

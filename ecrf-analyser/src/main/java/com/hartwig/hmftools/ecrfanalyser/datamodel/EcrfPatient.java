@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ecrfanalyser.datamodel;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,9 +12,9 @@ public class EcrfPatient {
     @NotNull
     private final String patientId;
     @NotNull
-    private final Map<EcrfField, String> fields;
+    private final Map<EcrfField, List<String>> fields;
 
-    public EcrfPatient(@NotNull final String patientId, @NotNull final Map<EcrfField, String> fields) {
+    public EcrfPatient(@NotNull final String patientId, @NotNull final Map<EcrfField, List<String>> fields) {
         this.patientId = patientId;
         this.fields = fields;
     }
@@ -29,7 +30,7 @@ public class EcrfPatient {
     }
 
     @Nullable
-    public String fieldValue(@NotNull EcrfField field) {
+    public List<String> fieldValues(@NotNull EcrfField field) {
         return fields.get(field);
     }
 }
