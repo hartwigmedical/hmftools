@@ -19,7 +19,16 @@ public class EcrfAnalysisApplicationTest {
 
     @Test
     public void tryIt() throws IOException, XMLStreamException {
-        EcrfAnalysisApplication app = new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT, PATIENTS);
+        EcrfAnalysisApplication app = new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT, PATIENTS, null, false);
+
+        app.run();
+    }
+
+    @Test
+    public void tryItWithFieldSelectionAndTransposed() throws IOException, XMLStreamException {
+        List<String> fields = Lists.newArrayList("AFTERBIOPT.TRTAFTER.TRTAFTER.SYSREGPOST",
+                "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC");
+        EcrfAnalysisApplication app = new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT, PATIENTS, fields, true);
 
         app.run();
     }

@@ -10,6 +10,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -45,6 +46,12 @@ public class EcrfAnalysisApplication {
     private static final String PATIENTS_ARGS_DESC = "A comma-separated list of patients to filter on";
     private static final String PATIENTS = "patients";
 
+    private static final String FIELDS_ARGS_DESC = "A comma-separated list of fields to filter on";
+    private static final String FIELDS = "fields";
+
+    private static final String PATIENT_AS_ROW_ARGS_DESC = "If present, patients will be printed as rows rather than columns";
+    private static final String PATIENT_AS_ROW = "patientasrow";
+
     public static void main(final String... args) throws ParseException, IOException, XMLStreamException {
         Options options = createOptions();
         CommandLine cmd = createCommandLine(options, args);
@@ -59,7 +66,10 @@ public class EcrfAnalysisApplication {
             System.exit(1);
         }
 
-        new EcrfAnalysisApplication(reportsPath, csvOut, Lists.newArrayList(patients.split(","))).run();
+        String fields = cmd.getOptionValue(FIELDS, null);
+
+        new EcrfAnalysisApplication(reportsPath, csvOut, Lists.newArrayList(patients.split(",")),
+                fields != null ? Lists.newArrayList(fields.split(",")) : null, cmd.hasOption(PATIENT_AS_ROW)).run();
     }
 
     @NotNull
@@ -69,6 +79,8 @@ public class EcrfAnalysisApplication {
         options.addOption(ECRF_XML_PATH, true, ECRF_XML_PATH_ARGS_DESC);
         options.addOption(CSV_OUT_PATH, true, CSV_OUT_PATH_ARGS_DESC);
         options.addOption(PATIENTS, true, PATIENTS_ARGS_DESC);
+        options.addOption(FIELDS, true, FIELDS_ARGS_DESC);
+        options.addOption(PATIENT_AS_ROW, false, PATIENT_AS_ROW_ARGS_DESC);
 
         return options;
     }
@@ -86,12 +98,18 @@ public class EcrfAnalysisApplication {
     private final String csvOutPath;
     @NotNull
     private final List<String> patientIds;
+    @Nullable
+    private final List<String> fieldIds;
+    private final boolean patientAsRow;
 
     EcrfAnalysisApplication(@NotNull final String ecrfXmlPath, @NotNull final String csvOutPath,
-            @NotNull final List<String> patientIds) {
+            @NotNull final List<String> patientIds, @Nullable final List<String> fieldIds,
+            final boolean patientAsRow) {
         this.ecrfXmlPath = ecrfXmlPath;
         this.csvOutPath = csvOutPath;
         this.patientIds = patientIds;
+        this.fieldIds = fieldIds;
+        this.patientAsRow = patientAsRow;
     }
 
     void run() throws IOException, XMLStreamException {
@@ -100,11 +118,20 @@ public class EcrfAnalysisApplication {
         XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
 
         Iterable<EcrfField> allFields = Sets.newTreeSet(XMLEcrfDatamodelToEcrfFields.convert(datamodel));
-        Iterable<EcrfPatient> allPatients = XMLPatientReader.readPatients(reader, allFields);
+        Iterable<EcrfField> filteredFields = filterFields(allFields);
 
+        Iterable<EcrfPatient> allPatients = XMLPatientReader.readPatients(reader, allFields);
+        Iterable<EcrfPatient> filteredPatients = filterPatients(allPatients);
+
+        //        writeDatamodelToCSV(allFields, csvOutPath);
+        writePatientsToCSV(filteredPatients, filteredFields, csvOutPath, patientAsRow);
+    }
+
+    @NotNull
+    private Iterable<EcrfPatient> filterPatients(@NotNull Iterable<EcrfPatient> patients) {
         List<EcrfPatient> filteredPatients = Lists.newArrayList();
         for (String patientId : patientIds) {
-            EcrfPatient patient = findPatient(allPatients, patientId);
+            EcrfPatient patient = findPatient(patients, patientId);
             if (patient != null) {
                 filteredPatients.add(patient);
             } else {
@@ -112,13 +139,11 @@ public class EcrfAnalysisApplication {
                 filteredPatients.add(new EcrfPatient(patientId, Maps.<EcrfField, List<String>>newHashMap()));
             }
         }
-
-        //        writeDatamodelToCSV(allFields, csvOutPath);
-        writePatientsToCSV(filteredPatients, allFields, csvOutPath);
+        return filteredPatients;
     }
 
     @Nullable
-    private EcrfPatient findPatient(@NotNull Iterable<EcrfPatient> patients, @NotNull String patientIdToFind) {
+    private static EcrfPatient findPatient(@NotNull Iterable<EcrfPatient> patients, @NotNull String patientIdToFind) {
         for (EcrfPatient patient : patients) {
             if (patient.patientId().equals(patientIdToFind)) {
                 return patient;
@@ -127,43 +152,95 @@ public class EcrfAnalysisApplication {
         return null;
     }
 
+    @NotNull
+    private Iterable<EcrfField> filterFields(@NotNull Iterable<EcrfField> fields) {
+        if (fieldIds == null) {
+            return fields;
+        }
+
+        List<EcrfField> filteredFields = Lists.newArrayList();
+        for (String fieldId : fieldIds) {
+            EcrfField field = findField(fields, fieldId);
+            if (field != null) {
+                filteredFields.add(field);
+            } else {
+                LOGGER.warn("Did not find field " + fieldId);
+            }
+        }
+        return filteredFields;
+    }
+
+    @Nullable
+    private static EcrfField findField(@NotNull Iterable<EcrfField> fields, @NotNull String fieldIdToFind) {
+        for (EcrfField field : fields) {
+            if (field.name().equals(fieldIdToFind)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
     @SuppressWarnings("unused")
-    private static void writePatientsToCSV(@NotNull List<EcrfPatient> patients, @NotNull Iterable<EcrfField> fields,
-            @NotNull String csvOutPath) throws IOException {
+    private static void writePatientsToCSV(@NotNull Iterable<EcrfPatient> patients,
+            @NotNull Iterable<EcrfField> fields, @NotNull String csvOutPath, boolean patientAsRow) throws IOException {
+        int rowCount = Iterables.size(patients) + 1;
+        int colCount = Iterables.size(fields) + 1;
+        String[][] table = toDataTable(patients, fields, rowCount, colCount);
+
         BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
 
-        String header = "PATIENT";
-
-        for (EcrfPatient patient : patients) {
-            header += (", " + patient.patientId());
+        int firstDimension = patientAsRow ? rowCount : colCount;
+        int secondDimension = patientAsRow ? colCount : rowCount;
+        for (int i = 0; i < firstDimension; i++) {
+            String line = patientAsRow ? table[i][0] : table[0][i];
+            for (int j = 1; j < secondDimension; j++) {
+                String field = patientAsRow ? table[i][j] : table[j][i];
+                line += (", " + field);
+            }
+            if (i > 0) {
+                writer.newLine();
+            }
+            writer.write(line);
         }
-        writer.write(header);
 
-        for (EcrfField field : fields) {
-            writer.newLine();
-            writer.write(fieldDataToCSV(field, patients));
-        }
         writer.close();
     }
 
     @NotNull
-    private static String fieldDataToCSV(@NotNull EcrfField field, @NotNull List<EcrfPatient> patients) {
-        String fieldCSV = field.name();
-        for (EcrfPatient patient : patients) {
-            List<String> values = patient.fieldValues(field);
-            String finalValue = Strings.EMPTY;
-            if (values != null && containsSomeValue(values)) {
-                for (int i = 0; i < values.size(); i++) {
-                    if (i == 0) {
-                        finalValue = values.get(i);
-                    } else {
-                        finalValue += ("; " + values.get(i));
-                    }
+    private static String[][] toDataTable(@NotNull Iterable<EcrfPatient> patients, @NotNull Iterable<EcrfField> fields,
+            int rowCount, int colCount) {
+        String[][] table = new String[rowCount][colCount];
+
+        table[0][0] = "PATIENT";
+
+        int currentField = 1;
+        for (EcrfField field : fields) {
+            table[0][currentField] = field.name();
+            int currentPatient = 1;
+            for (EcrfPatient patient : patients) {
+                table[currentPatient][0] = patient.patientId();
+                table[currentPatient][currentField] = extractFieldForPatient(patient, field);
+                currentPatient++;
+            }
+            currentField++;
+        }
+        return table;
+    }
+
+    @NotNull
+    private static String extractFieldForPatient(@NotNull EcrfPatient patient, @NotNull EcrfField field) {
+        List<String> values = patient.fieldValues(field);
+        String finalValue = Strings.EMPTY;
+        if (values != null && containsSomeValue(values)) {
+            for (int i = 0; i < values.size(); i++) {
+                if (i == 0) {
+                    finalValue = values.get(i);
+                } else {
+                    finalValue += ("; " + values.get(i));
                 }
             }
-            fieldCSV += ", " + finalValue.replaceAll(",", ":");
         }
-        return fieldCSV;
+        return finalValue.replaceAll(",", ":");
     }
 
     private static boolean containsSomeValue(@NotNull Iterable<String> strings) {
