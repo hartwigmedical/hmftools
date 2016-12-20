@@ -5,8 +5,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthcheckeranalyser.model.HealthCheckReport;
@@ -136,8 +139,10 @@ public class HealthCheckerAnalysisApplication {
     }
 
     private static void printChecks(@NotNull Map<String, String> checks) {
-        for (Map.Entry<String, String> check : checks.entrySet()) {
-            LOGGER.info(check.getKey() + "\t" + check.getValue());
+        Set<String> keys = new TreeSet<>(Comparator.<String>naturalOrder());
+        keys.addAll(checks.keySet());
+        for (String key : keys) {
+            LOGGER.info(key + "\t" + checks.get(key));
         }
     }
 }
