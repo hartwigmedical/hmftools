@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class CPCTRunContextFactoryTest {
 
-    private static final String RESOURCE_DIR = "CPCTRunContextFactory";
+    private static final String RESOURCE_DIR = "common/CPCTRunContextFactory";
 
     private static final String VALID_RUNDIR = "160101_HMFregCPCT_FR10002000_FR20003000_CPCT12345678";
     private static final String VALID_RUN_NAME = VALID_RUNDIR;

@@ -14,17 +14,18 @@ import org.junit.Test;
 
 public class PathRegexFinderTest {
 
-    private static final String RUN_DIRECTORY = "run";
+    private static final String RUN_DIRECTORY = "common/run";
     private static final String NON_EXISTING_DIRECTORY = "bla";
-    private static final String EMPTY_DIRECTORY = "empty";
+    private static final String EMPTY_DIRECTORY = "common/empty";
 
+    private static final String EXISTING_RUN = "run";
     private static final String EXISTING_REGEX = "something";
     private static final String NON_EXISTING_REGEX = "this does not exist";
 
     @Test
     public void findPathRunLog() throws IOException {
         final URL testPath = Resources.getResource(RUN_DIRECTORY);
-        final Path path = PathRegexFinder.build().findPath(testPath.getPath(), RUN_DIRECTORY);
+        final Path path = PathRegexFinder.build().findPath(testPath.getPath(), EXISTING_RUN);
         assertNotNull(path);
     }
 
