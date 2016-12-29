@@ -8,16 +8,11 @@
         <version>1</version>
     </parent>
 
-    <artifactId>retention-checker</artifactId>
+    <artifactId>hmftools-common</artifactId>
     <packaging>jar</packaging>
-    <name>HMF Tools - Retention Checker</name>
+    <name>HMF Tools - Common</name>
 
     <dependencies>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>hmftools-common</artifactId>
-            <version>1</version>
-        </dependency>
         <dependency>
             <groupId>com.github.samtools</groupId>
             <artifactId>htsjdk</artifactId>
@@ -45,35 +40,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.retentionchecker.RetentionCheckRunner</mainClass>
-                        </manifest>
-                    </archive>
-
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

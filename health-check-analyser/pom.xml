@@ -14,6 +14,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>hmftools-common</artifactId>
+            <version>1</version>
+        </dependency>
+        <dependency>
             <groupId>com.intellij</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
