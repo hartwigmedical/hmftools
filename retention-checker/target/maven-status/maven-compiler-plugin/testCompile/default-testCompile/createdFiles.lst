@@ -1,9 +1,0 @@
-com/hartwig/hmftools/retentionchecker/FastqHeaderTest.class
-com/hartwig/hmftools/retentionchecker/RetentionCheckAlgoTest.class
-com/hartwig/hmftools/retentionchecker/DefaultNameConverterTest.class
-com/hartwig/hmftools/retentionchecker/FastqHeaderTest$DummyNormalizer.class
-com/hartwig/hmftools/retentionchecker/RetentionCheckAlgoTest$DummyConverter.class
-com/hartwig/hmftools/retentionchecker/FastqHeaderTest$1.class
-com/hartwig/hmftools/retentionchecker/OriginalFastqHeaderNormalizerTest.class
-com/hartwig/hmftools/retentionchecker/RecreatedFastqHeaderNormalizerTest.class
-com/hartwig/hmftools/retentionchecker/RetentionCheckAlgoTest$1.class
