@@ -56,7 +56,7 @@ public class HealthCheckReaderApplication {
 
         if (reportPath == null && dataPath == null || (dataPath != null && csvOut == null)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Health-Checks-Analyser", options);
+            formatter.printHelp("Batch-Health-Check-Reader", options);
             System.exit(1);
         }
 
