@@ -77,7 +77,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.healthchecker.HealthChecksApplication
+                            <mainClass>com.hartwig.hmftools.healthchecker.HealthChecksApplication
                             </mainClass>
                         </manifest>
                     </archive>
