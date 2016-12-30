@@ -3,10 +3,10 @@ package com.hartwig.healthchecker;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.healthchecker.checks.MappingChecker;
-import com.hartwig.healthchecker.common.checks.CheckType;
-import com.hartwig.healthchecker.common.checks.HealthChecker;
-import com.hartwig.healthchecker.common.exception.NotFoundException;
+import com.hartwig.healthchecker.checkers.MappingChecker;
+import com.hartwig.healthchecker.checkers.CheckType;
+import com.hartwig.healthchecker.checkers.HealthChecker;
+import com.hartwig.healthchecker.exception.NotFoundException;
 
 import org.junit.Test;
 

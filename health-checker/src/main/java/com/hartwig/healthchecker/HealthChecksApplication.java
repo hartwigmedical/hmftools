@@ -4,15 +4,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
-import com.hartwig.healthchecker.common.checks.HealthChecker;
-import com.hartwig.healthchecker.common.exception.GenerateReportException;
-import com.hartwig.healthchecker.common.exception.HealthChecksException;
-import com.hartwig.healthchecker.common.exception.NotFoundException;
-import com.hartwig.healthchecker.common.io.dir.CPCTRunContextFactory;
-import com.hartwig.healthchecker.common.io.dir.FolderChecker;
-import com.hartwig.healthchecker.common.io.dir.RunContext;
-import com.hartwig.healthchecker.common.report.HealthCheckReportFactory;
-import com.hartwig.healthchecker.common.report.Report;
+import com.hartwig.healthchecker.checkers.HealthChecker;
+import com.hartwig.healthchecker.exception.GenerateReportException;
+import com.hartwig.healthchecker.exception.HealthChecksException;
+import com.hartwig.healthchecker.exception.NotFoundException;
+import com.hartwig.healthchecker.io.dir.CPCTRunContextFactory;
+import com.hartwig.healthchecker.io.dir.FolderChecker;
+import com.hartwig.healthchecker.io.dir.RunContext;
+import com.hartwig.healthchecker.report.HealthCheckReportFactory;
+import com.hartwig.healthchecker.report.Report;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import com.hartwig.healthchecker.common.checks.CheckType;
-import com.hartwig.healthchecker.common.checks.ErrorHandlingChecker;
-import com.hartwig.healthchecker.common.checks.HealthChecker;
-import com.hartwig.healthchecker.common.exception.NotFoundException;
-import com.hartwig.healthchecker.common.resource.ResourceWrapper;
+import com.hartwig.healthchecker.checkers.CheckType;
+import com.hartwig.healthchecker.checkers.ErrorHandlingChecker;
+import com.hartwig.healthchecker.checkers.HealthChecker;
+import com.hartwig.healthchecker.exception.NotFoundException;
+import com.hartwig.healthchecker.resource.ResourceWrapper;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
