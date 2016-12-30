@@ -1,0 +1,930 @@
+{
+  "health_checks": [
+    {
+      "KINSHIP": {
+        "check": {
+          "sample_id": "CPCT12345678T",
+          "check_name": "KINSHIP_TEST",
+          "value": "0.2743"
+        },
+        "check_type": "KINSHIP"
+      }
+    },
+    {
+      "REALIGNER": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_REALIGNER_CHANGED_ALIGNMENTS",
+            "value": "ERROR"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_REALIGNER_CHANGED_ALIGNMENTS",
+            "value": "ERROR"
+          }
+        ],
+        "check_type": "REALIGNER"
+      }
+    },
+    {
+      "PRESTATS": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_WARN",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_FAIL",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_KMER_CONTENT_WARN",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_KMER_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PRESTATS_NUMBER_OF_READS",
+            "value": "17904"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_QUALITY_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_FAIL",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_WARN",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_TILE_SEQUENCE_QUALITY_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_SEQUENCE_QUALITY_SCORES_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_WARN",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_SEQUENCE_CONTENT_PASS",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_FAIL",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_SEQUENCE_GC_CONTENT_PASS",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_PER_BASE_N_CONTENT_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_SEQUENCE_LENGTH_DISTRIBUTION_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_SEQUENCE_DUPLICATION_LEVELS_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_OVERREPRESENTED_SEQUENCES_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_WARN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_ADAPTER_CONTENT_PASS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_KMER_CONTENT_FAIL",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_KMER_CONTENT_WARN",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_KMER_CONTENT_PASS",
+            "value": "1"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PRESTATS_NUMBER_OF_READS",
+            "value": "17920"
+          }
+        ],
+        "check_type": "PRESTATS"
+      }
+    },
+    {
+      "SLICED": {
+        "check": {
+          "sample_id": "CPCT12345678T",
+          "check_name": "SLICED_NUMBER_OF_VARIANTS",
+          "value": "26"
+        },
+        "check_type": "SLICED"
+      }
+    },
+    {
+      "INSERT_SIZE": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_MEDIAN_INSERT_SIZE",
+            "value": "425"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_WIDTH_OF_70_PERCENT",
+            "value": "215"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_MEDIAN_INSERT_SIZE",
+            "value": "409"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_WIDTH_OF_70_PERCENT",
+            "value": "195"
+          }
+        ],
+        "check_type": "INSERT_SIZE"
+      }
+    },
+    {
+      "COPYNUMBER": {
+        "checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COPYNUMBER_GENOME_GAIN",
+            "value": "ERROR"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COPYNUMBER_GENOME_LOSS",
+            "value": "ERROR"
+          }
+        ],
+        "check_type": "COPYNUMBER"
+      }
+    },
+    {
+      "GERMLINE": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "VARIANTS_GERMLINE_SNP",
+            "value": "103"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "VARIANTS_GERMLINE_INDELS",
+            "value": "28"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "VARIANTS_GERMLINE_SNP",
+            "value": "109"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "VARIANTS_GERMLINE_INDELS",
+            "value": "29"
+          }
+        ],
+        "check_type": "GERMLINE"
+      }
+    },
+    {
+      "SOMATIC": {
+        "checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "VARIANTS_SOMATIC_SNP",
+            "value": "17"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PRECISION_MUTECT_2+_CALLERS",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PRECISION_VARSCAN_2+_CALLERS",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PRECISION_STRELKA_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PRECISION_FREEBAYES_2+_CALLERS",
+            "value": "0.9411764705882353"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_MUTECT_VARIANTS_2+_CALLERS",
+            "value": "0.5"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_VARSCAN_VARIANTS_2+_CALLERS",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_STRELKA_VARIANTS_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_SENSITIVITY_FREEBAYES_VARIANTS_2+_CALLERS",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_1_CALLERS",
+            "value": "0.058823529411764705"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_2_CALLERS",
+            "value": "0.47058823529411764"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_3_CALLERS",
+            "value": "0.47058823529411764"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_SNP_PROPORTION_VARIANTS_4_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "VARIANTS_SOMATIC_INDELS",
+            "value": "2"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PRECISION_MUTECT_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PRECISION_VARSCAN_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PRECISION_STRELKA_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PRECISION_FREEBAYES_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_MUTECT_VARIANTS_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_VARSCAN_VARIANTS_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_STRELKA_VARIANTS_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_SENSITIVITY_FREEBAYES_VARIANTS_2+_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_1_CALLERS",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_2_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_3_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_INDELS_PROPORTION_VARIANTS_4_CALLERS",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_MUTECT_LOWER_SD",
+            "value": "0.3611111111111111"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_MUTECT_MEDIAN",
+            "value": "0.5"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_MUTECT_UPPER_SD",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_VARSCAN_LOWER_SD",
+            "value": "0.40540540540540543"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_VARSCAN_MEDIAN",
+            "value": "0.5"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_VARSCAN_UPPER_SD",
+            "value": "0.7222222222222222"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_STRELKA_LOWER_SD",
+            "value": "-"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_STRELKA_MEDIAN",
+            "value": "-"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_STRELKA_UPPER_SD",
+            "value": "-"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_FREEBAYES_LOWER_SD",
+            "value": "0.40540540540540543"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_FREEBAYES_MEDIAN",
+            "value": "0.5263157894736842"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "SOMATIC_AF_FREEBAYES_UPPER_SD",
+            "value": "0.7222222222222222"
+          }
+        ],
+        "check_type": "SOMATIC"
+      }
+    },
+    {
+      "METADATA": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "HAS_PASSED_TESTS",
+            "value": "true"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "RUN_DATE",
+            "value": "2016-09-13"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "PIPELINE_VERSION",
+            "value": "v1.9"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "HAS_PASSED_TESTS",
+            "value": "true"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "RUN_DATE",
+            "value": "2016-09-13"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "PIPELINE_VERSION",
+            "value": "v1.9"
+          }
+        ],
+        "check_type": "METADATA"
+      }
+    },
+    {
+      "WGS_METRICS": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_MEAN",
+            "value": "0.000844"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_MEDIAN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_SD",
+            "value": "0.156968"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_PCT_EXC_BASEQ",
+            "value": "0.002504"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_PCT_EXC_DUPE",
+            "value": "0.063508"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_PCT_EXC_MAPQ",
+            "value": "0.000785"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_PCT_EXC_OVERLAP",
+            "value": "0.023719"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_PCT_EXC_TOTAL",
+            "value": "0.095866"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "COVERAGE_PCT_EXC_UNPAIRED",
+            "value": "0.003147"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_MEAN",
+            "value": "0.000856"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_MEDIAN",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_SD",
+            "value": "0.157469"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_PCT_EXC_BASEQ",
+            "value": "0.002378"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_PCT_EXC_DUPE",
+            "value": "0.059484"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_PCT_EXC_MAPQ",
+            "value": "0.000585"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_PCT_EXC_OVERLAP",
+            "value": "0.020675"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_PCT_EXC_TOTAL",
+            "value": "0.086479"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "COVERAGE_PCT_EXC_UNPAIRED",
+            "value": "0.002331"
+          }
+        ],
+        "check_type": "WGS_METRICS"
+      }
+    },
+    {
+      "SUMMARY_METRICS": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PF_INDEL_RATE",
+            "value": "0.000147"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PCT_ADAPTER",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PCT_CHIMERA",
+            "value": "0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PF_MISMATCH_RATE",
+            "value": "0.005496"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_STRAND_BALANCE",
+            "value": "0.5"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PF_INDEL_RATE",
+            "value": "0.000161"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PCT_ADAPTER",
+            "value": "0.000056"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PCT_CHIMERA",
+            "value": "0.000112"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PF_MISMATCH_RATE",
+            "value": "0.005024"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_STRAND_BALANCE",
+            "value": "0.499972"
+          }
+        ],
+        "check_type": "SUMMARY_METRICS"
+      }
+    },
+    {
+      "MAPPING": {
+        "ref_sample_checks": [
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PROPORTION_READ_VS_TOTAL_SEQUENCES",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PERCENTAGE_MAPPED",
+            "value": "0.9957586918912886"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PROPERLY_PAIRED_PROPORTION_OF_MAPPED",
+            "value": "0.994451605671692"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PROPORTION_SINGLETON",
+            "value": "0.004259373423751611"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_PROPORTION_MAPPED_DIFFERENT_CHR",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678R",
+            "check_name": "MAPPING_MARKDUP_PROPORTION_DUPLICATES",
+            "value": "0.06350800825938947"
+          }
+        ],
+        "tumor_sample_checks": [
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PROPORTION_READ_VS_TOTAL_SEQUENCES",
+            "value": "1.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PERCENTAGE_MAPPED",
+            "value": "0.9969342251950948"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PROPERLY_PAIRED_PROPORTION_OF_MAPPED",
+            "value": "0.9956947162426615"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PROPORTION_SINGLETON",
+            "value": "0.0030752026838132512"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_PROPORTION_MAPPED_DIFFERENT_CHR",
+            "value": "0.0"
+          },
+          {
+            "sample_id": "CPCT12345678T",
+            "check_name": "MAPPING_MARKDUP_PROPORTION_DUPLICATES",
+            "value": "0.05953177257525084"
+          }
+        ],
+        "check_type": "MAPPING"
+      }
+    }
+  ]
+}

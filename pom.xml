@@ -10,10 +10,10 @@
 
     <modules>
         <module>hmftools-common</module>
-        <module>retention-checker</module>
-        <module>health-checker</module>
-        <module>health-check-analyser</module>
+        <module>batch-health-check-reader</module>
         <module>ecrf-analyser</module>
+        <module>health-checker</module>
+        <module>retention-checker</module>
     </modules>
 
     <properties>
