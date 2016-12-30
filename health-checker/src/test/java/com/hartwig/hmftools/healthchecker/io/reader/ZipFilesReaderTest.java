@@ -20,7 +20,7 @@ public class ZipFilesReaderTest {
     private static final int NUM_HELLO_WORLD_LINES = 2;
     private static final String EMPTY_FILE_NAME = "emptyfile";
 
-    private static final String PATH_WITH_NO_ZIPS = "run";
+    private static final String PATH_WITH_NO_ZIPS = "empty";
 
     @Test
     public void readAllLinesFromZip() throws IOException {

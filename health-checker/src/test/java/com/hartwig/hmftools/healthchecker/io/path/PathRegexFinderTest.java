@@ -14,12 +14,12 @@ import org.junit.Test;
 
 public class PathRegexFinderTest {
 
-    private static final String RUN_DIRECTORY = "run";
+    private static final String RUN_DIRECTORY = "runners";
     private static final String NON_EXISTING_DIRECTORY = "bla";
     private static final String EMPTY_DIRECTORY = "empty";
 
-    private static final String EXISTING_RUN = "run";
-    private static final String EXISTING_REGEX = "somefile";
+    private static final String EXISTING_RUN = "metadata";
+    private static final String EXISTING_REGEX = "PipelineCheck.log";
     private static final String NON_EXISTING_REGEX = "this does not exist";
 
     @Test
