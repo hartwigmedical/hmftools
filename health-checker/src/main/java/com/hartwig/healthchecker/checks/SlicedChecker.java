@@ -12,7 +12,7 @@ import com.hartwig.healthchecker.common.exception.HealthChecksException;
 import com.hartwig.healthchecker.common.io.dir.RunContext;
 import com.hartwig.healthchecker.common.io.path.PathExtensionFinder;
 import com.hartwig.healthchecker.common.io.reader.LineReader;
-import com.hartwig.healthchecker.common.predicate.VCFDataLinePredicate;
+import com.hartwig.hmftools.common.variant.predicate.VCFDataLinePredicate;
 import com.hartwig.healthchecker.common.resource.ResourceWrapper;
 import com.hartwig.healthchecker.common.result.BaseResult;
 import com.hartwig.healthchecker.common.result.SingleValueResult;

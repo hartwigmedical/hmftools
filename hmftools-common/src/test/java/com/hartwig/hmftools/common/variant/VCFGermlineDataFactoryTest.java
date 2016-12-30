@@ -1,7 +1,9 @@
-package com.hartwig.healthchecker.checks.model;
+package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import com.hartwig.hmftools.common.variant.VCFGermlineDataFactory;
 
 import org.junit.Test;
 

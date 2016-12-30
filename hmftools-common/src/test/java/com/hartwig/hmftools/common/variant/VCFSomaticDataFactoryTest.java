@@ -1,8 +1,11 @@
-package com.hartwig.healthchecker.checks.model;
+package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.common.variant.VCFSomaticData;
+import com.hartwig.hmftools.common.variant.VCFSomaticDataFactory;
 
 import org.junit.Test;
 

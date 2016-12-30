@@ -1,4 +1,4 @@
-package com.hartwig.healthchecker.checks.model;
+package com.hartwig.hmftools.common.variant;
 
 import java.util.Arrays;
 import java.util.List;

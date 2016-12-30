@@ -8,8 +8,8 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.healthchecker.checks.model.VCFConstants;
-import com.hartwig.healthchecker.checks.model.VCFType;
+import com.hartwig.hmftools.common.variant.VCFConstants;
+import com.hartwig.hmftools.common.variant.VCFType;
 import com.hartwig.healthchecker.common.checks.CheckType;
 import com.hartwig.healthchecker.common.checks.HealthCheck;
 import com.hartwig.healthchecker.common.exception.HealthChecksException;

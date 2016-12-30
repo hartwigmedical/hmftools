@@ -1,10 +1,11 @@
-package com.hartwig.healthchecker.checks.predicate;
+package com.hartwig.hmftools.common.variant.predicate;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.healthchecker.checks.model.VCFGermlineData;
-import com.hartwig.healthchecker.checks.model.VCFType;
+import com.hartwig.hmftools.common.variant.VCFGermlineData;
+import com.hartwig.hmftools.common.variant.VCFType;
+import com.hartwig.hmftools.common.variant.predicate.VCFGermlineVariantPredicate;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.hartwig.healthchecker.common.predicate;
+package com.hartwig.hmftools.common.variant.predicate;
 
 import java.util.function.Predicate;
 
