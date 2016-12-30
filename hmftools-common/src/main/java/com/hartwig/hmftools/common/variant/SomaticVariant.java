@@ -4,17 +4,17 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VCFSomaticData {
+public class SomaticVariant {
 
     @NotNull
-    private final VCFType type;
+    private final VariantType type;
     @NotNull
     private final List<String> callers;
     private final double alleleFrequency;
     private final boolean isDBSNP;
     private final boolean isCOSMIC;
 
-    VCFSomaticData(@NotNull final VCFType type, @NotNull final List<String> callers, final double alleleFrequency,
+    SomaticVariant(@NotNull final VariantType type, @NotNull final List<String> callers, final double alleleFrequency,
             final boolean isDBSNP, final boolean isCOSMIC) {
         this.type = type;
         this.callers = callers;
@@ -24,7 +24,7 @@ public class VCFSomaticData {
     }
 
     @NotNull
-    public VCFType type() {
+    public VariantType type() {
         return type;
     }
 

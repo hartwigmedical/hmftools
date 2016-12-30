@@ -10,8 +10,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.SomaticCheck;
-import com.hartwig.hmftools.common.variant.VCFConstants;
-import com.hartwig.hmftools.common.variant.VCFType;
+import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
 import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
 import com.hartwig.hmftools.healthchecker.io.dir.TestRunContextFactory;
@@ -35,13 +35,13 @@ public class SomaticCheckerTest {
     private static final String MINIMAL_REF_SAMPLE = "sample3";
     private static final String MINIMAL_TUMOR_SAMPLE = "sample4";
 
-    private static final String INDELS = VCFType.INDELS.toString();
-    private static final String SNP = VCFType.SNP.toString();
+    private static final String INDELS = VariantType.INDEL.toString();
+    private static final String SNP = VariantType.SNP.toString();
 
-    private static final String MUTECT = VCFConstants.MUTECT.toUpperCase();
-    private static final String FREEBAYES = VCFConstants.FREEBAYES.toUpperCase();
-    private static final String STRELKA = VCFConstants.STRELKA.toUpperCase();
-    private static final String VARSCAN = VCFConstants.VARSCAN.toUpperCase();
+    private static final String MUTECT = SomaticVariantConstants.MUTECT.toUpperCase();
+    private static final String FREEBAYES = SomaticVariantConstants.FREEBAYES.toUpperCase();
+    private static final String STRELKA = SomaticVariantConstants.STRELKA.toUpperCase();
+    private static final String VARSCAN = SomaticVariantConstants.VARSCAN.toUpperCase();
 
     private final SomaticChecker checker = new SomaticChecker();
 

@@ -3,9 +3,8 @@ package com.hartwig.hmftools.common.variant.predicate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.variant.VCFGermlineData;
-import com.hartwig.hmftools.common.variant.VCFType;
-import com.hartwig.hmftools.common.variant.predicate.VCFGermlineVariantPredicate;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.junit.Test;
 
@@ -16,29 +15,29 @@ public class VCFGermlineVariantPredicateTest {
 
     @Test
     public void checkSNPVariant() {
-        final VCFGermlineData vcfGermlineVariantData = new VCFGermlineData(VCFType.SNP, VARIANT, NOT_VARIANT);
-        final VCFGermlineData vcfGermlineNotVariantData = new VCFGermlineData(VCFType.SNP, NOT_VARIANT, NOT_VARIANT);
+        final GermlineVariant refSNPVariant = new GermlineVariant(VariantType.SNP, VARIANT, NOT_VARIANT);
+        final GermlineVariant noVariant = new GermlineVariant(VariantType.SNP, NOT_VARIANT, NOT_VARIANT);
 
-        VCFGermlineVariantPredicate predicate = new VCFGermlineVariantPredicate(VCFType.SNP, true);
-        assertTrue(predicate.test(vcfGermlineVariantData));
-        assertFalse(predicate.test(vcfGermlineNotVariantData));
+        VCFGermlineVariantPredicate predicate = new VCFGermlineVariantPredicate(VariantType.SNP, true);
+        assertTrue(predicate.test(refSNPVariant));
+        assertFalse(predicate.test(noVariant));
 
-        predicate = new VCFGermlineVariantPredicate(VCFType.INDELS, true);
-        assertFalse(predicate.test(vcfGermlineVariantData));
-        assertFalse(predicate.test(vcfGermlineNotVariantData));
+        predicate = new VCFGermlineVariantPredicate(VariantType.INDEL, true);
+        assertFalse(predicate.test(refSNPVariant));
+        assertFalse(predicate.test(noVariant));
     }
 
     @Test
     public void checkIndelVariant() {
-        final VCFGermlineData vcfGermlineVariantData = new VCFGermlineData(VCFType.INDELS, VARIANT, NOT_VARIANT);
-        final VCFGermlineData vcfGermlineNotVariantData = new VCFGermlineData(VCFType.INDELS, NOT_VARIANT, NOT_VARIANT);
+        final GermlineVariant refIndelVariant = new GermlineVariant(VariantType.INDEL, VARIANT, NOT_VARIANT);
+        final GermlineVariant noVariant = new GermlineVariant(VariantType.INDEL, NOT_VARIANT, NOT_VARIANT);
 
-        VCFGermlineVariantPredicate predicate = new VCFGermlineVariantPredicate(VCFType.INDELS, true);
-        assertTrue(predicate.test(vcfGermlineVariantData));
-        assertFalse(predicate.test(vcfGermlineNotVariantData));
+        VCFGermlineVariantPredicate predicate = new VCFGermlineVariantPredicate(VariantType.INDEL, true);
+        assertTrue(predicate.test(refIndelVariant));
+        assertFalse(predicate.test(noVariant));
 
-        predicate = new VCFGermlineVariantPredicate(VCFType.SNP, true);
-        assertFalse(predicate.test(vcfGermlineVariantData));
-        assertFalse(predicate.test(vcfGermlineNotVariantData));
+        predicate = new VCFGermlineVariantPredicate(VariantType.SNP, true);
+        assertFalse(predicate.test(refIndelVariant));
+        assertFalse(predicate.test(noVariant));
     }
 }

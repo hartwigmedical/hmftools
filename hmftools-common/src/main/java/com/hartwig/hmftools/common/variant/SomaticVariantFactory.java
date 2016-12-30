@@ -11,10 +11,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class VCFSomaticDataFactory {
+public final class SomaticVariantFactory {
 
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactory.class);
     private static final String VCF_COLUMN_SEPARATOR = "\t";
-    private static final Logger LOGGER = LogManager.getLogger(VCFSomaticDataFactory.class);
 
     private static final int ID_COLUMN = 2;
     private static final String DBSNP_IDENTIFIER = "rs";
@@ -33,14 +33,14 @@ public final class VCFSomaticDataFactory {
     private static final int AF_COLUMN_INDEX = 1;
     private static final String AF_FIELD_SEPARATOR = ",";
 
-    private VCFSomaticDataFactory() {
+    private SomaticVariantFactory() {
     }
 
     @NotNull
-    public static VCFSomaticData fromVCFLine(@NotNull final String line) {
+    public static SomaticVariant fromVCFLine(@NotNull final String line) {
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
 
-        final VCFType type = VCFExtractorFunctions.extractVCFType(values);
+        final VariantType type = VariantExtractorFunctions.extractVCFType(values);
         final List<String> callers = extractCallers(values);
         final double alleleFrequency = calcAlleleFrequency(values);
         if (Double.isNaN(alleleFrequency)) {
@@ -50,7 +50,7 @@ public final class VCFSomaticDataFactory {
         boolean isDBSNP = id.contains(DBSNP_IDENTIFIER);
         boolean isCOSMIC = id.contains(COSMIC_IDENTIFIER);
 
-        return new VCFSomaticData(type, callers, alleleFrequency, isDBSNP, isCOSMIC);
+        return new SomaticVariant(type, callers, alleleFrequency, isDBSNP, isCOSMIC);
     }
 
     @NotNull
@@ -66,7 +66,7 @@ public final class VCFSomaticDataFactory {
         final String[] allCallers = setValue.get().split(CALLER_ALGO_SEPARATOR);
         List<String> finalCallers = Lists.newArrayList();
         if (allCallers.length > 0 && allCallers[0].equals(CALLER_INTERSECTION_IDENTIFIER)) {
-            finalCallers.addAll(VCFConstants.ALL_CALLERS);
+            finalCallers.addAll(SomaticVariantConstants.ALL_CALLERS);
         } else {
             finalCallers.addAll(
                     Arrays.stream(allCallers).filter(caller -> !caller.startsWith(CALLER_FILTERED_IDENTIFIER)).collect(

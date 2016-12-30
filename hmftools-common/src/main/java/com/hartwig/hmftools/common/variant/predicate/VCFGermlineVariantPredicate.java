@@ -2,33 +2,33 @@ package com.hartwig.hmftools.common.variant.predicate;
 
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.variant.VCFGermlineData;
-import com.hartwig.hmftools.common.variant.VCFType;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VCFGermlineVariantPredicate implements Predicate<VCFGermlineData> {
+public class VCFGermlineVariantPredicate implements Predicate<GermlineVariant> {
 
     private static final String INVALID_VARIANT_1 = "./.";
     private static final String INVALID_VARIANT_2 = "0/0";
 
     @NotNull
-    private final VCFType vcfType;
+    private final VariantType variantType;
     private final boolean isRefSample;
 
-    public VCFGermlineVariantPredicate(@NotNull final VCFType vcfType, final boolean isRefSample) {
-        this.vcfType = vcfType;
+    public VCFGermlineVariantPredicate(@NotNull final VariantType variantType, final boolean isRefSample) {
+        this.variantType = variantType;
         this.isRefSample = isRefSample;
     }
 
     @Override
-    public boolean test(@NotNull final VCFGermlineData vcfGermlineData) {
+    public boolean test(@NotNull final GermlineVariant germlineVariant) {
         boolean isVariant = false;
-        if (vcfGermlineData.getType() == vcfType) {
-            String dataToCheck = vcfGermlineData.getRefData();
+        if (germlineVariant.getType() == variantType) {
+            String dataToCheck = germlineVariant.getRefData();
 
             if (!isRefSample) {
-                dataToCheck = vcfGermlineData.getTumorData();
+                dataToCheck = germlineVariant.getTumorData();
             }
 
             if (!dataToCheck.startsWith(INVALID_VARIANT_1) && !dataToCheck.startsWith(INVALID_VARIANT_2)) {

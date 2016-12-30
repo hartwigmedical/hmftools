@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthchecker.runners.checks.GermlineCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.common.variant.VCFGermlineData;
-import com.hartwig.hmftools.common.variant.VCFGermlineDataFactory;
-import com.hartwig.hmftools.common.variant.VCFType;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VCFGermlineVariantPredicate;
 import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
 import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
@@ -56,7 +56,7 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
         }
 
         final List<String> passFilterLines = LineReader.build().readLines(vcfPath, new VCFPassDataLinePredicate());
-        final List<VCFGermlineData> variants = getVCFDataForGermLine(passFilterLines);
+        final List<GermlineVariant> variants = getVariantsForGermLine(passFilterLines);
 
         final List<HealthCheck> refChecks = calcChecksForSample(variants, runContext.refSample(), true);
         final List<HealthCheck> tumorChecks = calcChecksForSample(variants, runContext.tumorSample(), false);
@@ -91,30 +91,30 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private static List<HealthCheck> calcChecksForSample(@NotNull List<VCFGermlineData> vcfData,
+    private static List<HealthCheck> calcChecksForSample(@NotNull List<GermlineVariant> vcfData,
             @NotNull final String sampleId, final boolean isRefSample) {
-        final HealthCheck snp = getGermlineVariantCount(sampleId, vcfData, VCFType.SNP,
+        final HealthCheck snp = getGermlineVariantCount(sampleId, vcfData, VariantType.SNP,
                 GermlineCheck.VARIANTS_GERMLINE_SNP, isRefSample);
-        final HealthCheck indels = getGermlineVariantCount(sampleId, vcfData, VCFType.INDELS,
+        final HealthCheck indel = getGermlineVariantCount(sampleId, vcfData, VariantType.INDEL,
                 GermlineCheck.VARIANTS_GERMLINE_INDELS, isRefSample);
-        return Arrays.asList(snp, indels);
+        return Arrays.asList(snp, indel);
     }
 
     @NotNull
-    private static List<VCFGermlineData> getVCFDataForGermLine(@NotNull final List<String> lines) {
-        return lines.stream().map(VCFGermlineDataFactory::fromVCFLine).filter(notNull()).collect(Collectors.toList());
+    private static List<GermlineVariant> getVariantsForGermLine(@NotNull final List<String> lines) {
+        return lines.stream().map(GermlineVariantFactory::fromVCFLine).filter(notNull()).collect(Collectors.toList());
     }
 
     @NotNull
     private static HealthCheck getGermlineVariantCount(@NotNull final String sampleId,
-            @NotNull final List<VCFGermlineData> vcfData, @NotNull final VCFType vcfType,
+            @NotNull final List<GermlineVariant> variants, @NotNull final VariantType variantType,
             @NotNull final GermlineCheck check, final boolean isRefSample) {
-        final long count = vcfData.stream().filter(new VCFGermlineVariantPredicate(vcfType, isRefSample)).count();
+        final long count = variants.stream().filter(new VCFGermlineVariantPredicate(variantType, isRefSample)).count();
         return new HealthCheck(sampleId, check.toString(), String.valueOf(count));
     }
 
     @NotNull
-    private static Predicate<VCFGermlineData> notNull() {
+    private static Predicate<GermlineVariant> notNull() {
         return vcf -> vcf != null;
     }
 }

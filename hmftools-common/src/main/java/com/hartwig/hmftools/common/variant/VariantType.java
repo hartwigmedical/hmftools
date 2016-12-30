@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-public enum VCFType {
+public enum VariantType {
     SNP,
-    INDELS
+    INDEL
 }

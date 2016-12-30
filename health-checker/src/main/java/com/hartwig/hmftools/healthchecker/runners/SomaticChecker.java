@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.SomaticCheck;
-import com.hartwig.hmftools.common.variant.VCFConstants;
-import com.hartwig.hmftools.common.variant.VCFSomaticData;
-import com.hartwig.hmftools.common.variant.VCFSomaticDataFactory;
-import com.hartwig.hmftools.common.variant.VCFType;
+import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
 import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
 import com.hartwig.hmftools.healthchecker.io.path.PathExtensionFinder;
@@ -55,11 +55,11 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
         final Path vcfPath = PathExtensionFinder.build().findPath(runContext.runDirectory(),
                 MELTED_SOMATICS_EXTENSION);
         final List<String> lines = LineReader.build().readLines(vcfPath, new VCFPassDataLinePredicate());
-        final List<VCFSomaticData> variants = toVCFSomaticData(lines);
+        final List<SomaticVariant> variants = toSomaticVariants(lines);
 
         final List<HealthCheck> checks = Lists.newArrayList();
-        checks.addAll(getTypeChecks(variants, runContext.tumorSample(), VCFType.SNP));
-        checks.addAll(getTypeChecks(variants, runContext.tumorSample(), VCFType.INDELS));
+        checks.addAll(getTypeChecks(variants, runContext.tumorSample(), VariantType.SNP));
+        checks.addAll(getTypeChecks(variants, runContext.tumorSample(), VariantType.INDEL));
         checks.addAll(getAFChecks(variants, runContext.tumorSample()));
 
         return toMultiValueResult(checks);
@@ -69,18 +69,18 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
         final List<HealthCheck> checks = Lists.newArrayList();
-        for (final VCFType type : VCFType.values()) {
+        for (final VariantType type : VariantType.values()) {
             checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.COUNT_TOTAL.checkName(type.name()),
                     HealthCheckConstants.ERROR_VALUE));
             checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.DBSNP_COUNT.checkName(type.name()),
                     HealthCheckConstants.ERROR_VALUE));
-            checks.addAll(VCFConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
+            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
                     SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller),
                     HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-            checks.addAll(VCFConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
+            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
                     SomaticCheck.PRECISION_CHECK.checkName(type.name(), caller),
                     HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-            checks.addAll(VCFConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
+            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
                     SomaticCheck.SENSITIVITY_CHECK.checkName(type.name(), caller),
                     HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
             checks.addAll(CALLERS_COUNT.stream().map(count -> new HealthCheck(runContext.tumorSample(),
@@ -88,7 +88,7 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
                     HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
         }
 
-        for (final String caller : VCFConstants.ALL_CALLERS) {
+        for (final String caller : SomaticVariantConstants.ALL_CALLERS) {
             checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_LOWER_SD.checkName(caller),
                     HealthCheckConstants.ERROR_VALUE));
             checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_MEDIAN.checkName(caller),
@@ -107,36 +107,36 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static List<VCFSomaticData> toVCFSomaticData(@NotNull final List<String> lines) {
-        return lines.stream().map(VCFSomaticDataFactory::fromVCFLine).collect(Collectors.toList());
+    private static List<SomaticVariant> toSomaticVariants(@NotNull final List<String> lines) {
+        return lines.stream().map(SomaticVariantFactory::fromVCFLine).collect(Collectors.toList());
     }
 
     @NotNull
-    private static List<HealthCheck> getTypeChecks(@NotNull final List<VCFSomaticData> variants,
-            @NotNull final String sampleId, @NotNull final VCFType type) {
+    private static List<HealthCheck> getTypeChecks(@NotNull final List<SomaticVariant> variants,
+            @NotNull final String sampleId, @NotNull final VariantType type) {
         final List<HealthCheck> checks = new ArrayList<>();
-        final List<VCFSomaticData> variantsForType = filter(variants, hasVCFType(type));
+        final List<SomaticVariant> variantsForType = filter(variants, hasVCFType(type));
 
-        final HealthCheck vcfCountCheck = new HealthCheck(sampleId, SomaticCheck.COUNT_TOTAL.checkName(type.name()),
-                String.valueOf(variantsForType.size()));
-        checks.add(vcfCountCheck);
+        final HealthCheck variantCountCheck = new HealthCheck(sampleId,
+                SomaticCheck.COUNT_TOTAL.checkName(type.name()), String.valueOf(variantsForType.size()));
+        checks.add(variantCountCheck);
 
-        final List<VCFSomaticData> variantsWithDBSNPAndNotCOSMIC = filter(variantsForType, isDBSNPAndNotCOSMIC());
+        final List<SomaticVariant> variantsWithDBSNPAndNotCOSMIC = filter(variantsForType, isDBSNPAndNotCOSMIC());
         final HealthCheck dbsnpCheck = new HealthCheck(sampleId, SomaticCheck.DBSNP_COUNT.checkName(type.name()),
                 String.valueOf(variantsWithDBSNPAndNotCOSMIC.size()));
         checks.add(dbsnpCheck);
 
-        for (final String caller : VCFConstants.ALL_CALLERS) {
-            List<VCFSomaticData> callsPerCaller = filter(variantsForType, hasCaller(caller));
+        for (final String caller : SomaticVariantConstants.ALL_CALLERS) {
+            List<SomaticVariant> callsPerCaller = filter(variantsForType, hasCaller(caller));
             checks.add(new HealthCheck(sampleId, SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller),
                     String.valueOf(callsPerCaller.size())));
         }
 
-        final List<HealthCheck> precisionChecks = VCFConstants.ALL_CALLERS.stream().map(
+        final List<HealthCheck> precisionChecks = SomaticVariantConstants.ALL_CALLERS.stream().map(
                 caller -> calculatePrecision(variantsForType, sampleId, type, caller)).collect(Collectors.toList());
         checks.addAll(precisionChecks);
 
-        final List<HealthCheck> sensitivityChecks = VCFConstants.ALL_CALLERS.stream().map(
+        final List<HealthCheck> sensitivityChecks = SomaticVariantConstants.ALL_CALLERS.stream().map(
                 caller -> calculateSensitivity(variantsForType, sampleId, type, caller)).collect(Collectors.toList());
         checks.addAll(sensitivityChecks);
 
@@ -148,13 +148,13 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static List<HealthCheck> getAFChecks(final List<VCFSomaticData> variants, final String sampleId) {
+    private static List<HealthCheck> getAFChecks(final List<SomaticVariant> variants, final String sampleId) {
         final List<HealthCheck> checks = Lists.newArrayList();
-        for (String caller : VCFConstants.ALL_CALLERS) {
-            List<VCFSomaticData> filteredVariants = filter(variants, hasCaller(caller));
+        for (String caller : SomaticVariantConstants.ALL_CALLERS) {
+            List<SomaticVariant> filteredVariants = filter(variants, hasCaller(caller));
 
             if (filteredVariants.size() > 0) {
-                List<Double> alleleFreqs = filteredVariants.stream().map(VCFSomaticData::alleleFrequency).collect(
+                List<Double> alleleFreqs = filteredVariants.stream().map(SomaticVariant::alleleFrequency).collect(
                         Collectors.toList());
                 alleleFreqs.sort(Comparator.naturalOrder());
 
@@ -179,10 +179,10 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static HealthCheck calculatePrecision(@NotNull final List<VCFSomaticData> variants,
-            @NotNull final String sampleId, @NotNull final VCFType type, @NotNull final String caller) {
-        final List<VCFSomaticData> variantsForCaller = filter(variants, hasCaller(caller));
-        final List<VCFSomaticData> variantsForCallerWithMoreThanOneCaller = filter(variantsForCaller,
+    private static HealthCheck calculatePrecision(@NotNull final List<SomaticVariant> variants,
+            @NotNull final String sampleId, @NotNull final VariantType type, @NotNull final String caller) {
+        final List<SomaticVariant> variantsForCaller = filter(variants, hasCaller(caller));
+        final List<SomaticVariant> variantsForCallerWithMoreThanOneCaller = filter(variantsForCaller,
                 isTotalCallersCountMoreThan(1));
 
         double precision = 0D;
@@ -194,10 +194,10 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static HealthCheck calculateSensitivity(@NotNull final List<VCFSomaticData> variants,
-            @NotNull final String sampleId, @NotNull final VCFType type, @NotNull final String caller) {
-        final List<VCFSomaticData> variantsWithMoreThanOneCaller = filter(variants, isTotalCallersCountMoreThan(1));
-        final List<VCFSomaticData> variantsForCallerWithMoreThanOneCaller = filter(variantsWithMoreThanOneCaller,
+    private static HealthCheck calculateSensitivity(@NotNull final List<SomaticVariant> variants,
+            @NotNull final String sampleId, @NotNull final VariantType type, @NotNull final String caller) {
+        final List<SomaticVariant> variantsWithMoreThanOneCaller = filter(variants, isTotalCallersCountMoreThan(1));
+        final List<SomaticVariant> variantsForCallerWithMoreThanOneCaller = filter(variantsWithMoreThanOneCaller,
                 hasCaller(caller));
 
         double sensitivity = 0D;
@@ -210,9 +210,9 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static HealthCheck calculateProportion(@NotNull final List<VCFSomaticData> variants,
-            @NotNull final String sampleId, @NotNull final VCFType type, final int count) {
-        final List<VCFSomaticData> variantsWithCallerCount = filter(variants, isTotalCallersCountEqual(count));
+    private static HealthCheck calculateProportion(@NotNull final List<SomaticVariant> variants,
+            @NotNull final String sampleId, @NotNull final VariantType type, final int count) {
+        final List<SomaticVariant> variantsWithCallerCount = filter(variants, isTotalCallersCountEqual(count));
         double proportion = 0D;
         if (!variantsWithCallerCount.isEmpty() && !variants.isEmpty()) {
             proportion = (double) variantsWithCallerCount.size() / variants.size();
@@ -223,33 +223,33 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static List<VCFSomaticData> filter(@NotNull final List<VCFSomaticData> variants,
-            @NotNull final Predicate<VCFSomaticData> filter) {
+    private static List<SomaticVariant> filter(@NotNull final List<SomaticVariant> variants,
+            @NotNull final Predicate<SomaticVariant> filter) {
         return variants.stream().filter(filter).collect(Collectors.toList());
     }
 
     @NotNull
-    private static Predicate<VCFSomaticData> hasVCFType(@NotNull final VCFType type) {
-        return vcf -> vcf.type().equals(type);
+    private static Predicate<SomaticVariant> hasVCFType(@NotNull final VariantType type) {
+        return variant -> variant.type().equals(type);
     }
 
     @NotNull
-    private static Predicate<VCFSomaticData> isDBSNPAndNotCOSMIC() {
-        return vcf -> vcf.isDBSNP() && !vcf.isCOSMIC();
+    private static Predicate<SomaticVariant> isDBSNPAndNotCOSMIC() {
+        return variant -> variant.isDBSNP() && !variant.isCOSMIC();
     }
 
     @NotNull
-    private static Predicate<VCFSomaticData> hasCaller(@NotNull final String caller) {
-        return vcf -> vcf.callers().contains(caller);
+    private static Predicate<SomaticVariant> hasCaller(@NotNull final String caller) {
+        return variant -> variant.callers().contains(caller);
     }
 
     @NotNull
-    private static Predicate<VCFSomaticData> isTotalCallersCountMoreThan(final int count) {
-        return vcf -> vcf.callerCount() > count;
+    private static Predicate<SomaticVariant> isTotalCallersCountMoreThan(final int count) {
+        return variant -> variant.callerCount() > count;
     }
 
     @NotNull
-    private static Predicate<VCFSomaticData> isTotalCallersCountEqual(final int count) {
-        return vcf -> vcf.callerCount() == count;
+    private static Predicate<SomaticVariant> isTotalCallersCountEqual(final int count) {
+        return variant -> variant.callerCount() == count;
     }
 }

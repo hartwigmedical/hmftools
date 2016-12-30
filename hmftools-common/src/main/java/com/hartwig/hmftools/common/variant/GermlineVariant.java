@@ -2,24 +2,24 @@ package com.hartwig.hmftools.common.variant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VCFGermlineData {
+public class GermlineVariant {
 
+    @NotNull
+    private final VariantType type;
     @NotNull
     private final String refData;
     @NotNull
     private final String tumorData;
-    @NotNull
-    private final VCFType type;
 
-    public VCFGermlineData(@NotNull final VCFType type, @NotNull final String refData,
+    public GermlineVariant(@NotNull final VariantType type, @NotNull final String refData,
             @NotNull final String tumorData) {
+        this.type = type;
         this.refData = refData;
         this.tumorData = tumorData;
-        this.type = type;
     }
 
     @NotNull
-    public VCFType getType() {
+    public VariantType getType() {
         return type;
     }
 
