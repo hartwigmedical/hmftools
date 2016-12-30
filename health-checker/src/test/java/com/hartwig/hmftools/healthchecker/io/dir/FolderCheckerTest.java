@@ -17,10 +17,10 @@ import org.junit.Test;
 
 public class FolderCheckerTest {
 
-    private static final String RUN_FOLDER = "common/run";
-    private static final String NOT_A_FOLDER = "common/run/something";
+    private static final String RUN_FOLDER = "runners";
+    private static final String NOT_A_FOLDER = "somefile";
     private static final String NON_EXISTING_FOLDER = "bla";
-    private static final String EMPTY_FOLDER = "common/empty";
+    private static final String EMPTY_FOLDER = "empty";
 
     @Test
     public void checkFolder() throws IOException, HealthChecksException {

@@ -24,7 +24,7 @@ import org.junit.Test;
 
 public class SummaryMetricsCheckerTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/metrics").getPath();
+    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("metrics");
 
     private static final int EXPECTED_NUM_CHECKS = 5;
 

@@ -24,10 +24,10 @@ import org.junit.Test;
 
 public class RealignerCheckerTest {
 
+    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("realigner");
+
     private static final String REF_CHANGED_READS_PROPORTION = "0.04000";
     private static final String TUMOR_CHANGED_READS_PROPORTION = "0.04444";
-
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/realigner").getPath();
 
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";

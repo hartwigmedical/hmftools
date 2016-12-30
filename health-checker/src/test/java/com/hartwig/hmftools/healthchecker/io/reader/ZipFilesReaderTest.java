@@ -14,13 +14,13 @@ import org.junit.Test;
 
 public class ZipFilesReaderTest {
 
-    private static final String ZIP_DIRECTORY = "common/zipfiles";
+    private static final String ZIP_DIRECTORY = "zipfiles";
     private static final String COMMON_FILE_NAME = "helloworld";
     private static final String HELLO_WORLD_LINE = "helloworld";
     private static final int NUM_HELLO_WORLD_LINES = 2;
     private static final String EMPTY_FILE_NAME = "emptyfile";
 
-    private static final String PATH_WITH_NO_ZIPS = "common/run";
+    private static final String PATH_WITH_NO_ZIPS = "run";
 
     @Test
     public void readAllLinesFromZip() throws IOException {

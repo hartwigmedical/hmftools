@@ -21,7 +21,7 @@ public class FileInZipsFinderTest {
     private static final String EMPTY_FILE = "emptyfile";
     private static final String ZIP_WITH_EMPTY_FILE = "emptyfile.zip";
     private static final String ZIP_WITHOUT_FILE = "emptyarchive.zip";
-    private static final String ZIP_DIRECTORY = "common/zipfiles";
+    private static final String ZIP_DIRECTORY = "zipfiles";
 
     @Test
     public void findFile() throws IOException, HealthChecksException {

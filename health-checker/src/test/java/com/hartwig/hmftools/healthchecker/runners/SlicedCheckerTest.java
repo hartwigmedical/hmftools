@@ -19,7 +19,7 @@ import org.junit.Test;
 
 public class SlicedCheckerTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/sliced").getPath();
+    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("sliced");
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 

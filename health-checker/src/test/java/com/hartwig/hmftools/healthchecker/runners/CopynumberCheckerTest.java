@@ -23,7 +23,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class CopynumberCheckerTest {
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/copynumber").getPath();
+    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("copynumber");
 
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
@@ -21,12 +22,15 @@ import org.junit.Test;
 
 public class KinshipCheckerTest {
 
+    private static final String CORRECT_RUN =
+            RunnerTestFunctions.getRunnerResourcePath("kinship") + File.separator + "run";
+    private static final String MALFORMED_RUN =
+            RunnerTestFunctions.getRunnerResourcePath("kinship") + File.separator + "run2";
+    private static final String EMPTY_RUN =
+            RunnerTestFunctions.getRunnerResourcePath("kinship") + File.separator + "run3";
+
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
-
-    private static final String CORRECT_RUN = Resources.getResource("checks/kinship/run").getPath();
-    private static final String MALFORMED_RUN = Resources.getResource("checks/kinship/run2").getPath();
-    private static final String EMPTY_RUN = Resources.getResource("checks/kinship/run3").getPath();
 
     private static final double EXPECTED_KINSHIP_VALUE = 0.4748;
 
@@ -66,8 +70,7 @@ public class KinshipCheckerTest {
         checker.tryRun(runContext);
     }
 
-    private static void assertCheck(@NotNull final SingleValueResult result,
-            @NotNull final String expectedValue) {
+    private static void assertCheck(@NotNull final SingleValueResult result, @NotNull final String expectedValue) {
         final HealthCheck healthCheck = result.getCheck();
         assertEquals(expectedValue, healthCheck.getValue());
     }

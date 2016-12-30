@@ -2,6 +2,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -27,11 +28,13 @@ public class SomaticCheckerTest {
     private static final double EPSILON = 1.0e-4;
     private static final int EXPECTED_NUM_CHECKS = 48;
 
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/variants/run").getPath();
+    private static final String RUN_DIRECTORY =
+            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run";
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 
-    private static final String MINIMAL_RUN_DIRECTORY = Resources.getResource("checks/variants/run2").getPath();
+    private static final String MINIMAL_RUN_DIRECTORY =
+            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run2";
     private static final String MINIMAL_REF_SAMPLE = "sample3";
     private static final String MINIMAL_TUMOR_SAMPLE = "sample4";
 

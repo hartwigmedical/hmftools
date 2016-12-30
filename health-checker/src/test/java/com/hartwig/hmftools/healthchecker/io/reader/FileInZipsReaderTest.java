@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class FileInZipsReaderTest {
 
-    private static final String ZIP_DIRECTORY = "common/zipfiles";
+    private static final String ZIP_DIRECTORY = "zipfiles";
 
     private static final String FILE = "helloworld";
     private static final String FILE_ZIPPED = FILE + ".zip";

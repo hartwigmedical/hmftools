@@ -20,7 +20,7 @@ import org.junit.Test;
 
 public class MetadataCheckerTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/metadata").getPath();
+    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("metadata");
 
     private static final String EXPECTED_VERSION = "v1.7";
     private static final String EXPECTED_DATE = "2016-07-09";

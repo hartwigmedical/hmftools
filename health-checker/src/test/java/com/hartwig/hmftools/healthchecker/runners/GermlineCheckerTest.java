@@ -2,6 +2,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -21,8 +22,11 @@ import org.junit.Test;
 
 public class GermlineCheckerTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/variants/run").getPath();
-    private static final String RUN_DIRECTORY_V1_9 = Resources.getResource("checks/variants/run_v1_9").getPath();
+    private static final String RUN_DIRECTORY =
+            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run";
+    private static final String RUN_DIRECTORY_V1_9 =
+            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run_v1_9";
+
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 

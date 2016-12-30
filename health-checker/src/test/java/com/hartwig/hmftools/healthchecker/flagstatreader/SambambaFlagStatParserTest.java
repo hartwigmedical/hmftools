@@ -15,7 +15,7 @@ import org.junit.Test;
 
 public class SambambaFlagStatParserTest {
 
-    private static final String FLAGSTAT_EXAMPLE_PATH = Resources.getResource("common/flagstat").getPath();
+    private static final String FLAGSTAT_EXAMPLE_PATH = Resources.getResource("flagstat").getPath();
     private static final String FLAGSTAT_EXAMPLE_FILE_PATTERN = ".example";
     private static final String FLAGSTAT_EMPTY_FILE_PATTERN = ".empty";
     private static final String FLAGSTAT_DOES_NOT_EXIST_PATTERN = "this does not exist";

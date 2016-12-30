@@ -22,7 +22,7 @@ import org.junit.Test;
 
 public class PrestatsCheckerTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("checks/prestats").getPath();
+    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("prestats");
 
     private static final int EXPECTED_CHECKS_NUM = 34;
 
