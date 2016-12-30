@@ -13,6 +13,7 @@
         <module>batch-health-check-reader</module>
         <module>ecrf-analyser</module>
         <module>health-checker</module>
+        <module>patient-reporter</module>
         <module>retention-checker</module>
     </modules>
 
