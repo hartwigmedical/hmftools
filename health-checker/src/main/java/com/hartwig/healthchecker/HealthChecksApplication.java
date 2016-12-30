@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
-import com.hartwig.healthchecker.checkers.HealthChecker;
+import com.hartwig.healthchecker.runners.HealthChecker;
 import com.hartwig.healthchecker.exception.GenerateReportException;
 import com.hartwig.healthchecker.exception.HealthChecksException;
 import com.hartwig.healthchecker.exception.NotFoundException;

@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import com.hartwig.healthchecker.checkers.CheckType;
-import com.hartwig.healthchecker.checkers.ErrorHandlingChecker;
-import com.hartwig.healthchecker.checkers.HealthChecker;
+import com.hartwig.healthchecker.runners.CheckType;
+import com.hartwig.healthchecker.runners.ErrorHandlingChecker;
+import com.hartwig.healthchecker.runners.HealthChecker;
 import com.hartwig.healthchecker.exception.NotFoundException;
 import com.hartwig.healthchecker.resource.ResourceWrapper;
 

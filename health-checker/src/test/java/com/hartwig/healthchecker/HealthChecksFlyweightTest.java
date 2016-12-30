@@ -3,9 +3,9 @@ package com.hartwig.healthchecker;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.healthchecker.checkers.MappingChecker;
-import com.hartwig.healthchecker.checkers.CheckType;
-import com.hartwig.healthchecker.checkers.HealthChecker;
+import com.hartwig.healthchecker.runners.MappingChecker;
+import com.hartwig.healthchecker.runners.CheckType;
+import com.hartwig.healthchecker.runners.HealthChecker;
 import com.hartwig.healthchecker.exception.NotFoundException;
 
 import org.junit.Test;

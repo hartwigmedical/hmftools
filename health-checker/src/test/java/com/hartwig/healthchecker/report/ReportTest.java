@@ -9,7 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Optional;
 
-import com.hartwig.healthchecker.checkers.CheckType;
+import com.hartwig.healthchecker.runners.CheckType;
 import com.hartwig.healthchecker.exception.GenerateReportException;
 import com.hartwig.healthchecker.exception.HealthChecksException;
 import com.hartwig.healthchecker.io.dir.RunContext;

@@ -1,6 +1,6 @@
 package com.hartwig.healthchecker.result;
 
-import com.hartwig.healthchecker.checkers.CheckType;
+import com.hartwig.healthchecker.runners.CheckType;
 
 import org.jetbrains.annotations.NotNull;
 

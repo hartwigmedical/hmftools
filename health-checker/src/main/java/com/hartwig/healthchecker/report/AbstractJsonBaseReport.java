@@ -9,7 +9,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.hartwig.healthchecker.checkers.CheckType;
+import com.hartwig.healthchecker.runners.CheckType;
 import com.hartwig.healthchecker.result.BaseResult;
 
 import org.jetbrains.annotations.NotNull;
