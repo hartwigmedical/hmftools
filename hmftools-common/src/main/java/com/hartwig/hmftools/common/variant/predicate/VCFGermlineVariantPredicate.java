@@ -24,11 +24,11 @@ public class VCFGermlineVariantPredicate implements Predicate<GermlineVariant> {
     @Override
     public boolean test(@NotNull final GermlineVariant germlineVariant) {
         boolean isVariant = false;
-        if (germlineVariant.getType() == variantType) {
-            String dataToCheck = germlineVariant.getRefData();
+        if (germlineVariant.type() == variantType) {
+            String dataToCheck = germlineVariant.refData();
 
             if (!isRefSample) {
-                dataToCheck = germlineVariant.getTumorData();
+                dataToCheck = germlineVariant.tumorData();
             }
 
             if (!dataToCheck.startsWith(INVALID_VARIANT_1) && !dataToCheck.startsWith(INVALID_VARIANT_2)) {

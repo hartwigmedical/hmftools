@@ -16,9 +16,15 @@ public final class SomaticVariantFactory {
     private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactory.class);
     private static final String VCF_COLUMN_SEPARATOR = "\t";
 
+    private static final int CHROMOSOME_COLUMN = 0;
+    private static final int POSITION_COLUMN = 1;
+
     private static final int ID_COLUMN = 2;
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
+
+    private static final int REF_COLUMN = 3;
+    private static final int ALT_COLUMN = 4;
 
     private static final int INFO_COLUMN = 7;
     private static final String INFO_FIELD_SEPARATOR = ";";
@@ -40,17 +46,22 @@ public final class SomaticVariantFactory {
     public static SomaticVariant fromVCFLine(@NotNull final String line) {
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
 
-        final VariantType type = VariantExtractorFunctions.extractVCFType(values);
+        final VariantType type = VariantExtractorFunctions.extractVCFType(values[REF_COLUMN].trim(),
+                values[ALT_COLUMN].trim());
         final List<String> callers = extractCallers(values);
         final double alleleFrequency = calcAlleleFrequency(values);
         if (Double.isNaN(alleleFrequency)) {
             LOGGER.warn("Could not parse alleleFrequency from " + line);
         }
+
+        String chromosome = values[CHROMOSOME_COLUMN].trim();
+        int position = Integer.valueOf(values[POSITION_COLUMN].trim());
+
         String id = values[ID_COLUMN];
         boolean isDBSNP = id.contains(DBSNP_IDENTIFIER);
         boolean isCOSMIC = id.contains(COSMIC_IDENTIFIER);
 
-        return new SomaticVariant(type, callers, alleleFrequency, isDBSNP, isCOSMIC);
+        return new SomaticVariant(chromosome, position, type, callers, alleleFrequency, isDBSNP, isCOSMIC);
     }
 
     @NotNull
@@ -77,6 +88,10 @@ public final class SomaticVariantFactory {
 
     private static double calcAlleleFrequency(@NotNull final String[] values) {
         final String[] sampleFields = values[SAMPLE_COLUMN].split(SAMPLE_FIELD_SEPARATOR);
+        if (sampleFields.length < 2) {
+            return Double.NaN;
+        }
+
         final String[] afFields = sampleFields[AF_COLUMN_INDEX].split(AF_FIELD_SEPARATOR);
 
         if (afFields.length < 2) {

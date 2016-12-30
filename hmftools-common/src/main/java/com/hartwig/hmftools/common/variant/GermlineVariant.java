@@ -19,17 +19,17 @@ public class GermlineVariant {
     }
 
     @NotNull
-    public VariantType getType() {
+    public VariantType type() {
         return type;
     }
 
     @NotNull
-    public String getRefData() {
+    public String refData() {
         return refData;
     }
 
     @NotNull
-    public String getTumorData() {
+    public String tumorData() {
         return tumorData;
     }
 }

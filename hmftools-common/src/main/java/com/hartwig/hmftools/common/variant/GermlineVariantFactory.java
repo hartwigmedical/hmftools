@@ -10,8 +10,12 @@ public final class GermlineVariantFactory {
     private static final Logger LOGGER = LogManager.getLogger(GermlineVariantFactory.class);
 
     private static final String VCF_COLUMN_SEPARATOR = "\t";
-    private static final int TUMOR_SAMPLE_COLUMN = 10;
+
+    private static final int REF_COLUMN = 3;
+    private static final int ALT_COLUMN = 4;
+
     private static final int REF_SAMPLE_COLUMN = 9;
+    private static final int TUMOR_SAMPLE_COLUMN = 10;
 
     private GermlineVariantFactory() {
     }
@@ -24,7 +28,8 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        final VariantType type = VariantExtractorFunctions.extractVCFType(values);
+        final VariantType type = VariantExtractorFunctions.extractVCFType(values[REF_COLUMN].trim(),
+                values[ALT_COLUMN].trim());
         final String refData = values[REF_SAMPLE_COLUMN];
         final String tumData = values[TUMOR_SAMPLE_COLUMN];
 
