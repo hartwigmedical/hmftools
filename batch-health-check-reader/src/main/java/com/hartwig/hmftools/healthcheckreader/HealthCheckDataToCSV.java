@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.healthcheckeranalyser;
+package com.hartwig.hmftools.healthcheckreader;
 
 import java.util.Set;
 import java.util.SortedSet;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.healthcheckeranalyser.model.HealthCheckReport;
+import com.hartwig.hmftools.healthcheckreader.model.HealthCheckReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -19,7 +19,7 @@ final class JsonReport extends AbstractJsonBaseReport {
     private static final JsonReport INSTANCE = new JsonReport();
 
     private static final Logger LOGGER = LogManager.getLogger(JsonReport.class);
-    private static final String REPORT_NAME = "%s_health-checks_%s.json";
+    private static final String REPORT_NAME = "%s_health_checks_%s.json";
 
     private static final String ERROR_GENERATING_REPORT = "Error occurred whilst generating reports. Error -> %s";
 

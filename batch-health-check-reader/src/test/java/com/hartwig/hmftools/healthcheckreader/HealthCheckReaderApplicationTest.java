@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthcheckeranalyser;
+package com.hartwig.hmftools.healthcheckreader;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +7,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class HealthCheckerAnalysisApplicationTest {
+public class HealthCheckReaderApplicationTest {
 
     private static final String EXAMPLE_REPORT_PATH =
             Resources.getResource("checks").getPath() + File.separator + "example.json";
@@ -16,11 +16,11 @@ public class HealthCheckerAnalysisApplicationTest {
     @Test
     public void canRunAnalysisOnData() throws IOException {
         String csvOut = "/Users/kduyvesteyn/hmf/tmp/checks.csv";
-        new HealthCheckerAnalysisApplication(null, EXAMPLE_DATA_PATH, csvOut).runAnalysis();
+        new HealthCheckReaderApplication(null, EXAMPLE_DATA_PATH, csvOut).runAnalysis();
     }
 
     @Test
     public void canRunAnalysisOnReport() throws IOException {
-        new HealthCheckerAnalysisApplication(EXAMPLE_REPORT_PATH, null, null).runAnalysis();
+        new HealthCheckReaderApplication(EXAMPLE_REPORT_PATH, null, null).runAnalysis();
     }
 }

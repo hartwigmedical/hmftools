@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthcheckeranalyser.model;
+package com.hartwig.hmftools.healthcheckreader.model;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;

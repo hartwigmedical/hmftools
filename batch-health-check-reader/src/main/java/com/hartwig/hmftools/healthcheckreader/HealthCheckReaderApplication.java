@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthcheckeranalyser;
+package com.hartwig.hmftools.healthcheckreader;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,8 +12,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.healthcheckeranalyser.model.HealthCheckReport;
-import com.hartwig.hmftools.healthcheckeranalyser.model.HealthCheckReportFactory;
+import com.hartwig.hmftools.healthcheckreader.model.HealthCheckReport;
+import com.hartwig.hmftools.healthcheckreader.model.HealthCheckReportFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -26,9 +26,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HealthCheckerAnalysisApplication {
+public class HealthCheckReaderApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(HealthCheckerAnalysisApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(HealthCheckReaderApplication.class);
 
     private static final String REPORT_PATH_ARGS_DESC = "A path towards a single report to print in STDOUT.";
     private static final String REPORT_PATH = "report";
@@ -60,7 +60,7 @@ public class HealthCheckerAnalysisApplication {
             System.exit(1);
         }
 
-        new HealthCheckerAnalysisApplication(reportPath, dataPath, csvOut).runAnalysis();
+        new HealthCheckReaderApplication(reportPath, dataPath, csvOut).runAnalysis();
     }
 
     @NotNull
@@ -81,7 +81,7 @@ public class HealthCheckerAnalysisApplication {
         return parser.parse(options, args);
     }
 
-    HealthCheckerAnalysisApplication(@Nullable final String reportPath, @Nullable final String dataPath,
+    HealthCheckReaderApplication(@Nullable final String reportPath, @Nullable final String dataPath,
             @Nullable final String csvOut) {
         this.reportPath = reportPath;
         this.dataPath = dataPath;
