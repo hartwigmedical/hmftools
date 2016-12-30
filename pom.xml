@@ -27,6 +27,9 @@
         <apache.log4j.version>2.5</apache.log4j.version>
         <google.gson.version>2.6.2</google.gson.version>
 
+        <hmftools-common.version>1</hmftools-common.version>
+
+        <!-- Used by health checker -->
         <reactivex.version>1.1.5</reactivex.version>
         <reflections.version>0.9.10</reflections.version>
 
@@ -41,6 +44,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>hmftools-common</artifactId>
+                <version>${hmftools-common.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>com.github.samtools</groupId>
                 <artifactId>htsjdk</artifactId>
