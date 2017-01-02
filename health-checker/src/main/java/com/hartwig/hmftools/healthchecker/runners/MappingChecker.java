@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStatData;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStats;
@@ -44,7 +44,7 @@ public class MappingChecker extends ErrorHandlingChecker implements HealthChecke
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final List<HealthCheck> refChecks = getChecksForSample(runContext.runDirectory(), runContext.refSample());
         final List<HealthCheck> tumorChecks = getChecksForSample(runContext.runDirectory(), runContext.tumorSample());
 
@@ -78,7 +78,7 @@ public class MappingChecker extends ErrorHandlingChecker implements HealthChecke
 
     @NotNull
     private static List<HealthCheck> getChecksForSample(@NotNull final String runDirectory,
-            @NotNull final String sampleId) throws IOException, HealthChecksException {
+            @NotNull final String sampleId) throws IOException, HartwigException {
         final String basePathForTotalSequences = getBasePathForTotalSequences(runDirectory, sampleId);
         final long totalSequences = HealthCheckFunctions.sumOfTotalSequencesFromFastQC(basePathForTotalSequences);
 

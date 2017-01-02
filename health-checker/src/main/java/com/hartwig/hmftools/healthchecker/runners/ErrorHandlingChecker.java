@@ -2,7 +2,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 
@@ -21,7 +21,7 @@ public abstract class ErrorHandlingChecker implements HealthChecker {
         BaseResult result;
         try {
             result = tryRun(runContext);
-        } catch (IOException | HealthChecksException exception) {
+        } catch (IOException | HartwigException exception) {
             LOGGER.error(String.format(EXCEPTION_MSG, exception.getMessage()));
             result = errorRun(runContext);
         }
@@ -29,8 +29,7 @@ public abstract class ErrorHandlingChecker implements HealthChecker {
     }
 
     @NotNull
-    protected abstract BaseResult tryRun(@NotNull RunContext runContext)
-            throws IOException, HealthChecksException;
+    protected abstract BaseResult tryRun(@NotNull RunContext runContext) throws IOException, HartwigException;
 
     @NotNull
     protected abstract BaseResult errorRun(@NotNull RunContext runContext);

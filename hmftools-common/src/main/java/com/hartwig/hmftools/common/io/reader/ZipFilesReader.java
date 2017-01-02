@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathsExtensionFinder;
 
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +45,7 @@ public class ZipFilesReader {
         final List<String> fileLines = new ArrayList<>();
         try {
             fileLines.addAll(FileInZipsReader.build().readLines(path, fileName));
-        } catch (IOException | HealthChecksException e) {
+        } catch (IOException | HartwigException e) {
             LOGGER.error(String.format(ERROR_MSG, path, e.getMessage()));
         }
         return fileLines;
@@ -57,7 +57,7 @@ public class ZipFilesReader {
         String searchedLine = null;
         try {
             searchedLine = LineInZipsReader.build().readLines(path.toString(), fileName, filter);
-        } catch (IOException | HealthChecksException e) {
+        } catch (IOException | HartwigException e) {
             LOGGER.error(String.format(ERROR_MSG, path, e.getMessage()));
         }
         return searchedLine;

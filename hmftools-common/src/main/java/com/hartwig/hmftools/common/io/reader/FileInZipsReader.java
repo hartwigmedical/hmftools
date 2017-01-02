@@ -9,7 +9,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ interface FileInZipsReader {
 
     @NotNull
     List<String> readLines(@NotNull String zipPath, @NotNull String fileNameInZip)
-            throws IOException, HealthChecksException;
+            throws IOException, HartwigException;
 
     @NotNull
     static FileInZipsReader build() {

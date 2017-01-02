@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -44,7 +44,7 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final Path kinshipPath = PathExtensionFinder.build().findPath(runContext.runDirectory(), KINSHIP_EXTENSION);
         final List<String> kinshipLines = FileReader.build().readLines(kinshipPath);
         if (kinshipLines.size() != EXPECTED_NUM_LINES) {

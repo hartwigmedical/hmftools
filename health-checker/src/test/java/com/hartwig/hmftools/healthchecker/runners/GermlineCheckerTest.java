@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -38,7 +38,7 @@ public class GermlineCheckerTest {
     private final GermlineChecker checker = new GermlineChecker();
 
     @Test
-    public void canCountSNPAndIndels() throws IOException, HealthChecksException {
+    public void canCountSNPAndIndels() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
@@ -51,7 +51,7 @@ public class GermlineCheckerTest {
     }
 
     @Test
-    public void canCountSNPAndV1_9() throws IOException, HealthChecksException {
+    public void canCountSNPAndV1_9() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY_V1_9, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.tryRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());

@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
+import java.util.List;
+
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -15,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
+    private static final String SOMATIC_EXTENSION = "_melted.vcf";
 
     private static final String RUN_DIRECTORY_ARGS_DESC = "A path towards a single rundir.";
     private static final String RUN_DIRECTORY = "rundir";
@@ -22,7 +28,7 @@ public class PatientReporterApplication {
     @NotNull
     private final String runDirectory;
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(final String... args) throws ParseException, IOException, HartwigException {
         Options options = createOptions();
         CommandLine cmd = createCommandLine(options, args);
 
@@ -34,7 +40,7 @@ public class PatientReporterApplication {
             System.exit(1);
         }
 
-        new PatientReporterApplication(runDir).printRunDirectory();
+        new PatientReporterApplication(runDir).runPatientReporter();
     }
 
     @NotNull
@@ -58,7 +64,9 @@ public class PatientReporterApplication {
         this.runDirectory = runDirectory;
     }
 
-    void printRunDirectory() {
-        LOGGER.info(runDirectory);
+    void runPatientReporter() throws IOException, HartwigException {
+        LOGGER.info("Running patient reporter on " + runDirectory);
+        List<SomaticVariant> variants = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
+
     }
 }

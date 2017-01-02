@@ -2,8 +2,6 @@ package com.hartwig.hmftools.healthchecker.context;
 
 import java.io.File;
 
-import com.hartwig.hmftools.common.exception.MalformedRunDirException;
-
 import org.jetbrains.annotations.NotNull;
 
 public final class CPCTRunContextFactory {

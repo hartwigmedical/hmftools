@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.MalformedRunDirException;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

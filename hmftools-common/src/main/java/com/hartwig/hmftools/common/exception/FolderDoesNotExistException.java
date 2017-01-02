@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FolderDoesNotExistException extends HealthChecksException {
+public class FolderDoesNotExistException extends HartwigException {
 
     private static final long serialVersionUID = -8396650626359037492L;
 

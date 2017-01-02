@@ -12,7 +12,7 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ public class FileInZipsFinderTest {
     private static final String ZIP_DIRECTORY = "zipfiles";
 
     @Test
-    public void findFile() throws IOException, HealthChecksException {
+    public void findFile() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + ZIP_WITH_EMPTY_FILE);
         final ZipFile zipFile = new ZipFile(testPath.getPath());
         final List<? extends ZipEntry> zipEntry = FileInZipsFinder.build().findFileInZip(zipFile, EMPTY_FILE);
@@ -32,14 +32,14 @@ public class FileInZipsFinderTest {
     }
 
     @Test(expected = ZipException.class)
-    public void readZipNotFound() throws IOException, HealthChecksException {
+    public void readZipNotFound() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + ZIP_WITHOUT_FILE);
         final ZipFile zipFile = new ZipFile(testPath.getPath());
         FileInZipsFinder.build().findFileInZip(zipFile, "bla");
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void readFileNotFound() throws IOException, HealthChecksException {
+    public void readFileNotFound() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + ZIP_WITH_EMPTY_FILE);
         final ZipFile zipFile = new ZipFile(testPath.getPath());
         FileInZipsFinder.build().findFileInZip(zipFile, "bla");

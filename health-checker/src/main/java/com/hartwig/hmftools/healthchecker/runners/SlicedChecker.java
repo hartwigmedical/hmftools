@@ -3,7 +3,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
@@ -36,7 +36,7 @@ public class SlicedChecker extends ErrorHandlingChecker implements HealthChecker
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         List<GermlineVariant> variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(),
                 SLICED_VCF_EXTENSION);
         final long value = variants.size();

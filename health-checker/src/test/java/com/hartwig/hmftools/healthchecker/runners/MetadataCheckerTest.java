@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -28,7 +28,7 @@ public class MetadataCheckerTest {
     private final MetadataChecker checker = new MetadataChecker();
 
     @Test
-    public void canReadCorrectMetaData() throws IOException, HealthChecksException {
+    public void canReadCorrectMetaData() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY);
         final BaseResult result = checker.tryRun(runContext);
 

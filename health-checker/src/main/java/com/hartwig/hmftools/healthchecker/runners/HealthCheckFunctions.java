@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.ZipFilesReader;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,8 +20,7 @@ final class HealthCheckFunctions {
     private HealthCheckFunctions() {
     }
 
-    static long sumOfTotalSequencesFromFastQC(@NotNull final String basePath)
-            throws IOException, HealthChecksException {
+    static long sumOfTotalSequencesFromFastQC(@NotNull final String basePath) throws IOException, HartwigException {
         final List<String> allLines = new ZipFilesReader().readFieldFromZipFiles(basePath, FASTQC_DATA_FILE_NAME,
                 TOTAL_SEQUENCES_PATTERN);
 

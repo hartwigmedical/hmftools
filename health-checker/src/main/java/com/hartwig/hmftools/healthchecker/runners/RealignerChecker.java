@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.LineNotFoundException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
@@ -56,8 +56,7 @@ public class RealignerChecker extends ErrorHandlingChecker implements HealthChec
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext)
-            throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final HealthCheck refCheck = extractCheckForSample(runContext.runDirectory(), runContext.refSample());
         final HealthCheck tumorCheck = extractCheckForSample(runContext.runDirectory(), runContext.tumorSample());
 
@@ -87,7 +86,7 @@ public class RealignerChecker extends ErrorHandlingChecker implements HealthChec
     @NotNull
     private static HealthCheck extractCheckForSample(@NotNull final String runDirectory,
                                                      @NotNull final String sampleId)
-            throws IOException, HealthChecksException {
+            throws IOException, HartwigException {
         final String basePath = getBasePathForSample(runDirectory, sampleId);
 
         final Path bamDiffPath = PathPrefixSuffixFinder.build().findPath(basePath, sampleId, BAM_DIFF_EXTENSION);
@@ -100,8 +99,7 @@ public class RealignerChecker extends ErrorHandlingChecker implements HealthChec
         return new HealthCheck(sampleId, REALIGNER_CHECK_NAME, value);
     }
 
-    private static long readMappedFromFlagstat(@NotNull final Path flagStatPath)
-            throws IOException, HealthChecksException {
+    private static long readMappedFromFlagstat(@NotNull final Path flagStatPath) throws IOException, HartwigException {
         final List<String> lines = FileReader.build().readLines(flagStatPath);
 
         final Optional<String> mappedLine = lines.stream()
@@ -121,7 +119,7 @@ public class RealignerChecker extends ErrorHandlingChecker implements HealthChec
     }
 
     private static long readDiffCountFromBamDiff(@NotNull final Path bamDiffPath)
-            throws IOException, HealthChecksException {
+            throws IOException, HartwigException {
         final List<String> lines = FileReader.build().readLines(bamDiffPath);
         return lines.stream()
                     .filter(line -> !line.startsWith(IGNORE_FOR_DIFF_COUNT_PATTERN_1)

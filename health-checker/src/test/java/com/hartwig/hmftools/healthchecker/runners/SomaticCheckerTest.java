@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
@@ -48,7 +48,7 @@ public class SomaticCheckerTest {
     private final SomaticChecker checker = new SomaticChecker();
 
     @Test
-    public void canAnalyseTypicalMeltedVCF() throws IOException, HealthChecksException {
+    public void canAnalyseTypicalMeltedVCF() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
 
         final BaseResult result = checker.tryRun(runContext);
@@ -123,7 +123,7 @@ public class SomaticCheckerTest {
     }
 
     @Test
-    public void canAnalyseMinimalVCF() throws IOException, HealthChecksException {
+    public void canAnalyseMinimalVCF() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE,
                 MINIMAL_TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
@@ -140,7 +140,7 @@ public class SomaticCheckerTest {
     }
 
     @Test
-    public void errorGeneratesSameCheckNames() throws IOException, HealthChecksException {
+    public void errorGeneratesSameCheckNames() throws IOException, HartwigException {
         final RunContext normalRun = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final List<HealthCheck> normalChecks = ((MultiValueResult) checker.tryRun(normalRun)).getChecks();
         final List<HealthCheck> errorChecks = ((MultiValueResult) checker.errorRun(normalRun)).getChecks();

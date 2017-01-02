@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -27,7 +27,7 @@ public class SlicedCheckerTest {
     private final SlicedChecker checker = new SlicedChecker();
 
     @Test
-    public void canAnalyseTypicalSlicedVCF() throws IOException, HealthChecksException {
+    public void canAnalyseTypicalSlicedVCF() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
 
         final BaseResult result = checker.tryRun(runContext);
@@ -47,7 +47,7 @@ public class SlicedCheckerTest {
     }
 
     @Test(expected = IOException.class)
-    public void readingNonExistingFileYieldsIOException() throws IOException, HealthChecksException {
+    public void readingNonExistingFileYieldsIOException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest("DoesNotExist", REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }

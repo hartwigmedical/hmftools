@@ -9,7 +9,7 @@ import java.util.Locale;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
@@ -55,8 +55,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext)
-            throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final String runDate = extractRunDate(runContext);
         final String pipelineVersion = extractPipelineVersion(runContext.runDirectory());
 
@@ -69,7 +68,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
         String pipelineVersion = HealthCheckConstants.ERROR_VALUE;
         try {
             pipelineVersion = extractPipelineVersion(runContext.runDirectory());
-        } catch (IOException | HealthChecksException exception) {
+        } catch (IOException | HartwigException exception) {
             // KODU: This is to work around the fact that pipeline version and run date are linked.
             // If run date extraction fails, pipeline version wont be available.
             // Should be two separate checkers...
@@ -112,8 +111,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private static String extractRunDate(@NotNull final RunContext runContext)
-            throws IOException, HealthChecksException {
+    private static String extractRunDate(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final Path dateTimeLogPath = PathRegexFinder.build()
                                                     .findPath(runContext.runDirectory(),
                                                               String.format(LOG_FILENAME_FORMAT,
@@ -129,7 +127,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static String extractPipelineVersion(@NotNull final String runDirectory)
-            throws IOException, HealthChecksException {
+            throws IOException, HartwigException {
         final Path pipelineLogPath = PathRegexFinder.build().findPath(runDirectory, PIPELINE_LOG_REGEX);
         final List<String> versionsLine = LineReader.build()
                                                     .readLines(pipelineLogPath, doesLineStartWith(PIPELINE_VERSION));

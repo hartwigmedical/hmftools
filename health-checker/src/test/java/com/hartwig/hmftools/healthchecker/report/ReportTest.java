@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.GenerateReportException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -31,7 +31,7 @@ public class ReportTest {
     private static final String MOCK_OUTPUT_DIR = "path/to/output";
 
     @Test
-    public void generateStdOutReport() throws IOException, HealthChecksException {
+    public void generateStdOutReport() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
         final BaseResult baseConfig1 = new TestResult(CheckType.MAPPING);
@@ -49,7 +49,7 @@ public class ReportTest {
     }
 
     @Test
-    public void generateReportMetadataIOException() throws IOException, HealthChecksException {
+    public void generateReportMetadataIOException() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
         final BaseResult baseConfig1 = new TestResult(CheckType.MAPPING);
@@ -67,7 +67,7 @@ public class ReportTest {
     }
 
     @Test
-    public void generateReportMetadataHealthCheckException() throws IOException, HealthChecksException {
+    public void generateReportMetadataHealthCheckException() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
         final BaseResult baseConfig1 = new TestResult(CheckType.MAPPING);
@@ -85,8 +85,7 @@ public class ReportTest {
     }
 
     @Test(expected = GenerateReportException.class)
-    public void generateReportException(@Mocked final FileWriter fileWriter)
-            throws IOException, HealthChecksException {
+    public void generateReportException(@Mocked final FileWriter fileWriter) throws IOException, HartwigException {
 
         new NonStrictExpectations() {
             {

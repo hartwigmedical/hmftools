@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
@@ -38,7 +38,7 @@ public class CopynumberCheckerTest {
     private final CopynumberChecker checker = new CopynumberChecker();
 
     @Test
-    public void correctInputYieldsCorrectOutput() throws IOException, HealthChecksException {
+    public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
         assertResult(result, EXPECTED_GAIN, EXPECTED_LOSS);
@@ -52,32 +52,32 @@ public class CopynumberCheckerTest {
     }
 
     @Test(expected = MalformedFileException.class)
-    public void noGainLossTagsYieldMalformedException() throws IOException, HealthChecksException {
+    public void noGainLossTagsYieldMalformedException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, MALFORMED_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test
-    public void emptyCopyNumberVariantsAllowedIfRatiosPresent() throws IOException, HealthChecksException {
+    public void emptyCopyNumberVariantsAllowedIfRatiosPresent() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, NO_CNVS_FOUND_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
         assertResult(result, 0, 0);
     }
 
     @Test(expected = EmptyFileException.class)
-    public void emptyCopyNumberVariantsNotAllowedIfRatiosEmpty() throws IOException, HealthChecksException {
+    public void emptyCopyNumberVariantsNotAllowedIfRatiosEmpty() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, EMPTY_RATIOS_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void emptyCopyNumberVariantsNotAllowedIfRatiosMissing() throws IOException, HealthChecksException {
+    public void emptyCopyNumberVariantsNotAllowedIfRatiosMissing() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, NO_RATIOS_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void missingCopyNumberVariantsNotAllowedEvenIfRatiosPresent() throws IOException, HealthChecksException {
+    public void missingCopyNumberVariantsNotAllowedEvenIfRatiosPresent() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, MISSING_CNVS_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }

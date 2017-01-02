@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.LineNotFoundException;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,7 @@ public interface LineReader {
 
     @NotNull
     List<String> readLines(@NotNull Path filePath, @NotNull Predicate<String> filter)
-            throws IOException, HealthChecksException;
+            throws IOException, HartwigException;
 
     @NotNull
     static LineReader build() {

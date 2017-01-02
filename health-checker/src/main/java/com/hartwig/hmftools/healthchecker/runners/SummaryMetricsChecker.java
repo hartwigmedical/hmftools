@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.LineNotFoundException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -48,7 +48,7 @@ public class SummaryMetricsChecker extends ErrorHandlingChecker implements Healt
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final List<HealthCheck> refChecks = extractChecksForSample(runContext.runDirectory(), runContext.refSample());
         final List<HealthCheck> tumorChecks = extractChecksForSample(runContext.runDirectory(),
                 runContext.tumorSample());
@@ -83,7 +83,7 @@ public class SummaryMetricsChecker extends ErrorHandlingChecker implements Healt
 
     @NotNull
     private static List<HealthCheck> extractChecksForSample(@NotNull final String runDirectory,
-            @NotNull final String sampleId) throws IOException, HealthChecksException {
+            @NotNull final String sampleId) throws IOException, HartwigException {
         final String basePath = getBasePathForSample(runDirectory, sampleId);
         Path alignmentSummaryMetricsPath = PathPrefixSuffixFinder.build().findPath(basePath, sampleId,
                 ALIGNMENT_SUMMARY_METRICS_EXTENSION);

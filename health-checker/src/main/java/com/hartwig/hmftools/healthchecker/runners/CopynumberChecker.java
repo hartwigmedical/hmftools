@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -56,7 +56,7 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         long totalGain = 0;
         long totalLoss = 0;
         for (final String line : copynumberLines(runContext)) {

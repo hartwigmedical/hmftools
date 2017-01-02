@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class ReportsFlyweightTest {
     private static final String JSON = "json";
 
     @Test
-    public void getReport() throws IOException, HealthChecksException {
+    public void getReport() throws IOException, HartwigException {
         Report report = ReportsFlyweight.getInstance().getReport(STDOUT);
         assertNotNull(report);
         assertTrue(report instanceof StandardOutputReport);

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.exception.NotFoundException;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.runners.CheckType;
 import com.hartwig.hmftools.healthchecker.runners.ErrorHandlingChecker;

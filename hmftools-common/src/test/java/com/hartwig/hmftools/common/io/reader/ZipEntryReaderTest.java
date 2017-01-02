@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ public class ZipEntryReaderTest {
     @Test
     public void readEntry(@Mocked final ZipFile zipFile, @Mocked final ZipEntry zipEntry,
                     @Mocked final InputStream inputStream, @Mocked final BufferedReader reader,
-                    @Mocked final InputStreamReader inputStreamReader) throws IOException, HealthChecksException {
+            @Mocked final InputStreamReader inputStreamReader) throws IOException, HartwigException {
         new NonStrictExpectations() {
             {
                 zipFile.getInputStream(zipEntry);
@@ -52,7 +52,7 @@ public class ZipEntryReaderTest {
     @Test
     public void readEntryIoException(@Mocked final ZipFile zipFile, @Mocked final ZipEntry zipEntry,
                     @Mocked final InputStream inputStream, @Mocked final BufferedReader reader,
-                    @Mocked final InputStreamReader inputStreamReader) throws IOException, HealthChecksException {
+            @Mocked final InputStreamReader inputStreamReader) throws IOException, HartwigException {
         new NonStrictExpectations() {
             {
                 zipFile.getInputStream(zipEntry);

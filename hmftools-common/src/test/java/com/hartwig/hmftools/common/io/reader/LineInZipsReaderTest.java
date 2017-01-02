@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.LineNotFoundException;
 
 import org.junit.Test;
@@ -23,7 +23,7 @@ public class LineInZipsReaderTest {
     private static final String EMPTY_ZIP = EMPTY_FILE + ".zip";
 
     @Test
-    public void readLine() throws IOException, HealthChecksException {
+    public void readLine() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + ZIP_FILE);
         final String line = LineInZipsReader.build().readLines(testPath.getPath(), FILE, FILE_CONTENT);
         assertTrue(line.startsWith(FILE_CONTENT));
@@ -31,13 +31,13 @@ public class LineInZipsReaderTest {
     }
 
     @Test(expected = LineNotFoundException.class)
-    public void readLinesEmptyFiles() throws IOException, HealthChecksException {
+    public void readLinesEmptyFiles() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + EMPTY_ZIP);
         LineInZipsReader.build().readLines(testPath.getPath(), EMPTY_FILE, "try to find me");
     }
 
     @Test(expected = LineNotFoundException.class)
-    public void readLineNotInFile() throws IOException, HealthChecksException {
+    public void readLineNotInFile() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + ZIP_FILE);
         LineInZipsReader.build().readLines(testPath.getPath(), FILE, "try to find me");
     }

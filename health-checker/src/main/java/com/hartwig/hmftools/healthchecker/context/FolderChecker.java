@@ -8,8 +8,7 @@ import java.nio.file.Path;
 
 import com.hartwig.hmftools.common.exception.EmptyFolderException;
 import com.hartwig.hmftools.common.exception.FolderDoesNotExistException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
-import com.hartwig.hmftools.common.exception.NotFolderException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public interface FolderChecker {
 
     @NotNull
-    String checkFolder(@NotNull String directory) throws IOException, HealthChecksException;
+    String checkFolder(@NotNull String directory) throws IOException, HartwigException;
 
     @NotNull
     static FolderChecker build() {

@@ -9,12 +9,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.predicate.PassFilterPredicate;
+import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
@@ -33,7 +33,7 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticChecker.class);
 
-    private static final String MELTED_SOMATICS_EXTENSION = "_melted.vcf";
+    private static final String SOMATICS_EXTENSION = "_melted.vcf";
     private static final List<Integer> CALLERS_COUNT = Arrays.asList(1, 2, 3, 4);
 
     private static final double AF_SD_DISTANCE = 0.16;
@@ -49,10 +49,9 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
-        List<SomaticVariant> variants = VCFFileLoader.loadSomaticVCF(runContext.runDirectory(),
-                MELTED_SOMATICS_EXTENSION);
-        variants = variants.stream().filter(new PassFilterPredicate()).collect(Collectors.toList());
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
+        final List<SomaticVariant> variants = VariantFilter.passOnly(
+                VCFFileLoader.loadSomaticVCF(runContext.runDirectory(), SOMATICS_EXTENSION));
 
         final List<HealthCheck> checks = Lists.newArrayList();
         checks.addAll(getTypeChecks(variants, runContext.tumorSample(), VariantType.SNP));

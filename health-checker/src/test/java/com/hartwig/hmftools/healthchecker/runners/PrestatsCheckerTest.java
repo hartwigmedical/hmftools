@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -39,7 +39,7 @@ public class PrestatsCheckerTest {
     private final PrestatsChecker checker = new PrestatsChecker();
 
     @Test
-    public void correctInputYieldsCorrectOutput() throws IOException, HealthChecksException {
+    public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
@@ -58,14 +58,14 @@ public class PrestatsCheckerTest {
 
 
     @Test(expected = EmptyFileException.class)
-    public void emptyTotalSequenceFileYieldsEmptyFileException() throws IOException, HealthChecksException {
+    public void emptyTotalSequenceFileYieldsEmptyFileException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, EMPTY_TOTAL_SEQUENCE_SAMPLE,
                 EMPTY_TOTAL_SEQUENCE_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test
-    public void incompleteInputYieldsIncompleteOutput() throws IOException, HealthChecksException {
+    public void incompleteInputYieldsIncompleteOutput() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, INCOMPLETE_SAMPLE,
                 INCOMPLETE_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
@@ -76,7 +76,7 @@ public class PrestatsCheckerTest {
     }
 
     @Test(expected = IOException.class)
-    public void nonExistingFileYieldsIOException() throws IOException, HealthChecksException {
+    public void nonExistingFileYieldsIOException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, NON_EXISTING_SAMPLE,
                 NON_EXISTING_SAMPLE);
         checker.tryRun(runContext);

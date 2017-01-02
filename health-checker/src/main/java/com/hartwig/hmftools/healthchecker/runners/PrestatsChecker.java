@@ -9,7 +9,7 @@ import java.util.Optional;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.ZipFilesReader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
@@ -46,7 +46,7 @@ public class PrestatsChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     @Override
-    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
+    public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final List<HealthCheck> refChecks = extractChecksForSample(runContext.runDirectory(), runContext.refSample());
         final List<HealthCheck> tumorChecks = extractChecksForSample(runContext.runDirectory(),
                 runContext.tumorSample());
@@ -86,7 +86,7 @@ public class PrestatsChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static List<HealthCheck> extractChecksForSample(@NotNull final String runDirectory,
-            @NotNull final String sampleId) throws IOException, HealthChecksException {
+            @NotNull final String sampleId) throws IOException, HartwigException {
         final String basePath = getBasePathForSample(runDirectory, sampleId);
 
         final List<HealthCheck> fastqcChecks = extractFastqcChecks(basePath, sampleId);
@@ -165,7 +165,7 @@ public class PrestatsChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static HealthCheck extractTotalSequenceCheck(@NotNull final String basePath,
-            @NotNull final String sampleId) throws IOException, HealthChecksException {
+            @NotNull final String sampleId) throws IOException, HartwigException {
         final long totalSequences = HealthCheckFunctions.sumOfTotalSequencesFromFastQC(basePath);
 
         return new HealthCheck(sampleId, PrestatsCheck.PRESTATS_NUMBER_OF_READS.toString(),

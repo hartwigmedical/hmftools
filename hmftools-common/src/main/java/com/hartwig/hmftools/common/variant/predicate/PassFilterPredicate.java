@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PassFilterPredicate implements Predicate<Variant> {
+class PassFilterPredicate implements Predicate<Variant> {
 
     @VisibleForTesting
     static final String PASS_IDENTIFIER_1 = "PASS";

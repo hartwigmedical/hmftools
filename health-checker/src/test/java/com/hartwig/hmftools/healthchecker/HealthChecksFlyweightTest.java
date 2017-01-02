@@ -3,7 +3,6 @@ package com.hartwig.hmftools.healthchecker;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.exception.NotFoundException;
 import com.hartwig.hmftools.healthchecker.runners.CheckType;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
 import com.hartwig.hmftools.healthchecker.runners.MappingChecker;

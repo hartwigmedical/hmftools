@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
@@ -36,7 +36,7 @@ public class KinshipCheckerTest {
     private final KinshipChecker checker = new KinshipChecker();
 
     @Test
-    public void extractDataFromKinship() throws IOException, HealthChecksException {
+    public void extractDataFromKinship() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
@@ -52,19 +52,19 @@ public class KinshipCheckerTest {
     }
 
     @Test(expected = MalformedFileException.class)
-    public void cannotReadMalformedKinship() throws IOException, HealthChecksException {
+    public void cannotReadMalformedKinship() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(MALFORMED_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = EmptyFileException.class)
-    public void cannotReadFromEmptyKinship() throws IOException, HealthChecksException {
+    public void cannotReadFromEmptyKinship() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest(EMPTY_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = IOException.class)
-    public void cannotReadFromNonExistingKinship() throws IOException, HealthChecksException {
+    public void cannotReadFromNonExistingKinship() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forTest("Does not exist", REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }

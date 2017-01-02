@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ public class FileInZipsReaderTest {
     private static final String EMPTY_FILE_ZIPPED = EMPTY_FILE + ".zip";
 
     @Test
-    public void readLines() throws IOException, HealthChecksException {
+    public void readLines() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + FILE_ZIPPED);
         final List<String> readLines = FileInZipsReader.build().readLines(testPath.getPath(), FILE);
         assertNotNull(readLines);
@@ -35,13 +35,13 @@ public class FileInZipsReaderTest {
     }
 
     @Test(expected = EmptyFileException.class)
-    public void readLinesEmptyFiles() throws IOException, HealthChecksException {
+    public void readLinesEmptyFiles() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + EMPTY_FILE_ZIPPED);
         FileInZipsReader.build().readLines(testPath.getPath(), EMPTY_FILE);
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void readLinesFileNotInZip() throws IOException, HealthChecksException {
+    public void readLinesFileNotInZip() throws IOException, HartwigException {
         final URL testPath = Resources.getResource(ZIP_DIRECTORY + File.separator + FILE_ZIPPED);
         FileInZipsReader.build().readLines(testPath.getPath(), "bla");
     }
