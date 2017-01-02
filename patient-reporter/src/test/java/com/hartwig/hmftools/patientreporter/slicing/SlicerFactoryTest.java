@@ -13,27 +13,16 @@ import org.junit.Test;
 public class SlicerFactoryTest {
 
     private static final String BED_FILE_BASE_PATH = Resources.getResource("bed").getPath();
+    private static final String VALID_BED = "valid.bed";
     private static final String UNSORTED_BED = "unsorted.bed";
     private static final String INVALID_BED = "invalid.bed";
 
-    private static final int CPCT_SLICING_REGION_COUNT = 391;
-    private static final int CPCT_SLICING_NUMBER_OF_BASES = 77840;
-
-    private static final long GIAB_HIGH_CONFIDENCE_REGION_COUNT = 2120622L;
-    private static final long GIAB_HIGH_CONFIDENCE_NUMBER_OF_BASES = 2531285550L;
-
     @Test
-    public void canCreateCPCTGenePanelSlicer() throws IOException, EmptyFileException {
-        final Slicer slicer = SlicerFactory.cpctSlicingRegionSlicer();
-        assertEquals(CPCT_SLICING_REGION_COUNT, slicer.numberOfRegions());
-        assertEquals(CPCT_SLICING_NUMBER_OF_BASES, slicer.numberOfBases());
-    }
-
-    @Test
-    public void canCreateGIABHighConfidenceSlicer() throws IOException, EmptyFileException {
-        final Slicer slicer = SlicerFactory.giabHighConfidenceSlicer();
-        assertEquals(GIAB_HIGH_CONFIDENCE_REGION_COUNT, slicer.numberOfRegions());
-        assertEquals(GIAB_HIGH_CONFIDENCE_NUMBER_OF_BASES, slicer.numberOfBases());
+    public void handleTrivialBed() throws IOException, EmptyFileException {
+        String bedFile = BED_FILE_BASE_PATH + File.separator + VALID_BED;
+        final Slicer slicer = SlicerFactory.fromBedFile(bedFile);
+        assertEquals(1, slicer.numberOfRegions());
+        assertEquals(1, slicer.numberOfBases());
     }
 
     @Test

@@ -28,22 +28,34 @@ public class PatientReporterApplication {
     private static final String RUN_DIRECTORY_ARGS_DESC = "A path towards a single rundir.";
     private static final String RUN_DIRECTORY = "rundir";
 
+    private static final String CPCT_SLICING_BED_ARGS_DESC = "A path towards the CPCT slicing bed.";
+    private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
+
+    private static final String HIGH_CONFIDENCE_BED_ARGS_DESC = "A path towards the high confidence bed.";
+    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
+
     @NotNull
     private final String runDirectory;
+    @NotNull
+    private final String cpctSlicingBed;
+    @NotNull
+    private final String highConfidenceBed;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
         Options options = createOptions();
         CommandLine cmd = createCommandLine(options, args);
 
         String runDir = cmd.getOptionValue(RUN_DIRECTORY);
+        String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
+        String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
 
-        if (runDir == null) {
+        if (runDir == null || cpctSlicingBed == null || highConfidenceBed == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-Reporter", options);
             System.exit(1);
         }
 
-        new PatientReporterApplication(runDir).runPatientReporter();
+        new PatientReporterApplication(runDir, cpctSlicingBed, highConfidenceBed).runPatientReporter();
     }
 
     @NotNull
@@ -51,6 +63,8 @@ public class PatientReporterApplication {
         Options options = new Options();
 
         options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
+        options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
+        options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
 
         return options;
     }
@@ -60,11 +74,13 @@ public class PatientReporterApplication {
             throws ParseException {
         CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-
     }
 
-    PatientReporterApplication(@NotNull final String runDirectory) {
+    PatientReporterApplication(@NotNull final String runDirectory, @NotNull final String cpctSlicingBed,
+            @NotNull final String highConfidenceBed) {
         this.runDirectory = runDirectory;
+        this.cpctSlicingBed = cpctSlicingBed;
+        this.highConfidenceBed = highConfidenceBed;
     }
 
     void runPatientReporter() throws IOException, HartwigException {
@@ -72,8 +88,8 @@ public class PatientReporterApplication {
         List<SomaticVariant> variants = VariantFilter.passOnly(
                 VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION));
 
-        ConsensusRule rule = new ConsensusRule(SlicerFactory.giabHighConfidenceSlicer(),
-                SlicerFactory.cpctSlicingRegionSlicer());
+        ConsensusRule rule = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
+                SlicerFactory.fromBedFile(cpctSlicingBed));
         variants = rule.apply(variants);
         LOGGER.info("Variants in consensus rule = " + variants.size());
         LOGGER.info("Mutational load = " + MutationalLoad.calculate(variants));

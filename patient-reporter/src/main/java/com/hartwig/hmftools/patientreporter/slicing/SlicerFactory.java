@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
@@ -19,10 +17,6 @@ public final class SlicerFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(SlicerFactory.class);
 
-    private static final String BASE_RESOURCE_PATH = "bed";
-    private static final String CPCT_GENE_PANEL_BED = "CPCTSlicing.bed";
-    private static final String GIAB_HIGH_CONFIDENCE_BED = "GIABHighConfidence.bed";
-
     private static final String FIELD_SEPARATOR = "\t";
     private static final int CHROMOSOME_COLUMN = 0;
     private static final int START_COLUMN = 1;
@@ -32,19 +26,7 @@ public final class SlicerFactory {
     }
 
     @NotNull
-    public static Slicer cpctSlicingRegionSlicer() throws IOException, EmptyFileException {
-        return fromBedFile(Resources.getResource(BASE_RESOURCE_PATH + File.separator + CPCT_GENE_PANEL_BED).getPath());
-    }
-
-    @NotNull
-    public static Slicer giabHighConfidenceSlicer() throws IOException, EmptyFileException {
-        return fromBedFile(
-                Resources.getResource(BASE_RESOURCE_PATH + File.separator + GIAB_HIGH_CONFIDENCE_BED).getPath());
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static Slicer fromBedFile(@NotNull String bedFile) throws IOException, EmptyFileException {
+    public static Slicer fromBedFile(@NotNull String bedFile) throws IOException, EmptyFileException {
         final List<String> lines = FileReader.build().readLines(new File(bedFile).toPath());
         final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
 
@@ -72,6 +54,9 @@ public final class SlicerFactory {
             }
         }
 
-        return new Slicer(regionMap);
+        Slicer slicer = new Slicer(regionMap);
+        LOGGER.debug("Created slicer from " + bedFile + ": " + slicer.numberOfRegions() + " regions covering "
+                + slicer.numberOfBases() + " bases");
+        return slicer;
     }
 }
