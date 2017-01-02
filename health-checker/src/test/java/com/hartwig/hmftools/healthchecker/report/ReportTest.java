@@ -9,12 +9,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Optional;
 
-import com.hartwig.hmftools.healthchecker.runners.CheckType;
-import com.hartwig.hmftools.healthchecker.exception.GenerateReportException;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
-import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
-import com.hartwig.hmftools.healthchecker.io.dir.TestRunContextFactory;
+import com.hartwig.hmftools.common.exception.GenerateReportException;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.io.dir.RunContext;
+import com.hartwig.hmftools.common.io.dir.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.runners.CheckType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.healthchecker.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

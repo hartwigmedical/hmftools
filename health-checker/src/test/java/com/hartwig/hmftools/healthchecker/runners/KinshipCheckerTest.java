@@ -6,15 +6,14 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.IOException;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.healthchecker.exception.EmptyFileException;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
-import com.hartwig.hmftools.healthchecker.exception.MalformedFileException;
-import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
-import com.hartwig.hmftools.healthchecker.io.dir.TestRunContextFactory;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.dir.RunContext;
+import com.hartwig.hmftools.common.io.dir.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
+import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;

@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.exception.NotFoundException;
+import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.runners.CheckType;
 import com.hartwig.hmftools.healthchecker.runners.ErrorHandlingChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.healthchecker.exception.NotFoundException;
-import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

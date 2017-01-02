@@ -5,9 +5,9 @@ import static java.util.stream.Collectors.toList;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.healthchecker.exception.EmptyFileException;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
-import com.hartwig.hmftools.healthchecker.io.reader.ZipFilesReader;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.io.reader.ZipFilesReader;
 
 import org.jetbrains.annotations.NotNull;
 

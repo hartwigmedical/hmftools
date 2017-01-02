@@ -5,14 +5,13 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.healthchecker.runners.checks.SlicedCheck;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
-import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
-import com.hartwig.hmftools.healthchecker.io.dir.TestRunContextFactory;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.io.dir.RunContext;
+import com.hartwig.hmftools.common.io.dir.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
+import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
+import com.hartwig.hmftools.healthchecker.runners.checks.SlicedCheck;
 
 import org.junit.Assert;
 import org.junit.Test;

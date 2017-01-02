@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
 
 import org.junit.Test;
 

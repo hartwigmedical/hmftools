@@ -1,26 +1,25 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.healthchecker.runners.checks.CopynumberCheck;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.healthchecker.exception.EmptyFileException;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
-import com.hartwig.hmftools.healthchecker.exception.MalformedFileException;
-import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
-import com.hartwig.hmftools.healthchecker.io.dir.TestRunContextFactory;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.dir.RunContext;
+import com.hartwig.hmftools.common.io.dir.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
+import com.hartwig.hmftools.healthchecker.runners.checks.CopynumberCheck;
+import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class CopynumberCheckerTest {
     private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("copynumber");

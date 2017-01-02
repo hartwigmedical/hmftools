@@ -2,7 +2,7 @@ package com.hartwig.hmftools.healthchecker.flagstatreader;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.healthchecker.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.jetbrains.annotations.NotNull;
 

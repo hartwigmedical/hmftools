@@ -5,18 +5,18 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.healthchecker.runners.checks.MappingCheck;
-import com.hartwig.hmftools.healthchecker.exception.EmptyFileException;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.io.dir.RunContext;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStatData;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStats;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStatsType;
 import com.hartwig.hmftools.healthchecker.flagstatreader.SambambaFlagStatParser;
-import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
+import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
+import com.hartwig.hmftools.healthchecker.runners.checks.MappingCheck;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

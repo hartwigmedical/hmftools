@@ -4,15 +4,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
-import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.healthchecker.exception.GenerateReportException;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
-import com.hartwig.hmftools.healthchecker.exception.NotFoundException;
-import com.hartwig.hmftools.healthchecker.io.dir.CPCTRunContextFactory;
-import com.hartwig.hmftools.healthchecker.io.dir.FolderChecker;
-import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
+import com.hartwig.hmftools.common.exception.GenerateReportException;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.NotFoundException;
+import com.hartwig.hmftools.common.io.dir.CPCTRunContextFactory;
+import com.hartwig.hmftools.common.io.dir.FolderChecker;
+import com.hartwig.hmftools.common.io.dir.RunContext;
 import com.hartwig.hmftools.healthchecker.report.HealthCheckReportFactory;
 import com.hartwig.hmftools.healthchecker.report.Report;
+import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

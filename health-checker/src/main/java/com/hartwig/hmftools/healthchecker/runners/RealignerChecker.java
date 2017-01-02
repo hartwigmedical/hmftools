@@ -9,16 +9,16 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.healthchecker.exception.HealthChecksException;
-import com.hartwig.hmftools.healthchecker.exception.LineNotFoundException;
-import com.hartwig.hmftools.healthchecker.exception.MalformedFileException;
-import com.hartwig.hmftools.healthchecker.io.dir.RunContext;
-import com.hartwig.hmftools.healthchecker.io.path.PathPrefixSuffixFinder;
-import com.hartwig.hmftools.healthchecker.io.reader.FileReader;
+import com.hartwig.hmftools.common.exception.HealthChecksException;
+import com.hartwig.hmftools.common.exception.LineNotFoundException;
+import com.hartwig.hmftools.common.exception.MalformedFileException;
+import com.hartwig.hmftools.common.io.dir.RunContext;
+import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
+import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
+import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
