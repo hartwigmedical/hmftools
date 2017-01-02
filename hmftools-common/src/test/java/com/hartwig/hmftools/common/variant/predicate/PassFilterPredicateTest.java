@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -36,6 +37,12 @@ public class PassFilterPredicateTest {
 
         private TestVariant(@NotNull final String filter) {
             this.filter = filter;
+        }
+
+        @NotNull
+        @Override
+        public VariantType type() {
+            return VariantType.SNP;
         }
 
         @NotNull
