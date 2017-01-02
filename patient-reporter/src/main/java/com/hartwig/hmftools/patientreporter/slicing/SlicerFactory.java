@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -46,7 +46,7 @@ public final class SlicerFactory {
     @VisibleForTesting
     static Slicer fromBedFile(@NotNull String bedFile) throws IOException, EmptyFileException {
         final List<String> lines = FileReader.build().readLines(new File(bedFile).toPath());
-        final Multimap<String, GenomeRegion> regionMap = HashMultimap.create();
+        final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
 
         String prevChromosome = null;
         GenomeRegion prevRegion = null;

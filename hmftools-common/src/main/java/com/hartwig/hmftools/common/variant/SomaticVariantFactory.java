@@ -57,12 +57,12 @@ public final class SomaticVariantFactory {
             LOGGER.warn("Could not parse alleleFrequency from " + line);
         }
 
-        String chromosome = values[CHROMOSOME_COLUMN].trim();
-        int position = Integer.valueOf(values[POSITION_COLUMN].trim());
+        final String chromosome = values[CHROMOSOME_COLUMN].trim();
+        final long position = Long.valueOf(values[POSITION_COLUMN].trim());
 
-        String id = values[ID_COLUMN];
-        boolean isDBSNP = id.contains(DBSNP_IDENTIFIER);
-        boolean isCOSMIC = id.contains(COSMIC_IDENTIFIER);
+        final String id = values[ID_COLUMN];
+        final boolean isDBSNP = id.contains(DBSNP_IDENTIFIER);
+        final boolean isCOSMIC = id.contains(COSMIC_IDENTIFIER);
 
         return new SomaticVariant(type, filter, chromosome, position, callers, alleleFrequency, isDBSNP, isCOSMIC);
     }

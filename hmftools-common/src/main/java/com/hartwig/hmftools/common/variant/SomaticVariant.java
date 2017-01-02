@@ -12,7 +12,7 @@ public class SomaticVariant implements Variant {
     private final String filter;
     @NotNull
     private final String chromosome;
-    private final int position;
+    private final long position;
 
     @NotNull
     private final List<String> callers;
@@ -20,8 +20,9 @@ public class SomaticVariant implements Variant {
     private final boolean isDBSNP;
     private final boolean isCOSMIC;
 
-    SomaticVariant(@NotNull final VariantType type, @NotNull final String filter, @NotNull final String chromosome,
-            final int position, @NotNull final List<String> callers, final double alleleFrequency,
+    public SomaticVariant(@NotNull final VariantType type, @NotNull final String filter,
+            @NotNull final String chromosome, final long position, @NotNull final List<String> callers,
+            final double alleleFrequency,
             final boolean isDBSNP, final boolean isCOSMIC) {
         this.type = type;
         this.filter = filter;
@@ -44,11 +45,11 @@ public class SomaticVariant implements Variant {
     }
 
     @NotNull
-    String chromosome() {
+    public String chromosome() {
         return chromosome;
     }
 
-    int position() {
+    public long position() {
         return position;
     }
 
@@ -71,5 +72,10 @@ public class SomaticVariant implements Variant {
 
     public boolean isCOSMIC() {
         return isCOSMIC;
+    }
+
+    @Override
+    public String toString() {
+        return "SomaticVariant{" + "chromosome='" + chromosome + '\'' + ", position=" + position + '}';
     }
 }

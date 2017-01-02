@@ -1,22 +1,24 @@
 package com.hartwig.hmftools.patientreporter.slicing;
 
-public class GenomeRegion {
+import org.jetbrains.annotations.NotNull;
+
+class GenomeRegion implements Comparable<GenomeRegion> {
 
     private final long start;
     private final long end;
 
-    public GenomeRegion(final long start, final long end) {
+    GenomeRegion(final long start, final long end) {
         assert end >= start;
 
         this.start = start;
         this.end = end;
     }
 
-    public long start() {
+    long start() {
         return start;
     }
 
-    public long end() {
+    long end() {
         return end;
     }
 
@@ -27,5 +29,15 @@ public class GenomeRegion {
     @Override
     public String toString() {
         return "GenomeRegion{" + "start=" + start + ", end=" + end + '}';
+    }
+
+    @Override
+    public int compareTo(@NotNull final GenomeRegion other) {
+        if (start() < other.start()) {
+            return -1;
+        } else if (start() == other.start()) {
+            return 0;
+        }
+        return 1;
     }
 }
