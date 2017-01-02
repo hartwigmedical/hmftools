@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -12,7 +14,6 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class SlicerFactory {
 
@@ -42,39 +43,35 @@ public final class SlicerFactory {
     }
 
     @NotNull
-    private static Slicer fromBedFile(@NotNull String bedFile) throws IOException, EmptyFileException {
+    @VisibleForTesting
+    static Slicer fromBedFile(@NotNull String bedFile) throws IOException, EmptyFileException {
         final List<String> lines = FileReader.build().readLines(new File(bedFile).toPath());
-        final List<GenomeRegion> regions = Lists.newArrayList();
+        final Multimap<String, GenomeRegion> regionMap = HashMultimap.create();
 
-        GenomeRegion currentRegion = null;
+        String prevChromosome = null;
+        GenomeRegion prevRegion = null;
         for (String line : lines) {
-            currentRegion = toRegion(line, currentRegion);
-            if (currentRegion != null) {
-                regions.add(currentRegion);
+            final String[] values = line.split(FIELD_SEPARATOR);
+            final String chromosome = values[CHROMOSOME_COLUMN].trim();
+
+            final long start = Long.valueOf(values[START_COLUMN].trim());
+            final long end = Long.valueOf(values[END_COLUMN].trim());
+
+            if (end < start) {
+                LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end="
+                        + end);
+            } else {
+                final GenomeRegion region = new GenomeRegion(start, end);
+                if (prevRegion != null && chromosome.equals(prevChromosome) && prevRegion.end() >= start) {
+                    LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + prevRegion);
+                } else {
+                    regionMap.put(chromosome, region);
+                    prevChromosome = chromosome;
+                    prevRegion = region;
+                }
             }
         }
 
-        return new Slicer(regions);
-    }
-
-    @Nullable
-    private static GenomeRegion toRegion(@NotNull String line, @Nullable GenomeRegion previous) {
-        final String[] values = line.split(FIELD_SEPARATOR);
-
-        final String chromosome = values[CHROMOSOME_COLUMN].trim();
-        final long start = Long.valueOf(values[START_COLUMN].trim());
-        final long end = Long.valueOf(values[END_COLUMN].trim());
-
-        if (end < start) {
-            LOGGER.warn(
-                    "Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
-            return null;
-        }
-
-        final GenomeRegion region = new GenomeRegion(chromosome, start, end);
-        if (previous != null && chromosome.equals(previous.chromosome()) && previous.start() > start) {
-            LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + previous);
-        }
-        return region;
+        return new Slicer(regionMap);
     }
 }

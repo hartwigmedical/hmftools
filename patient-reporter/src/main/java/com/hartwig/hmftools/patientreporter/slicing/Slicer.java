@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.patientreporter.slicing;
 
-import java.util.List;
-
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Multimap;
 
 import org.jetbrains.annotations.NotNull;
 
 public class Slicer {
 
     @NotNull
-    private final List<GenomeRegion> regions;
+    private final Multimap<String, GenomeRegion> regions;
 
-    public Slicer(@NotNull final List<GenomeRegion> regions) {
+    Slicer(@NotNull final Multimap<String, GenomeRegion> regions) {
         this.regions = regions;
     }
 
@@ -23,7 +22,7 @@ public class Slicer {
     @VisibleForTesting
     long numberOfBases() {
         long bases = 0;
-        for (GenomeRegion region : regions) {
+        for (GenomeRegion region : regions.values()) {
             bases += region.bases();
         }
         return bases;
