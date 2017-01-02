@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.List;
 
 import com.hartwig.hmftools.common.exception.HealthChecksException;
-import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
-import com.hartwig.hmftools.common.io.reader.LineReader;
-import com.hartwig.hmftools.common.variant.predicate.VCFDataLinePredicate;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -38,8 +37,9 @@ public class SlicedChecker extends ErrorHandlingChecker implements HealthChecker
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
-        final Path vcfPath = PathExtensionFinder.build().findPath(runContext.runDirectory(), SLICED_VCF_EXTENSION);
-        final long value = LineReader.build().readLines(vcfPath, new VCFDataLinePredicate()).stream().count();
+        List<GermlineVariant> variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(),
+                SLICED_VCF_EXTENSION);
+        final long value = variants.size();
 
         return toSingleValueResult(
                 new HealthCheck(runContext.tumorSample(), SlicedCheck.SLICED_NUMBER_OF_VARIANTS.toString(),

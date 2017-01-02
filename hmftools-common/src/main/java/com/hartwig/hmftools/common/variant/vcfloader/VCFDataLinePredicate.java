@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.common.variant.predicate;
+package com.hartwig.hmftools.common.variant.vcfloader;
 
 import java.util.function.Predicate;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VCFDataLinePredicate implements Predicate<String> {
+class VCFDataLinePredicate implements Predicate<String> {
 
     private static final String NON_DATA_LINE_START_IDENTIFIER = "#";
 

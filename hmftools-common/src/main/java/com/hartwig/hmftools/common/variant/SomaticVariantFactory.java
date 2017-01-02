@@ -26,6 +26,8 @@ public final class SomaticVariantFactory {
     private static final int REF_COLUMN = 3;
     private static final int ALT_COLUMN = 4;
 
+    private static final int FILTER_COLUMN = 6;
+
     private static final int INFO_COLUMN = 7;
     private static final String INFO_FIELD_SEPARATOR = ";";
     private static final String CALLER_ALGO_IDENTIFIER = "set=";
@@ -48,6 +50,7 @@ public final class SomaticVariantFactory {
 
         final VariantType type = VariantExtractorFunctions.extractVCFType(values[REF_COLUMN].trim(),
                 values[ALT_COLUMN].trim());
+        final String filter = values[FILTER_COLUMN].trim();
         final List<String> callers = extractCallers(values);
         final double alleleFrequency = calcAlleleFrequency(values);
         if (Double.isNaN(alleleFrequency)) {
@@ -61,7 +64,7 @@ public final class SomaticVariantFactory {
         boolean isDBSNP = id.contains(DBSNP_IDENTIFIER);
         boolean isCOSMIC = id.contains(COSMIC_IDENTIFIER);
 
-        return new SomaticVariant(chromosome, position, type, callers, alleleFrequency, isDBSNP, isCOSMIC);
+        return new SomaticVariant(type, filter, chromosome, position, callers, alleleFrequency, isDBSNP, isCOSMIC);
     }
 
     @NotNull

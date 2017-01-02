@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -11,13 +10,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HealthChecksException;
-import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
-import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.predicate.VCFPassDataLinePredicate;
+import com.hartwig.hmftools.common.variant.predicate.PassFilterPredicate;
+import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -52,10 +50,9 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HealthChecksException {
-        final Path vcfPath = PathExtensionFinder.build().findPath(runContext.runDirectory(),
+        List<SomaticVariant> variants = VCFFileLoader.loadSomaticVCF(runContext.runDirectory(),
                 MELTED_SOMATICS_EXTENSION);
-        final List<String> lines = LineReader.build().readLines(vcfPath, new VCFPassDataLinePredicate());
-        final List<SomaticVariant> variants = toSomaticVariants(lines);
+        variants = variants.stream().filter(new PassFilterPredicate()).collect(Collectors.toList());
 
         final List<HealthCheck> checks = Lists.newArrayList();
         checks.addAll(getTypeChecks(variants, runContext.tumorSample(), VariantType.SNP));
@@ -74,15 +71,18 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
                     HealthCheckConstants.ERROR_VALUE));
             checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.DBSNP_COUNT.checkName(type.name()),
                     HealthCheckConstants.ERROR_VALUE));
-            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
-                    SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller),
-                    HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
-                    SomaticCheck.PRECISION_CHECK.checkName(type.name(), caller),
-                    HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(caller -> new HealthCheck(runContext.tumorSample(),
-                    SomaticCheck.SENSITIVITY_CHECK.checkName(type.name(), caller),
-                    HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
+            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
+                    caller -> new HealthCheck(runContext.tumorSample(),
+                            SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller),
+                            HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
+            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
+                    caller -> new HealthCheck(runContext.tumorSample(),
+                            SomaticCheck.PRECISION_CHECK.checkName(type.name(), caller),
+                            HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
+            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
+                    caller -> new HealthCheck(runContext.tumorSample(),
+                            SomaticCheck.SENSITIVITY_CHECK.checkName(type.name(), caller),
+                            HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
             checks.addAll(CALLERS_COUNT.stream().map(count -> new HealthCheck(runContext.tumorSample(),
                     SomaticCheck.PROPORTION_CHECK.checkName(type.name(), String.valueOf(count)),
                     HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));

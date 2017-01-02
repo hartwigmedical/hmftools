@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.predicate;
+package com.hartwig.hmftools.common.variant.vcfloader;
 
 final class VCFTestConstants {
 
