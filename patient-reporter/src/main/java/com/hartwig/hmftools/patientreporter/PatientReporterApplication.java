@@ -1,4 +1,4 @@
-package com.hartwig.patientreporter;
+package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
 

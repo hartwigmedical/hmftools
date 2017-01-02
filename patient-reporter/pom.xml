@@ -55,7 +55,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.patientreporter.PatientReporterApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.patientreporter.PatientReporterApplication</mainClass>
                         </manifest>
                     </archive>
 
