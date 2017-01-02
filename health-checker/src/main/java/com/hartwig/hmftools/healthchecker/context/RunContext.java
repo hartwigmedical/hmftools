@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.io.dir;
+package com.hartwig.hmftools.healthchecker.context;
 
 import org.jetbrains.annotations.NotNull;
 

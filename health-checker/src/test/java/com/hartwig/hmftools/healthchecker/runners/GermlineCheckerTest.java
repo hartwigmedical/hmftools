@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.HealthChecksException;
-import com.hartwig.hmftools.common.io.dir.RunContext;
-import com.hartwig.hmftools.common.io.dir.TestRunContextFactory;
+import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.GermlineCheck;

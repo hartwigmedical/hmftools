@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import com.hartwig.hmftools.common.io.dir.RunContext;
+import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 
 import org.jetbrains.annotations.NotNull;

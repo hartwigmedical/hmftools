@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HealthChecksException;
-import com.hartwig.hmftools.common.io.dir.RunContext;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VCFPassDataLinePredicate;
+import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;

@@ -11,8 +11,8 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.GenerateReportException;
 import com.hartwig.hmftools.common.exception.HealthChecksException;
-import com.hartwig.hmftools.common.io.dir.RunContext;
-import com.hartwig.hmftools.common.io.dir.TestRunContextFactory;
+import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.runners.CheckType;
 

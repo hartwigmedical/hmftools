@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.io.dir;
+package com.hartwig.hmftools.healthchecker.context;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -20,7 +20,7 @@ public class FolderCheckerTest {
     private static final String RUN_FOLDER = "FolderChecker";
     private static final String NOT_A_FOLDER = "NotAFolder";
     private static final String NON_EXISTING_FOLDER = "bla";
-    private static final String EMPTY_FOLDER = "empty";
+    private static final String EMPTY_FOLDER = "FolderCheckerEmpty";
 
     @Test
     public void checkFolder() throws IOException, HealthChecksException {
