@@ -11,7 +11,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class PatientReporterApplication {
 
@@ -31,7 +30,7 @@ public class PatientReporterApplication {
 
         if (runDir == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Health-Checks-Analyser", options);
+            formatter.printHelp("Patient-Reporter", options);
             System.exit(1);
         }
 

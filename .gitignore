@@ -3,6 +3,8 @@
 .idea/*
 
 # Ignore target directies
-retention-checker/target
-health-check-analyser/target
+batch-health-check-reader/target
 ecrf-analyser/target
+hmftools-common/target
+patient-reporter/target
+retention-checker/target
