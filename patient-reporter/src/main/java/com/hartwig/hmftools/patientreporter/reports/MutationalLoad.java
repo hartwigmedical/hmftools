@@ -11,8 +11,7 @@ public final class MutationalLoad {
     private MutationalLoad() {
     }
 
-    public int calcMutationalLoad(@NotNull List<SomaticVariant> variants) {
-
+    public static int calculate(@NotNull List<SomaticVariant> variants) {
         return 0;
     }
 }

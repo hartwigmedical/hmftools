@@ -16,17 +16,17 @@ public class SlicerFactoryTest {
     private static final String UNSORTED_BED = "unsorted.bed";
     private static final String INVALID_BED = "invalid.bed";
 
-    private static final int CPCT_GENE_PANEL_REGION_COUNT = 391;
-    private static final int CPCT_GENE_PANEL_NUMBER_OF_BASES = 77840;
+    private static final int CPCT_SLICING_REGION_COUNT = 391;
+    private static final int CPCT_SLICING_NUMBER_OF_BASES = 77840;
 
     private static final long GIAB_HIGH_CONFIDENCE_REGION_COUNT = 2120622L;
     private static final long GIAB_HIGH_CONFIDENCE_NUMBER_OF_BASES = 2531285550L;
 
     @Test
     public void canCreateCPCTGenePanelSlicer() throws IOException, EmptyFileException {
-        final Slicer slicer = SlicerFactory.cpctGenePanelSlicer();
-        assertEquals(CPCT_GENE_PANEL_REGION_COUNT, slicer.numberOfRegions());
-        assertEquals(CPCT_GENE_PANEL_NUMBER_OF_BASES, slicer.numberOfBases());
+        final Slicer slicer = SlicerFactory.cpctSlicingRegionSlicer();
+        assertEquals(CPCT_SLICING_REGION_COUNT, slicer.numberOfRegions());
+        assertEquals(CPCT_SLICING_NUMBER_OF_BASES, slicer.numberOfBases());
     }
 
     @Test

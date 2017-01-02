@@ -7,6 +7,8 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
+import com.hartwig.hmftools.patientreporter.reports.MutationalLoad;
+import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -70,5 +72,10 @@ public class PatientReporterApplication {
         List<SomaticVariant> variants = VariantFilter.passOnly(
                 VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION));
 
+        ConsensusRule rule = new ConsensusRule(SlicerFactory.giabHighConfidenceSlicer(),
+                SlicerFactory.cpctSlicingRegionSlicer());
+        variants = rule.apply(variants);
+        LOGGER.info("Variants in consensus rule = " + variants.size());
+        LOGGER.info("Mutational load = " + MutationalLoad.calculate(variants));
     }
 }

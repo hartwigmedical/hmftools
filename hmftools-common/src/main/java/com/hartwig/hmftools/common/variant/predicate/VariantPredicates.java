@@ -12,14 +12,55 @@ public final class VariantPredicates {
     private VariantPredicates() {
     }
 
+    @SafeVarargs
+    @NotNull
+    public static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant>... predicates) {
+        return variant -> {
+            for (Predicate<SomaticVariant> predicate : predicates) {
+                if (!predicate.test(variant)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+    }
+
+    @SafeVarargs
+    @NotNull
+    public static Predicate<SomaticVariant> or(@NotNull Predicate<SomaticVariant>... predicates) {
+        return variant -> {
+            for (Predicate<SomaticVariant> predicate : predicates) {
+                if (predicate.test(variant)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+    }
+
+    @NotNull
+    public static Predicate<SomaticVariant> not(@NotNull Predicate<SomaticVariant> predicate) {
+        return variant -> !predicate.test(variant);
+    }
+
     @NotNull
     public static Predicate<SomaticVariant> withType(@NotNull final VariantType type) {
         return variant -> variant.type().equals(type);
     }
 
     @NotNull
+    public static Predicate<SomaticVariant> inCOSMIC() {
+        return SomaticVariant::isCOSMIC;
+    }
+
+    @NotNull
+    public static Predicate<SomaticVariant> inDBSNP() {
+        return SomaticVariant::isDBSNP;
+    }
+
+    @NotNull
     public static Predicate<SomaticVariant> inDBSNPAndNotInCOSMIC() {
-        return variant -> variant.isDBSNP() && !variant.isCOSMIC();
+        return and(inDBSNP(), not(inCOSMIC()));
     }
 
     @NotNull

@@ -20,7 +20,7 @@ public final class SlicerFactory {
     private static final Logger LOGGER = LogManager.getLogger(SlicerFactory.class);
 
     private static final String BASE_RESOURCE_PATH = "bed";
-    private static final String CPCT_GENE_PANEL_BED = "CPCTGenePanel.bed";
+    private static final String CPCT_GENE_PANEL_BED = "CPCTSlicing.bed";
     private static final String GIAB_HIGH_CONFIDENCE_BED = "GIABHighConfidence.bed";
 
     private static final String FIELD_SEPARATOR = "\t";
@@ -32,7 +32,7 @@ public final class SlicerFactory {
     }
 
     @NotNull
-    public static Slicer cpctGenePanelSlicer() throws IOException, EmptyFileException {
+    public static Slicer cpctSlicingRegionSlicer() throws IOException, EmptyFileException {
         return fromBedFile(Resources.getResource(BASE_RESOURCE_PATH + File.separator + CPCT_GENE_PANEL_BED).getPath());
     }
 
