@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
 
 import org.apache.commons.cli.CommandLine;
@@ -66,7 +67,8 @@ public class PatientReporterApplication {
 
     void runPatientReporter() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
-        List<SomaticVariant> variants = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
+        List<SomaticVariant> variants = VariantFilter.passOnly(
+                VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION));
 
     }
 }

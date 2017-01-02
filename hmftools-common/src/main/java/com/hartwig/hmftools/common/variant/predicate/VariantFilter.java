@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.predicate;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.GermlineVariant;
@@ -16,13 +17,17 @@ public final class VariantFilter {
 
     @NotNull
     public static <T extends Variant> List<T> passOnly(@NotNull List<T> variants) {
-        return variants.stream().filter(new PassFilterPredicate()).collect(Collectors.toList());
+        return filter(variants, new PassFilterPredicate<>());
     }
 
     @NotNull
     public static List<GermlineVariant> validGermline(@NotNull List<GermlineVariant> variants,
             @NotNull VariantType type, boolean isRefSample) {
-        return variants.stream().filter(new ValidGermlineVariantPredicate(type, isRefSample)).collect(
-                Collectors.toList());
+        return filter(variants, new ValidGermlineVariantPredicate(type, isRefSample));
+    }
+
+    @NotNull
+    public static <T extends Variant> List<T> filter(@NotNull List<T> variants, @NotNull Predicate<T> predicate) {
+        return variants.stream().filter(predicate).collect(Collectors.toList());
     }
 }
