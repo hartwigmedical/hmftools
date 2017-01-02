@@ -23,18 +23,14 @@ public class ValidGermlineVariantPredicate implements Predicate<GermlineVariant>
 
     @Override
     public boolean test(@NotNull final GermlineVariant germlineVariant) {
-        boolean isVariant = false;
+        boolean isValid = false;
         if (germlineVariant.type() == variantType) {
-            String dataToCheck = germlineVariant.refData();
-
-            if (!isRefSample) {
-                dataToCheck = germlineVariant.tumorData();
-            }
+            final String dataToCheck = isRefSample ? germlineVariant.refData() : germlineVariant.tumorData();
 
             if (!dataToCheck.startsWith(INVALID_VARIANT_1) && !dataToCheck.startsWith(INVALID_VARIANT_2)) {
-                isVariant = true;
+                isValid = true;
             }
         }
-        return isVariant;
+        return isValid;
     }
 }
