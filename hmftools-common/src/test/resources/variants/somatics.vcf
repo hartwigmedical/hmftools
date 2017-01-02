@@ -1,0 +1,5 @@
+##fileformat=VCFv4.1
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample2
+1	1	.	C	A	.	PASS	set=freebayes	GT:AD:DP	0/1:48,15:64
+1	2	.	G	T	.	PASS	set=mutect	GT:AD:DP	0/1:84,5:89
+1	3	.	T	C	.	PASS	set=strelka	GT:AD:DP	0/1:160,13:185
