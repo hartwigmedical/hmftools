@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
+import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.isMissense;
 
 import java.io.IOException;
@@ -8,7 +9,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 
@@ -87,16 +87,15 @@ public class PatientReporterApplication {
 
     void runPatientReporter() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
-        List<SomaticVariant> variants = VariantFilter.passOnly(
+        final List<SomaticVariant> allPassedVariants = passOnly(
                 VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION));
 
-        ConsensusRule rule = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
+        final ConsensusRule rule = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
                 SlicerFactory.fromBedFile(cpctSlicingBed));
-        variants = rule.apply(variants);
+        final List<SomaticVariant> consensusPassedVariants = rule.apply(allPassedVariants);
+        LOGGER.info("Number of variants after applying consensus rule = " + consensusPassedVariants.size());
 
-        LOGGER.info("Number of variants after applying consensus rule = " + variants.size());
-
-        List<SomaticVariant> missense = filter(variants, isMissense());
-        LOGGER.info("Mutational load: " + missense.size());
+        final List<SomaticVariant> consensusMissenseVariants = filter(consensusPassedVariants, isMissense());
+        LOGGER.info("Mutational load: " + consensusMissenseVariants.size());
     }
 }
