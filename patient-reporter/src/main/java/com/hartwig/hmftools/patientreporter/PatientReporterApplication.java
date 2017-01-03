@@ -94,9 +94,9 @@ public class PatientReporterApplication {
                 SlicerFactory.fromBedFile(cpctSlicingBed));
         variants = rule.apply(variants);
 
-        LOGGER.info("Variants in consensus rule = " + variants.size());
+        LOGGER.info("Number of variants after applying consensus rule = " + variants.size());
 
         List<SomaticVariant> missense = filter(variants, isMissense());
-        LOGGER.info("Missense variants: " + missense.size());
+        LOGGER.info("Mutational load: " + missense.size());
     }
 }
