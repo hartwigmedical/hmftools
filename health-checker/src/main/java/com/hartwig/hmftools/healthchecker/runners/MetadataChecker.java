@@ -106,6 +106,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
                 String.format(LOG_FILENAME_FORMAT, runContext.runName()));
         final List<String> dateLine = LineReader.build().readLines(dateTimeLogPath,
                 doesLineStartWith(LINE_TO_GET_DATE_FROM));
+        // KODU: Replacing all double spaces with single spaces to solve issue mentioned in run2 of MetadataCheckerTest
         final String date = dateLine.get(DATE_LINE_INDEX).split(REGEX_SPLIT)[1].trim().replaceAll("  ", " ");
         final DateTimeFormatter inFormatter = DateTimeFormatter.ofPattern(DATE_IN_FORMAT, Locale.ENGLISH);
         final LocalDateTime formattedDate = LocalDateTime.parse(date, inFormatter);
