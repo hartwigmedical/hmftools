@@ -2,6 +2,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -19,31 +20,51 @@ import org.junit.Test;
 
 public class MetadataCheckerTest {
 
-    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("metadata");
+    private static final String METADATA_BASE_PATH = RunnerTestFunctions.getRunnerResourcePath("metadata");
 
-    private static final String EXPECTED_VERSION = "v1.7";
-    private static final String EXPECTED_DATE = "2016-07-09";
+    private static final String RUN_DIRECTORY_1 = METADATA_BASE_PATH + File.separator + "run1";
+    private static final String EXPECTED_VERSION_1 = "v1.7";
+    private static final String EXPECTED_DATE_1 = "2016-07-09";
+
+    private static final String RUN_DIRECTORY_2 = METADATA_BASE_PATH + File.separator + "run2";
+    private static final String EXPECTED_VERSION_2 = "v1.11-rc.2";
+    private static final String EXPECTED_DATE_2 = "2017-01-01";
+
     private static final int EXPECTED_NUM_CHECKS = 4;
 
     private final MetadataChecker checker = new MetadataChecker();
 
     @Test
-    public void canReadCorrectMetaData() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY);
+    public void canReadCorrectMetaDataRun1() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY_1);
         final BaseResult result = checker.tryRun(runContext);
 
         final PatientResult patientResult = (PatientResult) result;
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getTumorSampleChecks().size());
-        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE);
-        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION);
-        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE);
-        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION);
+        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
+        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
+        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
+        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
+    }
+
+    @Test
+    public void canReadCorrectMetaDataRun2() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY_2);
+        final BaseResult result = checker.tryRun(runContext);
+
+        final PatientResult patientResult = (PatientResult) result;
+        assertEquals(EXPECTED_NUM_CHECKS, patientResult.getRefSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS, patientResult.getTumorSampleChecks().size());
+        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_2);
+        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_2);
+        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_2);
+        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_2);
     }
 
     @Test
     public void errorYieldsCorrectOutput() {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY);
+        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY_1);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
