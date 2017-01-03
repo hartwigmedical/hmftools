@@ -44,12 +44,12 @@ public class PatientReporterApplication {
     private final String highConfidenceBed;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
-        Options options = createOptions();
-        CommandLine cmd = createCommandLine(options, args);
+        final Options options = createOptions();
+        final CommandLine cmd = createCommandLine(options, args);
 
-        String runDir = cmd.getOptionValue(RUN_DIRECTORY);
-        String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
-        String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+        final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
+        final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
+        final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
 
         if (runDir == null || cpctSlicingBed == null || highConfidenceBed == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -62,7 +62,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static Options createOptions() {
-        Options options = new Options();
+        final Options options = new Options();
 
         options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
         options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
@@ -74,7 +74,7 @@ public class PatientReporterApplication {
     @NotNull
     private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
             throws ParseException {
-        CommandLineParser parser = new DefaultParser();
+        final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
