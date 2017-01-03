@@ -87,8 +87,12 @@ public class PatientReporterApplication {
 
     void runPatientReporter() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
-        final List<SomaticVariant> allPassedVariants = passOnly(
-                VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION));
+
+        final List<SomaticVariant> allVariants = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
+        LOGGER.info("Total number of variants: " + allVariants.size());
+
+        final List<SomaticVariant> allPassedVariants = passOnly(allVariants);
+        LOGGER.info("Number of variants after applying pass-only filter: " + allPassedVariants.size());
 
         final ConsensusRule rule = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
                 SlicerFactory.fromBedFile(cpctSlicingBed));
