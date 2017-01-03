@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter;
 
+import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
+import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.isMissense;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -7,7 +10,6 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
-import com.hartwig.hmftools.patientreporter.reports.MutationalLoad;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 
 import org.apache.commons.cli.CommandLine;
@@ -91,7 +93,10 @@ public class PatientReporterApplication {
         ConsensusRule rule = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
                 SlicerFactory.fromBedFile(cpctSlicingBed));
         variants = rule.apply(variants);
+
         LOGGER.info("Variants in consensus rule = " + variants.size());
-        LOGGER.info("Mutational load = " + MutationalLoad.calculate(variants));
+
+        List<SomaticVariant> missense = filter(variants, isMissense());
+        LOGGER.info("Missense variants: " + missense.size());
     }
 }

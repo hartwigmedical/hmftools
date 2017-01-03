@@ -78,7 +78,7 @@ public class SomaticVariant implements Variant {
         return isCOSMIC;
     }
 
-    boolean isMissense() {
+    public boolean isMissense() {
         return isMissense;
     }
 

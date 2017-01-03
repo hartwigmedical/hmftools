@@ -64,6 +64,11 @@ public final class VariantPredicates {
     }
 
     @NotNull
+    public static Predicate<SomaticVariant> isMissense() {
+        return SomaticVariant::isMissense;
+    }
+
+    @NotNull
     public static Predicate<SomaticVariant> withCaller(@NotNull final String caller) {
         return variant -> variant.callers().contains(caller);
     }
