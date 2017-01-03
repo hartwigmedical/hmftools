@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.slicing;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -49,7 +48,6 @@ public class SlicerTest {
 
     @NotNull
     private static SomaticVariant buildVariant(@NotNull String chromosome, long position) {
-        return new SomaticVariant(VariantType.SNP, "Some Filter", chromosome, position, Lists.newArrayList(), 0D,
-                false, false);
+        return new SomaticVariant.Builder(VariantType.SNP).chromosome(chromosome).position(position).build();
     }
 }

@@ -35,6 +35,7 @@ public final class SomaticVariantFactory {
     private static final String CALLER_ALGO_SEPARATOR = "-";
     private static final String CALLER_FILTERED_IDENTIFIER = "filterIn";
     private static final String CALLER_INTERSECTION_IDENTIFIER = "Intersection";
+    private static final String MISSENSE_IDENTIFIER = "missense_variant";
 
     private static final int SAMPLE_COLUMN = 9;
     private static final String SAMPLE_FIELD_SEPARATOR = ":";
@@ -50,32 +51,41 @@ public final class SomaticVariantFactory {
 
         final VariantType type = VariantExtractorFunctions.extractVCFType(values[REF_COLUMN].trim(),
                 values[ALT_COLUMN].trim());
-        final String filter = values[FILTER_COLUMN].trim();
-        final List<String> callers = extractCallers(values);
-        final double alleleFrequency = calcAlleleFrequency(values);
+        final SomaticVariant.Builder builder = new SomaticVariant.Builder(type);
+
+        builder.filter(values[FILTER_COLUMN].trim());
+
+        final String info = values[INFO_COLUMN].trim();
+        builder.callers(extractCallers(info));
+
+        final String sampleInfo = values[SAMPLE_COLUMN].trim();
+        final double alleleFrequency = calcAlleleFrequency(sampleInfo);
         if (Double.isNaN(alleleFrequency)) {
             LOGGER.warn("Could not parse alleleFrequency from " + line);
         }
+        builder.alleleFrequency(alleleFrequency);
 
-        final String chromosome = values[CHROMOSOME_COLUMN].trim();
-        final long position = Long.valueOf(values[POSITION_COLUMN].trim());
+        builder.chromosome(values[CHROMOSOME_COLUMN].trim());
+        builder.position(Long.valueOf(values[POSITION_COLUMN].trim()));
 
         final String id = values[ID_COLUMN];
-        final boolean isDBSNP = id.contains(DBSNP_IDENTIFIER);
-        final boolean isCOSMIC = id.contains(COSMIC_IDENTIFIER);
+        builder.isDBSNP(id.contains(DBSNP_IDENTIFIER));
+        builder.isCOSMIC(id.contains(COSMIC_IDENTIFIER));
+        builder.isMissense(info.contains(MISSENSE_IDENTIFIER));
 
-        return new SomaticVariant(type, filter, chromosome, position, callers, alleleFrequency, isDBSNP, isCOSMIC);
+        return builder.build();
     }
 
     @NotNull
-    private static List<String> extractCallers(@NotNull final String[] values) {
-        final String info = values[INFO_COLUMN];
-
+    private static List<String> extractCallers(@NotNull final String info) {
         final Optional<String> setValue = Arrays.stream(info.split(INFO_FIELD_SEPARATOR)).filter(
                 infoLine -> infoLine.contains(CALLER_ALGO_IDENTIFIER)).map(
                 infoLine -> infoLine.substring(infoLine.indexOf(CALLER_ALGO_START) + 1,
                         infoLine.length())).findFirst();
-        assert setValue.isPresent();
+        if (!setValue.isPresent()) {
+            LOGGER.warn("No caller info found in info field: " + info);
+            return Lists.newArrayList();
+        }
 
         final String[] allCallers = setValue.get().split(CALLER_ALGO_SEPARATOR);
         List<String> finalCallers = Lists.newArrayList();
@@ -89,8 +99,8 @@ public final class SomaticVariantFactory {
         return finalCallers;
     }
 
-    private static double calcAlleleFrequency(@NotNull final String[] values) {
-        final String[] sampleFields = values[SAMPLE_COLUMN].split(SAMPLE_FIELD_SEPARATOR);
+    private static double calcAlleleFrequency(@NotNull final String sampleInfo) {
+        final String[] sampleFields = sampleInfo.split(SAMPLE_FIELD_SEPARATOR);
         if (sampleFields.length < 2) {
             return Double.NaN;
         }

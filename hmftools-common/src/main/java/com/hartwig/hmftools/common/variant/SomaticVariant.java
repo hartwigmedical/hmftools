@@ -2,6 +2,9 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SomaticVariant implements Variant {
@@ -19,11 +22,11 @@ public class SomaticVariant implements Variant {
     private final double alleleFrequency;
     private final boolean isDBSNP;
     private final boolean isCOSMIC;
+    private final boolean isMissense;
 
-    public SomaticVariant(@NotNull final VariantType type, @NotNull final String filter,
+    private SomaticVariant(@NotNull final VariantType type, @NotNull final String filter,
             @NotNull final String chromosome, final long position, @NotNull final List<String> callers,
-            final double alleleFrequency,
-            final boolean isDBSNP, final boolean isCOSMIC) {
+            final double alleleFrequency, final boolean isDBSNP, final boolean isCOSMIC, final boolean isMissense) {
         this.type = type;
         this.filter = filter;
         this.chromosome = chromosome;
@@ -32,6 +35,7 @@ public class SomaticVariant implements Variant {
         this.alleleFrequency = alleleFrequency;
         this.isDBSNP = isDBSNP;
         this.isCOSMIC = isCOSMIC;
+        this.isMissense = isMissense;
     }
 
     @NotNull
@@ -74,8 +78,87 @@ public class SomaticVariant implements Variant {
         return isCOSMIC;
     }
 
+    boolean isMissense() {
+        return isMissense;
+    }
+
     @Override
     public String toString() {
         return "SomaticVariant{" + "chromosome='" + chromosome + '\'' + ", position=" + position + '}';
+    }
+
+    public static class Builder {
+        @NotNull
+        private final VariantType type;
+        @NotNull
+        private String filter = Strings.EMPTY;
+        @NotNull
+        private String chromosome = Strings.EMPTY;
+        private long position = 0L;
+
+        @NotNull
+        private List<String> callers = Lists.newArrayList();
+        private double alleleFrequency = Double.NaN;
+        private boolean isDBSNP = false;
+        private boolean isCOSMIC = false;
+        private boolean isMissense = false;
+
+        public Builder(@NotNull final VariantType type) {
+            this.type = type;
+        }
+
+        @NotNull
+        public Builder filter(@NotNull final String filter) {
+            this.filter = filter;
+            return this;
+        }
+
+        @NotNull
+        public Builder chromosome(@NotNull final String chromosome) {
+            this.chromosome = chromosome;
+            return this;
+        }
+
+        @NotNull
+        public Builder position(final long position) {
+            this.position = position;
+            return this;
+        }
+
+        @NotNull
+        public Builder callers(@NotNull final List<String> callers) {
+            this.callers = callers;
+            return this;
+        }
+
+        @NotNull
+        Builder alleleFrequency(final double alleleFrequency) {
+            this.alleleFrequency = alleleFrequency;
+            return this;
+        }
+
+        @NotNull
+        public Builder isDBSNP(final boolean isDBSNP) {
+            this.isDBSNP = isDBSNP;
+            return this;
+        }
+
+        @NotNull
+        public Builder isCOSMIC(final boolean isCOSMIC) {
+            this.isCOSMIC = isCOSMIC;
+            return this;
+        }
+
+        @NotNull
+        Builder isMissense(final boolean isMissense) {
+            this.isMissense = isMissense;
+            return this;
+        }
+
+        @NotNull
+        public SomaticVariant build() {
+            return new SomaticVariant(type, filter, chromosome, position, callers, alleleFrequency, isDBSNP, isCOSMIC,
+                    isMissense);
+        }
     }
 }

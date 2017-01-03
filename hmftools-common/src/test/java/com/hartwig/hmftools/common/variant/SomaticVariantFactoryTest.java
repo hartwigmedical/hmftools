@@ -21,6 +21,7 @@ public class SomaticVariantFactoryTest {
         assertEquals(VariantType.SNP, variant.type());
         assertTrue(variant.isDBSNP());
         assertFalse(variant.isCOSMIC());
+        assertFalse(variant.isMissense());
 
         assertEquals(2, variant.callerCount());
         assertTrue(variant.callers().contains(SomaticVariantConstants.FREEBAYES));
@@ -53,25 +54,36 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void correctDBSNPAndCOSMIC() {
-        final String both = "0 \t 1 \t rs:1;COSM2 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 9";
+        final String both = "0 \t 1 \t rs:1;COSM2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
 
         final SomaticVariant hasBoth = SomaticVariantFactory.fromVCFLine(both);
         assertTrue(hasBoth.isDBSNP());
         assertTrue(hasBoth.isCOSMIC());
 
-        final String dbsnpOnly = "0 \t 1 \t rs:1 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 9";
+        final String dbsnpOnly = "0 \t 1 \t rs:1 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant hasDBSNPOnly = SomaticVariantFactory.fromVCFLine(dbsnpOnly);
         assertTrue(hasDBSNPOnly.isDBSNP());
         assertFalse(hasDBSNPOnly.isCOSMIC());
 
-        final String cosmicOnly = "0 \t 1 \t COSM2 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 9";
+        final String cosmicOnly = "0 \t 1 \t COSM2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant hasCOSMICOnly = SomaticVariantFactory.fromVCFLine(cosmicOnly);
         assertFalse(hasCOSMICOnly.isDBSNP());
         assertTrue(hasCOSMICOnly.isCOSMIC());
 
-        final String none = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 9";
+        final String none = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant hasNone = SomaticVariantFactory.fromVCFLine(none);
         assertFalse(hasNone.isDBSNP());
         assertFalse(hasNone.isCOSMIC());
+    }
+
+    @Test
+    public void correctMissense() {
+        final String missense = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t missense_variant \t 8 \t 9";
+        final SomaticVariant isMissense = SomaticVariantFactory.fromVCFLine(missense);
+        assertTrue(isMissense.isMissense());
+
+        final String notMissense = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t intron_variant \t 8 \t 9";
+        final SomaticVariant isNotMissense = SomaticVariantFactory.fromVCFLine(notMissense);
+        assertFalse(isNotMissense.isMissense());
     }
 }

@@ -44,7 +44,8 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant(VariantType.SNP, "any", CHROMOSOME, position, callers, 0D, false, true);
+        return new SomaticVariant.Builder(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
+                callers).isDBSNP(false).isCOSMIC(true).build();
     }
 
     @NotNull
@@ -53,7 +54,8 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant(VariantType.SNP, "any", CHROMOSOME, position, callers, 0D, true, false);
+        return new SomaticVariant.Builder(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
+                callers).isDBSNP(true).isCOSMIC(false).build();
     }
 
     @NotNull
@@ -62,6 +64,7 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant(VariantType.INDEL, "any", CHROMOSOME, position, callers, 0D, false, false);
+        return new SomaticVariant.Builder(VariantType.INDEL).chromosome(CHROMOSOME).position(position).callers(
+                callers).isDBSNP(false).isCOSMIC(false).build();
     }
 }
