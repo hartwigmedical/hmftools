@@ -49,7 +49,7 @@ public final class SomaticVariantFactory {
     public static SomaticVariant fromVCFLine(@NotNull final String line) {
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
 
-        final VariantType type = VariantExtractorFunctions.extractVCFType(values[REF_COLUMN].trim(),
+        final VariantType type = VariantExtractorFunctions.determineVariantType(values[REF_COLUMN].trim(),
                 values[ALT_COLUMN].trim());
         final SomaticVariant.Builder builder = new SomaticVariant.Builder(type);
 

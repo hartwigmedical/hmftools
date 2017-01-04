@@ -29,7 +29,7 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        final VariantType type = VariantExtractorFunctions.extractVCFType(values[REF_COLUMN].trim(),
+        final VariantType type = VariantExtractorFunctions.determineVariantType(values[REF_COLUMN].trim(),
                 values[ALT_COLUMN].trim());
         final String filter = values[FILTER_COLUMN].trim();
         final String refData = values[REF_SAMPLE_COLUMN];

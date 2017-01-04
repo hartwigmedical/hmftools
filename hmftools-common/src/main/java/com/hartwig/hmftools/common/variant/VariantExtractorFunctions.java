@@ -10,7 +10,7 @@ final class VariantExtractorFunctions {
     }
 
     @NotNull
-    static VariantType extractVCFType(@NotNull final String refValue, @NotNull final String altValue) {
+    static VariantType determineVariantType(@NotNull final String refValue, @NotNull final String altValue) {
         final String[] allAlts = altValue.split(MULTIPLE_ALTS_IDENTIFIER);
 
         VariantType type = VariantType.SNP;

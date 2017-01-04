@@ -7,14 +7,16 @@ import org.junit.Test;
 public class VariantExtractorFunctionsTest {
 
     @Test
-    public void canDetectSNPAndIndel() {
-        String ref = "C";
-        String singleAltSnp = "G";
-        String multipleAltSnp = "G,T";
-        String singleIndel = "AT";
+    public void canDetermineSNPAndIndel() {
+        final String ref = "C";
+        final String singleAltSnp = "G";
+        final String multipleAltSnp = "G,T";
+        final String singleIndel = "AT";
+        final String snpAndIndel = "G,AG";
 
-        assertEquals(VariantType.SNP, VariantExtractorFunctions.extractVCFType(ref, singleAltSnp));
-        assertEquals(VariantType.SNP, VariantExtractorFunctions.extractVCFType(ref, multipleAltSnp));
-        assertEquals(VariantType.INDEL, VariantExtractorFunctions.extractVCFType(ref, singleIndel));
+        assertEquals(VariantType.SNP, VariantExtractorFunctions.determineVariantType(ref, singleAltSnp));
+        assertEquals(VariantType.SNP, VariantExtractorFunctions.determineVariantType(ref, multipleAltSnp));
+        assertEquals(VariantType.INDEL, VariantExtractorFunctions.determineVariantType(ref, singleIndel));
+        assertEquals(VariantType.INDEL, VariantExtractorFunctions.determineVariantType(ref, snpAndIndel));
     }
 }
