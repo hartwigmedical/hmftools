@@ -57,7 +57,7 @@ public class PatientReporterApplication {
             System.exit(1);
         }
 
-        new PatientReporterApplication(runDir, cpctSlicingBed, highConfidenceBed).runPatientReporter();
+        new PatientReporterApplication(runDir, cpctSlicingBed, highConfidenceBed).run();
     }
 
     @NotNull
@@ -85,7 +85,7 @@ public class PatientReporterApplication {
         this.highConfidenceBed = highConfidenceBed;
     }
 
-    void runPatientReporter() throws IOException, HartwigException {
+    void run() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
         final List<SomaticVariant> allVariants = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);

@@ -36,7 +36,8 @@ public final class SlicerFactory {
             final String[] values = line.split(FIELD_SEPARATOR);
             final String chromosome = values[CHROMOSOME_COLUMN].trim();
 
-            final long start = Long.valueOf(values[START_COLUMN].trim());
+            // KODU: BED Files are 0-based start and 1-based end, to make length simply "end - start".
+            final long start = Long.valueOf(values[START_COLUMN].trim()) + 1;
             final long end = Long.valueOf(values[END_COLUMN].trim());
 
             if (end < start) {
@@ -55,7 +56,7 @@ public final class SlicerFactory {
         }
 
         Slicer slicer = new Slicer(regionMap);
-        LOGGER.debug("Created slicer from " + bedFile + ": " + slicer.numberOfRegions() + " regions covering "
+        LOGGER.info("Created slicer from " + bedFile + ": " + slicer.numberOfRegions() + " regions covering "
                 + slicer.numberOfBases() + " bases");
         return slicer;
     }
