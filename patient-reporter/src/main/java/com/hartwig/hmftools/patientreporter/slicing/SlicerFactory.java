@@ -55,8 +55,8 @@ public final class SlicerFactory {
             }
         }
 
-        Slicer slicer = new Slicer(regionMap);
-        LOGGER.info("Created slicer from " + bedFile + ": " + slicer.numberOfRegions() + " regions covering "
+        final Slicer slicer = new Slicer(regionMap);
+        LOGGER.debug("Created slicer from " + bedFile + ": " + slicer.numberOfRegions() + " regions covering "
                 + slicer.numberOfBases() + " bases");
         return slicer;
     }
