@@ -63,6 +63,7 @@ public final class SomaticVariantFactory {
 
         final String info = values[INFO_COLUMN].trim();
         builder.callers(extractCallers(info));
+        builder.consequences(extractConsequences(info));
 
         final String sampleInfo = values[SAMPLE_COLUMN].trim();
         final double alleleFrequency = calcAlleleFrequency(sampleInfo);
@@ -77,7 +78,6 @@ public final class SomaticVariantFactory {
         final String id = values[ID_COLUMN];
         builder.isDBSNP(id.contains(DBSNP_IDENTIFIER));
         builder.isCOSMIC(id.contains(COSMIC_IDENTIFIER));
-        builder.isMissense(info.contains(MISSENSE_IDENTIFIER));
 
         return builder.build();
     }
@@ -103,6 +103,17 @@ public final class SomaticVariantFactory {
                             Collectors.toList()));
         }
         return finalCallers;
+    }
+
+    @NotNull
+    private static List<VariantConsequence> extractConsequences(@NotNull final String info) {
+        List<VariantConsequence> consequences = Lists.newArrayList();
+        for (VariantConsequence consequence : VariantConsequence.values()) {
+            if (info.contains(consequence.sequenceOntologyTerm())) {
+                consequences.add(consequence);
+            }
+        }
+        return consequences;
     }
 
     private static double calcAlleleFrequency(@NotNull final String sampleInfo) {

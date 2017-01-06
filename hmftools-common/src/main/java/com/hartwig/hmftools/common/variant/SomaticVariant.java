@@ -22,11 +22,15 @@ public class SomaticVariant implements Variant {
     private final double alleleFrequency;
     private final boolean isDBSNP;
     private final boolean isCOSMIC;
-    private final boolean isMissense;
+
+    // KODU: Not sure if one variant can have multiple consequences.
+    @NotNull
+    private final List<VariantConsequence> consequences;
 
     private SomaticVariant(@NotNull final VariantType type, @NotNull final String filter,
             @NotNull final String chromosome, final long position, @NotNull final List<String> callers,
-            final double alleleFrequency, final boolean isDBSNP, final boolean isCOSMIC, final boolean isMissense) {
+            final double alleleFrequency, final boolean isDBSNP, final boolean isCOSMIC,
+            @NotNull final List<VariantConsequence> consequences) {
         this.type = type;
         this.filter = filter;
         this.chromosome = chromosome;
@@ -35,7 +39,7 @@ public class SomaticVariant implements Variant {
         this.alleleFrequency = alleleFrequency;
         this.isDBSNP = isDBSNP;
         this.isCOSMIC = isCOSMIC;
-        this.isMissense = isMissense;
+        this.consequences = consequences;
     }
 
     @NotNull
@@ -79,7 +83,7 @@ public class SomaticVariant implements Variant {
     }
 
     public boolean isMissense() {
-        return isMissense;
+        return consequences.contains(VariantConsequence.MISSENSE_VARIANT);
     }
 
     @Override
@@ -101,7 +105,8 @@ public class SomaticVariant implements Variant {
         private double alleleFrequency = Double.NaN;
         private boolean isDBSNP = false;
         private boolean isCOSMIC = false;
-        private boolean isMissense = false;
+        @NotNull
+        private List<VariantConsequence> consequences = Lists.newArrayList();
 
         public Builder(@NotNull final VariantType type) {
             this.type = type;
@@ -150,15 +155,15 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        Builder isMissense(final boolean isMissense) {
-            this.isMissense = isMissense;
+        Builder consequences(@NotNull final List<VariantConsequence> consequences) {
+            this.consequences = consequences;
             return this;
         }
 
         @NotNull
         public SomaticVariant build() {
             return new SomaticVariant(type, filter, chromosome, position, callers, alleleFrequency, isDBSNP, isCOSMIC,
-                    isMissense);
+                    consequences);
         }
     }
 }
