@@ -10,27 +10,31 @@ import org.jetbrains.annotations.NotNull;
 public class SomaticVariant implements Variant {
 
     @NotNull
+    private final String originalVCFLine;
+    @NotNull
     private final VariantType type;
     @NotNull
     private final String filter;
     @NotNull
     private final String chromosome;
-    private final long position;
 
+    private final long position;
     @NotNull
     private final List<String> callers;
     private final double alleleFrequency;
     private final boolean isDBSNP;
+
     private final boolean isCOSMIC;
 
     // KODU: Not sure if one variant can have multiple consequences.
     @NotNull
     private final List<VariantConsequence> consequences;
 
-    private SomaticVariant(@NotNull final VariantType type, @NotNull final String filter,
-            @NotNull final String chromosome, final long position, @NotNull final List<String> callers,
-            final double alleleFrequency, final boolean isDBSNP, final boolean isCOSMIC,
-            @NotNull final List<VariantConsequence> consequences) {
+    public SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
+            @NotNull final String filter, @NotNull final String chromosome, final long position,
+            @NotNull final List<String> callers, final double alleleFrequency, final boolean isDBSNP,
+            final boolean isCOSMIC, @NotNull final List<VariantConsequence> consequences) {
+        this.originalVCFLine = originalVCFLine;
         this.type = type;
         this.filter = filter;
         this.chromosome = chromosome;
@@ -93,13 +97,15 @@ public class SomaticVariant implements Variant {
 
     public static class Builder {
         @NotNull
+        private String originalVCFLine = Strings.EMPTY;
+        @NotNull
         private final VariantType type;
         @NotNull
         private String filter = Strings.EMPTY;
         @NotNull
         private String chromosome = Strings.EMPTY;
-        private long position = 0L;
 
+        private long position = 0L;
         @NotNull
         private List<String> callers = Lists.newArrayList();
         private double alleleFrequency = Double.NaN;
@@ -108,8 +114,19 @@ public class SomaticVariant implements Variant {
         @NotNull
         private List<VariantConsequence> consequences = Lists.newArrayList();
 
+        @NotNull
+        static Builder fromVCF(@NotNull final String vcfLine, @NotNull final VariantType type) {
+            final Builder builder = new Builder(type);
+            builder.originalVCFLine(vcfLine);
+            return builder;
+        }
+
         public Builder(@NotNull final VariantType type) {
             this.type = type;
+        }
+
+        private void originalVCFLine(@NotNull final String originalVCFLine) {
+            this.originalVCFLine = originalVCFLine;
         }
 
         @NotNull
@@ -162,8 +179,8 @@ public class SomaticVariant implements Variant {
 
         @NotNull
         public SomaticVariant build() {
-            return new SomaticVariant(type, filter, chromosome, position, callers, alleleFrequency, isDBSNP, isCOSMIC,
-                    consequences);
+            return new SomaticVariant(originalVCFLine, type, filter, chromosome, position, callers, alleleFrequency,
+                    isDBSNP, isCOSMIC, consequences);
         }
     }
 }

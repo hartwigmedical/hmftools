@@ -57,7 +57,7 @@ public final class SomaticVariantFactory {
 
         final VariantType type = VariantExtractorFunctions.determineVariantType(values[REF_COLUMN].trim(),
                 values[ALT_COLUMN].trim());
-        final SomaticVariant.Builder builder = new SomaticVariant.Builder(type);
+        final SomaticVariant.Builder builder = SomaticVariant.Builder.fromVCF(line, type);
 
         builder.filter(values[FILTER_COLUMN].trim());
 
