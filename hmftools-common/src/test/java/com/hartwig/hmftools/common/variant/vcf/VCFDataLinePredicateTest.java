@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.vcfloader;
+package com.hartwig.hmftools.common.variant.vcf;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

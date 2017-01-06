@@ -9,8 +9,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcfloader.VCFSomaticFile;
+import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
+import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 
 import org.apache.commons.cli.CommandLine;
