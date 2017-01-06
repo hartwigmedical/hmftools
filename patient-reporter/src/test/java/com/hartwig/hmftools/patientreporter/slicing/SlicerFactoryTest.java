@@ -13,7 +13,7 @@ import org.junit.Test;
 public class SlicerFactoryTest {
 
     private static final String BED_FILE_BASE_PATH = Resources.getResource("bed").getPath();
-    private static final String FILTER_BED = "filter.bed";
+    private static final String FILTER_BED = "HMF_Slicing.bed";
     private static final String VALID_BED = "valid.bed";
     private static final String UNSORTED_BED = "unsorted.bed";
     private static final String INVALID_BED = "invalid.bed";
