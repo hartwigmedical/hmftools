@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +18,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.predicate.VariantPredicates;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
+import com.hartwig.hmftools.common.variant.vcfloader.VCFSomaticFile;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -50,8 +53,13 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
-        final List<SomaticVariant> variants = VariantFilter.passOnly(
-                VCFFileLoader.loadSomaticVCF(runContext.runDirectory(), SOMATICS_EXTENSION));
+        final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runContext.runDirectory(), SOMATICS_EXTENSION);
+
+        if (!variantFile.sample().equals(runContext.tumorSample())) {
+            LOGGER.warn("Sample name in VCF (" + variantFile.sample() + ") does not match with name ("
+                    + runContext.tumorSample() + ") from run context!");
+        }
+        final List<SomaticVariant> variants = passOnly(variantFile.variants());
 
         final List<HealthCheck> checks = Lists.newArrayList();
         checks.addAll(getTypeChecks(variants, runContext.tumorSample(), VariantType.SNP));

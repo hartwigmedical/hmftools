@@ -46,6 +46,12 @@ public final class SomaticVariantFactory {
     }
 
     @NotNull
+    public static String sampleFromHeaderLine(@NotNull final String headerLine) {
+        final String[] values = headerLine.split(VCF_COLUMN_SEPARATOR);
+        return values[SAMPLE_COLUMN];
+    }
+
+    @NotNull
     public static SomaticVariant fromVCFLine(@NotNull final String line) {
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
 

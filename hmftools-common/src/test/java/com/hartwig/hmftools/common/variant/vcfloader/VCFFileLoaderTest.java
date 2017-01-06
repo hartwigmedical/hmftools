@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.junit.Test;
 
@@ -20,8 +19,9 @@ public class VCFFileLoaderTest {
 
     @Test
     public void canLoadSomaticVCF() throws IOException, HartwigException {
-        List<SomaticVariant> variants = VCFFileLoader.loadSomaticVCF(VARIANT_PATH, SOMATIC_EXTENSION);
-        assertEquals(3, variants.size());
+        VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(VARIANT_PATH, SOMATIC_EXTENSION);
+        assertEquals("sample", variantFile.sample());
+        assertEquals(3, variantFile.variants().size());
     }
 
     @Test

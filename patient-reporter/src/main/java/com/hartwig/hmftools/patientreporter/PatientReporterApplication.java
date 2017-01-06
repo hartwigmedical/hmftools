@@ -10,6 +10,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.vcfloader.VCFFileLoader;
+import com.hartwig.hmftools.common.variant.vcfloader.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 
 import org.apache.commons.cli.CommandLine;
@@ -88,7 +89,8 @@ public class PatientReporterApplication {
     void run() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
-        final List<SomaticVariant> allVariants = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
+        final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
+        final List<SomaticVariant> allVariants = variantFile.variants();
         LOGGER.info("Total number of variants: " + allVariants.size());
 
         final List<SomaticVariant> allPassedVariants = passOnly(allVariants);
