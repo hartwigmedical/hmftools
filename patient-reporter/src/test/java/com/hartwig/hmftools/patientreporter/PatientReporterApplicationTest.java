@@ -16,7 +16,8 @@ public class PatientReporterApplicationTest {
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException {
         final String bedFile = BED_DIRECTORY + File.separator + "valid.bed";
-        PatientReporterApplication app = new PatientReporterApplication(RUN_DIRECTORY, bedFile, bedFile, bedFile);
+        final PatientReporterApplication app = new PatientReporterApplication(RUN_DIRECTORY, bedFile, bedFile, bedFile,
+                null);
         app.run();
     }
 }

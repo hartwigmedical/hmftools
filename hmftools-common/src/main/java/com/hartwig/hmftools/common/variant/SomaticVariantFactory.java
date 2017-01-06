@@ -52,6 +52,11 @@ public final class SomaticVariantFactory {
     }
 
     @NotNull
+    public static String toVCFLine(@NotNull final SomaticVariant variant) {
+        return variant.originalVCFLine();
+    }
+
+    @NotNull
     public static SomaticVariant fromVCFLine(@NotNull final String line) {
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
 

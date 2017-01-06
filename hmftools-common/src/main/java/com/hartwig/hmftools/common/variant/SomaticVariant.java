@@ -47,6 +47,11 @@ public class SomaticVariant implements Variant {
     }
 
     @NotNull
+    String originalVCFLine() {
+        return originalVCFLine;
+    }
+
+    @NotNull
     public VariantType type() {
         return type;
     }
