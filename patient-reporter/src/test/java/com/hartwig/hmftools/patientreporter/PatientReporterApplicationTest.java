@@ -5,6 +5,8 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.patientreporter.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 
 import org.junit.Test;
 
@@ -16,8 +18,12 @@ public class PatientReporterApplicationTest {
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException {
         final String bedFile = BED_DIRECTORY + File.separator + "valid.bed";
-        final PatientReporterApplication app = new PatientReporterApplication(RUN_DIRECTORY, bedFile, bedFile, bedFile,
-                null);
+        final Slicer slicer = SlicerFactory.fromBedFile(bedFile);
+        final ConsensusRule consensusRule = new ConsensusRule(slicer, slicer);
+        final ConsequenceRule consequenceRule = new ConsequenceRule(slicer);
+
+        final PatientReporterApplication app = new PatientReporterApplication(RUN_DIRECTORY, consensusRule,
+                consequenceRule, null, false);
         app.run();
     }
 }

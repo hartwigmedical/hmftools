@@ -177,7 +177,7 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        Builder consequences(@NotNull final List<VariantConsequence> consequences) {
+        public Builder consequences(@NotNull final List<VariantConsequence> consequences) {
             this.consequences = consequences;
             return this;
         }
