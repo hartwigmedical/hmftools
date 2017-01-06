@@ -21,7 +21,6 @@ public class SomaticVariantFactoryTest {
         assertEquals(VariantType.SNP, variant.type());
         assertTrue(variant.isDBSNP());
         assertFalse(variant.isCOSMIC());
-        assertFalse(variant.isMissense());
 
         assertEquals(2, variant.callerCount());
         assertTrue(variant.callers().contains(SomaticVariantConstants.FREEBAYES));
@@ -80,10 +79,10 @@ public class SomaticVariantFactoryTest {
     public void correctMissense() {
         final String missense = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t missense_variant \t 8 \t 9";
         final SomaticVariant isMissense = SomaticVariantFactory.fromVCFLine(missense);
-        assertTrue(isMissense.isMissense());
+        assertTrue(isMissense.hasConsequence(VariantConsequence.MISSENSE_VARIANT));
 
         final String notMissense = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t intron_variant \t 8 \t 9";
         final SomaticVariant isNotMissense = SomaticVariantFactory.fromVCFLine(notMissense);
-        assertFalse(isNotMissense.isMissense());
+        assertFalse(isNotMissense.hasConsequence(VariantConsequence.MISSENSE_VARIANT));
     }
 }

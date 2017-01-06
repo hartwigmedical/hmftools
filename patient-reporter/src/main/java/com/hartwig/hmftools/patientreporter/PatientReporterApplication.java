@@ -37,12 +37,17 @@ public class PatientReporterApplication {
     private static final String HIGH_CONFIDENCE_BED_ARGS_DESC = "A path towards the high confidence bed.";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
+    private static final String HMF_SLICING_BED_ARGS_DESC = "A path towards the HMF slicing bed.";
+    private static final String HMF_SLICING_BED = "hmf_slicing_bed";
+
     @NotNull
     private final String runDirectory;
     @NotNull
     private final String cpctSlicingBed;
     @NotNull
     private final String highConfidenceBed;
+    @NotNull
+    private final String hmfSlicingBed;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
         final Options options = createOptions();
@@ -51,14 +56,15 @@ public class PatientReporterApplication {
         final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
         final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+        final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
 
-        if (runDir == null || cpctSlicingBed == null || highConfidenceBed == null) {
+        if (runDir == null || cpctSlicingBed == null || highConfidenceBed == null || hmfSlicingBed == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-Reporter", options);
             System.exit(1);
         }
 
-        new PatientReporterApplication(runDir, cpctSlicingBed, highConfidenceBed).run();
+        new PatientReporterApplication(runDir, cpctSlicingBed, highConfidenceBed, hmfSlicingBed).run();
     }
 
     @NotNull
@@ -68,6 +74,7 @@ public class PatientReporterApplication {
         options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
         options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
         options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
+        options.addOption(HMF_SLICING_BED, true, HMF_SLICING_BED_ARGS_DESC);
 
         return options;
     }
@@ -80,28 +87,35 @@ public class PatientReporterApplication {
     }
 
     PatientReporterApplication(@NotNull final String runDirectory, @NotNull final String cpctSlicingBed,
-            @NotNull final String highConfidenceBed) {
+            @NotNull final String highConfidenceBed, @NotNull final String hmfSlicingBed) {
         this.runDirectory = runDirectory;
         this.cpctSlicingBed = cpctSlicingBed;
         this.highConfidenceBed = highConfidenceBed;
+        this.hmfSlicingBed = hmfSlicingBed;
     }
 
     void run() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
         final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
+        LOGGER.info(" - Extracted variants for sample " + variantFile.sample());
+
         final List<SomaticVariant> allVariants = variantFile.variants();
-        LOGGER.info("Total number of variants: " + allVariants.size());
+        LOGGER.info(" - Total number of variants: " + allVariants.size());
 
         final List<SomaticVariant> allPassedVariants = passOnly(allVariants);
-        LOGGER.info("Number of variants after applying pass-only filter: " + allPassedVariants.size());
+        LOGGER.info(" - Number of variants after applying pass-only filter: " + allPassedVariants.size());
 
-        final ConsensusRule rule = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
+        final ConsensusRule consensus = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
                 SlicerFactory.fromBedFile(cpctSlicingBed));
-        final List<SomaticVariant> consensusPassedVariants = rule.apply(allPassedVariants);
-        LOGGER.info("Number of variants after applying consensus rule = " + consensusPassedVariants.size());
+        final List<SomaticVariant> consensusPassedVariants = consensus.apply(allPassedVariants);
+        LOGGER.info(" - Number of variants after applying consensus rule = " + consensusPassedVariants.size());
 
         final List<SomaticVariant> consensusMissenseVariants = filter(consensusPassedVariants, isMissense());
-        LOGGER.info("Mutational load: " + consensusMissenseVariants.size());
+        LOGGER.info(" - Mutational load: " + consensusMissenseVariants.size());
+
+        final ConsequenceRule consequence = new ConsequenceRule(SlicerFactory.fromBedFile(hmfSlicingBed));
+        final List<SomaticVariant> consequencePassedVariants = consequence.apply(consensusPassedVariants);
+        LOGGER.info(" - Number of consequential variants to report: " + consequencePassedVariants.size());
     }
 }

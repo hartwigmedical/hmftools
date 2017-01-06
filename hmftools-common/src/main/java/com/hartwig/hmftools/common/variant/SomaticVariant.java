@@ -82,8 +82,8 @@ public class SomaticVariant implements Variant {
         return isCOSMIC;
     }
 
-    public boolean isMissense() {
-        return consequences.contains(VariantConsequence.MISSENSE_VARIANT);
+    public boolean hasConsequence(@NotNull VariantConsequence consequence) {
+        return consequences.contains(consequence);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant.predicate;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +66,7 @@ public final class VariantPredicates {
 
     @NotNull
     public static Predicate<SomaticVariant> isMissense() {
-        return SomaticVariant::isMissense;
+        return variant -> variant.hasConsequence(VariantConsequence.MISSENSE_VARIANT);
     }
 
     @NotNull
