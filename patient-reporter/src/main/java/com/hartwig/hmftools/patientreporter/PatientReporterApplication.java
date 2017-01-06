@@ -120,34 +120,36 @@ public class PatientReporterApplication {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
         final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
-        LOGGER.info(" - Extracted variants for sample " + variantFile.sample());
+        LOGGER.info("  Extracted variants for sample " + variantFile.sample());
 
         final List<SomaticVariant> allVariants = variantFile.variants();
-        LOGGER.info(" - Total number of variants: " + allVariants.size());
+        LOGGER.info("  Total number of variants: " + allVariants.size());
 
         final List<SomaticVariant> allPassedVariants = passOnly(allVariants);
-        LOGGER.info(" - Number of variants after applying pass-only filter: " + allPassedVariants.size());
+        LOGGER.info("  Number of variants after applying pass-only filter: " + allPassedVariants.size());
 
         final ConsensusRule consensus = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
                 SlicerFactory.fromBedFile(cpctSlicingBed));
         final List<SomaticVariant> consensusPassedVariants = consensus.apply(allPassedVariants);
-        LOGGER.info(" - Number of variants after applying consensus rule = " + consensusPassedVariants.size());
+        LOGGER.info("  Number of variants after applying consensus rule = " + consensusPassedVariants.size());
 
         final List<SomaticVariant> consensusMissenseVariants = filter(consensusPassedVariants, isMissense());
-        LOGGER.info(" - Mutational load: " + consensusMissenseVariants.size());
+        LOGGER.info("  Mutational load: " + consensusMissenseVariants.size());
         if (vcfOutputPath != null) {
-            final String mutationalLoadVCF = variantFile.sample() + "_mutational_load_variants.vcf";
-            VCFFileWriter.writeSomaticVCF(vcfOutputPath + File.separator + mutationalLoadVCF,
-                    consensusMissenseVariants);
+            final String mutationalLoadVCF =
+                    vcfOutputPath + File.separator + variantFile.sample() + "_mutational_load_variants.vcf";
+            VCFFileWriter.writeSomaticVCF(mutationalLoadVCF, consensusMissenseVariants);
+            LOGGER.info("    Written mutational load variants to " + mutationalLoadVCF);
         }
 
         final ConsequenceRule consequence = new ConsequenceRule(SlicerFactory.fromBedFile(hmfSlicingBed));
         final List<SomaticVariant> consequencePassedVariants = consequence.apply(consensusPassedVariants);
-        LOGGER.info(" - Number of consequential variants to report: " + consequencePassedVariants.size());
+        LOGGER.info("  Number of consequential variants to report: " + consequencePassedVariants.size());
         if (vcfOutputPath != null) {
-            final String variantsToReport = variantFile.sample() + "_variants_to_report.vcf";
-            VCFFileWriter.writeSomaticVCF(vcfOutputPath + File.separator + variantsToReport,
-                    consequencePassedVariants);
+            final String variantsToReport =
+                    vcfOutputPath + File.separator + variantFile.sample() + "_variants_to_report.vcf";
+            VCFFileWriter.writeSomaticVCF(variantsToReport, consequencePassedVariants);
+            LOGGER.info("    Written variants to report to " + variantsToReport);
         }
     }
 }
