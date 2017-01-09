@@ -50,6 +50,7 @@ public final class ProductionRunContextFactory {
             @NotNull final String refSampleSuffix, @NotNull final String tumorSampleSuffix)
             throws MalformedRunDirException {
         final int patientPosition = runName.indexOf(patientIdentifier) + 1;
+        // KODU: somatic has to be called with the right identifier, so this should always be found!
         assert patientPosition > 0;
 
         if (runName.length() < (patientPosition + patientNameLength)) {
