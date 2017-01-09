@@ -5,11 +5,12 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CPCTRunContextFactoryTest {
+public class ProductionRunContextFactoryTest {
 
     private static final String RESOURCE_DIR = "CPCTRunContextFactory";
 
@@ -27,8 +28,8 @@ public class CPCTRunContextFactoryTest {
     private static final String MISSING_REF_RUNDIR = "160104_HMFregCPCT_FR10002000_FR20003000_CPCT12345678";
 
     @Test
-    public void resolveCorrectlyForValidRunWithTII() throws MalformedRunDirException {
-        final RunContext runContext = CPCTRunContextFactory.fromRunDirectory(toPath(VALID_RUNDIR));
+    public void resolveCorrectlyForValidRunWithTII() throws HartwigException {
+        final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(toPath(VALID_RUNDIR));
         assertEquals(VALID_REF, runContext.refSample());
         assertEquals(VALID_TUMOR, runContext.tumorSample());
         assertEquals(VALID_RUN_NAME, runContext.runName());
@@ -36,8 +37,8 @@ public class CPCTRunContextFactoryTest {
     }
 
     @Test
-    public void resolveCorrectlyForLowQualRun() throws MalformedRunDirException {
-        final RunContext runContextLowQual = CPCTRunContextFactory.fromRunDirectory(toPath(LOW_QUAL_RUNDIR));
+    public void resolveCorrectlyForLowQualRun() throws HartwigException {
+        final RunContext runContextLowQual = ProductionRunContextFactory.fromRunDirectory(toPath(LOW_QUAL_RUNDIR));
         assertEquals(LOW_QUAL_REF, runContextLowQual.refSample());
         assertEquals(LOW_QUAL_TUMOR, runContextLowQual.tumorSample());
         assertEquals(LOW_QUAL_RUN_NAME, runContextLowQual.runName());
@@ -45,13 +46,13 @@ public class CPCTRunContextFactoryTest {
     }
 
     @Test(expected = MalformedRunDirException.class)
-    public void exceptionOnRunDirWithTooShortPatientName() throws MalformedRunDirException {
-        CPCTRunContextFactory.fromRunDirectory(toPath(INVALID_PATIENT_RUNDIR));
+    public void exceptionOnRunDirWithTooShortPatientName() throws HartwigException {
+        ProductionRunContextFactory.fromRunDirectory(toPath(INVALID_PATIENT_RUNDIR));
     }
 
     @Test(expected = MalformedRunDirException.class)
-    public void exceptionOnRunDirWithMissingRef() throws MalformedRunDirException {
-        CPCTRunContextFactory.fromRunDirectory(toPath(MISSING_REF_RUNDIR));
+    public void exceptionOnRunDirWithMissingRef() throws HartwigException {
+        ProductionRunContextFactory.fromRunDirectory(toPath(MISSING_REF_RUNDIR));
     }
 
     @NotNull

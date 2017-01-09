@@ -6,8 +6,8 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.GenerateReportException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.healthchecker.context.CPCTRunContextFactory;
 import com.hartwig.hmftools.healthchecker.context.FolderChecker;
+import com.hartwig.hmftools.healthchecker.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.report.HealthCheckReportFactory;
 import com.hartwig.hmftools.healthchecker.report.Report;
@@ -90,7 +90,7 @@ public final class HealthChecksApplication {
         RunContext runContext = null;
         try {
             runDirectory = FolderChecker.build().checkFolder(runDirectory);
-            runContext = CPCTRunContextFactory.fromRunDirectory(runDirectory);
+            runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         } catch (IOException | HartwigException e) {
             LOGGER.info(e.getMessage());
             System.exit(1);
