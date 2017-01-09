@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class SomaticVariantFactoryTest {
@@ -84,5 +85,15 @@ public class SomaticVariantFactoryTest {
         final String notMissense = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t intron_variant \t 8 \t 9";
         final SomaticVariant isNotMissense = SomaticVariantFactory.fromVCFLine(notMissense);
         assertFalse(isNotMissense.hasConsequence(VariantConsequence.MISSENSE_VARIANT));
+    }
+
+    @Test
+    public void canRecreateVCFLine() {
+        final String vcfLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t INFO \t 8 \t 9";
+        final SomaticVariant variant = SomaticVariantFactory.fromVCFLine(vcfLine);
+        assertEquals(vcfLine, SomaticVariantFactory.toVCFLine(variant));
+
+        final String withoutInfo = vcfLine.replace(" INFO ", Strings.EMPTY);
+        assertEquals(withoutInfo, SomaticVariantFactory.toVCFLine(variant, true));
     }
 }
