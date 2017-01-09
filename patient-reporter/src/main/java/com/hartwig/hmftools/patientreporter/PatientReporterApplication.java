@@ -174,7 +174,8 @@ public class PatientReporterApplication {
         LOGGER.info("  Total number of variants: " + report.allVariants.size());
         LOGGER.info("  Number of variants after applying pass-only filter: " + report.allPassedVariants.size());
         LOGGER.info("  Number of variants after applying consensus rule = " + report.consensusPassedVariants.size());
-        LOGGER.info("  Number of missense variants : " + report.missenseVariants.size());
+        LOGGER.info("  Number of missense variants in consensus rule (mutational load) : "
+                + report.missenseVariants.size());
         LOGGER.info("  Number of consequential variants to report: " + report.consequencePassedVariants.size());
 
         if (vcfOutputPath != null) {
