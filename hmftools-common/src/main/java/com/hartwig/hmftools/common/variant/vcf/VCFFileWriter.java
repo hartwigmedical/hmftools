@@ -16,7 +16,7 @@ public final class VCFFileWriter {
 
     private static final String VCF_START_LINE = "##fileformat=VCFv4.1";
     // KODU: Variant interpreter figures out the version of the ref genome from below line.
-    private static final String VCF_VERSION_LINE = "##reference=file:///genome/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+    private static final String VCF_VERSION_LINE = "##reference=GRCh37";
     private static final String VCF_HEADER = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample";
 
     public static void writeSomaticVCF(@NotNull final String filePath, @NotNull final List<SomaticVariant> variants)
