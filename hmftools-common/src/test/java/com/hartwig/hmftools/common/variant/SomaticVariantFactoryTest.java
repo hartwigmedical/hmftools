@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class SomaticVariantFactoryTest {
@@ -93,7 +92,8 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant variant = SomaticVariantFactory.fromVCFLine(vcfLine);
         assertEquals(vcfLine, SomaticVariantFactory.toVCFLine(variant));
 
-        final String withoutInfo = vcfLine.replace(" INFO ", Strings.EMPTY);
-        assertEquals(withoutInfo, SomaticVariantFactory.toVCFLine(variant, true));
+        final String newInfo = "hello world!";
+        final String withoutInfo = vcfLine.replace(" INFO ", newInfo);
+        assertEquals(withoutInfo, SomaticVariantFactory.toVCFLine(variant, newInfo));
     }
 }

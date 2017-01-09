@@ -191,7 +191,7 @@ public class PatientReporterApplication {
 
             final String cleanedConsequenceVCF =
                     vcfOutputPath + File.separator + variantFile.sample() + "_cleaned_consequential_variants.vcf";
-            VCFFileWriter.writeSomaticVCFWithoutInfoFields(cleanedConsequenceVCF, report.consequencePassedVariants);
+            VCFFileWriter.writeCleanedSomaticVCF(cleanedConsequenceVCF, report.consequencePassedVariants);
             LOGGER.info("    Written cleaned consequential variants to " + cleanedConsequenceVCF);
         }
     }

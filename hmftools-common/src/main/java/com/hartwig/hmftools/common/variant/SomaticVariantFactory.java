@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantFactory {
 
@@ -54,17 +54,17 @@ public final class SomaticVariantFactory {
 
     @NotNull
     public static String toVCFLine(@NotNull final SomaticVariant variant) {
-        return toVCFLine(variant, false);
+        return toVCFLine(variant, null);
     }
 
     @NotNull
-    public static String toVCFLine(@NotNull final SomaticVariant variant, boolean removeInfoField) {
+    public static String toVCFLine(@NotNull final SomaticVariant variant, @Nullable String newInfoValue) {
         final String originalVCFLine = variant.originalVCFLine();
-        if (removeInfoField) {
+        if (newInfoValue != null) {
             final String[] values = originalVCFLine.split(VCF_COLUMN_SEPARATOR);
             String reconstructedVCFLine = values[0];
             for (int i = 1; i < values.length; i++) {
-                final String value = i == INFO_COLUMN ? Strings.EMPTY : values[i];
+                final String value = i == INFO_COLUMN ? newInfoValue : values[i];
                 reconstructedVCFLine += (VCF_COLUMN_SEPARATOR + value);
             }
 
