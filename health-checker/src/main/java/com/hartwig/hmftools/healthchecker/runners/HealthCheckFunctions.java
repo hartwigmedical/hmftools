@@ -33,7 +33,7 @@ final class HealthCheckFunctions {
             return totalSequences;
         }).filter(lines -> lines != null).collect(toList());
 
-        long totalSequences = !allValues.isEmpty() ? allValues.stream().mapToLong(Long::parseLong).sum() : 0L;
+        final long totalSequences = !allValues.isEmpty() ? allValues.stream().mapToLong(Long::parseLong).sum() : 0L;
         if (totalSequences == 0) {
             throw new EmptyFileException(FASTQC_DATA_FILE_NAME, basePath);
         }

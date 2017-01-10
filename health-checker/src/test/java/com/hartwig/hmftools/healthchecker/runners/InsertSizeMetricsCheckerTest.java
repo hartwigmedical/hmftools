@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.exception.LineNotFoundException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.InsertSizeMetricsCheck;
@@ -41,18 +42,36 @@ public class InsertSizeMetricsCheckerTest {
     private final InsertSizeMetricsChecker checker = new InsertSizeMetricsChecker();
 
     @Test
-    public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
+    public void correctInputYieldsCorrectOutputForSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
-        assertResult(result);
+        assertSomaticResult(result);
     }
 
     @Test
-    public void errorRunYieldsCorrectNumberOfChecks() {
+    public void correctInputYieldsCorrectOutputForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+        assertCheck(result.getChecks(), REF_SAMPLE, InsertSizeMetricsCheck.MAPPING_MEDIAN_INSERT_SIZE,
+                REF_MEDIAN_INSERT_SIZE);
+        assertCheck(result.getChecks(), REF_SAMPLE, InsertSizeMetricsCheck.MAPPING_WIDTH_OF_70_PERCENT,
+                REF_WIDTH_OF_70_PERCENT);
+    }
+
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
+    }
+
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }
 
     @Test(expected = EmptyFileException.class)
@@ -89,29 +108,28 @@ public class InsertSizeMetricsCheckerTest {
         checker.tryRun(runContext);
     }
 
-    private static void assertResult(@NotNull final BaseResult result) {
+    private static void assertSomaticResult(@NotNull final BaseResult result) {
         final PatientResult patientResult = (PatientResult) result;
         Assert.assertEquals(CheckType.INSERT_SIZE, patientResult.getCheckType());
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getTumorSampleChecks().size());
-        assertField(patientResult, InsertSizeMetricsCheck.MAPPING_MEDIAN_INSERT_SIZE.toString(),
-                REF_MEDIAN_INSERT_SIZE,
+        assertSomaticField(patientResult, InsertSizeMetricsCheck.MAPPING_MEDIAN_INSERT_SIZE, REF_MEDIAN_INSERT_SIZE,
                 TUMOR_MEDIAN_INSERT_SIZE);
-        assertField(patientResult, InsertSizeMetricsCheck.MAPPING_WIDTH_OF_70_PERCENT.toString(),
-                REF_WIDTH_OF_70_PERCENT,
+        assertSomaticField(patientResult, InsertSizeMetricsCheck.MAPPING_WIDTH_OF_70_PERCENT, REF_WIDTH_OF_70_PERCENT,
                 TUMOR_WIDTH_OF_70_PERCENT);
     }
 
-    private static void assertField(@NotNull final PatientResult result, @NotNull final String field,
-            @NotNull final String refValue, @NotNull final String tumValue) {
+    private static void assertSomaticField(@NotNull final PatientResult result,
+            @NotNull final InsertSizeMetricsCheck field, @NotNull final String refValue,
+            @NotNull final String tumValue) {
         assertCheck(result.getRefSampleChecks(), REF_SAMPLE, field, refValue);
         assertCheck(result.getTumorSampleChecks(), TUMOR_SAMPLE, field, tumValue);
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String sampleId,
-            @NotNull final String checkName, @NotNull final String expectedValue) {
+            @NotNull final InsertSizeMetricsCheck check, @NotNull final String expectedValue) {
         final Optional<HealthCheck> optCheck = checks.stream().filter(
-                p -> p.getCheckName().equals(checkName)).findFirst();
+                p -> p.getCheckName().equals(check.toString())).findFirst();
         assert optCheck.isPresent();
 
         assertEquals(expectedValue, optCheck.get().getValue());

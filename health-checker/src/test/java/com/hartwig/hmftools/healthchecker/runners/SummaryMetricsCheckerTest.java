@@ -12,12 +12,12 @@ import com.hartwig.hmftools.common.exception.LineNotFoundException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.SummaryMetricsCheck;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class SummaryMetricsCheckerTest {
@@ -47,18 +47,38 @@ public class SummaryMetricsCheckerTest {
     private final SummaryMetricsChecker checker = new SummaryMetricsChecker();
 
     @Test
-    public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
+    public void correctInputYieldsCorrectOutputForSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
-        assertResult(result);
+        assertSomaticResult(result);
     }
 
     @Test
-    public void errorRunYieldsCorrectNumberOfChecks() {
+    public void correctInputYieldsCorrectOutputForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+        assertCheck(result.getChecks(), REF_SAMPLE, SummaryMetricsCheck.MAPPING_PCT_ADAPTER, REF_PCT_ADAPTER);
+        assertCheck(result.getChecks(), REF_SAMPLE, SummaryMetricsCheck.MAPPING_PCT_CHIMERA, REF_PCT_CHIMERA);
+        assertCheck(result.getChecks(), REF_SAMPLE, SummaryMetricsCheck.MAPPING_PF_INDEL_RATE, REF_PF_INDEL_RATE);
+        assertCheck(result.getChecks(), REF_SAMPLE, SummaryMetricsCheck.MAPPING_PF_MISMATCH_RATE,
+                REF_PF_MISMATCH_RATE);
+        assertCheck(result.getChecks(), REF_SAMPLE, SummaryMetricsCheck.MAPPING_STRAND_BALANCE, REF_STRAND_BALANCE);
+    }
+
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
+    }
+
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }
 
     @Test(expected = EmptyFileException.class)
@@ -95,35 +115,33 @@ public class SummaryMetricsCheckerTest {
         checker.tryRun(runContext);
     }
 
-    private static void assertResult(@NotNull final BaseResult result) {
+    private static void assertSomaticResult(@NotNull final BaseResult result) {
         final PatientResult patientResult = (PatientResult) result;
 
-        Assert.assertEquals(CheckType.SUMMARY_METRICS, patientResult.getCheckType());
+        assertEquals(CheckType.SUMMARY_METRICS, patientResult.getCheckType());
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getTumorSampleChecks().size());
 
-        assertField(patientResult, SummaryMetricsCheck.MAPPING_PF_MISMATCH_RATE.toString(), REF_PF_MISMATCH_RATE,
+        assertSomaticField(patientResult, SummaryMetricsCheck.MAPPING_PF_MISMATCH_RATE, REF_PF_MISMATCH_RATE,
                 TUMOR_PF_MISMATCH_RATE);
-        assertField(patientResult, SummaryMetricsCheck.MAPPING_PF_INDEL_RATE.toString(), REF_PF_INDEL_RATE,
+        assertSomaticField(patientResult, SummaryMetricsCheck.MAPPING_PF_INDEL_RATE, REF_PF_INDEL_RATE,
                 TUMOR_PF_INDEL_RATE);
-        assertField(patientResult, SummaryMetricsCheck.MAPPING_STRAND_BALANCE.toString(), REF_STRAND_BALANCE,
+        assertSomaticField(patientResult, SummaryMetricsCheck.MAPPING_STRAND_BALANCE, REF_STRAND_BALANCE,
                 TUMOR_STRAND_BALANCE);
-        assertField(patientResult, SummaryMetricsCheck.MAPPING_PCT_CHIMERA.toString(), REF_PCT_CHIMERA,
-                TUMOR_PCT_CHIMERA);
-        assertField(patientResult, SummaryMetricsCheck.MAPPING_PCT_ADAPTER.toString(), REF_PCT_ADAPTER,
-                TUMOR_PCT_ADAPTER);
+        assertSomaticField(patientResult, SummaryMetricsCheck.MAPPING_PCT_CHIMERA, REF_PCT_CHIMERA, TUMOR_PCT_CHIMERA);
+        assertSomaticField(patientResult, SummaryMetricsCheck.MAPPING_PCT_ADAPTER, REF_PCT_ADAPTER, TUMOR_PCT_ADAPTER);
     }
 
-    private static void assertField(@NotNull final PatientResult result, @NotNull final String field,
-            @NotNull final String refValue, @NotNull final String tumValue) {
+    private static void assertSomaticField(@NotNull final PatientResult result,
+            @NotNull final SummaryMetricsCheck field, @NotNull final String refValue, @NotNull final String tumValue) {
         assertCheck(result.getRefSampleChecks(), REF_SAMPLE, field, refValue);
         assertCheck(result.getTumorSampleChecks(), TUMOR_SAMPLE, field, tumValue);
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String sampleId,
-            @NotNull final String checkName, @NotNull final String expectedValue) {
+            @NotNull final SummaryMetricsCheck check, @NotNull final String expectedValue) {
         final Optional<HealthCheck> value = checks.stream().filter(
-                p -> p.getCheckName().equals(checkName)).findFirst();
+                p -> p.getCheckName().equals(check.toString())).findFirst();
         assert value.isPresent();
 
         assertEquals(expectedValue, value.get().getValue());

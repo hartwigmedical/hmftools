@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.SummaryMetricsCheck;
@@ -50,17 +51,25 @@ public class SummaryMetricsChecker extends ErrorHandlingChecker implements Healt
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final List<HealthCheck> refChecks = extractChecksForSample(runContext.runDirectory(), runContext.refSample());
-        final List<HealthCheck> tumorChecks = extractChecksForSample(runContext.runDirectory(),
-                runContext.tumorSample());
+        if (runContext.isSomaticRun()) {
+            final List<HealthCheck> tumorChecks = extractChecksForSample(runContext.runDirectory(),
+                    runContext.tumorSample());
 
-        return toPatientResult(refChecks, tumorChecks);
+            return toPatientResult(refChecks, tumorChecks);
+        } else {
+            return toMultiValueResult(refChecks);
+        }
     }
 
     @NotNull
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
-        return toPatientResult(getErrorChecksForSample(runContext.refSample()),
-                getErrorChecksForSample(runContext.tumorSample()));
+        if (runContext.isSomaticRun()) {
+            return toPatientResult(getErrorChecksForSample(runContext.refSample()),
+                    getErrorChecksForSample(runContext.tumorSample()));
+        } else {
+            return toMultiValueResult(getErrorChecksForSample(runContext.refSample()));
+        }
     }
 
     @NotNull
@@ -79,6 +88,13 @@ public class SummaryMetricsChecker extends ErrorHandlingChecker implements Healt
         HealthCheck.log(LOGGER, tumorChecks);
 
         return new PatientResult(checkType(), refChecks, tumorChecks);
+    }
+
+    @NotNull
+    private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
+        HealthCheck.log(LOGGER, checks);
+
+        return new MultiValueResult(checkType(), checks);
     }
 
     @NotNull
