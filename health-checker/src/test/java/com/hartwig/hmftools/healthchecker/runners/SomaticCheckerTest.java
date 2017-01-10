@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.SomaticCheck;
 
@@ -116,10 +118,24 @@ public class SomaticCheckerTest {
     }
 
     @Test
-    public void errorYieldsCorrectOutput() {
+    public void runsCorrectlyForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final BaseResult result = checker.tryRun(runContext);
+        assertTrue(result instanceof NoResult);
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final BaseResult result = checker.errorRun(runContext);
+        assertTrue(result instanceof NoResult);
     }
 
     @Test

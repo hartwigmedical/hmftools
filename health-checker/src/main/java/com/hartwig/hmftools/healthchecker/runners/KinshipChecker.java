@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.KinshipCheck;
@@ -45,6 +46,9 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
+        if (!runContext.isSomaticRun()) {
+            return new NoResult(checkType());
+        }
         final Path kinshipPath = PathExtensionFinder.build().findPath(runContext.runDirectory(), KINSHIP_EXTENSION);
         final List<String> kinshipLines = FileReader.build().readLines(kinshipPath);
         if (kinshipLines.size() != EXPECTED_NUM_LINES) {
@@ -66,8 +70,12 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
-        return toSingleValueResult(new HealthCheck(runContext.tumorSample(), KinshipCheck.KINSHIP_TEST.toString(),
-                HealthCheckConstants.ERROR_VALUE));
+        if (runContext.isSomaticRun()) {
+            return toSingleValueResult(new HealthCheck(runContext.tumorSample(), KinshipCheck.KINSHIP_TEST.toString(),
+                    HealthCheckConstants.ERROR_VALUE));
+        } else {
+            return new NoResult(checkType());
+        }
     }
 
     @NotNull

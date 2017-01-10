@@ -2,6 +2,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
@@ -36,7 +38,7 @@ public class KinshipCheckerTest {
     private final KinshipChecker checker = new KinshipChecker();
 
     @Test
-    public void extractDataFromKinship() throws IOException, HartwigException {
+    public void extractDataFromKinshipWorksForSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
@@ -45,10 +47,26 @@ public class KinshipCheckerTest {
     }
 
     @Test
-    public void errorYieldsCorrectOutput() {
+    public void extractDataFromKinshipWorksForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(CORRECT_RUN, REF_SAMPLE);
+        final BaseResult result = checker.tryRun(runContext);
+
+        assertEquals(CheckType.KINSHIP, result.getCheckType());
+        assertTrue(result instanceof NoResult);
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         final SingleValueResult result = (SingleValueResult) checker.errorRun(runContext);
         assertNotNull(result.getCheck());
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(CORRECT_RUN, REF_SAMPLE);
+        final BaseResult result = checker.errorRun(runContext);
+        assertTrue(result instanceof NoResult);
     }
 
     @Test(expected = MalformedFileException.class)

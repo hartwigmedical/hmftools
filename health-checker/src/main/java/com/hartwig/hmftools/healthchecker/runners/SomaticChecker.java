@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.predicate.VariantPredicates;
@@ -23,6 +22,7 @@ import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
+import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.SomaticCheck;
 
@@ -53,6 +53,9 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
+        if (!runContext.isSomaticRun()) {
+            return new NoResult(checkType());
+        }
         final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runContext.runDirectory(), SOMATICS_EXTENSION);
 
         if (!variantFile.sample().equals(runContext.tumorSample())) {
@@ -72,50 +75,49 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
-        final List<HealthCheck> checks = Lists.newArrayList();
-        for (final VariantType type : VariantType.values()) {
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.COUNT_TOTAL.checkName(type.name()),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.DBSNP_COUNT.checkName(type.name()),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
-                    caller -> new HealthCheck(runContext.tumorSample(),
-                            SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller),
-                            HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
-                    caller -> new HealthCheck(runContext.tumorSample(),
-                            SomaticCheck.PRECISION_CHECK.checkName(type.name(), caller),
-                            HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-            checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
-                    caller -> new HealthCheck(runContext.tumorSample(),
-                            SomaticCheck.SENSITIVITY_CHECK.checkName(type.name(), caller),
-                            HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-            checks.addAll(CALLERS_COUNT.stream().map(count -> new HealthCheck(runContext.tumorSample(),
-                    SomaticCheck.PROPORTION_CHECK.checkName(type.name(), String.valueOf(count)),
-                    HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
-        }
+        if (runContext.isSomaticRun()) {
+            final List<HealthCheck> checks = Lists.newArrayList();
+            for (final VariantType type : VariantType.values()) {
+                checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.COUNT_TOTAL.checkName(type.name()),
+                        HealthCheckConstants.ERROR_VALUE));
+                checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.DBSNP_COUNT.checkName(type.name()),
+                        HealthCheckConstants.ERROR_VALUE));
+                checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
+                        caller -> new HealthCheck(runContext.tumorSample(),
+                                SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller),
+                                HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
+                checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
+                        caller -> new HealthCheck(runContext.tumorSample(),
+                                SomaticCheck.PRECISION_CHECK.checkName(type.name(), caller),
+                                HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
+                checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream().map(
+                        caller -> new HealthCheck(runContext.tumorSample(),
+                                SomaticCheck.SENSITIVITY_CHECK.checkName(type.name(), caller),
+                                HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
+                checks.addAll(CALLERS_COUNT.stream().map(count -> new HealthCheck(runContext.tumorSample(),
+                        SomaticCheck.PROPORTION_CHECK.checkName(type.name(), String.valueOf(count)),
+                        HealthCheckConstants.ERROR_VALUE)).collect(Collectors.toList()));
+            }
 
-        for (final String caller : SomaticVariantConstants.ALL_CALLERS) {
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_LOWER_SD.checkName(caller),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_MEDIAN.checkName(caller),
-                    HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_UPPER_SD.checkName(caller),
-                    HealthCheckConstants.ERROR_VALUE));
-        }
+            for (final String caller : SomaticVariantConstants.ALL_CALLERS) {
+                checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_LOWER_SD.checkName(caller),
+                        HealthCheckConstants.ERROR_VALUE));
+                checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_MEDIAN.checkName(caller),
+                        HealthCheckConstants.ERROR_VALUE));
+                checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.AF_UPPER_SD.checkName(caller),
+                        HealthCheckConstants.ERROR_VALUE));
+            }
 
-        return toMultiValueResult(checks);
+            return toMultiValueResult(checks);
+        } else {
+            return new NoResult(checkType());
+        }
     }
 
     @NotNull
     private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
         HealthCheck.log(LOGGER, checks);
         return new MultiValueResult(checkType(), checks);
-    }
-
-    @NotNull
-    private static List<SomaticVariant> toSomaticVariants(@NotNull final List<String> lines) {
-        return lines.stream().map(SomaticVariantFactory::fromVCFLine).collect(Collectors.toList());
     }
 
     @NotNull
