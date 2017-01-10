@@ -13,6 +13,6 @@ final class RunnerTestFunctions {
 
     @NotNull
     static String getRunnerResourcePath(@NotNull String runner) {
-        return Resources.getResource("Runners2" + File.separator + runner).getPath();
+        return Resources.getResource("Runners" + File.separator + runner).getPath();
     }
 }
