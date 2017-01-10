@@ -35,8 +35,8 @@ public class ProductionRunContextFactoryTest {
     private static final String VALID_SINGLE_SAMPLE_RUN_NAME = "170202_HMFreg0100_FR10002000_SAMPLE";
     private static final String VALID_SINGLE_SAMPLE_NAME = "SAMPLE";
 
-    private static final String LOW_QUAL_SINGLE_SAMPLE_RUNDIR = "170202_HMFreg0100_FR10002000_SAMPLE";
-    private static final String LOW_QUAL_SINGLE_SAMPLE_RUN_NAME = "170202_HMFreg0100_FR10002000_SAMPLE";
+    private static final String LOW_QUAL_SINGLE_SAMPLE_RUNDIR = "170303_HMFreg0100_FR10002000_SAMPLE_LowQual";
+    private static final String LOW_QUAL_SINGLE_SAMPLE_RUN_NAME = "170303_HMFreg0100_FR10002000_SAMPLE";
     private static final String LOW_QUAL_SINGLE_SAMPLE_NAME = "SAMPLE";
 
     private static final String INVALID_CPCT_PATIENT_RUNDIR = "160103_HMFregCPCT_FR10002000_FR20003000_CPCT1234";
