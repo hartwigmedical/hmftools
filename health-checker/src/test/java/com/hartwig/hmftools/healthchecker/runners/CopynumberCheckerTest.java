@@ -18,7 +18,6 @@ import com.hartwig.hmftools.healthchecker.runners.checks.CopynumberCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class CopynumberCheckerTest {
@@ -108,7 +107,7 @@ public class CopynumberCheckerTest {
 
     private static void assertResult(@NotNull final BaseResult baseResult, long expectedGain, long expectedLoss) {
         final MultiValueResult result = (MultiValueResult) baseResult;
-        Assert.assertEquals(CheckType.COPYNUMBER, result.getCheckType());
+        assertEquals(CheckType.COPYNUMBER, result.getCheckType());
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
 
         final HealthCheck gainCheck = extractHealthCheck(result.getChecks(), CopynumberCheck.COPYNUMBER_GENOME_GAIN);
