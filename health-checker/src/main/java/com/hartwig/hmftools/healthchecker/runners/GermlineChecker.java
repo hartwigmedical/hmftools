@@ -50,9 +50,7 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
             variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(), GERMLINE_VCF_EXTENSION_V1_9);
         }
 
-        System.out.println(variants.size());
         variants = VariantFilter.passOnly(variants);
-        System.out.println(variants.size());
         final List<HealthCheck> refChecks = calcChecksForSample(variants, runContext.refSample(), true);
         if (runContext.isSomaticRun()) {
             final List<HealthCheck> tumorChecks = calcChecksForSample(variants, runContext.tumorSample(), false);
