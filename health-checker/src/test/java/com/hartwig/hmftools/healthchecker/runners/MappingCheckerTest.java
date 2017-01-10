@@ -11,12 +11,12 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.MappingCheck;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class MappingCheckerTest {
@@ -29,21 +29,37 @@ public class MappingCheckerTest {
     private static final String EMPTY_FASTQC_SAMPLE = "sample4";
     private static final String NON_EXISTING_SAMPLE = "sample5";
 
+    private static final int EXPECTED_NUM_CHECKS = 6;
+
     private final MappingChecker checker = new MappingChecker();
 
     @Test
-    public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
+    public void correctInputYieldsCorrectOutputForSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
-        assertResult(result);
+        assertSomaticResult(result);
     }
 
     @Test
-    public void errorRunYieldsCorrectNumberOfChecks() {
+    public void correctInputYieldsCorrectOutputForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final BaseResult result = checker.tryRun(runContext);
+        assertRefSampleData(((MultiValueResult) result).getChecks());
+    }
+
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
-        assertEquals(6, result.getRefSampleChecks().size());
-        assertEquals(6, result.getTumorSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
+    }
+
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }
 
     @Test(expected = EmptyFileException.class)
@@ -67,8 +83,8 @@ public class MappingCheckerTest {
         checker.tryRun(runContext);
     }
 
-    private static void assertResult(@NotNull final BaseResult result) {
-        Assert.assertEquals(CheckType.MAPPING, result.getCheckType());
+    private static void assertSomaticResult(@NotNull final BaseResult result) {
+        assertEquals(CheckType.MAPPING, result.getCheckType());
         assertRefSampleData(((PatientResult) result).getRefSampleChecks());
         assertTumorSampleData(((PatientResult) result).getTumorSampleChecks());
     }

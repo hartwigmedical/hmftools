@@ -18,6 +18,7 @@ import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
+import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.apache.logging.log4j.LogManager;
@@ -58,35 +59,46 @@ public class RealignerChecker extends ErrorHandlingChecker implements HealthChec
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final HealthCheck refCheck = extractCheckForSample(runContext.runDirectory(), runContext.refSample());
-        final HealthCheck tumorCheck = extractCheckForSample(runContext.runDirectory(), runContext.tumorSample());
+        if (runContext.isSomaticRun()) {
+            final HealthCheck tumorCheck = extractCheckForSample(runContext.runDirectory(), runContext.tumorSample());
 
-        return toPatientResult(refCheck, tumorCheck);
+            return toPatientResult(refCheck, tumorCheck);
+        } else {
+            return toSingleValueResult(refCheck);
+        }
     }
 
     @NotNull
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
-        return toPatientResult(new HealthCheck(runContext.refSample(),
-                                               REALIGNER_CHECK_NAME,
-                                               HealthCheckConstants.ERROR_VALUE),
-                               new HealthCheck(runContext.tumorSample(),
-                                               REALIGNER_CHECK_NAME,
-                                               HealthCheckConstants.ERROR_VALUE));
+        HealthCheck refCheck = new HealthCheck(runContext.refSample(), REALIGNER_CHECK_NAME,
+                HealthCheckConstants.ERROR_VALUE);
+        if (runContext.isSomaticRun()) {
+            return toPatientResult(refCheck,
+                    new HealthCheck(runContext.tumorSample(), REALIGNER_CHECK_NAME, HealthCheckConstants.ERROR_VALUE));
+        } else {
+            return toSingleValueResult(refCheck);
+        }
     }
 
     @NotNull
     private BaseResult toPatientResult(@NotNull final HealthCheck refCheck, @NotNull final HealthCheck tumorCheck) {
         refCheck.log(LOGGER);
         tumorCheck.log(LOGGER);
-        return new PatientResult(checkType(),
-                                 Collections.singletonList(refCheck),
-                                 Collections.singletonList(tumorCheck));
+        return new PatientResult(checkType(), Collections.singletonList(refCheck),
+                Collections.singletonList(tumorCheck));
+    }
+
+    @NotNull
+    private BaseResult toSingleValueResult(@NotNull final HealthCheck check) {
+        check.log(LOGGER);
+
+        return new SingleValueResult(checkType(), check);
     }
 
     @NotNull
     private static HealthCheck extractCheckForSample(@NotNull final String runDirectory,
-                                                     @NotNull final String sampleId)
-            throws IOException, HartwigException {
+            @NotNull final String sampleId) throws IOException, HartwigException {
         final String basePath = getBasePathForSample(runDirectory, sampleId);
 
         final Path bamDiffPath = PathPrefixSuffixFinder.build().findPath(basePath, sampleId, BAM_DIFF_EXTENSION);
@@ -102,17 +114,15 @@ public class RealignerChecker extends ErrorHandlingChecker implements HealthChec
     private static long readMappedFromFlagstat(@NotNull final Path flagStatPath) throws IOException, HartwigException {
         final List<String> lines = FileReader.build().readLines(flagStatPath);
 
-        final Optional<String> mappedLine = lines.stream()
-                                                 .filter(line -> line.contains(FLAGSTAT_MAPPED_PATTERN))
-                                                 .findFirst();
+        final Optional<String> mappedLine = lines.stream().filter(
+                line -> line.contains(FLAGSTAT_MAPPED_PATTERN)).findFirst();
         if (!mappedLine.isPresent()) {
             throw new LineNotFoundException(flagStatPath.toString(), FLAGSTAT_MAPPED_PATTERN);
         }
         final String mapped = mappedLine.get();
         if (!mapped.contains(FLAGSTAT_END_OF_MAPPED_VALUE_PATTERN)) {
-            throw new MalformedFileException(String.format(MALFORMED_FILE_MSG,
-                                                           flagStatPath.toString(),
-                                                           FLAGSTAT_END_OF_MAPPED_VALUE_PATTERN));
+            throw new MalformedFileException(
+                    String.format(MALFORMED_FILE_MSG, flagStatPath.toString(), FLAGSTAT_END_OF_MAPPED_VALUE_PATTERN));
         }
         final String mappedValue = mapped.substring(0, mapped.indexOf(FLAGSTAT_END_OF_MAPPED_VALUE_PATTERN));
         return Long.valueOf(mappedValue.trim());
@@ -121,10 +131,8 @@ public class RealignerChecker extends ErrorHandlingChecker implements HealthChec
     private static long readDiffCountFromBamDiff(@NotNull final Path bamDiffPath)
             throws IOException, HartwigException {
         final List<String> lines = FileReader.build().readLines(bamDiffPath);
-        return lines.stream()
-                    .filter(line -> !line.startsWith(IGNORE_FOR_DIFF_COUNT_PATTERN_1)
-                                    && !line.startsWith(IGNORE_FOR_DIFF_COUNT_PATTERN_2))
-                    .count();
+        return lines.stream().filter(line -> !line.startsWith(IGNORE_FOR_DIFF_COUNT_PATTERN_1) && !line.startsWith(
+                IGNORE_FOR_DIFF_COUNT_PATTERN_2)).count();
     }
 
     @NotNull

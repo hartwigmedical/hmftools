@@ -11,11 +11,6 @@ public final class TestRunContextFactory {
     }
 
     @NotNull
-    public static RunContext forTest(@NotNull final String runDirectory) {
-        return forSomaticTest(runDirectory, Strings.EMPTY, Strings.EMPTY);
-    }
-
-    @NotNull
     public static RunContext forSingleSampleTest(@NotNull final String runDirectory, @NotNull final String sample) {
         return new RunContextImpl(runDirectory, removePath(runDirectory), sample, Strings.EMPTY, false, false);
     }

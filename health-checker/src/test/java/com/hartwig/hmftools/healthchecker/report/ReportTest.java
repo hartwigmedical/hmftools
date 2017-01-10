@@ -27,7 +27,8 @@ public class ReportTest {
     private static final String SOME_VERSION = "v1.7";
     private static final String SOME_DATE = "2016-07-09";
 
-    private static final RunContext MOCK_RUN_CONTEXT = TestRunContextFactory.forTest("path/to/run");
+    private static final RunContext MOCK_RUN_CONTEXT = TestRunContextFactory.forSingleSampleTest("path/to/run",
+            "any_sample");
     private static final String MOCK_OUTPUT_DIR = "path/to/output";
 
     @Test

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.MetadataCheck;
@@ -58,7 +59,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
         final String runDate = extractRunDate(runContext);
         final String pipelineVersion = extractPipelineVersion(runContext.runDirectory());
 
-        return toPatientResult(runContext, runDate, pipelineVersion);
+        return toFinalResult(runContext, runDate, pipelineVersion);
     }
 
     @NotNull
@@ -72,21 +73,26 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
             // If run date extraction fails, pipeline version wont be available.
             // Should be two separate checkers...
         }
-        return toPatientResult(runContext, HealthCheckConstants.ERROR_VALUE, pipelineVersion);
+        return toFinalResult(runContext, HealthCheckConstants.ERROR_VALUE, pipelineVersion);
     }
 
     @NotNull
-    private BaseResult toPatientResult(@NotNull final RunContext runContext, @NotNull final String runDate,
+    private BaseResult toFinalResult(@NotNull final RunContext runContext, @NotNull final String runDate,
             @NotNull final String pipelineVersion) {
         final List<HealthCheck> refMetaData = toHealthCheckList(runContext.refSample(), runContext, runDate,
                 pipelineVersion);
-        final List<HealthCheck> tumorMetaData = toHealthCheckList(runContext.tumorSample(), runContext, runDate,
-                pipelineVersion);
-
         HealthCheck.log(LOGGER, refMetaData);
-        HealthCheck.log(LOGGER, tumorMetaData);
 
-        return new PatientResult(checkType(), refMetaData, tumorMetaData);
+        if (runContext.isSomaticRun()) {
+            final List<HealthCheck> tumorMetaData = toHealthCheckList(runContext.tumorSample(), runContext, runDate,
+                    pipelineVersion);
+
+            HealthCheck.log(LOGGER, tumorMetaData);
+
+            return new PatientResult(checkType(), refMetaData, tumorMetaData);
+        } else {
+            return new MultiValueResult(checkType(), refMetaData);
+        }
     }
 
     @NotNull

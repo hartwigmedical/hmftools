@@ -14,6 +14,7 @@ import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStatsType;
 import com.hartwig.hmftools.healthchecker.flagstatreader.SambambaFlagStatParser;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.MappingCheck;
@@ -45,17 +46,26 @@ public class MappingChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
-        final List<HealthCheck> refChecks = getChecksForSample(runContext.runDirectory(), runContext.refSample());
-        final List<HealthCheck> tumorChecks = getChecksForSample(runContext.runDirectory(), runContext.tumorSample());
+        final List<HealthCheck> refChecks = extractChecksForSample(runContext.runDirectory(), runContext.refSample());
+        if (runContext.isSomaticRun()) {
+            final List<HealthCheck> tumorChecks = extractChecksForSample(runContext.runDirectory(),
+                    runContext.tumorSample());
 
-        return toPatientResult(refChecks, tumorChecks);
+            return toPatientResult(refChecks, tumorChecks);
+        } else {
+            return toMultiValueResult(refChecks);
+        }
     }
 
     @NotNull
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
-        return toPatientResult(getErrorChecksForSample(runContext.refSample()),
-                getErrorChecksForSample(runContext.tumorSample()));
+        if (runContext.isSomaticRun()) {
+            return toPatientResult(getErrorChecksForSample(runContext.refSample()),
+                    getErrorChecksForSample(runContext.tumorSample()));
+        } else {
+            return toMultiValueResult(getErrorChecksForSample(runContext.refSample()));
+        }
     }
 
     @NotNull
@@ -77,7 +87,14 @@ public class MappingChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static List<HealthCheck> getChecksForSample(@NotNull final String runDirectory,
+    private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
+        HealthCheck.log(LOGGER, checks);
+
+        return new MultiValueResult(checkType(), checks);
+    }
+
+    @NotNull
+    private static List<HealthCheck> extractChecksForSample(@NotNull final String runDirectory,
             @NotNull final String sampleId) throws IOException, HartwigException {
         final String basePathForTotalSequences = getBasePathForTotalSequences(runDirectory, sampleId);
         final long totalSequences = HealthCheckFunctions.sumOfTotalSequencesFromFastQC(basePathForTotalSequences);

@@ -11,12 +11,12 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.PrestatsCheck;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class PrestatsCheckerTest {
@@ -39,23 +39,38 @@ public class PrestatsCheckerTest {
     private final PrestatsChecker checker = new PrestatsChecker();
 
     @Test
-    public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
+    public void correctInputYieldsCorrectOutputForSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
-        Assert.assertEquals(CheckType.PRESTATS, result.getCheckType());
+        assertEquals(CheckType.PRESTATS, result.getCheckType());
         assertRefChecks(((PatientResult) result).getRefSampleChecks());
         assertTumorChecks(((PatientResult) result).getTumorSampleChecks());
     }
 
     @Test
-    public void errorRunYieldsCorrectNumberOfChecks() {
+    public void correctInputYieldsCorrectOutputForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final BaseResult result = checker.tryRun(runContext);
+
+        assertEquals(CheckType.PRESTATS, result.getCheckType());
+        assertRefChecks(((MultiValueResult) result).getChecks());
+    }
+
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_CHECKS_NUM, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_CHECKS_NUM, result.getTumorSampleChecks().size());
     }
 
+    @Test
+    public void errorRunYieldsCorrectNumberOfChecksForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
+        assertEquals(EXPECTED_CHECKS_NUM, result.getChecks().size());
+    }
 
     @Test(expected = EmptyFileException.class)
     public void emptyTotalSequenceFileYieldsEmptyFileException() throws IOException, HartwigException {

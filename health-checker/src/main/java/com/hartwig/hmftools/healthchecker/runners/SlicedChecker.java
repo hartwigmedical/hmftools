@@ -37,21 +37,21 @@ public class SlicedChecker extends ErrorHandlingChecker implements HealthChecker
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
-        List<GermlineVariant> variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(),
+        final List<GermlineVariant> variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(),
                 SLICED_VCF_EXTENSION);
         final long value = variants.size();
 
+        final String sample = runContext.isSomaticRun() ? runContext.tumorSample() : runContext.refSample();
         return toSingleValueResult(
-                new HealthCheck(runContext.tumorSample(), SlicedCheck.SLICED_NUMBER_OF_VARIANTS.toString(),
-                        String.valueOf(value)));
+                new HealthCheck(sample, SlicedCheck.SLICED_NUMBER_OF_VARIANTS.toString(), String.valueOf(value)));
     }
 
     @NotNull
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
-        return toSingleValueResult(
-                new HealthCheck(runContext.tumorSample(), SlicedCheck.SLICED_NUMBER_OF_VARIANTS.toString(),
-                        HealthCheckConstants.ERROR_VALUE));
+        final String sample = runContext.isSomaticRun() ? runContext.tumorSample() : runContext.refSample();
+        return toSingleValueResult(new HealthCheck(sample, SlicedCheck.SLICED_NUMBER_OF_VARIANTS.toString(),
+                HealthCheckConstants.ERROR_VALUE));
     }
 
     @NotNull

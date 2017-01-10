@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.MetadataCheck;
@@ -31,12 +32,14 @@ public class MetadataCheckerTest {
     private static final String EXPECTED_DATE_2 = "2017-01-01";
 
     private static final int EXPECTED_NUM_CHECKS = 4;
+    private static final String REF_SAMPLE = "sample1";
+    private static final String TUMOR_SAMPLE = "sample2";
 
     private final MetadataChecker checker = new MetadataChecker();
 
     @Test
     public void canReadCorrectMetaDataRun1() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY_1);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_1, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
         final PatientResult patientResult = (PatientResult) result;
@@ -50,7 +53,7 @@ public class MetadataCheckerTest {
 
     @Test
     public void canReadCorrectMetaDataRun2() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY_2);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_2, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
         final PatientResult patientResult = (PatientResult) result;
@@ -63,11 +66,30 @@ public class MetadataCheckerTest {
     }
 
     @Test
-    public void errorYieldsCorrectOutput() {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY_1);
+    public void worksForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY_1, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
+
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+        assertCheck(result.getChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
+        assertCheck(result.getChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
+        assertCheck(result.getChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
+        assertCheck(result.getChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSomatic() {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_1, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY_1, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final MetadataCheck checkName,
