@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.GermlineCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
@@ -49,18 +50,28 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
             variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(), GERMLINE_VCF_EXTENSION_V1_9);
         }
 
+        System.out.println(variants.size());
         variants = VariantFilter.passOnly(variants);
+        System.out.println(variants.size());
         final List<HealthCheck> refChecks = calcChecksForSample(variants, runContext.refSample(), true);
-        final List<HealthCheck> tumorChecks = calcChecksForSample(variants, runContext.tumorSample(), false);
+        if (runContext.isSomaticRun()) {
+            final List<HealthCheck> tumorChecks = calcChecksForSample(variants, runContext.tumorSample(), false);
 
-        return toPatientResult(refChecks, tumorChecks);
+            return toPatientResult(refChecks, tumorChecks);
+        } else {
+            return toMultiValueResult(refChecks);
+        }
     }
 
     @NotNull
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
-        return toPatientResult(getErrorChecksForSample(runContext.refSample()),
-                getErrorChecksForSample(runContext.tumorSample()));
+        if (runContext.isSomaticRun()) {
+            return toPatientResult(getErrorChecksForSample(runContext.refSample()),
+                    getErrorChecksForSample(runContext.tumorSample()));
+        } else {
+            return toMultiValueResult(getErrorChecksForSample(runContext.refSample()));
+        }
     }
 
     @NotNull
@@ -74,12 +85,19 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private PatientResult toPatientResult(@NotNull final List<HealthCheck> refChecks,
+    private BaseResult toPatientResult(@NotNull final List<HealthCheck> refChecks,
             @NotNull final List<HealthCheck> tumorChecks) {
         HealthCheck.log(LOGGER, refChecks);
         HealthCheck.log(LOGGER, tumorChecks);
 
         return new PatientResult(checkType(), refChecks, tumorChecks);
+    }
+
+    @NotNull
+    private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
+        HealthCheck.log(LOGGER, checks);
+
+        return new MultiValueResult(checkType(), checks);
     }
 
     @NotNull

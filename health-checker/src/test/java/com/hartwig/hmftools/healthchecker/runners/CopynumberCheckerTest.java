@@ -50,15 +50,22 @@ public class CopynumberCheckerTest {
     }
 
     @Test
-    public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
+    public void correctInputYieldsCorrectOutputForSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
         assertResult(result, EXPECTED_GAIN, EXPECTED_LOSS);
     }
 
     @Test
-    public void errorYieldsCorrectOutput() {
+    public void errorYieldsCorrectOutputForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, SINGLE_SAMPLE_EXAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }

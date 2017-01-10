@@ -11,12 +11,12 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.GermlineCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class GermlineCheckerTest {
@@ -25,11 +25,16 @@ public class GermlineCheckerTest {
             RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run";
     private static final String RUN_DIRECTORY_V1_9 =
             RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run_v1_9";
+    private static final String SINGLE_SAMPLE_RUN =
+            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "single_sample_run";
 
+    private static final String SINGLE_SAMPLE = "sample";
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 
-    private static final int EXPECTED_NUM_CHECKS = 2;
+    private static final int EXPECTED_NUM_CHECKS_PER_SAMPLE = 2;
+    private static final int EXPECTED_SINGLE_SAMPLE_SNPS = 2;
+    private static final int EXPECTED_SINGLE_SAMPLE_INDELS = 0;
     private static final int EXPECTED_REF_SNPS = 55;
     private static final int EXPECTED_REF_INDELS = 4;
     private static final int EXPECTED_TUMOR_SNPS = 74;
@@ -38,11 +43,21 @@ public class GermlineCheckerTest {
     private final GermlineChecker checker = new GermlineChecker();
 
     @Test
-    public void canCountSNPAndIndels() throws IOException, HartwigException {
+    public void canCountSNPAndIndelsInSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(SINGLE_SAMPLE_RUN, SINGLE_SAMPLE);
+        final BaseResult result = checker.tryRun(runContext);
+
+        assertEquals(CheckType.GERMLINE, result.getCheckType());
+        final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
+        assertChecks(checks, EXPECTED_SINGLE_SAMPLE_SNPS, EXPECTED_SINGLE_SAMPLE_INDELS);
+    }
+
+    @Test
+    public void canCountSNPAndIndelsInSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
-        Assert.assertEquals(CheckType.GERMLINE, result.getCheckType());
+        assertEquals(CheckType.GERMLINE, result.getCheckType());
         final List<HealthCheck> refChecks = ((PatientResult) result).getRefSampleChecks();
         final List<HealthCheck> tumorChecks = ((PatientResult) result).getTumorSampleChecks();
 
@@ -51,25 +66,32 @@ public class GermlineCheckerTest {
     }
 
     @Test
-    public void canCountSNPAndV1_9() throws IOException, HartwigException {
+    public void canCountSNPAndV1_9InSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_V1_9, REF_SAMPLE,
                 TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.tryRun(runContext);
-        assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
-        assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getRefSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getTumorSampleChecks().size());
     }
 
     @Test
-    public void errorYieldsCorrectOutput() {
+    public void errorYieldsCorrectOutputForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
-        assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
-        assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getRefSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getTumorSampleChecks().size());
+    }
+
+    @Test
+    public void errorYieldsCorrectOutputForSingleSample() {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, REF_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getChecks().size());
     }
 
     private static void assertChecks(@NotNull final List<HealthCheck> checks, final long expectedCountSNP,
             final long expectedCountIndels) {
-        assertEquals(EXPECTED_NUM_CHECKS, checks.size());
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, checks.size());
 
         final Optional<HealthCheck> snpCheck = checks.stream().filter(
                 check -> check.getCheckName().equals(GermlineCheck.VARIANTS_GERMLINE_SNP.toString())).findFirst();

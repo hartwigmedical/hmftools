@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,8 +25,8 @@ public final class GermlineVariantFactory {
     @Nullable
     public static GermlineVariant fromVCFLine(@NotNull final String line) {
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
-        if (values.length <= TUMOR_SAMPLE_COLUMN) {
-            LOGGER.warn("Invalid vcf line: " + line);
+        if (values.length <= REF_SAMPLE_COLUMN) {
+            LOGGER.warn("Not enough columns in vcf line: " + line);
             return null;
         }
 
@@ -33,7 +34,7 @@ public final class GermlineVariantFactory {
                 values[ALT_COLUMN].trim());
         final String filter = values[FILTER_COLUMN].trim();
         final String refData = values[REF_SAMPLE_COLUMN];
-        final String tumData = values[TUMOR_SAMPLE_COLUMN];
+        final String tumData = values.length > TUMOR_SAMPLE_COLUMN ? values[TUMOR_SAMPLE_COLUMN] : Strings.EMPTY;
 
         return new GermlineVariant(type, filter, refData, tumData);
     }
