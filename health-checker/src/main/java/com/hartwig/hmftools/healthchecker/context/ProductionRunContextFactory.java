@@ -4,9 +4,12 @@ import java.io.File;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ProductionRunContextFactory {
+
+    private static final String RUN_NAME_SEPARATOR = "_";
 
     private static final String CPCT_PATIENT_IDENTIFIER = "_CPCT";
     private static final int CPCT_PATIENT_NAME_LENGTH = 12;
@@ -17,6 +20,8 @@ public final class ProductionRunContextFactory {
     private static final int DRUP_PATIENT_NAME_LENGTH = 12;
     private static final String DRUP_REF_SAMPLE_SUFFIX = "R";
     private static final String DRUP_TUMOR_SAMPLE_SUFFIX = "T";
+
+    private static final int SINGLE_SAMPLE_RUN_NAME_PARTS = 4;
 
     private ProductionRunContextFactory() {
     }
@@ -31,8 +36,10 @@ public final class ProductionRunContextFactory {
         } else if (isDRUPRun(runName)) {
             return somatic(runName, runDirectory, DRUP_PATIENT_IDENTIFIER, DRUP_PATIENT_NAME_LENGTH,
                     DRUP_REF_SAMPLE_SUFFIX, DRUP_TUMOR_SAMPLE_SUFFIX);
+        } else if (isSingleSample(runName)) {
+            return singleSample(runName, runDirectory);
         } else {
-            throw new HartwigException("Currently only somatic pipelines from CPCT or DRUP are supported!");
+            throw new HartwigException("Run name not supported by health checker: " + runName);
         }
     }
 
@@ -42,6 +49,30 @@ public final class ProductionRunContextFactory {
 
     private static boolean isDRUPRun(@NotNull final String runName) {
         return runName.contains(DRUP_PATIENT_IDENTIFIER);
+    }
+
+    private static boolean isSingleSample(@NotNull final String runName) {
+        final String[] values = runName.split(RUN_NAME_SEPARATOR);
+        if (values.length <= SINGLE_SAMPLE_RUN_NAME_PARTS) {
+            return true;
+        } else {
+            final String identifier = RUN_NAME_SEPARATOR + values[values.length - 1];
+            return !identifier.equals(CPCT_PATIENT_IDENTIFIER) && !identifier.equals(DRUP_PATIENT_IDENTIFIER);
+        }
+    }
+
+    @NotNull
+    private static RunContext singleSample(@NotNull final String runName, @NotNull final String runDirectory)
+            throws MalformedRunDirException {
+        final String[] parts = runName.split(RUN_NAME_SEPARATOR);
+        final String finalRunName =
+                parts[0] + RUN_NAME_SEPARATOR + parts[1] + RUN_NAME_SEPARATOR + parts[2] + RUN_NAME_SEPARATOR
+                        + parts[3];
+
+        final String sample = parts[SINGLE_SAMPLE_RUN_NAME_PARTS - 1];
+        final boolean hasPassedTests = parts.length == SINGLE_SAMPLE_RUN_NAME_PARTS;
+
+        return new RunContextImpl(runDirectory, finalRunName, sample, Strings.EMPTY, hasPassedTests, false);
     }
 
     @NotNull

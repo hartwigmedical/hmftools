@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.healthchecker.context;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
@@ -29,17 +31,16 @@ public class ProductionRunContextFactoryTest {
     private static final String LOW_QUAL_CPCT_REF = "CPCT12345678R";
     private static final String LOW_QUAL_CPCT_TUMOR = "CPCT12345678T";
 
+    private static final String VALID_SINGLE_SAMPLE_RUNDIR = "170202_HMFreg0100_FR10002000_SAMPLE";
+    private static final String VALID_SINGLE_SAMPLE_RUN_NAME = "170202_HMFreg0100_FR10002000_SAMPLE";
+    private static final String VALID_SINGLE_SAMPLE_NAME = "SAMPLE";
+
+    private static final String LOW_QUAL_SINGLE_SAMPLE_RUNDIR = "170202_HMFreg0100_FR10002000_SAMPLE";
+    private static final String LOW_QUAL_SINGLE_SAMPLE_RUN_NAME = "170202_HMFreg0100_FR10002000_SAMPLE";
+    private static final String LOW_QUAL_SINGLE_SAMPLE_NAME = "SAMPLE";
+
     private static final String INVALID_CPCT_PATIENT_RUNDIR = "160103_HMFregCPCT_FR10002000_FR20003000_CPCT1234";
     private static final String MISSING_REF_CPCT_RUNDIR = "160104_HMFregCPCT_FR10002000_FR20003000_CPCT12345678";
-
-    @Test
-    public void alsoWorksForDRUP() throws HartwigException {
-        final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(toPath(VALID_DRUP_RUNDIR));
-        assertEquals(VALID_DRUP_REF, runContext.refSample());
-        assertEquals(VALID_DRUP_TUMOR, runContext.tumorSample());
-        assertEquals(VALID_DRUP_RUN_NAME, runContext.runName());
-        assertEquals(true, runContext.hasPassedTests());
-    }
 
     @Test
     public void resolveCorrectlyForValidCPCTRunWithTII() throws HartwigException {
@@ -47,7 +48,8 @@ public class ProductionRunContextFactoryTest {
         assertEquals(VALID_CPCT_REF, runContext.refSample());
         assertEquals(VALID_CPCT_TUMOR, runContext.tumorSample());
         assertEquals(VALID_CPCT_RUN_NAME, runContext.runName());
-        assertEquals(true, runContext.hasPassedTests());
+        assertTrue(runContext.hasPassedTests());
+        assertTrue(runContext.isSomaticRun());
     }
 
     @Test
@@ -57,7 +59,37 @@ public class ProductionRunContextFactoryTest {
         assertEquals(LOW_QUAL_CPCT_REF, runContextLowQual.refSample());
         assertEquals(LOW_QUAL_CPCT_TUMOR, runContextLowQual.tumorSample());
         assertEquals(LOW_QUAL_CPCT_RUN_NAME, runContextLowQual.runName());
-        assertEquals(false, runContextLowQual.hasPassedTests());
+        assertFalse(runContextLowQual.hasPassedTests());
+        assertTrue(runContextLowQual.isSomaticRun());
+    }
+
+    @Test
+    public void worksForDRUP() throws HartwigException {
+        final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(toPath(VALID_DRUP_RUNDIR));
+        assertEquals(VALID_DRUP_REF, runContext.refSample());
+        assertEquals(VALID_DRUP_TUMOR, runContext.tumorSample());
+        assertEquals(VALID_DRUP_RUN_NAME, runContext.runName());
+        assertTrue(runContext.hasPassedTests());
+        assertTrue(runContext.isSomaticRun());
+    }
+
+    @Test
+    public void worksForValidSingleSample() throws HartwigException {
+        final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(toPath(VALID_SINGLE_SAMPLE_RUNDIR));
+        assertEquals(VALID_SINGLE_SAMPLE_NAME, runContext.refSample());
+        assertEquals(VALID_SINGLE_SAMPLE_RUN_NAME, runContext.runName());
+        assertTrue(runContext.hasPassedTests());
+        assertFalse(runContext.isSomaticRun());
+    }
+
+    @Test
+    public void worksForLowQualSingleSample() throws HartwigException {
+        final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(
+                toPath(LOW_QUAL_SINGLE_SAMPLE_RUNDIR));
+        assertEquals(LOW_QUAL_SINGLE_SAMPLE_NAME, runContext.refSample());
+        assertEquals(LOW_QUAL_SINGLE_SAMPLE_RUN_NAME, runContext.runName());
+        assertFalse(runContext.hasPassedTests());
+        assertFalse(runContext.isSomaticRun());
     }
 
     @Test(expected = MalformedRunDirException.class)
