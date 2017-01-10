@@ -96,9 +96,7 @@ public final class HealthChecksApplication {
             System.exit(1);
         }
 
-        final HealthChecksApplication healthChecksApplication = new HealthChecksApplication(runContext, checkType,
-                reportType, reportOutputPath);
-        healthChecksApplication.processHealthChecks();
+        new HealthChecksApplication(runContext, checkType, reportType, reportOutputPath).run();
     }
 
     @NotNull
@@ -120,7 +118,7 @@ public final class HealthChecksApplication {
         return parser.parse(options, args);
     }
 
-    private void processHealthChecks() {
+    private void run() {
         if (checkType.equalsIgnoreCase(ALL_CHECKS)) {
             executeAllChecks();
         } else {

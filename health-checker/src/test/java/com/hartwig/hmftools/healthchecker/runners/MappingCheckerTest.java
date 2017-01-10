@@ -33,14 +33,14 @@ public class MappingCheckerTest {
 
     @Test
     public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
         assertResult(result);
     }
 
     @Test
     public void errorRunYieldsCorrectNumberOfChecks() {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(6, result.getRefSampleChecks().size());
         assertEquals(6, result.getTumorSampleChecks().size());
@@ -48,21 +48,21 @@ public class MappingCheckerTest {
 
     @Test(expected = EmptyFileException.class)
     public void emptyFlagStatYieldsEmptyFileException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, EMPTY_FLAGSTAT_SAMPLE,
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, EMPTY_FLAGSTAT_SAMPLE,
                 EMPTY_FLAGSTAT_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = EmptyFileException.class)
     public void emptyTotalSequenceFileYieldsEmptyFileException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, EMPTY_FASTQC_SAMPLE,
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, EMPTY_FASTQC_SAMPLE,
                 EMPTY_FASTQC_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = IOException.class)
     public void nonExistingFileYieldsIOException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, NON_EXISTING_SAMPLE,
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, NON_EXISTING_SAMPLE,
                 NON_EXISTING_SAMPLE);
         checker.tryRun(runContext);
     }

@@ -81,7 +81,7 @@ public final class ProductionRunContextFactory {
             throw new MalformedRunDirException(runName);
         }
 
-        return new RunContextImpl(runDirectory, runNameUntilPatient, refSample, tumorSample, hasPassedTests);
+        return new RunContextImpl(runDirectory, runNameUntilPatient, refSample, tumorSample, hasPassedTests, true);
     }
 
     @NotNull

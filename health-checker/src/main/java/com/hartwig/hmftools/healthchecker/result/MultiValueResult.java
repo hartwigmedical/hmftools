@@ -2,6 +2,7 @@ package com.hartwig.hmftools.healthchecker.result;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthchecker.runners.CheckType;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
@@ -13,6 +14,11 @@ public class MultiValueResult extends AbstractResult {
 
     @NotNull
     private final List<HealthCheck> checks;
+
+    @NotNull
+    public static MultiValueResult emptyResult(@NotNull final CheckType checkType) {
+        return new MultiValueResult(checkType, Lists.newArrayList());
+    }
 
     public MultiValueResult(@NotNull final CheckType checkType, @NotNull final List<HealthCheck> checks) {
         super(checkType);

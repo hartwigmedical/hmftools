@@ -49,7 +49,7 @@ public class SomaticCheckerTest {
 
     @Test
     public void canAnalyseTypicalMeltedVCF() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
 
         final BaseResult result = checker.tryRun(runContext);
         final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
@@ -117,14 +117,14 @@ public class SomaticCheckerTest {
 
     @Test
     public void errorYieldsCorrectOutput() {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }
 
     @Test
     public void canAnalyseMinimalVCF() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE,
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE,
                 MINIMAL_TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
@@ -141,7 +141,7 @@ public class SomaticCheckerTest {
 
     @Test
     public void errorGeneratesSameCheckNames() throws IOException, HartwigException {
-        final RunContext normalRun = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext normalRun = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final List<HealthCheck> normalChecks = ((MultiValueResult) checker.tryRun(normalRun)).getChecks();
         final List<HealthCheck> errorChecks = ((MultiValueResult) checker.errorRun(normalRun)).getChecks();
 

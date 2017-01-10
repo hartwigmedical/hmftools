@@ -31,6 +31,8 @@ public class CopynumberCheckerTest {
     private static final String EMPTY_RATIOS_SAMPLE = "sample5";
     private static final String NO_RATIOS_SAMPLE = "sample6";
     private static final String MISSING_CNVS_SAMPLE = "sample7";
+    private static final String SINGLE_SAMPLE_EXAMPLE = "sample8";
+
     private static final int EXPECTED_NUM_CHECKS = 2;
     private static final long EXPECTED_GAIN = 252;
     private static final long EXPECTED_LOSS = 11561;
@@ -38,47 +40,62 @@ public class CopynumberCheckerTest {
     private final CopynumberChecker checker = new CopynumberChecker();
 
     @Test
+    public void worksForSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, SINGLE_SAMPLE_EXAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+        for (HealthCheck check : result.getChecks()) {
+            assertEquals(check.getSampleId(), SINGLE_SAMPLE_EXAMPLE);
+        }
+    }
+
+    @Test
     public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
         assertResult(result, EXPECTED_GAIN, EXPECTED_LOSS);
     }
 
     @Test
     public void errorYieldsCorrectOutput() {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }
 
     @Test(expected = MalformedFileException.class)
     public void noGainLossTagsYieldMalformedException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, MALFORMED_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE,
+                MALFORMED_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test
     public void emptyCopyNumberVariantsAllowedIfRatiosPresent() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, NO_CNVS_FOUND_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, NO_CNVS_FOUND_SAMPLE,
+                TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
         assertResult(result, 0, 0);
     }
 
     @Test(expected = EmptyFileException.class)
     public void emptyCopyNumberVariantsNotAllowedIfRatiosEmpty() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, EMPTY_RATIOS_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, EMPTY_RATIOS_SAMPLE,
+                TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = FileNotFoundException.class)
     public void emptyCopyNumberVariantsNotAllowedIfRatiosMissing() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, NO_RATIOS_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, NO_RATIOS_SAMPLE,
+                TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = FileNotFoundException.class)
     public void missingCopyNumberVariantsNotAllowedEvenIfRatiosPresent() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, MISSING_CNVS_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, MISSING_CNVS_SAMPLE,
+                TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 

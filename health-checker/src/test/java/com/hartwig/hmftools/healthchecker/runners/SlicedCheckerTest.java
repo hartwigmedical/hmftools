@@ -28,7 +28,7 @@ public class SlicedCheckerTest {
 
     @Test
     public void canAnalyseTypicalSlicedVCF() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
 
         final BaseResult result = checker.tryRun(runContext);
         Assert.assertEquals(CheckType.SLICED, result.getCheckType());
@@ -41,14 +41,14 @@ public class SlicedCheckerTest {
 
     @Test
     public void errorYieldsCorrectOutput() {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final SingleValueResult result = (SingleValueResult) checker.errorRun(runContext);
         assertNotNull(result.getCheck());
     }
 
     @Test(expected = IOException.class)
     public void readingNonExistingFileYieldsIOException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest("DoesNotExist", REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest("DoesNotExist", REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 }

@@ -16,7 +16,7 @@ public class PatientResult extends AbstractResult {
     @NotNull
     private final List<HealthCheck> tumorSampleChecks;
 
-    public PatientResult(final CheckType checkType, @NotNull final List<HealthCheck> refSampleChecks,
+    public PatientResult(@NotNull final CheckType checkType, @NotNull final List<HealthCheck> refSampleChecks,
             @NotNull final List<HealthCheck> tumorSampleChecks) {
         super(checkType);
         this.refSampleChecks = refSampleChecks;

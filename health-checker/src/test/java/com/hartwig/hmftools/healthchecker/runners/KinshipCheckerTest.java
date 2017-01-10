@@ -37,7 +37,7 @@ public class KinshipCheckerTest {
 
     @Test
     public void extractDataFromKinship() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
         Assert.assertEquals(CheckType.KINSHIP, result.getCheckType());
@@ -46,26 +46,26 @@ public class KinshipCheckerTest {
 
     @Test
     public void errorYieldsCorrectOutput() {
-        final RunContext runContext = TestRunContextFactory.forTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(CORRECT_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         final SingleValueResult result = (SingleValueResult) checker.errorRun(runContext);
         assertNotNull(result.getCheck());
     }
 
     @Test(expected = MalformedFileException.class)
     public void cannotReadMalformedKinship() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(MALFORMED_RUN, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(MALFORMED_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = EmptyFileException.class)
     public void cannotReadFromEmptyKinship() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(EMPTY_RUN, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(EMPTY_RUN, REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test(expected = IOException.class)
     public void cannotReadFromNonExistingKinship() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest("Does not exist", REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest("Does not exist", REF_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 

@@ -40,7 +40,7 @@ public class PrestatsCheckerTest {
 
     @Test
     public void correctInputYieldsCorrectOutput() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
         Assert.assertEquals(CheckType.PRESTATS, result.getCheckType());
@@ -50,7 +50,7 @@ public class PrestatsCheckerTest {
 
     @Test
     public void errorRunYieldsCorrectNumberOfChecks() {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_CHECKS_NUM, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_CHECKS_NUM, result.getTumorSampleChecks().size());
@@ -59,14 +59,14 @@ public class PrestatsCheckerTest {
 
     @Test(expected = EmptyFileException.class)
     public void emptyTotalSequenceFileYieldsEmptyFileException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, EMPTY_TOTAL_SEQUENCE_SAMPLE,
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, EMPTY_TOTAL_SEQUENCE_SAMPLE,
                 EMPTY_TOTAL_SEQUENCE_SAMPLE);
         checker.tryRun(runContext);
     }
 
     @Test
     public void incompleteInputYieldsIncompleteOutput() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, INCOMPLETE_SAMPLE,
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, INCOMPLETE_SAMPLE,
                 INCOMPLETE_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
         final List<HealthCheck> refResults = ((PatientResult) result).getRefSampleChecks();
@@ -77,7 +77,7 @@ public class PrestatsCheckerTest {
 
     @Test(expected = IOException.class)
     public void nonExistingFileYieldsIOException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forTest(RUN_DIRECTORY, NON_EXISTING_SAMPLE,
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, NON_EXISTING_SAMPLE,
                 NON_EXISTING_SAMPLE);
         checker.tryRun(runContext);
     }

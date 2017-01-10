@@ -17,4 +17,6 @@ public interface RunContext {
     String tumorSample();
 
     boolean hasPassedTests();
+
+    boolean isSomaticRun();
 }

@@ -86,13 +86,13 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
     private static List<String> copynumberLines(@NotNull final RunContext runContext)
             throws IOException, EmptyFileException {
         final Path copynumberPath = PathPrefixSuffixFinder.build().findPath(getBasePath(runContext),
-                runContext.tumorSample(), COPYNUMBER_SUFFIX);
+                relevantSample(runContext), COPYNUMBER_SUFFIX);
         try {
             return FileReader.build().readLines(copynumberPath);
         } catch (EmptyFileException e) {
             // if the CNV is empty (but exists) and the ratio file exists, there is no problem (just no CNVs found)
             final Path ratioPath = PathPrefixSuffixFinder.build().findPath(getBasePath(runContext),
-                    runContext.tumorSample(), COPYNUMBER_RATIO_SUFFIX);
+                    relevantSample(runContext), COPYNUMBER_RATIO_SUFFIX);
             FileReader.build().readLines(ratioPath);
             return Collections.emptyList();
         }
@@ -107,9 +107,9 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
     @NotNull
     private BaseResult toMultiValueResult(@NotNull final RunContext runContext, @NotNull final String totalGain,
             @NotNull final String totalLoss) {
-        final HealthCheck gainCheck = new HealthCheck(runContext.tumorSample(),
+        final HealthCheck gainCheck = new HealthCheck(relevantSample(runContext),
                 CopynumberCheck.COPYNUMBER_GENOME_GAIN.toString(), totalGain);
-        final HealthCheck lossCheck = new HealthCheck(runContext.tumorSample(),
+        final HealthCheck lossCheck = new HealthCheck(relevantSample(runContext),
                 CopynumberCheck.COPYNUMBER_GENOME_LOSS.toString(), totalLoss);
         final List<HealthCheck> checks = Lists.newArrayList(gainCheck, lossCheck);
         HealthCheck.log(LOGGER, checks);
@@ -118,8 +118,16 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
 
     @NotNull
     private static String getBasePath(@NotNull final RunContext runContext) {
-        return runContext.runDirectory() + File.separator + COPYNUMBER_BASE_DIRECTORY + File.separator
-                + runContext.refSample() + COPYNUMBER_SAMPLE_CONNECTOR + runContext.tumorSample() + File.separator
-                + COPYNUMBER_ALGO_DIRECTORY;
+        final String baseDir = runContext.runDirectory() + File.separator + COPYNUMBER_BASE_DIRECTORY + File.separator;
+        final String sampleDir = runContext.isSomaticRun() ?
+                runContext.refSample() + COPYNUMBER_SAMPLE_CONNECTOR + runContext.tumorSample() :
+                runContext.refSample();
+
+        return baseDir + sampleDir + File.separator + COPYNUMBER_ALGO_DIRECTORY;
+    }
+
+    @NotNull
+    private static String relevantSample(@NotNull final RunContext runContext) {
+        return runContext.isSomaticRun() ? runContext.tumorSample() : runContext.refSample();
     }
 }
