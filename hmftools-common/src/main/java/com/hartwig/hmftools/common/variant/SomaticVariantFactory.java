@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +37,6 @@ public final class SomaticVariantFactory {
     private static final String CALLER_ALGO_SEPARATOR = "-";
     private static final String CALLER_FILTERED_IDENTIFIER = "filterIn";
     private static final String CALLER_INTERSECTION_IDENTIFIER = "Intersection";
-    private static final String MISSENSE_IDENTIFIER = "missense_variant";
 
     private static final int SAMPLE_COLUMN = 9;
     private static final String SAMPLE_FIELD_SEPARATOR = ":";
@@ -49,7 +49,15 @@ public final class SomaticVariantFactory {
     @NotNull
     public static String sampleFromHeaderLine(@NotNull final String headerLine) {
         final String[] values = headerLine.split(VCF_COLUMN_SEPARATOR);
-        return values[SAMPLE_COLUMN];
+        final String sample = values[SAMPLE_COLUMN];
+        // KODU: In v1.7, the sample would contain the whole path of the VCF.
+        if (sample.contains(File.separator)) {
+            final String[] parts = sample.split(File.separator);
+            final String[] subParts = parts[parts.length - 1].split("_");
+            return subParts[1];
+        } else {
+            return sample;
+        }
     }
 
     @NotNull
