@@ -131,6 +131,16 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static Predicate<String> doesLineStartWith(@NotNull final String prefix) {
-        return line -> line.startsWith(prefix);
+        return new Predicate<String>() {
+            @Override
+            public boolean test(final String line) {
+                return line.startsWith(prefix);
+            }
+
+            @Override
+            public String toString() {
+                return prefix;
+            }
+        };
     }
 }

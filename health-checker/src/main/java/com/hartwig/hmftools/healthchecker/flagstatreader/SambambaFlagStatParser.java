@@ -31,7 +31,7 @@ public class SambambaFlagStatParser implements FlagStatParser {
                         .findFirst();
 
         if (!filePath.isPresent()) {
-            throw new IOException("Could not find flagstat on " + flagstatPath);
+            throw new IOException("Could not find input file with filter \"" + filter + "\" on path " + flagstatPath);
         }
 
         return parseFromFilePath(filePath.get());
