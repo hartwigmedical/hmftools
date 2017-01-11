@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,7 +33,8 @@ public class MappingChecker extends ErrorHandlingChecker implements HealthChecke
     private static final String FASTQC_BASE_DIRECTORY = "QCStats";
     private static final String FLAGSTAT_BASE_DIRECTORY = "mapping";
 
-    private static final String FLAGSTAT_FILE_FILTER = ".realign";
+    private static final String PRIMARY_FLAGSTAT_FILE_FILTER = ".recalibrated";
+    private static final String SECONDARY_FLAGSTAT_FILE_FILTER = ".realign";
 
     public MappingChecker() {
     }
@@ -106,7 +108,13 @@ public class MappingChecker extends ErrorHandlingChecker implements HealthChecke
     @NotNull
     private static List<HealthCheck> extractChecksFromFlagstats(@NotNull final String basePath,
             @NotNull final String sampleId, final long totalSequences) throws IOException, EmptyFileException {
-        final FlagStatData flagstatData = new SambambaFlagStatParser().parse(basePath, FLAGSTAT_FILE_FILTER);
+        FlagStatData flagstatData;
+
+        try {
+            flagstatData = new SambambaFlagStatParser().parse(basePath, PRIMARY_FLAGSTAT_FILE_FILTER);
+        } catch (FileNotFoundException exception) {
+            flagstatData = new SambambaFlagStatParser().parse(basePath, SECONDARY_FLAGSTAT_FILE_FILTER);
+        }
 
         final List<FlagStats> passed = flagstatData.getPassedStats();
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.healthchecker.flagstatreader;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,14 +25,14 @@ public class SambambaFlagStatParser implements FlagStatParser {
     @Override
     @NotNull
     public FlagStatData parse(@NotNull final String flagstatPath, @NotNull final String filter)
-                    throws IOException, EmptyFileException {
-        final Optional<Path> filePath = Files.walk(new File(flagstatPath).toPath())
-                        .filter(path -> path.getFileName().toString().endsWith(FLAGSTAT_SUFFIX)
-                                        && path.getFileName().toString().contains(filter))
-                        .findFirst();
+            throws IOException, EmptyFileException {
+        final Optional<Path> filePath = Files.walk(new File(flagstatPath).toPath()).filter(
+                path -> path.getFileName().toString().endsWith(FLAGSTAT_SUFFIX)
+                        && path.getFileName().toString().contains(filter)).findFirst();
 
         if (!filePath.isPresent()) {
-            throw new IOException("Could not find input file with filter \"" + filter + "\" on path " + flagstatPath);
+            throw new FileNotFoundException(
+                    "Could not find input file with filter \"" + filter + "\" on path " + flagstatPath);
         }
 
         return parseFromFilePath(filePath.get());
@@ -51,7 +52,7 @@ public class SambambaFlagStatParser implements FlagStatParser {
             final int firstWordIndex = line.indexOf(firstWord);
             final String checkName = line.substring(firstWordIndex, line.length());
 
-            return new String[] {qcPassed, qcFailed, checkName};
+            return new String[] { qcPassed, qcFailed, checkName };
         }).forEach(array -> {
             final double passedValue = Double.parseDouble(array[0]);
             final double failedValue = Double.parseDouble(array[1]);
