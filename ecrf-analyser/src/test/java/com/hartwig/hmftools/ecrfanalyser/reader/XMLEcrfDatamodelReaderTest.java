@@ -19,9 +19,9 @@ public class XMLEcrfDatamodelReaderTest {
 
     @Test
     public void canExtractDatamodelFromEcrf() throws FileNotFoundException, XMLStreamException {
-        XMLInputFactory factory = XMLInputFactory.newInstance();
-        XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(TEST_ECRF));
-        XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
+        final XMLInputFactory factory = XMLInputFactory.newInstance();
+        final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(TEST_ECRF));
+        final XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
 
         assertEquals(1, datamodel.studyEvents().size());
         assertEquals(1, datamodel.forms().size());

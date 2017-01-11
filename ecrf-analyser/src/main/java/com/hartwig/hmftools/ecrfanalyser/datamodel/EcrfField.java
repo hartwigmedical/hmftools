@@ -50,11 +50,6 @@ public class EcrfField implements Comparable<EcrfField> {
         return itemOID;
     }
 
-    @NotNull
-    String itemGroupOID() {
-        return itemGroupOID;
-    }
-
     public int compareTo(@NotNull EcrfField other) {
         return name().compareTo(other.name());
     }

@@ -18,18 +18,14 @@ public class EcrfAnalysisApplicationTest {
     private static final List<String> PATIENTS = Lists.newArrayList("CPCT02252500");
 
     @Test
-    public void tryIt() throws IOException, XMLStreamException {
-        EcrfAnalysisApplication app = new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT, PATIENTS, null, false);
-
-        app.run();
+    public void runApplication() throws IOException, XMLStreamException {
+        new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT, PATIENTS, null, false, true).run();
     }
 
     @Test
-    public void tryItWithFieldSelectionAndTransposed() throws IOException, XMLStreamException {
-        List<String> fields = Lists.newArrayList("AFTERBIOPT.TRTAFTER.TRTAFTER.SYSREGPOST",
+    public void runWithFieldSelectionAndRowsTransposed() throws IOException, XMLStreamException {
+        final List<String> fields = Lists.newArrayList("AFTERBIOPT.TRTAFTER.TRTAFTER.SYSREGPOST",
                 "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC");
-        EcrfAnalysisApplication app = new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT, PATIENTS, fields, true);
-
-        app.run();
+        new EcrfAnalysisApplication(TEST_ECRF, CSV_OUT, PATIENTS, fields, true, true).run();
     }
 }
