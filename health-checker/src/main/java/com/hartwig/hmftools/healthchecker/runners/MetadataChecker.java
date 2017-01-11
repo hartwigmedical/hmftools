@@ -35,9 +35,9 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     private static final String DATE_IN_FORMAT =
             "[EEE MMM d HH:mm:ss z yyyy]" + "[EEE d MMM HH:mm:ss z yyyy]" + "[EEE d MMM yyyy HH:mm:ss z]"
                     + "[EEE MMM d yyyy HH:mm:ss z]";
-    private static final String REGEX_SPLIT = "\t";
-    private static final String LINE_TO_GET_DATE_FROM = "End Kinship";
-    private static final int DATE_LINE_INDEX = 0;
+    private static final String SOMATIC_LINE_TO_GET_DATE_FROM = "End Kinship";
+    private static final String SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM = "End germline variant annotation";
+    private static final String DATE_LINE_FIELD_SEPARATOR = "\t";
 
     private static final String PIPELINE_LOG_REGEX = "PipelineCheck.log";
     private static final String PIPELINE_VERSION = "Pipeline version:";
@@ -110,10 +110,12 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     private static String extractRunDate(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final Path dateTimeLogPath = PathRegexFinder.build().findPath(runContext.runDirectory(),
                 String.format(LOG_FILENAME_FORMAT, runContext.runName()));
-        final List<String> dateLine = LineReader.build().readLines(dateTimeLogPath,
-                doesLineStartWith(LINE_TO_GET_DATE_FROM));
+        final Predicate<String> dateLineFilter = runContext.isSomaticRun() ?
+                doesLineStartWith(SOMATIC_LINE_TO_GET_DATE_FROM) :
+                doesLineStartWith(SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM);
+        List<String> dateLine = LineReader.build().readLines(dateTimeLogPath, dateLineFilter);
         // KODU: Replacing all double spaces with single spaces to solve issue mentioned in run2 of MetadataCheckerTest
-        final String date = dateLine.get(DATE_LINE_INDEX).split(REGEX_SPLIT)[1].trim().replaceAll("  ", " ");
+        final String date = dateLine.get(0).split(DATE_LINE_FIELD_SEPARATOR)[1].trim().replaceAll("  ", " ");
         final DateTimeFormatter inFormatter = DateTimeFormatter.ofPattern(DATE_IN_FORMAT, Locale.ENGLISH);
         final LocalDateTime formattedDate = LocalDateTime.parse(date, inFormatter);
         final DateTimeFormatter outFormatter = DateTimeFormatter.ofPattern(DATE_OUT_FORMAT, Locale.ENGLISH);

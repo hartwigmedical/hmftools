@@ -23,13 +23,13 @@ public class MetadataCheckerTest {
 
     private static final String METADATA_BASE_PATH = RunnerTestFunctions.getRunnerResourcePath("metadata");
 
-    private static final String RUN_DIRECTORY_1 = METADATA_BASE_PATH + File.separator + "run1";
-    private static final String EXPECTED_VERSION_1 = "v1.7";
-    private static final String EXPECTED_DATE_1 = "2016-07-09";
+    private static final String RUN_DIRECTORY_SOMATIC = METADATA_BASE_PATH + File.separator + "run1";
+    private static final String EXPECTED_VERSION_SOMATIC = "v1.7";
+    private static final String EXPECTED_DATE_SOMATIC = "2016-07-09";
 
-    private static final String RUN_DIRECTORY_2 = METADATA_BASE_PATH + File.separator + "run2";
-    private static final String EXPECTED_VERSION_2 = "v1.11-rc.2";
-    private static final String EXPECTED_DATE_2 = "2017-01-01";
+    private static final String RUN_DIRECTORY_SINGLE_SAMPLE = METADATA_BASE_PATH + File.separator + "run2";
+    private static final String EXPECTED_VERSION_SINGLE_SAMPLE = "v1.11-rc.2";
+    private static final String EXPECTED_DATE_SINGLE_SAMPLE = "2017-01-01";
 
     private static final int EXPECTED_NUM_CHECKS = 4;
     private static final String REF_SAMPLE = "sample1";
@@ -38,48 +38,35 @@ public class MetadataCheckerTest {
     private final MetadataChecker checker = new MetadataChecker();
 
     @Test
-    public void canReadCorrectMetaDataRun1() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_1, REF_SAMPLE, TUMOR_SAMPLE);
+    public void canReadCorrectMetaDataSomatic() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_SOMATIC, REF_SAMPLE,
+                TUMOR_SAMPLE);
         final BaseResult result = checker.tryRun(runContext);
 
         final PatientResult patientResult = (PatientResult) result;
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, patientResult.getTumorSampleChecks().size());
-        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
-        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
-        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
-        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
+        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_SOMATIC);
+        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_SOMATIC);
+        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_SOMATIC);
+        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_SOMATIC);
     }
 
     @Test
-    public void canReadCorrectMetaDataRun2() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_2, REF_SAMPLE, TUMOR_SAMPLE);
-        final BaseResult result = checker.tryRun(runContext);
-
-        final PatientResult patientResult = (PatientResult) result;
-        assertEquals(EXPECTED_NUM_CHECKS, patientResult.getRefSampleChecks().size());
-        assertEquals(EXPECTED_NUM_CHECKS, patientResult.getTumorSampleChecks().size());
-        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_2);
-        assertCheck(patientResult.getRefSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_2);
-        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_2);
-        assertCheck(patientResult.getTumorSampleChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_2);
-    }
-
-    @Test
-    public void worksForSingleSample() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY_1, REF_SAMPLE);
+    public void canReadCorrectMetaDataSingleSample() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY_SINGLE_SAMPLE,
+                REF_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
 
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
-        assertCheck(result.getChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
-        assertCheck(result.getChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
-        assertCheck(result.getChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_1);
-        assertCheck(result.getChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_1);
+        assertCheck(result.getChecks(), MetadataCheck.RUN_DATE, EXPECTED_DATE_SINGLE_SAMPLE);
+        assertCheck(result.getChecks(), MetadataCheck.PIPELINE_VERSION, EXPECTED_VERSION_SINGLE_SAMPLE);
     }
 
     @Test
     public void errorYieldsCorrectOutputForSomatic() {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_1, REF_SAMPLE, TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_SOMATIC, REF_SAMPLE,
+                TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS, result.getTumorSampleChecks().size());
@@ -87,7 +74,8 @@ public class MetadataCheckerTest {
 
     @Test
     public void errorYieldsCorrectOutputForSingleSample() {
-        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY_1, REF_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY_SINGLE_SAMPLE,
+                REF_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }

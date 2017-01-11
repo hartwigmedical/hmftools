@@ -5,6 +5,4 @@ End germline variant caller	Sun Jan  1 08:30:45 CET 2017	hmfpcompute-india4-18
 Start germline variant filter	Sun Jan  1 08:30:53 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.raw_variants.vcf	hmfpcompute-india4-18
 End germline variant filter	Sun Jan  1 09:09:42 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.raw_variants.vcf	hmfpcompute-india4-18
 Start germline variant annotation	Sun Jan  1 10:59:38 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.filtered_variants.vcf	hmfpcompute-india4-7
-End germline variant annotation	Sun Jan  1 18:35:18 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.filtered_variants_snpEff_snpSift_Cosmicv76_GoNLv5.vcf	hmfpcompute-india4-7
-Start Kinship	Sun Jan  1 19:50:53 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.filtered_variants.vcf	hmfpcompute-india4-6
-End Kinship	Sun Jan  1 19:51:55 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.filtered_variants.vcf	hmfpcompute-india4-6
+End germline variant annotation	Sun Jan  1 19:51:55 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.filtered_variants.vcf	hmfpcompute-india4-6
