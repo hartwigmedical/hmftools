@@ -22,8 +22,6 @@ public class PatientReporterApplicationTest {
         final ConsensusRule consensusRule = new ConsensusRule(slicer, slicer);
         final ConsequenceRule consequenceRule = new ConsequenceRule(slicer);
 
-        final PatientReporterApplication app = new PatientReporterApplication(RUN_DIRECTORY, consensusRule,
-                consequenceRule, null, false);
-        app.run();
+        new PatientReporterApplication(RUN_DIRECTORY, consensusRule, consequenceRule, null, false).run();
     }
 }

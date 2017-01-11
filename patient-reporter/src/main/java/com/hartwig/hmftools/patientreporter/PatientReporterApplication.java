@@ -179,20 +179,15 @@ public class PatientReporterApplication {
         LOGGER.info("  Number of consequential variants to report: " + report.consequencePassedVariants.size());
 
         if (vcfOutputPath != null) {
-            final String missenseVCF =
-                    vcfOutputPath + File.separator + variantFile.sample() + "_missense_variants.vcf";
-            VCFFileWriter.writeSomaticVCF(missenseVCF, report.missenseVariants);
-            LOGGER.info("    Written missense variants to " + missenseVCF);
+            final String consensusVCF =
+                    vcfOutputPath + File.separator + variantFile.sample() + "_consensus_variants.vcf";
+            VCFFileWriter.writeSomaticVCF(consensusVCF, report.consensusPassedVariants);
+            LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
 
             final String consequenceVCF =
                     vcfOutputPath + File.separator + variantFile.sample() + "_consequential_variants.vcf";
             VCFFileWriter.writeSomaticVCF(consequenceVCF, report.consequencePassedVariants);
             LOGGER.info("    Written consequential variants to " + consequenceVCF);
-
-            final String cleanedConsequenceVCF =
-                    vcfOutputPath + File.separator + variantFile.sample() + "_cleaned_consequential_variants.vcf";
-            VCFFileWriter.writeCleanedSomaticVCF(cleanedConsequenceVCF, report.consequencePassedVariants);
-            LOGGER.info("    Written cleaned consequential variants to " + cleanedConsequenceVCF);
         }
     }
 
