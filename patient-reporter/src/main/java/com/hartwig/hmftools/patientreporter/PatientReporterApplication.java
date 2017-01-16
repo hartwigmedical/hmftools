@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOn
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.isMissense;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -37,6 +42,8 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
+    private static final String COPYNUMBER_DIRECTORY = "copynumber";
+    private static final String FREEC_DIRECTORY = "freec";
 
     private static final String RUN_DIRECTORY_ARGS_DESC = "A path towards a single rundir.";
     private static final String RUN_DIRECTORY = "rundir";
@@ -141,15 +148,16 @@ public class PatientReporterApplication {
         VariantConsequence[] consequences = VariantConsequence.values();
 
         String header = "SAMPLE,VARIANT_COUNT,PASS_ONLY_COUNT,CONSENSUS_COUNT,MISSENSE_COUNT,CONSEQUENCE_COUNT";
-        for (VariantConsequence consequence : consequences) {
+        for (final VariantConsequence consequence : consequences) {
             header += ("," + consequence.name() + "_COUNT");
         }
         System.out.println(header);
 
-        for (Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
+        for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
             final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(run.toFile().getPath(), SOMATIC_EXTENSION);
 
-            final ReportContext report = ReportContext.fromVCFFile(variantFile, consensusRule, consequenceRule);
+            final SomaticVariantReport report = SomaticVariantReport.fromVCFFile(variantFile, consensusRule,
+                    consequenceRule);
             final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(report.consensusPassedVariants);
             String consequenceList = Strings.EMPTY;
             for (final VariantConsequence consequence : consequences) {
@@ -166,11 +174,17 @@ public class PatientReporterApplication {
 
     private void patientRun() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
+        final String sample = analyzeSomaticVariants();
+        analyzeCopyNumbers(sample);
+    }
 
+    @NotNull
+    private String analyzeSomaticVariants() throws IOException, HartwigException {
         final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
         LOGGER.info("  Extracted variants for sample " + variantFile.sample());
 
-        final ReportContext report = ReportContext.fromVCFFile(variantFile, consensusRule, consequenceRule);
+        final SomaticVariantReport report = SomaticVariantReport.fromVCFFile(variantFile, consensusRule,
+                consequenceRule);
         LOGGER.info("  Total number of variants: " + report.allVariants.size());
         LOGGER.info("  Number of variants after applying pass-only filter: " + report.allPassedVariants.size());
         LOGGER.info("  Number of variants after applying consensus rule = " + report.consensusPassedVariants.size());
@@ -189,9 +203,36 @@ public class PatientReporterApplication {
             VCFFileWriter.writeSomaticVCF(consequenceVCF, report.consequencePassedVariants);
             LOGGER.info("    Written consequential variants to " + consequenceVCF);
         }
+
+        return variantFile.sample();
     }
 
-    private static class ReportContext {
+    private void analyzeCopyNumbers(@NotNull final String sample) throws IOException, HartwigException {
+        final String cnvBasePath = guessCNVBasePath(sample) + File.separator + FREEC_DIRECTORY;
+        List<CopyNumber> copyNumbers;
+
+        try {
+            copyNumbers = CNVFileLoader.loadCNV(cnvBasePath, sample);
+        } catch (EmptyFileException e) {
+            copyNumbers = Lists.newArrayList();
+        }
+    }
+
+    @NotNull
+    private String guessCNVBasePath(@NotNull final String sample) throws IOException {
+        final String basePath = runDirectory + File.separator + COPYNUMBER_DIRECTORY;
+
+        for (Path path : Files.list(new File(basePath).toPath()).collect(Collectors.toList())) {
+            if (path.toFile().isDirectory() && path.getFileName().toFile().getName().contains(sample)) {
+                return path.toString();
+            }
+        }
+
+        throw new FileNotFoundException(
+                "Could not determine CNV location in " + runDirectory + " using sample " + sample);
+    }
+
+    private static class SomaticVariantReport {
         @NotNull
         private final List<SomaticVariant> allVariants;
         @NotNull
@@ -204,18 +245,18 @@ public class PatientReporterApplication {
         private final List<SomaticVariant> consequencePassedVariants;
 
         @NotNull
-        static ReportContext fromVCFFile(@NotNull final VCFSomaticFile variantFile,
+        static SomaticVariantReport fromVCFFile(@NotNull final VCFSomaticFile variantFile,
                 @NotNull final ConsensusRule consensusRule, @NotNull final ConsequenceRule consequenceRule) {
             final List<SomaticVariant> allVariants = variantFile.variants();
             final List<SomaticVariant> allPassedVariants = passOnly(allVariants);
             final List<SomaticVariant> consensusPassedVariants = consensusRule.apply(allPassedVariants);
             final List<SomaticVariant> missenseVariants = filter(consensusPassedVariants, isMissense());
             final List<SomaticVariant> consequencePassedVariants = consequenceRule.apply(consensusPassedVariants);
-            return new ReportContext(allVariants, allPassedVariants, consensusPassedVariants, missenseVariants,
+            return new SomaticVariantReport(allVariants, allPassedVariants, consensusPassedVariants, missenseVariants,
                     consequencePassedVariants);
         }
 
-        private ReportContext(@NotNull final List<SomaticVariant> allVariants,
+        private SomaticVariantReport(@NotNull final List<SomaticVariant> allVariants,
                 @NotNull final List<SomaticVariant> allPassedVariants,
                 @NotNull final List<SomaticVariant> consensusPassedVariants,
                 @NotNull final List<SomaticVariant> missenseVariants,
