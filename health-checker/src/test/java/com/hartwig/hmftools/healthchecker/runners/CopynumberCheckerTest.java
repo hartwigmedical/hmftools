@@ -41,7 +41,7 @@ public class CopynumberCheckerTest {
         final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, SINGLE_SAMPLE_EXAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
-        for (HealthCheck check : result.getChecks()) {
+        for (final HealthCheck check : result.getChecks()) {
             assertEquals(check.getSampleId(), SINGLE_SAMPLE_EXAMPLE);
         }
     }
