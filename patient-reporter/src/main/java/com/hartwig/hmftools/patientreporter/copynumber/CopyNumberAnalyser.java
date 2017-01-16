@@ -71,12 +71,8 @@ final class CopyNumberAnalyser {
     }
 
     private static long overlappingBases(@NotNull final GenomeRegion region, @NotNull final CopyNumber copyNumber) {
-        if (copyNumber.start() > region.end() || copyNumber.end() < region.start()) {
-            return 0;
-        } else {
-            long minEnd = Math.min(copyNumber.end(), region.end());
-            long maxStart = Math.max(copyNumber.start(), region.start());
-            return 1 + minEnd - maxStart;
-        }
+        long minEnd = Math.min(copyNumber.end(), region.end());
+        long maxStart = Math.max(copyNumber.start(), region.start());
+        return Math.max(0, 1 + minEnd - maxStart);
     }
 }
