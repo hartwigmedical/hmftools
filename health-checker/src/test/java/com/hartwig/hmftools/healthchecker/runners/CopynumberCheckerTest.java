@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -69,8 +68,8 @@ public class CopynumberCheckerTest {
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
     }
 
-    @Test(expected = MalformedFileException.class)
-    public void noGainLossTagsYieldMalformedException() throws IOException, HartwigException {
+    @Test(expected = HartwigException.class)
+    public void noGainLossTagsYieldHartwigException() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE,
                 MALFORMED_SAMPLE);
         checker.tryRun(runContext);
