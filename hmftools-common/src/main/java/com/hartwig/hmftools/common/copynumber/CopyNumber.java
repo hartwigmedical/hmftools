@@ -13,6 +13,10 @@ public class CopyNumber {
     private final int value;
 
     public CopyNumber(@NotNull final String chromosome, final long start, final long end, final int value) {
+        assert end >= start;
+        assert value > 0;
+        assert value != EXPECTED_VALUE;
+
         this.chromosome = chromosome;
         this.start = start;
         this.end = end;

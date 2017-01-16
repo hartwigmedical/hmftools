@@ -12,10 +12,10 @@ public class GenomeRegionTest {
 
     @Test
     public void sortsAscending() {
-        GenomeRegion first = new GenomeRegion(100, 200);
-        GenomeRegion last = new GenomeRegion(300, 400);
+        final GenomeRegion first = new GenomeRegion("X", 100, 200);
+        final GenomeRegion last = new GenomeRegion("X", 300, 400);
 
-        SortedSet<GenomeRegion> sorted = Sets.newTreeSet();
+        final SortedSet<GenomeRegion> sorted = Sets.newTreeSet();
         sorted.add(last);
         sorted.add(first);
 

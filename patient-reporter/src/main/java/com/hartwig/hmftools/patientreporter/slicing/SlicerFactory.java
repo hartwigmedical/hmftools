@@ -21,6 +21,7 @@ public final class SlicerFactory {
     private static final int CHROMOSOME_COLUMN = 0;
     private static final int START_COLUMN = 1;
     private static final int END_COLUMN = 2;
+    private static final int ANNOTATION_COLUMN = 3;
 
     private SlicerFactory() {
     }
@@ -32,9 +33,10 @@ public final class SlicerFactory {
 
         String prevChromosome = null;
         GenomeRegion prevRegion = null;
-        for (String line : lines) {
+        for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
             final String chromosome = values[CHROMOSOME_COLUMN].trim();
+            final String annotation = values.length > ANNOTATION_COLUMN ? values[ANNOTATION_COLUMN].trim() : null;
 
             // KODU: BED Files are 0-based start and 1-based end, to make length simply "end - start".
             final long start = Long.valueOf(values[START_COLUMN].trim()) + 1;
@@ -44,7 +46,7 @@ public final class SlicerFactory {
                 LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end="
                         + end);
             } else {
-                final GenomeRegion region = new GenomeRegion(start, end);
+                final GenomeRegion region = new GenomeRegion(chromosome, start, end, annotation);
                 if (prevRegion != null && chromosome.equals(prevChromosome) && prevRegion.end() >= start) {
                     LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + prevRegion);
                 } else {

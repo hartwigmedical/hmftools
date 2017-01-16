@@ -34,6 +34,11 @@ public class Slicer {
         return false;
     }
 
+    @NotNull
+    Collection<GenomeRegion> regions() {
+        return regions.values();
+    }
+
     @VisibleForTesting
     int numberOfRegions() {
         return regions.size();

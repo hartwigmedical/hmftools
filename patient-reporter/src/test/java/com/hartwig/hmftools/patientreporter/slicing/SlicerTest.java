@@ -39,10 +39,10 @@ public class SlicerTest {
 
     @NotNull
     private static Slicer buildSlicer() {
-        SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
-        regionMap.put("X", new GenomeRegion(100, 200));
-        regionMap.put("X", new GenomeRegion(300, 400));
-        regionMap.put("Y", new GenomeRegion(500, 600));
+        final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
+        regionMap.put("X", new GenomeRegion("X", 100, 200));
+        regionMap.put("X", new GenomeRegion("X", 300, 400));
+        regionMap.put("Y", new GenomeRegion("Y", 500, 600));
         return new Slicer(regionMap);
     }
 

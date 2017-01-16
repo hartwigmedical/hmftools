@@ -1,28 +1,50 @@
 package com.hartwig.hmftools.patientreporter.slicing;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-class GenomeRegion implements Comparable<GenomeRegion> {
+public class GenomeRegion implements Comparable<GenomeRegion> {
 
+    @NotNull
+    private final String chromosome;
     private final long start;
     private final long end;
+    @Nullable
+    private final String annotation;
 
-    GenomeRegion(final long start, final long end) {
-        assert end >= start;
-
-        this.start = start;
-        this.end = end;
+    public GenomeRegion(@NotNull final String chromosome, final long start, final long end) {
+        this(chromosome, start, end, null);
     }
 
-    long start() {
+    GenomeRegion(@NotNull final String chromosome, final long start, final long end,
+            @Nullable final String annotation) {
+        assert end >= start;
+
+        this.chromosome = chromosome;
+        this.start = start;
+        this.end = end;
+        this.annotation = annotation;
+    }
+
+    @NotNull
+    public String chromosome() {
+        return chromosome;
+    }
+
+    @Nullable
+    String annotation() {
+        return annotation;
+    }
+
+    public long start() {
         return start;
     }
 
-    long end() {
+    public long end() {
         return end;
     }
 
-    long bases() {
+    public long bases() {
         return 1 + end - start;
     }
 
