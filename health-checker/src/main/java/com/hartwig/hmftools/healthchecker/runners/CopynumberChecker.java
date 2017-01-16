@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -8,7 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.CopyNumberFactory;
+import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
+import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
@@ -30,11 +30,6 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
 
     private static final Logger LOGGER = LogManager.getLogger(CopynumberChecker.class);
 
-    // KODU: copynumber data is stored in {run}/copyNumber/{sampleR}_{sampleT}/freec/{sampleT}<>.bam_CNVs
-    private static final String COPYNUMBER_BASE_DIRECTORY = "copyNumber";
-    private static final String COPYNUMBER_SAMPLE_CONNECTOR = "_";
-    private static final String COPYNUMBER_ALGO_DIRECTORY = "freec";
-    private static final String COPYNUMBER_SUFFIX = ".bam_CNVs";
     private static final String COPYNUMBER_RATIO_SUFFIX = ".bam_ratio.txt";
 
     public CopynumberChecker() {
@@ -65,24 +60,18 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
     @NotNull
     private static List<CopyNumber> copynumberLines(@NotNull final RunContext runContext)
             throws IOException, HartwigException {
-        final Path copynumberPath = PathPrefixSuffixFinder.build().findPath(getBasePath(runContext),
-                relevantSample(runContext), COPYNUMBER_SUFFIX);
-        final List<String> lines;
+        final String basePath = CNVFileLoaderHelper.getFreecBasePath(runContext.runDirectory(), runContext.refSample(),
+                runContext.isSomaticRun() ? runContext.tumorSample() : null);
+        final String relevantSample = relevantSample(runContext);
         try {
-            lines = FileReader.build().readLines(copynumberPath);
+            return CNVFileLoader.loadCNV(basePath, relevantSample);
         } catch (EmptyFileException e) {
             // if the CNV is empty (but exists) and the ratio file exists, there is no problem (just no CNVs found)
-            final Path ratioPath = PathPrefixSuffixFinder.build().findPath(getBasePath(runContext),
-                    relevantSample(runContext), COPYNUMBER_RATIO_SUFFIX);
+            final Path ratioPath = PathPrefixSuffixFinder.build().findPath(basePath, relevantSample,
+                    COPYNUMBER_RATIO_SUFFIX);
             FileReader.build().readLines(ratioPath);
             return Collections.emptyList();
         }
-
-        List<CopyNumber> copyNumbers = Lists.newArrayList();
-        for (String line : lines) {
-            copyNumbers.add(CopyNumberFactory.fromCNVLine(line));
-        }
-        return copyNumbers;
     }
 
     @NotNull
@@ -101,16 +90,6 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
         final List<HealthCheck> checks = Lists.newArrayList(gainCheck, lossCheck);
         HealthCheck.log(LOGGER, checks);
         return new MultiValueResult(checkType(), checks);
-    }
-
-    @NotNull
-    private static String getBasePath(@NotNull final RunContext runContext) {
-        final String baseDir = runContext.runDirectory() + File.separator + COPYNUMBER_BASE_DIRECTORY + File.separator;
-        final String sampleDir = runContext.isSomaticRun() ?
-                runContext.refSample() + COPYNUMBER_SAMPLE_CONNECTOR + runContext.tumorSample() :
-                runContext.refSample();
-
-        return baseDir + sampleDir + File.separator + COPYNUMBER_ALGO_DIRECTORY;
     }
 
     @NotNull

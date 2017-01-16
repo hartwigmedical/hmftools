@@ -24,7 +24,6 @@ public class CopynumberCheckerTest {
 
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
-    private static final String MALFORMED_SAMPLE = "sample3";
     private static final String NO_CNVS_FOUND_SAMPLE = "sample4";
     private static final String EMPTY_RATIOS_SAMPLE = "sample5";
     private static final String NO_RATIOS_SAMPLE = "sample6";
@@ -66,13 +65,6 @@ public class CopynumberCheckerTest {
         final RunContext runContext = TestRunContextFactory.forSingleSampleTest(RUN_DIRECTORY, SINGLE_SAMPLE_EXAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.errorRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
-    }
-
-    @Test(expected = HartwigException.class)
-    public void noGainLossTagsYieldHartwigException() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE,
-                MALFORMED_SAMPLE);
-        checker.tryRun(runContext);
     }
 
     @Test
