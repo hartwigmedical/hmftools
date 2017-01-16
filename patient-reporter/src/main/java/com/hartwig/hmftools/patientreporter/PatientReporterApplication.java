@@ -46,7 +46,7 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
-    private static final String COPYNUMBER_DIRECTORY = "copynumber";
+    private static final String COPYNUMBER_DIRECTORY = "copyNumber";
     private static final String COPYNUMBER_EXTENSION = ".bam_CNVs";
     private static final String FREEC_DIRECTORY = "freec";
 
