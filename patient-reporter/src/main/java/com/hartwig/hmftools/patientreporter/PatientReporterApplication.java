@@ -235,6 +235,7 @@ public class PatientReporterApplication {
             }
             final String filePath = outputDirectory + File.separator + sample + "_CNV.csv";
             Files.write(new File(filePath).toPath(), lines);
+            LOGGER.info("    Written CNV stats to " + filePath);
         }
     }
 
