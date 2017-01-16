@@ -43,6 +43,7 @@ public class PatientReporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
     private static final String COPYNUMBER_DIRECTORY = "copynumber";
+    private static final String COPYNUMBER_EXTENSION = ".bam_CNVs";
     private static final String FREEC_DIRECTORY = "freec";
 
     private static final String RUN_DIRECTORY_ARGS_DESC = "A path towards a single rundir.";
@@ -212,7 +213,7 @@ public class PatientReporterApplication {
         List<CopyNumber> copyNumbers;
 
         try {
-            copyNumbers = CNVFileLoader.loadCNV(cnvBasePath, sample);
+            copyNumbers = CNVFileLoader.loadCNV(cnvBasePath, sample, COPYNUMBER_EXTENSION);
         } catch (EmptyFileException e) {
             copyNumbers = Lists.newArrayList();
         }

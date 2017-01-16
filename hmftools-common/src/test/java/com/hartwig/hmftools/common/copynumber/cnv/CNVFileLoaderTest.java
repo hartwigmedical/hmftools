@@ -14,10 +14,12 @@ import org.junit.Test;
 public class CNVFileLoaderTest {
 
     private static final String BASE_PATH = Resources.getResource("copynumber").getPath();
+    private static final String SAMPLE = "sample";
+    private static final String FILE_EXTENSION = ".bam_CNVs";
 
     @Test
     public void canLoadCNVFile() throws IOException, HartwigException {
-        final List<CopyNumber> copyNumbers = CNVFileLoader.loadCNV(BASE_PATH, "sample");
+        final List<CopyNumber> copyNumbers = CNVFileLoader.loadCNV(BASE_PATH, SAMPLE, FILE_EXTENSION);
         assertEquals(2, copyNumbers.size());
     }
 }

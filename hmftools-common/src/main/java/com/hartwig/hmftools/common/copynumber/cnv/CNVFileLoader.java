@@ -21,8 +21,8 @@ public final class CNVFileLoader {
     }
 
     @NotNull
-    public static List<CopyNumber> loadCNV(@NotNull final String basePath, @NotNull final String sample)
-            throws IOException, HartwigException {
+    public static List<CopyNumber> loadCNV(@NotNull final String basePath, @NotNull final String sample,
+            @NotNull final String fileExtension) throws IOException, HartwigException {
         final Path copynumberPath = PathPrefixSuffixFinder.build().findPath(basePath, sample, COPYNUMBER_SUFFIX);
         final List<String> lines = FileReader.build().readLines(copynumberPath);
 

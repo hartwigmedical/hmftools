@@ -30,6 +30,7 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
 
     private static final Logger LOGGER = LogManager.getLogger(CopynumberChecker.class);
 
+    private static final String COPYNUMBER_EXTENSION = ".bam_CNVs";
     private static final String COPYNUMBER_RATIO_SUFFIX = ".bam_ratio.txt";
 
     public CopynumberChecker() {
@@ -64,7 +65,7 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
                 runContext.isSomaticRun() ? runContext.tumorSample() : null);
         final String relevantSample = relevantSample(runContext);
         try {
-            return CNVFileLoader.loadCNV(basePath, relevantSample);
+            return CNVFileLoader.loadCNV(basePath, relevantSample, COPYNUMBER_EXTENSION);
         } catch (EmptyFileException e) {
             // if the CNV is empty (but exists) and the ratio file exists, there is no problem (just no CNVs found)
             final Path ratioPath = PathPrefixSuffixFinder.build().findPath(basePath, relevantSample,
