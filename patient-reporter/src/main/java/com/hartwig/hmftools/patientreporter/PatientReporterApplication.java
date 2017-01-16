@@ -191,12 +191,12 @@ public class PatientReporterApplication {
 
         final SomaticVariantReport report = SomaticVariantReport.fromVCFFile(variantFile, consensusRule,
                 consequenceRule);
-        LOGGER.info("  Total number of variants: " + report.allVariants.size());
-        LOGGER.info("  Number of variants after applying pass-only filter: " + report.allPassedVariants.size());
-        LOGGER.info("  Number of variants after applying consensus rule = " + report.consensusPassedVariants.size());
+        LOGGER.info("  Total number of variants : " + report.allVariants.size());
+        LOGGER.info("  Number of variants after applying pass-only filter : " + report.allPassedVariants.size());
+        LOGGER.info("  Number of variants after applying consensus rule : " + report.consensusPassedVariants.size());
         LOGGER.info("  Number of missense variants in consensus rule (mutational load) : "
                 + report.missenseVariants.size());
-        LOGGER.info("  Number of consequential variants to report: " + report.consequencePassedVariants.size());
+        LOGGER.info("  Number of consequential variants to report : " + report.consequencePassedVariants.size());
 
         if (outputDirectory != null) {
             final String consensusVCF =
@@ -224,7 +224,7 @@ public class PatientReporterApplication {
         }
 
         final Map<GenomeRegion, CopyNumberStats> stats = CopyNumberAnalyser.run(hmfSlicer.regions(), copyNumbers);
-        LOGGER.info("Determined copy number stats for " + stats.size() + " genomic regions");
+        LOGGER.info("  Determined copy number stats for " + stats.size() + " genomic regions");
 
         if (outputDirectory != null) {
             final List<String> lines = Lists.newArrayList();
