@@ -23,6 +23,10 @@ import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyser;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberStats;
+import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
+import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
 
@@ -58,8 +62,8 @@ public class PatientReporterApplication {
     private static final String HMF_SLICING_BED_ARGS_DESC = "A path towards the HMF slicing bed.";
     private static final String HMF_SLICING_BED = "hmf_slicing_bed";
 
-    private static final String VCF_OUTPUT_PATH_ARGS_DESC = "A path where, if provided, vcfs will be written to.";
-    private static final String VCF_OUTPUT_PATH = "vcf_output_path";
+    private static final String OUTPUT_DIR_ARGS_DESC = "A path where, if provided, output files will be written to.";
+    private static final String OUTPUT_DIR = "output_dir";
 
     private static final String BATCH_MODE_ARGS_DESC = "If set, runs in batch mode (Caution!!! Korneel Only)";
     private static final String BATCH_MODE = "batch_mode";
@@ -69,9 +73,9 @@ public class PatientReporterApplication {
     @NotNull
     private final ConsensusRule consensusRule;
     @NotNull
-    private final ConsequenceRule consequenceRule;
+    private final Slicer hmfSlicer;
     @Nullable
-    private final String vcfOutputPath;
+    private final String outputDirectory;
     private final boolean batchMode;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
@@ -82,7 +86,7 @@ public class PatientReporterApplication {
         final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
-        final String vcfOutputPath = cmd.getOptionValue(VCF_OUTPUT_PATH);
+        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
         final boolean batchMode = cmd.hasOption(BATCH_MODE);
 
         if (runDir == null || cpctSlicingBed == null || highConfidenceBed == null || hmfSlicingBed == null) {
@@ -91,18 +95,18 @@ public class PatientReporterApplication {
             System.exit(1);
         }
 
-        if (vcfOutputPath != null) {
-            final Path vcfPath = new File(vcfOutputPath).toPath();
-            if (!Files.exists(vcfPath) || !Files.isDirectory(vcfPath)) {
-                LOGGER.warn("vcf_output_path has to be an existing directory!");
+        if (outputDirectory != null) {
+            final Path outputPath = new File(outputDirectory).toPath();
+            if (!Files.exists(outputPath) || !Files.isDirectory(outputPath)) {
+                LOGGER.warn(OUTPUT_DIR + " has to be an existing directory!");
                 System.exit(1);
             }
         }
 
         final ConsensusRule consensusRule = new ConsensusRule(SlicerFactory.fromBedFile(highConfidenceBed),
                 SlicerFactory.fromBedFile(cpctSlicingBed));
-        final ConsequenceRule consequenceRule = new ConsequenceRule(SlicerFactory.fromBedFile(hmfSlicingBed));
-        new PatientReporterApplication(runDir, consensusRule, consequenceRule, vcfOutputPath, batchMode).run();
+        new PatientReporterApplication(runDir, consensusRule, SlicerFactory.fromBedFile(hmfSlicingBed),
+                outputDirectory, batchMode).run();
     }
 
     @NotNull
@@ -113,7 +117,7 @@ public class PatientReporterApplication {
         options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
         options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
         options.addOption(HMF_SLICING_BED, true, HMF_SLICING_BED_ARGS_DESC);
-        options.addOption(VCF_OUTPUT_PATH, true, VCF_OUTPUT_PATH_ARGS_DESC);
+        options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_ARGS_DESC);
         options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
 
         return options;
@@ -127,24 +131,24 @@ public class PatientReporterApplication {
     }
 
     PatientReporterApplication(@NotNull final String runDirectory, @NotNull final ConsensusRule consensusRule,
-            @NotNull final ConsequenceRule consequenceRule, @Nullable final String vcfOutputPath,
-            final boolean batchMode) {
+            @NotNull final Slicer hmfSlicer, @Nullable final String outputDirectory, final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.consensusRule = consensusRule;
-        this.consequenceRule = consequenceRule;
-        this.vcfOutputPath = vcfOutputPath;
+        this.hmfSlicer = hmfSlicer;
+        this.outputDirectory = outputDirectory;
         this.batchMode = batchMode;
     }
 
     void run() throws IOException, HartwigException {
+        final ConsequenceRule consequenceRule = new ConsequenceRule(hmfSlicer);
         if (batchMode) {
-            batchRun();
+            batchRun(consequenceRule);
         } else {
-            patientRun();
+            patientRun(consequenceRule);
         }
     }
 
-    private void batchRun() throws IOException, HartwigException {
+    private void batchRun(@NotNull final ConsequenceRule consequenceRule) throws IOException, HartwigException {
         // KODU: We assume "run directory" is a path with a lot of directories on which we can all run in patient mode.
         VariantConsequence[] consequences = VariantConsequence.values();
 
@@ -173,14 +177,15 @@ public class PatientReporterApplication {
         }
     }
 
-    private void patientRun() throws IOException, HartwigException {
+    private void patientRun(@NotNull final ConsequenceRule consequenceRule) throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
-        final String sample = analyzeSomaticVariants();
+        final String sample = analyzeSomaticVariants(consequenceRule);
         analyzeCopyNumbers(sample);
     }
 
     @NotNull
-    private String analyzeSomaticVariants() throws IOException, HartwigException {
+    private String analyzeSomaticVariants(@NotNull final ConsequenceRule consequenceRule)
+            throws IOException, HartwigException {
         final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION);
         LOGGER.info("  Extracted variants for sample " + variantFile.sample());
 
@@ -193,14 +198,14 @@ public class PatientReporterApplication {
                 + report.missenseVariants.size());
         LOGGER.info("  Number of consequential variants to report: " + report.consequencePassedVariants.size());
 
-        if (vcfOutputPath != null) {
+        if (outputDirectory != null) {
             final String consensusVCF =
-                    vcfOutputPath + File.separator + variantFile.sample() + "_consensus_variants.vcf";
+                    outputDirectory + File.separator + variantFile.sample() + "_consensus_variants.vcf";
             VCFFileWriter.writeSomaticVCF(consensusVCF, report.consensusPassedVariants);
             LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
 
             final String consequenceVCF =
-                    vcfOutputPath + File.separator + variantFile.sample() + "_consequential_variants.vcf";
+                    outputDirectory + File.separator + variantFile.sample() + "_consequential_variants.vcf";
             VCFFileWriter.writeSomaticVCF(consequenceVCF, report.consequencePassedVariants);
             LOGGER.info("    Written consequential variants to " + consequenceVCF);
         }
@@ -216,6 +221,20 @@ public class PatientReporterApplication {
             copyNumbers = CNVFileLoader.loadCNV(cnvBasePath, sample, COPYNUMBER_EXTENSION);
         } catch (EmptyFileException e) {
             copyNumbers = Lists.newArrayList();
+        }
+
+        final Map<GenomeRegion, CopyNumberStats> stats = CopyNumberAnalyser.run(hmfSlicer.regions(), copyNumbers);
+        LOGGER.info("Determined copy number stats for " + stats.size() + " genomic regions");
+
+        if (outputDirectory != null) {
+            final List<String> lines = Lists.newArrayList();
+            lines.add("GENE,CNV_MIN,CNV_MEAN,CNV_MAX");
+            for (Map.Entry<GenomeRegion, CopyNumberStats> entry : stats.entrySet()) {
+                CopyNumberStats stat = entry.getValue();
+                lines.add(entry.getKey().annotation() + "," + stat.min() + "," + stat.mean() + "," + stat.max());
+            }
+            final String filePath = outputDirectory + File.separator + sample + "_CNV.csv";
+            Files.write(new File(filePath).toPath(), lines);
         }
     }
 

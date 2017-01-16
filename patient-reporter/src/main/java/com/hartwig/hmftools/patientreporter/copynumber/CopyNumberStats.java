@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-class CopyNumberStats {
+public class CopyNumberStats {
     private final int min;
     private final int max;
     private final double mean;
@@ -11,15 +11,15 @@ class CopyNumberStats {
         this.mean = mean;
     }
 
-    int min() {
+    public int min() {
         return min;
     }
 
-    int max() {
+    public int max() {
         return max;
     }
 
-    double mean() {
+    public double mean() {
         return mean;
     }
 }

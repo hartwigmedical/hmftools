@@ -32,7 +32,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
     }
 
     @Nullable
-    String annotation() {
+    public String annotation() {
         return annotation;
     }
 

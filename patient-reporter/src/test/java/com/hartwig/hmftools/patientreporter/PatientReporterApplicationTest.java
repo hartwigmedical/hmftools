@@ -20,8 +20,7 @@ public class PatientReporterApplicationTest {
         final String bedFile = BED_DIRECTORY + File.separator + "valid.bed";
         final Slicer slicer = SlicerFactory.fromBedFile(bedFile);
         final ConsensusRule consensusRule = new ConsensusRule(slicer, slicer);
-        final ConsequenceRule consequenceRule = new ConsequenceRule(slicer);
 
-        new PatientReporterApplication(RUN_DIRECTORY, consensusRule, consequenceRule, null, false).run();
+        new PatientReporterApplication(RUN_DIRECTORY, consensusRule, slicer, null, false).run();
     }
 }

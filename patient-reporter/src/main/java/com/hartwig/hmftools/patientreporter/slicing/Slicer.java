@@ -35,7 +35,7 @@ public class Slicer {
     }
 
     @NotNull
-    Collection<GenomeRegion> regions() {
+    public Collection<GenomeRegion> regions() {
         return regions.values();
     }
 

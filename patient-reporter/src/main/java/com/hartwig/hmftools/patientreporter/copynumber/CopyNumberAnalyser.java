@@ -13,7 +13,7 @@ import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-final class CopyNumberAnalyser {
+public final class CopyNumberAnalyser {
 
     private static final int NORMAL_COPYNUMBER = 2;
 
@@ -21,7 +21,7 @@ final class CopyNumberAnalyser {
     }
 
     @NotNull
-    static Map<GenomeRegion, CopyNumberStats> run(@NotNull Collection<GenomeRegion> regions,
+    public static Map<GenomeRegion, CopyNumberStats> run(@NotNull Collection<GenomeRegion> regions,
             @NotNull Collection<CopyNumber> copyNumbers) {
         final Map<GenomeRegion, CopyNumberStats> stats = Maps.newHashMap();
 
