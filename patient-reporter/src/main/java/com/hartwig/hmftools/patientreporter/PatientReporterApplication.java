@@ -220,6 +220,7 @@ public class PatientReporterApplication {
         try {
             copyNumbers = CNVFileLoader.loadCNV(cnvBasePath, sample, COPYNUMBER_EXTENSION);
         } catch (EmptyFileException e) {
+            // KODU: It could be that the sample simply does not have any amplifications...
             copyNumbers = Lists.newArrayList();
         }
 
@@ -229,13 +230,15 @@ public class PatientReporterApplication {
         if (outputDirectory != null) {
             final List<String> lines = Lists.newArrayList();
             lines.add("GENE,CNV_MIN,CNV_MEAN,CNV_MAX");
-            for (Map.Entry<GenomeRegion, CopyNumberStats> entry : stats.entrySet()) {
-                CopyNumberStats stat = entry.getValue();
-                lines.add(entry.getKey().annotation() + "," + stat.min() + "," + stat.mean() + "," + stat.max());
+            for (final Map.Entry<GenomeRegion, CopyNumberStats> entry : stats.entrySet()) {
+                final CopyNumberStats stat = entry.getValue();
+                if (stat.min() != 2 || stat.max() != 2) {
+                    lines.add(entry.getKey().annotation() + "," + stat.min() + "," + stat.mean() + "," + stat.max());
+                }
             }
             final String filePath = outputDirectory + File.separator + sample + "_CNV.csv";
             Files.write(new File(filePath).toPath(), lines);
-            LOGGER.info("    Written CNV stats to " + filePath);
+            LOGGER.info("    Written all non-default CNV stats to " + filePath);
         }
     }
 
