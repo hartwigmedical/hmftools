@@ -28,7 +28,7 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canReadCorrectSomaticVariant() {
-        final String line = "15 \t 12345678 \t rs:1;UCSC \t C \t A,G \t <qual> \t <filter> "
+        final String line = "15 \t 12345678 \t rs1;UCSC \t C \t A,G \t <qual> \t <filter> "
                 + " \t set=varscan-freebayes; \t <format> \t 0/1:60,60:121";
 
         final SomaticVariant variant = SomaticVariantFactory.fromVCFLine(line);
@@ -69,13 +69,13 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void correctDBSNPAndCOSMIC() {
-        final String both = "0 \t 1 \t rs:1;COSM2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
+        final String both = "0 \t 1 \t rs1;COSM2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
 
         final SomaticVariant hasBoth = SomaticVariantFactory.fromVCFLine(both);
         assertTrue(hasBoth.isDBSNP());
         assertTrue(hasBoth.isCOSMIC());
 
-        final String dbsnpOnly = "0 \t 1 \t rs:1 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
+        final String dbsnpOnly = "0 \t 1 \t rs1 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant hasDBSNPOnly = SomaticVariantFactory.fromVCFLine(dbsnpOnly);
         assertTrue(hasDBSNPOnly.isDBSNP());
         assertFalse(hasDBSNPOnly.isCOSMIC());

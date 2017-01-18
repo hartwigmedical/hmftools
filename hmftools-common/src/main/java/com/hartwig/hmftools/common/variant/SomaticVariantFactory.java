@@ -24,6 +24,7 @@ public final class SomaticVariantFactory {
     private static final int ID_COLUMN = 2;
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
+    private static final String ID_SEPARATOR = ";";
 
     private static final int REF_COLUMN = 3;
     private static final int ALT_COLUMN = 4;
@@ -54,6 +55,7 @@ public final class SomaticVariantFactory {
         if (sample.contains(File.separator)) {
             final String[] parts = sample.split(File.separator);
             final String[] subParts = parts[parts.length - 1].split("_");
+            // KODU: Assume last part starts with "R_T"
             return subParts[1];
         } else {
             return sample;
@@ -90,6 +92,18 @@ public final class SomaticVariantFactory {
                 values[ALT_COLUMN].trim());
         final SomaticVariant.Builder builder = SomaticVariant.Builder.fromVCF(line, type);
 
+        final String idValue = values[ID_COLUMN].trim();
+        if (!idValue.isEmpty()) {
+            final String[] ids = idValue.split(ID_SEPARATOR);
+            for (final String id : ids) {
+                if (id.contains(DBSNP_IDENTIFIER)) {
+                    builder.dnsnpID(id);
+                } else if (id.contains(COSMIC_IDENTIFIER)) {
+                    builder.cosmicID(id);
+                }
+            }
+        }
+
         builder.filter(values[FILTER_COLUMN].trim());
 
         final String info = values[INFO_COLUMN].trim();
@@ -105,10 +119,6 @@ public final class SomaticVariantFactory {
 
         builder.chromosome(values[CHROMOSOME_COLUMN].trim());
         builder.position(Long.valueOf(values[POSITION_COLUMN].trim()));
-
-        final String id = values[ID_COLUMN];
-        builder.isDBSNP(id.contains(DBSNP_IDENTIFIER));
-        builder.isCOSMIC(id.contains(COSMIC_IDENTIFIER));
 
         return builder.build();
     }
