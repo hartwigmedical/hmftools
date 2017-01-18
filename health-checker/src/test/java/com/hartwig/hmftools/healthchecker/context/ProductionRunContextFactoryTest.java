@@ -26,6 +26,11 @@ public class ProductionRunContextFactoryTest {
     private static final String VALID_DRUP_REF = "DRUP01020005R";
     private static final String VALID_DRUP_TUMOR = "DRUP01020005T";
 
+    private static final String VALID_PMC_RUNDIR = "170404_HMFregPMC_FR10002000_FR20003000_PMC010001";
+    private static final String VALID_PMC_RUN_NAME = VALID_PMC_RUNDIR;
+    private static final String VALID_PMC_REF = "PMC010001R";
+    private static final String VALID_PMC_TUMOR = "PMC010001T";
+
     private static final String LOW_QUAL_CPCT_RUNDIR = "160102_HMFregCPCT_FR10002000_FR20003000_CPCT12345678_LowQual";
     private static final String LOW_QUAL_CPCT_RUN_NAME = "160102_HMFregCPCT_FR10002000_FR20003000_CPCT12345678";
     private static final String LOW_QUAL_CPCT_REF = "CPCT12345678R";
@@ -69,6 +74,16 @@ public class ProductionRunContextFactoryTest {
         assertEquals(VALID_DRUP_REF, runContext.refSample());
         assertEquals(VALID_DRUP_TUMOR, runContext.tumorSample());
         assertEquals(VALID_DRUP_RUN_NAME, runContext.runName());
+        assertTrue(runContext.hasPassedTests());
+        assertTrue(runContext.isSomaticRun());
+    }
+
+    @Test
+    public void worksForPMC() throws HartwigException {
+        final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(toPath(VALID_PMC_RUNDIR));
+        assertEquals(VALID_PMC_REF, runContext.refSample());
+        assertEquals(VALID_PMC_TUMOR, runContext.tumorSample());
+        assertEquals(VALID_PMC_RUN_NAME, runContext.runName());
         assertTrue(runContext.hasPassedTests());
         assertTrue(runContext.isSomaticRun());
     }

@@ -21,6 +21,11 @@ public final class ProductionRunContextFactory {
     private static final String DRUP_REF_SAMPLE_SUFFIX = "R";
     private static final String DRUP_TUMOR_SAMPLE_SUFFIX = "T";
 
+    private static final String PMC_PATIENT_IDENTIFIER = "_PMC";
+    private static final int PMC_PATIENT_NAME_LENGTH = 9;
+    private static final String PMC_REF_SAMPLE_SUFFIX = "R";
+    private static final String PMC_TUMOR_SAMPLE_SUFFIX = "T";
+
     private static final int SINGLE_SAMPLE_RUN_NAME_PARTS = 4;
 
     private ProductionRunContextFactory() {
@@ -36,6 +41,9 @@ public final class ProductionRunContextFactory {
         } else if (isDRUPRun(runName)) {
             return somatic(runName, runDirectory, DRUP_PATIENT_IDENTIFIER, DRUP_PATIENT_NAME_LENGTH,
                     DRUP_REF_SAMPLE_SUFFIX, DRUP_TUMOR_SAMPLE_SUFFIX);
+        } else if (isPMCRun(runName)) {
+            return somatic(runName, runDirectory, PMC_PATIENT_IDENTIFIER, PMC_PATIENT_NAME_LENGTH,
+                    PMC_REF_SAMPLE_SUFFIX, PMC_TUMOR_SAMPLE_SUFFIX);
         } else if (isSingleSample(runName)) {
             return singleSample(runName, runDirectory);
         } else {
@@ -49,6 +57,10 @@ public final class ProductionRunContextFactory {
 
     private static boolean isDRUPRun(@NotNull final String runName) {
         return runName.contains(DRUP_PATIENT_IDENTIFIER);
+    }
+
+    private static boolean isPMCRun(@NotNull final String runName) {
+        return runName.contains(PMC_PATIENT_IDENTIFIER);
     }
 
     private static boolean isSingleSample(@NotNull final String runName) {
@@ -70,6 +82,20 @@ public final class ProductionRunContextFactory {
                         + parts[3];
 
         final String sample = parts[SINGLE_SAMPLE_RUN_NAME_PARTS - 1];
+        final File[] runContents = new File(runDirectory).listFiles();
+        assert runContents != null;
+
+        boolean sampleIsFound = false;
+        for (final File content : runContents) {
+            if (content.isDirectory() && content.getName().equals(sample)) {
+                sampleIsFound = true;
+            }
+        }
+
+        if (!sampleIsFound) {
+            throw new MalformedRunDirException(runName);
+        }
+
         final boolean hasPassedTests = parts.length == SINGLE_SAMPLE_RUN_NAME_PARTS;
 
         return new RunContextImpl(runDirectory, finalRunName, sample, Strings.EMPTY, hasPassedTests, false);
