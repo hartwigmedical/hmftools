@@ -11,6 +11,7 @@ import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
+import com.hartwig.hmftools.patientreporter.variants.VariantInterpreter;
 
 import org.junit.Test;
 
@@ -28,8 +29,7 @@ public class PatientReporterApplicationTest {
             assertNotNull(HMFSlicingAnnotation.fromGenomeRegion(region));
         }
 
-        final ConsensusRule consensusRule = new ConsensusRule(slicer, slicer);
-
-        new PatientReporterApplication(RUN_DIRECTORY, consensusRule, slicer, null, false).run();
+        VariantInterpreter variantInterpreter = VariantInterpreter.fromSlicingRegions(slicer, slicer, slicer);
+        new PatientReporterApplication(RUN_DIRECTORY, variantInterpreter, slicer, null, false).run();
     }
 }

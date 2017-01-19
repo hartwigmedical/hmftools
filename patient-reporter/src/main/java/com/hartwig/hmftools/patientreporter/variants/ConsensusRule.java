@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.variants;
 
 import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.and;
@@ -21,12 +21,12 @@ import org.jetbrains.annotations.NotNull;
 class ConsensusRule {
 
     @NotNull
-    private final Slicer highConfidenceRegion;
+    private final Slicer giabHighConfidenceRegion;
     @NotNull
     private final Slicer cpctSlicingRegion;
 
-    ConsensusRule(@NotNull final Slicer highConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
-        this.highConfidenceRegion = highConfidenceRegion;
+    ConsensusRule(@NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
+        this.giabHighConfidenceRegion = giabHighConfidenceRegion;
         this.cpctSlicingRegion = cpctSlicingRegion;
     }
 
@@ -34,7 +34,8 @@ class ConsensusRule {
     List<SomaticVariant> apply(@NotNull List<SomaticVariant> variants) {
         Predicate<SomaticVariant> snpRule = and(withType(VariantType.SNP),
                 or(withMinCallers(3), isIncludedIn(cpctSlicingRegion),
-                        and(withMinCallers(2), isIncludedIn(highConfidenceRegion), or(inCOSMIC(), not(inDBSNP())))));
+                        and(withMinCallers(2), isIncludedIn(giabHighConfidenceRegion),
+                                or(inCOSMIC(), not(inDBSNP())))));
         Predicate<SomaticVariant> indelRule = and(withType(VariantType.INDEL),
                 or(withMinCallers(2), isIncludedIn(cpctSlicingRegion)));
 

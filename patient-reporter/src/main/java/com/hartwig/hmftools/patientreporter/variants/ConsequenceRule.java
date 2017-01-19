@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.variants;
 
 import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.and;
