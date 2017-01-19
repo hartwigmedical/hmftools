@@ -11,9 +11,9 @@ public final class SlicerTestFactory {
     }
 
     @NotNull
-    public static Slicer oneRegionTestSlicer(@NotNull final String chromosome, final long start, final long end) {
+    public static Slicer forGenomeRegion(@NotNull final GenomeRegion region) {
         final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
-        regionMap.put(chromosome, new GenomeRegion("1", start, end));
+        regionMap.put(region.chromosome(), region);
         return new Slicer(regionMap);
     }
 }

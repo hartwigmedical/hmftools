@@ -16,7 +16,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this(chromosome, start, end, null);
     }
 
-    GenomeRegion(@NotNull final String chromosome, final long start, final long end,
+    public GenomeRegion(@NotNull final String chromosome, final long start, final long end,
             @Nullable final String annotation) {
         assert end >= start;
 

@@ -100,8 +100,8 @@ public class PatientReporterApplication {
             }
         }
 
-        Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
-        VariantInterpreter variantInterpreter = VariantInterpreter.fromSlicingRegions(hmfSlicingRegion,
+        final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
+        final VariantInterpreter variantInterpreter = VariantInterpreter.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
         new PatientReporterApplication(runDir, variantInterpreter, hmfSlicingRegion, outputDirectory, batchMode).run();
     }
@@ -147,7 +147,7 @@ public class PatientReporterApplication {
 
     private void batchRun() throws IOException, HartwigException {
         // KODU: We assume "run directory" is a path with a lot of directories on which we can all run in patient mode.
-        VariantConsequence[] consequences = VariantConsequence.values();
+        final VariantConsequence[] consequences = VariantConsequence.values();
 
         String header = "SAMPLE,VARIANT_COUNT,PASS_ONLY_COUNT,CONSENSUS_COUNT,MISSENSE_COUNT,CONSEQUENCE_COUNT";
         for (final VariantConsequence consequence : consequences) {
@@ -157,7 +157,7 @@ public class PatientReporterApplication {
 
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
             final VCFSomaticFile variantFile = loadVariantFile(run.toFile().getPath());
-            final VariantAnalysis analysis = variantInterpreter.run(variantFile);
+            final VariantAnalysis analysis = variantInterpreter.run(variantFile.variants());
 
             final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(analysis.consensusPassedVariants());
             String consequenceList = Strings.EMPTY;
@@ -165,8 +165,9 @@ public class PatientReporterApplication {
                 consequenceList += ("," + counts.get(consequence).toString());
             }
 
-            final String out = variantFile.sample() + "," + analysis.allVariants().size() + ","
-                    + analysis.allPassedVariants().size() + "," + analysis.consensusPassedVariants().size() + ","
+            final String out =
+                    variantFile.sample() + "," + variantFile.variants().size() + "," + analysis.passedVariants().size()
+                            + "," + analysis.consensusPassedVariants().size() + ","
                     + analysis.missenseVariants().size() + "," + analysis.consequencePassedVariants().size()
                     + consequenceList;
             System.out.println(out);
@@ -177,11 +178,12 @@ public class PatientReporterApplication {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
         final VCFSomaticFile variantFile = loadVariantFile(runDirectory);
-        final VariantAnalysis analysis = variantInterpreter.run(variantFile);
+        LOGGER.info("  Total number of variants : " + variantFile.variants().size());
+
+        final VariantAnalysis analysis = variantInterpreter.run(variantFile.variants());
         analyzeCopyNumbers(variantFile.sample());
 
-        LOGGER.info("  Total number of variants : " + analysis.allVariants().size());
-        LOGGER.info("  Number of variants after applying pass-only filter : " + analysis.allPassedVariants().size());
+        LOGGER.info("  Number of variants after applying pass-only filter : " + analysis.passedVariants().size());
         LOGGER.info(
                 "  Number of variants after applying consensus rule : " + analysis.consensusPassedVariants().size());
         LOGGER.info("  Number of missense variants in consensus rule (mutational load) : "

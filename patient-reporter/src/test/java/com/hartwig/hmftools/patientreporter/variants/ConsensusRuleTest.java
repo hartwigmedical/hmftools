@@ -7,6 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerTestFactory;
 
@@ -19,12 +20,12 @@ public class ConsensusRuleTest {
 
     @Test
     public void consensusRuleWorks() {
-        final Slicer highConfidence = SlicerTestFactory.oneRegionTestSlicer(CHROMOSOME, 100, 1000);
-        final Slicer cpctSlicing = SlicerTestFactory.oneRegionTestSlicer(CHROMOSOME, 500, 600);
+        final Slicer highConfidence = SlicerTestFactory.forGenomeRegion(region(100, 1000));
+        final Slicer cpctSlicing = SlicerTestFactory.forGenomeRegion(region(500, 600));
 
         final ConsensusRule rule = new ConsensusRule(highConfidence, cpctSlicing);
 
-        List<SomaticVariant> variants = Lists.newArrayList(cosmicSNPVariantOnPositionWithCallers(300, 2),
+        final List<SomaticVariant> variants = Lists.newArrayList(cosmicSNPVariantOnPositionWithCallers(300, 2),
                 // KODU: Include
                 dbsnpSNPVariantOnPositionWithCallers(400, 2), // KODU: Exclude
                 dbsnpSNPVariantOnPositionWithCallers(550, 2), // KODU: Include
@@ -34,33 +35,38 @@ public class ConsensusRuleTest {
                 indelVariantOnPositionWithCallers(250, 2) // KODU: Include
         );
 
-        List<SomaticVariant> filtered = rule.apply(variants);
+        final List<SomaticVariant> filtered = rule.apply(variants);
         assertEquals(5, filtered.size());
     }
 
     @NotNull
+    private static GenomeRegion region(final long start, final long end) {
+        return new GenomeRegion(CHROMOSOME, start, end);
+    }
+
+    @NotNull
     private static SomaticVariant cosmicSNPVariantOnPositionWithCallers(long position, int numCallers) {
-        List<String> callers = Lists.newArrayList();
+        final List<String> callers = Lists.newArrayList();
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
         return new SomaticVariant.Builder(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
-                callers).cosmicID("id").build();
+                callers).cosmicID("any_id").build();
     }
 
     @NotNull
     private static SomaticVariant dbsnpSNPVariantOnPositionWithCallers(long position, int numCallers) {
-        List<String> callers = Lists.newArrayList();
+        final List<String> callers = Lists.newArrayList();
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
         return new SomaticVariant.Builder(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
-                callers).dnsnpID("id").build();
+                callers).dnsnpID("any_id").build();
     }
 
     @NotNull
     private static SomaticVariant indelVariantOnPositionWithCallers(long position, int numCallers) {
-        List<String> callers = Lists.newArrayList();
+        final List<String> callers = Lists.newArrayList();
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }

@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.is
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,13 +32,12 @@ public class VariantInterpreter {
     }
 
     @NotNull
-    public VariantAnalysis run(@NotNull final VCFSomaticFile variantFile) {
-        final List<SomaticVariant> allVariants = variantFile.variants();
-        final List<SomaticVariant> allPassedVariants = passOnly(allVariants);
-        final List<SomaticVariant> consensusPassedVariants = consensusRule.apply(allPassedVariants);
+    public VariantAnalysis run(@NotNull final List<SomaticVariant> variants) {
+        final List<SomaticVariant> passedVariants = passOnly(variants);
+        final List<SomaticVariant> consensusPassedVariants = consensusRule.apply(passedVariants);
         final List<SomaticVariant> missenseVariants = filter(consensusPassedVariants, isMissense());
         final List<SomaticVariant> consequencePassedVariants = consequenceRule.apply(consensusPassedVariants);
-        return new VariantAnalysis(allVariants, allPassedVariants, consensusPassedVariants, missenseVariants,
+        return new VariantAnalysis(passedVariants, consensusPassedVariants, missenseVariants,
                 consequencePassedVariants);
     }
 }
