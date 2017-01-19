@@ -24,6 +24,7 @@ class ConsequenceRule {
     private static final Logger LOGGER = LogManager.getLogger(ConsequenceRule.class);
 
     private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
+    // KODU: This boolean exists to evaluate the impact of annotation-filtering on actual patients.
     private static final boolean INCLUDE_ALL_ANNOTATIONS_FOR_IMPACT = false;
 
     private static final List<VariantConsequence> ACTIONABLE_CONSEQUENCES = Lists.newArrayList(
