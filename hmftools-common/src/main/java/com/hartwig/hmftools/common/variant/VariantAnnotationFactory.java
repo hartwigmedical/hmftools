@@ -73,10 +73,15 @@ final class VariantAnnotationFactory {
         final List<VariantConsequence> consequences = Lists.newArrayList();
         final String[] parts = consequenceString.split(CONSEQUENCE_SEPARATOR);
         for (final String part : parts) {
+            boolean found = false;
             for (final VariantConsequence consequence : VariantConsequence.values()) {
                 if (consequence.sequenceOntologyTerm().equals(part)) {
+                    found = true;
                     consequences.add(consequence);
                 }
+            }
+            if (!found) {
+                consequences.add(VariantConsequence.OTHER);
             }
         }
         return consequences;
