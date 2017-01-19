@@ -24,6 +24,7 @@ class ConsequenceRule {
     private static final Logger LOGGER = LogManager.getLogger(ConsequenceRule.class);
 
     private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
+    private static final boolean INCLUDE_ALL_ANNOTATIONS_FOR_IMPACT = false;
 
     private static final List<VariantConsequence> ACTIONABLE_CONSEQUENCES = Lists.newArrayList(
             VariantConsequence.TRANSCRIPT_ABLATION, VariantConsequence.TRANSCRIPT_AMPLIFICATION,
@@ -99,6 +100,10 @@ class ConsequenceRule {
     @NotNull
     private static List<VariantAnnotation> findRelevantAnnotations(final List<VariantAnnotation> annotations,
             final List<String> relevantTranscripts) {
+        if (INCLUDE_ALL_ANNOTATIONS_FOR_IMPACT) {
+            return annotations;
+        }
+
         return annotations.stream().filter(
                 annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT) && relevantTranscripts.contains(
                         annotation.featureID())).collect(Collectors.toList());
