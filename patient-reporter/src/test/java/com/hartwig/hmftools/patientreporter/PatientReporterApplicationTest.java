@@ -11,7 +11,7 @@ import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
-import com.hartwig.hmftools.patientreporter.variants.VariantInterpreter;
+import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ public class PatientReporterApplicationTest {
             assertNotNull(HMFSlicingAnnotation.fromGenomeRegion(region));
         }
 
-        VariantInterpreter variantInterpreter = VariantInterpreter.fromSlicingRegions(slicer, slicer, slicer);
-        new PatientReporterApplication(RUN_DIRECTORY, variantInterpreter, slicer, null, false).run();
+        VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
+        new PatientReporterApplication(RUN_DIRECTORY, variantAnalyzer, slicer, null, false).run();
     }
 }

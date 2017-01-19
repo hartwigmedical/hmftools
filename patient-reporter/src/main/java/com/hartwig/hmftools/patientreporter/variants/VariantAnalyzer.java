@@ -11,21 +11,21 @@ import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VariantInterpreter {
+public class VariantAnalyzer {
 
     @NotNull
     private final ConsensusRule consensusRule;
     @NotNull
     private final ConsequenceRule consequenceRule;
 
-    public static VariantInterpreter fromSlicingRegions(@NotNull final Slicer hmfSlicingRegion,
+    public static VariantAnalyzer fromSlicingRegions(@NotNull final Slicer hmfSlicingRegion,
             @NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
         final ConsensusRule consensusRule = new ConsensusRule(giabHighConfidenceRegion, cpctSlicingRegion);
         final ConsequenceRule consequenceRule = ConsequenceRule.fromHmfSlicingRegion(hmfSlicingRegion);
-        return new VariantInterpreter(consensusRule, consequenceRule);
+        return new VariantAnalyzer(consensusRule, consequenceRule);
     }
 
-    private VariantInterpreter(@NotNull final ConsensusRule consensusRule,
+    private VariantAnalyzer(@NotNull final ConsensusRule consensusRule,
             @NotNull final ConsequenceRule consequenceRule) {
         this.consensusRule = consensusRule;
         this.consequenceRule = consequenceRule;

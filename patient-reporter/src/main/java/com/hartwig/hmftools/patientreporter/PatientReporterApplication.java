@@ -25,7 +25,7 @@ import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.VariantInterpreter;
+import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -68,7 +68,7 @@ public class PatientReporterApplication {
     @NotNull
     private final String runDirectory;
     @NotNull
-    private final VariantInterpreter variantInterpreter;
+    private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final Slicer hmfSlicer;
     @Nullable
@@ -101,9 +101,9 @@ public class PatientReporterApplication {
         }
 
         final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
-        final VariantInterpreter variantInterpreter = VariantInterpreter.fromSlicingRegions(hmfSlicingRegion,
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
-        new PatientReporterApplication(runDir, variantInterpreter, hmfSlicingRegion, outputDirectory, batchMode).run();
+        new PatientReporterApplication(runDir, variantAnalyzer, hmfSlicingRegion, outputDirectory, batchMode).run();
     }
 
     @NotNull
@@ -127,11 +127,11 @@ public class PatientReporterApplication {
         return parser.parse(options, args);
     }
 
-    PatientReporterApplication(@NotNull final String runDirectory,
-            @NotNull final VariantInterpreter variantInterpreter, @NotNull final Slicer hmfSlicer,
+    PatientReporterApplication(@NotNull final String runDirectory, @NotNull final VariantAnalyzer variantAnalyzer,
+            @NotNull final Slicer hmfSlicer,
             @Nullable final String outputDirectory, final boolean batchMode) {
         this.runDirectory = runDirectory;
-        this.variantInterpreter = variantInterpreter;
+        this.variantAnalyzer = variantAnalyzer;
         this.hmfSlicer = hmfSlicer;
         this.outputDirectory = outputDirectory;
         this.batchMode = batchMode;
@@ -157,7 +157,7 @@ public class PatientReporterApplication {
 
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
             final VCFSomaticFile variantFile = loadVariantFile(run.toFile().getPath());
-            final VariantAnalysis analysis = variantInterpreter.run(variantFile.variants());
+            final VariantAnalysis analysis = variantAnalyzer.run(variantFile.variants());
 
             final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(analysis.consensusPassedVariants());
             String consequenceList = Strings.EMPTY;
@@ -180,7 +180,7 @@ public class PatientReporterApplication {
         final VCFSomaticFile variantFile = loadVariantFile(runDirectory);
         LOGGER.info("  Total number of variants : " + variantFile.variants().size());
 
-        final VariantAnalysis analysis = variantInterpreter.run(variantFile.variants());
+        final VariantAnalysis analysis = variantAnalyzer.run(variantFile.variants());
         analyzeCopyNumbers(variantFile.sample());
 
         LOGGER.info("  Number of variants after applying pass-only filter : " + analysis.passedVariants().size());

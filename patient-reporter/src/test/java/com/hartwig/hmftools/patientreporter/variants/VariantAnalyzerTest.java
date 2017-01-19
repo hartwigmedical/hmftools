@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class VariantInterpreterTest {
+public class VariantAnalyzerTest {
 
     private static final String CHROMOSOME = "X";
 
@@ -20,9 +20,9 @@ public class VariantInterpreterTest {
         final Slicer giabHighConfidenceRegion = SlicerTestFactory.forGenomeRegion(region(100, 1000));
         final Slicer cpctSlicingRegion = SlicerTestFactory.forGenomeRegion(region(400, 500));
 
-        final VariantInterpreter interpreter = VariantInterpreter.fromSlicingRegions(hmfSlicingRegion,
+        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 giabHighConfidenceRegion, cpctSlicingRegion);
-        assertNotNull(interpreter);
+        assertNotNull(analyzer);
     }
 
     @NotNull
