@@ -30,7 +30,7 @@ final class VariantAnnotationFactory {
         if (startIndex >= 0) {
             String fullAnnotationString = info.substring(startIndex + START_IDENTIFIER.length());
             final int endIndex = fullAnnotationString.indexOf(END_IDENTIFIER);
-            if (endIndex > 0) {
+            if (endIndex >= 0) {
                 fullAnnotationString = fullAnnotationString.substring(0, endIndex - 1);
             }
             for (final String annotationString : fullAnnotationString.split(ANNOTATION_SEPARATOR)) {
@@ -48,7 +48,8 @@ final class VariantAnnotationFactory {
                     LOGGER.warn("Annotation found with invalid field count: " + annotationString);
                 }
             }
-
+        } else {
+            LOGGER.warn("Cannot find annotation for variant with info field " + info);
         }
         return annotations;
     }

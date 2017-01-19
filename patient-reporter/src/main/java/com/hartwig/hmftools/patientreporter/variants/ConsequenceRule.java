@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.an
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -17,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 class ConsequenceRule {
 
@@ -79,30 +79,26 @@ class ConsequenceRule {
     private static Predicate<SomaticVariant> hasActionableConsequence(
             @NotNull final List<String> relevantTranscripts) {
         return variant -> {
-            final VariantAnnotation annotation = findRelevantAnnotation(variant.annotations(), relevantTranscripts);
-            if (annotation == null) {
+            final List<VariantAnnotation> annotations = findRelevantAnnotations(variant.annotations(),
+                    relevantTranscripts);
+            if (annotations.isEmpty()) {
                 LOGGER.warn("Variants should be filtered on transcripts already by this stage!");
                 return false;
             }
-
-            return ACTIONABLE_CONSEQUENCES.contains(annotation.consequence());
+            for (final VariantAnnotation annotation : annotations) {
+                if (ACTIONABLE_CONSEQUENCES.contains(annotation.consequence())) {
+                    return true;
+                }
+            }
+            return false;
         };
     }
 
-    @Nullable
-    private static VariantAnnotation findRelevantAnnotation(final List<VariantAnnotation> annotations,
+    @NotNull
+    private static List<VariantAnnotation> findRelevantAnnotations(final List<VariantAnnotation> annotations,
             final List<String> relevantTranscripts) {
-        VariantAnnotation finalAnnotation = null;
-        for (final VariantAnnotation annotation : annotations) {
-            if (annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT) && relevantTranscripts.contains(
-                    annotation.featureID())) {
-                if (finalAnnotation == null) {
-                    finalAnnotation = annotation;
-                } else {
-                    LOGGER.warn("Multiple annotations found for relevant transcripts for " + annotation.featureID());
-                }
-            }
-        }
-        return finalAnnotation;
+        return annotations.stream().filter(
+                annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT) && relevantTranscripts.contains(
+                        annotation.featureID())).collect(Collectors.toList());
     }
 }
