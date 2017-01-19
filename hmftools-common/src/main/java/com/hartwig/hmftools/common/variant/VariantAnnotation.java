@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.variant;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class Annotation {
+public class VariantAnnotation {
 
     @NotNull
     private final String allele;
@@ -38,7 +38,7 @@ public class Annotation {
     @NotNull
     private final String addition;
 
-    private Annotation(@NotNull final String allele, @NotNull final VariantConsequence consequence,
+    private VariantAnnotation(@NotNull final String allele, @NotNull final VariantConsequence consequence,
             @NotNull final String severity, @NotNull final String gene, @NotNull final String geneID,
             @NotNull final String featureType, @NotNull final String featureID,
             @NotNull final String transcriptBioType, @NotNull final String rank, @NotNull final String hgvsCoding,
@@ -277,8 +277,8 @@ public class Annotation {
         }
 
         @NotNull
-        public Annotation build() {
-            return new Annotation(allele, consequence, severity, gene, geneID, featureType, featureID,
+        public VariantAnnotation build() {
+            return new VariantAnnotation(allele, consequence, severity, gene, geneID, featureType, featureID,
                     transcriptBioType, rank, hgvsCoding, hgvsProtein, cDNAPosAndLength, cdsPosAndLength,
                     aaPosAndLength, distance, addition);
         }

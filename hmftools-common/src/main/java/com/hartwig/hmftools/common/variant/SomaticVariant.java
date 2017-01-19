@@ -25,7 +25,7 @@ public class SomaticVariant implements Variant {
     @Nullable
     private final String cosmicID;
     @NotNull
-    private final List<Annotation> annotations;
+    private final List<VariantAnnotation> annotations;
     @NotNull
     private final List<String> callers;
     private final double alleleFrequency;
@@ -34,7 +34,7 @@ public class SomaticVariant implements Variant {
     public SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
             @NotNull final String chromosome, final long position, @NotNull final String filter,
             @Nullable final String dbsnpID, @Nullable final String cosmicID,
-            @NotNull final List<Annotation> annotations, @NotNull final List<String> callers,
+            @NotNull final List<VariantAnnotation> annotations, @NotNull final List<String> callers,
             final double alleleFrequency, final int readDepth) {
         this.originalVCFLine = originalVCFLine;
         this.type = type;
@@ -81,8 +81,13 @@ public class SomaticVariant implements Variant {
         return cosmicID != null;
     }
 
+    @NotNull
+    public List<VariantAnnotation> annotations() {
+        return annotations;
+    }
+
     public boolean hasConsequence(@NotNull VariantConsequence consequence) {
-        for (final Annotation annotation : annotations) {
+        for (final VariantAnnotation annotation : annotations) {
             if (annotation.consequence().equals(consequence)) {
                 return true;
             }
@@ -128,7 +133,7 @@ public class SomaticVariant implements Variant {
         @Nullable
         private String cosmicID = null;
         @NotNull
-        private List<Annotation> annotations = Lists.newArrayList();
+        private List<VariantAnnotation> annotations = Lists.newArrayList();
         @NotNull
         private List<String> callers = Lists.newArrayList();
         private double alleleFrequency = Double.NaN;
@@ -180,7 +185,7 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        public Builder annotations(@NotNull final List<Annotation> annotations) {
+        public Builder annotations(@NotNull final List<VariantAnnotation> annotations) {
             this.annotations = annotations;
             return this;
         }

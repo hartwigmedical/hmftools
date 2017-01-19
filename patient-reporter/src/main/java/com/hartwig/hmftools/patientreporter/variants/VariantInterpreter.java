@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.is
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
@@ -22,7 +23,7 @@ public class VariantInterpreter {
     public static VariantInterpreter fromSlicingRegions(@NotNull final Slicer hmfSlicingRegion,
             @NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
         final ConsensusRule consensusRule = new ConsensusRule(giabHighConfidenceRegion, cpctSlicingRegion);
-        final ConsequenceRule consequenceRule = new ConsequenceRule(hmfSlicingRegion);
+        final ConsequenceRule consequenceRule = new ConsequenceRule(hmfSlicingRegion, Lists.newArrayList());
         return new VariantInterpreter(consensusRule, consequenceRule);
     }
 

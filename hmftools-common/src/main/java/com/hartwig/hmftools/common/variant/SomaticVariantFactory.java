@@ -110,7 +110,7 @@ public final class SomaticVariantFactory {
 
         final String info = values[INFO_COLUMN].trim();
         builder.callers(extractCallers(info));
-        builder.annotations(AnnotationFactory.fromVCFInfoField(info));
+        builder.annotations(VariantAnnotationFactory.fromVCFInfoField(info));
 
         final String sampleInfo = values[SAMPLE_COLUMN].trim();
         final ReadCount readCounts = extractReadCounts(sampleInfo);

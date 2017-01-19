@@ -7,11 +7,11 @@ import java.util.List;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class AnnotationFactoryTest {
+public class VariantAnnotationFactoryTest {
 
     @Test
     public void canLoadFromEmptyVCFInfoField() {
-        final List<Annotation> annotations = AnnotationFactory.fromVCFInfoField(Strings.EMPTY);
+        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(Strings.EMPTY);
         assertEquals(0, annotations.size());
     }
 
@@ -20,9 +20,9 @@ public class AnnotationFactoryTest {
         final String info = "ANN=allele|consequence|severity|gene|geneID|featureType|featureID|"
                 + "transcriptBioType|rank|hgvsCoding|hgvsProtein|cDNAPosAndLength|cdsPosAndLength|"
                 + "aaPosAndLength|distance|addition";
-        final List<Annotation> annotations = AnnotationFactory.fromVCFInfoField(info);
+        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(info);
         assertEquals(1, annotations.size());
-        final Annotation annotation = annotations.get(0);
+        final VariantAnnotation annotation = annotations.get(0);
         assertEquals("allele", annotation.allele());
         assertEquals(VariantConsequence.OTHER, annotation.consequence());
         assertEquals("severity", annotation.severity());
@@ -54,7 +54,7 @@ public class AnnotationFactoryTest {
                 + "PAO=0;PQA=0;PQR=0;PRO=0;QA=482;QR=4272;RO=111;RPL=9;RPP=7.18621;RPPR=3.18637;RPR=4;RUN=1;SAF=6;"
                 + "SAP=3.17734;SAR=7;SOMATIC;SRF=55;SRP=3.02986;SRR=56;TYPE=snp;VT=SNP;set=freebayes-mutect;"
                 + "technology.ILLUMINA=1;CSA=2,2;CSP=2";
-        final List<Annotation> annotations = AnnotationFactory.fromVCFInfoField(info);
+        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(info);
         assertEquals(4, annotations.size());
         assertEquals(VariantConsequence.MISSENSE_VARIANT, annotations.get(0).consequence());
     }

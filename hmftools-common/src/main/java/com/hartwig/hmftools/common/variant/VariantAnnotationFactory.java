@@ -9,9 +9,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class AnnotationFactory {
+final class VariantAnnotationFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(AnnotationFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(VariantAnnotationFactory.class);
 
     private static final String START_IDENTIFIER = "ANN=";
     private static final String END_IDENTIFIER = ";";
@@ -20,12 +20,12 @@ final class AnnotationFactory {
 
     private static final int EXPECTED_FIELD_SIZE_PER_ANNOTATION = 16;
 
-    private AnnotationFactory() {
+    private VariantAnnotationFactory() {
     }
 
     @NotNull
-    static List<Annotation> fromVCFInfoField(@NotNull final String info) {
-        final List<Annotation> annotations = Lists.newArrayList();
+    static List<VariantAnnotation> fromVCFInfoField(@NotNull final String info) {
+        final List<VariantAnnotation> annotations = Lists.newArrayList();
         final int startIndex = info.indexOf(START_IDENTIFIER);
         if (startIndex >= 0) {
             String fullAnnotationString = info.substring(startIndex + START_IDENTIFIER.length());
@@ -37,7 +37,8 @@ final class AnnotationFactory {
                 final String[] parts = enforceMinLength(annotationString.split(FIELD_SEPARATOR),
                         EXPECTED_FIELD_SIZE_PER_ANNOTATION);
                 if (parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION) {
-                    annotations.add(new Annotation.Builder().allele(parts[0]).consequence(toConsequence(parts[1])).
+                    annotations.add(
+                            new VariantAnnotation.Builder().allele(parts[0]).consequence(toConsequence(parts[1])).
                             severity(parts[2]).gene(parts[3]).geneID(parts[4]).featureType(parts[5]).
                             featureID(parts[6]).transcriptBioType(parts[7]).rank(parts[8]).hgvsCoding(parts[9]).
                             hgvsProtein(parts[10]).cDNAPosAndLength(parts[11]).cdsPosAndLength(

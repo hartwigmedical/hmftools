@@ -25,9 +25,12 @@ class ConsequenceRule {
 
     @NotNull
     private final Slicer hmfSlicingRegion;
+    @NotNull
+    private final List<String> relevantTranscripts;
 
-    ConsequenceRule(@NotNull final Slicer hmfSlicingRegion) {
+    ConsequenceRule(@NotNull final Slicer hmfSlicingRegion, @NotNull final List<String> relevantTranscripts) {
         this.hmfSlicingRegion = hmfSlicingRegion;
+        this.relevantTranscripts = relevantTranscripts;
     }
 
     @NotNull
