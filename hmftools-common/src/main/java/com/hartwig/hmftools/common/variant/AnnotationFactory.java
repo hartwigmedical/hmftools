@@ -38,8 +38,8 @@ final class AnnotationFactory {
                         EXPECTED_FIELD_SIZE_PER_ANNOTATION);
                 if (parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION) {
                     annotations.add(
-                            new Annotation(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6],
-                                    parts[7], parts[8], parts[9], parts[10], parts[11], parts[12], parts[13],
+                            new Annotation(parts[0], toConsequence(parts[1]), parts[2], parts[3], parts[4], parts[5],
+                                    parts[6], parts[7], parts[8], parts[9], parts[10], parts[11], parts[12], parts[13],
                                     parts[14], parts[15]));
                 } else {
                     LOGGER.warn("Annotation found with invalid field count: " + annotationString);
@@ -63,5 +63,15 @@ final class AnnotationFactory {
 
             return values;
         }
+    }
+
+    @NotNull
+    private static VariantConsequence toConsequence(@NotNull final String annotation) {
+        for (final VariantConsequence consequence : VariantConsequence.values()) {
+            if (consequence.sequenceOntologyTerm().equals(annotation)) {
+                return consequence;
+            }
+        }
+        return VariantConsequence.OTHER;
     }
 }

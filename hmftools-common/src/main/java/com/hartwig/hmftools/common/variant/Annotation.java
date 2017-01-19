@@ -7,9 +7,9 @@ class Annotation {
     @NotNull
     private final String allele;
     @NotNull
-    private final String annotation;
+    private final VariantConsequence consequence;
     @NotNull
-    private final String annotationImpact;
+    private final String severity;
     @NotNull
     private final String gene;
     @NotNull
@@ -37,15 +37,16 @@ class Annotation {
     @NotNull
     private final String addition;
 
-    Annotation(@NotNull final String allele, @NotNull final String annotation, @NotNull final String annotationImpact,
-            @NotNull final String gene, @NotNull final String geneID, @NotNull final String featureType,
-            @NotNull final String featureID, @NotNull final String transcriptBioType, @NotNull final String rank,
-            @NotNull final String hgvsCoding, @NotNull final String hgvsProtein,
-            @NotNull final String cDNAPosAndLength, @NotNull final String cdsPosAndLength,
-            @NotNull final String aaPosAndLength, @NotNull final String distance, @NotNull final String addition) {
+    Annotation(@NotNull final String allele, @NotNull final VariantConsequence consequence,
+            @NotNull final String severity, @NotNull final String gene, @NotNull final String geneID,
+            @NotNull final String featureType, @NotNull final String featureID,
+            @NotNull final String transcriptBioType, @NotNull final String rank, @NotNull final String hgvsCoding,
+            @NotNull final String hgvsProtein, @NotNull final String cDNAPosAndLength,
+            @NotNull final String cdsPosAndLength, @NotNull final String aaPosAndLength,
+            @NotNull final String distance, @NotNull final String addition) {
         this.allele = allele;
-        this.annotation = annotation;
-        this.annotationImpact = annotationImpact;
+        this.consequence = consequence;
+        this.severity = severity;
         this.gene = gene;
         this.geneID = geneID;
         this.featureType = featureType;
@@ -67,13 +68,13 @@ class Annotation {
     }
 
     @NotNull
-    String annotation() {
-        return annotation;
+    VariantConsequence consequence() {
+        return consequence;
     }
 
     @NotNull
-    String annotationImpact() {
-        return annotationImpact;
+    String severity() {
+        return severity;
     }
 
     @NotNull

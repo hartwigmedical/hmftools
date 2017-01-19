@@ -17,15 +17,15 @@ public class AnnotationFactoryTest {
 
     @Test
     public void canLoadFromTrivialVCFInfoField() {
-        final String info = "ANN=allele|annotation|annotationImpact|gene|geneID|featureType|featureID|"
+        final String info = "ANN=allele|consequence|severity|gene|geneID|featureType|featureID|"
                 + "transcriptBioType|rank|hgvsCoding|hgvsProtein|cDNAPosAndLength|cdsPosAndLength|"
                 + "aaPosAndLength|distance|addition";
         final List<Annotation> annotations = AnnotationFactory.fromVCFInfoField(info);
         assertEquals(1, annotations.size());
         final Annotation annotation = annotations.get(0);
         assertEquals("allele", annotation.allele());
-        assertEquals("annotation", annotation.annotation());
-        assertEquals("annotationImpact", annotation.annotationImpact());
+        assertEquals(VariantConsequence.OTHER, annotation.consequence());
+        assertEquals("severity", annotation.severity());
         assertEquals("gene", annotation.gene());
         assertEquals("geneID", annotation.geneID());
         assertEquals("featureType", annotation.featureType());
@@ -56,5 +56,6 @@ public class AnnotationFactoryTest {
                 + "technology.ILLUMINA=1;CSA=2,2;CSP=2";
         final List<Annotation> annotations = AnnotationFactory.fromVCFInfoField(info);
         assertEquals(4, annotations.size());
+        assertEquals(VariantConsequence.MISSENSE_VARIANT, annotations.get(0).consequence());
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public enum VariantConsequence {
@@ -16,7 +17,8 @@ public enum VariantConsequence {
     FRAMESHIFT_VARIANT("frameshift_variant"),
     INFRAME_INSERTION("inframe_insertion"),
     INFRAME_DELETION("inframe_deletion"),
-    MISSENSE_VARIANT("missense_variant");
+    MISSENSE_VARIANT("missense_variant"),
+    OTHER(Strings.EMPTY);
 
     @NotNull
     private final String sequenceOntologyTerm;
