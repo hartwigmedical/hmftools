@@ -37,6 +37,7 @@ public class VariantAnalyzer {
         final List<SomaticVariant> consensusPassedVariants = consensusRule.apply(passedVariants);
         final List<SomaticVariant> missenseVariants = filter(consensusPassedVariants, isMissense());
         final List<SomaticVariant> consequencePassedVariants = consequenceRule.apply(consensusPassedVariants);
+
         return new VariantAnalysis(passedVariants, consensusPassedVariants, missenseVariants,
                 consequencePassedVariants);
     }
