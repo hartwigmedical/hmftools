@@ -48,8 +48,6 @@ final class VariantAnnotationFactory {
                     LOGGER.warn("Annotation found with invalid field count: " + annotationString);
                 }
             }
-        } else {
-            LOGGER.warn("Cannot find annotation for variant with info field " + info);
         }
         return annotations;
     }
