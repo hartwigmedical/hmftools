@@ -211,13 +211,13 @@ public class VariantAnnotation {
         }
 
         @NotNull
-        Builder featureType(@NotNull final String featureType) {
+        public Builder featureType(@NotNull final String featureType) {
             this.featureType = featureType;
             return this;
         }
 
         @NotNull
-        Builder featureID(@NotNull final String featureID) {
+        public Builder featureID(@NotNull final String featureID) {
             this.featureID = featureID;
             return this;
         }

@@ -136,7 +136,7 @@ public final class SomaticVariantFactory {
         }
 
         final String[] allCallers = setValue.get().split(CALLER_ALGO_SEPARATOR);
-        List<String> finalCallers = Lists.newArrayList();
+        final List<String> finalCallers = Lists.newArrayList();
         if (allCallers.length > 0 && allCallers[0].equals(CALLER_INTERSECTION_IDENTIFIER)) {
             finalCallers.addAll(SomaticVariantConstants.ALL_CALLERS);
         } else {
