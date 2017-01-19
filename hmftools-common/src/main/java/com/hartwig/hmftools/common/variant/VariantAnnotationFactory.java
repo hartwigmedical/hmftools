@@ -17,6 +17,7 @@ final class VariantAnnotationFactory {
     private static final String END_IDENTIFIER = ";";
     private static final String ANNOTATION_SEPARATOR = ",";
     private static final String FIELD_SEPARATOR = "\\|";
+    private static final String CONSEQUENCE_SEPARATOR = "&";
 
     private static final int EXPECTED_FIELD_SIZE_PER_ANNOTATION = 16;
 
@@ -38,7 +39,7 @@ final class VariantAnnotationFactory {
                         EXPECTED_FIELD_SIZE_PER_ANNOTATION);
                 if (parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION) {
                     annotations.add(
-                            new VariantAnnotation.Builder().allele(parts[0]).consequence(toConsequence(parts[1])).
+                            new VariantAnnotation.Builder().allele(parts[0]).consequences(toConsequences(parts[1])).
                             severity(parts[2]).gene(parts[3]).geneID(parts[4]).featureType(parts[5]).
                             featureID(parts[6]).transcriptBioType(parts[7]).rank(parts[8]).hgvsCoding(parts[9]).
                             hgvsProtein(parts[10]).cDNAPosAndLength(parts[11]).cdsPosAndLength(
@@ -68,12 +69,16 @@ final class VariantAnnotationFactory {
     }
 
     @NotNull
-    private static VariantConsequence toConsequence(@NotNull final String annotation) {
-        for (final VariantConsequence consequence : VariantConsequence.values()) {
-            if (consequence.sequenceOntologyTerm().equals(annotation)) {
-                return consequence;
+    private static List<VariantConsequence> toConsequences(@NotNull final String consequenceString) {
+        final List<VariantConsequence> consequences = Lists.newArrayList();
+        final String[] parts = consequenceString.split(CONSEQUENCE_SEPARATOR);
+        for (final String part : parts) {
+            for (final VariantConsequence consequence : VariantConsequence.values()) {
+                if (consequence.sequenceOntologyTerm().equals(part)) {
+                    consequences.add(consequence);
+                }
             }
         }
-        return VariantConsequence.OTHER;
+        return consequences;
     }
 }

@@ -117,7 +117,7 @@ public final class SomaticVariantFactory {
         boolean annotationHasMissense = false;
         for (VariantAnnotation annotation : annotations) {
             annotationHasMissense =
-                    annotationHasMissense || annotation.consequence().equals(VariantConsequence.MISSENSE_VARIANT);
+                    annotationHasMissense || annotation.consequences().contains(VariantConsequence.MISSENSE_VARIANT);
         }
         boolean infoHasMissense = info.contains("missense");
         if (annotationHasMissense != infoHasMissense) {

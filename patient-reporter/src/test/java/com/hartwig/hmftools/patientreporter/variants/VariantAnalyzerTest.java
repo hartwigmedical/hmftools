@@ -38,19 +38,19 @@ public class VariantAnalyzerTest {
                 cpctSlicingRegion);
 
         final VariantAnnotation rightAnnotation = new VariantAnnotation.Builder().
-                consequence(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE).
+                consequences(list(VariantConsequence.MISSENSE_VARIANT)).featureType(RIGHT_FEATURE_TYPE).
                 featureID(RIGHT_TRANSCRIPT).build();
 
         final VariantAnnotation wrongTranscript = new VariantAnnotation.Builder().
-                consequence(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE).
+                consequences(list(VariantConsequence.MISSENSE_VARIANT)).featureType(RIGHT_FEATURE_TYPE).
                 featureID(WRONG_TRANSCRIPT).build();
 
         final VariantAnnotation wrongFeatureType = new VariantAnnotation.Builder().
-                consequence(VariantConsequence.MISSENSE_VARIANT).featureType(WRONG_FEATURE_TYPE).
+                consequences(list(VariantConsequence.MISSENSE_VARIANT)).featureType(WRONG_FEATURE_TYPE).
                 featureID(RIGHT_TRANSCRIPT).build();
 
         final VariantAnnotation wrongConsequence = new VariantAnnotation.Builder().
-                consequence(VariantConsequence.OTHER).featureType(RIGHT_FEATURE_TYPE).
+                consequences(list(VariantConsequence.OTHER)).featureType(RIGHT_FEATURE_TYPE).
                 featureID(RIGHT_TRANSCRIPT).build();
 
         final List<SomaticVariant> variants = Lists.newArrayList(
@@ -64,6 +64,11 @@ public class VariantAnalyzerTest {
         assertEquals(4, analysis.consensusPassedVariants().size());
         assertEquals(3, analysis.missenseVariants().size());
         assertEquals(1, analysis.consequencePassedVariants().size());
+    }
+
+    @NotNull
+    private static List<VariantConsequence> list(@NotNull final VariantConsequence consequence) {
+        return Lists.newArrayList(consequence);
     }
 
     @NotNull

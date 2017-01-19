@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.variant;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,7 +12,7 @@ public class VariantAnnotation {
     @NotNull
     private final String allele;
     @NotNull
-    private final VariantConsequence consequence;
+    private final List<VariantConsequence> consequences;
     @NotNull
     private final String severity;
     @NotNull
@@ -38,7 +42,7 @@ public class VariantAnnotation {
     @NotNull
     private final String addition;
 
-    private VariantAnnotation(@NotNull final String allele, @NotNull final VariantConsequence consequence,
+    private VariantAnnotation(@NotNull final String allele, @NotNull final List<VariantConsequence> consequences,
             @NotNull final String severity, @NotNull final String gene, @NotNull final String geneID,
             @NotNull final String featureType, @NotNull final String featureID,
             @NotNull final String transcriptBioType, @NotNull final String rank, @NotNull final String hgvsCoding,
@@ -46,7 +50,7 @@ public class VariantAnnotation {
             @NotNull final String cdsPosAndLength, @NotNull final String aaPosAndLength,
             @NotNull final String distance, @NotNull final String addition) {
         this.allele = allele;
-        this.consequence = consequence;
+        this.consequences = consequences;
         this.severity = severity;
         this.gene = gene;
         this.geneID = geneID;
@@ -69,8 +73,8 @@ public class VariantAnnotation {
     }
 
     @NotNull
-    public VariantConsequence consequence() {
-        return consequence;
+    public List<VariantConsequence> consequences() {
+        return consequences;
     }
 
     @NotNull
@@ -147,7 +151,7 @@ public class VariantAnnotation {
         @NotNull
         private String allele = Strings.EMPTY;
         @NotNull
-        private VariantConsequence consequence = VariantConsequence.OTHER;
+        private List<VariantConsequence> consequences = Lists.newArrayList();
         @NotNull
         private String severity = Strings.EMPTY;
         @NotNull
@@ -187,8 +191,8 @@ public class VariantAnnotation {
         }
 
         @NotNull
-        public Builder consequence(@NotNull final VariantConsequence consequence) {
-            this.consequence = consequence;
+        public Builder consequences(@NotNull final List<VariantConsequence> consequences) {
+            this.consequences = consequences;
             return this;
         }
 
@@ -278,7 +282,7 @@ public class VariantAnnotation {
 
         @NotNull
         public VariantAnnotation build() {
-            return new VariantAnnotation(allele, consequence, severity, gene, geneID, featureType, featureID,
+            return new VariantAnnotation(allele, consequences, severity, gene, geneID, featureType, featureID,
                     transcriptBioType, rank, hgvsCoding, hgvsProtein, cDNAPosAndLength, cdsPosAndLength,
                     aaPosAndLength, distance, addition);
         }

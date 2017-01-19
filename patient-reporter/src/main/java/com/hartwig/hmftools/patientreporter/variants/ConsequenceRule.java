@@ -86,8 +86,10 @@ class ConsequenceRule {
                 return false;
             }
             for (final VariantAnnotation annotation : annotations) {
-                if (ACTIONABLE_CONSEQUENCES.contains(annotation.consequence())) {
-                    return true;
+                for (VariantConsequence consequence : annotation.consequences()) {
+                    if (ACTIONABLE_CONSEQUENCES.contains(consequence)) {
+                        return true;
+                    }
                 }
             }
             return false;

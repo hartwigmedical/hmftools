@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ConsequenceCountTest {
@@ -21,15 +22,21 @@ public class ConsequenceCountTest {
 
         final SomaticVariant.Builder builder = new SomaticVariant.Builder(VariantType.SNP);
         variants.add(builder.annotations(Lists.newArrayList(
-                new VariantAnnotation.Builder().consequence(VariantConsequence.FRAMESHIFT_VARIANT).build(),
-                new VariantAnnotation.Builder().consequence(VariantConsequence.INFRAME_DELETION).build())).build());
-        variants.add(builder.annotations(Lists.newArrayList(
-                new VariantAnnotation.Builder().consequence(VariantConsequence.INFRAME_DELETION).build())).build());
+                new VariantAnnotation.Builder().consequences(list(VariantConsequence.FRAMESHIFT_VARIANT)).build(),
+                new VariantAnnotation.Builder().consequences(
+                        list(VariantConsequence.INFRAME_DELETION)).build())).build());
+        variants.add(builder.annotations(Lists.newArrayList(new VariantAnnotation.Builder().consequences(
+                list(VariantConsequence.INFRAME_DELETION)).build())).build());
 
         final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(variants);
         assertEquals(VariantConsequence.values().length, counts.size());
         assertEquals(0, counts.get(VariantConsequence.INITIATOR_CODON_VARIANT).intValue());
         assertEquals(1, counts.get(VariantConsequence.FRAMESHIFT_VARIANT).intValue());
         assertEquals(2, counts.get(VariantConsequence.INFRAME_DELETION).intValue());
+    }
+
+    @NotNull
+    private static List<VariantConsequence> list(@NotNull final VariantConsequence consequence) {
+        return Lists.newArrayList(consequence);
     }
 }

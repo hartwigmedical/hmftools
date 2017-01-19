@@ -88,7 +88,7 @@ public class SomaticVariant implements Variant {
 
     public boolean hasConsequence(@NotNull VariantConsequence consequence) {
         for (final VariantAnnotation annotation : annotations) {
-            if (annotation.consequence().equals(consequence)) {
+            if (annotation.consequences().contains(consequence)) {
                 return true;
             }
         }

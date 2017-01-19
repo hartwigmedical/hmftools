@@ -16,6 +16,15 @@ public class VariantAnnotationFactoryTest {
     }
 
     @Test
+    public void canDealWithMultipleConsequences() {
+        final String info = "ANN=allele|missense_variant&splice_donor_variant";
+        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(info);
+        assertEquals(1, annotations.size());
+        assertEquals(VariantConsequence.MISSENSE_VARIANT, annotations.get(0).consequences().get(0));
+        assertEquals(VariantConsequence.SPLICE_DONOR_VARIANT, annotations.get(0).consequences().get(1));
+    }
+
+    @Test
     public void canLoadFromTrivialVCFInfoField() {
         final String info = "ANN=allele|consequence|severity|gene|geneID|featureType|featureID|"
                 + "transcriptBioType|rank|hgvsCoding|hgvsProtein|cDNAPosAndLength|cdsPosAndLength|"
@@ -24,7 +33,7 @@ public class VariantAnnotationFactoryTest {
         assertEquals(1, annotations.size());
         final VariantAnnotation annotation = annotations.get(0);
         assertEquals("allele", annotation.allele());
-        assertEquals(VariantConsequence.OTHER, annotation.consequence());
+        assertEquals(VariantConsequence.OTHER, annotation.consequences().get(0));
         assertEquals("severity", annotation.severity());
         assertEquals("gene", annotation.gene());
         assertEquals("geneID", annotation.geneID());
@@ -56,6 +65,6 @@ public class VariantAnnotationFactoryTest {
                 + "technology.ILLUMINA=1;CSA=2,2;CSP=2";
         final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(info);
         assertEquals(4, annotations.size());
-        assertEquals(VariantConsequence.MISSENSE_VARIANT, annotations.get(0).consequence());
+        assertEquals(VariantConsequence.MISSENSE_VARIANT, annotations.get(0).consequences().get(0));
     }
 }
