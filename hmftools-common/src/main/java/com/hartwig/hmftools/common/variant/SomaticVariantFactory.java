@@ -115,11 +115,11 @@ public final class SomaticVariantFactory {
         // KODU: For testing
         final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(info);
         boolean annotationHasMissense = false;
-        for (VariantAnnotation annotation : annotations) {
+        for (final VariantAnnotation annotation : annotations) {
             annotationHasMissense =
                     annotationHasMissense || annotation.consequences().contains(VariantConsequence.MISSENSE_VARIANT);
         }
-        boolean infoHasMissense = info.contains("missense");
+        final boolean infoHasMissense = info.contains("missense");
         if (annotationHasMissense != infoHasMissense) {
             LOGGER.warn("Mismatch between annotated missense and normal missense: " + info);
         }
