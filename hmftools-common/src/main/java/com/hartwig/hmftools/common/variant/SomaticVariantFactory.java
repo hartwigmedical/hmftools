@@ -92,6 +92,10 @@ public final class SomaticVariantFactory {
                 values[ALT_COLUMN].trim());
         final SomaticVariant.Builder builder = SomaticVariant.Builder.fromVCF(line, type);
 
+        builder.chromosome(values[CHROMOSOME_COLUMN].trim());
+        builder.position(Long.valueOf(values[POSITION_COLUMN].trim()));
+        builder.filter(values[FILTER_COLUMN].trim());
+
         final String idValue = values[ID_COLUMN].trim();
         if (!idValue.isEmpty()) {
             final String[] ids = idValue.split(ID_SEPARATOR);
@@ -104,21 +108,18 @@ public final class SomaticVariantFactory {
             }
         }
 
-        builder.filter(values[FILTER_COLUMN].trim());
-
         final String info = values[INFO_COLUMN].trim();
         builder.callers(extractCallers(info));
         builder.annotations(AnnotationFactory.fromVCFInfoField(info));
 
         final String sampleInfo = values[SAMPLE_COLUMN].trim();
-        final double alleleFrequency = calcAlleleFrequency(sampleInfo);
-        if (Double.isNaN(alleleFrequency)) {
-            LOGGER.warn("Could not parse alleleFrequency from " + line);
+        final ReadCount readCounts = extractReadCounts(sampleInfo);
+        if (readCounts == null) {
+            LOGGER.warn("Could not parse read counts from " + line);
+        } else {
+            builder.alleleFrequency(readCounts.alleleFrequency());
+            builder.readDepth(readCounts.readDepth());
         }
-        builder.alleleFrequency(alleleFrequency);
-
-        builder.chromosome(values[CHROMOSOME_COLUMN].trim());
-        builder.position(Long.valueOf(values[POSITION_COLUMN].trim()));
 
         return builder.build();
     }
@@ -146,24 +147,43 @@ public final class SomaticVariantFactory {
         return finalCallers;
     }
 
-    private static double calcAlleleFrequency(@NotNull final String sampleData) {
+    @Nullable
+    private static ReadCount extractReadCounts(@NotNull final String sampleData) {
         final String[] sampleFields = sampleData.split(SAMPLE_FIELD_SEPARATOR);
         if (sampleFields.length < 2) {
-            return Double.NaN;
+            return null;
         }
 
         final String[] afFields = sampleFields[AF_COLUMN_INDEX].split(AF_FIELD_SEPARATOR);
 
         if (afFields.length < 2) {
-            return Double.NaN;
+            return null;
         }
 
         final int readCount = Integer.valueOf(afFields[1]);
         int totalReadCount = 0;
-        for (String afField : afFields) {
+        for (final String afField : afFields) {
             totalReadCount += Integer.valueOf(afField);
         }
 
-        return (double) readCount / totalReadCount;
+        return new ReadCount(readCount, totalReadCount);
+    }
+
+    private static class ReadCount {
+        private final int alleleReadCount;
+        private final int totalReadCount;
+
+        private ReadCount(final int alleleReadCount, final int totalReadCount) {
+            this.alleleReadCount = alleleReadCount;
+            this.totalReadCount = totalReadCount;
+        }
+
+        private double alleleFrequency() {
+            return (double) alleleReadCount / totalReadCount;
+        }
+
+        private int readDepth() {
+            return totalReadCount;
+        }
     }
 }

@@ -12,39 +12,41 @@ public class SomaticVariant implements Variant {
 
     @NotNull
     private final String originalVCFLine;
+
     @NotNull
     private final VariantType type;
     @NotNull
-    private final String filter;
-    @NotNull
     private final String chromosome;
-
     private final long position;
     @NotNull
-    private final List<String> callers;
-    private final double alleleFrequency;
+    private final String filter;
     @Nullable
     private final String dbsnpID;
     @Nullable
     private final String cosmicID;
-
     @NotNull
     private final List<Annotation> annotations;
+    @NotNull
+    private final List<String> callers;
+    private final double alleleFrequency;
+    private final int readDepth;
 
-    private SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
-            @NotNull final String filter, @NotNull final String chromosome, final long position,
-            @NotNull final List<String> callers, final double alleleFrequency, @Nullable final String dbsnpID,
-            @Nullable final String cosmicID, @NotNull final List<Annotation> annotations) {
+    public SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
+            @NotNull final String chromosome, final long position, @NotNull final String filter,
+            @Nullable final String dbsnpID, @Nullable final String cosmicID,
+            @NotNull final List<Annotation> annotations, @NotNull final List<String> callers,
+            final double alleleFrequency, final int readDepth) {
         this.originalVCFLine = originalVCFLine;
         this.type = type;
-        this.filter = filter;
         this.chromosome = chromosome;
         this.position = position;
-        this.callers = callers;
-        this.alleleFrequency = alleleFrequency;
+        this.filter = filter;
         this.dbsnpID = dbsnpID;
         this.cosmicID = cosmicID;
         this.annotations = annotations;
+        this.callers = callers;
+        this.alleleFrequency = alleleFrequency;
+        this.readDepth = readDepth;
     }
 
     @NotNull
@@ -58,11 +60,6 @@ public class SomaticVariant implements Variant {
     }
 
     @NotNull
-    public String filter() {
-        return filter;
-    }
-
-    @NotNull
     public String chromosome() {
         return chromosome;
     }
@@ -72,16 +69,8 @@ public class SomaticVariant implements Variant {
     }
 
     @NotNull
-    public List<String> callers() {
-        return callers;
-    }
-
-    public long callerCount() {
-        return callers.size();
-    }
-
-    public double alleleFrequency() {
-        return alleleFrequency;
+    public String filter() {
+        return filter;
     }
 
     public boolean isDBSNP() {
@@ -101,6 +90,23 @@ public class SomaticVariant implements Variant {
         return false;
     }
 
+    @NotNull
+    public List<String> callers() {
+        return callers;
+    }
+
+    public long callerCount() {
+        return callers.size();
+    }
+
+    public double alleleFrequency() {
+        return alleleFrequency;
+    }
+
+    int readDepth() {
+        return readDepth;
+    }
+
     @Override
     public String toString() {
         return "SomaticVariant{" + "chromosome='" + chromosome + '\'' + ", position=" + position + '}';
@@ -109,23 +115,24 @@ public class SomaticVariant implements Variant {
     public static class Builder {
         @NotNull
         private String originalVCFLine = Strings.EMPTY;
+
         @NotNull
         private final VariantType type;
         @NotNull
-        private String filter = Strings.EMPTY;
-        @NotNull
         private String chromosome = Strings.EMPTY;
-
         private long position = 0L;
         @NotNull
-        private List<String> callers = Lists.newArrayList();
-        private double alleleFrequency = Double.NaN;
+        private String filter = Strings.EMPTY;
         @Nullable
         private String dbsnpID = null;
         @Nullable
         private String cosmicID = null;
         @NotNull
         private List<Annotation> annotations = Lists.newArrayList();
+        @NotNull
+        private List<String> callers = Lists.newArrayList();
+        private double alleleFrequency = Double.NaN;
+        private int readDepth = 0;
 
         @NotNull
         static Builder fromVCF(@NotNull final String vcfLine, @NotNull final VariantType type) {
@@ -143,12 +150,6 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        public Builder filter(@NotNull final String filter) {
-            this.filter = filter;
-            return this;
-        }
-
-        @NotNull
         public Builder chromosome(@NotNull final String chromosome) {
             this.chromosome = chromosome;
             return this;
@@ -161,14 +162,8 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        public Builder callers(@NotNull final List<String> callers) {
-            this.callers = callers;
-            return this;
-        }
-
-        @NotNull
-        Builder alleleFrequency(final double alleleFrequency) {
-            this.alleleFrequency = alleleFrequency;
+        public Builder filter(@NotNull final String filter) {
+            this.filter = filter;
             return this;
         }
 
@@ -191,9 +186,27 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
+        public Builder callers(@NotNull final List<String> callers) {
+            this.callers = callers;
+            return this;
+        }
+
+        @NotNull
+        Builder alleleFrequency(final double alleleFrequency) {
+            this.alleleFrequency = alleleFrequency;
+            return this;
+        }
+
+        @NotNull
+        Builder readDepth(final int readDepth) {
+            this.readDepth = readDepth;
+            return this;
+        }
+
+        @NotNull
         public SomaticVariant build() {
-            return new SomaticVariant(originalVCFLine, type, filter, chromosome, position, callers, alleleFrequency,
-                    dbsnpID, cosmicID, annotations);
+            return new SomaticVariant(originalVCFLine, type, chromosome, position, filter, dbsnpID, cosmicID,
+                    annotations, callers, alleleFrequency, readDepth);
         }
     }
 }

@@ -45,17 +45,20 @@ public class SomaticVariantFactoryTest {
         assertFalse(variant.callers().contains(SomaticVariantConstants.MUTECT));
 
         assertEquals(0.5, variant.alleleFrequency(), EPSILON);
+        assertEquals(120, variant.readDepth(), EPSILON);
     }
 
     @Test
-    public void incorrectAFFieldYieldsNaN() {
+    public void incorrectSampleFieldYieldsMissingReadCounts() {
         final String missingAFLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 9";
         final SomaticVariant missingAFVariant = SomaticVariantFactory.fromVCFLine(missingAFLine);
         assertEquals(Double.NaN, missingAFVariant.alleleFrequency(), EPSILON);
+        assertEquals(0, missingAFVariant.readDepth(), EPSILON);
 
         final String missingRefCovLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 0/1:60:113";
         final SomaticVariant missingRefCovVariant = SomaticVariantFactory.fromVCFLine(missingRefCovLine);
         assertEquals(Double.NaN, missingRefCovVariant.alleleFrequency(), EPSILON);
+        assertEquals(0, missingRefCovVariant.readDepth(), EPSILON);
     }
 
     @Test
@@ -89,17 +92,6 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant hasNone = SomaticVariantFactory.fromVCFLine(none);
         assertFalse(hasNone.isDBSNP());
         assertFalse(hasNone.isCOSMIC());
-    }
-
-    @Test
-    public void correctMissense() {
-        final String missense = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t missense_variant \t 8 \t 9";
-        final SomaticVariant isMissense = SomaticVariantFactory.fromVCFLine(missense);
-        assertTrue(isMissense.hasConsequence(VariantConsequence.MISSENSE_VARIANT));
-
-        final String notMissense = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t intron_variant \t 8 \t 9";
-        final SomaticVariant isNotMissense = SomaticVariantFactory.fromVCFLine(notMissense);
-        assertFalse(isNotMissense.hasConsequence(VariantConsequence.MISSENSE_VARIANT));
     }
 
     @Test
