@@ -69,7 +69,7 @@ public class VariantAnnotation {
     }
 
     @NotNull
-    VariantConsequence consequence() {
+    public VariantConsequence consequence() {
         return consequence;
     }
 
@@ -89,12 +89,12 @@ public class VariantAnnotation {
     }
 
     @NotNull
-    String featureType() {
+    public String featureType() {
         return featureType;
     }
 
     @NotNull
-    String featureID() {
+    public String featureID() {
         return featureID;
     }
 

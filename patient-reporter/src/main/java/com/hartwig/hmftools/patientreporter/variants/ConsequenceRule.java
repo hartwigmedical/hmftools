@@ -8,12 +8,22 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
+import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class ConsequenceRule {
+
+    private static final Logger LOGGER = LogManager.getLogger(ConsequenceRule.class);
+
+    private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
 
     private static final List<VariantConsequence> ACTIONABLE_CONSEQUENCES = Lists.newArrayList(
             VariantConsequence.TRANSCRIPT_ABLATION, VariantConsequence.TRANSCRIPT_AMPLIFICATION,
@@ -28,14 +38,34 @@ class ConsequenceRule {
     @NotNull
     private final List<String> relevantTranscripts;
 
-    ConsequenceRule(@NotNull final Slicer hmfSlicingRegion, @NotNull final List<String> relevantTranscripts) {
+    @NotNull
+    static ConsequenceRule fromHmfSlicingRegion(@NotNull final Slicer hmfSlicingRegion) {
+        return new ConsequenceRule(hmfSlicingRegion, extractTranscripts(hmfSlicingRegion));
+    }
+
+    @NotNull
+    private static List<String> extractTranscripts(final @NotNull Slicer hmfSlicingRegion) {
+        final List<String> transcripts = Lists.newArrayList();
+        for (final GenomeRegion region : hmfSlicingRegion.regions()) {
+            HMFSlicingAnnotation annotation = HMFSlicingAnnotation.fromGenomeRegion(region);
+            if (annotation == null) {
+                LOGGER.warn("Could not extract annotation from hmf slicing region: " + region);
+            } else {
+                transcripts.add(annotation.transcriptID());
+            }
+        }
+        return transcripts;
+    }
+
+    private ConsequenceRule(@NotNull final Slicer hmfSlicingRegion, @NotNull final List<String> relevantTranscripts) {
         this.hmfSlicingRegion = hmfSlicingRegion;
         this.relevantTranscripts = relevantTranscripts;
     }
 
     @NotNull
     List<SomaticVariant> apply(@NotNull List<SomaticVariant> variants) {
-        Predicate<SomaticVariant> consequenceRule = and(isIncludedIn(hmfSlicingRegion), hasActionableConsequence());
+        final Predicate<SomaticVariant> consequenceRule = and(isIncludedIn(hmfSlicingRegion),
+                hasActionableConsequence(relevantTranscripts));
 
         return filter(variants, consequenceRule);
     }
@@ -46,14 +76,33 @@ class ConsequenceRule {
     }
 
     @NotNull
-    private static Predicate<SomaticVariant> hasActionableConsequence() {
+    private static Predicate<SomaticVariant> hasActionableConsequence(
+            @NotNull final List<String> relevantTranscripts) {
         return variant -> {
-            for (VariantConsequence consequence : ACTIONABLE_CONSEQUENCES) {
-                if (variant.hasConsequence(consequence)) {
-                    return true;
+            final VariantAnnotation annotation = findRelevantAnnotation(variant.annotations(), relevantTranscripts);
+            if (annotation == null) {
+                LOGGER.warn("Variants should be filtered on transcripts already by this stage!");
+                return false;
+            }
+
+            return ACTIONABLE_CONSEQUENCES.contains(annotation.consequence());
+        };
+    }
+
+    @Nullable
+    private static VariantAnnotation findRelevantAnnotation(final List<VariantAnnotation> annotations,
+            final List<String> relevantTranscripts) {
+        VariantAnnotation finalAnnotation = null;
+        for (final VariantAnnotation annotation : annotations) {
+            if (annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT) && relevantTranscripts.contains(
+                    annotation.featureID())) {
+                if (finalAnnotation == null) {
+                    finalAnnotation = annotation;
+                } else {
+                    LOGGER.warn("Multiple annotations found for relevant transcripts for " + annotation.featureID());
                 }
             }
-            return false;
-        };
+        }
+        return finalAnnotation;
     }
 }

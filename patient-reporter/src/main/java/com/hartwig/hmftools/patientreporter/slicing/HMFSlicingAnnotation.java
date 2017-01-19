@@ -50,7 +50,7 @@ public class HMFSlicingAnnotation {
     }
 
     @NotNull
-    String transcriptID() {
+    public String transcriptID() {
         return transcriptID;
     }
 
