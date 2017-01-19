@@ -37,10 +37,12 @@ final class AnnotationFactory {
                 final String[] parts = enforceMinLength(annotationString.split(FIELD_SEPARATOR),
                         EXPECTED_FIELD_SIZE_PER_ANNOTATION);
                 if (parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION) {
-                    annotations.add(
-                            new Annotation(parts[0], toConsequence(parts[1]), parts[2], parts[3], parts[4], parts[5],
-                                    parts[6], parts[7], parts[8], parts[9], parts[10], parts[11], parts[12], parts[13],
-                                    parts[14], parts[15]));
+                    annotations.add(new Annotation.Builder().allele(parts[0]).consequence(toConsequence(parts[1])).
+                            severity(parts[2]).gene(parts[3]).geneID(parts[4]).featureType(parts[5]).
+                            featureID(parts[6]).transcriptBioType(parts[7]).rank(parts[8]).hgvsCoding(parts[9]).
+                            hgvsProtein(parts[10]).cDNAPosAndLength(parts[11]).cdsPosAndLength(
+                            parts[12]).aaPosAndLength(parts[13]).distance(parts[14]).addition(parts[15]).build());
+
                 } else {
                     LOGGER.warn("Annotation found with invalid field count: " + annotationString);
                 }

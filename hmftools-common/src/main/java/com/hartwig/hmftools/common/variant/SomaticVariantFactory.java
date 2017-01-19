@@ -108,7 +108,7 @@ public final class SomaticVariantFactory {
 
         final String info = values[INFO_COLUMN].trim();
         builder.callers(extractCallers(info));
-        builder.consequences(extractConsequences(info));
+        builder.annotations(AnnotationFactory.fromVCFInfoField(info));
 
         final String sampleInfo = values[SAMPLE_COLUMN].trim();
         final double alleleFrequency = calcAlleleFrequency(sampleInfo);
@@ -146,19 +146,8 @@ public final class SomaticVariantFactory {
         return finalCallers;
     }
 
-    @NotNull
-    private static List<VariantConsequence> extractConsequences(@NotNull final String info) {
-        List<VariantConsequence> consequences = Lists.newArrayList();
-        for (VariantConsequence consequence : VariantConsequence.values()) {
-            if (info.contains(consequence.sequenceOntologyTerm())) {
-                consequences.add(consequence);
-            }
-        }
-        return consequences;
-    }
-
-    private static double calcAlleleFrequency(@NotNull final String sampleInfo) {
-        final String[] sampleFields = sampleInfo.split(SAMPLE_FIELD_SEPARATOR);
+    private static double calcAlleleFrequency(@NotNull final String sampleData) {
+        final String[] sampleFields = sampleData.split(SAMPLE_FIELD_SEPARATOR);
         if (sampleFields.length < 2) {
             return Double.NaN;
         }

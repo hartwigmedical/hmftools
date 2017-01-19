@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.common.variant;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-class Annotation {
+public class Annotation {
 
     @NotNull
     private final String allele;
@@ -37,7 +38,7 @@ class Annotation {
     @NotNull
     private final String addition;
 
-    Annotation(@NotNull final String allele, @NotNull final VariantConsequence consequence,
+    private Annotation(@NotNull final String allele, @NotNull final VariantConsequence consequence,
             @NotNull final String severity, @NotNull final String gene, @NotNull final String geneID,
             @NotNull final String featureType, @NotNull final String featureID,
             @NotNull final String transcriptBioType, @NotNull final String rank, @NotNull final String hgvsCoding,
@@ -140,5 +141,146 @@ class Annotation {
     @NotNull
     String addition() {
         return addition;
+    }
+
+    public static class Builder {
+        @NotNull
+        private String allele = Strings.EMPTY;
+        @NotNull
+        private VariantConsequence consequence = VariantConsequence.OTHER;
+        @NotNull
+        private String severity = Strings.EMPTY;
+        @NotNull
+        private String gene = Strings.EMPTY;
+        @NotNull
+        private String geneID = Strings.EMPTY;
+        @NotNull
+        private String featureType = Strings.EMPTY;
+        @NotNull
+        private String featureID = Strings.EMPTY;
+        @NotNull
+        private String transcriptBioType = Strings.EMPTY;
+        @NotNull
+        private String rank = Strings.EMPTY;
+        @NotNull
+        private String hgvsCoding = Strings.EMPTY;
+        @NotNull
+        private String hgvsProtein = Strings.EMPTY;
+        @NotNull
+        private String cDNAPosAndLength = Strings.EMPTY;
+        @NotNull
+        private String cdsPosAndLength = Strings.EMPTY;
+        @NotNull
+        private String aaPosAndLength = Strings.EMPTY;
+        @NotNull
+        private String distance = Strings.EMPTY;
+        @NotNull
+        private String addition = Strings.EMPTY;
+
+        public Builder() {
+        }
+
+        @NotNull
+        Builder allele(@NotNull final String allele) {
+            this.allele = allele;
+            return this;
+        }
+
+        @NotNull
+        public Builder consequence(@NotNull final VariantConsequence consequence) {
+            this.consequence = consequence;
+            return this;
+        }
+
+        @NotNull
+        Builder severity(@NotNull final String severity) {
+            this.severity = severity;
+            return this;
+        }
+
+        @NotNull
+        Builder gene(@NotNull final String gene) {
+            this.gene = gene;
+            return this;
+        }
+
+        @NotNull
+        Builder geneID(@NotNull final String geneID) {
+            this.geneID = geneID;
+            return this;
+        }
+
+        @NotNull
+        Builder featureType(@NotNull final String featureType) {
+            this.featureType = featureType;
+            return this;
+        }
+
+        @NotNull
+        Builder featureID(@NotNull final String featureID) {
+            this.featureID = featureID;
+            return this;
+        }
+
+        @NotNull
+        Builder transcriptBioType(@NotNull final String transcriptBioType) {
+            this.transcriptBioType = transcriptBioType;
+            return this;
+        }
+
+        @NotNull
+        Builder rank(@NotNull final String rank) {
+            this.rank = rank;
+            return this;
+        }
+
+        @NotNull
+        Builder hgvsCoding(@NotNull final String hgvsCoding) {
+            this.hgvsCoding = hgvsCoding;
+            return this;
+        }
+
+        @NotNull
+        Builder hgvsProtein(@NotNull final String hgvsProtein) {
+            this.hgvsProtein = hgvsProtein;
+            return this;
+        }
+
+        @NotNull
+        Builder cDNAPosAndLength(@NotNull final String cDNAPosAndLength) {
+            this.cDNAPosAndLength = cDNAPosAndLength;
+            return this;
+        }
+
+        @NotNull
+        Builder cdsPosAndLength(@NotNull final String cdsPosAndLength) {
+            this.cdsPosAndLength = cdsPosAndLength;
+            return this;
+        }
+
+        @NotNull
+        Builder aaPosAndLength(@NotNull final String aaPosAndLength) {
+            this.aaPosAndLength = aaPosAndLength;
+            return this;
+        }
+
+        @NotNull
+        Builder distance(@NotNull final String distance) {
+            this.distance = distance;
+            return this;
+        }
+
+        @NotNull
+        Builder addition(@NotNull final String addition) {
+            this.addition = addition;
+            return this;
+        }
+
+        @NotNull
+        public Annotation build() {
+            return new Annotation(allele, consequence, severity, gene, geneID, featureType, featureID,
+                    transcriptBioType, rank, hgvsCoding, hgvsProtein, cDNAPosAndLength, cdsPosAndLength,
+                    aaPosAndLength, distance, addition);
+        }
     }
 }

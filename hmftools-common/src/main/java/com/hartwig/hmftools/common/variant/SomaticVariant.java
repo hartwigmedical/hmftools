@@ -28,14 +28,13 @@ public class SomaticVariant implements Variant {
     @Nullable
     private final String cosmicID;
 
-    // KODU: Not sure if one variant can have multiple consequences.
     @NotNull
-    private final List<VariantConsequence> consequences;
+    private final List<Annotation> annotations;
 
     private SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
             @NotNull final String filter, @NotNull final String chromosome, final long position,
             @NotNull final List<String> callers, final double alleleFrequency, @Nullable final String dbsnpID,
-            @Nullable final String cosmicID, @NotNull final List<VariantConsequence> consequences) {
+            @Nullable final String cosmicID, @NotNull final List<Annotation> annotations) {
         this.originalVCFLine = originalVCFLine;
         this.type = type;
         this.filter = filter;
@@ -45,7 +44,7 @@ public class SomaticVariant implements Variant {
         this.alleleFrequency = alleleFrequency;
         this.dbsnpID = dbsnpID;
         this.cosmicID = cosmicID;
-        this.consequences = consequences;
+        this.annotations = annotations;
     }
 
     @NotNull
@@ -94,7 +93,12 @@ public class SomaticVariant implements Variant {
     }
 
     public boolean hasConsequence(@NotNull VariantConsequence consequence) {
-        return consequences.contains(consequence);
+        for (final Annotation annotation : annotations) {
+            if (annotation.consequence().equals(consequence)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -121,7 +125,7 @@ public class SomaticVariant implements Variant {
         @Nullable
         private String cosmicID = null;
         @NotNull
-        private List<VariantConsequence> consequences = Lists.newArrayList();
+        private List<Annotation> annotations = Lists.newArrayList();
 
         @NotNull
         static Builder fromVCF(@NotNull final String vcfLine, @NotNull final VariantType type) {
@@ -181,15 +185,15 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        public Builder consequences(@NotNull final List<VariantConsequence> consequences) {
-            this.consequences = consequences;
+        public Builder annotations(@NotNull final List<Annotation> annotations) {
+            this.annotations = annotations;
             return this;
         }
 
         @NotNull
         public SomaticVariant build() {
             return new SomaticVariant(originalVCFLine, type, filter, chromosome, position, callers, alleleFrequency,
-                    dbsnpID, cosmicID, consequences);
+                    dbsnpID, cosmicID, annotations);
         }
     }
 }
