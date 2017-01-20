@@ -26,6 +26,7 @@ import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -128,8 +129,7 @@ public class PatientReporterApplication {
     }
 
     PatientReporterApplication(@NotNull final String runDirectory, @NotNull final VariantAnalyzer variantAnalyzer,
-            @NotNull final Slicer hmfSlicer,
-            @Nullable final String outputDirectory, final boolean batchMode) {
+            @NotNull final Slicer hmfSlicer, @Nullable final String outputDirectory, final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.variantAnalyzer = variantAnalyzer;
         this.hmfSlicer = hmfSlicer;
@@ -169,7 +169,7 @@ public class PatientReporterApplication {
                     variantFile.sample() + "," + variantFile.variants().size() + "," + analysis.passedVariants().size()
                             + "," + analysis.consensusPassedVariants().size() + ","
                             + analysis.missenseVariants().size() + "," + analysis.variantsToReport().size()
-                    + consequenceList;
+                            + consequenceList;
             System.out.println(out);
         }
     }
@@ -181,7 +181,6 @@ public class PatientReporterApplication {
         LOGGER.info("  Total number of variants : " + variantFile.variants().size());
 
         final VariantAnalysis analysis = variantAnalyzer.run(variantFile.variants());
-        analyzeCopyNumbers(variantFile.sample());
 
         LOGGER.info("  Number of variants after applying pass-only filter : " + analysis.passedVariants().size());
         LOGGER.info(
@@ -195,7 +194,13 @@ public class PatientReporterApplication {
                     outputDirectory + File.separator + variantFile.sample() + "_consensus_variants.vcf";
             VCFFileWriter.writeSomaticVCF(consensusVCF, analysis.consensusPassedVariants());
             LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
+
+            final String reportFile = outputDirectory + File.separator + variantFile.sample() + "_variants_report.csv";
+            Files.write(new File(reportFile).toPath(), toCSV(analysis.variantsToReport()));
+            LOGGER.info("    Written all variants to report to " + reportFile);
         }
+
+        analyzeCopyNumbers(variantFile.sample());
     }
 
     private void analyzeCopyNumbers(@NotNull final String sample) throws IOException, HartwigException {
@@ -244,5 +249,18 @@ public class PatientReporterApplication {
     @NotNull
     private static VCFSomaticFile loadVariantFile(@NotNull final String path) throws IOException, HartwigException {
         return VCFFileLoader.loadSomaticVCF(path, SOMATIC_EXTENSION);
+    }
+
+    @NotNull
+    private static List<String> toCSV(@NotNull final List<VariantReport> reports) {
+        final List<String> lines = Lists.newArrayList();
+        lines.add("GENE,POSITION,REF,ALT,TRANSCRIPT,CDS,AA,CONSEQUENCE,COSMIC_ID,ALLELE_FREQ,READ_DEPTH");
+        for (final VariantReport report : reports) {
+            lines.add(report.gene() + "," + report.position() + "," + report.ref() + "," + report.alt() + ","
+                    + report.transcript() + "," + report.hgvsCoding() + "," + report.hgvsProtein() + ","
+                    + report.consequence() + "," + report.cosmicID() + "," + report.alleleFrequency() + ","
+                    + report.readDepth());
+        }
+        return lines;
     }
 }

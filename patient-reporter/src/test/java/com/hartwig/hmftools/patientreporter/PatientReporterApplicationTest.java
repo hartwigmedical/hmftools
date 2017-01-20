@@ -29,7 +29,7 @@ public class PatientReporterApplicationTest {
             assertNotNull(HMFSlicingAnnotation.fromGenomeRegion(region));
         }
 
-        VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
         new PatientReporterApplication(RUN_DIRECTORY, variantAnalyzer, slicer, null, false).run();
     }
 }

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.variants;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-class VariantReport {
+public class VariantReport {
 
     @NotNull
     private final String gene;
@@ -46,55 +46,55 @@ class VariantReport {
     }
 
     @NotNull
-    String gene() {
+    public String gene() {
         return gene;
     }
 
     @NotNull
-    String position() {
+    public String position() {
         return position;
     }
 
     @NotNull
-    String ref() {
+    public String ref() {
         return ref;
     }
 
     @NotNull
-    String alt() {
+    public String alt() {
         return alt;
     }
 
     @NotNull
-    String transcript() {
+    public String transcript() {
         return transcript;
     }
 
     @NotNull
-    String hgvsCoding() {
+    public String hgvsCoding() {
         return hgvsCoding;
     }
 
     @NotNull
-    String hgvsProtein() {
+    public String hgvsProtein() {
         return hgvsProtein;
     }
 
     @NotNull
-    String consequence() {
+    public String consequence() {
         return consequence;
     }
 
     @NotNull
-    String cosmicID() {
+    public String cosmicID() {
         return cosmicID;
     }
 
-    String alleleFrequency() {
+    public String alleleFrequency() {
         return alleleFrequency;
     }
 
-    String readDepth() {
+    public String readDepth() {
         return readDepth;
     }
 
