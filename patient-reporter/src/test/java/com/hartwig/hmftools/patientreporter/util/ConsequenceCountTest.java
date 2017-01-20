@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -20,7 +19,7 @@ public class ConsequenceCountTest {
     public void canCountConsequences() {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
-        final SomaticVariant.Builder builder = new SomaticVariant.Builder(VariantType.SNP);
+        final SomaticVariant.Builder builder = new SomaticVariant.Builder();
         variants.add(builder.annotations(Lists.newArrayList(
                 new VariantAnnotation.Builder().consequences(list(VariantConsequence.FRAMESHIFT_VARIANT)).build(),
                 new VariantAnnotation.Builder().consequences(

@@ -77,7 +77,7 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     public BaseResult errorRun(@NotNull final RunContext runContext) {
         if (runContext.isSomaticRun()) {
             final List<HealthCheck> checks = Lists.newArrayList();
-            for (final VariantType type : VariantType.values()) {
+            for (final VariantType type : Lists.newArrayList(VariantType.SNP, VariantType.INDEL)) {
                 checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.COUNT_TOTAL.checkName(type.name()),
                         HealthCheckConstants.ERROR_VALUE));
                 checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.DBSNP_COUNT.checkName(type.name()),

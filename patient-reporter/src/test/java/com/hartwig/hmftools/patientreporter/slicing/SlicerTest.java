@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -48,6 +47,6 @@ public class SlicerTest {
 
     @NotNull
     private static SomaticVariant buildVariant(@NotNull String chromosome, long position) {
-        return new SomaticVariant.Builder(VariantType.SNP).chromosome(chromosome).position(position).build();
+        return new SomaticVariant.Builder().chromosome(chromosome).position(position).build();
     }
 }

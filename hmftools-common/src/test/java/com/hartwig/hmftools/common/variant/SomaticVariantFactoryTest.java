@@ -38,6 +38,9 @@ public class SomaticVariantFactoryTest {
         assertTrue(variant.isDBSNP());
         assertFalse(variant.isCOSMIC());
 
+        assertEquals("C", variant.ref());
+        assertEquals("A,G", variant.alt());
+
         assertEquals(2, variant.callerCount());
         assertTrue(variant.callers().contains(SomaticVariantConstants.FREEBAYES));
         assertTrue(variant.callers().contains(SomaticVariantConstants.VARSCAN));
@@ -50,12 +53,12 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void incorrectSampleFieldYieldsMissingReadCounts() {
-        final String missingAFLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 9";
+        final String missingAFLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant missingAFVariant = SomaticVariantFactory.fromVCFLine(missingAFLine);
         assertEquals(Double.NaN, missingAFVariant.alleleFrequency(), EPSILON);
         assertEquals(0, missingAFVariant.readDepth(), EPSILON);
 
-        final String missingRefCovLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t set=Intersection; \t 8 \t 0/1:60:113";
+        final String missingRefCovLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 0/1:60:113";
         final SomaticVariant missingRefCovVariant = SomaticVariantFactory.fromVCFLine(missingRefCovLine);
         assertEquals(Double.NaN, missingRefCovVariant.alleleFrequency(), EPSILON);
         assertEquals(0, missingRefCovVariant.readDepth(), EPSILON);
@@ -77,6 +80,7 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant hasBoth = SomaticVariantFactory.fromVCFLine(both);
         assertTrue(hasBoth.isDBSNP());
         assertTrue(hasBoth.isCOSMIC());
+        assertEquals("COSM2", hasBoth.cosmicID());
 
         final String dbsnpOnly = "0 \t 1 \t rs1 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant hasDBSNPOnly = SomaticVariantFactory.fromVCFLine(dbsnpOnly);
@@ -87,6 +91,7 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant hasCOSMICOnly = SomaticVariantFactory.fromVCFLine(cosmicOnly);
         assertFalse(hasCOSMICOnly.isDBSNP());
         assertTrue(hasCOSMICOnly.isCOSMIC());
+        assertEquals("COSM2", hasCOSMICOnly.cosmicID());
 
         final String none = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant hasNone = SomaticVariantFactory.fromVCFLine(none);

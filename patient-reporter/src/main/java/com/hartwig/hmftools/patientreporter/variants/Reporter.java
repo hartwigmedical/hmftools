@@ -77,15 +77,15 @@ class Reporter {
 
             builder.gene(variantAnnotation.gene());
             builder.position(variant.chromosome() + ":" + variant.position());
-            // KODU: TODO
-            builder.ref("");
-            builder.alt("");
+            builder.ref(variant.ref());
+            builder.alt(variant.alt());
             builder.transcript(slicingAnnotation.transcriptID() + "." + slicingAnnotation.transcriptVersion());
             builder.hgvsCoding(variantAnnotation.hgvsCoding());
             builder.hgvsProtein(variantAnnotation.hgvsProtein());
             builder.consequence(variantAnnotation.consequenceString());
-            // KODU: TODO
-            builder.cosmicID(null);
+            if (variant.isCOSMIC()) {
+                builder.cosmicID(variant.cosmicID());
+            }
             builder.alleleFrequency(variant.alleleFrequency());
             builder.readDepth(variant.readDepth());
             reports.add(builder.build());

@@ -50,7 +50,7 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant.Builder(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
+        return new SomaticVariant.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
                 callers).cosmicID("any_id").build();
     }
 
@@ -60,7 +60,7 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant.Builder(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
+        return new SomaticVariant.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
                 callers).dnsnpID("any_id").build();
     }
 
@@ -70,7 +70,7 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant.Builder(VariantType.INDEL).chromosome(CHROMOSOME).position(position).callers(
+        return new SomaticVariant.Builder().type(VariantType.INDEL).chromosome(CHROMOSOME).position(position).callers(
                 callers).build();
     }
 }

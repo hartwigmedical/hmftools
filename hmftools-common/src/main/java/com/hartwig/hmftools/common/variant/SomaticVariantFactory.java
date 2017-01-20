@@ -86,11 +86,15 @@ public final class SomaticVariantFactory {
 
     @NotNull
     public static SomaticVariant fromVCFLine(@NotNull final String line) {
-        final String[] values = line.split(VCF_COLUMN_SEPARATOR);
+        final SomaticVariant.Builder builder = SomaticVariant.Builder.fromVCF(line);
 
-        final VariantType type = VariantExtractorFunctions.determineVariantType(values[REF_COLUMN].trim(),
-                values[ALT_COLUMN].trim());
-        final SomaticVariant.Builder builder = SomaticVariant.Builder.fromVCF(line, type);
+        final String[] values = line.split(VCF_COLUMN_SEPARATOR);
+        final String ref = values[REF_COLUMN].trim();
+        final String alt = values[ALT_COLUMN].trim();
+
+        builder.ref(ref);
+        builder.alt(alt);
+        builder.type(VariantType.fromRefAlt(ref, alt));
 
         builder.chromosome(values[CHROMOSOME_COLUMN].trim());
         builder.position(Long.valueOf(values[POSITION_COLUMN].trim()));

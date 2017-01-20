@@ -30,12 +30,12 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        final VariantType type = VariantExtractorFunctions.determineVariantType(values[REF_COLUMN].trim(),
-                values[ALT_COLUMN].trim());
+        final VariantType type = VariantType.fromRefAlt(values[REF_COLUMN].trim(), values[ALT_COLUMN].trim());
         final String filter = values[FILTER_COLUMN].trim();
-        final String refData = values[REF_SAMPLE_COLUMN];
-        final String tumData = values.length > TUMOR_SAMPLE_COLUMN ? values[TUMOR_SAMPLE_COLUMN] : Strings.EMPTY;
+        final String refData = values[REF_SAMPLE_COLUMN].trim();
+        final String tumorData =
+                values.length > TUMOR_SAMPLE_COLUMN ? values[TUMOR_SAMPLE_COLUMN].trim() : Strings.EMPTY;
 
-        return new GermlineVariant(type, filter, refData, tumData);
+        return new GermlineVariant(type, filter, refData, tumorData);
     }
 }

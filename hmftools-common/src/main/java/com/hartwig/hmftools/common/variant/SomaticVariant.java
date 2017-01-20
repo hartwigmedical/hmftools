@@ -19,6 +19,10 @@ public class SomaticVariant implements Variant {
     private final String chromosome;
     private final long position;
     @NotNull
+    private final String ref;
+    @NotNull
+    private final String alt;
+    @NotNull
     private final String filter;
     @Nullable
     private final String dbsnpID;
@@ -31,15 +35,17 @@ public class SomaticVariant implements Variant {
     private final double alleleFrequency;
     private final int readDepth;
 
-    public SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
-            @NotNull final String chromosome, final long position, @NotNull final String filter,
-            @Nullable final String dbsnpID, @Nullable final String cosmicID,
-            @NotNull final List<VariantAnnotation> annotations, @NotNull final List<String> callers,
-            final double alleleFrequency, final int readDepth) {
+    private SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
+            @NotNull final String chromosome, final long position, @NotNull final String ref,
+            @NotNull final String alt, @NotNull final String filter, @Nullable final String dbsnpID,
+            @Nullable final String cosmicID, @NotNull final List<VariantAnnotation> annotations,
+            @NotNull final List<String> callers, final double alleleFrequency, final int readDepth) {
         this.originalVCFLine = originalVCFLine;
         this.type = type;
         this.chromosome = chromosome;
         this.position = position;
+        this.ref = ref;
+        this.alt = alt;
         this.filter = filter;
         this.dbsnpID = dbsnpID;
         this.cosmicID = cosmicID;
@@ -69,6 +75,16 @@ public class SomaticVariant implements Variant {
     }
 
     @NotNull
+    public String ref() {
+        return ref;
+    }
+
+    @NotNull
+    public String alt() {
+        return alt;
+    }
+
+    @NotNull
     public String filter() {
         return filter;
     }
@@ -81,12 +97,17 @@ public class SomaticVariant implements Variant {
         return cosmicID != null;
     }
 
+    @Nullable
+    public String cosmicID() {
+        return cosmicID;
+    }
+
     @NotNull
     public List<VariantAnnotation> annotations() {
         return annotations;
     }
 
-    public boolean hasConsequence(@NotNull VariantConsequence consequence) {
+    public boolean hasConsequence(@NotNull final VariantConsequence consequence) {
         for (final VariantAnnotation annotation : annotations) {
             if (annotation.consequences().contains(consequence)) {
                 return true;
@@ -122,10 +143,14 @@ public class SomaticVariant implements Variant {
         private String originalVCFLine = Strings.EMPTY;
 
         @NotNull
-        private final VariantType type;
+        private VariantType type = VariantType.UNDEFINED;
         @NotNull
         private String chromosome = Strings.EMPTY;
         private long position = 0L;
+        @NotNull
+        private String ref = Strings.EMPTY;
+        @NotNull
+        private String alt = Strings.EMPTY;
         @NotNull
         private String filter = Strings.EMPTY;
         @Nullable
@@ -140,18 +165,23 @@ public class SomaticVariant implements Variant {
         private int readDepth = 0;
 
         @NotNull
-        static Builder fromVCF(@NotNull final String vcfLine, @NotNull final VariantType type) {
-            final Builder builder = new Builder(type);
+        static Builder fromVCF(@NotNull final String vcfLine) {
+            final Builder builder = new Builder();
             builder.originalVCFLine(vcfLine);
             return builder;
         }
 
-        public Builder(@NotNull final VariantType type) {
-            this.type = type;
+        public Builder() {
         }
 
         private void originalVCFLine(@NotNull final String originalVCFLine) {
             this.originalVCFLine = originalVCFLine;
+        }
+
+        @NotNull
+        public Builder type(@NotNull final VariantType type) {
+            this.type = type;
+            return this;
         }
 
         @NotNull
@@ -163,6 +193,18 @@ public class SomaticVariant implements Variant {
         @NotNull
         public Builder position(final long position) {
             this.position = position;
+            return this;
+        }
+
+        @NotNull
+        public Builder ref(@NotNull final String ref) {
+            this.ref = ref;
+            return this;
+        }
+
+        @NotNull
+        public Builder alt(@NotNull final String alt) {
+            this.alt = alt;
             return this;
         }
 
@@ -210,7 +252,7 @@ public class SomaticVariant implements Variant {
 
         @NotNull
         public SomaticVariant build() {
-            return new SomaticVariant(originalVCFLine, type, chromosome, position, filter, dbsnpID, cosmicID,
+            return new SomaticVariant(originalVCFLine, type, chromosome, position, ref, alt, filter, dbsnpID, cosmicID,
                     annotations, callers, alleleFrequency, readDepth);
         }
     }
