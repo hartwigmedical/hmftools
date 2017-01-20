@@ -239,13 +239,13 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        Builder alleleFrequency(final double alleleFrequency) {
+        public Builder alleleFrequency(final double alleleFrequency) {
             this.alleleFrequency = alleleFrequency;
             return this;
         }
 
         @NotNull
-        Builder readDepth(final int readDepth) {
+        public Builder readDepth(final int readDepth) {
             this.readDepth = readDepth;
             return this;
         }

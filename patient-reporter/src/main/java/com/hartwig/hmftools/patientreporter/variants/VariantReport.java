@@ -2,9 +2,8 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class VariantReport {
+class VariantReport {
 
     @NotNull
     private final String gene;
@@ -22,16 +21,17 @@ public class VariantReport {
     private final String hgvsProtein;
     @NotNull
     private final String consequence;
-
-    @Nullable
+    @NotNull
     private final String cosmicID;
-    private final double alleleFrequency;
-    private final int readDepth;
+    @NotNull
+    private final String alleleFrequency;
+    @NotNull
+    private final String readDepth;
 
     private VariantReport(@NotNull final String gene, @NotNull final String position, @NotNull final String ref,
             @NotNull final String alt, @NotNull final String transcript, @NotNull final String hgvsCoding,
-            @NotNull final String hgvsProtein, @NotNull final String consequence, @Nullable final String cosmicID,
-            final double alleleFrequency, final int readDepth) {
+            @NotNull final String hgvsProtein, @NotNull final String consequence, @NotNull final String cosmicID,
+            @NotNull final String alleleFrequency, @NotNull final String readDepth) {
         this.gene = gene;
         this.position = position;
         this.ref = ref;
@@ -43,6 +43,59 @@ public class VariantReport {
         this.cosmicID = cosmicID;
         this.alleleFrequency = alleleFrequency;
         this.readDepth = readDepth;
+    }
+
+    @NotNull
+    String gene() {
+        return gene;
+    }
+
+    @NotNull
+    String position() {
+        return position;
+    }
+
+    @NotNull
+    String ref() {
+        return ref;
+    }
+
+    @NotNull
+    String alt() {
+        return alt;
+    }
+
+    @NotNull
+    String transcript() {
+        return transcript;
+    }
+
+    @NotNull
+    String hgvsCoding() {
+        return hgvsCoding;
+    }
+
+    @NotNull
+    String hgvsProtein() {
+        return hgvsProtein;
+    }
+
+    @NotNull
+    String consequence() {
+        return consequence;
+    }
+
+    @NotNull
+    String cosmicID() {
+        return cosmicID;
+    }
+
+    String alleleFrequency() {
+        return alleleFrequency;
+    }
+
+    String readDepth() {
+        return readDepth;
     }
 
     static class Builder {
@@ -62,11 +115,12 @@ public class VariantReport {
         private String hgvsProtein = Strings.EMPTY;
         @NotNull
         private String consequence = Strings.EMPTY;
-
-        @Nullable
-        private String cosmicID;
-        private double alleleFrequency;
-        private int readDepth;
+        @NotNull
+        private String cosmicID = Strings.EMPTY;
+        @NotNull
+        private String alleleFrequency = Strings.EMPTY;
+        @NotNull
+        private String readDepth = Strings.EMPTY;
 
         Builder() {
         }
@@ -120,19 +174,19 @@ public class VariantReport {
         }
 
         @NotNull
-        Builder cosmicID(@Nullable final String cosmicID) {
+        Builder cosmicID(@NotNull final String cosmicID) {
             this.cosmicID = cosmicID;
             return this;
         }
 
         @NotNull
-        Builder alleleFrequency(final double alleleFrequency) {
+        Builder alleleFrequency(@NotNull final String alleleFrequency) {
             this.alleleFrequency = alleleFrequency;
             return this;
         }
 
         @NotNull
-        Builder readDepth(final int readDepth) {
+        Builder readDepth(@NotNull final String readDepth) {
             this.readDepth = readDepth;
             return this;
         }

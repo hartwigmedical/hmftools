@@ -68,7 +68,7 @@ public class VariantAnnotation {
     }
 
     @NotNull
-    String allele() {
+    public String allele() {
         return allele;
     }
 
@@ -215,7 +215,7 @@ public class VariantAnnotation {
         }
 
         @NotNull
-        Builder gene(@NotNull final String gene) {
+        public Builder gene(@NotNull final String gene) {
             this.gene = gene;
             return this;
         }
@@ -251,13 +251,13 @@ public class VariantAnnotation {
         }
 
         @NotNull
-        Builder hgvsCoding(@NotNull final String hgvsCoding) {
+        public Builder hgvsCoding(@NotNull final String hgvsCoding) {
             this.hgvsCoding = hgvsCoding;
             return this;
         }
 
         @NotNull
-        Builder hgvsProtein(@NotNull final String hgvsProtein) {
+        public Builder hgvsProtein(@NotNull final String hgvsProtein) {
             this.hgvsProtein = hgvsProtein;
             return this;
         }

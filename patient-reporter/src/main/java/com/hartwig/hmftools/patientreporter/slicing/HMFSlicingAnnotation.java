@@ -42,7 +42,7 @@ public class HMFSlicingAnnotation {
         return null;
     }
 
-    private HMFSlicingAnnotation(@NotNull final String transcriptID, final int transcriptVersion,
+    HMFSlicingAnnotation(@NotNull final String transcriptID, final int transcriptVersion,
             @NotNull final String gene) {
         this.transcriptID = transcriptID;
         this.transcriptVersion = transcriptVersion;
@@ -59,7 +59,7 @@ public class HMFSlicingAnnotation {
     }
 
     @NotNull
-    String gene() {
+    public String gene() {
         return gene;
     }
 }

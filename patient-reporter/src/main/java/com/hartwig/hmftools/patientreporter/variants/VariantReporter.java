@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
@@ -16,12 +17,17 @@ import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class VariantReporter {
 
-    private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
+    private static final Logger LOGGER = LogManager.getLogger(VariantReporter.class);
+
+    @VisibleForTesting
+    static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
     // KODU: This boolean exists to evaluate the impact of annotation-filtering on actual patients.
     private static final boolean INCLUDE_ALL_ANNOTATIONS_FOR_IMPACT = false;
 
@@ -36,18 +42,18 @@ class VariantReporter {
     @NotNull
     private final Slicer hmfSlicingRegion;
     @NotNull
-    private final Map<String, HMFSlicingAnnotation> transcriptMap;
+    private final Map<String, HMFSlicingAnnotation> relevantTranscriptMap;
 
     VariantReporter(@NotNull final Slicer hmfSlicingRegion,
-            @NotNull final Map<String, HMFSlicingAnnotation> transcriptMap) {
+            @NotNull final Map<String, HMFSlicingAnnotation> relevantTranscriptMap) {
         this.hmfSlicingRegion = hmfSlicingRegion;
-        this.transcriptMap = transcriptMap;
+        this.relevantTranscriptMap = relevantTranscriptMap;
     }
 
     @NotNull
-    List<VariantReport> run(@NotNull List<SomaticVariant> variants) {
+    List<VariantReport> run(@NotNull final List<SomaticVariant> variants) {
         final Predicate<SomaticVariant> consequenceRule = and(isIncludedIn(hmfSlicingRegion),
-                hasActionableConsequence(transcriptMap.keySet()));
+                hasActionableConsequence(relevantTranscriptMap.keySet()));
 
         final List<SomaticVariant> variantsWithConsequence = filter(variants, consequenceRule);
 
@@ -55,7 +61,7 @@ class VariantReporter {
     }
 
     @NotNull
-    private static Predicate<SomaticVariant> isIncludedIn(@NotNull Slicer slicer) {
+    private static Predicate<SomaticVariant> isIncludedIn(@NotNull final Slicer slicer) {
         return slicer::includes;
     }
 
@@ -65,16 +71,25 @@ class VariantReporter {
     }
 
     @NotNull
-    private List<VariantReport> toVariantReport(@NotNull List<SomaticVariant> variants) {
+    private List<VariantReport> toVariantReport(@NotNull final List<SomaticVariant> variants) {
         final List<VariantReport> reports = Lists.newArrayList();
         for (final SomaticVariant variant : variants) {
             final VariantReport.Builder builder = new VariantReport.Builder();
-            final VariantAnnotation variantAnnotation = findPrimaryRelevantAnnotation(variant, transcriptMap.keySet());
+            final VariantAnnotation variantAnnotation = findPrimaryRelevantAnnotation(variant,
+                    relevantTranscriptMap.keySet());
             // KODU: Variants with no relevant annotations should be filtered out by now.
             assert variantAnnotation != null;
 
-            final HMFSlicingAnnotation slicingAnnotation = transcriptMap.get(variantAnnotation.featureID());
+            final HMFSlicingAnnotation slicingAnnotation = relevantTranscriptMap.get(variantAnnotation.featureID());
             assert slicingAnnotation != null;
+
+            if (!variantAnnotation.gene().equals(slicingAnnotation.gene())) {
+                LOGGER.warn("Annotated gene does not match gene expected from slicing annotation for " + variant);
+            }
+
+            if (!variantAnnotation.allele().equals(variant.alt())) {
+                LOGGER.warn("Annotated allele does not match alt from variant for " + variant);
+            }
 
             builder.gene(variantAnnotation.gene());
             builder.position(variant.chromosome() + ":" + variant.position());
@@ -84,11 +99,12 @@ class VariantReporter {
             builder.hgvsCoding(variantAnnotation.hgvsCoding());
             builder.hgvsProtein(variantAnnotation.hgvsProtein());
             builder.consequence(variantAnnotation.consequenceString());
-            if (variant.isCOSMIC()) {
-                builder.cosmicID(variant.cosmicID());
+            final String cosmicID = variant.cosmicID();
+            if (cosmicID != null) {
+                builder.cosmicID(cosmicID);
             }
-            builder.alleleFrequency(variant.alleleFrequency());
-            builder.readDepth(variant.readDepth());
+            builder.alleleFrequency(Double.toString(variant.alleleFrequency()));
+            builder.readDepth(Integer.toString(variant.readDepth()));
             reports.add(builder.build());
         }
 
