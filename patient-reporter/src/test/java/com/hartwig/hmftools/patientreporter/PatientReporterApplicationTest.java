@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
@@ -30,6 +31,7 @@ public class PatientReporterApplicationTest {
         }
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
-        new PatientReporterApplication(RUN_DIRECTORY, variantAnalyzer, slicer, null, false).run();
+        final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(slicer);
+        new PatientReporterApplication(RUN_DIRECTORY, variantAnalyzer, copyNumberAnalyzer, null, false).run();
     }
 }

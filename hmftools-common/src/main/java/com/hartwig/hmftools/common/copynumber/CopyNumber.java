@@ -14,7 +14,7 @@ public class CopyNumber {
 
     public CopyNumber(@NotNull final String chromosome, final long start, final long end, final int value) {
         assert end >= start;
-        assert value > 0;
+        assert value >= 0;
         assert value != EXPECTED_VALUE;
 
         this.chromosome = chromosome;

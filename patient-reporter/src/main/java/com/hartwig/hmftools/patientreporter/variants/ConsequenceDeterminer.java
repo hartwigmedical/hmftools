@@ -95,7 +95,7 @@ class ConsequenceDeterminer {
             builder.position(variant.chromosome() + ":" + variant.position());
             builder.ref(variant.ref());
             builder.alt(variant.alt());
-            builder.transcript(slicingAnnotation.transcriptID() + "." + slicingAnnotation.transcriptVersion());
+            builder.transcript(slicingAnnotation.transcript());
             builder.hgvsCoding(variantAnnotation.hgvsCoding());
             builder.hgvsProtein(variantAnnotation.hgvsProtein());
             builder.consequence(variantAnnotation.consequenceString());

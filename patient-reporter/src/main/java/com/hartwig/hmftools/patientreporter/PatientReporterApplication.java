@@ -18,9 +18,9 @@ import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyser;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberStats;
-import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
@@ -71,7 +71,7 @@ public class PatientReporterApplication {
     @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
-    private final Slicer hmfSlicer;
+    private final CopyNumberAnalyzer copyNumberAnalyzer;
     @Nullable
     private final String outputDirectory;
     private final boolean batchMode;
@@ -104,7 +104,8 @@ public class PatientReporterApplication {
         final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
-        new PatientReporterApplication(runDir, variantAnalyzer, hmfSlicingRegion, outputDirectory, batchMode).run();
+        final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
+        new PatientReporterApplication(runDir, variantAnalyzer, copyNumberAnalyzer, outputDirectory, batchMode).run();
     }
 
     @NotNull
@@ -129,10 +130,11 @@ public class PatientReporterApplication {
     }
 
     PatientReporterApplication(@NotNull final String runDirectory, @NotNull final VariantAnalyzer variantAnalyzer,
-            @NotNull final Slicer hmfSlicer, @Nullable final String outputDirectory, final boolean batchMode) {
+            @NotNull final CopyNumberAnalyzer copyNumberAnalyzer, @Nullable final String outputDirectory,
+            final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.variantAnalyzer = variantAnalyzer;
-        this.hmfSlicer = hmfSlicer;
+        this.copyNumberAnalyzer = copyNumberAnalyzer;
         this.outputDirectory = outputDirectory;
         this.batchMode = batchMode;
     }
@@ -177,58 +179,53 @@ public class PatientReporterApplication {
     private void patientRun() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
+        LOGGER.info(" Start loading data...");
         final VCFSomaticFile variantFile = loadVariantFile(runDirectory);
-        LOGGER.info("  Total number of variants : " + variantFile.variants().size());
+        LOGGER.info("  Somatic variants loaded : " + variantFile.variants().size());
 
-        final VariantAnalysis analysis = variantAnalyzer.run(variantFile.variants());
+        final List<CopyNumber> copyNumbers = loadCNVFile(variantFile.sample());
+        LOGGER.info("  CNV data loaded for sample " + variantFile.sample());
 
-        LOGGER.info("  Number of variants after applying pass-only filter : " + analysis.passedVariants().size());
+        LOGGER.info(" Start analyzing data...");
+        final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
+        final CopyNumberAnalysis copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
+
         LOGGER.info(
-                "  Number of variants after applying consensus rule : " + analysis.consensusPassedVariants().size());
+                "  Number of variants after applying pass-only filter : " + variantAnalysis.passedVariants().size());
+        LOGGER.info("  Number of variants after applying consensus rule : "
+                + variantAnalysis.consensusPassedVariants().size());
         LOGGER.info("  Number of missense variants in consensus rule (mutational load) : "
-                + analysis.missenseVariants().size());
-        LOGGER.info("  Number of consequential variants to report : " + analysis.variantsToReport().size());
+                + variantAnalysis.missenseVariants().size());
+        LOGGER.info("  Number of consequential variants to report : " + variantAnalysis.variantsToReport().size());
+        LOGGER.info("  Determined copy number stats for " + copyNumberAnalysis.stats().size() + " regions.");
 
         if (outputDirectory != null) {
             final String consensusVCF =
                     outputDirectory + File.separator + variantFile.sample() + "_consensus_variants.vcf";
-            VCFFileWriter.writeSomaticVCF(consensusVCF, analysis.consensusPassedVariants());
+            VCFFileWriter.writeSomaticVCF(consensusVCF, variantAnalysis.consensusPassedVariants());
             LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
 
-            final String reportFile = outputDirectory + File.separator + variantFile.sample() + "_variants_report.csv";
-            Files.write(new File(reportFile).toPath(), toCSV(analysis.variantsToReport()));
-            LOGGER.info("    Written all variants to report to " + reportFile);
-        }
+            final String varReportFile =
+                    outputDirectory + File.separator + variantFile.sample() + "_variant_report.csv";
+            Files.write(new File(varReportFile).toPath(), varToCSV(variantAnalysis.variantsToReport()));
+            LOGGER.info("    Written all variants to report to " + varReportFile);
 
-        analyzeCopyNumbers(variantFile.sample());
+            final String cnvReportFile =
+                    outputDirectory + File.separator + variantFile.sample() + "_copynumber_report.csv";
+            Files.write(new File(cnvReportFile).toPath(), cnvToCSV(copyNumberAnalysis.findings()));
+            LOGGER.info("    Written all copy-numbers to report to " + cnvReportFile);
+        }
     }
 
-    private void analyzeCopyNumbers(@NotNull final String sample) throws IOException, HartwigException {
+    @NotNull
+    private List<CopyNumber> loadCNVFile(@NotNull final String sample) throws IOException, HartwigException {
         final String cnvBasePath = guessCNVBasePath(sample) + File.separator + FREEC_DIRECTORY;
-        List<CopyNumber> copyNumbers;
 
         try {
-            copyNumbers = CNVFileLoader.loadCNV(cnvBasePath, sample, COPYNUMBER_EXTENSION);
+            return CNVFileLoader.loadCNV(cnvBasePath, sample, COPYNUMBER_EXTENSION);
         } catch (EmptyFileException e) {
             // KODU: It could be that the sample simply does not have any amplifications...
-            copyNumbers = Lists.newArrayList();
-        }
-
-        final Map<GenomeRegion, CopyNumberStats> stats = CopyNumberAnalyser.run(hmfSlicer.regions(), copyNumbers);
-        LOGGER.info("  Determined copy number stats for " + stats.size() + " genomic regions");
-
-        if (outputDirectory != null) {
-            final List<String> lines = Lists.newArrayList();
-            lines.add("GENE,CNV_MIN,CNV_MEAN,CNV_MAX");
-            for (final Map.Entry<GenomeRegion, CopyNumberStats> entry : stats.entrySet()) {
-                final CopyNumberStats stat = entry.getValue();
-                if (stat.min() != 2 || stat.max() != 2) {
-                    lines.add(entry.getKey().annotation() + "," + stat.min() + "," + stat.mean() + "," + stat.max());
-                }
-            }
-            final String filePath = outputDirectory + File.separator + sample + "_CNV.csv";
-            Files.write(new File(filePath).toPath(), lines);
-            LOGGER.info("    Written all non-default CNV stats to " + filePath);
+            return Lists.newArrayList();
         }
     }
 
@@ -252,7 +249,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static List<String> toCSV(@NotNull final List<VariantReport> reports) {
+    private static List<String> varToCSV(@NotNull final List<VariantReport> reports) {
         final List<String> lines = Lists.newArrayList();
         lines.add("GENE,POSITION,REF,ALT,TRANSCRIPT,CDS,AA,CONSEQUENCE,COSMIC_ID,ALLELE_FREQ,READ_DEPTH");
         for (final VariantReport report : reports) {
@@ -260,6 +257,16 @@ public class PatientReporterApplication {
                     + report.transcript() + "," + report.hgvsCoding() + "," + report.hgvsProtein() + ","
                     + report.consequence() + "," + report.cosmicID() + "," + report.alleleFrequency() + ","
                     + report.readDepth());
+        }
+        return lines;
+    }
+
+    @NotNull
+    private static List<String> cnvToCSV(@NotNull final List<CopyNumberReport> reports) {
+        final List<String> lines = Lists.newArrayList();
+        lines.add("GENE,TRANSCRIPT,FINDING");
+        for (final CopyNumberReport report : reports) {
+            lines.add(report.gene() + "," + report.transcript() + "," + report.finding());
         }
         return lines;
     }

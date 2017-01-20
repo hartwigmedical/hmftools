@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.slicing;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -50,11 +52,17 @@ public class HMFSlicingAnnotation {
     }
 
     @NotNull
+    public String transcript() {
+        return transcriptID + "." + transcriptVersion();
+    }
+
+    @NotNull
     public String transcriptID() {
         return transcriptID;
     }
 
-    public int transcriptVersion() {
+    @VisibleForTesting
+    int transcriptVersion() {
         return transcriptVersion;
     }
 
