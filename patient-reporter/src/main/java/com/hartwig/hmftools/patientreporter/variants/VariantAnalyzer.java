@@ -25,18 +25,18 @@ public class VariantAnalyzer {
     @NotNull
     private final ConsensusRule consensusRule;
     @NotNull
-    private final VariantReporter reporter;
+    private final ConsequenceDeterminer determiner;
 
     public static VariantAnalyzer fromSlicingRegions(@NotNull final Slicer hmfSlicingRegion,
             @NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
         final ConsensusRule consensusRule = new ConsensusRule(giabHighConfidenceRegion, cpctSlicingRegion);
-        final VariantReporter reporter = fromHmfSlicingRegion(hmfSlicingRegion);
-        return new VariantAnalyzer(consensusRule, reporter);
+        final ConsequenceDeterminer determiner = fromHmfSlicingRegion(hmfSlicingRegion);
+        return new VariantAnalyzer(consensusRule, determiner);
     }
 
     @NotNull
-    private static VariantReporter fromHmfSlicingRegion(@NotNull final Slicer hmfSlicingRegion) {
-        return new VariantReporter(hmfSlicingRegion, extractTranscriptMap(hmfSlicingRegion));
+    private static ConsequenceDeterminer fromHmfSlicingRegion(@NotNull final Slicer hmfSlicingRegion) {
+        return new ConsequenceDeterminer(hmfSlicingRegion, extractTranscriptMap(hmfSlicingRegion));
     }
 
     @NotNull
@@ -53,9 +53,10 @@ public class VariantAnalyzer {
         return transcriptMap;
     }
 
-    private VariantAnalyzer(@NotNull final ConsensusRule consensusRule, @NotNull final VariantReporter reporter) {
+    private VariantAnalyzer(@NotNull final ConsensusRule consensusRule,
+            @NotNull final ConsequenceDeterminer determiner) {
         this.consensusRule = consensusRule;
-        this.reporter = reporter;
+        this.determiner = determiner;
     }
 
     @NotNull
@@ -64,7 +65,7 @@ public class VariantAnalyzer {
         final List<SomaticVariant> consensusPassedVariants = consensusRule.apply(passedVariants);
         final List<SomaticVariant> missenseVariants = filter(consensusPassedVariants, isMissense());
 
-        final List<VariantReport> variantsToReport = reporter.run(consensusPassedVariants);
+        final List<VariantReport> variantsToReport = determiner.run(consensusPassedVariants);
 
         return new VariantAnalysis(passedVariants, consensusPassedVariants, missenseVariants, variantsToReport);
     }

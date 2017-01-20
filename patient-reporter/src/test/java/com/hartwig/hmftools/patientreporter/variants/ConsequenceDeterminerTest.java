@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.slicing.SlicerTestFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class VariantReporterTest {
+public class ConsequenceDeterminerTest {
 
     private static final String CHROMOSOME = "X";
     private static final long POSITION = 150L;
@@ -46,13 +46,13 @@ public class VariantReporterTest {
         transcriptMap.put(TRANSCRIPT,
                 HMFSlicingAnnotationTestFactory.create(TRANSCRIPT, TRANSCRIPT_VERSION, Strings.EMPTY));
 
-        final VariantReporter reporter = new VariantReporter(slicer, transcriptMap);
+        final ConsequenceDeterminer determiner = new ConsequenceDeterminer(slicer, transcriptMap);
 
         final VariantConsequence rightConsequence = VariantConsequence.MISSENSE_VARIANT;
         final VariantConsequence wrongConsequence = VariantConsequence.OTHER;
 
         final VariantAnnotation.Builder annotationBuilder = new VariantAnnotation.Builder().featureID(TRANSCRIPT).
-                featureType(VariantReporter.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
+                featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
                 hgvsProtein(HGVS_PROTEIN);
         final VariantAnnotation rightAnnotation = annotationBuilder.consequences(
                 Lists.newArrayList(rightConsequence)).build();
@@ -70,7 +70,7 @@ public class VariantReporterTest {
         final SomaticVariant wrongPositionVariant = variantBuilder.position(WRONG_POSITION).
                 annotations(Lists.newArrayList(rightAnnotation)).build();
 
-        final List<VariantReport> reports = reporter.run(
+        final List<VariantReport> reports = determiner.run(
                 Lists.newArrayList(rightVariant, wrongConsequenceVariant, wrongPositionVariant));
         assertEquals(1, reports.size());
 
@@ -84,7 +84,15 @@ public class VariantReporterTest {
         assertEquals(HGVS_PROTEIN, report.hgvsProtein());
         assertEquals(rightConsequence.sequenceOntologyTerm(), report.consequence());
         assertEquals(COSMIC_ID, report.cosmicID());
-        assertEquals(Double.toString(ALLELE_FREQUENCY), report.alleleFrequency());
+        assertEquals(ConsequenceDeterminer.toPercent(ALLELE_FREQUENCY), report.alleleFrequency());
         assertEquals(Integer.toString(READ_DEPTH), report.readDepth());
+    }
+
+    @Test
+    public void canConvertToPercent() {
+        assertEquals("50%", ConsequenceDeterminer.toPercent(0.5));
+        assertEquals("0%", ConsequenceDeterminer.toPercent(0D));
+        assertEquals("100%", ConsequenceDeterminer.toPercent(1D));
+        assertEquals("94%", ConsequenceDeterminer.toPercent(0.9364456));
     }
 }

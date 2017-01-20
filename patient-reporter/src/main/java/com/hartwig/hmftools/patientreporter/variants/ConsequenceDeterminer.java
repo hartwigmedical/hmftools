@@ -22,9 +22,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class VariantReporter {
+class ConsequenceDeterminer {
 
-    private static final Logger LOGGER = LogManager.getLogger(VariantReporter.class);
+    private static final Logger LOGGER = LogManager.getLogger(ConsequenceDeterminer.class);
 
     @VisibleForTesting
     static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
@@ -44,7 +44,7 @@ class VariantReporter {
     @NotNull
     private final Map<String, HMFSlicingAnnotation> relevantTranscriptMap;
 
-    VariantReporter(@NotNull final Slicer hmfSlicingRegion,
+    ConsequenceDeterminer(@NotNull final Slicer hmfSlicingRegion,
             @NotNull final Map<String, HMFSlicingAnnotation> relevantTranscriptMap) {
         this.hmfSlicingRegion = hmfSlicingRegion;
         this.relevantTranscriptMap = relevantTranscriptMap;
@@ -103,12 +103,18 @@ class VariantReporter {
             if (cosmicID != null) {
                 builder.cosmicID(cosmicID);
             }
-            builder.alleleFrequency(Double.toString(variant.alleleFrequency()));
+            builder.alleleFrequency(toPercent(variant.alleleFrequency()));
             builder.readDepth(Integer.toString(variant.readDepth()));
             reports.add(builder.build());
         }
 
         return reports;
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static String toPercent(final double numberBetweenZeroAndOne) {
+        return Long.toString(Math.round(numberBetweenZeroAndOne * 100)) + "%";
     }
 
     @Nullable
