@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class Reporter {
+class VariantReporter {
 
     private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
     // KODU: This boolean exists to evaluate the impact of annotation-filtering on actual patients.
@@ -38,7 +38,8 @@ class Reporter {
     @NotNull
     private final Map<String, HMFSlicingAnnotation> transcriptMap;
 
-    Reporter(@NotNull final Slicer hmfSlicingRegion, @NotNull final Map<String, HMFSlicingAnnotation> transcriptMap) {
+    VariantReporter(@NotNull final Slicer hmfSlicingRegion,
+            @NotNull final Map<String, HMFSlicingAnnotation> transcriptMap) {
         this.hmfSlicingRegion = hmfSlicingRegion;
         this.transcriptMap = transcriptMap;
     }

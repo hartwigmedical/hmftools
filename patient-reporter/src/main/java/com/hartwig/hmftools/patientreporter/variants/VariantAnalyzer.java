@@ -25,18 +25,18 @@ public class VariantAnalyzer {
     @NotNull
     private final ConsensusRule consensusRule;
     @NotNull
-    private final Reporter reporter;
+    private final VariantReporter reporter;
 
     public static VariantAnalyzer fromSlicingRegions(@NotNull final Slicer hmfSlicingRegion,
             @NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
         final ConsensusRule consensusRule = new ConsensusRule(giabHighConfidenceRegion, cpctSlicingRegion);
-        final Reporter reporter = fromHmfSlicingRegion(hmfSlicingRegion);
+        final VariantReporter reporter = fromHmfSlicingRegion(hmfSlicingRegion);
         return new VariantAnalyzer(consensusRule, reporter);
     }
 
     @NotNull
-    private static Reporter fromHmfSlicingRegion(@NotNull final Slicer hmfSlicingRegion) {
-        return new Reporter(hmfSlicingRegion, extractTranscriptMap(hmfSlicingRegion));
+    private static VariantReporter fromHmfSlicingRegion(@NotNull final Slicer hmfSlicingRegion) {
+        return new VariantReporter(hmfSlicingRegion, extractTranscriptMap(hmfSlicingRegion));
     }
 
     @NotNull
@@ -53,7 +53,7 @@ public class VariantAnalyzer {
         return transcriptMap;
     }
 
-    private VariantAnalyzer(@NotNull final ConsensusRule consensusRule, @NotNull final Reporter reporter) {
+    private VariantAnalyzer(@NotNull final ConsensusRule consensusRule, @NotNull final VariantReporter reporter) {
         this.consensusRule = consensusRule;
         this.reporter = reporter;
     }
