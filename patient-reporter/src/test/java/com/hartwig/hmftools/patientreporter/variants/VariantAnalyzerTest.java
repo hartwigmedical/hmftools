@@ -63,7 +63,7 @@ public class VariantAnalyzerTest {
         assertEquals(4, analysis.passedVariants().size());
         assertEquals(4, analysis.consensusPassedVariants().size());
         assertEquals(3, analysis.missenseVariants().size());
-        assertEquals(1, analysis.consequencePassedVariants().size());
+        assertEquals(1, analysis.variantsToReport().size());
     }
 
     @NotNull

@@ -119,7 +119,7 @@ public final class SomaticVariantFactory {
             annotationHasMissense =
                     annotationHasMissense || annotation.consequences().contains(VariantConsequence.MISSENSE_VARIANT);
         }
-        final boolean infoHasMissense = info.contains("missense");
+        final boolean infoHasMissense = info.contains(VariantConsequence.MISSENSE_VARIANT.sequenceOntologyTerm());
         if (annotationHasMissense != infoHasMissense) {
             LOGGER.warn("Mismatch between annotated missense and normal missense: " + info);
         }

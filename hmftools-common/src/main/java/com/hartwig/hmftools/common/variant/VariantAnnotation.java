@@ -78,12 +78,24 @@ public class VariantAnnotation {
     }
 
     @NotNull
+    public String consequenceString() {
+        String consequenceString = Strings.EMPTY;
+        for (final VariantConsequence consequence : consequences) {
+            if (!consequenceString.isEmpty()) {
+                consequenceString += "; ";
+            }
+            consequenceString += consequence.sequenceOntologyTerm();
+        }
+        return consequenceString;
+    }
+
+    @NotNull
     String severity() {
         return severity;
     }
 
     @NotNull
-    String gene() {
+    public String gene() {
         return gene;
     }
 
@@ -113,12 +125,12 @@ public class VariantAnnotation {
     }
 
     @NotNull
-    String hgvsCoding() {
+    public String hgvsCoding() {
         return hgvsCoding;
     }
 
     @NotNull
-    String hgvsProtein() {
+    public String hgvsProtein() {
         return hgvsProtein;
     }
 

@@ -32,11 +32,11 @@ class ConsensusRule {
 
     @NotNull
     List<SomaticVariant> apply(@NotNull List<SomaticVariant> variants) {
-        Predicate<SomaticVariant> snpRule = and(withType(VariantType.SNP),
+        final Predicate<SomaticVariant> snpRule = and(withType(VariantType.SNP),
                 or(withMinCallers(3), isIncludedIn(cpctSlicingRegion),
                         and(withMinCallers(2), isIncludedIn(giabHighConfidenceRegion),
                                 or(inCOSMIC(), not(inDBSNP())))));
-        Predicate<SomaticVariant> indelRule = and(withType(VariantType.INDEL),
+        final Predicate<SomaticVariant> indelRule = and(withType(VariantType.INDEL),
                 or(withMinCallers(2), isIncludedIn(cpctSlicingRegion)));
 
         return filter(variants, or(snpRule, indelRule));

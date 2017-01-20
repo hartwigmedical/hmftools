@@ -15,7 +15,7 @@ final class VariantExtractorFunctions {
 
         VariantType type = VariantType.SNP;
 
-        for (String alt : allAlts) {
+        for (final String alt : allAlts) {
             if (refValue.length() != alt.length()) {
                 type = VariantType.INDEL;
             }

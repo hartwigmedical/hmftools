@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant.predicate;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +16,7 @@ public final class VariantPredicates {
     @NotNull
     public static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant>... predicates) {
         return variant -> {
-            for (Predicate<SomaticVariant> predicate : predicates) {
+            for (final Predicate<SomaticVariant> predicate : predicates) {
                 if (!predicate.test(variant)) {
                     return false;
                 }
@@ -30,7 +29,7 @@ public final class VariantPredicates {
     @NotNull
     public static Predicate<SomaticVariant> or(@NotNull Predicate<SomaticVariant>... predicates) {
         return variant -> {
-            for (Predicate<SomaticVariant> predicate : predicates) {
+            for (final Predicate<SomaticVariant> predicate : predicates) {
                 if (predicate.test(variant)) {
                     return true;
                 }
@@ -62,11 +61,6 @@ public final class VariantPredicates {
     @NotNull
     public static Predicate<SomaticVariant> inDBSNPAndNotInCOSMIC() {
         return and(inDBSNP(), not(inCOSMIC()));
-    }
-
-    @NotNull
-    public static Predicate<SomaticVariant> isMissense() {
-        return variant -> variant.hasConsequence(VariantConsequence.MISSENSE_VARIANT);
     }
 
     @NotNull

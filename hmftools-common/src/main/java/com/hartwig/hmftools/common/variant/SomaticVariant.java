@@ -108,7 +108,7 @@ public class SomaticVariant implements Variant {
         return alleleFrequency;
     }
 
-    int readDepth() {
+    public int readDepth() {
         return readDepth;
     }
 

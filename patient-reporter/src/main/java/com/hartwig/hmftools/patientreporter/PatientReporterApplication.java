@@ -168,7 +168,7 @@ public class PatientReporterApplication {
             final String out =
                     variantFile.sample() + "," + variantFile.variants().size() + "," + analysis.passedVariants().size()
                             + "," + analysis.consensusPassedVariants().size() + ","
-                    + analysis.missenseVariants().size() + "," + analysis.consequencePassedVariants().size()
+                            + analysis.missenseVariants().size() + "," + analysis.variantsToReport().size()
                     + consequenceList;
             System.out.println(out);
         }
@@ -188,18 +188,13 @@ public class PatientReporterApplication {
                 "  Number of variants after applying consensus rule : " + analysis.consensusPassedVariants().size());
         LOGGER.info("  Number of missense variants in consensus rule (mutational load) : "
                 + analysis.missenseVariants().size());
-        LOGGER.info("  Number of consequential variants to report : " + analysis.consequencePassedVariants().size());
+        LOGGER.info("  Number of consequential variants to report : " + analysis.variantsToReport().size());
 
         if (outputDirectory != null) {
             final String consensusVCF =
                     outputDirectory + File.separator + variantFile.sample() + "_consensus_variants.vcf";
             VCFFileWriter.writeSomaticVCF(consensusVCF, analysis.consensusPassedVariants());
             LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
-
-            final String consequenceVCF =
-                    outputDirectory + File.separator + variantFile.sample() + "_consequential_variants.vcf";
-            VCFFileWriter.writeSomaticVCF(consequenceVCF, analysis.consequencePassedVariants());
-            LOGGER.info("    Written consequential variants to " + consequenceVCF);
         }
     }
 

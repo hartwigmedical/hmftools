@@ -54,7 +54,7 @@ public class HMFSlicingAnnotation {
         return transcriptID;
     }
 
-    int transcriptVersion() {
+    public int transcriptVersion() {
         return transcriptVersion;
     }
 
