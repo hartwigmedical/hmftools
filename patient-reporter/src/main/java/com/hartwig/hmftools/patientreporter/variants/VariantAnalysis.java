@@ -14,18 +14,21 @@ public class VariantAnalysis {
     private final List<SomaticVariant> consensusPassedVariants;
     @NotNull
     private final List<SomaticVariant> missenseVariants;
+    @NotNull
+    private final List<SomaticVariant> consequentialVariants;
 
     @NotNull
-    private final List<VariantReport> variantsToReport;
+    private final List<VariantReport> findings;
 
     VariantAnalysis(@NotNull final List<SomaticVariant> passedVariants,
             @NotNull final List<SomaticVariant> consensusPassedVariants,
             @NotNull final List<SomaticVariant> missenseVariants,
-            @NotNull final List<VariantReport> variantsToReport) {
+            @NotNull final List<SomaticVariant> consequentialVariants, @NotNull final List<VariantReport> findings) {
         this.passedVariants = passedVariants;
         this.consensusPassedVariants = consensusPassedVariants;
         this.missenseVariants = missenseVariants;
-        this.variantsToReport = variantsToReport;
+        this.consequentialVariants = consequentialVariants;
+        this.findings = findings;
     }
 
     @NotNull
@@ -44,7 +47,12 @@ public class VariantAnalysis {
     }
 
     @NotNull
-    public List<VariantReport> variantsToReport() {
-        return variantsToReport;
+    public List<SomaticVariant> consequentialVariants() {
+        return consequentialVariants;
+    }
+
+    @NotNull
+    public List<VariantReport> findings() {
+        return findings;
     }
 }

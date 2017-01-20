@@ -70,11 +70,11 @@ public class ConsequenceDeterminerTest {
         final SomaticVariant wrongPositionVariant = variantBuilder.position(WRONG_POSITION).
                 annotations(Lists.newArrayList(rightAnnotation)).build();
 
-        final List<VariantReport> reports = determiner.run(
-                Lists.newArrayList(rightVariant, wrongConsequenceVariant, wrongPositionVariant));
-        assertEquals(1, reports.size());
+        final List<VariantReport> findings = determiner.run(
+                Lists.newArrayList(rightVariant, wrongConsequenceVariant, wrongPositionVariant)).findings();
+        assertEquals(1, findings.size());
 
-        final VariantReport report = reports.get(0);
+        final VariantReport report = findings.get(0);
         assertEquals(GENE, report.gene());
         assertEquals(CHROMOSOME + ":" + POSITION, report.position());
         assertEquals(REF, report.ref());

@@ -51,13 +51,13 @@ class ConsequenceDeterminer {
     }
 
     @NotNull
-    List<VariantReport> run(@NotNull final List<SomaticVariant> variants) {
+    ConsequenceOutput run(@NotNull final List<SomaticVariant> variants) {
         final Predicate<SomaticVariant> consequenceRule = and(isIncludedIn(hmfSlicingRegion),
                 hasActionableConsequence(relevantTranscriptMap.keySet()));
 
-        final List<SomaticVariant> variantsWithConsequence = filter(variants, consequenceRule);
+        final List<SomaticVariant> consequentialVariants = filter(variants, consequenceRule);
 
-        return toVariantReport(variantsWithConsequence);
+        return new ConsequenceOutput(consequentialVariants, toVariantReport(consequentialVariants));
     }
 
     @NotNull

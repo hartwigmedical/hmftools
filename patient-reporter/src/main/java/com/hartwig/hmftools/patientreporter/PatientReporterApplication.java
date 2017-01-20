@@ -167,26 +167,24 @@ public class PatientReporterApplication {
                 consequenceList += ("," + counts.get(consequence).toString());
             }
 
-            final String out =
+            System.out.println(
                     variantFile.sample() + "," + variantFile.variants().size() + "," + analysis.passedVariants().size()
                             + "," + analysis.consensusPassedVariants().size() + ","
-                            + analysis.missenseVariants().size() + "," + analysis.variantsToReport().size()
-                            + consequenceList;
-            System.out.println(out);
+                            + analysis.missenseVariants().size() + "," + analysis.findings().size() + consequenceList);
         }
     }
 
     private void patientRun() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
-        LOGGER.info(" Start loading data...");
+        LOGGER.info(" Loading data...");
         final VCFSomaticFile variantFile = loadVariantFile(runDirectory);
         LOGGER.info("  Somatic variants loaded : " + variantFile.variants().size());
 
         final List<CopyNumber> copyNumbers = loadCNVFile(variantFile.sample());
         LOGGER.info("  CNV data loaded for sample " + variantFile.sample());
 
-        LOGGER.info(" Start analyzing data...");
+        LOGGER.info(" Analyzing data...");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
         final CopyNumberAnalysis copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
 
@@ -196,25 +194,33 @@ public class PatientReporterApplication {
                 + variantAnalysis.consensusPassedVariants().size());
         LOGGER.info("  Number of missense variants in consensus rule (mutational load) : "
                 + variantAnalysis.missenseVariants().size());
-        LOGGER.info("  Number of consequential variants to report : " + variantAnalysis.variantsToReport().size());
+        LOGGER.info("  Number of consequential variants to report : " + variantAnalysis.findings().size());
         LOGGER.info("  Determined copy number stats for " + copyNumberAnalysis.stats().size() + " regions.");
 
         if (outputDirectory != null) {
-            final String consensusVCF =
-                    outputDirectory + File.separator + variantFile.sample() + "_consensus_variants.vcf";
-            VCFFileWriter.writeSomaticVCF(consensusVCF, variantAnalysis.consensusPassedVariants());
-            LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
-
-            final String varReportFile =
-                    outputDirectory + File.separator + variantFile.sample() + "_variant_report.csv";
-            Files.write(new File(varReportFile).toPath(), varToCSV(variantAnalysis.variantsToReport()));
-            LOGGER.info("    Written all variants to report to " + varReportFile);
-
-            final String cnvReportFile =
-                    outputDirectory + File.separator + variantFile.sample() + "_copynumber_report.csv";
-            Files.write(new File(cnvReportFile).toPath(), cnvToCSV(copyNumberAnalysis.findings()));
-            LOGGER.info("    Written all copy-numbers to report to " + cnvReportFile);
+            writeToFiles(outputDirectory + File.separator + variantFile.sample(), variantAnalysis, copyNumberAnalysis);
         }
+    }
+
+    private static void writeToFiles(@NotNull final String baseName, @NotNull final VariantAnalysis variantAnalysis,
+            @NotNull final CopyNumberAnalysis copyNumberAnalysis) throws IOException {
+        final String consensusVCF = baseName + "_consensus_variants.vcf";
+        VCFFileWriter.writeSomaticVCF(consensusVCF, variantAnalysis.consensusPassedVariants());
+        LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
+
+        final String consequentialVCF = baseName + "_consequential_variants.vcf";
+        VCFFileWriter.writeSomaticVCF(consequentialVCF, variantAnalysis.consequentialVariants());
+        LOGGER.info("    Written consequential variants to " + consequentialVCF);
+
+        final String varReportFile = baseName + "_variant_report.csv";
+        final List<VariantReport> varFindings = variantAnalysis.findings();
+        Files.write(new File(varReportFile).toPath(), varToCSV(varFindings));
+        LOGGER.info("    Written " + varFindings.size() + " variants to report to " + varReportFile);
+
+        final String cnvReportFile = baseName + "_copynumber_report.csv";
+        final List<CopyNumberReport> cnvFindings = copyNumberAnalysis.findings();
+        Files.write(new File(cnvReportFile).toPath(), cnvToCSV(cnvFindings));
+        LOGGER.info("    Written " + cnvFindings.size() + " copy-numbers to report to " + cnvReportFile);
     }
 
     @NotNull
