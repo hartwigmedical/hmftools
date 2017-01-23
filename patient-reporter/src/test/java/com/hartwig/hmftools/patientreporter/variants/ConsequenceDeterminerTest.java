@@ -75,17 +75,17 @@ public class ConsequenceDeterminerTest {
         assertEquals(1, findings.size());
 
         final VariantReport report = findings.get(0);
-        assertEquals(GENE, report.gene());
-        assertEquals(CHROMOSOME + ":" + POSITION, report.position());
-        assertEquals(REF, report.ref());
-        assertEquals(ALT, report.alt());
-        assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.transcript());
-        assertEquals(HGVS_CODING, report.hgvsCoding());
-        assertEquals(HGVS_PROTEIN, report.hgvsProtein());
-        assertEquals(rightConsequence.sequenceOntologyTerm(), report.consequence());
-        assertEquals(COSMIC_ID, report.cosmicID());
-        assertEquals(ConsequenceDeterminer.toPercent(ALLELE_FREQUENCY), report.alleleFrequency());
-        assertEquals(Integer.toString(READ_DEPTH), report.readDepth());
+        assertEquals(GENE, report.getGene());
+        assertEquals(CHROMOSOME + ":" + POSITION, report.getPosition());
+        assertEquals(REF, report.getRef());
+        assertEquals(ALT, report.getAlt());
+        assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.getTranscript());
+        assertEquals(HGVS_CODING, report.getHgvsCoding());
+        assertEquals(HGVS_PROTEIN, report.getHgvsProtein());
+        assertEquals(rightConsequence.sequenceOntologyTerm(), report.getConsequence());
+        assertEquals(COSMIC_ID, report.getCosmicID());
+        assertEquals(ConsequenceDeterminer.toPercent(ALLELE_FREQUENCY), report.getAlleleFrequency());
+        assertEquals(Integer.toString(READ_DEPTH), report.getReadDepth());
     }
 
     @Test

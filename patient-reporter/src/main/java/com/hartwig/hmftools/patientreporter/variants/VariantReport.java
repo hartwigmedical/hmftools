@@ -46,59 +46,61 @@ public class VariantReport {
     }
 
     @NotNull
-    public String gene() {
+    public String getGene() {
         return gene;
     }
 
     @NotNull
-    public String position() {
+    public String getPosition() {
         return position;
     }
 
     @NotNull
-    public String ref() {
+    public String getRef() {
         return ref;
     }
 
     @NotNull
-    public String alt() {
+    public String getAlt() {
         return alt;
     }
 
     @NotNull
-    public String transcript() {
+    public String getTranscript() {
         return transcript;
     }
 
     @NotNull
-    public String hgvsCoding() {
+    public String getHgvsCoding() {
         return hgvsCoding;
     }
 
     @NotNull
-    public String hgvsProtein() {
+    public String getHgvsProtein() {
         return hgvsProtein;
     }
 
     @NotNull
-    public String consequence() {
+    public String getConsequence() {
         return consequence;
     }
 
     @NotNull
-    public String cosmicID() {
+    public String getCosmicID() {
         return cosmicID;
     }
 
-    public String alleleFrequency() {
+    @NotNull
+    public String getAlleleFrequency() {
         return alleleFrequency;
     }
 
-    public String readDepth() {
+    @NotNull
+    public String getReadDepth() {
         return readDepth;
     }
 
-    static class Builder {
+    public static class Builder {
         @NotNull
         private String gene = Strings.EMPTY;
         @NotNull
@@ -122,77 +124,77 @@ public class VariantReport {
         @NotNull
         private String readDepth = Strings.EMPTY;
 
-        Builder() {
+        public Builder() {
         }
 
         @NotNull
-        Builder gene(@NotNull final String gene) {
+        public Builder gene(@NotNull final String gene) {
             this.gene = gene;
             return this;
         }
 
         @NotNull
-        Builder position(@NotNull final String position) {
+        public Builder position(@NotNull final String position) {
             this.position = position;
             return this;
         }
 
         @NotNull
-        Builder ref(@NotNull final String ref) {
+        public Builder ref(@NotNull final String ref) {
             this.ref = ref;
             return this;
         }
 
         @NotNull
-        Builder alt(@NotNull final String alt) {
+        public Builder alt(@NotNull final String alt) {
             this.alt = alt;
             return this;
         }
 
         @NotNull
-        Builder transcript(@NotNull final String transcript) {
+        public Builder transcript(@NotNull final String transcript) {
             this.transcript = transcript;
             return this;
         }
 
         @NotNull
-        Builder hgvsCoding(@NotNull final String hgvsCoding) {
+        public Builder hgvsCoding(@NotNull final String hgvsCoding) {
             this.hgvsCoding = hgvsCoding;
             return this;
         }
 
         @NotNull
-        Builder hgvsProtein(@NotNull final String hgvsProtein) {
+        public Builder hgvsProtein(@NotNull final String hgvsProtein) {
             this.hgvsProtein = hgvsProtein;
             return this;
         }
 
         @NotNull
-        Builder consequence(@NotNull final String consequence) {
+        public Builder consequence(@NotNull final String consequence) {
             this.consequence = consequence;
             return this;
         }
 
         @NotNull
-        Builder cosmicID(@NotNull final String cosmicID) {
+        public Builder cosmicID(@NotNull final String cosmicID) {
             this.cosmicID = cosmicID;
             return this;
         }
 
         @NotNull
-        Builder alleleFrequency(@NotNull final String alleleFrequency) {
+        public Builder alleleFrequency(@NotNull final String alleleFrequency) {
             this.alleleFrequency = alleleFrequency;
             return this;
         }
 
         @NotNull
-        Builder readDepth(@NotNull final String readDepth) {
+        public Builder readDepth(@NotNull final String readDepth) {
             this.readDepth = readDepth;
             return this;
         }
 
         @NotNull
-        VariantReport build() {
+        public VariantReport build() {
             return new VariantReport(gene, position, ref, alt, transcript, hgvsCoding, hgvsProtein, consequence,
                     cosmicID, alleleFrequency, readDepth);
         }

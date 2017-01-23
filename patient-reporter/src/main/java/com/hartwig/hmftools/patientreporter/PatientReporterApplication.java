@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.output.PDFWriter;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
@@ -39,6 +40,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import net.sf.dynamicreports.report.exception.DRException;
 
 public class PatientReporterApplication {
 
@@ -143,7 +146,14 @@ public class PatientReporterApplication {
         if (batchMode) {
             batchRun();
         } else {
-            patientRun();
+            final PatientReport report = patientRun();
+            if (outputDirectory != null) {
+                try {
+                    PDFWriter.writeToPDF(outputDirectory, report);
+                } catch (DRException e) {
+                    LOGGER.warn("Could not generate PDF report: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -174,7 +184,8 @@ public class PatientReporterApplication {
         }
     }
 
-    private void patientRun() throws IOException, HartwigException {
+    @NotNull
+    private PatientReport patientRun() throws IOException, HartwigException {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
         LOGGER.info(" Loading data...");
@@ -200,6 +211,9 @@ public class PatientReporterApplication {
         if (outputDirectory != null) {
             writeToFiles(outputDirectory + File.separator + variantFile.sample(), variantAnalysis, copyNumberAnalysis);
         }
+
+        return new PatientReport(variantFile.sample(), variantAnalysis.findings(), copyNumberAnalysis.findings(),
+                variantAnalysis.missenseVariants().size());
     }
 
     private static void writeToFiles(@NotNull final String baseName, @NotNull final VariantAnalysis variantAnalysis,
@@ -239,7 +253,7 @@ public class PatientReporterApplication {
     private String guessCNVBasePath(@NotNull final String sample) throws IOException {
         final String basePath = runDirectory + File.separator + COPYNUMBER_DIRECTORY;
 
-        for (Path path : Files.list(new File(basePath).toPath()).collect(Collectors.toList())) {
+        for (final Path path : Files.list(new File(basePath).toPath()).collect(Collectors.toList())) {
             if (path.toFile().isDirectory() && path.getFileName().toFile().getName().contains(sample)) {
                 return path.toString();
             }
@@ -258,12 +272,11 @@ public class PatientReporterApplication {
     private static List<String> varToCSV(@NotNull final List<VariantReport> reports) {
         final List<String> lines = Lists.newArrayList();
         lines.add("GENE,POSITION,REF,ALT,TRANSCRIPT,CDS,AA,CONSEQUENCE,COSMIC_ID,ALLELE_FREQ,READ_DEPTH");
-        for (final VariantReport report : reports) {
-            lines.add(report.gene() + "," + report.position() + "," + report.ref() + "," + report.alt() + ","
-                    + report.transcript() + "," + report.hgvsCoding() + "," + report.hgvsProtein() + ","
-                    + report.consequence() + "," + report.cosmicID() + "," + report.alleleFrequency() + ","
-                    + report.readDepth());
-        }
+        lines.addAll(reports.stream().map(
+                report -> report.getGene() + "," + report.getPosition() + "," + report.getRef() + "," + report.getAlt()
+                        + "," + report.getTranscript() + "," + report.getHgvsCoding() + "," + report.getHgvsProtein()
+                        + "," + report.getConsequence() + "," + report.getCosmicID() + ","
+                        + report.getAlleleFrequency() + "," + report.getReadDepth()).collect(Collectors.toList()));
         return lines;
     }
 
@@ -271,9 +284,9 @@ public class PatientReporterApplication {
     private static List<String> cnvToCSV(@NotNull final List<CopyNumberReport> reports) {
         final List<String> lines = Lists.newArrayList();
         lines.add("GENE,TRANSCRIPT,FINDING");
-        for (final CopyNumberReport report : reports) {
-            lines.add(report.gene() + "," + report.transcript() + "," + report.finding());
-        }
+        lines.addAll(reports.stream().map(
+                report -> report.gene() + "," + report.transcript() + "," + report.finding()).collect(
+                Collectors.toList()));
         return lines;
     }
 }
