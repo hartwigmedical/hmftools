@@ -14,6 +14,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
@@ -25,6 +26,7 @@ public class PDFWriterTest {
     private static final String HMF_LOGO = Resources.getResource("pdf/hartwig_logo.jpg").getPath();
 
     @Test
+    @Ignore
     public void canGeneratePDFReport() throws DRException {
         final String sample = "CPCT11111111T";
         final List<VariantReport> variants = Lists.newArrayList(
