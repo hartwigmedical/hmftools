@@ -285,7 +285,7 @@ public class PatientReporterApplication {
         final List<String> lines = Lists.newArrayList();
         lines.add("GENE,TRANSCRIPT,FINDING");
         lines.addAll(reports.stream().map(
-                report -> report.gene() + "," + report.transcript() + "," + report.finding()).collect(
+                report -> report.getGene() + "," + report.getTranscript() + "," + report.getFinding()).collect(
                 Collectors.toList()));
         return lines;
     }

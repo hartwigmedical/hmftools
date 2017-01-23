@@ -45,9 +45,9 @@ public class CopyNumberAnalyzerTest {
 
         final List<CopyNumberReport> findings = analysis.findings();
         assertEquals(1, findings.size());
-        assertEquals(secondAnnotation.gene(), findings.get(0).gene());
-        assertEquals(secondAnnotation.transcript(), findings.get(0).transcript());
-        assertEquals(String.format(CopyNumberAnalyzer.LOSS_FINDING, 0), findings.get(0).finding());
+        assertEquals(secondAnnotation.gene(), findings.get(0).getGene());
+        assertEquals(secondAnnotation.transcript(), findings.get(0).getTranscript());
+        assertEquals(String.format(CopyNumberAnalyzer.LOSS_FINDING, 0), findings.get(0).getFinding());
 
         final CopyNumberStats firstStat = analysis.stats().get(first);
         assertEquals(2, firstStat.min());
