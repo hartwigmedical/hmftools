@@ -14,6 +14,8 @@ import org.junit.Test;
 
 public class EcrfAnalysisApplicationTest {
 
+    // KODU: This file does not exist in github for privacy reasons.
+    // KODU: Tests should remain ignored to allow building on locations which don't have this file.
     private static final String TEST_ECRF = Resources.getResource("example").getPath() + File.separator + "ecrf.xml";
     private static final List<String> PATIENTS = Lists.newArrayList("CPCT02252500");
 
