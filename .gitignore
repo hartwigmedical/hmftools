@@ -8,3 +8,4 @@ ecrf-analyser/target
 hmftools-common/target
 patient-reporter/target
 retention-checker/target
+health-checker/target
