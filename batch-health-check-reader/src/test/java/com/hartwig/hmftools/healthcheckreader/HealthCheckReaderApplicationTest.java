@@ -9,14 +9,12 @@ import org.junit.Test;
 
 public class HealthCheckReaderApplicationTest {
 
-    private static final String EXAMPLE_REPORT_PATH =
-            Resources.getResource("checks").getPath() + File.separator + "example.json";
     private static final String EXAMPLE_DATA_PATH = Resources.getResource("checks").getPath();
+    private static final String EXAMPLE_REPORT_PATH = EXAMPLE_DATA_PATH + File.separator + "example.json";
 
     @Test
     public void canRunAnalysisOnData() throws IOException {
-        String csvOut = "/Users/kduyvesteyn/hmf/tmp/checks.csv";
-        new HealthCheckReaderApplication(null, EXAMPLE_DATA_PATH, csvOut).runAnalysis();
+        new HealthCheckReaderApplication(null, EXAMPLE_DATA_PATH, null).runAnalysis();
     }
 
     @Test
