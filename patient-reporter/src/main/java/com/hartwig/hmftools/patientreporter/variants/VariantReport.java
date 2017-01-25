@@ -96,6 +96,10 @@ public class VariantReport {
         return alleleReadCount;
     }
 
+    public double alleleFrequency() {
+        return (double) alleleReadCount / totalReadCount;
+    }
+
     public static class Builder {
         @NotNull
         private String gene = Strings.EMPTY;
