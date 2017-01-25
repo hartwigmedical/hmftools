@@ -4,15 +4,19 @@ import com.hartwig.hmftools.patientreporter.PatientReport;
 
 import org.jetbrains.annotations.NotNull;
 
-import net.sf.dynamicreports.report.exception.DRException;
+public class PDFWriter {
 
-public final class PDFWriter {
+    @NotNull
+    private final String outputDirectory;
+    @NotNull
+    private final String hmfLogo;
 
-    private PDFWriter() {
+    public PDFWriter(@NotNull final String outputDirectory, @NotNull final String hmfLogo) {
+        this.outputDirectory = outputDirectory;
+        this.hmfLogo = hmfLogo;
     }
 
-    public static void writeToPDF(@NotNull final String basePath, @NotNull final PatientReport patientReport)
-            throws DRException {
+    public void write(@NotNull final PatientReport patientReport) {
         // KODU: TODO!
     }
 }

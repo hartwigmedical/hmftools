@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,11 +10,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -41,15 +37,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import net.sf.dynamicreports.report.exception.DRException;
-
 public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
-    private static final String SOMATIC_EXTENSION = "_melted.vcf";
-    private static final String COPYNUMBER_DIRECTORY = "copyNumber";
-    private static final String COPYNUMBER_EXTENSION = ".bam_CNVs";
-    private static final String FREEC_DIRECTORY = "freec";
 
     private static final String RUN_DIRECTORY_ARGS_DESC = "A path towards a single rundir.";
     private static final String RUN_DIRECTORY = "rundir";
@@ -62,6 +52,9 @@ public class PatientReporterApplication {
 
     private static final String HMF_SLICING_BED_ARGS_DESC = "A path towards the HMF slicing bed.";
     private static final String HMF_SLICING_BED = "hmf_slicing_bed";
+
+    private static final String HMF_LOGO_ARGS_DESC = "A path to the HMF logo, used in the PDF report.";
+    private static final String HMF_LOGO = "hmf_logo";
 
     private static final String OUTPUT_DIR_ARGS_DESC = "A path where, if provided, output files will be written to.";
     private static final String OUTPUT_DIR = "output_dir";
@@ -77,6 +70,8 @@ public class PatientReporterApplication {
     private final CopyNumberAnalyzer copyNumberAnalyzer;
     @Nullable
     private final String outputDirectory;
+    @Nullable
+    private final PDFWriter pdfWriter;
     private final boolean batchMode;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
@@ -88,6 +83,7 @@ public class PatientReporterApplication {
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
         final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
+        final String hmfLogo = cmd.getOptionValue(HMF_LOGO);
         final boolean batchMode = cmd.hasOption(BATCH_MODE);
 
         if (runDir == null || cpctSlicingBed == null || highConfidenceBed == null || hmfSlicingBed == null) {
@@ -104,11 +100,25 @@ public class PatientReporterApplication {
             }
         }
 
+        if (hmfLogo != null) {
+            final Path logoPath = new File(hmfLogo).toPath();
+            if (!Files.exists(logoPath)) {
+                LOGGER.warn(HMF_LOGO + " has to be an existing file!");
+                System.exit(1);
+            }
+        }
+
+        PDFWriter pdfWriter = null;
+        if (outputDirectory != null && hmfLogo != null) {
+            pdfWriter = new PDFWriter(outputDirectory, hmfLogo);
+        }
+
         final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
-        new PatientReporterApplication(runDir, variantAnalyzer, copyNumberAnalyzer, outputDirectory, batchMode).run();
+        new PatientReporterApplication(runDir, variantAnalyzer, copyNumberAnalyzer, outputDirectory, pdfWriter,
+                batchMode).run();
     }
 
     @NotNull
@@ -119,6 +129,7 @@ public class PatientReporterApplication {
         options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
         options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
         options.addOption(HMF_SLICING_BED, true, HMF_SLICING_BED_ARGS_DESC);
+        options.addOption(HMF_LOGO, true, HMF_LOGO_ARGS_DESC);
         options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_ARGS_DESC);
         options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
 
@@ -134,11 +145,12 @@ public class PatientReporterApplication {
 
     PatientReporterApplication(@NotNull final String runDirectory, @NotNull final VariantAnalyzer variantAnalyzer,
             @NotNull final CopyNumberAnalyzer copyNumberAnalyzer, @Nullable final String outputDirectory,
-            final boolean batchMode) {
+            @Nullable final PDFWriter pdfWriter, final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
         this.outputDirectory = outputDirectory;
+        this.pdfWriter = pdfWriter;
         this.batchMode = batchMode;
     }
 
@@ -147,12 +159,8 @@ public class PatientReporterApplication {
             batchRun();
         } else {
             final PatientReport report = patientRun();
-            if (outputDirectory != null) {
-                try {
-                    PDFWriter.writeToPDF(outputDirectory, report);
-                } catch (DRException e) {
-                    LOGGER.warn("Could not generate PDF report: " + e.getMessage());
-                }
+            if (pdfWriter != null) {
+                pdfWriter.write(report);
             }
         }
     }
@@ -168,7 +176,7 @@ public class PatientReporterApplication {
         System.out.println(header);
 
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
-            final VCFSomaticFile variantFile = loadVariantFile(run.toFile().getPath());
+            final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(run.toFile().getPath());
             final VariantAnalysis analysis = variantAnalyzer.run(variantFile.variants());
 
             final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(analysis.consensusPassedVariants());
@@ -189,10 +197,10 @@ public class PatientReporterApplication {
         LOGGER.info("Running patient reporter on " + runDirectory);
 
         LOGGER.info(" Loading data...");
-        final VCFSomaticFile variantFile = loadVariantFile(runDirectory);
+        final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
         LOGGER.info("  Somatic variants loaded : " + variantFile.variants().size());
 
-        final List<CopyNumber> copyNumbers = loadCNVFile(variantFile.sample());
+        final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, variantFile.sample());
         LOGGER.info("  CNV data loaded for sample " + variantFile.sample());
 
         LOGGER.info(" Analyzing data...");
@@ -235,37 +243,6 @@ public class PatientReporterApplication {
         final List<CopyNumberReport> cnvFindings = copyNumberAnalysis.findings();
         Files.write(new File(cnvReportFile).toPath(), cnvToCSV(cnvFindings));
         LOGGER.info("    Written " + cnvFindings.size() + " copy-numbers to report to " + cnvReportFile);
-    }
-
-    @NotNull
-    private List<CopyNumber> loadCNVFile(@NotNull final String sample) throws IOException, HartwigException {
-        final String cnvBasePath = guessCNVBasePath(sample) + File.separator + FREEC_DIRECTORY;
-
-        try {
-            return CNVFileLoader.loadCNV(cnvBasePath, sample, COPYNUMBER_EXTENSION);
-        } catch (EmptyFileException e) {
-            // KODU: It could be that the sample simply does not have any amplifications...
-            return Lists.newArrayList();
-        }
-    }
-
-    @NotNull
-    private String guessCNVBasePath(@NotNull final String sample) throws IOException {
-        final String basePath = runDirectory + File.separator + COPYNUMBER_DIRECTORY;
-
-        for (final Path path : Files.list(new File(basePath).toPath()).collect(Collectors.toList())) {
-            if (path.toFile().isDirectory() && path.getFileName().toFile().getName().contains(sample)) {
-                return path.toString();
-            }
-        }
-
-        throw new FileNotFoundException(
-                "Could not determine CNV location in " + runDirectory + " using sample " + sample);
-    }
-
-    @NotNull
-    private static VCFSomaticFile loadVariantFile(@NotNull final String path) throws IOException, HartwigException {
-        return VCFFileLoader.loadSomaticVCF(path, SOMATIC_EXTENSION);
     }
 
     @NotNull

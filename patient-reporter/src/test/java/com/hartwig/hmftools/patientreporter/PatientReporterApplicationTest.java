@@ -32,6 +32,6 @@ public class PatientReporterApplicationTest {
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(slicer);
-        new PatientReporterApplication(RUN_DIRECTORY, variantAnalyzer, copyNumberAnalyzer, null, false).run();
+        new PatientReporterApplication(RUN_DIRECTORY, variantAnalyzer, copyNumberAnalyzer, null, null, false).run();
     }
 }
