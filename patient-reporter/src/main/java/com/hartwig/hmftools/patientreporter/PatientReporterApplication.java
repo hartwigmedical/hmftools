@@ -156,13 +156,17 @@ public class PatientReporterApplication {
         this.batchMode = batchMode;
     }
 
-    void run() throws IOException, HartwigException, DRException {
+    void run() throws IOException, HartwigException {
         if (batchMode) {
             batchRun();
         } else {
             final PatientReport report = patientRun();
             if (pdfWriter != null) {
-                pdfWriter.write(report);
+                try {
+                    pdfWriter.write(report);
+                } catch (DRException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -200,10 +204,10 @@ public class PatientReporterApplication {
 
         LOGGER.info(" Loading data...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
-        LOGGER.info("  Somatic variants loaded : " + variantFile.variants().size());
+        LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for " + variantFile.sample());
 
         final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, variantFile.sample());
-        LOGGER.info("  CNV data loaded for sample " + variantFile.sample());
+        LOGGER.info("  " + copyNumbers.size() + "copy number regions loaded for sample " + variantFile.sample());
 
         LOGGER.info(" Analyzing data...");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
