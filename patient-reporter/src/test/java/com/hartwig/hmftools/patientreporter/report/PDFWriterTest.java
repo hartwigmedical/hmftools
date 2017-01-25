@@ -23,22 +23,16 @@ public class PDFWriterTest {
     private static final String HMF_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
 
     @Test
-    public void experimentWithReport() throws DRException, FileNotFoundException {
+    public void canGenerateReport() throws DRException, FileNotFoundException {
         final String sample = "CPCT11111111T";
-        final List<VariantReport> variants = Lists.newArrayList(
-                new VariantReport.Builder().gene("PIK3CA").position("3:178936082").ref("G").alt("A").transcript(
-                        "ENST00000263967.3").hgvsCoding("c.1624G>A").hgvsProtein("p.Glu542Lys").consequence(
-                        "missense variant").cosmicID("COSM125369").alleleReadCount(75).totalReadCount(151).build(),
-                new VariantReport.Builder().gene("PIK3CA").position("3:178936082").ref("G").alt("A").transcript(
-                        "ENST00000263967.3").hgvsCoding("c.1624G>A").hgvsProtein("p.Glu542Lys").consequence(
-                        "missense variant").cosmicID("").alleleReadCount(75).totalReadCount(151).build(),
-                new VariantReport.Builder().gene("PIK3CA").position("3:178936082").ref("G").alt("A").transcript(
-                        "ENST00000263967.3").hgvsCoding("c.1624G>A").hgvsProtein("p.Glu542Lys").consequence(
-                        "missense variant").cosmicID("COSM125369").alleleReadCount(75).totalReadCount(151).build());
+        final VariantReport variant = new VariantReport.Builder().gene("A").position("3:178936082").ref("G").alt(
+                "A").transcript("ENST00000263967.3").hgvsCoding("c.1624G>A").hgvsProtein("p.Glu542Lys").consequence(
+                "missense variant").cosmicID("COSM125369").alleleReadCount(75).totalReadCount(151).build();
+        final List<VariantReport> variants = Lists.newArrayList(variant, variant, variant);
 
-        final List<CopyNumberReport> copyNumbers = Lists.newArrayList(
-                new CopyNumberReport.Builder().gene("PIK3CA").transcript("ENST00000263967.3").copyNumber(4).build(),
-                new CopyNumberReport.Builder().gene("PIK3CA").transcript("ENST00000263967.3").copyNumber(0).build());
+        final CopyNumberReport copyNumber = new CopyNumberReport.Builder().gene("PIK3CA").transcript(
+                "ENST00000263967.3").copyNumber(4).build();
+        final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber, copyNumber);
 
         final int mutationalLoad = 12;
 
