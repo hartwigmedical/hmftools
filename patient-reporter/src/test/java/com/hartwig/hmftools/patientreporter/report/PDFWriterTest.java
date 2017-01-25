@@ -2,9 +2,9 @@ package com.hartwig.hmftools.patientreporter.report;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
-import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.awt.Color;
 import java.util.List;
@@ -14,7 +14,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -22,7 +21,6 @@ import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
-import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -46,6 +44,8 @@ public class PDFWriterTest {
                         "ENST00000263967.3").hgvsCoding("c.1624G>A").hgvsProtein("p.Glu542Lys").consequence(
                         "missense variant").cosmicID("COSM125369").alleleReadCount(75).totalReadCount(151).build());
 
+        final JRDataSource variantDataSource = DataSourceCreator.fromVariants(variants);
+
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList();
         //        final int mutationalLoad = 0;
         //        final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad);
@@ -62,20 +62,16 @@ public class PDFWriterTest {
                                 .bold()
                                 .setFontSize(12)
                                 .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))))
-                .fields(
-                        field("item1", String.class),
-                        field("item2", String.class))
-                .columns(col.componentColumn(listBuilder))
-//                .columns(col.column("Gene", "gene", type.stringType()),
-//                         col.column("Chr:Pos", "position", type.stringType()),
-//                         col.column("Ref", "ref", type.stringType()),
-//                         col.column("Alt", "alt", type.stringType()),
-//                         col.column("HGVS Transcript", "transcript", type.stringType()).setWidth(250),
-//                         col.column("HGVS Protein", "hgvsProtein", type.stringType()),
-//                         col.column("Effect", "consequence", type.stringType()),
-//                         col.column("Cosmic ID", "cosmicID", type.stringType()),
-//                         col.column("Allele #", "alleleReadCount", type.integerType()),
-//                         col.column("Total #", "totalReadCount", type.integerType()))
+                .fields(DataSourceCreator.variantFields())
+                .columns(col.column("Gene", DataSourceCreator.GENE_FIELD, type.stringType()),
+                         col.column("Position", DataSourceCreator.POSITION_FIELD, type.stringType()),
+                         col.column("Variant", DataSourceCreator.VARIANT_FIELD, type.stringType()),
+                         col.column("Transcript", DataSourceCreator.TRANSCRIPT_FIELD, type.stringType()).setWidth(250),
+                         col.column("CDS", DataSourceCreator.HGVS_CODING_FIELD, type.stringType()),
+                         col.column("AA", DataSourceCreator.HGVS_PROTEIN_FIELD, type.stringType()),
+                         col.column("Effect", DataSourceCreator.EFFECT_FIELD, type.stringType()),
+                         col.column("Cosmic", DataSourceCreator.COSMIC_FIELD, type.stringType()),
+                         col.column("Read Count", DataSourceCreator.READ_COUNT_FIELD, type.stringType()))
                 .setColumnStyle(stl.style()
                         .setFontSize(8)
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))
@@ -84,7 +80,7 @@ public class PDFWriterTest {
                         .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                         .setBorder(stl.pen1Point())
                         .setBackgroundColor(Color.LIGHT_GRAY))
-                .setDataSource(createDataSource())
+                .setDataSource(variantDataSource)
                 .show()
                 .print();
         // @formatter:on
@@ -102,14 +98,5 @@ public class PDFWriterTest {
         public String evaluate(ReportParameters reportParameters) {
             return reportParameters.getValue("item2");
         }
-    }
-
-    @NotNull
-    private static JRDataSource createDataSource() {
-        final DRDataSource dataSource = new DRDataSource("item1", "item2");
-        dataSource.add("item1_1", "item1_2");
-        dataSource.add("item2_1", "item2_2");
-
-        return dataSource;
     }
 }
