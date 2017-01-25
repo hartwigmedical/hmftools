@@ -17,7 +17,7 @@ public final class PatientReport {
     private final List<CopyNumberReport> copyNumbers;
     private final int mutationalLoad;
 
-    PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
+    public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
             @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad) {
         this.sample = sample;
         this.variants = variants;

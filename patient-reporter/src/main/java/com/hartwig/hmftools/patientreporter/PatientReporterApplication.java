@@ -37,6 +37,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import net.sf.dynamicreports.report.exception.DRException;
+
 public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
@@ -74,7 +76,7 @@ public class PatientReporterApplication {
     private final PDFWriter pdfWriter;
     private final boolean batchMode;
 
-    public static void main(final String... args) throws ParseException, IOException, HartwigException {
+    public static void main(final String... args) throws ParseException, IOException, HartwigException, DRException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -154,7 +156,7 @@ public class PatientReporterApplication {
         this.batchMode = batchMode;
     }
 
-    void run() throws IOException, HartwigException {
+    void run() throws IOException, HartwigException, DRException {
         if (batchMode) {
             batchRun();
         } else {
