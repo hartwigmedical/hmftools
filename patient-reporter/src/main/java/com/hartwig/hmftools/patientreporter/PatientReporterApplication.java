@@ -207,7 +207,7 @@ public class PatientReporterApplication {
         LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for " + variantFile.sample());
 
         final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, variantFile.sample());
-        LOGGER.info("  " + copyNumbers.size() + "copy number regions loaded for sample " + variantFile.sample());
+        LOGGER.info("  " + copyNumbers.size() + " copy number regions loaded for sample " + variantFile.sample());
 
         LOGGER.info(" Analyzing data...");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
