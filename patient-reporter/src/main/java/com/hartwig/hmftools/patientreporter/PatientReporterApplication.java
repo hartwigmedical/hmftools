@@ -38,7 +38,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.exception.DRException;
-import net.sf.jasperreports.engine.JRRuntimeException;
 
 public class PatientReporterApplication {
 
@@ -157,18 +156,15 @@ public class PatientReporterApplication {
         this.batchMode = batchMode;
     }
 
-    void run() throws IOException, HartwigException {
+    void run() throws IOException, HartwigException, DRException {
         if (batchMode) {
             batchRun();
         } else {
             final PatientReport report = patientRun();
             if (pdfWriter != null) {
-                try {
-                    final String pdfReport = pdfWriter.write(report);
-                    LOGGER.info("  Written PDF report to " + pdfReport);
-                } catch (DRException | JRRuntimeException e) {
-                    e.printStackTrace();
-                }
+                final String pdfReport = pdfWriter.write(report);
+                LOGGER.info("  Written PDF report to " + pdfReport);
+
             }
         }
     }

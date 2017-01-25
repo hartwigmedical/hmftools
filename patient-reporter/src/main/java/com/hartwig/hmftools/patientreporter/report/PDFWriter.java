@@ -9,6 +9,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.PatientReport;
@@ -44,9 +45,11 @@ public class PDFWriter {
     @NotNull
     public String write(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
         final String fileName = outputDirectory + File.separator + report.sample() + "_report.pdf";
-        //        final OutputStream outputStream = new FileOutputStream(fileName);
+        final JasperReportBuilder jasperReportBuilder = generatePatientReport(report, hmfLogo);
 
-        generatePatientReport(report, hmfLogo);
+        // KODU: This line causes net.sf.jasperreports.engine.JRRuntimeException in production...
+        jasperReportBuilder.toPdf(new FileOutputStream(fileName));
+
         return fileName;
     }
 
