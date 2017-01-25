@@ -9,12 +9,12 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -29,6 +29,8 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriter {
 
+    private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
+
     @NotNull
     private final String outputDirectory;
     @NotNull
@@ -39,11 +41,13 @@ public class PDFWriter {
         this.hmfLogo = hmfLogo;
     }
 
-    public void write(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
-        final String fileName = report.sample() + "_report.pdf";
-        final OutputStream outputStream = new FileOutputStream(outputDirectory + File.separator + fileName);
+    @NotNull
+    public String write(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
+        final String fileName = outputDirectory + File.separator + report.sample() + "_report.pdf";
+        //        final OutputStream outputStream = new FileOutputStream(fileName);
 
-        generatePatientReport(report, hmfLogo).toPdf(outputStream);
+        generatePatientReport(report, hmfLogo);
+        return fileName;
     }
 
     @VisibleForTesting

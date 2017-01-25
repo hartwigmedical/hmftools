@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.report.exception.DRException;
+import net.sf.jasperreports.engine.JRRuntimeException;
 
 public class PatientReporterApplication {
 
@@ -163,8 +164,9 @@ public class PatientReporterApplication {
             final PatientReport report = patientRun();
             if (pdfWriter != null) {
                 try {
-                    pdfWriter.write(report);
-                } catch (DRException e) {
+                    final String pdfReport = pdfWriter.write(report);
+                    LOGGER.info("  Written PDF report to " + pdfReport);
+                } catch (DRException | JRRuntimeException e) {
                     e.printStackTrace();
                 }
             }
