@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.output;
+package com.hartwig.hmftools.patientreporter.report;
 
 import com.hartwig.hmftools.patientreporter.PatientReport;
 

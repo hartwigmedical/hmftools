@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.output;
+package com.hartwig.hmftools.patientreporter.report;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
