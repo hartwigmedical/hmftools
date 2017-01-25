@@ -4,6 +4,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,15 +18,18 @@ class PatientDataSource {
     private static final String COSMIC_IDENTIFIER = "COSM";
 
     static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
+    static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
+
     static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
     static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
-    static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
     static final FieldBuilder<?> HGVS_CODING_FIELD = field("hgvs_coding", String.class);
     static final FieldBuilder<?> HGVS_PROTEIN_FIELD = field("hgvs_protein", String.class);
     static final FieldBuilder<?> EFFECT_FIELD = field("effect", String.class);
     static final FieldBuilder<?> COSMIC_FIELD = field("cosmic", String.class);
     static final FieldBuilder<?> COSMIC_NR_FIELD = field("cosmic_nr", String.class);
     static final FieldBuilder<?> ALLELE_FREQUENCY_FIELD = field("allele_freq", String.class);
+
+    static final FieldBuilder<?> COPY_NUMBER_FIELD = field("copynumber", String.class);
 
     private PatientDataSource() {
     }
@@ -47,6 +51,19 @@ class PatientDataSource {
     }
 
     @NotNull
+    static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers) {
+        final DRDataSource copyNumberDatasource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
+                COPY_NUMBER_FIELD.getName());
+
+        for (final CopyNumberReport copyNumber : copyNumbers) {
+            copyNumberDatasource.add(copyNumber.gene(), copyNumber.transcript(),
+                    Integer.toString(copyNumber.copyNumber()));
+        }
+
+        return copyNumberDatasource;
+    }
+
+    @NotNull
     private static String stripCosmicIdentifier(@NotNull final String cosmicID) {
         final int identifierPos = cosmicID.indexOf(COSMIC_IDENTIFIER);
         if (identifierPos >= 0) {
@@ -60,6 +77,11 @@ class PatientDataSource {
     static FieldBuilder<?>[] variantFields() {
         return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, VARIANT_FIELD, TRANSCRIPT_FIELD, HGVS_CODING_FIELD,
                 HGVS_PROTEIN_FIELD, EFFECT_FIELD, COSMIC_FIELD, COSMIC_NR_FIELD, ALLELE_FREQUENCY_FIELD };
+    }
+
+    @NotNull
+    static FieldBuilder<?>[] copyNumberFields() {
+        return new FieldBuilder<?>[] { GENE_FIELD, TRANSCRIPT_FIELD, COPY_NUMBER_FIELD };
     }
 
     @NotNull

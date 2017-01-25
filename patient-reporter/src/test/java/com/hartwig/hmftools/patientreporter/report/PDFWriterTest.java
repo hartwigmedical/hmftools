@@ -51,7 +51,8 @@ public class PDFWriterTest {
                         "missense variant").cosmicID("COSM125369").alleleReadCount(75).totalReadCount(151).build());
 
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(
-                new CopyNumberReport.Builder().gene("PIK3CA").transcript("ENST00000263967.3").copyNumber(4).build());
+                new CopyNumberReport.Builder().gene("PIK3CA").transcript("ENST00000263967.3").copyNumber(4).build(),
+                new CopyNumberReport.Builder().gene("PIK3CA").transcript("ENST00000263967.3").copyNumber(0).build());
 
         final int mutationalLoad = 12;
 
@@ -84,7 +85,7 @@ public class PDFWriterTest {
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
                 cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD)));
 
-        final JasperReportBuilder variantTable = report()
+        final JasperReportBuilder variantReport = report()
                 .fields(PatientDataSource.variantFields())
                 .columns(col.column("Gene", PatientDataSource.GENE_FIELD),
                          col.column("Position", PatientDataSource.POSITION_FIELD),
@@ -101,6 +102,17 @@ public class PDFWriterTest {
                 .setColumnTitleStyle(columnTitleStyle)
                 .highlightDetailEvenRows();
 
+        final JasperReportBuilder copyNumberReport = report()
+                .fields(PatientDataSource.copyNumberFields())
+                .columns(col.column("Gene", PatientDataSource.GENE_FIELD),
+                         col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setWidth(150)
+                                 .setHyperLink(hyperLink(new TranscriptLinkExpression()))
+                                 .setStyle(linkStyle),
+                         col.column("Number of copies?", PatientDataSource.COPY_NUMBER_FIELD))
+                .setColumnStyle(columnStyle)
+                .setColumnTitleStyle(columnTitleStyle)
+                .highlightDetailEvenRows();
+
         report().title(
                 cmp.verticalList(
                         mainTitle,
@@ -108,9 +120,11 @@ public class PDFWriterTest {
                         cmp.text("Mutational Load: " + Integer.toString(mutationalLoad))
                             .setStyle(columnTitleStyle),
                         cmp.verticalGap(20),
-                        cmp.subreport(variantTable).setDataSource(PatientDataSource.fromVariants(variants)),
+                        cmp.subreport(variantReport)
+                                .setDataSource(PatientDataSource.fromVariants(variants)),
                         cmp.verticalGap(20),
-                        cmp.subreport(variantTable).setDataSource(PatientDataSource.fromVariants(variants))))
+                        cmp.subreport(copyNumberReport)
+                                .setDataSource(PatientDataSource.fromCopyNumbers(copyNumbers))))
                 .show()
                 .toPdf(output)
                 .print();
