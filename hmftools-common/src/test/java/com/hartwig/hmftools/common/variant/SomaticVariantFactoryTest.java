@@ -48,7 +48,7 @@ public class SomaticVariantFactoryTest {
         assertFalse(variant.callers().contains(SomaticVariantConstants.MUTECT));
 
         assertEquals(0.5, variant.alleleFrequency(), EPSILON);
-        assertEquals(120, variant.readDepth(), EPSILON);
+        assertEquals(120, variant.totalReadCount(), EPSILON);
     }
 
     @Test
@@ -56,12 +56,12 @@ public class SomaticVariantFactoryTest {
         final String missingAFLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant missingAFVariant = SomaticVariantFactory.fromVCFLine(missingAFLine);
         assertEquals(Double.NaN, missingAFVariant.alleleFrequency(), EPSILON);
-        assertEquals(0, missingAFVariant.readDepth(), EPSILON);
+        assertEquals(0, missingAFVariant.totalReadCount(), EPSILON);
 
         final String missingRefCovLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 0/1:60:113";
         final SomaticVariant missingRefCovVariant = SomaticVariantFactory.fromVCFLine(missingRefCovLine);
         assertEquals(Double.NaN, missingRefCovVariant.alleleFrequency(), EPSILON);
-        assertEquals(0, missingRefCovVariant.readDepth(), EPSILON);
+        assertEquals(0, missingRefCovVariant.totalReadCount(), EPSILON);
     }
 
     @Test

@@ -23,15 +23,13 @@ public class VariantReport {
     private final String consequence;
     @NotNull
     private final String cosmicID;
-    @NotNull
-    private final String alleleFrequency;
-    @NotNull
-    private final String readDepth;
+    private final int totalReadCount;
+    private final int alleleReadCount;
 
     private VariantReport(@NotNull final String gene, @NotNull final String position, @NotNull final String ref,
             @NotNull final String alt, @NotNull final String transcript, @NotNull final String hgvsCoding,
             @NotNull final String hgvsProtein, @NotNull final String consequence, @NotNull final String cosmicID,
-            @NotNull final String alleleFrequency, @NotNull final String readDepth) {
+            final int totalReadCount, final int alleleReadCount) {
         this.gene = gene;
         this.position = position;
         this.ref = ref;
@@ -41,63 +39,61 @@ public class VariantReport {
         this.hgvsProtein = hgvsProtein;
         this.consequence = consequence;
         this.cosmicID = cosmicID;
-        this.alleleFrequency = alleleFrequency;
-        this.readDepth = readDepth;
+        this.totalReadCount = totalReadCount;
+        this.alleleReadCount = alleleReadCount;
     }
 
     @NotNull
-    public String getGene() {
+    public String gene() {
         return gene;
     }
 
     @NotNull
-    public String getPosition() {
+    public String position() {
         return position;
     }
 
     @NotNull
-    public String getRef() {
+    public String ref() {
         return ref;
     }
 
     @NotNull
-    public String getAlt() {
+    public String alt() {
         return alt;
     }
 
     @NotNull
-    public String getTranscript() {
+    public String transcript() {
         return transcript;
     }
 
     @NotNull
-    public String getHgvsCoding() {
+    public String hgvsCoding() {
         return hgvsCoding;
     }
 
     @NotNull
-    public String getHgvsProtein() {
+    public String hgvsProtein() {
         return hgvsProtein;
     }
 
     @NotNull
-    public String getConsequence() {
+    public String consequence() {
         return consequence;
     }
 
     @NotNull
-    public String getCosmicID() {
+    public String cosmicID() {
         return cosmicID;
     }
 
-    @NotNull
-    public String getAlleleFrequency() {
-        return alleleFrequency;
+    public int totalReadCount() {
+        return totalReadCount;
     }
 
-    @NotNull
-    public String getReadDepth() {
-        return readDepth;
+    public int alleleReadCount() {
+        return alleleReadCount;
     }
 
     public static class Builder {
@@ -119,10 +115,8 @@ public class VariantReport {
         private String consequence = Strings.EMPTY;
         @NotNull
         private String cosmicID = Strings.EMPTY;
-        @NotNull
-        private String alleleFrequency = Strings.EMPTY;
-        @NotNull
-        private String readDepth = Strings.EMPTY;
+        private int totalReadCount = 0;
+        private int alleleReadCount = 0;
 
         public Builder() {
         }
@@ -182,21 +176,21 @@ public class VariantReport {
         }
 
         @NotNull
-        public Builder alleleFrequency(@NotNull final String alleleFrequency) {
-            this.alleleFrequency = alleleFrequency;
+        public Builder totalReadCount(final int totalReadCount) {
+            this.totalReadCount = totalReadCount;
             return this;
         }
 
         @NotNull
-        public Builder readDepth(@NotNull final String readDepth) {
-            this.readDepth = readDepth;
+        public Builder alleleReadCount(final int alleleReadCount) {
+            this.alleleReadCount = alleleReadCount;
             return this;
         }
 
         @NotNull
         public VariantReport build() {
             return new VariantReport(gene, position, ref, alt, transcript, hgvsCoding, hgvsProtein, consequence,
-                    cosmicID, alleleFrequency, readDepth);
+                    cosmicID, totalReadCount, alleleReadCount);
         }
     }
 }

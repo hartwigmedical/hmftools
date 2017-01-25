@@ -32,8 +32,8 @@ public class ConsequenceDeterminerTest {
     private static final String REF = "R";
     private static final String ALT = "A";
     private static final String COSMIC_ID = "123";
-    private static final double ALLELE_FREQUENCY = 0.5;
-    private static final int READ_DEPTH = 2;
+    private static final int ALLELE_READ_COUNT = 1;
+    private static final int TOTAL_READ_COUNT = 2;
 
     private static final String HGVS_CODING = "c.RtoA";
     private static final String HGVS_PROTEIN = "p.RtoA";
@@ -61,7 +61,7 @@ public class ConsequenceDeterminerTest {
 
         final SomaticVariant.Builder variantBuilder = new SomaticVariant.Builder().
                 chromosome(CHROMOSOME).ref(REF).alt(ALT).cosmicID(COSMIC_ID).
-                alleleFrequency(ALLELE_FREQUENCY).readDepth(READ_DEPTH);
+                totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 
         final SomaticVariant rightVariant = variantBuilder.position(POSITION).
                 annotations(Lists.newArrayList(rightAnnotation)).build();
@@ -75,24 +75,16 @@ public class ConsequenceDeterminerTest {
         assertEquals(1, findings.size());
 
         final VariantReport report = findings.get(0);
-        assertEquals(GENE, report.getGene());
-        assertEquals(CHROMOSOME + ":" + POSITION, report.getPosition());
-        assertEquals(REF, report.getRef());
-        assertEquals(ALT, report.getAlt());
-        assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.getTranscript());
-        assertEquals(HGVS_CODING, report.getHgvsCoding());
-        assertEquals(HGVS_PROTEIN, report.getHgvsProtein());
-        assertEquals(rightConsequence.sequenceOntologyTerm(), report.getConsequence());
-        assertEquals(COSMIC_ID, report.getCosmicID());
-        assertEquals(ConsequenceDeterminer.toPercent(ALLELE_FREQUENCY), report.getAlleleFrequency());
-        assertEquals(Integer.toString(READ_DEPTH), report.getReadDepth());
-    }
-
-    @Test
-    public void canConvertToPercent() {
-        assertEquals("50%", ConsequenceDeterminer.toPercent(0.5));
-        assertEquals("0%", ConsequenceDeterminer.toPercent(0D));
-        assertEquals("100%", ConsequenceDeterminer.toPercent(1D));
-        assertEquals("94%", ConsequenceDeterminer.toPercent(0.9364456));
+        assertEquals(GENE, report.gene());
+        assertEquals(CHROMOSOME + ":" + POSITION, report.position());
+        assertEquals(REF, report.ref());
+        assertEquals(ALT, report.alt());
+        assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.transcript());
+        assertEquals(HGVS_CODING, report.hgvsCoding());
+        assertEquals(HGVS_PROTEIN, report.hgvsProtein());
+        assertEquals(rightConsequence.sequenceOntologyTerm(), report.consequence());
+        assertEquals(COSMIC_ID, report.cosmicID());
+        assertEquals(TOTAL_READ_COUNT, report.totalReadCount());
+        assertEquals(ALLELE_READ_COUNT, report.alleleReadCount());
     }
 }

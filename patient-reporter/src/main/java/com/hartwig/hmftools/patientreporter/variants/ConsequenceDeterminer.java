@@ -103,18 +103,12 @@ class ConsequenceDeterminer {
             if (cosmicID != null) {
                 builder.cosmicID(cosmicID);
             }
-            builder.alleleFrequency(toPercent(variant.alleleFrequency()));
-            builder.readDepth(Integer.toString(variant.readDepth()));
+            builder.totalReadCount(variant.totalReadCount());
+            builder.alleleReadCount(variant.alleleReadCount());
             reports.add(builder.build());
         }
 
         return reports;
-    }
-
-    @VisibleForTesting
-    @NotNull
-    static String toPercent(final double numberBetweenZeroAndOne) {
-        return Long.toString(Math.round(numberBetweenZeroAndOne * 100)) + "%";
     }
 
     @Nullable

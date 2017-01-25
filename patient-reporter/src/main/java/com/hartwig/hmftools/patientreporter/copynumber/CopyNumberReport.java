@@ -19,17 +19,17 @@ public class CopyNumberReport {
     }
 
     @NotNull
-    public String getGene() {
+    public String gene() {
         return gene;
     }
 
     @NotNull
-    public String getTranscript() {
+    public String transcript() {
         return transcript;
     }
 
     @NotNull
-    public String getFinding() {
+    public String finding() {
         return finding;
     }
 

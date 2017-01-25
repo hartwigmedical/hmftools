@@ -32,14 +32,14 @@ public class SomaticVariant implements Variant {
     private final List<VariantAnnotation> annotations;
     @NotNull
     private final List<String> callers;
-    private final double alleleFrequency;
-    private final int readDepth;
+    private final int totalReadCount;
+    private final int alleleReadCount;
 
     private SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
             @NotNull final String chromosome, final long position, @NotNull final String ref,
             @NotNull final String alt, @NotNull final String filter, @Nullable final String dbsnpID,
             @Nullable final String cosmicID, @NotNull final List<VariantAnnotation> annotations,
-            @NotNull final List<String> callers, final double alleleFrequency, final int readDepth) {
+            @NotNull final List<String> callers, final int totalReadCount, final int alleleReadCount) {
         this.originalVCFLine = originalVCFLine;
         this.type = type;
         this.chromosome = chromosome;
@@ -51,8 +51,8 @@ public class SomaticVariant implements Variant {
         this.cosmicID = cosmicID;
         this.annotations = annotations;
         this.callers = callers;
-        this.alleleFrequency = alleleFrequency;
-        this.readDepth = readDepth;
+        this.totalReadCount = totalReadCount;
+        this.alleleReadCount = alleleReadCount;
     }
 
     @NotNull
@@ -125,12 +125,16 @@ public class SomaticVariant implements Variant {
         return callers.size();
     }
 
-    public double alleleFrequency() {
-        return alleleFrequency;
+    public int totalReadCount() {
+        return totalReadCount;
     }
 
-    public int readDepth() {
-        return readDepth;
+    public int alleleReadCount() {
+        return alleleReadCount;
+    }
+
+    public double alleleFrequency() {
+        return (double) alleleReadCount / totalReadCount;
     }
 
     @Override
@@ -161,8 +165,8 @@ public class SomaticVariant implements Variant {
         private List<VariantAnnotation> annotations = Lists.newArrayList();
         @NotNull
         private List<String> callers = Lists.newArrayList();
-        private double alleleFrequency = Double.NaN;
-        private int readDepth = 0;
+        private int totalReadCount = 0;
+        private int alleleReadCount = 0;
 
         @NotNull
         static Builder fromVCF(@NotNull final String vcfLine) {
@@ -239,21 +243,21 @@ public class SomaticVariant implements Variant {
         }
 
         @NotNull
-        public Builder alleleFrequency(final double alleleFrequency) {
-            this.alleleFrequency = alleleFrequency;
+        public Builder totalReadCount(final int totalReadCount) {
+            this.totalReadCount = totalReadCount;
             return this;
         }
 
         @NotNull
-        public Builder readDepth(final int readDepth) {
-            this.readDepth = readDepth;
+        public Builder alleleReadCount(final int alleleReadCount) {
+            this.alleleReadCount = alleleReadCount;
             return this;
         }
 
         @NotNull
         public SomaticVariant build() {
             return new SomaticVariant(originalVCFLine, type, chromosome, position, ref, alt, filter, dbsnpID, cosmicID,
-                    annotations, callers, alleleFrequency, readDepth);
+                    annotations, callers, totalReadCount, alleleReadCount);
         }
     }
 }

@@ -134,8 +134,8 @@ public final class SomaticVariantFactory {
         if (readCounts == null) {
             LOGGER.warn("Could not parse read counts from " + line);
         } else {
-            builder.alleleFrequency(readCounts.alleleFrequency());
-            builder.readDepth(readCounts.readDepth());
+            builder.totalReadCount(readCounts.totalReadCount);
+            builder.alleleReadCount(readCounts.alleleReadCount);
         }
 
         return builder.build();
@@ -193,14 +193,6 @@ public final class SomaticVariantFactory {
         private ReadCount(final int alleleReadCount, final int totalReadCount) {
             this.alleleReadCount = alleleReadCount;
             this.totalReadCount = totalReadCount;
-        }
-
-        private double alleleFrequency() {
-            return (double) alleleReadCount / totalReadCount;
-        }
-
-        private int readDepth() {
-            return totalReadCount;
         }
     }
 }

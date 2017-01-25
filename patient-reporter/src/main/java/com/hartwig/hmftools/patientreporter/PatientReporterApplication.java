@@ -271,12 +271,13 @@ public class PatientReporterApplication {
     @NotNull
     private static List<String> varToCSV(@NotNull final List<VariantReport> reports) {
         final List<String> lines = Lists.newArrayList();
-        lines.add("GENE,POSITION,REF,ALT,TRANSCRIPT,CDS,AA,CONSEQUENCE,COSMIC_ID,ALLELE_FREQ,READ_DEPTH");
+        lines.add("GENE,POSITION,REF,ALT,TRANSCRIPT,CDS,AA,CONSEQUENCE,COSMIC_ID,ALLELE_READ_COUNT,TOTAL_READ_COUNT");
         lines.addAll(reports.stream().map(
-                report -> report.getGene() + "," + report.getPosition() + "," + report.getRef() + "," + report.getAlt()
-                        + "," + report.getTranscript() + "," + report.getHgvsCoding() + "," + report.getHgvsProtein()
-                        + "," + report.getConsequence() + "," + report.getCosmicID() + ","
-                        + report.getAlleleFrequency() + "," + report.getReadDepth()).collect(Collectors.toList()));
+                report -> report.gene() + "," + report.position() + "," + report.ref() + "," + report.alt() + ","
+                        + report.transcript() + "," + report.hgvsCoding() + "," + report.hgvsProtein() + ","
+                        + report.consequence() + "," + report.cosmicID() + "," + Integer.toString(
+                        report.alleleReadCount()) + "," + Integer.toString(report.totalReadCount())).
+                collect(Collectors.toList()));
         return lines;
     }
 
@@ -285,7 +286,7 @@ public class PatientReporterApplication {
         final List<String> lines = Lists.newArrayList();
         lines.add("GENE,TRANSCRIPT,FINDING");
         lines.addAll(reports.stream().map(
-                report -> report.getGene() + "," + report.getTranscript() + "," + report.getFinding()).collect(
+                report -> report.gene() + "," + report.transcript() + "," + report.finding()).collect(
                 Collectors.toList()));
         return lines;
     }
