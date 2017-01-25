@@ -285,9 +285,8 @@ public class PatientReporterApplication {
     private static List<String> cnvToCSV(@NotNull final List<CopyNumberReport> reports) {
         final List<String> lines = Lists.newArrayList();
         lines.add("GENE,TRANSCRIPT,FINDING");
-        lines.addAll(reports.stream().map(
-                report -> report.gene() + "," + report.transcript() + "," + report.finding()).collect(
-                Collectors.toList()));
+        lines.addAll(reports.stream().map(report -> report.gene() + "," + report.transcript() + "," + Integer.toString(
+                report.copyNumber())).collect(Collectors.toList()));
         return lines;
     }
 }

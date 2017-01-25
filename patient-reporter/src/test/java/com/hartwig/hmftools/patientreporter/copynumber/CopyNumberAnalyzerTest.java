@@ -47,7 +47,7 @@ public class CopyNumberAnalyzerTest {
         assertEquals(1, findings.size());
         assertEquals(secondAnnotation.gene(), findings.get(0).gene());
         assertEquals(secondAnnotation.transcript(), findings.get(0).transcript());
-        assertEquals(String.format(CopyNumberAnalyzer.LOSS_FINDING, 0), findings.get(0).finding());
+        assertEquals(0, findings.get(0).copyNumber());
 
         final CopyNumberStats firstStat = analysis.stats().get(first);
         assertEquals(2, firstStat.min());

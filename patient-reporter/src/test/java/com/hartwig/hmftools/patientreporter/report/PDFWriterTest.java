@@ -50,27 +50,27 @@ public class PDFWriterTest {
                         "ENST00000263967.3").hgvsCoding("c.1624G>A").hgvsProtein("p.Glu542Lys").consequence(
                         "missense variant").cosmicID("COSM125369").alleleReadCount(75).totalReadCount(151).build());
 
-        final List<CopyNumberReport> copyNumbers = Lists.newArrayList();
-        final int mutationalLoad = 0;
+        final List<CopyNumberReport> copyNumbers = Lists.newArrayList(
+                new CopyNumberReport.Builder().gene("PIK3CA").transcript("ENST00000263967.3").copyNumber(4).build());
+
+        final int mutationalLoad = 12;
 
         // @formatter:off
-        final ComponentBuilder<?,?> annotationField = cmp.verticalList(
-                cmp.horizontalList(
-                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
-                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD)));
-
         final StyleBuilder columnStyle = stl.style()
                 .setFontSize(8)
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER);
 
+        final StyleBuilder columnTitleStyle = stl.style()
+                        .bold()
+                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                        .setBorder(stl.pen1Point())
+                        .setBackgroundColor(Color.LIGHT_GRAY);
         final StyleBuilder linkStyle = stl.style(columnStyle)
                 .setForegroundColor(Color.BLUE);
 
         final OutputStream output = new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf");
 
-
-        HorizontalListBuilder title =
+        final HorizontalListBuilder mainTitle =
                 cmp.horizontalList().add(
                         cmp.image(HMF_LOGO),
                         cmp.text("HMF Sequencing Report - " + sample).setStyle(stl.style()
@@ -78,7 +78,13 @@ public class PDFWriterTest {
                                 .setFontSize(12)
                                 .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)));
 
-        JasperReportBuilder variantTable = report()
+        final ComponentBuilder<?,?> variantAnnotationField = cmp.verticalList(
+                cmp.horizontalList(
+                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
+                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
+                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD)));
+
+        final JasperReportBuilder variantTable = report()
                 .fields(PatientDataSource.variantFields())
                 .columns(col.column("Gene", PatientDataSource.GENE_FIELD),
                          col.column("Position", PatientDataSource.POSITION_FIELD),
@@ -86,27 +92,27 @@ public class PDFWriterTest {
                          col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setWidth(150)
                                  .setHyperLink(hyperLink(new TranscriptLinkExpression()))
                                  .setStyle(linkStyle),
-                         col.componentColumn("Annotation", annotationField),
+                         col.componentColumn("Annotation", variantAnnotationField),
                          col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                  .setHyperLink(hyperLink(new COSMICLinkExpression()))
                                  .setStyle(linkStyle),
                          col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD))
                 .setColumnStyle(columnStyle)
-                .setColumnTitleStyle(stl.style()
-                        .bold()
-                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                        .setBorder(stl.pen1Point())
-                        .setBackgroundColor(Color.LIGHT_GRAY))
-                .highlightDetailEvenRows()
-                .setDataSource(PatientDataSource.fromVariants(variants));
+                .setColumnTitleStyle(columnTitleStyle)
+                .highlightDetailEvenRows();
 
         report().title(
                 cmp.verticalList(
-                        title,
+                        mainTitle,
+                        cmp.verticalGap(20),
+                        cmp.text("Mutational Load: " + Integer.toString(mutationalLoad))
+                            .setStyle(columnTitleStyle),
+                        cmp.verticalGap(20),
                         cmp.subreport(variantTable).setDataSource(PatientDataSource.fromVariants(variants)),
                         cmp.verticalGap(20),
                         cmp.subreport(variantTable).setDataSource(PatientDataSource.fromVariants(variants))))
                 .show()
+                .toPdf(output)
                 .print();
         // @formatter:on
     }

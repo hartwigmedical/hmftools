@@ -26,10 +26,6 @@ public final class CopyNumberAnalyzer {
     private static final int MIN_CNV_FOR_GAIN = 4;
     private static final int MAX_CNV_FOR_LOSS = 0;
 
-    private static final String GAIN_FINDING = "gain to %s copies";
-    @VisibleForTesting
-    static final String LOSS_FINDING = "loss to %s copies";
-
     @NotNull
     private final Map<GenomeRegion, HMFSlicingAnnotation> annotations;
 
@@ -66,10 +62,8 @@ public final class CopyNumberAnalyzer {
 
             if (relevantCNV >= MIN_CNV_FOR_GAIN || relevantCNV <= MAX_CNV_FOR_LOSS) {
                 final HMFSlicingAnnotation annotation = annotations.get(stat.getKey());
-
-                final String finding = relevantCNV >= MIN_CNV_FOR_GAIN ? GAIN_FINDING : LOSS_FINDING;
                 reports.add(new CopyNumberReport.Builder().gene(annotation.gene()).
-                        transcript(annotation.transcript()).finding(String.format(finding, relevantCNV)).build());
+                        transcript(annotation.transcript()).copyNumber(relevantCNV).build());
             }
         }
         return new CopyNumberAnalysis(stats, reports);

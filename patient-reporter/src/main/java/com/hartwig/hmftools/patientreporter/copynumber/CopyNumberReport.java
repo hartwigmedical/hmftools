@@ -8,14 +8,12 @@ public class CopyNumberReport {
     private final String gene;
     @NotNull
     private final String transcript;
-    @NotNull
-    private final String finding;
+    private final int copyNumber;
 
-    private CopyNumberReport(@NotNull final String gene, @NotNull final String transcript,
-            @NotNull final String finding) {
+    private CopyNumberReport(@NotNull final String gene, @NotNull final String transcript, final int copyNumber) {
         this.gene = gene;
         this.transcript = transcript;
-        this.finding = finding;
+        this.copyNumber = copyNumber;
     }
 
     @NotNull
@@ -28,43 +26,40 @@ public class CopyNumberReport {
         return transcript;
     }
 
-    @NotNull
-    public String finding() {
-        return finding;
+    public int copyNumber() {
+        return copyNumber;
     }
 
-    static class Builder {
+    public static class Builder {
         @NotNull
         private String gene = Strings.EMPTY;
         @NotNull
         private String transcript = Strings.EMPTY;
-        @NotNull
-        private String finding = Strings.EMPTY;
+        private int copyNumber = 0;
 
-        Builder() {
+        public Builder() {
         }
 
         @NotNull
-        Builder gene(@NotNull final String gene) {
+        public Builder gene(@NotNull final String gene) {
             this.gene = gene;
             return this;
         }
 
         @NotNull
-        Builder transcript(@NotNull final String transcript) {
+        public Builder transcript(@NotNull final String transcript) {
             this.transcript = transcript;
             return this;
         }
 
-        @NotNull
-        Builder finding(@NotNull final String finding) {
-            this.finding = finding;
+        public Builder copyNumber(final int copyNumber) {
+            this.copyNumber = copyNumber;
             return this;
         }
 
         @NotNull
-        CopyNumberReport build() {
-            return new CopyNumberReport(gene, transcript, finding);
+        public CopyNumberReport build() {
+            return new CopyNumberReport(gene, transcript, copyNumber);
         }
     }
 }
