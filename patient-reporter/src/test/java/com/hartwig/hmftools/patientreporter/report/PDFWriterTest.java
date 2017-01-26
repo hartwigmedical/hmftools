@@ -44,6 +44,6 @@ public class PDFWriterTest {
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
         //pdf.show().print();
-        pdf.toPdf(new FileOutputStream("~/tmp/report.pdf"));
+        pdf.toPdf(new FileOutputStream("/home/korneel/tmp/report.pdf"));
     }
 }
