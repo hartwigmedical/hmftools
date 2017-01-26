@@ -34,14 +34,6 @@
             <groupId>net.sourceforge.dynamicreports</groupId>
             <artifactId>dynamicreports-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>net.sourceforge.dynamicreports</groupId>
-            <artifactId>dynamicreports-adhoc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.dynamicreports</groupId>
-            <artifactId>dynamicreports-googlecharts</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

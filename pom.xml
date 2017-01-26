@@ -86,16 +86,6 @@
                 <artifactId>dynamicreports-core</artifactId>
                 <version>${dynamicreports.version}</version>
             </dependency>
-            <dependency>
-                <groupId>net.sourceforge.dynamicreports</groupId>
-                <artifactId>dynamicreports-adhoc</artifactId>
-                <version>${dynamicreports.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.sourceforge.dynamicreports</groupId>
-                <artifactId>dynamicreports-googlecharts</artifactId>
-                <version>${dynamicreports.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>io.reactivex</groupId>
