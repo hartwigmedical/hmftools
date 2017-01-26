@@ -84,8 +84,6 @@ public class PatientReporterApplication {
         final CommandLine cmd = createCommandLine(options, args);
 
         final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
-        report().toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report_tst.pdf"));
-
         final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
