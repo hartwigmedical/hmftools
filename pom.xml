@@ -19,6 +19,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
 
         <htsjdk.version>1.141</htsjdk.version>
         <intellij.annotations.version>12.0</intellij.annotations.version>
