@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.retentionchecker;
 
+import java.util.Collection;
+
 import com.google.common.collect.Lists;
-import org.apache.commons.cli.*;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
 
 public class RetentionCheckRunner {
 
@@ -45,9 +51,9 @@ public class RetentionCheckRunner {
             boolean success = algo.runAlgo(fastqPaths, recreatedPath, numRecords);
 
             if (success) {
-                LOGGER.info("Sullivan ran successfully!");
+                LOGGER.info("RetentionCheck ran successfully!");
             } else {
-                LOGGER.info("Sullivan not successful!");
+                LOGGER.info("RetentionCheck not successful!");
             }
         }
     }
@@ -55,7 +61,7 @@ public class RetentionCheckRunner {
     @NotNull
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options)
             throws ParseException {
-        CommandLineParser parser = new DefaultParser();
+        final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 

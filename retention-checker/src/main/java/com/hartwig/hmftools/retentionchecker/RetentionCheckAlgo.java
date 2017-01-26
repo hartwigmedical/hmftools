@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.retentionchecker;
 
-import htsjdk.samtools.fastq.FastqReader;
-import htsjdk.samtools.fastq.FastqRecord;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.*;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
 
 class RetentionCheckAlgo {
 
@@ -27,14 +27,14 @@ class RetentionCheckAlgo {
         boolean success = true;
 
         for (String fastqPath : fastqPaths) {
-            success = success && runSullivanOnTwoDirectories(fastqPath, recreatedFastqPath, numRecords);
+            success = success && runRetentionCheckOnTwoDirectories(fastqPath, recreatedFastqPath, numRecords);
         }
 
         return success;
     }
 
-    private boolean runSullivanOnTwoDirectories(@NotNull String originalFastqPath, @NotNull String recreatedFastqPath,
-            int numRecords) {
+    private boolean runRetentionCheckOnTwoDirectories(@NotNull String originalFastqPath,
+            @NotNull String recreatedFastqPath, int numRecords) {
         File originalPath = new File(originalFastqPath);
         File recreatedPath = new File(recreatedFastqPath);
         if (!originalPath.exists()) {
@@ -47,11 +47,7 @@ class RetentionCheckAlgo {
 
         assert originalPath.isDirectory() && recreatedPath.isDirectory();
 
-        File[] originalFiles = originalPath.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return name.indexOf(".fastq") > 0;
-            }
-        });
+        File[] originalFiles = originalPath.listFiles((dir, name) -> name.indexOf(".fastq") > 0);
 
         assert originalFiles != null;
         File[] recreatedFiles = new File[originalFiles.length];
@@ -64,13 +60,14 @@ class RetentionCheckAlgo {
 
         boolean success = true;
         for (int i = 0; i < originalFiles.length; i++) {
-            success = success && runSullivanOnTwoFiles(originalFiles[i], recreatedFiles[i], numRecords);
+            success = success && runRetentionCheckOnTwoFiles(originalFiles[i], recreatedFiles[i], numRecords);
         }
 
         return success;
     }
 
-    private static boolean runSullivanOnTwoFiles(@NotNull File originalFastqFile, @NotNull File recreatedFastqFile,
+    private static boolean runRetentionCheckOnTwoFiles(@NotNull File originalFastqFile,
+            @NotNull File recreatedFastqFile,
             int numRecords) {
         assert originalFastqFile.isFile() && recreatedFastqFile.isFile();
 
@@ -144,7 +141,7 @@ class RetentionCheckAlgo {
     private static Map<FastqHeaderKey, FastqRecord> mapRecreatedFastqFile(@NotNull File file,
             @NotNull String refHeader, int numRecords) {
         FastqHeaderNormalizer normalizer = new RecreatedFastqHeaderNormalizer();
-        Map<FastqHeaderKey, FastqRecord> records = new HashMap<FastqHeaderKey, FastqRecord>(numRecords);
+        Map<FastqHeaderKey, FastqRecord> records = new HashMap<>(numRecords);
 
         FastqReader fastqReader = new FastqReader(file);
 
