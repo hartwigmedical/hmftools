@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -42,6 +43,7 @@ public class PDFWriterTest {
         assertNotNull(pdf);
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
-        //        pdf.show().print();
+        //pdf.show().print();
+        pdf.toPdf(new FileOutputStream("~/tmp/report.pdf"));
     }
 }
