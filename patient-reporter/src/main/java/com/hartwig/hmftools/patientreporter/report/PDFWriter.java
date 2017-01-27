@@ -34,22 +34,14 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriter {
 
-    private static final String DISCLAIMER = "This test is performed for on behalf of CPCT-02 and "
-            + "is not meant to be used for clinical decision making without further validation of findings.";
-    // @formatter:off
-    private static final String REF_TO_EXPLANATIONS =
-            "Additional information on the various fields can be found on the final page of this report.";
-    private static final String FURTHER_QUESTIONS =
-            "For additional questions, please contact us via info@hartwigmedicalfoundation.nl.";
-    // @formatter:on
+    private static final String FONT = "Times New Roman";
 
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
     private static final int LIST_INDENT = 5;
     private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
-    private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 5;
+    private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 4;
     private static final int SECTION_VERTICAL_GAP = 25;
-    private static final String FONT = "Times New Roman";
 
     @NotNull
     private final String outputDirectory;
@@ -211,16 +203,18 @@ public class PDFWriter {
         return cmp.verticalList(
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_HEADER_INDENT),
-                        cmp.text("Filtering details").setStyle(fontStyle().bold().setFontSize(11))),
+                        cmp.text("Details on filtering").setStyle(fontStyle().bold().setFontSize(11))),
                 cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
                         cmp.text("The findings in this report are generated from whole-genome-sequencing analysis, " +
                                 "filtered on the following " + hmfSlicingRegion.numberOfRegions() + " genes.")
                                 .setStyle(fontStyle())),
                 cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
                         cmp.text("The canonical transcripts used for the filtering cover " + coverage + " MBases.")
                                 .setStyle(fontStyle())),
                 cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
@@ -293,15 +287,21 @@ public class PDFWriter {
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("1.").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text(DISCLAIMER).setStyle(fontStyle())),
+                        cmp.text("This test is performed for on behalf of CPCT-02 andis not meant to be used for " +
+                                        "clinical decision making without further validation of findings.")
+                                .setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("2.").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text(REF_TO_EXPLANATIONS).setStyle(fontStyle())),
+                        cmp.text("Additional information on the various fields can be found on the final page " +
+                                "of this report.").setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                  cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("3.").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text(FURTHER_QUESTIONS).setStyle(fontStyle()))
+                        cmp.text("For additional questions, please contact us via info@hartwigmedicalfoundation.nl.")
+                                .setStyle(fontStyle()))
         );
         // @formatter:on
     }
