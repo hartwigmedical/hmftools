@@ -34,7 +34,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriter {
 
-    private static final String DISCLAIMER = "This test is performed for the CPCT-02 research project and "
+    private static final String DISCLAIMER = "This test is performed for on behalf of CPCT-02 and "
             + "is not meant to be used for clinical decision making without further validation of findings.";
     // @formatter:off
     private static final String REF_TO_EXPLANATIONS =
