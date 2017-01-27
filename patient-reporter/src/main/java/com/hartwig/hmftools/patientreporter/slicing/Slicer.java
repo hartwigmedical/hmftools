@@ -39,13 +39,12 @@ public class Slicer {
         return regions.values();
     }
 
-    @VisibleForTesting
-    int numberOfRegions() {
+    public int numberOfRegions() {
         return regions.size();
     }
 
     @VisibleForTesting
-    long numberOfBases() {
+    public long numberOfBases() {
         long bases = 0;
         for (GenomeRegion region : regions.values()) {
             bases += region.bases();

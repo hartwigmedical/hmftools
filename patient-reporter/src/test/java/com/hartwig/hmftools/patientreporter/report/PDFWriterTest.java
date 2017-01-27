@@ -4,14 +4,20 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -23,7 +29,7 @@ public class PDFWriterTest {
     private static final String HMF_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
 
     @Test
-    public void canGenerateReport() throws DRException, FileNotFoundException {
+    public void canGenerateReport() throws DRException, IOException, EmptyFileException {
         final String sample = "CPCT11111111T";
         final VariantReport variant1 = new VariantReport.Builder().gene("BRAF").position("7:140453136").ref("A").alt(
                 "T").transcript("ENST00000288602.6").hgvsCoding("c.1799T>A").hgvsProtein("p.Val600Glu").consequence(
@@ -47,10 +53,17 @@ public class PDFWriterTest {
 
         final PatientReport report = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType);
 
-        final JasperReportBuilder pdf = PDFWriter.generatePatientReport(report, HMF_LOGO);
+        final JasperReportBuilder pdf = PDFWriter.generatePatientReport(report, HMF_LOGO, createHMFSlicingRegion());
         assertNotNull(pdf);
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
-//        pdf.show().print();
+        pdf.show().print();
+//        pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
+    }
+
+    @NotNull
+    private static Slicer createHMFSlicingRegion() throws IOException, EmptyFileException {
+        final String resourcePath = Resources.getResource("bed").getPath();
+        return SlicerFactory.fromBedFile(resourcePath + File.separator + "HMF_Slicing.bed");
     }
 }

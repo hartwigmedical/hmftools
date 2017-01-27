@@ -113,12 +113,13 @@ public class PatientReporterApplication {
             }
         }
 
+        final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
+
         PDFWriter pdfWriter = null;
         if (outputDirectory != null && hmfLogo != null) {
-            pdfWriter = new PDFWriter(outputDirectory, hmfLogo);
+            pdfWriter = new PDFWriter(outputDirectory, hmfLogo, hmfSlicingRegion);
         }
 
-        final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
