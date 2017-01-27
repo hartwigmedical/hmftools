@@ -16,13 +16,17 @@ public final class PatientReport {
     @NotNull
     private final List<CopyNumberReport> copyNumbers;
     private final int mutationalLoad;
+    @NotNull
+    private final String tumorType;
 
     public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
-            @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad) {
+            @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad,
+            @NotNull final String tumorType) {
         this.sample = sample;
         this.variants = variants;
         this.copyNumbers = copyNumbers;
         this.mutationalLoad = mutationalLoad;
+        this.tumorType = tumorType;
     }
 
     @NotNull
@@ -42,5 +46,10 @@ public final class PatientReport {
 
     public int mutationalLoad() {
         return mutationalLoad;
+    }
+
+    @NotNull
+    public String tumorType() {
+        return tumorType;
     }
 }

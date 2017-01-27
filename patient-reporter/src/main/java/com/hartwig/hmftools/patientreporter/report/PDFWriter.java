@@ -14,14 +14,12 @@ import java.io.FileOutputStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
+import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
-import net.sf.dynamicreports.report.builder.component.HorizontalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
@@ -30,7 +28,10 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriter {
 
-    private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
+    private static final String DISCLAIMER = "This test is not performed in a diagnostic laboratory and "
+            + "can therefore not be used to directly affect clinical decision making.";
+    private static final String REF_TO_EXPLANATIONS =
+            "Short explanations on the various fields can be " + "found on the final page of this report.";
 
     @NotNull
     private final String outputDirectory;
@@ -44,10 +45,9 @@ public class PDFWriter {
 
     @NotNull
     public String write(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
-        final String fileName = outputDirectory + File.separator + report.sample() + "_report.pdf";
+        final String fileName = outputDirectory + File.separator + report.sample() + "_hmf_report.pdf";
         final JasperReportBuilder jasperReportBuilder = generatePatientReport(report, hmfLogo);
 
-        // KODU: This line causes net.sf.jasperreports.engine.JRRuntimeException in production...
         jasperReportBuilder.toPdf(new FileOutputStream(fileName));
 
         return fileName;
@@ -57,74 +57,148 @@ public class PDFWriter {
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
             @NotNull final String hmfLogoPath) {
+
         // @formatter:off
-        final StyleBuilder columnStyle = stl.style()
-                .setFontSize(8)
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER);
-
-        final StyleBuilder columnTitleStyle = stl.style()
-                        .bold()
-                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                        .setBorder(stl.pen1Point())
-                        .setBackgroundColor(Color.LIGHT_GRAY);
-        final StyleBuilder linkStyle = stl.style(columnStyle)
-                .setForegroundColor(Color.BLUE);
-
-        final HorizontalListBuilder mainTitle =
-                cmp.horizontalList().add(
-                        cmp.image(hmfLogoPath),
-                        cmp.text("HMF Sequencing Report - " + report.sample()).setStyle(stl.style()
-                                .bold()
-                                .setFontSize(12)
-                                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)));
-
-        final ComponentBuilder<?,?> variantAnnotationField = cmp.verticalList(
+        final ComponentBuilder<?,?> disclaimer = cmp.verticalList(
                 cmp.horizontalList(
-                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
-                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD)));
-
-        final JasperReportBuilder variantReport = report()
-                .fields(PatientDataSource.variantFields())
-                .columns(col.column("Gene", PatientDataSource.GENE_FIELD),
-                         col.column("Position", PatientDataSource.POSITION_FIELD),
-                         col.column("Variant", PatientDataSource.VARIANT_FIELD),
-                         col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setWidth(150)
-                                 .setHyperLink(hyperLink(new TranscriptLinkExpression()))
-                                 .setStyle(linkStyle),
-                         col.componentColumn("Annotation", variantAnnotationField),
-                         col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
-                                 .setHyperLink(hyperLink(new COSMICLinkExpression()))
-                                 .setStyle(linkStyle),
-                         col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD))
-                .setColumnStyle(columnStyle)
-                .setColumnTitleStyle(columnTitleStyle)
-                .highlightDetailEvenRows();
-
-        final JasperReportBuilder copyNumberReport = report()
-                .fields(PatientDataSource.copyNumberFields())
-                .columns(col.column("Gene", PatientDataSource.GENE_FIELD),
-                         col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setWidth(150)
-                                 .setHyperLink(hyperLink(new TranscriptLinkExpression()))
-                                 .setStyle(linkStyle),
-                         col.column("Number of copies?", PatientDataSource.COPY_NUMBER_FIELD))
-                .setColumnStyle(columnStyle)
-                .setColumnTitleStyle(columnTitleStyle)
-                .highlightDetailEvenRows();
+                        cmp.horizontalGap(30),
+                        cmp.text("About this report").setStyle(fontStyle().bold().setFontSize(11))),
+                cmp.verticalGap(5),
+                cmp.horizontalList(
+                        cmp.horizontalGap(30),
+                        cmp.text("   1. " + DISCLAIMER).setStyle(fontStyle())),
+                cmp.horizontalList(
+                        cmp.horizontalGap(30),
+                        cmp.text("   2. " + REF_TO_EXPLANATIONS).setStyle(fontStyle()))
+        );
 
         return report().title(
                 cmp.verticalList(
-                        mainTitle,
-                        cmp.verticalGap(20),
-                        cmp.text("Mutational Load: " + Integer.toString(report.mutationalLoad()))
-                            .setStyle(columnTitleStyle),
-                        cmp.verticalGap(20),
-                        cmp.subreport(variantReport)
-                                .setDataSource(PatientDataSource.fromVariants(report.variants())),
-                        cmp.verticalGap(20),
-                        cmp.subreport(copyNumberReport)
-                                .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))));
+                        topSection(report, hmfLogoPath),
+                        cmp.verticalGap(25),
+                        disclaimer,
+                        cmp.verticalGap(25),
+                        variantReport(report),
+                        cmp.verticalGap(25),
+                        copyNumberReport(report))
+                );
         // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> topSection(@NotNull final PatientReport report,
+            @NotNull final String hmfLogoPath) {
+        // @formatter:off
+        final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
+                cmp.verticalList(
+                        cmp.text("Report Date").setStyle(tableHeaderStyle()),
+                        cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
+                cmp.verticalList(
+                        cmp.text("Tumor Type").setStyle(tableHeaderStyle()),
+                        cmp.text(report.tumorType()).setStyle(dataTableStyle()))
+        );
+
+        return cmp.horizontalList(
+                cmp.image(hmfLogoPath),
+                cmp.verticalList(
+                        cmp.text("HMF Sequencing Report - " + report.sample()).
+                                setStyle(fontStyle().bold().setFontSize(14)
+                                        .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                                .setHeight(50),
+                        mainDiagnosisInfo)
+        );
+        // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
+        // @formatter:off
+        return cmp.verticalList(
+                cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(6),
+                cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
+                        .columns(
+                            col.column("Gene", PatientDataSource.GENE_FIELD),
+                            col.column("Position", PatientDataSource.POSITION_FIELD),
+                            col.column("Variant", PatientDataSource.VARIANT_FIELD),
+                            transcriptColumn(),
+                            col.componentColumn("Annotation", annotationField()),
+                            col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
+                                    .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
+                            col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
+                        .setDataSource(PatientDataSource.fromVariants(report.variants())),
+                cmp.verticalGap(15),
+                cmp.text("Mutational Load: " + Integer.toString(report.mutationalLoad())).setStyle(tableHeaderStyle())
+        );
+        // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
+        // @formatter:off
+        return cmp.verticalList(
+                cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(6),
+                cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
+                        .columns(
+                            col.column("Gene", PatientDataSource.GENE_FIELD),
+                            transcriptColumn(),
+                            col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
+                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers())))
+        );
+        // @formatter:on
+    }
+
+    @NotNull
+    private static JasperReportBuilder baseTable() {
+        return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
+    }
+
+    @NotNull
+    private static StyleBuilder sectionHeaderStyle() {
+        return fontStyle().bold().setFontSize(12).setHorizontalTextAlignment(HorizontalTextAlignment.CENTER);
+    }
+
+    @NotNull
+    private static StyleBuilder tableHeaderStyle() {
+        return fontStyle().bold().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setFontSize(10).setBorder(
+                stl.pen1Point()).setBackgroundColor(new Color(210, 210, 210));
+    }
+
+    @NotNull
+    private static StyleBuilder dataStyle() {
+        return fontStyle().setFontSize(8).setHorizontalTextAlignment(
+                HorizontalTextAlignment.CENTER).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE);
+    }
+
+    @NotNull
+    private static StyleBuilder dataTableStyle() {
+        return dataStyle().setBorder(stl.pen1Point());
+    }
+
+    @NotNull
+    private static StyleBuilder linkStyle() {
+        return dataStyle().setForegroundColor(Color.BLUE);
+    }
+
+    @NotNull
+    private static StyleBuilder fontStyle() {
+        return stl.style().setFontName("Times New Roman");
+    }
+
+    @NotNull
+    private static TextColumnBuilder<?> transcriptColumn() {
+        return col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setWidth(150).setHyperLink(
+                hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> annotationField() {
+        return cmp.verticalList(
+                cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
+                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
+                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD)));
     }
 
     private static class COSMICLinkExpression extends AbstractSimpleExpression<String> {
@@ -140,4 +214,5 @@ public class PDFWriter {
                     PatientDataSource.TRANSCRIPT_FIELD.getName());
         }
     }
+
 }

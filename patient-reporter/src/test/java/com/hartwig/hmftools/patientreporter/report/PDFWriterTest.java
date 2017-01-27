@@ -34,14 +34,15 @@ public class PDFWriterTest {
                 "ENST00000263967.3").copyNumber(4).build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber, copyNumber);
 
-        final int mutationalLoad = 12;
+        final int mutationalLoad = 361;
+        final String tumorType = "Melanoma";
 
-        final PatientReport report = new PatientReport(sample, variants, copyNumbers, mutationalLoad);
+        final PatientReport report = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType);
 
         final JasperReportBuilder pdf = PDFWriter.generatePatientReport(report, HMF_LOGO);
         assertNotNull(pdf);
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
-        //pdf.show().print();
+//        pdf.show().print();
     }
 }

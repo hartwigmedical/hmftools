@@ -228,7 +228,7 @@ public class PatientReporterApplication {
         }
 
         return new PatientReport(variantFile.sample(), variantAnalysis.findings(), copyNumberAnalysis.findings(),
-                variantAnalysis.missenseVariants().size());
+                variantAnalysis.missenseVariants().size(), Strings.EMPTY);
     }
 
     private static void writeToFiles(@NotNull final String baseName, @NotNull final VariantAnalysis variantAnalysis,
