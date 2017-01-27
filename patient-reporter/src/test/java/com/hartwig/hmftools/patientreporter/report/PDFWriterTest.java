@@ -25,14 +25,22 @@ public class PDFWriterTest {
     @Test
     public void canGenerateReport() throws DRException, FileNotFoundException {
         final String sample = "CPCT11111111T";
-        final VariantReport variant = new VariantReport.Builder().gene("A").position("3:178936082").ref("G").alt(
-                "A").transcript("ENST00000263967.3").hgvsCoding("c.1624G>A").hgvsProtein("p.Glu542Lys").consequence(
-                "missense variant").cosmicID("COSM125369").alleleReadCount(75).totalReadCount(151).build();
-        final List<VariantReport> variants = Lists.newArrayList(variant, variant, variant);
+        final VariantReport variant1 = new VariantReport.Builder().gene("BRAF").position("7:140453136").ref("A").alt(
+                "T").transcript("ENST00000288602.6").hgvsCoding("c.1799T>A").hgvsProtein("p.Val600Glu").consequence(
+                "missense_variant").cosmicID("COSM476").alleleReadCount(34).totalReadCount(99).build();
+        final VariantReport variant2 = new VariantReport.Builder().gene("FGFR").position("4:1795557").ref("T").alt(
+                "C").transcript("ENST00000340107.4").hgvsCoding("c.-102-3T>C").hgvsProtein("").consequence(
+                "splice_region_variant").cosmicID("").alleleReadCount(12).totalReadCount(88).build();
+        final VariantReport variant3 = new VariantReport.Builder().gene("GNAQ").position("9:80409488").ref("T").alt(
+                "G").transcript("ENST00000286548.4").hgvsCoding("c.626A>C").hgvsProtein("p.Gln209Pro").consequence(
+                "missense_variant").cosmicID("COSM28758").alleleReadCount(57).totalReadCount(121).build();
+        final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber = new CopyNumberReport.Builder().gene("PIK3CA").transcript(
-                "ENST00000263967.3").copyNumber(4).build();
-        final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber, copyNumber);
+        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().gene("PIK3CA").transcript(
+                "ENST00000263967.3").copyNumber(6).build();
+        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().gene("ALK").transcript(
+                "ENST00000389048.3").copyNumber(0).build();
+        final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 
         final int mutationalLoad = 361;
         final String tumorType = "Melanoma";

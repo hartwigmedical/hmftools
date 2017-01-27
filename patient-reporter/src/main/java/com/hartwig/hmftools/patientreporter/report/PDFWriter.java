@@ -123,7 +123,7 @@ public class PDFWriter {
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
                             transcriptColumn(),
-                            col.componentColumn("Annotation", annotationField()),
+                            col.componentColumn("Effect", effectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
@@ -194,7 +194,7 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> annotationField() {
+    private static ComponentBuilder<?, ?> effectColumn() {
         return cmp.verticalList(
                 cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
@@ -203,7 +203,7 @@ public class PDFWriter {
 
     private static class COSMICLinkExpression extends AbstractSimpleExpression<String> {
         public String evaluate(@NotNull final ReportParameters data) {
-            return "http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + data.getValue(
+            return "http://grch37-cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + data.getValue(
                     PatientDataSource.COSMIC_NR_FIELD.getName());
         }
     }
