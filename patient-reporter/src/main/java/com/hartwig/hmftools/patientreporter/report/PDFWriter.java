@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.report;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
-import static net.sf.dynamicreports.report.builder.DynamicReports.exp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
@@ -12,8 +11,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -22,21 +19,17 @@ import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
-import org.apache.logging.log4j.core.config.builder.api.Component;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
-import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.HorizontalListBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
-import net.sf.dynamicreports.report.constant.Evaluation;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
-import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriter {
@@ -52,8 +45,10 @@ public class PDFWriter {
 
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
-    private static final int HEADER_DETAIL_SEPARATION = 5;
     private static final int LIST_INDENT = 5;
+    private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
+    private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 5;
+    private static final int SECTION_VERTICAL_GAP = 25;
     private static final String FONT = "Times New Roman";
 
     @NotNull
@@ -86,28 +81,66 @@ public class PDFWriter {
             @NotNull final String hmfLogoPath, @NotNull final Slicer hmfSlicingRegion) {
 
         // @formatter:off
-        final ComponentBuilder<?, ?> reportMainPage = cmp.verticalList(
-                        topSection(report, hmfLogoPath),
-                        cmp.verticalGap(25),
-                        aboutSection(),
-                        cmp.verticalGap(25),
+        final ComponentBuilder<?, ?> reportMainPage =
+                cmp.verticalList(
+                        mainPageTopSection(report, hmfLogoPath),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        mainPageAboutSection(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantReport(report),
-                        cmp.verticalGap(25),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberReport(report));
 
-        final ComponentBuilder<?, ?> helpPage = cmp.verticalList(
-                cmp.verticalGap(25),
-                cmp.text("HMF Sequencing Report - Additional Information").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(25),
-                geneSection(hmfSlicingRegion),
-                cmp.verticalGap(25),
-                variantFieldExplanationSection()
+        final ComponentBuilder<?, ?> helpPage =
+                cmp.verticalList(
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text("HMF Sequencing Report - Additional Information").setStyle(sectionHeaderStyle()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneSection(hmfSlicingRegion),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        variantFieldExplanationSection(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        copyNumberExplanationSection()
+                );
+
+        final ComponentBuilder<?, ?> totalReport =
+                cmp.verticalList(
+                        reportMainPage,
+                        cmp.pageBreak(),
+                        helpPage
                 );
         // @formatter:on
 
-        return report().noData(helpPage);
+        return report().noData(totalReport);
     }
 
+    @NotNull
+    private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
+        // @formatter:off
+        return cmp.verticalList(
+                cmp.horizontalList(
+                        cmp.horizontalGap(TEXT_HEADER_INDENT),
+                        cmp.text("Details on reported copy numbers").setStyle(fontStyle().bold().setFontSize(11))),
+                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
+                cmp.horizontalList(
+                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
+                        cmp.text("Copy numbers are determined for all genes included in this report.")
+                                .setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
+                cmp.horizontalList(
+                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
+                        cmp.text("The lowest copy number across the entire canonical transcript is determined.")
+                                .setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
+                cmp.horizontalList(
+                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
+                        cmp.text("Any gene with a value of 0 or >3 is included in the finding").setStyle(fontStyle()))
+        );
+        // @formatter:on
+    }
     @NotNull
     private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
         // @formatter:off
@@ -115,45 +148,58 @@ public class PDFWriter {
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_HEADER_INDENT),
                         cmp.text("Details on reported variant fields").setStyle(fontStyle().bold().setFontSize(11))),
-                cmp.verticalGap(HEADER_DETAIL_SEPARATION),
+                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The analysis is based on reference genome version GRCh37.")),
+                        cmp.text("The analysis is based on reference genome version GRCh37.").setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The 'position' refers to the chromosome and start base of the variant against " +
-                                "the reference genome used.")),
+                        cmp.text("The 'position' refers to the chromosome and start base of the variant with " +
+                                "respect to the reference genome used.").setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
                         cmp.text("The 'variant' displays what was expected as reference base and what " +
-                                "was found instead")),
+                                "was found instead ('ref' > 'alt')").setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
                         cmp.text("The 'transcript' provides a link to the ensembl definition of the transcript " +
-                                "used for filtering")),
+                                "used for filtering").setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
                         cmp.text("The 'effect' provides additional information on the variant, including " +
                                 "the change in coding sequence ('c.'), the change in amino acid ('a.') and " +
-                                "the predicted impact on the final protein on the second line of this field")),
+                                "the predicted impact on the final protein on the second line of this field")
+                                .setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
                         cmp.text("The 'cosmic' fields display a link to the COSMIC database which contains " +
                                 "additional information on the variant. If the variant could not be found in the " +
-                                "COSMIC database, this field will be left blank.")),
+                                "COSMIC database, this field will be left blank.").setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
                         cmp.text("The 'VAF' fields displays the variant allele frequency. The first number is " +
                                 "the number of observations of the variant, and the second number is the total " +
                                 "number of observations on this position. The number within parentheses is the " +
-                                "allele frequency (the two numbers divided by each other)"))
+                                "allele frequency (the two numbers divided by each other)").setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
+                cmp.horizontalList(
+                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
+                        cmp.text("The mutational load is the total number of missense variants found in the genome.")
+                                .setStyle(fontStyle()))
         );
         // @formatter:on
     }
@@ -166,17 +212,18 @@ public class PDFWriter {
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_HEADER_INDENT),
                         cmp.text("Filtering details").setStyle(fontStyle().bold().setFontSize(11))),
-                cmp.verticalGap(HEADER_DETAIL_SEPARATION),
+                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("The findings in this report are generated from whole-genome-sequencing analysis, " +
                                 "filtered on the following " + hmfSlicingRegion.numberOfRegions() + " genes.")
                                 .setStyle(fontStyle())),
+                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("The canonical transcripts used for the filtering cover " + coverage + " MBases.")
                                 .setStyle(fontStyle())),
-                cmp.verticalGap(HEADER_DETAIL_SEPARATION),
+                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
                 createGenePanel(hmfSlicingRegion.regions())
         );
         // @formatter:on
@@ -194,14 +241,14 @@ public class PDFWriter {
         final VerticalListBuilder table = cmp.verticalList();
         final int nrOfGenesPerRow = 10;
 
-        long nrOfRowsNeeded = Math.round( (double) genes.size() / nrOfGenesPerRow);
+        long nrOfRowsNeeded = Math.round((double) genes.size() / nrOfGenesPerRow);
         nrOfRowsNeeded = (nrOfRowsNeeded * nrOfGenesPerRow < genes.size()) ? nrOfRowsNeeded + 1 : nrOfRowsNeeded;
 
         for (int i = 0; i < nrOfRowsNeeded; i++) {
             final HorizontalListBuilder row = cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT));
             for (int j = 0; j < nrOfGenesPerRow; j++) {
                 int index = i * nrOfGenesPerRow + j + 1;
-                final String gene = index > genes.size() ? Strings.EMPTY : (String) genes.toArray()[index-1];
+                final String gene = index > genes.size() ? Strings.EMPTY : (String) genes.toArray()[index - 1];
                 row.add(cmp.text(gene).setStyle(dataTableStyle()));
             }
             table.add(row);
@@ -210,7 +257,7 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> topSection(@NotNull final PatientReport report,
+    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final PatientReport report,
             @NotNull final String hmfLogoPath) {
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
@@ -236,13 +283,13 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> aboutSection() {
+    private static ComponentBuilder<?, ?> mainPageAboutSection() {
         // @formatter:off
         return cmp.verticalList(
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_HEADER_INDENT),
                         cmp.text("About this report").setStyle(fontStyle().bold().setFontSize(11))),
-                cmp.verticalGap(HEADER_DETAIL_SEPARATION),
+                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
                 cmp.horizontalList(
                         cmp.horizontalGap(TEXT_DETAIL_INDENT),
                         cmp.text("1.").setStyle(fontStyle()).setWidth(LIST_INDENT),
