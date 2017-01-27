@@ -6,7 +6,7 @@ class FastqHeaderKey {
     private final int xCoordinate;
     private final int yCoordinate;
 
-    FastqHeaderKey(int tileNumber, int xCoordinate, int yCoordinate) {
+    FastqHeaderKey(final int tileNumber, final int xCoordinate, final int yCoordinate) {
         this.tileNumber = tileNumber;
         this.xCoordinate = xCoordinate;
         this.yCoordinate = yCoordinate;

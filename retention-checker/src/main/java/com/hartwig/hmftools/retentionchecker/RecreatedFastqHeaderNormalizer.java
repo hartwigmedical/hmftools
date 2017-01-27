@@ -4,7 +4,8 @@ import org.jetbrains.annotations.NotNull;
 
 class RecreatedFastqHeaderNormalizer implements FastqHeaderNormalizer {
 
-    public String apply(@NotNull String fastqHeader) {
+    @NotNull
+    public String apply(@NotNull final String fastqHeader) {
         return fastqHeader.substring(0, fastqHeader.length() - 2);
     }
 }

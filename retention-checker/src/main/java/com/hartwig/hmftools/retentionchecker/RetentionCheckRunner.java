@@ -26,29 +26,29 @@ public class RetentionCheckRunner {
     private static final int DEFAULT_NUM_RECORDS = 100000;
 
     public static void main(String[] args) throws ParseException {
-        Options options = createOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        final Options options = createOptions();
+        final CommandLine cmd = createCommandLine(args, options);
 
-        String fastqPath1 = cmd.getOptionValue(FASTQ_PATH1_VAR);
-        String recreatedPath = cmd.getOptionValue(RECREATED_FASTQ_PATH_VAR);
+        final String fastqPath1 = cmd.getOptionValue(FASTQ_PATH1_VAR);
+        final String recreatedPath = cmd.getOptionValue(RECREATED_FASTQ_PATH_VAR);
 
         if (fastqPath1 == null || recreatedPath == null) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("retention-checker", options);
+            formatter.printHelp("Retention-Checker", options);
         } else {
-            int numRecords =
-                    Integer.parseInt(cmd.getOptionValue(NUM_RECORDS_VAR, Integer.toString(DEFAULT_NUM_RECORDS)));
+            final int numRecords = Integer.parseInt(
+                    cmd.getOptionValue(NUM_RECORDS_VAR, Integer.toString(DEFAULT_NUM_RECORDS)));
 
-            Collection<String> fastqPaths = Lists.newArrayList(fastqPath1);
-            String fastqPath2 = cmd.getOptionValue(FASTQ_PATH2_VAR);
+            final Collection<String> fastqPaths = Lists.newArrayList(fastqPath1);
+            final String fastqPath2 = cmd.getOptionValue(FASTQ_PATH2_VAR);
             if (fastqPath2 != null) {
                 fastqPaths.add(fastqPath2);
             }
 
-            FileNameConverter converter = new DefaultNameConverter();
-            RetentionCheckAlgo algo = new RetentionCheckAlgo(converter);
+            final FileNameConverter converter = new DefaultNameConverter();
+            final RetentionCheckAlgo algo = new RetentionCheckAlgo(converter);
 
-            boolean success = algo.runAlgo(fastqPaths, recreatedPath, numRecords);
+            final boolean success = algo.runAlgo(fastqPaths, recreatedPath, numRecords);
 
             if (success) {
                 LOGGER.info("RetentionCheck ran successfully!");

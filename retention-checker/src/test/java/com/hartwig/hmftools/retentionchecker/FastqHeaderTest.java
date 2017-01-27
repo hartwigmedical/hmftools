@@ -9,12 +9,12 @@ public class FastqHeaderTest {
 
     @Test
     public void createCorrectlyFromFastqRecord() {
-        String headerString = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182";
-        FastqRecord record = new FastqRecord(headerString, "", null, "");
+        final String headerString = "@HISEQ_HU01:89:H7YRLADXX:1:1101:1129:2182";
+        final FastqRecord record = new FastqRecord(headerString, "", null, "");
 
-        FastqHeader header = FastqHeader.parseFromFastqRecord(record, new DummyNormalizer());
+        final FastqHeader header = FastqHeader.parseFromFastqRecord(record, new DummyNormalizer());
 
-        FastqHeader expectedHeader = new FastqHeader("@HISEQ_HU01", 89, "H7YRLADXX", 1, 1101, 1129, 2182);
+        final FastqHeader expectedHeader = new FastqHeader("@HISEQ_HU01", 89, "H7YRLADXX", 1, 1101, 1129, 2182);
 
         assertTrue(expectedHeader.equals(header));
     }

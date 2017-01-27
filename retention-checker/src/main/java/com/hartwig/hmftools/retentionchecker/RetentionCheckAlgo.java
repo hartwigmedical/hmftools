@@ -19,14 +19,15 @@ class RetentionCheckAlgo {
     @NotNull
     private final FileNameConverter originalFileNameConverter;
 
-    RetentionCheckAlgo(@NotNull FileNameConverter originalFileNameConverter) {
+    RetentionCheckAlgo(@NotNull final FileNameConverter originalFileNameConverter) {
         this.originalFileNameConverter = originalFileNameConverter;
     }
 
-    boolean runAlgo(@NotNull Iterable<String> fastqPaths, @NotNull String recreatedFastqPath, int numRecords) {
+    boolean runAlgo(@NotNull final Iterable<String> fastqPaths, @NotNull final String recreatedFastqPath,
+            final int numRecords) {
         boolean success = true;
 
-        for (String fastqPath : fastqPaths) {
+        for (final String fastqPath : fastqPaths) {
             success = success && runRetentionCheckOnTwoDirectories(fastqPath, recreatedFastqPath, numRecords);
         }
 
@@ -35,8 +36,8 @@ class RetentionCheckAlgo {
 
     private boolean runRetentionCheckOnTwoDirectories(@NotNull String originalFastqPath,
             @NotNull String recreatedFastqPath, int numRecords) {
-        File originalPath = new File(originalFastqPath);
-        File recreatedPath = new File(recreatedFastqPath);
+        final File originalPath = new File(originalFastqPath);
+        final File recreatedPath = new File(recreatedFastqPath);
         if (!originalPath.exists()) {
             LOGGER.warn("Original fastq path does not exist: " + originalFastqPath);
             return false;
@@ -47,10 +48,10 @@ class RetentionCheckAlgo {
 
         assert originalPath.isDirectory() && recreatedPath.isDirectory();
 
-        File[] originalFiles = originalPath.listFiles((dir, name) -> name.indexOf(".fastq") > 0);
+        final File[] originalFiles = originalPath.listFiles((dir, name) -> name.indexOf(".fastq") > 0);
 
         assert originalFiles != null;
-        File[] recreatedFiles = new File[originalFiles.length];
+        final File[] recreatedFiles = new File[originalFiles.length];
 
         for (int i = 0; i < originalFiles.length; i++) {
             recreatedFiles[i] = new File(
@@ -66,14 +67,13 @@ class RetentionCheckAlgo {
         return success;
     }
 
-    private static boolean runRetentionCheckOnTwoFiles(@NotNull File originalFastqFile,
-            @NotNull File recreatedFastqFile,
-            int numRecords) {
+    private static boolean runRetentionCheckOnTwoFiles(@NotNull final File originalFastqFile,
+            @NotNull final File recreatedFastqFile, final int numRecords) {
         assert originalFastqFile.isFile() && recreatedFastqFile.isFile();
 
         LOGGER.info("Start reading recreated fastq file from " + recreatedFastqFile.getPath());
 
-        String refHeader = referenceHeader(recreatedFastqFile);
+        final String refHeader = referenceHeader(recreatedFastqFile);
         if (refHeader == null) {
             LOGGER.warn("No ref header could be isolated from fastq file on " + recreatedFastqFile.getName());
             return false;
@@ -81,24 +81,24 @@ class RetentionCheckAlgo {
             LOGGER.info("Generated ref header: " + refHeader);
         }
 
-        Map<FastqHeaderKey, FastqRecord> recreatedFastq = mapRecreatedFastqFile(recreatedFastqFile, refHeader,
+        final Map<FastqHeaderKey, FastqRecord> recreatedFastq = mapRecreatedFastqFile(recreatedFastqFile, refHeader,
                 numRecords);
-        int recreatedSize = recreatedFastq.size();
+        final int recreatedSize = recreatedFastq.size();
         LOGGER.info("Finished reading recreated fastq file. Created " + recreatedSize + " records.");
 
-        FastqReader originalFastqReader = new FastqReader(originalFastqFile);
-        FastqHeaderNormalizer originalNormalizer = new OriginalFastqHeaderNormalizer();
+        final FastqReader originalFastqReader = new FastqReader(originalFastqFile);
+        final FastqHeaderNormalizer originalNormalizer = new OriginalFastqHeaderNormalizer();
 
         boolean success = true;
         int recordCount = 0;
 
         LOGGER.info("Start mapping process from original to recreated fastq");
-        for (FastqRecord originalRecord : originalFastqReader) {
-            FastqHeader header = FastqHeader.parseFromFastqRecord(originalRecord, originalNormalizer);
+        for (final FastqRecord originalRecord : originalFastqReader) {
+            final FastqHeader header = FastqHeader.parseFromFastqRecord(originalRecord, originalNormalizer);
             if (!header.reference().equals(refHeader)) {
                 LOGGER.warn("  Invalid header in original fastq file. Record = " + originalRecord);
             } else {
-                FastqRecord recreatedMatch = recreatedFastq.get(header.key());
+                final FastqRecord recreatedMatch = recreatedFastq.get(header.key());
                 if (recreatedMatch != null) {
                     if (!recreatedMatch.getReadString().equals(originalRecord.getReadString())
                             || !recreatedMatch.getBaseQualityString().equals(originalRecord.getBaseQualityString())) {
@@ -115,7 +115,7 @@ class RetentionCheckAlgo {
                         + " recreated records");
             }
         }
-        int recordsFound = recreatedSize - recreatedFastq.size();
+        final int recordsFound = recreatedSize - recreatedFastq.size();
         LOGGER.info("  Finished mapping " + recordCount + " records. Found " + recordsFound + " recreated records");
 
         LOGGER.info("Finished mapping records. " + recreatedFastq.size()
@@ -125,10 +125,10 @@ class RetentionCheckAlgo {
     }
 
     @Nullable
-    private static String referenceHeader(@NotNull File recreatedFastqFile) {
-        FastqReader fastqReader = new FastqReader(recreatedFastqFile);
+    private static String referenceHeader(@NotNull final File recreatedFastqFile) {
+        final FastqReader fastqReader = new FastqReader(recreatedFastqFile);
         if (fastqReader.hasNext()) {
-            FastqHeader header = FastqHeader.parseFromFastqRecord(fastqReader.next(),
+            final FastqHeader header = FastqHeader.parseFromFastqRecord(fastqReader.next(),
                     new RecreatedFastqHeaderNormalizer());
             fastqReader.close();
             return header.reference();
@@ -138,16 +138,16 @@ class RetentionCheckAlgo {
     }
 
     @NotNull
-    private static Map<FastqHeaderKey, FastqRecord> mapRecreatedFastqFile(@NotNull File file,
-            @NotNull String refHeader, int numRecords) {
-        FastqHeaderNormalizer normalizer = new RecreatedFastqHeaderNormalizer();
-        Map<FastqHeaderKey, FastqRecord> records = new HashMap<>(numRecords);
+    private static Map<FastqHeaderKey, FastqRecord> mapRecreatedFastqFile(@NotNull final File file,
+            @NotNull final String refHeader, final int numRecords) {
+        final FastqHeaderNormalizer normalizer = new RecreatedFastqHeaderNormalizer();
+        final Map<FastqHeaderKey, FastqRecord> records = new HashMap<>(numRecords);
 
-        FastqReader fastqReader = new FastqReader(file);
+        final FastqReader fastqReader = new FastqReader(file);
 
         while (fastqReader.hasNext() && records.size() < numRecords) {
-            FastqRecord record = fastqReader.next();
-            FastqHeader header = FastqHeader.parseFromFastqRecord(record, normalizer);
+            final FastqRecord record = fastqReader.next();
+            final FastqHeader header = FastqHeader.parseFromFastqRecord(record, normalizer);
 
             if (records.containsKey(header.key())) {
                 LOGGER.warn("  Duplicate record found: " + record);

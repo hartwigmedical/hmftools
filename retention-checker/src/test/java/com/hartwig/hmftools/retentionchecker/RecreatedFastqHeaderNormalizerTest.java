@@ -8,9 +8,9 @@ public class RecreatedFastqHeaderNormalizerTest {
 
     @Test
     public void normalizeCorrectly() {
-        FastqHeaderNormalizer normalizer = new RecreatedFastqHeaderNormalizer();
-        String header = "@HISEQ_HU01:89:H7YRLADXX:1:1101:12051:6390/1";
-        String normalized = "@HISEQ_HU01:89:H7YRLADXX:1:1101:12051:6390";
+        final FastqHeaderNormalizer normalizer = new RecreatedFastqHeaderNormalizer();
+        final String header = "@HISEQ_HU01:89:H7YRLADXX:1:1101:12051:6390/1";
+        final String normalized = "@HISEQ_HU01:89:H7YRLADXX:1:1101:12051:6390";
 
         assertEquals(normalized, normalizer.apply(header));
     }

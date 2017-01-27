@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.retentionchecker;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import htsjdk.samtools.fastq.FastqRecord;
+
 import org.jetbrains.annotations.NotNull;
 
 class FastqHeader {
@@ -17,18 +19,19 @@ class FastqHeader {
     @NotNull
     private final FastqHeaderKey key;
 
-    static FastqHeader parseFromFastqRecord(@NotNull FastqRecord record,
-                                                   @NotNull FastqHeaderNormalizer normalizer) {
-        String normalized = normalizer.apply(record.getReadHeader());
+    @NotNull
+    static FastqHeader parseFromFastqRecord(@NotNull final FastqRecord record,
+            @NotNull final FastqHeaderNormalizer normalizer) {
+        final String normalized = normalizer.apply(record.getReadHeader());
 
-        String[] parts = normalized.split(PARSE_REGEXP);
+        final String[] parts = normalized.split(PARSE_REGEXP);
         return new FastqHeader(parts[0], Integer.valueOf(parts[1]), parts[2], Integer.valueOf(parts[3]),
                 Integer.valueOf(parts[4]), Integer.valueOf(parts[5]), Integer.valueOf(parts[6]));
     }
 
     @VisibleForTesting
-    FastqHeader(@NotNull String instrumentName, int runId, @NotNull String flowcellId,
-                       int flowcellLane, int tileNumber, int xCoordinate, int yCoordinate) {
+    FastqHeader(@NotNull final String instrumentName, final int runId, @NotNull final String flowcellId,
+            final int flowcellLane, final int tileNumber, final int xCoordinate, final int yCoordinate) {
         this.instrumentName = instrumentName;
         this.runId = runId;
         this.flowcellId = flowcellId;
@@ -43,21 +46,28 @@ class FastqHeader {
 
     @NotNull
     String reference() {
-         return instrumentName + PARSE_REGEXP + Integer.toString(runId) + PARSE_REGEXP +
-                 flowcellId + PARSE_REGEXP + Integer.toString(flowcellLane);
+        return instrumentName + PARSE_REGEXP + Integer.toString(runId) + PARSE_REGEXP + flowcellId + PARSE_REGEXP
+                + Integer.toString(flowcellLane);
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         FastqHeader that = (FastqHeader) o;
 
-        if (runId != that.runId) return false;
-        if (flowcellLane != that.flowcellLane) return false;
-        if (!instrumentName.equals(that.instrumentName)) return false;
-        if (!flowcellId.equals(that.flowcellId)) return false;
+        if (runId != that.runId)
+            return false;
+        if (flowcellLane != that.flowcellLane)
+            return false;
+        if (!instrumentName.equals(that.instrumentName))
+            return false;
+        if (!flowcellId.equals(that.flowcellId))
+            return false;
         return key.equals(that.key);
     }
 
