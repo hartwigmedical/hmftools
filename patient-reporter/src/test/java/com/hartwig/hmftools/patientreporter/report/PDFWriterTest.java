@@ -57,7 +57,7 @@ public class PDFWriterTest {
         assertNotNull(pdf);
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
-        pdf.show().print();
+//        pdf.show().print();
 //        pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
     }
 
