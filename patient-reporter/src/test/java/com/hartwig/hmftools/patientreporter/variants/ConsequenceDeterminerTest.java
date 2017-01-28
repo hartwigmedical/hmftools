@@ -82,7 +82,7 @@ public class ConsequenceDeterminerTest {
         assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.transcript());
         assertEquals(HGVS_CODING, report.hgvsCoding());
         assertEquals(HGVS_PROTEIN, report.hgvsProtein());
-        assertEquals(rightConsequence.sequenceOntologyTerm(), report.consequence());
+        assertEquals(rightConsequence.readableSequenceOntologyTerm(), report.consequence());
         assertEquals(COSMIC_ID, report.cosmicID());
         assertEquals(TOTAL_READ_COUNT, report.totalReadCount());
         assertEquals(ALLELE_READ_COUNT, report.alleleReadCount());
