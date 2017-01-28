@@ -122,84 +122,26 @@ public class EcrfAnalysisApplication {
     }
 
     void run() throws IOException, XMLStreamException {
-        final XMLInputFactory factory = XMLInputFactory.newInstance();
-        final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
-        final XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
+        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfXmlPath);
 
-        final Iterable<EcrfField> allFields = Sets.newTreeSet(XMLEcrfDatamodelToEcrfFields.convert(datamodel));
-        final Iterable<EcrfField> filteredFields = filterFields(allFields);
-
-        final Iterable<EcrfPatient> allPatients = XMLPatientReader.readPatients(reader, allFields);
-        final Iterable<EcrfPatient> filteredPatients = filterPatients(allPatients);
+        final Iterable<EcrfField> filteredFields = fieldIds == null ? model.fields() : model.findFieldsById(fieldIds);
+        final Iterable<EcrfPatient> filteredPatients = model.findPatientsById(patientIds);
 
         if (csvOutPath != null) {
-            //        writeDatamodelToCSV(allFields, csvOutPath);
+//                    writeDatamodelToCSV(model.fields(), csvOutPath);
             writePatientsToCSV(filteredPatients, filteredFields, csvOutPath, patientAsRow);
         }
 
         if (verbose) {
             LOGGER.info("Results for requested patients");
-            for (EcrfPatient patient : filteredPatients) {
+            for (final EcrfPatient patient : filteredPatients) {
                 String line = patient.patientId() + ": ";
-                for (EcrfField field : filteredFields) {
+                for (final EcrfField field : filteredFields) {
                     line += (field.name() + ":" + patient.fieldValues(field) + "   ");
                 }
                 LOGGER.info(line);
             }
         }
-    }
-
-    @NotNull
-    private Iterable<EcrfPatient> filterPatients(@NotNull Iterable<EcrfPatient> patients) {
-        final List<EcrfPatient> filteredPatients = Lists.newArrayList();
-        for (final String patientId : patientIds) {
-            final EcrfPatient patient = findPatient(patients, patientId);
-            if (patient != null) {
-                filteredPatients.add(patient);
-            } else {
-                LOGGER.warn("Did not find patient " + patientId);
-                filteredPatients.add(new EcrfPatient(patientId, Maps.newHashMap()));
-            }
-        }
-        return filteredPatients;
-    }
-
-    @Nullable
-    private static EcrfPatient findPatient(@NotNull Iterable<EcrfPatient> patients, @NotNull String patientIdToFind) {
-        for (final EcrfPatient patient : patients) {
-            if (patient.patientId().equals(patientIdToFind)) {
-                return patient;
-            }
-        }
-        return null;
-    }
-
-    @NotNull
-    private Iterable<EcrfField> filterFields(@NotNull Iterable<EcrfField> fields) {
-        if (fieldIds == null) {
-            return fields;
-        }
-
-        final List<EcrfField> filteredFields = Lists.newArrayList();
-        for (final String fieldId : fieldIds) {
-            final EcrfField field = findField(fields, fieldId);
-            if (field != null) {
-                filteredFields.add(field);
-            } else {
-                LOGGER.warn("Did not find field " + fieldId);
-            }
-        }
-        return filteredFields;
-    }
-
-    @Nullable
-    private static EcrfField findField(@NotNull Iterable<EcrfField> fields, @NotNull String fieldIdToFind) {
-        for (final EcrfField field : fields) {
-            if (field.name().equals(fieldIdToFind)) {
-                return field;
-            }
-        }
-        return null;
     }
 
     @SuppressWarnings("unused")
