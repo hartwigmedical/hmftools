@@ -47,7 +47,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
     }
 
     @NotNull
-    public static XMLEcrfDatamodel readXMLDatamodel(@NotNull XMLStreamReader reader) throws XMLStreamException {
+    public static XMLEcrfDatamodel readXMLDatamodel(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final List<StudyEvent> studyEvents = Lists.newArrayList();
         final List<Form> forms = Lists.newArrayList();
         final List<ItemGroup> itemGroups = Lists.newArrayList();
@@ -72,7 +72,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
     }
 
     @NotNull
-    private static StudyEvent extractStudyEvent(@NotNull XMLStreamReader reader) throws XMLStreamException {
+    private static StudyEvent extractStudyEvent(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", STUDY_EVENT_OID_ATTRIBUTE);
         final List<String> subOIDs = Lists.newArrayList();
         while (!isStudyEventEnd(reader)) {
@@ -86,7 +86,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
     }
 
     @NotNull
-    private static Form extractForm(@NotNull XMLStreamReader reader) throws XMLStreamException {
+    private static Form extractForm(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", FORM_OID_ATTRIBUTE);
         final List<String> subOIDs = Lists.newArrayList();
         while (!isFormEnd(reader)) {
@@ -103,7 +103,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
     }
 
     @NotNull
-    private static ItemGroup extractItemGroup(@NotNull XMLStreamReader reader) throws XMLStreamException {
+    private static ItemGroup extractItemGroup(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
         final List<String> subOIDs = Lists.newArrayList();
         while (!isItemGroupEnd(reader)) {
@@ -117,7 +117,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
     }
 
     @NotNull
-    private static Item extractItem(@NotNull XMLStreamReader reader) throws XMLStreamException {
+    private static Item extractItem(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
         final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
         String codeListOID = null;
@@ -132,7 +132,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
     }
 
     @NotNull
-    private static CodeList extractCodeList(@NotNull XMLStreamReader reader) throws XMLStreamException {
+    private static CodeList extractCodeList(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", CODE_LIST_OID_ATTRIBUTE);
         final Map<Integer, String> codeListItems = Maps.newHashMap();
         while (!isCodeListEnd(reader)) {
