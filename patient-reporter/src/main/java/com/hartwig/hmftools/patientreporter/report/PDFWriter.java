@@ -72,7 +72,6 @@ public class PDFWriter {
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
             @NotNull final String hmfLogoPath, @NotNull final Slicer hmfSlicingRegion) {
-
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
