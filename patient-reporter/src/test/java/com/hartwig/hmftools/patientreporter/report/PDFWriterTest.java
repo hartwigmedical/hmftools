@@ -56,7 +56,6 @@ public class PDFWriterTest {
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
 //        pdf.show().print();
-
         //        pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
     }
 
