@@ -14,11 +14,11 @@ public class HealthCheckReaderApplicationTest {
 
     @Test
     public void canRunAnalysisOnData() throws IOException {
-        new HealthCheckReaderApplication(null, EXAMPLE_DATA_PATH, null).runAnalysis();
+        new HealthCheckReaderApplication(null, EXAMPLE_DATA_PATH, null).run();
     }
 
     @Test
     public void canRunAnalysisOnReport() throws IOException {
-        new HealthCheckReaderApplication(EXAMPLE_REPORT_PATH, null, null).runAnalysis();
+        new HealthCheckReaderApplication(EXAMPLE_REPORT_PATH, null, null).run();
     }
 }

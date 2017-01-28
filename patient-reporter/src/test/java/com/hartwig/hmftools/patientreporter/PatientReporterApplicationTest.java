@@ -20,7 +20,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PatientReporterApplicationTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
+    private static final String RUN_DIRECTORY = Resources.getResource("ecrf/tests/example").getPath();
     private static final String BED_DIRECTORY = Resources.getResource("bed").getPath();
 
     @Test

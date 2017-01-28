@@ -1,25 +1,17 @@
 package com.hartwig.hmftools.ecrfanalyser;
 
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfField;
-import com.hartwig.hmftools.ecrfanalyser.datamodel.EcrfPatient;
-import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodel;
-import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodelReader;
-import com.hartwig.hmftools.ecrfanalyser.reader.XMLEcrfDatamodelToEcrfFields;
-import com.hartwig.hmftools.ecrfanalyser.reader.XMLPatientReader;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -110,7 +102,7 @@ public class EcrfAnalysisApplication {
     private final boolean patientAsRow;
     private final boolean verbose;
 
-    EcrfAnalysisApplication(@NotNull final String ecrfXmlPath, @Nullable final String csvOutPath,
+    private EcrfAnalysisApplication(@NotNull final String ecrfXmlPath, @Nullable final String csvOutPath,
             @NotNull final List<String> patientIds, @Nullable final List<String> fieldIds, final boolean patientAsRow,
             final boolean verbose) {
         this.ecrfXmlPath = ecrfXmlPath;
@@ -121,7 +113,7 @@ public class EcrfAnalysisApplication {
         this.verbose = verbose;
     }
 
-    void run() throws IOException, XMLStreamException {
+    private void run() throws IOException, XMLStreamException {
         final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfXmlPath);
 
         final Iterable<EcrfField> filteredFields = fieldIds == null ? model.fields() : model.findFieldsById(fieldIds);

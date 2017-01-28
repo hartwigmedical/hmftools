@@ -47,12 +47,12 @@ public class HealthCheckReaderApplication {
     private final String csvOut;
 
     public static void main(final String... args) throws ParseException, IOException {
-        Options options = createOptions();
-        CommandLine cmd = createCommandLine(options, args);
+        final Options options = createOptions();
+        final CommandLine cmd = createCommandLine(options, args);
 
-        String reportPath = cmd.getOptionValue(REPORT_PATH);
-        String dataPath = cmd.getOptionValue(DATA_PATH);
-        String csvOut = cmd.getOptionValue(CSV_OUT);
+        final String reportPath = cmd.getOptionValue(REPORT_PATH);
+        final String dataPath = cmd.getOptionValue(DATA_PATH);
+        final String csvOut = cmd.getOptionValue(CSV_OUT);
 
         if (reportPath == null && dataPath == null || (dataPath != null && csvOut == null)) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -60,12 +60,12 @@ public class HealthCheckReaderApplication {
             System.exit(1);
         }
 
-        new HealthCheckReaderApplication(reportPath, dataPath, csvOut).runAnalysis();
+        new HealthCheckReaderApplication(reportPath, dataPath, csvOut).run();
     }
 
     @NotNull
     private static Options createOptions() {
-        Options options = new Options();
+        final Options options = new Options();
 
         options.addOption(REPORT_PATH, true, REPORT_PATH_ARGS_DESC);
         options.addOption(DATA_PATH, true, DATA_PATH_ARGS_DESC);
@@ -77,7 +77,7 @@ public class HealthCheckReaderApplication {
     @NotNull
     private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
             throws ParseException {
-        CommandLineParser parser = new DefaultParser();
+        final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
@@ -88,7 +88,7 @@ public class HealthCheckReaderApplication {
         this.csvOut = csvOut;
     }
 
-    void runAnalysis() throws IOException {
+    void run() throws IOException {
         if (reportPath == null && dataPath != null && csvOut != null) {
             runInBatchMode(dataPath, csvOut);
         } else if (reportPath != null) {
@@ -98,11 +98,12 @@ public class HealthCheckReaderApplication {
         }
     }
 
-    private static void runInBatchMode(@NotNull String dataPath, @NotNull String csvOut) throws IOException {
-        List<HealthCheckReport> reports = Lists.newArrayList();
-        File[] runs = new File(dataPath).listFiles();
+    private static void runInBatchMode(@NotNull final String dataPath, @NotNull final String csvOut)
+            throws IOException {
+        final List<HealthCheckReport> reports = Lists.newArrayList();
+        final File[] runs = new File(dataPath).listFiles();
         if (runs != null) {
-            for (File runDirectory : runs) {
+            for (final File runDirectory : runs) {
                 LOGGER.info("Processing " + runDirectory.getPath());
                 HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(runDirectory.getPath());
                 reports.add(report);
@@ -111,10 +112,10 @@ public class HealthCheckReaderApplication {
             LOGGER.warn(String.format("%s contains no runs!", dataPath));
         }
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(csvOut, false));
+        final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOut, false));
         writer.write(HealthCheckDataToCSV.header(reports.get(0)));
 
-        for (HealthCheckReport report : reports) {
+        for (final HealthCheckReport report : reports) {
             writer.newLine();
             writer.write(HealthCheckDataToCSV.refSample(report));
             writer.newLine();
@@ -123,8 +124,8 @@ public class HealthCheckReaderApplication {
         writer.close();
     }
 
-    private static void runInSingleMode(@NotNull String reportPath) throws FileNotFoundException {
-        HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(reportPath);
+    private static void runInSingleMode(@NotNull final String reportPath) throws FileNotFoundException {
+        final HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(reportPath);
 
         LOGGER.info("REF SAMPLE CHECKS - " + report.refSample());
         printChecks(report.refChecks());
@@ -138,10 +139,10 @@ public class HealthCheckReaderApplication {
         printChecks(report.patientChecks());
     }
 
-    private static void printChecks(@NotNull Map<String, String> checks) {
-        Set<String> keys = new TreeSet<>(Comparator.<String>naturalOrder());
+    private static void printChecks(@NotNull final Map<String, String> checks) {
+        final Set<String> keys = new TreeSet<>(Comparator.<String>naturalOrder());
         keys.addAll(checks.keySet());
-        for (String key : keys) {
+        for (final String key : keys) {
             LOGGER.info(key + "\t" + checks.get(key));
         }
     }

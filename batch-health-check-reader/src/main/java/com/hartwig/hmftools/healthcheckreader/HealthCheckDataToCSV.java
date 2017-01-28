@@ -18,14 +18,14 @@ final class HealthCheckDataToCSV {
     }
 
     @NotNull
-    static String header(@NotNull HealthCheckReport report) {
+    static String header(@NotNull final HealthCheckReport report) {
         // KODU: We assume every report generates the same header.
         String header = "SAMPLE";
-        for (String check : getSampleChecks(report)) {
+        for (final String check : getSampleChecks(report)) {
             header += ("," + check);
         }
 
-        for (String check : getPatientChecks(report)) {
+        for (final String check : getPatientChecks(report)) {
             header += ("," + check);
         }
 
@@ -33,12 +33,12 @@ final class HealthCheckDataToCSV {
     }
 
     @NotNull
-    static String refSample(@NotNull HealthCheckReport report) {
+    static String refSample(@NotNull final HealthCheckReport report) {
         String refSample = report.refSample();
-        for (String check : getSampleChecks(report)) {
+        for (final String check : getSampleChecks(report)) {
             refSample += ("," + report.refChecks().get(check));
         }
-        for (String ignored : getPatientChecks(report)) {
+        for (final String ignored : getPatientChecks(report)) {
             refSample += (",-");
         }
 
@@ -46,12 +46,12 @@ final class HealthCheckDataToCSV {
     }
 
     @NotNull
-    static String tumorSample(@NotNull HealthCheckReport report) {
+    static String tumorSample(@NotNull final HealthCheckReport report) {
         String tumorSample = report.tumorSample();
-        for (String check : getSampleChecks(report)) {
+        for (final String check : getSampleChecks(report)) {
             tumorSample += ("," + report.tumorChecks().get(check));
         }
-        for (String check : getPatientChecks(report)) {
+        for (final String check : getPatientChecks(report)) {
             tumorSample += ("," + report.patientChecks().get(check));
         }
 
@@ -59,9 +59,9 @@ final class HealthCheckDataToCSV {
     }
 
     @NotNull
-    private static Set<String> getSampleChecks(@NotNull HealthCheckReport report) {
-        SortedSet<String> refChecks = Sets.newTreeSet(report.refChecks().keySet());
-        SortedSet<String> tumorChecks = Sets.newTreeSet(report.tumorChecks().keySet());
+    private static Set<String> getSampleChecks(@NotNull final HealthCheckReport report) {
+        final Set<String> refChecks = Sets.newTreeSet(report.refChecks().keySet());
+        final Set<String> tumorChecks = Sets.newTreeSet(report.tumorChecks().keySet());
         if (!refChecks.equals(tumorChecks)) {
             LOGGER.warn("RefChecks and TumorChecks do not match!");
         }
@@ -69,7 +69,7 @@ final class HealthCheckDataToCSV {
     }
 
     @NotNull
-    private static Set<String> getPatientChecks(@NotNull HealthCheckReport report) {
+    private static Set<String> getPatientChecks(@NotNull final HealthCheckReport report) {
         return Sets.newTreeSet(report.patientChecks().keySet());
     }
 }

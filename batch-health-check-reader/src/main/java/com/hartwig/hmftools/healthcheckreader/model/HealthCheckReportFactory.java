@@ -37,20 +37,20 @@ public final class HealthCheckReportFactory {
     }
 
     @NotNull
-    public static HealthCheckReport fromHealthCheckReport(@NotNull String path) throws FileNotFoundException {
-        JsonObject json = GSON.fromJson(new FileReader(path), JsonObject.class);
-        JsonArray checks = json.get(HEALTH_CHECK_MAIN_OBJECT).getAsJsonArray();
+    public static HealthCheckReport fromHealthCheckReport(@NotNull final String path) throws FileNotFoundException {
+        final JsonObject json = GSON.fromJson(new FileReader(path), JsonObject.class);
+        final JsonArray checks = json.get(HEALTH_CHECK_MAIN_OBJECT).getAsJsonArray();
 
         String refSample = Strings.EMPTY;
         String tumorSample = Strings.EMPTY;
-        Map<String, String> refChecks = Maps.newHashMap();
-        Map<String, String> tumorChecks = Maps.newHashMap();
-        Map<String, String> patientChecks = Maps.newHashMap();
+        final Map<String, String> refChecks = Maps.newHashMap();
+        final Map<String, String> tumorChecks = Maps.newHashMap();
+        final Map<String, String> patientChecks = Maps.newHashMap();
 
         for (int i = 0; i < checks.size(); i++) {
             JsonObject category = checks.get(i).getAsJsonObject();
-            for (Map.Entry<String, JsonElement> entry : category.entrySet()) {
-                JsonObject values = entry.getValue().getAsJsonObject();
+            for (final Map.Entry<String, JsonElement> entry : category.entrySet()) {
+                final JsonObject values = entry.getValue().getAsJsonObject();
                 if (values.has(PATIENT_CHECKS_IDENTIFIER_1)) {
                     patientChecks.putAll(extractChecks(values.get(PATIENT_CHECKS_IDENTIFIER_1)));
                 } else if (values.has(PATIENT_CHECKS_IDENTIFIER_2)) {
@@ -78,15 +78,15 @@ public final class HealthCheckReportFactory {
     }
 
     @NotNull
-    private static Map<String, String> extractChecks(@NotNull JsonElement element) {
-        Map<String, String> elements = Maps.newHashMap();
+    private static Map<String, String> extractChecks(@NotNull final JsonElement element) {
+        final Map<String, String> elements = Maps.newHashMap();
         if (element.isJsonObject()) {
-            JsonObject object = (JsonObject) element;
+            final JsonObject object = (JsonObject) element;
             elements.put(object.get(CHECK_NAME).getAsString(), object.get(CHECK_VALUE).getAsString());
         } else if (element.isJsonArray()) {
-            JsonArray array = (JsonArray) element;
+            final JsonArray array = (JsonArray) element;
             for (int i = 0; i < array.size(); i++) {
-                JsonObject object = (JsonObject) array.get(i);
+                final JsonObject object = (JsonObject) array.get(i);
                 elements.put(object.get(CHECK_NAME).getAsString(), object.get(CHECK_VALUE).getAsString());
             }
         }
@@ -94,9 +94,9 @@ public final class HealthCheckReportFactory {
     }
 
     @NotNull
-    private static String extractSampleId(@NotNull JsonElement element) {
-        JsonArray array = (JsonArray) element;
-        JsonObject firstObject = (JsonObject) array.get(0);
+    private static String extractSampleId(@NotNull final JsonElement element) {
+        final JsonArray array = (JsonArray) element;
+        final JsonObject firstObject = (JsonObject) array.get(0);
         return firstObject.get(CHECK_SAMPLE_ID).getAsString();
     }
 }

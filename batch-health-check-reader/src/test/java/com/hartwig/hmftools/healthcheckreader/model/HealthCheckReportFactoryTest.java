@@ -16,7 +16,7 @@ public class HealthCheckReportFactoryTest {
 
     @Test
     public void canConvertReportToJavaModel() throws IOException {
-        HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(EXAMPLE_REPORT_PATH);
+        final HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(EXAMPLE_REPORT_PATH);
         assertNotNull(report);
     }
 }
