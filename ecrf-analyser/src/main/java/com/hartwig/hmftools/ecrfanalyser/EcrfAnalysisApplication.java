@@ -80,7 +80,7 @@ public class EcrfAnalysisApplication {
 
     @NotNull
     private static Options createOptions() {
-        Options options = new Options();
+        final Options options = new Options();
 
         options.addOption(ECRF_XML_PATH, true, ECRF_XML_PATH_ARGS_DESC);
         options.addOption(CSV_OUT_PATH, true, CSV_OUT_PATH_ARGS_DESC);
@@ -95,7 +95,7 @@ public class EcrfAnalysisApplication {
     @NotNull
     private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
             throws ParseException {
-        CommandLineParser parser = new DefaultParser();
+        final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
@@ -151,9 +151,9 @@ public class EcrfAnalysisApplication {
 
     @NotNull
     private Iterable<EcrfPatient> filterPatients(@NotNull Iterable<EcrfPatient> patients) {
-        List<EcrfPatient> filteredPatients = Lists.newArrayList();
-        for (String patientId : patientIds) {
-            EcrfPatient patient = findPatient(patients, patientId);
+        final List<EcrfPatient> filteredPatients = Lists.newArrayList();
+        for (final String patientId : patientIds) {
+            final EcrfPatient patient = findPatient(patients, patientId);
             if (patient != null) {
                 filteredPatients.add(patient);
             } else {
@@ -166,7 +166,7 @@ public class EcrfAnalysisApplication {
 
     @Nullable
     private static EcrfPatient findPatient(@NotNull Iterable<EcrfPatient> patients, @NotNull String patientIdToFind) {
-        for (EcrfPatient patient : patients) {
+        for (final EcrfPatient patient : patients) {
             if (patient.patientId().equals(patientIdToFind)) {
                 return patient;
             }
@@ -181,7 +181,7 @@ public class EcrfAnalysisApplication {
         }
 
         final List<EcrfField> filteredFields = Lists.newArrayList();
-        for (String fieldId : fieldIds) {
+        for (final String fieldId : fieldIds) {
             final EcrfField field = findField(fields, fieldId);
             if (field != null) {
                 filteredFields.add(field);
@@ -194,7 +194,7 @@ public class EcrfAnalysisApplication {
 
     @Nullable
     private static EcrfField findField(@NotNull Iterable<EcrfField> fields, @NotNull String fieldIdToFind) {
-        for (EcrfField field : fields) {
+        for (final EcrfField field : fields) {
             if (field.name().equals(fieldIdToFind)) {
                 return field;
             }
@@ -282,7 +282,7 @@ public class EcrfAnalysisApplication {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("FIELD, DESCRIPTION, VALUES");
 
-        for (EcrfField field : fields) {
+        for (final EcrfField field : fields) {
             writer.newLine();
             writer.write(fieldToCSV(field));
         }
@@ -293,7 +293,7 @@ public class EcrfAnalysisApplication {
     @NotNull
     private static String fieldToCSV(@NotNull EcrfField field) {
         String valuesString = "";
-        for (String value : field.codeList().values()) {
+        for (final String value : field.codeList().values()) {
             valuesString += value.replaceAll(",", ":") + "; ";
         }
         if (valuesString.length() > 0) {
