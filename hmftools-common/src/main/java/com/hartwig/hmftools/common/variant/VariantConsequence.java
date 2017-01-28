@@ -31,4 +31,9 @@ public enum VariantConsequence {
     public String sequenceOntologyTerm() {
         return sequenceOntologyTerm;
     }
+
+    @NotNull
+    public String readableSequenceOntologyTerm() {
+        return sequenceOntologyTerm.replace("_", " ");
+    }
 }

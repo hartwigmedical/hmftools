@@ -84,7 +84,7 @@ public class VariantAnnotation {
             if (!consequenceString.isEmpty()) {
                 consequenceString += "; ";
             }
-            consequenceString += consequence.sequenceOntologyTerm();
+            consequenceString += consequence.readableSequenceOntologyTerm();
         }
         return consequenceString;
     }

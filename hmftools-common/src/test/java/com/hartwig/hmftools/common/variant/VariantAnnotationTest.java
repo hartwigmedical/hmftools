@@ -17,13 +17,14 @@ public class VariantAnnotationTest {
 
         final VariantAnnotation oneConsequence = new VariantAnnotation.Builder().consequences(
                 Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT)).build();
-        assertEquals(VariantConsequence.MISSENSE_VARIANT.sequenceOntologyTerm(), oneConsequence.consequenceString());
+        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(),
+                oneConsequence.consequenceString());
 
         final VariantAnnotation twoConsequences = new VariantAnnotation.Builder().consequences(
                 Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.INFRAME_DELETION)).build();
         assertTrue(twoConsequences.consequenceString().contains(
-                VariantConsequence.MISSENSE_VARIANT.sequenceOntologyTerm()));
+                VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm()));
         assertTrue(twoConsequences.consequenceString().contains(
-                VariantConsequence.INFRAME_DELETION.sequenceOntologyTerm()));
+                VariantConsequence.INFRAME_DELETION.readableSequenceOntologyTerm()));
     }
 }
