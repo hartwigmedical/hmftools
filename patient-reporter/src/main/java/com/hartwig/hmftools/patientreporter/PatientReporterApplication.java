@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static net.sf.dynamicreports.report.builder.DynamicReports.report;
-
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.xml.stream.XMLStreamException;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
@@ -58,6 +58,9 @@ public class PatientReporterApplication {
     private static final String HMF_SLICING_BED_ARGS_DESC = "A path towards the HMF slicing bed.";
     private static final String HMF_SLICING_BED = "hmf_slicing_bed";
 
+    private static final String CPCT_ECRF_ARGS_DESC = "A path towards the cpct ecrf xml database.";
+    private static final String CPCT_ECRF = "cpct_ecrf";
+
     private static final String HMF_LOGO_ARGS_DESC = "A path to the HMF logo, used in the PDF report.";
     private static final String HMF_LOGO = "hmf_logo";
 
@@ -67,50 +70,30 @@ public class PatientReporterApplication {
     private static final String BATCH_MODE_ARGS_DESC = "If set, runs in batch mode (Caution!!! Korneel Only)";
     private static final String BATCH_MODE = "batch_mode";
 
-    @NotNull
-    private final String runDirectory;
-    @NotNull
-    private final VariantAnalyzer variantAnalyzer;
-    @NotNull
-    private final CopyNumberAnalyzer copyNumberAnalyzer;
-    @Nullable
-    private final String outputDirectory;
-    @Nullable
-    private final PDFWriter pdfWriter;
-    private final boolean batchMode;
-
-    public static void main(final String... args) throws ParseException, IOException, HartwigException, DRException {
+    public static void main(final String... args)
+            throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        final String runDir = cmd.getOptionValue(RUN_DIRECTORY);
+        final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
-        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
+        final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
         final String hmfLogo = cmd.getOptionValue(HMF_LOGO);
+        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
         final boolean batchMode = cmd.hasOption(BATCH_MODE);
 
-        if (runDir == null || cpctSlicingBed == null || highConfidenceBed == null || hmfSlicingBed == null) {
+        if (runDirectory == null || cpctSlicingBed == null || highConfidenceBed == null || hmfSlicingBed == null
+                || cpctEcrf == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-Reporter", options);
             System.exit(1);
         }
 
-        if (outputDirectory != null) {
-            final Path outputPath = new File(outputDirectory).toPath();
-            if (!Files.exists(outputPath) || !Files.isDirectory(outputPath)) {
-                LOGGER.warn(OUTPUT_DIR + " has to be an existing directory!");
-                System.exit(1);
-            }
-        }
-
-        if (hmfLogo != null) {
-            final Path logoPath = new File(hmfLogo).toPath();
-            if (!Files.exists(logoPath)) {
-                LOGGER.warn(HMF_LOGO + " has to be an existing file!");
-                System.exit(1);
-            }
+        if (!validInput(runDirectory, cpctSlicingBed, highConfidenceBed, hmfSlicingBed, cpctEcrf, hmfLogo,
+                outputDirectory)) {
+            System.exit(1);
         }
 
         final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
@@ -119,12 +102,15 @@ public class PatientReporterApplication {
         if (outputDirectory != null && hmfLogo != null) {
             pdfWriter = new PDFWriter(outputDirectory, hmfLogo, hmfSlicingRegion);
         }
+        LOGGER.info("Running patient reporter on " + runDirectory);
+        LOGGER.info("  Loading ECRF database...");
+        final CpctEcrfModel cpctEcrfModel = CpctEcrfModel.loadFromXML(cpctEcrf);
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
-        new PatientReporterApplication(runDir, variantAnalyzer, copyNumberAnalyzer, outputDirectory, pdfWriter,
-                batchMode).run();
+        new PatientReporterApplication(runDirectory, cpctEcrfModel, variantAnalyzer, copyNumberAnalyzer,
+                outputDirectory, pdfWriter, batchMode).run();
     }
 
     @NotNull
@@ -135,6 +121,7 @@ public class PatientReporterApplication {
         options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
         options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
         options.addOption(HMF_SLICING_BED, true, HMF_SLICING_BED_ARGS_DESC);
+        options.addOption(CPCT_ECRF, true, CPCT_ECRF_ARGS_DESC);
         options.addOption(HMF_LOGO, true, HMF_LOGO_ARGS_DESC);
         options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_ARGS_DESC);
         options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
@@ -149,10 +136,57 @@ public class PatientReporterApplication {
         return parser.parse(options, args);
     }
 
-    PatientReporterApplication(@NotNull final String runDirectory, @NotNull final VariantAnalyzer variantAnalyzer,
-            @NotNull final CopyNumberAnalyzer copyNumberAnalyzer, @Nullable final String outputDirectory,
-            @Nullable final PDFWriter pdfWriter, final boolean batchMode) {
+    private static boolean validInput(@NotNull final String runDirectory, @NotNull final String cpctSlicingBed,
+            @NotNull final String highConfidenceBed, @NotNull final String hmfSlicingBed,
+            @NotNull final String cpctEcrf, @Nullable final String hmfLogo, @Nullable final String outputDirectory) {
+        if (!exists(runDirectory) || !isDirectory(runDirectory)) {
+            LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory!");
+        } else if (!exists(cpctSlicingBed)) {
+            LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file!");
+        } else if (!exists(highConfidenceBed)) {
+            LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file!");
+        } else if (!exists(hmfSlicingBed)) {
+            LOGGER.warn(HMF_SLICING_BED + " has to be an existing file!");
+        } else if (!exists(cpctEcrf)) {
+            LOGGER.warn(CPCT_ECRF + " has to be an existing file!");
+        } else if (hmfLogo != null && (!exists(hmfLogo) || !isDirectory(hmfLogo))) {
+            LOGGER.warn(HMF_LOGO + " has to be an existing directory!");
+        } else if (outputDirectory != null && (!exists(outputDirectory) || !isDirectory(outputDirectory))) {
+            LOGGER.warn(OUTPUT_DIR + " has to be an existing directory!");
+        } else {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean exists(@NotNull final String path) {
+        return Files.exists(new File(path).toPath());
+    }
+
+    private static boolean isDirectory(@NotNull final String path) {
+        return Files.isDirectory(new File(path).toPath());
+    }
+
+    @NotNull
+    private final String runDirectory;
+    @NotNull
+    private final CpctEcrfModel cpctEcrfModel;
+    @NotNull
+    private final VariantAnalyzer variantAnalyzer;
+    @NotNull
+    private final CopyNumberAnalyzer copyNumberAnalyzer;
+    @Nullable
+    private final String outputDirectory;
+    @Nullable
+    private final PDFWriter pdfWriter;
+    private final boolean batchMode;
+
+    PatientReporterApplication(@NotNull final String runDirectory, @NotNull final CpctEcrfModel cpctEcrfModel,
+            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
+            @Nullable final String outputDirectory, @Nullable final PDFWriter pdfWriter, final boolean batchMode) {
         this.runDirectory = runDirectory;
+        this.cpctEcrfModel = cpctEcrfModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
         this.outputDirectory = outputDirectory;
@@ -202,14 +236,13 @@ public class PatientReporterApplication {
 
     @NotNull
     private PatientReport patientRun() throws IOException, HartwigException {
-        LOGGER.info("Running patient reporter on " + runDirectory);
-
-        LOGGER.info(" Loading data...");
+        LOGGER.info(" Loading genomic data...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
-        LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for " + variantFile.sample());
+        final String sample = variantFile.sample();
+        LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for " + sample);
 
-        final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, variantFile.sample());
-        LOGGER.info("  " + copyNumbers.size() + " copy number regions loaded for sample " + variantFile.sample());
+        final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
+        LOGGER.info("  " + copyNumbers.size() + " copy number regions loaded for sample " + sample);
 
         LOGGER.info(" Analyzing data...");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
@@ -225,11 +258,12 @@ public class PatientReporterApplication {
         LOGGER.info("  Determined copy number stats for " + copyNumberAnalysis.stats().size() + " regions.");
 
         if (outputDirectory != null) {
-            writeToFiles(outputDirectory + File.separator + variantFile.sample(), variantAnalysis, copyNumberAnalysis);
+            writeToFiles(outputDirectory + File.separator + sample, variantAnalysis, copyNumberAnalysis);
         }
 
-        return new PatientReport(variantFile.sample(), variantAnalysis.findings(), copyNumberAnalysis.findings(),
-                variantAnalysis.missenseVariants().size(), Strings.EMPTY);
+        final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
+        return new PatientReport(sample, variantAnalysis.findings(), copyNumberAnalysis.findings(),
+                variantAnalysis.missenseVariants().size(), tumorType);
     }
 
     private static void writeToFiles(@NotNull final String baseName, @NotNull final VariantAnalysis variantAnalysis,

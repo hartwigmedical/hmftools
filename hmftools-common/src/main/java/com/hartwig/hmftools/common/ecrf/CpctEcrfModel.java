@@ -45,7 +45,7 @@ public class CpctEcrfModel {
         return new CpctEcrfModel(fields, patients);
     }
 
-    private CpctEcrfModel(@NotNull final Iterable<EcrfField> fields, @NotNull final Iterable<EcrfPatient> patients) {
+    public CpctEcrfModel(@NotNull final Iterable<EcrfField> fields, @NotNull final Iterable<EcrfPatient> patients) {
         this.fields = fields;
         this.patients = patients;
     }
@@ -71,7 +71,7 @@ public class CpctEcrfModel {
 
     }
     @Nullable
-    private EcrfPatient findPatientById(@NotNull final String patientId) {
+    public EcrfPatient findPatientById(@NotNull final String patientId) {
         for (final EcrfPatient patient : patients) {
             if (patient.patientId().equals(patientId)) {
                 return patient;
@@ -95,7 +95,7 @@ public class CpctEcrfModel {
     }
 
     @Nullable
-    private EcrfField findFieldById(@NotNull final String fieldId) {
+    public EcrfField findFieldById(@NotNull final String fieldId) {
         for (final EcrfField field : fields) {
             if (field.name().equals(fieldId)) {
                 return field;

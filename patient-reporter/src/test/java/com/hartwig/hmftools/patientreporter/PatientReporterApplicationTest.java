@@ -5,7 +5,9 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
@@ -14,13 +16,14 @@ import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sf.dynamicreports.report.exception.DRException;
 
 public class PatientReporterApplicationTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("ecrf/tests/example").getPath();
+    private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
     private static final String BED_DIRECTORY = Resources.getResource("bed").getPath();
 
     @Test
@@ -34,6 +37,12 @@ public class PatientReporterApplicationTest {
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(slicer);
-        new PatientReporterApplication(RUN_DIRECTORY, variantAnalyzer, copyNumberAnalyzer, null, null, false).run();
+        new PatientReporterApplication(RUN_DIRECTORY, buildTestCpctEcrfModel(), variantAnalyzer, copyNumberAnalyzer,
+                null, null, false).run();
+    }
+
+    @NotNull
+    private static CpctEcrfModel buildTestCpctEcrfModel() {
+        return new CpctEcrfModel(Lists.newArrayList(), Lists.newArrayList());
     }
 }
