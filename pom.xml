@@ -30,6 +30,7 @@
         <apache.commons.cli.version>1.3.1</apache.commons.cli.version>
         <apache.log4j.version>2.5</apache.log4j.version>
         <dynamicreports.version>4.1.1</dynamicreports.version>
+        <jasperreports.font.version>6.0.0</jasperreports.font.version>
 
         <hmftools-common.version>1</hmftools-common.version>
 
@@ -110,6 +111,11 @@
                 <groupId>net.sourceforge.dynamicreports</groupId>
                 <artifactId>dynamicreports-core</artifactId>
                 <version>${dynamicreports.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sf.jasperreports</groupId>
+                <artifactId>jasperreports-fonts</artifactId>
+                <version>${jasperreports.font.version}</version>
             </dependency>
 
             <dependency>

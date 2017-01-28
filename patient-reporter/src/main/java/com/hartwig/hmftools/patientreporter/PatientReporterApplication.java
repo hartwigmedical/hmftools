@@ -103,7 +103,7 @@ public class PatientReporterApplication {
             pdfWriter = new PDFWriter(outputDirectory, hmfLogo, hmfSlicingRegion);
         }
         LOGGER.info("Running patient reporter on " + runDirectory);
-        LOGGER.info("  Loading ECRF database...");
+        LOGGER.info(" Loading ECRF database...");
         final CpctEcrfModel cpctEcrfModel = CpctEcrfModel.loadFromXML(cpctEcrf);
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
@@ -149,8 +149,8 @@ public class PatientReporterApplication {
             LOGGER.warn(HMF_SLICING_BED + " has to be an existing file!");
         } else if (!exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file!");
-        } else if (hmfLogo != null && (!exists(hmfLogo) || !isDirectory(hmfLogo))) {
-            LOGGER.warn(HMF_LOGO + " has to be an existing directory!");
+        } else if (hmfLogo != null && !exists(hmfLogo)) {
+            LOGGER.warn(HMF_LOGO + " has to be an existing file!");
         } else if (outputDirectory != null && (!exists(outputDirectory) || !isDirectory(outputDirectory))) {
             LOGGER.warn(OUTPUT_DIR + " has to be an existing directory!");
         } else {

@@ -3,8 +3,6 @@ package com.hartwig.hmftools.patientreporter.report;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -58,7 +56,8 @@ public class PDFWriterTest {
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
 //        pdf.show().print();
-//        pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
+
+        //        pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
     }
 
     @NotNull

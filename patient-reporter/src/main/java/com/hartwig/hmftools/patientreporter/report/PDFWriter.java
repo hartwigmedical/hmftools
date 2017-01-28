@@ -216,7 +216,7 @@ public class PDFWriter {
         nrOfRowsNeeded = (nrOfRowsNeeded * nrOfGenesPerRow < genes.size()) ? nrOfRowsNeeded + 1 : nrOfRowsNeeded;
 
         for (int i = 0; i < nrOfRowsNeeded; i++) {
-            final HorizontalListBuilder row = cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT));
+            final HorizontalListBuilder row = cmp.horizontalList();
             for (int j = 0; j < nrOfGenesPerRow; j++) {
                 int index = i * nrOfGenesPerRow + j + 1;
                 final String gene = index > genes.size() ? Strings.EMPTY : (String) genes.toArray()[index - 1];
