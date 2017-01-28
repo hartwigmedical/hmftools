@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.util.Collection;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
@@ -107,120 +108,96 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
+    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final PatientReport report,
+            @NotNull final String hmfLogoPath) {
         // @formatter:off
-        return cmp.verticalList(
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_HEADER_INDENT),
-                        cmp.text("Details on reported copy numbers").setStyle(fontStyle().bold().setFontSize(11))),
-                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("Copy numbers are determined for all genes included in this report.")
-                                .setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The lowest copy number across the entire canonical transcript is determined.")
-                                .setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("Any gene with a value of 0 or >3 is included in the finding").setStyle(fontStyle()))
+        final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
+                cmp.verticalList(
+                        cmp.text("Report Date").setStyle(tableHeaderStyle()),
+                        cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
+                cmp.verticalList(
+                        cmp.text("Tumor Type").setStyle(tableHeaderStyle()),
+                        cmp.text(report.tumorType()).setStyle(dataTableStyle()))
         );
-        // @formatter:on
-    }
-    @NotNull
-    private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
-        // @formatter:off
-        return cmp.verticalList(
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_HEADER_INDENT),
-                        cmp.text("Details on reported variant fields").setStyle(fontStyle().bold().setFontSize(11))),
-                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The analysis is based on reference genome version GRCh37.").setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The 'position' refers to the chromosome and start base of the variant with " +
-                                "respect to the reference genome used.").setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The 'variant' displays what was expected as reference base and what " +
-                                "was found instead ('ref' > 'alt')").setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The 'transcript' provides a link to the ensembl definition of the transcript " +
-                                "used for filtering").setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The 'effect' provides additional information on the variant, including " +
-                                "the change in coding sequence ('c.'), the change in amino acid ('a.') and " +
-                                "the predicted impact on the final protein on the second line of this field")
-                                .setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The 'cosmic' fields display a link to the COSMIC database which contains " +
-                                "additional information on the variant. If the variant could not be found in the " +
-                                "COSMIC database, this field will be left blank.").setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The 'VAF' fields displays the variant allele frequency. The first number is " +
-                                "the number of observations of the variant, and the second number is the total " +
-                                "number of observations on this position. The number within parentheses is the " +
-                                "allele frequency (the two numbers divided by each other)").setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The mutational load is the total number of missense variants found in the genome.")
-                                .setStyle(fontStyle()))
+
+        return cmp.horizontalList(
+                cmp.image(hmfLogoPath),
+                cmp.verticalList(
+                        cmp.text("HMF Sequencing Report - " + report.sample()).
+                                setStyle(fontStyle().bold().setFontSize(14)
+                                        .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                                .setHeight(50),
+                        mainDiagnosisInfo)
         );
         // @formatter:on
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneSection(@NotNull final Slicer hmfSlicingRegion) {
-        long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
+    private static ComponentBuilder<?, ?> mainPageAboutSection() {
+        return toList("About this report", Lists.newArrayList(
+                "This test is performed for research purpose and is not meant to be used for "
+                        + "clinical decision making without further validation of findings.",
+                "Additional information on the various fields can be found on the final page of this report.",
+                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
         // @formatter:off
+        final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
+                cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
+                        .columns(
+                            col.column("Gene", PatientDataSource.GENE_FIELD),
+                            col.column("Position", PatientDataSource.POSITION_FIELD),
+                            col.column("Variant", PatientDataSource.VARIANT_FIELD),
+                            transcriptColumn(),
+                            col.componentColumn("Effect", effectColumn()),
+                            col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
+                                    .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
+                            col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
+                        .setDataSource(PatientDataSource.fromVariants(report.variants())) :
+                cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
         return cmp.verticalList(
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_HEADER_INDENT),
-                        cmp.text("Details on filtering").setStyle(fontStyle().bold().setFontSize(11))),
-                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The findings in this report are generated from whole-genome-sequencing analysis, " +
-                                "filtered on the following " + hmfSlicingRegion.numberOfRegions() + " genes.")
-                                .setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("The canonical transcripts used for the filtering cover " + coverage + " MBases.")
-                                .setStyle(fontStyle())),
-                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                createGenePanel(hmfSlicingRegion.regions())
+                cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(6),
+                table,
+                cmp.verticalGap(15),
+                cmp.text("Mutational Load: " + Integer.toString(report.mutationalLoad())).setStyle(tableHeaderStyle())
         );
         // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
+        // @formatter:off
+        final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
+                cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
+                        .columns(
+                            col.column("Gene", PatientDataSource.GENE_FIELD),
+                            transcriptColumn(),
+                            col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
+                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
+                cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
+        return cmp.verticalList(
+                cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(6),
+                table);
+        // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneSection(@NotNull final Slicer hmfSlicingRegion) {
+        final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
+        final VerticalListBuilder section = toList("Details on filtering", Lists.newArrayList(
+                "The findings in this report are generated from whole-genome-sequencing analysis, "
+                        + "filtered on the following " + hmfSlicingRegion.numberOfRegions() + " genes.",
+                "The canonical transcripts used for the filtering cover " + coverage + " MBases."));
+
+        return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
+                createGenePanel(hmfSlicingRegion.regions()));
     }
 
     @NotNull
@@ -251,98 +228,53 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final PatientReport report,
-            @NotNull final String hmfLogoPath) {
-        // @formatter:off
-        final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
-                cmp.verticalList(
-                        cmp.text("Report Date").setStyle(tableHeaderStyle()),
-                        cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
-                cmp.verticalList(
-                        cmp.text("Tumor Type").setStyle(tableHeaderStyle()),
-                        cmp.text(report.tumorType()).setStyle(dataTableStyle()))
-        );
-
-        return cmp.horizontalList(
-                cmp.image(hmfLogoPath),
-                cmp.verticalList(
-                        cmp.text("HMF Sequencing Report - " + report.sample()).
-                                setStyle(fontStyle().bold().setFontSize(14)
-                                        .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
-                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                                .setHeight(50),
-                        mainDiagnosisInfo)
-        );
-        // @formatter:on
+    private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
+        return toList("Details on reported variant fields",
+                Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
+                        "The 'position' refers to the chromosome and start base of the variant with "
+                                + "respect to the reference genome used.",
+                        "The 'variant' displays what was expected as reference base and what "
+                                + "was found instead ('ref' > 'alt')",
+                        "The 'transcript' provides a link to the ensembl definition of the transcript "
+                                + "used for filtering",
+                        "The 'effect' provides additional information on the variant, including "
+                                + "the change in coding sequence ('c.'), the change in amino acid ('a.') and "
+                                + "the predicted impact on the final protein on the second line of this field",
+                        "The 'cosmic' fields display a link to the COSMIC database which contains "
+                                + "additional information on the variant. If the variant could not be found in the "
+                                + "COSMIC database, this field will be left blank.",
+                        "The 'VAF' fields displays the variant allele frequency. The first number is "
+                                + "the number of observations of the variant, and the second number is the total "
+                                + "number of observations on this position. The number within parentheses is the "
+                                + "allele frequency (the two numbers divided by each other)",
+                        "The mutational load is the total number of missense variants found in the genome."));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageAboutSection() {
-        // @formatter:off
-        return cmp.verticalList(
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_HEADER_INDENT),
-                        cmp.text("About this report").setStyle(fontStyle().bold().setFontSize(11))),
-                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("1.").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("This test is performed for on behalf of CPCT-02 andis not meant to be used for " +
-                                        "clinical decision making without further validation of findings.")
-                                .setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("2.").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("Additional information on the various fields can be found on the final page " +
-                                "of this report.").setStyle(fontStyle())),
-                cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP),
-                 cmp.horizontalList(
-                        cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                        cmp.text("3.").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                        cmp.text("For additional questions, please contact us via info@hartwigmedicalfoundation.nl.")
-                                .setStyle(fontStyle()))
-        );
-        // @formatter:on
+    private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
+        return toList("Details on reported copy numbers",
+                Lists.newArrayList("Copy numbers are determined for all genes filtered for in this report.",
+                        "The lowest copy number across the entire canonical transcript is determined.",
+                        "Any gene with a value of 0 or >3 is included in the list of findings"));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
-        // @formatter:off
-        return cmp.verticalList(
-                cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(6),
-                cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
-                        .columns(
-                            col.column("Gene", PatientDataSource.GENE_FIELD),
-                            col.column("Position", PatientDataSource.POSITION_FIELD),
-                            col.column("Variant", PatientDataSource.VARIANT_FIELD),
-                            transcriptColumn(),
-                            col.componentColumn("Effect", effectColumn()),
-                            col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
-                                    .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
-                        .setDataSource(PatientDataSource.fromVariants(report.variants())),
-                cmp.verticalGap(15),
-                cmp.text("Mutational Load: " + Integer.toString(report.mutationalLoad())).setStyle(tableHeaderStyle())
-        );
-        // @formatter:on
-    }
+    private static VerticalListBuilder toList(@NotNull final String title, @NotNull final Iterable<String> lines) {
+        final VerticalListBuilder list = cmp.verticalList();
+        list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_HEADER_INDENT),
+                cmp.text(title).setStyle(fontStyle().bold().setFontSize(11))),
+                cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP));
+        boolean isFirst = true;
+        for (final String line : lines) {
+            if (!isFirst) {
+                list.add(cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP));
+            }
+            list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                    cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT), cmp.text(line).setStyle(fontStyle())));
 
-    @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
-        // @formatter:off
-        return cmp.verticalList(
-                cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(6),
-                cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
-                        .columns(
-                            col.column("Gene", PatientDataSource.GENE_FIELD),
-                            transcriptColumn(),
-                            col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers())))
-        );
-        // @formatter:on
+            isFirst = false;
+        }
+        return list;
     }
 
     @NotNull
