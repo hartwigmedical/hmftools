@@ -9,3 +9,6 @@ hmftools-common/target
 patient-reporter/target
 retention-checker/target
 health-checker/target
+
+# Ignore test xml ecrf
+ecrf-analyser/src/test/resources/example/ecrf.xml
