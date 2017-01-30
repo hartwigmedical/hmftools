@@ -29,6 +29,7 @@ class PatientDataSource {
     static final FieldBuilder<?> COSMIC_NR_FIELD = field("cosmic_nr", String.class);
     static final FieldBuilder<?> ALLELE_FREQUENCY_FIELD = field("allele_freq", String.class);
 
+    static final FieldBuilder<?> COPY_NUMBER_TYPE_FIELD = field("copynumber_type", String.class);
     static final FieldBuilder<?> COPY_NUMBER_FIELD = field("copynumber", String.class);
 
     private PatientDataSource() {
@@ -53,10 +54,10 @@ class PatientDataSource {
     @NotNull
     static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers) {
         final DRDataSource copyNumberDatasource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
-                COPY_NUMBER_FIELD.getName());
+                COPY_NUMBER_TYPE_FIELD.getName(), COPY_NUMBER_FIELD.getName());
 
         for (final CopyNumberReport copyNumber : copyNumbers) {
-            copyNumberDatasource.add(copyNumber.gene(), copyNumber.transcript(),
+            copyNumberDatasource.add(copyNumber.gene(), copyNumber.transcript(), copyNumber.resolveType(),
                     Integer.toString(copyNumber.copyNumber()));
         }
 
@@ -81,7 +82,7 @@ class PatientDataSource {
 
     @NotNull
     static FieldBuilder<?>[] copyNumberFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, TRANSCRIPT_FIELD, COPY_NUMBER_FIELD };
+        return new FieldBuilder<?>[] { GENE_FIELD, TRANSCRIPT_FIELD, COPY_NUMBER_TYPE_FIELD, COPY_NUMBER_FIELD };
     }
 
     @NotNull

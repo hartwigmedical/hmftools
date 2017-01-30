@@ -176,6 +176,7 @@ public class PDFWriter {
                         .columns(
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             transcriptColumn(),
+                            col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
                         .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
