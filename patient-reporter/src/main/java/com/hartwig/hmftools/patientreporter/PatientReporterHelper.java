@@ -83,7 +83,11 @@ final class PatientReporterHelper {
             return Strings.EMPTY;
         }
 
-        assert valueForPatient.size() == 1;
+        if (valueForPatient.size() != 1) {
+            LOGGER.warn("No value found for " + TUMOR_TYPE_ECRF_FIELD + " in patient " + patientId);
+            return Strings.EMPTY;
+        }
+
         return valueForPatient.get(0);
     }
 
