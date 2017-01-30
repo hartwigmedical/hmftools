@@ -8,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 public class CopyNumberReport {
 
     @VisibleForTesting
-    static final String COPY_NUMBER_GAIN = "gain";
+    static final String COPY_NUMBER_GAIN = "copy-gain";
     @VisibleForTesting
-    static final String COPY_NUMBER_LOSS = "loss";
+    static final String COPY_NUMBER_LOSS = "copy-loss";
     @VisibleForTesting
     static final String COPY_NUMBER_NEUTRAL = "none";
 

@@ -32,7 +32,7 @@ public class PDFWriterTest {
         final VariantReport variant1 = new VariantReport.Builder().gene("BRAF").position("7:140453136").ref("A").alt(
                 "T").transcript("ENST00000288602.6").hgvsCoding("c.1799T>A").hgvsProtein("p.Val600Glu").consequence(
                 "missense variant").cosmicID("COSM476").alleleReadCount(34).totalReadCount(99).build();
-        final VariantReport variant2 = new VariantReport.Builder().gene("FGFR").position("4:1795557").ref("T").alt(
+        final VariantReport variant2 = new VariantReport.Builder().gene("FGFR3").position("4:1795557").ref("T").alt(
                 "C").transcript("ENST00000340107.4").hgvsCoding("c.-102-3T>C").hgvsProtein("").consequence(
                 "splice region variant").cosmicID("").alleleReadCount(12).totalReadCount(88).build();
         final VariantReport variant3 = new VariantReport.Builder().gene("GNAQ").position("9:80409488").ref("T").alt(
@@ -56,7 +56,7 @@ public class PDFWriterTest {
 
         // KODU: If you want to visually inspect the report, uncomment the below line!
 //        pdf.show().print();
-        //        pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
+        //                pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
     }
 
     @NotNull

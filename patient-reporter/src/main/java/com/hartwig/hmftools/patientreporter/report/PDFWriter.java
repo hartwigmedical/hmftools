@@ -88,19 +88,17 @@ public class PDFWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         cmp.text("HMF Sequencing Report - Additional Information").setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        geneSection(hmfSlicingRegion),
+                        filteringSection(hmfSlicingRegion),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberExplanationSection()
+                        copyNumberExplanationSection(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        disclaimerSection()
                 );
 
         final ComponentBuilder<?, ?> totalReport =
-                cmp.verticalList(
-                        reportMainPage,
-                        cmp.pageBreak(),
-                        helpPage
-                );
+                cmp.multiPageList().add(reportMainPage).newPage().add(helpPage);
         // @formatter:on
 
         return report().noData(totalReport);
@@ -151,7 +149,7 @@ public class PDFWriter {
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
                             transcriptColumn(),
-                            col.componentColumn("Effect", effectColumn()),
+                            col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
@@ -163,7 +161,8 @@ public class PDFWriter {
                 cmp.verticalGap(6),
                 table,
                 cmp.verticalGap(15),
-                cmp.text("Mutational Load: " + Integer.toString(report.mutationalLoad())).setStyle(tableHeaderStyle())
+                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()))
+                        .setStyle(tableHeaderStyle())
         );
         // @formatter:on
     }
@@ -189,12 +188,14 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneSection(@NotNull final Slicer hmfSlicingRegion) {
+    private static ComponentBuilder<?, ?> filteringSection(@NotNull final Slicer hmfSlicingRegion) {
         final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
-        final VerticalListBuilder section = toList("Details on filtering", Lists.newArrayList(
-                "The findings in this report are generated from whole-genome-sequencing analysis, "
-                        + "filtered on the following " + hmfSlicingRegion.numberOfRegions() + " genes.",
-                "The canonical transcripts used for the filtering cover " + coverage + " MBases."));
+        final VerticalListBuilder section = toList("Details on filtering",
+                Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
+                        "The results are filtered on the canonical transcripts for the set of below "
+                                + Integer.toString(hmfSlicingRegion.numberOfRegions()) + " genes (covering " + coverage
+                                + " MBases)",
+                        "The definition of canonical transcripts can be found on http://www.ensembl.org/Help/Glossary?id=346"));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
                 createGenePanel(hmfSlicingRegion.regions()));
@@ -229,33 +230,43 @@ public class PDFWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
-        return toList("Details on reported variant fields",
+        return toList("Details on reported genomic variant fields",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
                         "The 'position' refers to the chromosome and start base of the variant with "
-                                + "respect to the reference genome used.",
+                                + "respect to this reference genome.",
                         "The 'variant' displays what was expected as reference base and what "
-                                + "was found instead ('ref' > 'alt')",
+                                + "was found instead ('ref' > 'alt').",
                         "The 'transcript' provides a link to the ensembl definition of the transcript "
-                                + "used for filtering",
-                        "The 'effect' provides additional information on the variant, including "
+                                + "used for filtering.",
+                        "The 'predicted effect' provides additional information on the variant, including "
                                 + "the change in coding sequence ('c.'), the change in amino acid ('a.') and "
-                                + "the predicted impact on the final protein on the second line of this field",
+                                + "the predicted impact on the final protein on the second line of this field.",
                         "The 'cosmic' fields display a link to the COSMIC database which contains "
                                 + "additional information on the variant. If the variant could not be found in the "
-                                + "COSMIC database, this field will be left blank.",
+                                + "COSMIC database, this field will be left blank. The Cosmic v76 database is used "
+                                + "to look-up these IDs.",
                         "The 'VAF' fields displays the variant allele frequency. The first number is "
                                 + "the number of observations of the variant, and the second number is the total "
                                 + "number of observations on this position. The number within parentheses is the "
-                                + "allele frequency (the two numbers divided by each other)",
-                        "The mutational load is the total number of missense variants found in the genome."));
+                                + "allele frequency (the two numbers divided by each other).",
+                        "The tumor mutational load is the total number of somatic missense variants found across "
+                                + " the whole genome of the tumor biopsy."));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
         return toList("Details on reported copy numbers",
-                Lists.newArrayList("Copy numbers are determined for all genes filtered for in this report.",
-                        "The lowest copy number across the entire canonical transcript is determined.",
-                        "Any gene with a value of 0 or >3 is included in the list of findings"));
+                Lists.newArrayList("Copy numbers are determined for the genes filtered for in this report.",
+                        "The lowest copy number value along the region of the canonical transcript is determined as a measure for the gene's copy number.",
+                        "Any gene with a value of 0 (loss) or >3 (gain) is included in the list of findings."));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> disclaimerSection() {
+        return toList("Disclaimer", Lists.newArrayList("This test is not certified for diagnostic purposes.",
+                "The findings in this report are not meant to be used for clinical decision making without validation of "
+                        + "findings using certified assays.",
+                "When no mutations are reported, the absence of mutations is not guaranteed."));
     }
 
     @NotNull
@@ -321,7 +332,7 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> effectColumn() {
+    private static ComponentBuilder<?, ?> predictedEffectColumn() {
         return cmp.verticalList(
                 cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
