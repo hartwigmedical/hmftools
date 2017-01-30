@@ -26,5 +26,10 @@ public class VariantAnnotationTest {
                 VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm()));
         assertTrue(twoConsequences.consequenceString().contains(
                 VariantConsequence.INFRAME_DELETION.readableSequenceOntologyTerm()));
+
+        final VariantAnnotation twoConsequencesIgnoreOne = new VariantAnnotation.Builder().consequences(
+                Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.OTHER)).build();
+        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(),
+                twoConsequencesIgnoreOne.consequenceString());
     }
 }

@@ -81,10 +81,12 @@ public class VariantAnnotation {
     public String consequenceString() {
         String consequenceString = Strings.EMPTY;
         for (final VariantConsequence consequence : consequences) {
-            if (!consequenceString.isEmpty()) {
-                consequenceString += "; ";
+            if (!consequence.readableSequenceOntologyTerm().isEmpty()) {
+                if (!consequenceString.isEmpty()) {
+                    consequenceString += "; ";
+                }
+                consequenceString += consequence.readableSequenceOntologyTerm();
             }
-            consequenceString += consequence.readableSequenceOntologyTerm();
         }
         return consequenceString;
     }
