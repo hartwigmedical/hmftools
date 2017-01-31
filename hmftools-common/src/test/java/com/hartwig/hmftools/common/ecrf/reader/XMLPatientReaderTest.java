@@ -56,18 +56,18 @@ public class XMLPatientReaderTest {
 
         assertEquals(3, patients.get(0).fields().size());
         assertEquals(PATIENT_1, patients.get(0).patientId());
-        verifyFirstFieldValue("one", patients.get(0).fieldValues(field1));
-        verifyFirstFieldValue("hi", patients.get(0).fieldValues(field2));
-        verifyFirstFieldValue("2016-01-01", patients.get(0).fieldValues(birthDate));
+        verifyFirstFieldValue("one", patients.get(0).fieldValuesByEcrfField(field1));
+        verifyFirstFieldValue("hi", patients.get(0).fieldValuesByEcrfField(field2));
+        verifyFirstFieldValue("2016-01-01", patients.get(0).fieldValuesByEcrfField(birthDate));
 
         assertEquals(3, patients.get(1).fields().size());
         assertEquals(PATIENT_2, patients.get(1).patientId());
-        verifyFirstFieldValue("two", patients.get(1).fieldValues(field1));
-        verifyFirstFieldValue("hi there", patients.get(1).fieldValues(field2));
-        verifyFirstFieldValue("2016-01-01", patients.get(1).fieldValues(birthDate));
+        verifyFirstFieldValue("two", patients.get(1).fieldValuesByEcrfField(field1));
+        verifyFirstFieldValue("hi there", patients.get(1).fieldValuesByEcrfField(field2));
+        verifyFirstFieldValue("2016-01-01", patients.get(1).fieldValuesByEcrfField(birthDate));
     }
 
-    private static void verifyFirstFieldValue(@NotNull String expected, @Nullable List<String> values) {
+    private static void verifyFirstFieldValue(@NotNull final String expected, @Nullable final List<String> values) {
         assert values != null && values.size() == 1;
         assertEquals(expected, values.get(0));
     }

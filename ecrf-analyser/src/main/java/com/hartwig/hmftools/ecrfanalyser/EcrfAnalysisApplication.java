@@ -129,7 +129,7 @@ public class EcrfAnalysisApplication {
             for (final EcrfPatient patient : filteredPatients) {
                 String line = patient.patientId() + ": ";
                 for (final EcrfField field : filteredFields) {
-                    line += (field.name() + ":" + patient.fieldValues(field) + "   ");
+                    line += (field.name() + ":" + patient.fieldValuesByEcrfField(field) + "   ");
                 }
                 LOGGER.info(line);
             }
@@ -187,7 +187,7 @@ public class EcrfAnalysisApplication {
 
     @NotNull
     private static String extractFieldForPatient(@NotNull EcrfPatient patient, @NotNull EcrfField field) {
-        final List<String> values = patient.fieldValues(field);
+        final List<String> values = patient.fieldValuesByEcrfField(field);
         String finalValue = Strings.EMPTY;
         if (values != null && containsSomeValue(values)) {
             for (int i = 0; i < values.size(); i++) {

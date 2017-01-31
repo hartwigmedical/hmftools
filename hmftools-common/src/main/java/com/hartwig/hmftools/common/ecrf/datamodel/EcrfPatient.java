@@ -30,7 +30,17 @@ public class EcrfPatient {
     }
 
     @Nullable
-    public List<String> fieldValues(@NotNull EcrfField field) {
+    public List<String> fieldValuesByEcrfField(@NotNull final EcrfField field) {
         return fields.get(field);
+    }
+
+    @Nullable
+    public List<String> fieldValuesByName(@NotNull final String fieldName) {
+        for (final EcrfField field : fields.keySet()) {
+            if (field.name().equals(fieldName)) {
+                return fieldValuesByEcrfField(field);
+            }
+        }
+        return null;
     }
 }

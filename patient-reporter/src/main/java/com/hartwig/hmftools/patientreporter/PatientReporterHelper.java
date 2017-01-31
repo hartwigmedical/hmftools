@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -71,24 +70,20 @@ final class PatientReporterHelper {
             return Strings.EMPTY;
         }
 
-        final EcrfField tumorTypeField = cpctEcrfModel.findFieldById(TUMOR_TYPE_ECRF_FIELD);
-        if (tumorTypeField == null) {
-            LOGGER.warn("Could not find field " + TUMOR_TYPE_ECRF_FIELD + " in CPCT ECRF database!");
-            return Strings.EMPTY;
-        }
-
-        final List<String> valueForPatient = patient.fieldValues(tumorTypeField);
-        if (valueForPatient == null) {
+        final List<String> tumorTypesForPatient = patient.fieldValuesByName(TUMOR_TYPE_ECRF_FIELD);
+        if (tumorTypesForPatient == null) {
             LOGGER.warn("Could not find field " + TUMOR_TYPE_ECRF_FIELD + " in patient " + patientId);
             return Strings.EMPTY;
         }
 
-        if (valueForPatient.size() != 1) {
+        if (tumorTypesForPatient.size() == 0) {
             LOGGER.warn("No value found for " + TUMOR_TYPE_ECRF_FIELD + " in patient " + patientId);
             return Strings.EMPTY;
         }
 
-        return valueForPatient.get(0);
+        // KODU: We should never have more than one tumor type for a single patient.
+        assert tumorTypesForPatient.size() == 1;
+        return tumorTypesForPatient.get(0);
     }
 
     @Nullable
