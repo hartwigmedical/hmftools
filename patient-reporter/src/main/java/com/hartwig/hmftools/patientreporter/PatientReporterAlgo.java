@@ -106,7 +106,7 @@ class PatientReporterAlgo {
         LOGGER.info(" Loading genomic data...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
         final String sample = variantFile.sample();
-        LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for " + sample);
+        LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for sample " + sample);
 
         final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
         LOGGER.info("  " + copyNumbers.size() + " copy number regions loaded for sample " + sample);
