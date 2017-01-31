@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -29,5 +30,8 @@ public class MNVDetectorTest {
 
         assertTrue(potentialMNVs.contains(potentialMNV));
         assertFalse(potentialMNVs.contains(nonMNV));
+
+        // KODU: Make sure the reported variants are not changed by the detector!
+        assertEquals(2, reportedVariants.size());
     }
 }

@@ -17,9 +17,10 @@ final class MNVDetector {
     @NotNull
     static List<SomaticVariant> locatePotentialMNVs(@NotNull final List<SomaticVariant> allVariants,
             @NotNull final List<SomaticVariant> reportedVariants) {
+        final List<SomaticVariant> copyOfReportedVariants = Lists.newArrayList(reportedVariants);
         final List<SomaticVariant> potentialMNVs = Lists.newArrayList();
         for (final SomaticVariant variant : allVariants) {
-            reportedVariants.stream().filter(
+            copyOfReportedVariants.stream().filter(
                     reportVariant -> variant.chromosome().equals(reportVariant.chromosome())).forEach(
                     reportVariant -> {
                         final long distance = Math.abs(variant.position() - reportVariant.position());
@@ -29,7 +30,7 @@ final class MNVDetector {
                     });
 
             // KODU: Performance optimization, once an MNV -> always an MNV!
-            potentialMNVs.stream().filter(reportedVariants::contains).forEach(reportedVariants::remove);
+            potentialMNVs.stream().filter(copyOfReportedVariants::contains).forEach(copyOfReportedVariants::remove);
         }
 
         return potentialMNVs;
