@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import net.sf.dynamicreports.report.exception.DRException;
 
-public class PatientReporterApplicationTest {
+public class PatientReporterAlgoTest {
 
     private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
     private static final String BED_DIRECTORY = Resources.getResource("bed").getPath();
@@ -37,7 +37,7 @@ public class PatientReporterApplicationTest {
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(slicer);
-        new PatientReporterApplication(RUN_DIRECTORY, buildTestCpctEcrfModel(), variantAnalyzer, copyNumberAnalyzer,
+        new PatientReporterAlgo(RUN_DIRECTORY, buildTestCpctEcrfModel(), variantAnalyzer, copyNumberAnalyzer,
                 null, null, false).run();
     }
 

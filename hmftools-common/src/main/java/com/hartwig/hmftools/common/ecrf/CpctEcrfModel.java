@@ -55,8 +55,12 @@ public class CpctEcrfModel {
         return fields;
     }
 
+    public int patientCount() {
+        return Lists.newArrayList(patients).size();
+    }
+
     @NotNull
-    public Iterable<EcrfPatient> findPatientsById(@NotNull Iterable<String> patientIds) {
+    public Iterable<EcrfPatient> findPatientsById(@NotNull final Iterable<String> patientIds) {
         final List<EcrfPatient> filteredPatients = Lists.newArrayList();
         for (final String patientId : patientIds) {
             final EcrfPatient patient = findPatientById(patientId);
@@ -81,7 +85,7 @@ public class CpctEcrfModel {
     }
 
     @NotNull
-    public Iterable<EcrfField> findFieldsById(@NotNull Iterable<String> fieldIds) {
+    public Iterable<EcrfField> findFieldsById(@NotNull final Iterable<String> fieldIds) {
         final List<EcrfField> filteredFields = Lists.newArrayList();
         for (final String fieldId : fieldIds) {
             final EcrfField field = findFieldById(fieldId);
@@ -95,7 +99,7 @@ public class CpctEcrfModel {
     }
 
     @Nullable
-    public EcrfField findFieldById(@NotNull final String fieldId) {
+    private EcrfField findFieldById(@NotNull final String fieldId) {
         for (final EcrfField field : fields) {
             if (field.name().equals(fieldId)) {
                 return field;
