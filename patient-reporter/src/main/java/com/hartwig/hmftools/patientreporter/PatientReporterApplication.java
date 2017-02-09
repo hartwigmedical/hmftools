@@ -55,29 +55,32 @@ public class PatientReporterApplication {
     private static final String BATCH_MODE_ARGS_DESC = "If set, runs in batch mode (Caution!!! Korneel Only)";
     private static final String BATCH_MODE = "batch_mode";
 
+    private static final String NOT_SEQUENCEABLE_ARGS_DESC = "if set, generates a non-sequenceable report.";
+    private static final String NOT_SEQUENCEABLE = "not_sequenceable";
+
+    private static final String NOT_SEQUENCEABLE_REASON_ARGS_DESC = "Either 'low_tumor_percentage' or 'low_dna_yield'";
+    private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
+
+    private static final String NOT_SEQUENCEABLE_SAMPLE_ARGS_DESC = "The sample that cannot be sequenced.";
+    private static final String NOT_SEQUENCEABLE_SAMPLE = "sample";
+
     public static void main(final String... args)
             throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
+        final HelpFormatter formatter = new HelpFormatter();
 
-        final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
-        final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
         final String hmfLogo = cmd.getOptionValue(HMF_LOGO);
         final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
-        final boolean batchMode = cmd.hasOption(BATCH_MODE);
 
-        if (runDirectory == null || cpctSlicingBed == null || highConfidenceBed == null || hmfSlicingBed == null
-                || cpctEcrf == null) {
-            final HelpFormatter formatter = new HelpFormatter();
+        final boolean notSequenceable = cmd.hasOption(NOT_SEQUENCEABLE);
+
+        if (cpctEcrf == null || hmfSlicingBed == null) {
             formatter.printHelp("Patient-Reporter", options);
             System.exit(1);
-        }
-
-        if (!validInput(runDirectory, cpctSlicingBed, highConfidenceBed, hmfSlicingBed, cpctEcrf, hmfLogo,
-                outputDirectory)) {
+        } else if (!validGeneralInput(cpctEcrf, hmfSlicingBed, hmfLogo, outputDirectory)) {
             System.exit(1);
         }
 
@@ -87,16 +90,44 @@ public class PatientReporterApplication {
         if (outputDirectory != null && hmfLogo != null) {
             pdfWriter = new PDFWriter(outputDirectory, hmfLogo, hmfSlicingRegion);
         }
-        LOGGER.info("Running patient reporter on " + runDirectory);
-        LOGGER.info(" Loading ECRF database...");
-        final CpctEcrfModel cpctEcrfModel = CpctEcrfModel.loadFromXML(cpctEcrf);
-        LOGGER.info("  Loaded data for " + cpctEcrfModel.patientCount() + " patients.");
 
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
-                SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
-        final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
-        new PatientReporterAlgo(runDirectory, cpctEcrfModel, variantAnalyzer, copyNumberAnalyzer,
-                outputDirectory, pdfWriter, batchMode).run();
+        if (notSequenceable) {
+            final NotSequenceableReason notSequenceableReason = NotSequenceableReason.fromIdentifier(
+                    cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
+            final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
+            if (pdfWriter == null || notSequenceableReason == NotSequenceableReason.OTHER
+                    || notSequenceableSample == null) {
+                formatter.printHelp("Patient-Reporter", options);
+                System.exit(1);
+            }
+
+            pdfWriter.writeNonSequenceableReport(notSequenceableReason, notSequenceableSample);
+        } else {
+            final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
+            final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
+            final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+            final boolean batchMode = cmd.hasOption(BATCH_MODE);
+
+            if (runDirectory == null || cpctSlicingBed == null || highConfidenceBed == null) {
+                formatter.printHelp("Patient-Reporter", options);
+                System.exit(1);
+            }
+
+            if (!validReportInput(runDirectory, cpctSlicingBed, highConfidenceBed)) {
+                System.exit(1);
+            }
+
+            LOGGER.info("Running patient reporter on " + runDirectory);
+            LOGGER.info(" Loading ECRF database...");
+            final CpctEcrfModel cpctEcrfModel = CpctEcrfModel.loadFromXML(cpctEcrf);
+            LOGGER.info("  Loaded data for " + cpctEcrfModel.patientCount() + " patients.");
+
+            final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
+                    SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
+            final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
+            new PatientReporterAlgo(runDirectory, cpctEcrfModel, variantAnalyzer, copyNumberAnalyzer, outputDirectory,
+                    pdfWriter, batchMode).run();
+        }
     }
 
     @NotNull
@@ -111,6 +142,9 @@ public class PatientReporterApplication {
         options.addOption(HMF_LOGO, true, HMF_LOGO_ARGS_DESC);
         options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_ARGS_DESC);
         options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
+        options.addOption(NOT_SEQUENCEABLE, false, NOT_SEQUENCEABLE_ARGS_DESC);
+        options.addOption(NOT_SEQUENCEABLE_REASON, true, NOT_SEQUENCEABLE_REASON_ARGS_DESC);
+        options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, NOT_SEQUENCEABLE_SAMPLE_ARGS_DESC);
 
         return options;
     }
@@ -122,23 +156,31 @@ public class PatientReporterApplication {
         return parser.parse(options, args);
     }
 
-    private static boolean validInput(@NotNull final String runDirectory, @NotNull final String cpctSlicingBed,
-            @NotNull final String highConfidenceBed, @NotNull final String hmfSlicingBed,
-            @NotNull final String cpctEcrf, @Nullable final String hmfLogo, @Nullable final String outputDirectory) {
+    private static boolean validGeneralInput(@NotNull final String cpctEcrf, @NotNull final String hmfSlicingBed,
+            @Nullable final String hmfLogo, @Nullable final String outputDirectory) {
+        if (!exists(cpctEcrf)) {
+            LOGGER.warn(CPCT_ECRF + " has to be an existing file!");
+        } else if (!exists(hmfSlicingBed)) {
+            LOGGER.warn(HMF_SLICING_BED + " has to be an existing file!");
+        } else if (hmfLogo != null && !exists(hmfLogo)) {
+            LOGGER.warn(HMF_LOGO + " has to be an existing file!");
+        } else if (outputDirectory != null && (!exists(outputDirectory) || !isDirectory(outputDirectory))) {
+            LOGGER.warn(OUTPUT_DIR + " has to be an existing directory!");
+        } else {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean validReportInput(@NotNull final String runDirectory, @NotNull final String cpctSlicingBed,
+            @NotNull final String highConfidenceBed) {
         if (!exists(runDirectory) || !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory!");
         } else if (!exists(cpctSlicingBed)) {
             LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file!");
         } else if (!exists(highConfidenceBed)) {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file!");
-        } else if (!exists(hmfSlicingBed)) {
-            LOGGER.warn(HMF_SLICING_BED + " has to be an existing file!");
-        } else if (!exists(cpctEcrf)) {
-            LOGGER.warn(CPCT_ECRF + " has to be an existing file!");
-        } else if (hmfLogo != null && !exists(hmfLogo)) {
-            LOGGER.warn(HMF_LOGO + " has to be an existing file!");
-        } else if (outputDirectory != null && (!exists(outputDirectory) || !isDirectory(outputDirectory))) {
-            LOGGER.warn(OUTPUT_DIR + " has to be an existing directory!");
         } else {
             return true;
         }

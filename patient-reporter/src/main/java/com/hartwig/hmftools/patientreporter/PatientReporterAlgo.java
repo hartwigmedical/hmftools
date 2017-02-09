@@ -67,7 +67,7 @@ class PatientReporterAlgo {
         } else {
             final PatientReport report = patientRun();
             if (pdfWriter != null) {
-                final String pdfReport = pdfWriter.write(report);
+                final String pdfReport = pdfWriter.writeSequenceReport(report);
                 LOGGER.info("  Written PDF report to " + pdfReport);
 
             }

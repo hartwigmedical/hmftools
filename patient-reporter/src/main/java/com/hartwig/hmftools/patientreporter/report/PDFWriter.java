@@ -15,6 +15,7 @@ import java.util.Collection;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
@@ -59,13 +60,24 @@ public class PDFWriter {
     }
 
     @NotNull
-    public String write(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
-        final String fileName = outputDirectory + File.separator + report.sample() + "_hmf_report.pdf";
+    public String writeSequenceReport(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
+        final String fileName = fileName(report.sample());
         final JasperReportBuilder jasperReportBuilder = generatePatientReport(report, hmfLogo, hmfSlicingRegion);
 
         jasperReportBuilder.toPdf(new FileOutputStream(fileName));
 
         return fileName;
+    }
+
+    @NotNull
+    public String writeNonSequenceableReport(@NotNull final NotSequenceableReason reason,
+            @NotNull final String sample) {
+        return fileName(sample);
+    }
+
+    @NotNull
+    private String fileName(@NotNull final String sample) {
+        return outputDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
     @VisibleForTesting
