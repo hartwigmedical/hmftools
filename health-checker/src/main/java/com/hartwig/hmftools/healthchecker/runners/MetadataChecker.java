@@ -9,6 +9,11 @@ import java.util.Locale;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.LineReader;
@@ -20,10 +25,6 @@ import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.MetadataCheck;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 @SuppressWarnings("WeakerAccess")
 @ResourceWrapper(type = CheckType.METADATA)
 public class MetadataChecker extends ErrorHandlingChecker implements HealthChecker {
@@ -32,9 +33,11 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
 
     private static final String LOG_FILENAME_FORMAT = "%s.log";
     private static final String DATE_OUT_FORMAT = "yyyy-MM-dd";
-    private static final String DATE_IN_FORMAT =
-            "[EEE MMM d HH:mm:ss z yyyy]" + "[EEE d MMM HH:mm:ss z yyyy]" + "[EEE d MMM yyyy HH:mm:ss z]"
-                    + "[EEE MMM d yyyy HH:mm:ss z]";
+    private static final String DATE_IN_FORMAT = "[EEE MMM d HH:mm:ss z yyyy]"
+                                                 + "[EEE MMM ppd HH:mm:ss z yyyy]"
+                                                 + "[EEE d MMM HH:mm:ss z yyyy]"
+                                                 + "[EEE d MMM yyyy HH:mm:ss z]"
+                                                 + "[EEE MMM d yyyy HH:mm:ss z]";
     private static final String SOMATIC_LINE_TO_GET_DATE_FROM = "End Kinship";
     private static final String SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM = "End germline variant annotation";
     private static final String DATE_LINE_FIELD_SEPARATOR = "\t";
@@ -114,8 +117,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
                 doesLineStartWith(SOMATIC_LINE_TO_GET_DATE_FROM) :
                 doesLineStartWith(SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM);
         List<String> dateLine = LineReader.build().readLines(dateTimeLogPath, dateLineFilter);
-        // KODU: Replacing all double spaces with single spaces to solve issue mentioned in run2 of MetadataCheckerTest
-        final String date = dateLine.get(0).split(DATE_LINE_FIELD_SEPARATOR)[1].trim().replaceAll("  ", " ");
+        final String date = dateLine.get(0).split(DATE_LINE_FIELD_SEPARATOR)[1].trim();
         final DateTimeFormatter inFormatter = DateTimeFormatter.ofPattern(DATE_IN_FORMAT, Locale.ENGLISH);
         final LocalDateTime formattedDate = LocalDateTime.parse(date, inFormatter);
         final DateTimeFormatter outFormatter = DateTimeFormatter.ofPattern(DATE_OUT_FORMAT, Locale.ENGLISH);
