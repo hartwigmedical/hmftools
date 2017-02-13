@@ -1,24 +1,26 @@
-Check and cleanup for run: run2
-Pipeline version: v1.11-rc.2
+Check and cleanup for run: sam_pipeline_test_single
+Pipeline version: v1.12
 
-Sample: CPCT02080052R
-	PreStats: done
-	Mapping: done
-	Realignment: done
-
-Sample: CPCT02080052T
-	PreStats: done
-	Mapping: done
-	Realignment: done
-
-PostStats: done
-GermlineCaller: done
-GermlineFilter: done
-GermlineAnnotation: done
-Somatic variants:
-	sample1_sample2: done
-Copy number analysis:
-	sample1_sample2: done
-Kinship: done
+PreStats_CPCT12345678T_HJJLGCCXX_S1_L001_R1_001.fastq.gz.done: succeeded
+PreStats_CPCT12345678T_HJJLGCCXX_S1_L001_R2_001.fastq.gz.done: succeeded
+PreStats_CPCT12345678R_HJJLGCCXX_S1_L001_R1_001.fastq.gz.done: succeeded
+PreStats_CPCT12345678R_HJJLGCCXX_S1_L001_R2_001.fastq.gz.done: succeeded
+PerLaneConvert_CPCT12345678T_HJJLGCCXX_S1_L001_001.done: succeeded
+PerLaneConvert_CPCT12345678R_HJJLGCCXX_S1_L001_001.done: succeeded
+Mapping_CPCT12345678T.done: succeeded
+Mapping_CPCT12345678R.done: succeeded
+PostStats.done: succeeded
+PostStats.done: succeeded
+Realignment_CPCT12345678T.done: succeeded
+Realignment_CPCT12345678T.done: succeeded
+Realignment_CPCT12345678R.done: succeeded
+Realignment_CPCT12345678R.done: succeeded
+CPCT12345678T.done: succeeded
+Freec.done: succeeded
+CPCT12345678R.done: succeeded
+Freec.done: succeeded
+GermlineCalling.done: succeeded
+GermlineFiltering.done: succeeded
+GermlineAnnotation.done: succeeded
 
 The pipeline completed successfully.

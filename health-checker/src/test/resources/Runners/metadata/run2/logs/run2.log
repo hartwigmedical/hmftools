@@ -1,8 +1,12 @@
-Start poststats	Fri Dec 30 22:36:08 CET 2016	hmfpcompute-india4-6
-End poststats	Sat Dec 31 09:23:38 CET 2016	hmfpcompute-india4-13
-Start germline variant caller	Sat Dec 31 14:08:23 CET 2016	hmfpcompute-india4-18
-End germline variant caller	Sun Jan  1 08:30:45 CET 2017	hmfpcompute-india4-18
-Start germline variant filter	Sun Jan  1 08:30:53 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.raw_variants.vcf	hmfpcompute-india4-18
-End germline variant filter	Sun Jan  1 09:09:42 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.raw_variants.vcf	hmfpcompute-india4-18
-Start germline variant annotation	Sun Jan  1 10:59:38 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.filtered_variants.vcf	hmfpcompute-india4-7
-End germline variant annotation	Sun Jan  1 19:51:55 CET 2017	161225_HMFregCPCT_FR12246216_FR12246094_CPCT02080052.filtered_variants.vcf	hmfpcompute-india4-6
+Start	PostStats	Sun Jan  1 09:37:24 CET 2017		crunch001
+End	PostStats	Sun Jan  1 09:47:55 CET 2017		crunch001
+Start	PostStatsCheck	Sun Jan  1 09:48:54 CET 2017		crunch001
+End	PostStatsCheck	Sun Jan  1 09:48:54 CET 2017		crunch001
+Start	GermlineCalling	Sun Jan  1 09:52:54 CET 2017		crunch001
+End	GermlineCalling	Sun Jan  1 10:50:43 CET 2017		crunch001
+Start	GermlineFiltering	Sun Jan  1 10:50:54 CET 2017	/data2/processed/sam_pipeline_test_single/sam_pipeline_test_single.raw_variants.vcf	crunch001
+End	GermlineFiltering	Sun Jan  1 10:53:34 CET 2017	/data2/processed/sam_pipeline_test_single/sam_pipeline_test_single.raw_variants.vcf	crunch001
+Start	GermlineAnnotation	Sun Jan  1 10:53:39 CET 2017	/data2/processed/sam_pipeline_test_single/sam_pipeline_test_single.annotated.vcf	crunch001
+End	GermlineAnnotation	Sun Jan  1 10:57:17 CET 2017	/data2/processed/sam_pipeline_test_single/sam_pipeline_test_single.annotated.vcf	crunch001
+Start	Finalize	Sun Jan  1 10:57:24 CET 2017		crunch001
+End	Finalize	Sun Jan  1 10:57:24 CET 2017		crunch001

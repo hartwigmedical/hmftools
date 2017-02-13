@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import static com.google.common.collect.Iterables.getLast;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -38,12 +40,12 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
                                                  + "[EEE d MMM HH:mm:ss z yyyy]"
                                                  + "[EEE d MMM yyyy HH:mm:ss z]"
                                                  + "[EEE MMM d yyyy HH:mm:ss z]";
-    private static final String SOMATIC_LINE_TO_GET_DATE_FROM = "End Kinship";
-    private static final String SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM = "End germline variant annotation";
+    private static final String SOMATIC_LINE_TO_GET_DATE_FROM_REGEX = "End\\s+(Kinship|Finalize)";
+    private static final String SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM_REGEX = "End\\s+(germline variant annotation|Finalize)";
     private static final String DATE_LINE_FIELD_SEPARATOR = "\t";
 
     private static final String PIPELINE_LOG_REGEX = "PipelineCheck.log";
-    private static final String PIPELINE_VERSION = "Pipeline version:";
+    private static final String PIPELINE_VERSION_REGEX = "Pipeline version:";
     private static final String PIPELINE_VERSION_LINE_SEPARATOR = ":";
     private static final int PIPELINE_VERSION_LINE_INDEX = 0;
 
@@ -114,10 +116,10 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
         final Path dateTimeLogPath = PathRegexFinder.build().findPath(runContext.runDirectory(),
                 String.format(LOG_FILENAME_FORMAT, runContext.runName()));
         final Predicate<String> dateLineFilter = runContext.isSomaticRun() ?
-                doesLineStartWith(SOMATIC_LINE_TO_GET_DATE_FROM) :
-                doesLineStartWith(SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM);
-        List<String> dateLine = LineReader.build().readLines(dateTimeLogPath, dateLineFilter);
-        final String date = dateLine.get(0).split(DATE_LINE_FIELD_SEPARATOR)[1].trim();
+                                                 doesLineMatch(SOMATIC_LINE_TO_GET_DATE_FROM_REGEX) :
+                                                 doesLineMatch(SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM_REGEX);
+        List<String> dateLines = LineReader.build().readLines(dateTimeLogPath, dateLineFilter);
+        final String date = datePart(getLast(dateLines).split(DATE_LINE_FIELD_SEPARATOR));
         final DateTimeFormatter inFormatter = DateTimeFormatter.ofPattern(DATE_IN_FORMAT, Locale.ENGLISH);
         final LocalDateTime formattedDate = LocalDateTime.parse(date, inFormatter);
         final DateTimeFormatter outFormatter = DateTimeFormatter.ofPattern(DATE_OUT_FORMAT, Locale.ENGLISH);
@@ -125,25 +127,34 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
+    private static String datePart(@NotNull String[] parts) {
+        if (parts[0].contains(" ")) {
+            return parts[1].trim();
+        } else {
+            return parts[2].trim();
+        }
+    }
+
+    @NotNull
     private static String extractPipelineVersion(@NotNull final String runDirectory)
             throws IOException, HartwigException {
         final Path pipelineLogPath = PathRegexFinder.build().findPath(runDirectory, PIPELINE_LOG_REGEX);
         final List<String> versionsLine = LineReader.build().readLines(pipelineLogPath,
-                doesLineStartWith(PIPELINE_VERSION));
+                                                                       doesLineMatch(PIPELINE_VERSION_REGEX));
         return versionsLine.get(PIPELINE_VERSION_LINE_INDEX).split(PIPELINE_VERSION_LINE_SEPARATOR)[1].trim();
     }
 
     @NotNull
-    private static Predicate<String> doesLineStartWith(@NotNull final String prefix) {
+    private static Predicate<String> doesLineMatch(@NotNull final String regex) {
         return new Predicate<String>() {
             @Override
             public boolean test(final String line) {
-                return line.startsWith(prefix);
+                return line.matches(String.format("%s.*", regex));
             }
 
             @Override
             public String toString() {
-                return prefix;
+                return String.format("doesLineMatch %s", regex);
             }
         };
     }

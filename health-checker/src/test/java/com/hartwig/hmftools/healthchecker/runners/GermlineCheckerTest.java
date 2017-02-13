@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
+
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
@@ -16,13 +19,12 @@ import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.GermlineCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
-import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
-
 public class GermlineCheckerTest {
 
     private static final String RUN_DIRECTORY =
             RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run";
+    private static final String RUN_DIRECTORY_V1_10 =
+            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run_v1_10";
     private static final String RUN_DIRECTORY_V1_9 =
             RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run_v1_9";
     private static final String SINGLE_SAMPLE_RUN =
@@ -66,12 +68,24 @@ public class GermlineCheckerTest {
     }
 
     @Test
-    public void canCountSNPAndV1_9InSomatic() throws IOException, HartwigException {
+    public void canCountSNPAndIndels_V1_10() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_V1_10, REF_SAMPLE, TUMOR_SAMPLE);
+        final PatientResult result = (PatientResult) checker.tryRun(runContext);
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getRefSampleChecks().size());
+        assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getTumorSampleChecks().size());
+        assertChecks(result.getRefSampleChecks(), EXPECTED_REF_SNPS, EXPECTED_REF_INDELS);
+        assertChecks(result.getTumorSampleChecks(), EXPECTED_TUMOR_SNPS, EXPECTED_TUMOR_INDELS);
+    }
+
+    @Test
+    public void canCountSNPAndIndelsV1_9InSomatic() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_V1_9, REF_SAMPLE,
                 TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.tryRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getRefSampleChecks().size());
         assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getTumorSampleChecks().size());
+        assertChecks(result.getRefSampleChecks(), 1, 0);
+        assertChecks(result.getTumorSampleChecks(), 1, 0);
     }
 
     @Test

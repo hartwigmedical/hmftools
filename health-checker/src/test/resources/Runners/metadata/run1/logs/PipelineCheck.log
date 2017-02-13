@@ -1,25 +1,30 @@
-Check and cleanup for run: run1
-Pipeline version: v1.7
+Check and cleanup for run: 170123_HMFregSABR_FR12345678_FR12345678_CPCT12345678
+Pipeline version: v1.12
 
-
-Sample: sample1
-	 PreStats: done
-	 Mapping: done
-	 Indel realignment: done
-
-Sample: sample2
-	 PreStats: done
-	 Mapping: done
-	 Indel realignment: done
-
-PostStats: done
-Variant caller: done
-Somatic variants:
-	 sample1_sample2: done
-Copy number analysis:
-	 sample1_sample2: done
-Variant filter: done
-Variant annotation: done
-VCF Utils: done
+PreStats_CPCT12345678T_HJJLGCCXX_S1_L001_R1_001.fastq.gz.done: succeeded
+PreStats_CPCT12345678T_HJJLGCCXX_S1_L001_R2_001.fastq.gz.done: succeeded
+PreStats_CPCT12345678R_HJJLGCCXX_S1_L001_R1_001.fastq.gz.done: succeeded
+PreStats_CPCT12345678R_HJJLGCCXX_S1_L001_R2_001.fastq.gz.done: succeeded
+PerLaneConvert_CPCT12345678T_HJJLGCCXX_S1_L001_001.done: succeeded
+PerLaneConvert_CPCT12345678R_HJJLGCCXX_S1_L001_001.done: succeeded
+Mapping_CPCT12345678T.done: succeeded
+Mapping_CPCT12345678R.done: succeeded
+PostStats.done: succeeded
+PostStats.done: succeeded
+Realignment_CPCT12345678T.done: succeeded
+Realignment_CPCT12345678T.done: succeeded
+Realignment_CPCT12345678R.done: succeeded
+Realignment_CPCT12345678R.done: succeeded
+CPCT12345678R_CPCT12345678T.done: succeeded
+Freebayes.done: succeeded
+Mutect.done: succeeded
+Strelka.done: succeeded
+Varscan.done: succeeded
+CPCT12345678R_CPCT12345678T.done: succeeded
+Freec.done: succeeded
+GermlineCalling.done: succeeded
+GermlineFiltering.done: succeeded
+GermlineAnnotation.done: succeeded
+Kinship.done: succeeded
 
 The pipeline completed successfully.

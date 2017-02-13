@@ -5,6 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -18,10 +23,6 @@ import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.GermlineCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 @SuppressWarnings("WeakerAccess")
 @ResourceWrapper(type = CheckType.GERMLINE)
 public class GermlineChecker extends ErrorHandlingChecker implements HealthChecker {
@@ -29,7 +30,7 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     private static final Logger LOGGER = LogManager.getLogger(GermlineChecker.class);
 
     private static final String GERMLINE_VCF_EXTENSION_V1_9 = "_GoNLv5.vcf";
-    private static final String GERMLINE_VCF_EXTENSION_V1_10 = ".filtered_variants.annotated.vcf";
+    private static final String GERMLINE_VCF_EXTENSION_V1_10 = ".annotated.vcf";
 
     public GermlineChecker() {
     }
