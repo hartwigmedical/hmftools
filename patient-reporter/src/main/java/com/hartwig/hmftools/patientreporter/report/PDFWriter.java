@@ -182,9 +182,20 @@ public class PDFWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequenceableReason reason) {
-        return toList("About this report",
-                Lists.newArrayList("This biopsy could not be analyzed for the following reason: " + reason.message(),
-                        "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
+        final String reasonString;
+        switch (reason) {
+            case LOW_DNA_YIELD:
+                reasonString = "The biopsy has not been analyzed because of low DNA yield from the biopsy";
+                break;
+            case LOW_TUMOR_PERCENTAGE:
+                reasonString = "The biopsy could not be analyzed because the biopsy contained less than 30% tumor cells";
+                break;
+            default:
+                reasonString = "ERROR";
+        }
+
+        return toList("About this report", Lists.newArrayList(reasonString,
+                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
 
     @NotNull

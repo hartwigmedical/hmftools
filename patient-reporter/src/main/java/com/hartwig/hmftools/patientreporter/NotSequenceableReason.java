@@ -5,28 +5,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum NotSequenceableReason {
-    LOW_TUMOR_PERCENTAGE("low_tumor_percentage", "Tumor Percentage <30% in biopsy"),
-    LOW_DNA_YIELD("low_dna_yield", "Not enough DNA available from biopsy"),
-    OTHER(Strings.EMPTY, Strings.EMPTY);
+    LOW_TUMOR_PERCENTAGE("low_tumor_percentage"),
+    LOW_DNA_YIELD("low_dna_yield"),
+    OTHER(Strings.EMPTY);
 
     @NotNull
     private final String identifier;
-    @NotNull
-    private final String message;
 
-    NotSequenceableReason(@NotNull final String identifier, @NotNull final String message) {
+    NotSequenceableReason(@NotNull final String identifier) {
         this.identifier = identifier;
-        this.message = message;
     }
 
     @NotNull
     String identifier() {
         return identifier;
-    }
-
-    @NotNull
-    public String message() {
-        return message;
     }
 
     @NotNull

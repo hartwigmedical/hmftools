@@ -73,7 +73,7 @@ public class PDFWriterTest {
     public void canGenerateNotSequenceableReport() throws DRException, FileNotFoundException {
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
-        final NotSequenceableReason reason = NotSequenceableReason.LOW_DNA_YIELD;
+        final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
 
         final JasperReportBuilder pdf = PDFWriter.generateNotSequenceableReport(sample, tumorType, reason, HMF_LOGO);
         assertNotNull(pdf);
@@ -83,7 +83,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/low_dna_yield_report.pdf"));
+            pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
     }
 
