@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.report;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -22,6 +23,9 @@ import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriterTest {
+
+    private static final boolean SHOW_AND_PRINT = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
     private static final String HMF_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
@@ -54,9 +58,13 @@ public class PDFWriterTest {
         final JasperReportBuilder pdf = PDFWriter.generatePatientReport(report, HMF_LOGO, createHMFSlicingRegion());
         assertNotNull(pdf);
 
-        // KODU: If you want to visually inspect the report, uncomment the below line!
-//        pdf.show().print();
-        //                pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
+        if (SHOW_AND_PRINT) {
+            pdf.show().print();
+        }
+
+        if (WRITE_TO_PDF) {
+            pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
+        }
     }
 
     @NotNull

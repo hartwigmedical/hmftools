@@ -11,15 +11,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Collection;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -70,8 +73,8 @@ public class PDFWriter {
     }
 
     @NotNull
-    public String writeNonSequenceableReport(@NotNull final NotSequenceableReason reason,
-            @NotNull final String sample) {
+    public String writeNonSequenceableReport(@NotNull final String sample, @NotNull String tumorType,
+            @NotNull final NotSequenceableReason reason) {
         return fileName(sample);
     }
 
@@ -87,13 +90,13 @@ public class PDFWriter {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
-                        mainPageTopSection(report, hmfLogoPath),
+                        mainPageTopSection(report.sample(), report.tumorType(), hmfLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(report),
+                        variantReport(report.variants(), Integer.toString(report.mutationalLoad())),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(report));
+                        copyNumberReport(report.copyNumbers()));
 
         final ComponentBuilder<?, ?> helpPage =
                 cmp.verticalList(
@@ -117,8 +120,8 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final PatientReport report,
-            @NotNull final String hmfLogoPath) {
+    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample,
+            @NotNull final String tumorType, @NotNull final String hmfLogoPath) {
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
@@ -126,13 +129,13 @@ public class PDFWriter {
                         cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
                 cmp.verticalList(
                         cmp.text("Tumor Type").setStyle(tableHeaderStyle()),
-                        cmp.text(report.tumorType()).setStyle(dataTableStyle()))
+                        cmp.text(tumorType).setStyle(dataTableStyle()))
         );
 
         return cmp.horizontalList(
                 cmp.image(hmfLogoPath),
                 cmp.verticalList(
-                        cmp.text("HMF Sequencing Report - " + report.sample()).
+                        cmp.text("HMF Sequencing Report - " + sample).
                                 setStyle(fontStyle().bold().setFontSize(14)
                                         .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
@@ -152,9 +155,10 @@ public class PDFWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
+    private static ComponentBuilder<?, ?> variantReport(@NotNull final List<VariantReport> variants,
+            @NotNull final String mutationalLoadString) {
         // @formatter:off
-        final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
+        final ComponentBuilder<?, ?> table = variants.size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
                         .columns(
                             col.column("Gene", PatientDataSource.GENE_FIELD),
@@ -165,7 +169,7 @@ public class PDFWriter {
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
-                        .setDataSource(PatientDataSource.fromVariants(report.variants())) :
+                        .setDataSource(PatientDataSource.fromVariants(variants)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
@@ -173,23 +177,22 @@ public class PDFWriter {
                 cmp.verticalGap(6),
                 table,
                 cmp.verticalGap(15),
-                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()))
-                        .setStyle(tableHeaderStyle())
+                cmp.text("Tumor Mutational Load: " + mutationalLoadString).setStyle(tableHeaderStyle())
         );
         // @formatter:on
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final List<CopyNumberReport> copyNumbers) {
         // @formatter:off
-        final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
+        final ComponentBuilder<?, ?> table = copyNumbers.size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             transcriptColumn(),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
+                        .setDataSource(PatientDataSource.fromCopyNumbers(copyNumbers))) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
