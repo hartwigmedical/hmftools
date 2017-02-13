@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.report;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
@@ -31,7 +33,7 @@ public class PDFWriterTest {
     private static final String HMF_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
 
     @Test
-    public void canGenerateReport() throws DRException, IOException, EmptyFileException {
+    public void canGeneratePatientReport() throws DRException, IOException, EmptyFileException {
         final String sample = "CPCT11111111T";
         final VariantReport variant1 = new VariantReport.Builder().gene("BRAF").position("7:140453136").ref("A").alt(
                 "T").transcript("ENST00000288602.6").hgvsCoding("c.1799T>A").hgvsProtein("p.Val600Glu").consequence(
@@ -64,6 +66,24 @@ public class PDFWriterTest {
 
         if (WRITE_TO_PDF) {
             pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
+        }
+    }
+
+    @Test
+    public void canGenerateNotSequenceableReport() throws DRException, FileNotFoundException {
+        final String sample = "CPCT11111111T";
+        final String tumorType = "Melanoma";
+        final NotSequenceableReason reason = NotSequenceableReason.LOW_DNA_YIELD;
+
+        final JasperReportBuilder pdf = PDFWriter.generateNotSequenceableReport(sample, tumorType, reason, HMF_LOGO);
+        assertNotNull(pdf);
+
+        if (SHOW_AND_PRINT) {
+            pdf.show().print();
+        }
+
+        if (WRITE_TO_PDF) {
+            pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/low_dna_yield_report.pdf"));
         }
     }
 

@@ -74,13 +74,39 @@ public class PDFWriter {
 
     @NotNull
     public String writeNonSequenceableReport(@NotNull final String sample, @NotNull String tumorType,
-            @NotNull final NotSequenceableReason reason) {
-        return fileName(sample);
+            @NotNull final NotSequenceableReason reason) throws FileNotFoundException, DRException {
+        final String fileName = fileName(sample);
+        final JasperReportBuilder jasperReportBuilder = generateNotSequenceableReport(sample, tumorType, reason,
+                hmfLogo);
+
+        jasperReportBuilder.toPdf(new FileOutputStream(fileName));
+
+        return fileName;
     }
 
     @NotNull
     private String fileName(@NotNull final String sample) {
         return outputDirectory + File.separator + sample + "_hmf_report.pdf";
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample,
+            @NotNull final String tumorType, @NotNull final NotSequenceableReason reason,
+            @NotNull final String hmfLogoPath) {
+        // @formatter:off
+        final ComponentBuilder<?, ?> report =
+                cmp.verticalList(
+                        mainPageTopSection(sample, tumorType, hmfLogoPath),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        mainPageNotSequenceableSection(reason),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        variantReport(Lists.newArrayList(), "-"),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        copyNumberReport(Lists.newArrayList()));
+        // @formatter:on
+
+        return report().noData(report);
     }
 
     @VisibleForTesting
@@ -152,6 +178,13 @@ public class PDFWriter {
                         + "clinical decision making without further validation of findings.",
                 "Additional information on the various fields can be found on the final page of this report.",
                 "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequenceableReason reason) {
+        return toList("About this report",
+                Lists.newArrayList("This biopsy could not be analyzed for the following reason: " + reason.message(),
+                        "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
 
     @NotNull
