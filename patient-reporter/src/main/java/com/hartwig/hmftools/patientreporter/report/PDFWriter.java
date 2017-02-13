@@ -11,18 +11,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Collection;
-import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.PatientReport;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
-import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -99,11 +96,7 @@ public class PDFWriter {
                 cmp.verticalList(
                         mainPageTopSection(sample, tumorType, hmfLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        mainPageNotSequenceableSection(reason),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(Lists.newArrayList(), "-"),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(Lists.newArrayList()));
+                        mainPageNotSequenceableSection(reason));
         // @formatter:on
 
         return report().noData(report);
@@ -120,9 +113,9 @@ public class PDFWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(report.variants(), Integer.toString(report.mutationalLoad())),
+                        variantReport(report),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(report.copyNumbers()));
+                        copyNumberReport(report));
 
         final ComponentBuilder<?, ?> helpPage =
                 cmp.verticalList(
@@ -182,27 +175,48 @@ public class PDFWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequenceableReason reason) {
-        final String reasonString;
-        switch (reason) {
-            case LOW_DNA_YIELD:
-                reasonString = "The biopsy has not been analyzed because of low DNA yield from the biopsy";
-                break;
-            case LOW_TUMOR_PERCENTAGE:
-                reasonString = "The biopsy could not be analyzed because the biopsy contained less than 30% tumor cells";
-                break;
-            default:
-                reasonString = "ERROR";
-        }
 
-        return toList("About this report", Lists.newArrayList(reasonString,
-                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
+        // @formatter:off
+        return cmp.verticalList(
+                cmp.text("Notification of inadequate tumor sample:").setStyle(tableHeaderStyle().setFontSize(12))
+                        .setHeight(20),
+                cmp.text("Insufficient percentage of tumor cells").setStyle(dataTableStyle().setFontSize(12))
+                        .setHeight(20),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The received tumor sample for this patient was inadequate to obtain a reliable sequencing " +
+                                "result. For sequencing we require a minimum of 30% tumor cells. " +
+                                "Therefore whole genome sequencing cannot be performed, unless additional fresh tumor " +
+                                "material can be provided for a new assessment.").setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("When possible, please resubmit using the same CPCT-number. In case additional tumor " +
+                        "material cannot be provided, please be notified that the patient will not be evaluable " +
+                        "for the CPCT-02 study.").setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl")
+                        .setStyle(fontStyle()));
+
+        // @formatter:on
+        //
+        //        final String reasonString;
+        //        switch (reason) {
+        //            case LOW_DNA_YIELD:
+        //                reasonString = "The biopsy has not been analyzed because of low DNA yield from the biopsy";
+        //                break;
+        //            case LOW_TUMOR_PERCENTAGE:
+        //                reasonString = "The biopsy could not be analyzed because the biopsy contained less than 30% tumor cells";
+        //                break;
+        //            default:
+        //                reasonString = "ERROR";
+        //        }
+        //
+        //        return toList("About this report", Lists.newArrayList(reasonString,
+        //                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantReport(@NotNull final List<VariantReport> variants,
-            @NotNull final String mutationalLoadString) {
+    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
         // @formatter:off
-        final ComponentBuilder<?, ?> table = variants.size() > 0 ?
+        final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
                         .columns(
                             col.column("Gene", PatientDataSource.GENE_FIELD),
@@ -213,7 +227,7 @@ public class PDFWriter {
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
-                        .setDataSource(PatientDataSource.fromVariants(variants)) :
+                        .setDataSource(PatientDataSource.fromVariants(report.variants())) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
@@ -221,22 +235,23 @@ public class PDFWriter {
                 cmp.verticalGap(6),
                 table,
                 cmp.verticalGap(15),
-                cmp.text("Tumor Mutational Load: " + mutationalLoadString).setStyle(tableHeaderStyle())
+                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()))
+                        .setStyle(tableHeaderStyle())
         );
         // @formatter:on
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final List<CopyNumberReport> copyNumbers) {
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
         // @formatter:off
-        final ComponentBuilder<?, ?> table = copyNumbers.size() > 0 ?
+        final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             transcriptColumn(),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(PatientDataSource.fromCopyNumbers(copyNumbers))) :
+                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
@@ -359,8 +374,9 @@ public class PDFWriter {
 
     @NotNull
     private static StyleBuilder tableHeaderStyle() {
-        return fontStyle().bold().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setFontSize(10).setBorder(
-                stl.pen1Point()).setBackgroundColor(new Color(210, 210, 210));
+        return fontStyle().bold().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setVerticalTextAlignment(
+                VerticalTextAlignment.MIDDLE).setFontSize(10).setBorder(stl.pen1Point()).setBackgroundColor(
+                new Color(210, 210, 210));
     }
 
     @NotNull
