@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
+
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
@@ -15,9 +18,6 @@ import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.CopynumberCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-
-import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
 
 public class CopynumberCheckerTest {
     private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("copynumber");
@@ -29,10 +29,14 @@ public class CopynumberCheckerTest {
     private static final String NO_RATIOS_SAMPLE = "sample6";
     private static final String MISSING_CNVS_SAMPLE = "sample7";
     private static final String SINGLE_SAMPLE_EXAMPLE = "sample8";
+    private static final String NEUTRAL_SAMPLE = "sample9";
+    private static final String PILEUP_SAMPLE = "sample10";
+    private static final String PILEUP_NORMAL_SAMPLE = "sample11";
 
     private static final int EXPECTED_NUM_CHECKS = 2;
     private static final long EXPECTED_GAIN = 252;
     private static final long EXPECTED_LOSS = 11561;
+    private static final long EXPECTED_LOSS_WITH_NEUTRAL = 11560;
 
     private final CopynumberChecker checker = new CopynumberChecker();
 
@@ -68,6 +72,13 @@ public class CopynumberCheckerTest {
     }
 
     @Test
+    public void neutralTagYieldsNoChange() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, NEUTRAL_SAMPLE, TUMOR_SAMPLE);
+        final BaseResult result = checker.tryRun(runContext);
+        assertResult(result, EXPECTED_GAIN, EXPECTED_LOSS_WITH_NEUTRAL);
+    }
+
+    @Test
     public void emptyCopyNumberVariantsAllowedIfRatiosPresent() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, NO_CNVS_FOUND_SAMPLE,
                 TUMOR_SAMPLE);
@@ -93,6 +104,19 @@ public class CopynumberCheckerTest {
     public void missingCopyNumberVariantsNotAllowedEvenIfRatiosPresent() throws IOException, HartwigException {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, MISSING_CNVS_SAMPLE,
                 TUMOR_SAMPLE);
+        checker.tryRun(runContext);
+    }
+
+    @Test
+    public void pileupSampleFound() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, PILEUP_SAMPLE, TUMOR_SAMPLE);
+        final BaseResult result = checker.tryRun(runContext);
+        assertResult(result, EXPECTED_GAIN, EXPECTED_LOSS);
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void pileupNormalCopyNumberVariantsNotFound() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, PILEUP_NORMAL_SAMPLE, TUMOR_SAMPLE);
         checker.tryRun(runContext);
     }
 

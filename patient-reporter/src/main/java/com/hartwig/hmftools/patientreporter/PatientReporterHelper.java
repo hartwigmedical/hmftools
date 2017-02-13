@@ -8,21 +8,19 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
+import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 
 final class PatientReporterHelper {
 
@@ -30,7 +28,6 @@ final class PatientReporterHelper {
 
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
     private static final String COPYNUMBER_DIRECTORY = "copyNumber";
-    private static final String COPYNUMBER_EXTENSION = ".bam_CNVs";
     private static final String FREEC_DIRECTORY = "freec";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
@@ -47,13 +44,7 @@ final class PatientReporterHelper {
     static List<CopyNumber> loadCNVFile(@NotNull final String runDirectory, @NotNull final String sample)
             throws IOException, HartwigException {
         final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
-
-        try {
-            return CNVFileLoader.loadCNV(cnvBasePath, sample, COPYNUMBER_EXTENSION);
-        } catch (EmptyFileException e) {
-            // KODU: It could be that the sample simply does not have any amplifications...
-            return Lists.newArrayList();
-        }
+        return CNVFileLoader.loadCNV(cnvBasePath, sample);
     }
 
     @NotNull

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.copynumber;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
-
 import org.jetbrains.annotations.NotNull;
+
+import com.hartwig.hmftools.common.exception.HartwigException;
 
 public final class CopyNumberFactory {
 
@@ -15,6 +15,7 @@ public final class CopyNumberFactory {
 
     private static final String GAIN_IDENTIFIER = "gain";
     private static final String LOSS_IDENTIFIER = "loss";
+    private static final String NEUTRAL_IDENTIFIER = "neutral";
     private static final String GAIN_LOSS_IDENTIFIER_ERROR = "Could not parse gain/loss identifier: %s";
     private static final String GAIN_LOSS_MISMATCH_WITH_VALUE_ERROR = "gain/loss identifier does not match with value: %s";
 
@@ -31,7 +32,7 @@ public final class CopyNumberFactory {
         final int value = Integer.valueOf(values[VALUE_COLUMN].trim());
         final String lossOrGain = values[LOSS_GAIN_FIELD_COLUMN].trim();
 
-        if (!(lossOrGain.equals(GAIN_IDENTIFIER) || lossOrGain.equals(LOSS_IDENTIFIER))) {
+        if (!(lossOrGain.equals(GAIN_IDENTIFIER) || lossOrGain.equals(LOSS_IDENTIFIER) || lossOrGain.equals(NEUTRAL_IDENTIFIER))) {
             throw new HartwigException(String.format(GAIN_LOSS_IDENTIFIER_ERROR, lossOrGain));
         }
 

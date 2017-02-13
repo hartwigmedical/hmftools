@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
-import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -20,18 +20,11 @@ import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.CopynumberCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 @SuppressWarnings("WeakerAccess")
 @ResourceWrapper(type = CheckType.COPYNUMBER)
 public class CopynumberChecker extends ErrorHandlingChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(CopynumberChecker.class);
-
-    private static final String COPYNUMBER_EXTENSION = ".bam_CNVs";
-    private static final String COPYNUMBER_RATIO_SUFFIX = ".bam_ratio.txt";
 
     public CopynumberChecker() {
     }
@@ -61,18 +54,13 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
     @NotNull
     private static List<CopyNumber> copynumberLines(@NotNull final RunContext runContext)
             throws IOException, HartwigException {
-        final String basePath = CNVFileLoaderHelper.getFreecBasePath(runContext.runDirectory(), runContext.refSample(),
-                runContext.isSomaticRun() ? runContext.tumorSample() : null);
+        final String basePath = CNVFileLoaderHelper.getFreecBasePath(runContext.runDirectory(),
+                                                                     runContext.refSample(),
+                                                                     runContext.isSomaticRun() ?
+                                                                     runContext.tumorSample() :
+                                                                     null);
         final String relevantSample = relevantSample(runContext);
-        try {
-            return CNVFileLoader.loadCNV(basePath, relevantSample, COPYNUMBER_EXTENSION);
-        } catch (EmptyFileException e) {
-            // if the CNV is empty (but exists) and the ratio file exists, there is no problem (just no CNVs found)
-            final Path ratioPath = PathPrefixSuffixFinder.build().findPath(basePath, relevantSample,
-                    COPYNUMBER_RATIO_SUFFIX);
-            FileReader.build().readLines(ratioPath);
-            return Collections.emptyList();
-        }
+        return CNVFileLoader.loadCNV(basePath, relevantSample);
     }
 
     @NotNull
