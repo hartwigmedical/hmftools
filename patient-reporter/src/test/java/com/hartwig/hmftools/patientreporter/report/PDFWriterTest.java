@@ -25,7 +25,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriterTest {
 
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = true;
+    private static final boolean WRITE_TO_PDF = false;
 
     private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
     private static final String HMF_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
