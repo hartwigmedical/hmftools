@@ -30,7 +30,7 @@ public class PDFWriterTest {
     private static final boolean WRITE_TO_PDF = false;
 
     private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
-    private static final String HMF_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
+    private static final String REPORT_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
 
     @Test
     public void canGeneratePatientReport() throws DRException, IOException, EmptyFileException {
@@ -59,7 +59,7 @@ public class PDFWriterTest {
         final PatientReport report = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
                 tumorPercentage);
 
-        final JasperReportBuilder pdf = PDFWriter.generatePatientReport(report, HMF_LOGO, createHMFSlicingRegion());
+        final JasperReportBuilder pdf = PDFWriter.generatePatientReport(report, REPORT_LOGO, createHMFSlicingRegion());
         assertNotNull(pdf);
 
         if (SHOW_AND_PRINT) {
@@ -79,7 +79,7 @@ public class PDFWriterTest {
         final String tumorPercentage = "0%";
 
         final JasperReportBuilder pdf = PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentage,
-                reason, HMF_LOGO);
+                reason, REPORT_LOGO);
         assertNotNull(pdf);
 
         if (SHOW_AND_PRINT) {

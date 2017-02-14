@@ -47,23 +47,23 @@ public class PDFWriter {
     private static final int SECTION_VERTICAL_GAP = 25;
 
     @NotNull
-    private final String outputDirectory;
+    private final String reportDirectory;
     @NotNull
-    private final String hmfLogo;
+    private final String reportLogo;
     @NotNull
     private final Slicer hmfSlicingRegion;
 
-    public PDFWriter(@NotNull final String outputDirectory, @NotNull final String hmfLogo,
+    public PDFWriter(@NotNull final String reportDirectory, @NotNull final String reportLogo,
             @NotNull final Slicer hmfSlicingRegion) {
-        this.outputDirectory = outputDirectory;
-        this.hmfLogo = hmfLogo;
+        this.reportDirectory = reportDirectory;
+        this.reportLogo = reportLogo;
         this.hmfSlicingRegion = hmfSlicingRegion;
     }
 
     @NotNull
     public String writeSequenceReport(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
         final String fileName = fileName(report.sample());
-        final JasperReportBuilder jasperReportBuilder = generatePatientReport(report, hmfLogo, hmfSlicingRegion);
+        final JasperReportBuilder jasperReportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion);
 
         jasperReportBuilder.toPdf(new FileOutputStream(fileName));
 
@@ -76,7 +76,7 @@ public class PDFWriter {
             throws FileNotFoundException, DRException {
         final String fileName = fileName(sample);
         final JasperReportBuilder jasperReportBuilder = generateNotSequenceableReport(sample, tumorType,
-                tumorPercentage, reason, hmfLogo);
+                tumorPercentage, reason, reportLogo);
 
         jasperReportBuilder.toPdf(new FileOutputStream(fileName));
 
@@ -85,18 +85,18 @@ public class PDFWriter {
 
     @NotNull
     private String fileName(@NotNull final String sample) {
-        return outputDirectory + File.separator + sample + "_hmf_report.pdf";
+        return reportDirectory + File.separator + sample + "_hmf_report.pdf";
     }
 
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample,
             @NotNull final String tumorType, @NotNull final String tumorPercentage,
-            @NotNull final NotSequenceableReason reason, @NotNull final String hmfLogoPath) {
+            @NotNull final NotSequenceableReason reason, @NotNull final String reportLogoPath) {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, tumorPercentage, hmfLogoPath),
+                        mainPageTopSection(sample, tumorType, tumorPercentage, reportLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason));
         // @formatter:on
@@ -107,12 +107,12 @@ public class PDFWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final String hmfLogoPath, @NotNull final Slicer hmfSlicingRegion) {
+            @NotNull final String reportLogoPath, @NotNull final Slicer hmfSlicingRegion) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
                         mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(),
-                                hmfLogoPath),
+                                reportLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -144,7 +144,7 @@ public class PDFWriter {
     @NotNull
     private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample,
             @NotNull final String tumorType, @NotNull final String tumorPercentage,
-            @NotNull final String hmfLogoPath) {
+            @NotNull final String reportLogoPath) {
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
@@ -159,7 +159,7 @@ public class PDFWriter {
         );
 
         return cmp.horizontalList(
-                cmp.image(hmfLogoPath),
+                cmp.image(reportLogoPath),
                 cmp.verticalList(
                         cmp.text("HMF Sequencing Report - " + sample).
                                 setStyle(fontStyle().bold().setFontSize(14)

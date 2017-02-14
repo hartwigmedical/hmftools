@@ -31,9 +31,6 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
-    private static final String RUN_DIRECTORY_ARGS_DESC = "Complete path towards a single rundir.";
-    private static final String RUN_DIRECTORY = "rundir";
-
     private static final String CPCT_SLICING_BED_ARGS_DESC = "Complete path towards the CPCT slicing bed.";
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
 
@@ -46,11 +43,17 @@ public class PatientReporterApplication {
     private static final String CPCT_ECRF_ARGS_DESC = "Complete path towards the cpct ecrf xml database.";
     private static final String CPCT_ECRF = "cpct_ecrf";
 
-    private static final String HMF_LOGO_ARGS_DESC = "Complete path to the HMF logo, used in the PDF report.";
-    private static final String HMF_LOGO = "hmf_logo";
+    private static final String REPORT_LOGO_ARGS_DESC = "Complete path to the logo used in the PDF report.";
+    private static final String REPORT_LOGO = "report_logo";
 
-    private static final String OUTPUT_DIR_ARGS_DESC = "Complete path where, if provided, output files will be written to.";
-    private static final String OUTPUT_DIR = "output_dir";
+    private static final String REPORT_DIRECTORY_ARGS_DESC = "Complete path to where the PDF reports have to be saved.";
+    private static final String REPORT_DIRECTORY = "report_dir";
+
+    private static final String TMP_DIRECTORY_ARGS_DESC = "Complete path where, if provided, temporary output files will be written to.";
+    private static final String TMP_DIRECTORY = "tmp_dir";
+
+    private static final String RUN_DIRECTORY_ARGS_DESC = "Complete path towards a single rundir.";
+    private static final String RUN_DIRECTORY = "run_dir";
 
     private static final String BATCH_MODE_ARGS_DESC = "If set, runs in batch mode (Caution!!! Korneel Only)";
     private static final String BATCH_MODE = "batch_mode";
@@ -71,28 +74,23 @@ public class PatientReporterApplication {
 
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
         final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
-        final String hmfLogo = cmd.getOptionValue(HMF_LOGO);
-        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
+        final String reportLogo = cmd.getOptionValue(REPORT_LOGO);
+        final String reportDirectory = cmd.getOptionValue(REPORT_DIRECTORY);
 
-        if (validGeneralInput(cpctEcrf, hmfSlicingBed, hmfLogo, outputDirectory)) {
+        if (validGeneralInput(cpctEcrf, hmfSlicingBed, reportLogo, reportDirectory)) {
             LOGGER.info("Running patient reporter");
             LOGGER.info(" Loading ECRF database...");
             final CpctEcrfModel cpctEcrfModel = CpctEcrfModel.loadFromXML(cpctEcrf);
             LOGGER.info("  Loaded data for " + cpctEcrfModel.patientCount() + " patients.");
 
             final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
-
-            PDFWriter pdfWriter = null;
-            if (outputDirectory != null && hmfLogo != null) {
-                pdfWriter = new PDFWriter(outputDirectory, hmfLogo, hmfSlicingRegion);
-            }
+            final PDFWriter pdfWriter = new PDFWriter(reportDirectory, reportLogo, hmfSlicingRegion);
 
             if (cmd.hasOption(NOT_SEQUENCEABLE)) {
                 final NotSequenceableReason notSequenceableReason = NotSequenceableReason.fromIdentifier(
                         cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
                 final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
-                if (pdfWriter != null && notSequenceableReason != NotSequenceableReason.OTHER
-                        && notSequenceableSample != null) {
+                if (notSequenceableReason != NotSequenceableReason.OTHER && notSequenceableSample != null) {
                     final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel,
                             notSequenceableSample);
                     pdfWriter.writeNonSequenceableReport(notSequenceableSample, tumorType, "0%",
@@ -104,15 +102,16 @@ public class PatientReporterApplication {
                 final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
                 final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
                 final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+                final String tmpDirectory = cmd.getOptionValue(TMP_DIRECTORY);
 
-                if (validPatientInput(runDirectory, cpctSlicingBed, highConfidenceBed)) {
+                if (validPatientInput(runDirectory, cpctSlicingBed, highConfidenceBed, tmpDirectory)) {
                     final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                             SlicerFactory.fromBedFile(highConfidenceBed), SlicerFactory.fromBedFile(cpctSlicingBed));
                     final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(
                             hmfSlicingRegion);
                     final boolean batchMode = cmd.hasOption(BATCH_MODE);
                     new PatientReporterAlgo(runDirectory, cpctEcrfModel, variantAnalyzer, copyNumberAnalyzer,
-                            outputDirectory, pdfWriter, batchMode).run();
+                            tmpDirectory, pdfWriter, batchMode).run();
                 } else {
                     gracefulShutdown(options);
                 }
@@ -132,13 +131,14 @@ public class PatientReporterApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
         options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
         options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
         options.addOption(HMF_SLICING_BED, true, HMF_SLICING_BED_ARGS_DESC);
         options.addOption(CPCT_ECRF, true, CPCT_ECRF_ARGS_DESC);
-        options.addOption(HMF_LOGO, true, HMF_LOGO_ARGS_DESC);
-        options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_ARGS_DESC);
+        options.addOption(REPORT_LOGO, true, REPORT_LOGO_ARGS_DESC);
+        options.addOption(REPORT_DIRECTORY, true, REPORT_DIRECTORY_ARGS_DESC);
+        options.addOption(TMP_DIRECTORY, true, TMP_DIRECTORY_ARGS_DESC);
+        options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
         options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
         options.addOption(NOT_SEQUENCEABLE, false, NOT_SEQUENCEABLE_ARGS_DESC);
         options.addOption(NOT_SEQUENCEABLE_REASON, true, NOT_SEQUENCEABLE_REASON_ARGS_DESC);
@@ -155,15 +155,15 @@ public class PatientReporterApplication {
     }
 
     private static boolean validGeneralInput(@Nullable final String cpctEcrf, @Nullable final String hmfSlicingBed,
-            @Nullable final String hmfLogo, @Nullable final String outputDirectory) {
+            @Nullable final String reportLogo, @Nullable final String reportDirectory) {
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
         } else if (hmfSlicingBed == null || !exists(hmfSlicingBed)) {
             LOGGER.warn(HMF_SLICING_BED + " has to be an existing file: " + hmfSlicingBed);
-        } else if (hmfLogo != null && !exists(hmfLogo)) {
-            LOGGER.warn(HMF_LOGO + " has to be an existing file: " + hmfLogo);
-        } else if (outputDirectory != null && (!exists(outputDirectory) || !isDirectory(outputDirectory))) {
-            LOGGER.warn(OUTPUT_DIR + " has to be an existing directory: " + outputDirectory);
+        } else if (reportLogo == null || !exists(reportLogo)) {
+            LOGGER.warn(REPORT_LOGO + " has to be an existing file: " + reportLogo);
+        } else if (reportDirectory == null || !exists(reportDirectory) || !isDirectory(reportDirectory)) {
+            LOGGER.warn(REPORT_DIRECTORY + " has to be an existing directory: " + reportDirectory);
         } else {
             return true;
         }
@@ -172,13 +172,16 @@ public class PatientReporterApplication {
     }
 
     private static boolean validPatientInput(@Nullable final String runDirectory,
-            @Nullable final String cpctSlicingBed, @Nullable final String highConfidenceBed) {
+            @Nullable final String cpctSlicingBed, @Nullable final String highConfidenceBed,
+            @Nullable final String tmpDirectory) {
         if (runDirectory == null || !exists(runDirectory) || !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
         } else if (cpctSlicingBed == null || !exists(cpctSlicingBed)) {
             LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
         } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
+        } else if (tmpDirectory != null && (!exists(tmpDirectory) || !isDirectory(tmpDirectory))) {
+            LOGGER.warn(TMP_DIRECTORY + " has to be an existing directory: " + highConfidenceBed);
         } else {
             return true;
         }

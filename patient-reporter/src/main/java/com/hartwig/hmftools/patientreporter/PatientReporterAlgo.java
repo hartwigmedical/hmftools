@@ -44,19 +44,19 @@ class PatientReporterAlgo {
     @NotNull
     private final CopyNumberAnalyzer copyNumberAnalyzer;
     @Nullable
-    private final String outputDirectory;
+    private final String tmpDirectory;
     @Nullable
     private final PDFWriter pdfWriter;
     private final boolean batchMode;
 
     PatientReporterAlgo(@NotNull final String runDirectory, @NotNull final CpctEcrfModel cpctEcrfModel,
             @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
-            @Nullable final String outputDirectory, @Nullable final PDFWriter pdfWriter, final boolean batchMode) {
+            @Nullable final String tmpDirectory, @Nullable final PDFWriter pdfWriter, final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.cpctEcrfModel = cpctEcrfModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
-        this.outputDirectory = outputDirectory;
+        this.tmpDirectory = tmpDirectory;
         this.pdfWriter = pdfWriter;
         this.batchMode = batchMode;
     }
@@ -129,8 +129,8 @@ class PatientReporterAlgo {
         LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
         LOGGER.info("  Determined copy number stats for " + copyNumberAnalysis.stats().size() + " regions.");
 
-        if (outputDirectory != null) {
-            writeToFiles(outputDirectory + File.separator + sample, variantAnalysis, copyNumberAnalysis);
+        if (tmpDirectory != null) {
+            writeToFiles(tmpDirectory + File.separator + sample, variantAnalysis, copyNumberAnalysis);
         }
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
