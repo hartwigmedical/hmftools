@@ -31,38 +31,38 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
-    private static final String RUN_DIRECTORY_ARGS_DESC = "A path towards a single rundir.";
+    private static final String RUN_DIRECTORY_ARGS_DESC = "Complete path towards a single rundir.";
     private static final String RUN_DIRECTORY = "rundir";
 
-    private static final String CPCT_SLICING_BED_ARGS_DESC = "A path towards the CPCT slicing bed.";
+    private static final String CPCT_SLICING_BED_ARGS_DESC = "Complete path towards the CPCT slicing bed.";
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
 
-    private static final String HIGH_CONFIDENCE_BED_ARGS_DESC = "A path towards the high confidence bed.";
+    private static final String HIGH_CONFIDENCE_BED_ARGS_DESC = "Complete path towards the high confidence bed.";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
-    private static final String HMF_SLICING_BED_ARGS_DESC = "A path towards the HMF slicing bed.";
+    private static final String HMF_SLICING_BED_ARGS_DESC = "Complete path towards the HMF slicing bed.";
     private static final String HMF_SLICING_BED = "hmf_slicing_bed";
 
-    private static final String CPCT_ECRF_ARGS_DESC = "A path towards the cpct ecrf xml database.";
+    private static final String CPCT_ECRF_ARGS_DESC = "Complete path towards the cpct ecrf xml database.";
     private static final String CPCT_ECRF = "cpct_ecrf";
 
-    private static final String HMF_LOGO_ARGS_DESC = "A path to the HMF logo, used in the PDF report.";
+    private static final String HMF_LOGO_ARGS_DESC = "Complete path to the HMF logo, used in the PDF report.";
     private static final String HMF_LOGO = "hmf_logo";
 
-    private static final String OUTPUT_DIR_ARGS_DESC = "A path where, if provided, output files will be written to.";
+    private static final String OUTPUT_DIR_ARGS_DESC = "Complete path where, if provided, output files will be written to.";
     private static final String OUTPUT_DIR = "output_dir";
 
     private static final String BATCH_MODE_ARGS_DESC = "If set, runs in batch mode (Caution!!! Korneel Only)";
     private static final String BATCH_MODE = "batch_mode";
 
-    private static final String NOT_SEQUENCEABLE_ARGS_DESC = "if set, generates a non-sequenceable report.";
+    private static final String NOT_SEQUENCEABLE_ARGS_DESC = "If set, generates a non-sequenceable report.";
     private static final String NOT_SEQUENCEABLE = "not_sequenceable";
 
     private static final String NOT_SEQUENCEABLE_REASON_ARGS_DESC = "Either 'low_tumor_percentage' or 'low_dna_yield'";
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
 
-    private static final String NOT_SEQUENCEABLE_SAMPLE_ARGS_DESC = "The sample that cannot be sequenced.";
-    private static final String NOT_SEQUENCEABLE_SAMPLE = "sample";
+    private static final String NOT_SEQUENCEABLE_SAMPLE_ARGS_DESC = "In case of non-sequenceable reports, the name of the sample used.";
+    private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
 
     public static void main(final String... args)
             throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
@@ -157,13 +157,13 @@ public class PatientReporterApplication {
     private static boolean validGeneralInput(@Nullable final String cpctEcrf, @Nullable final String hmfSlicingBed,
             @Nullable final String hmfLogo, @Nullable final String outputDirectory) {
         if (cpctEcrf == null || !exists(cpctEcrf)) {
-            LOGGER.warn(CPCT_ECRF + " has to be an existing file!");
+            LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
         } else if (hmfSlicingBed == null || !exists(hmfSlicingBed)) {
-            LOGGER.warn(HMF_SLICING_BED + " has to be an existing file!");
+            LOGGER.warn(HMF_SLICING_BED + " has to be an existing file: " + hmfSlicingBed);
         } else if (hmfLogo != null && !exists(hmfLogo)) {
-            LOGGER.warn(HMF_LOGO + " has to be an existing file!");
+            LOGGER.warn(HMF_LOGO + " has to be an existing file: " + hmfLogo);
         } else if (outputDirectory != null && (!exists(outputDirectory) || !isDirectory(outputDirectory))) {
-            LOGGER.warn(OUTPUT_DIR + " has to be an existing directory!");
+            LOGGER.warn(OUTPUT_DIR + " has to be an existing directory: " + outputDirectory);
         } else {
             return true;
         }
@@ -174,11 +174,11 @@ public class PatientReporterApplication {
     private static boolean validPatientInput(@Nullable final String runDirectory,
             @Nullable final String cpctSlicingBed, @Nullable final String highConfidenceBed) {
         if (runDirectory == null || !exists(runDirectory) || !isDirectory(runDirectory)) {
-            LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory!");
+            LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
         } else if (cpctSlicingBed == null || !exists(cpctSlicingBed)) {
-            LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file!");
+            LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
         } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
-            LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file!");
+            LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else {
             return true;
         }
