@@ -175,18 +175,44 @@ public class PDFWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequenceableReason reason) {
+        final String title;
+        final String subTitle;
+        final String message;
+
+        switch (reason) {
+            case LOW_DNA_YIELD: {
+                title = "Notification tumor sample on hold for sequencing";
+                subTitle = "Insufficient amount of DNA";
+                message = "The amount of isolated DNA was <300 ng, which is insufficient for sequencing. "
+                        + "This sample is on hold for further processing awaiting optimization of protocols.";
+                break;
+            }
+            case LOW_TUMOR_PERCENTAGE: {
+                title = "Notification of inadequate tumor sample";
+                subTitle = "Insufficient percentage of tumor cells";
+                message = "For sequencing we require a minimum of 30% tumor cells.";
+                break;
+            }
+            default: {
+                title = "TITLE";
+                subTitle = "SUB_TITLE";
+                message = "MESSAGE";
+            }
+        }
 
         // @formatter:off
         return cmp.verticalList(
-                cmp.text("Notification of inadequate tumor sample:").setStyle(tableHeaderStyle().setFontSize(12))
+                cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12))
                         .setHeight(20),
-                cmp.text("Insufficient percentage of tumor cells").setStyle(dataTableStyle().setFontSize(12))
+                cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12))
                         .setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text(message).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("The received tumor sample for this patient was inadequate to obtain a reliable sequencing " +
-                                "result. For sequencing we require a minimum of 30% tumor cells. " +
-                                "Therefore whole genome sequencing cannot be performed, unless additional fresh tumor " +
-                                "material can be provided for a new assessment.").setStyle(fontStyle()),
+                                "result. Therefore whole genome sequencing cannot be performed, " +
+                                "unless additional fresh tumor material can be provided for a new assessment.")
+                        .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("When possible, please resubmit using the same CPCT-number. In case additional tumor " +
                         "material cannot be provided, please be notified that the patient will not be evaluable " +
@@ -194,23 +220,7 @@ public class PDFWriter {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl")
                         .setStyle(fontStyle()));
-
         // @formatter:on
-        //
-        //        final String reasonString;
-        //        switch (reason) {
-        //            case LOW_DNA_YIELD:
-        //                reasonString = "The biopsy has not been analyzed because of low DNA yield from the biopsy";
-        //                break;
-        //            case LOW_TUMOR_PERCENTAGE:
-        //                reasonString = "The biopsy could not be analyzed because the biopsy contained less than 30% tumor cells";
-        //                break;
-        //            default:
-        //                reasonString = "ERROR";
-        //        }
-        //
-        //        return toList("About this report", Lists.newArrayList(reasonString,
-        //                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
 
     @NotNull
