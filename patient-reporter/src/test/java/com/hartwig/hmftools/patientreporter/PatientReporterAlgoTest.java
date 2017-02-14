@@ -31,17 +31,19 @@ public class PatientReporterAlgoTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final String bedFile = BED_DIRECTORY + File.separator + "HMF_Slicing.bed";
-        final Slicer slicer = SlicerFactory.fromBedFile(bedFile);
+        final String hmfSlicingBed = BED_DIRECTORY + File.separator + "HMF_Slicing.bed";
+        final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
         // KODU: Every region in the HMF slicing bed should be convertable to a slicing annotation!
-        for (final GenomeRegion region : slicer.regions()) {
+        for (final GenomeRegion region : hmfSlicingRegion.regions()) {
             assertNotNull(HMFSlicingAnnotation.fromGenomeRegion(region));
         }
 
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
-        final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(slicer);
-        new PatientReporterAlgo(RUN_DIRECTORY, buildTestCpctEcrfModel(), variantAnalyzer, copyNumberAnalyzer,
-                buildTestReportWriter(), null, false).run();
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion,
+                hmfSlicingRegion);
+        final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
+
+        new PatientReporterAlgo(RUN_DIRECTORY, buildTestCpctEcrfModel(), hmfSlicingRegion, variantAnalyzer,
+                copyNumberAnalyzer, buildTestReportWriter(), null, false).run();
     }
 
     @NotNull
@@ -53,8 +55,8 @@ public class PatientReporterAlgoTest {
         return new ReportWriter() {
             @NotNull
             @Override
-            public String writeSequenceReport(@NotNull final PatientReport report)
-                    throws FileNotFoundException, DRException {
+            public String writeSequenceReport(@NotNull final PatientReport report,
+                    @NotNull final Slicer hmfSlicingRegion) throws FileNotFoundException, DRException {
                 return Strings.EMPTY;
             }
 

@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
+import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -40,6 +41,8 @@ class PatientReporterAlgo {
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
     @NotNull
+    private final Slicer hmfSlicingRegion;
+    @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final CopyNumberAnalyzer copyNumberAnalyzer;
@@ -50,10 +53,12 @@ class PatientReporterAlgo {
     private final boolean batchMode;
 
     PatientReporterAlgo(@NotNull final String runDirectory, @NotNull final CpctEcrfModel cpctEcrfModel,
-            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
-            @NotNull final ReportWriter reportWriter, @Nullable final String tmpDirectory, final boolean batchMode) {
+            @NotNull final Slicer hmfSlicingRegion, @NotNull final VariantAnalyzer variantAnalyzer,
+            @NotNull final CopyNumberAnalyzer copyNumberAnalyzer, @NotNull final ReportWriter reportWriter,
+            @Nullable final String tmpDirectory, final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.cpctEcrfModel = cpctEcrfModel;
+        this.hmfSlicingRegion = hmfSlicingRegion;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
         this.reportWriter = reportWriter;
@@ -66,7 +71,7 @@ class PatientReporterAlgo {
             batchRun();
         } else {
             final PatientReport report = patientRun();
-            reportWriter.writeSequenceReport(report);
+            reportWriter.writeSequenceReport(report, hmfSlicingRegion);
         }
     }
 

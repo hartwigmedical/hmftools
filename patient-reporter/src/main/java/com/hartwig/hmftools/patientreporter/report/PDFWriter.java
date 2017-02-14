@@ -55,19 +55,16 @@ public class PDFWriter implements ReportWriter {
     private final String reportDirectory;
     @NotNull
     private final String reportLogo;
-    @NotNull
-    private final Slicer hmfSlicingRegion;
 
-    public PDFWriter(@NotNull final String reportDirectory, @NotNull final String reportLogo,
-            @NotNull final Slicer hmfSlicingRegion) {
+    public PDFWriter(@NotNull final String reportDirectory, @NotNull final String reportLogo) {
         this.reportDirectory = reportDirectory;
         this.reportLogo = reportLogo;
-        this.hmfSlicingRegion = hmfSlicingRegion;
     }
 
     @NotNull
     @Override
-    public String writeSequenceReport(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
+    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final Slicer hmfSlicingRegion)
+            throws FileNotFoundException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion);
 
         return writeReport(report.sample(), reportBuilder);
@@ -78,8 +75,8 @@ public class PDFWriter implements ReportWriter {
     public String writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
             throws FileNotFoundException, DRException {
-        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType,
-                tumorPercentage, reason, reportLogo);
+        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage,
+                reason, reportLogo);
 
         return writeReport(sample, reportBuilder);
     }
@@ -89,10 +86,10 @@ public class PDFWriter implements ReportWriter {
             throws FileNotFoundException, DRException {
         final String fileName = fileName(sample);
         if (Files.exists(new File(fileName).toPath())) {
-            LOGGER.warn("Could not write report as it already exists: " + fileName);
+            LOGGER.warn(" Could not write report as it already exists: " + fileName);
         } else {
             report.toPdf(new FileOutputStream(fileName));
-            LOGGER.info("Created patient report at " + fileName);
+            LOGGER.info(" Created patient report at " + fileName);
         }
         return fileName;
     }
