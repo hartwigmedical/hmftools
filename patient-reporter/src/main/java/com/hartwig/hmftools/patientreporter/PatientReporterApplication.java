@@ -95,7 +95,8 @@ public class PatientReporterApplication {
                         && notSequenceableSample != null) {
                     final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel,
                             notSequenceableSample);
-                    pdfWriter.writeNonSequenceableReport(notSequenceableSample, tumorType, notSequenceableReason);
+                    pdfWriter.writeNonSequenceableReport(notSequenceableSample, tumorType, "0%",
+                            notSequenceableReason);
                 } else {
                     gracefulShutdown(options);
                 }

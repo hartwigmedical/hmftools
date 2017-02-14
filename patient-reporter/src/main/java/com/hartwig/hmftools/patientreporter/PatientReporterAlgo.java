@@ -135,7 +135,7 @@ class PatientReporterAlgo {
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         return new PatientReport(sample, variantAnalysis.findings(), copyNumberAnalysis.findings(), mutationalLoad,
-                tumorType);
+                tumorType, Double.NaN);
     }
 
     private static void writeToFiles(@NotNull final String baseName, @NotNull final VariantAnalysis variantAnalysis,

@@ -54,8 +54,10 @@ public class PDFWriterTest {
 
         final int mutationalLoad = 361;
         final String tumorType = "Melanoma";
+        final double tumorPercentage = 0.6;
 
-        final PatientReport report = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType);
+        final PatientReport report = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
+                tumorPercentage);
 
         final JasperReportBuilder pdf = PDFWriter.generatePatientReport(report, HMF_LOGO, createHMFSlicingRegion());
         assertNotNull(pdf);
@@ -65,7 +67,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/report.pdf"));
+            pdf.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/test_report.pdf"));
         }
     }
 
@@ -74,8 +76,10 @@ public class PDFWriterTest {
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
+        final String tumorPercentage = "0%";
 
-        final JasperReportBuilder pdf = PDFWriter.generateNotSequenceableReport(sample, tumorType, reason, HMF_LOGO);
+        final JasperReportBuilder pdf = PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentage,
+                reason, HMF_LOGO);
         assertNotNull(pdf);
 
         if (SHOW_AND_PRINT) {

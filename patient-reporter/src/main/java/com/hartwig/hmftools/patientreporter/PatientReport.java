@@ -18,15 +18,17 @@ public final class PatientReport {
     private final int mutationalLoad;
     @NotNull
     private final String tumorType;
+    private final double tumorPercentage;
 
     public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
             @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad,
-            @NotNull final String tumorType) {
+            @NotNull final String tumorType, final double tumorPercentage) {
         this.sample = sample;
         this.variants = variants;
         this.copyNumbers = copyNumbers;
         this.mutationalLoad = mutationalLoad;
         this.tumorType = tumorType;
+        this.tumorPercentage = tumorPercentage;
     }
 
     @NotNull
@@ -51,5 +53,9 @@ public final class PatientReport {
     @NotNull
     public String tumorType() {
         return tumorType;
+    }
+
+    public String tumorPercentageString() {
+        return Long.toString(Math.round(tumorPercentage * 100D)) + "%";
     }
 }

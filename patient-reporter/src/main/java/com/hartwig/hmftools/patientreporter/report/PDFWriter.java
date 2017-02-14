@@ -37,6 +37,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriter {
 
     private static final String FONT = "Times New Roman";
+    private static final Color BORKIE_COLOR = new Color(221, 235, 247);
 
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
@@ -70,11 +71,12 @@ public class PDFWriter {
     }
 
     @NotNull
-    public String writeNonSequenceableReport(@NotNull final String sample, @NotNull String tumorType,
-            @NotNull final NotSequenceableReason reason) throws FileNotFoundException, DRException {
+    public String writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
+            @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
+            throws FileNotFoundException, DRException {
         final String fileName = fileName(sample);
-        final JasperReportBuilder jasperReportBuilder = generateNotSequenceableReport(sample, tumorType, reason,
-                hmfLogo);
+        final JasperReportBuilder jasperReportBuilder = generateNotSequenceableReport(sample, tumorType,
+                tumorPercentage, reason, hmfLogo);
 
         jasperReportBuilder.toPdf(new FileOutputStream(fileName));
 
@@ -89,12 +91,12 @@ public class PDFWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample,
-            @NotNull final String tumorType, @NotNull final NotSequenceableReason reason,
-            @NotNull final String hmfLogoPath) {
+            @NotNull final String tumorType, @NotNull final String tumorPercentage,
+            @NotNull final NotSequenceableReason reason, @NotNull final String hmfLogoPath) {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, hmfLogoPath),
+                        mainPageTopSection(sample, tumorType, tumorPercentage, hmfLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason));
         // @formatter:on
@@ -109,7 +111,8 @@ public class PDFWriter {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
-                        mainPageTopSection(report.sample(), report.tumorType(), hmfLogoPath),
+                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(),
+                                hmfLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -140,7 +143,8 @@ public class PDFWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample,
-            @NotNull final String tumorType, @NotNull final String hmfLogoPath) {
+            @NotNull final String tumorType, @NotNull final String tumorPercentage,
+            @NotNull final String hmfLogoPath) {
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
@@ -148,7 +152,10 @@ public class PDFWriter {
                         cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
                 cmp.verticalList(
                         cmp.text("Tumor Type").setStyle(tableHeaderStyle()),
-                        cmp.text(tumorType).setStyle(dataTableStyle()))
+                        cmp.text(tumorType).setStyle(dataTableStyle())),
+                cmp.verticalList(
+                        cmp.text("Tumor Percentage").setStyle(tableHeaderStyle()),
+                        cmp.text(tumorPercentage).setStyle(dataTableStyle()))
         );
 
         return cmp.horizontalList(
@@ -386,7 +393,7 @@ public class PDFWriter {
     private static StyleBuilder tableHeaderStyle() {
         return fontStyle().bold().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setVerticalTextAlignment(
                 VerticalTextAlignment.MIDDLE).setFontSize(10).setBorder(stl.pen1Point()).setBackgroundColor(
-                new Color(210, 210, 210));
+                BORKIE_COLOR);
     }
 
     @NotNull
