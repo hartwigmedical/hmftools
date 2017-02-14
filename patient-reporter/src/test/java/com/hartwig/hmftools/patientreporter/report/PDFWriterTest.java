@@ -76,10 +76,10 @@ public class PDFWriterTest {
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
-        final String tumorPercentage = "0%";
+        final String tumorPercentageString = "10%";
 
-        final JasperReportBuilder pdf = PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentage,
-                reason, REPORT_LOGO);
+        final JasperReportBuilder pdf = PDFWriter.generateNotSequenceableReport(sample, tumorType,
+                tumorPercentageString, reason, REPORT_LOGO);
         assertNotNull(pdf);
 
         if (SHOW_AND_PRINT) {

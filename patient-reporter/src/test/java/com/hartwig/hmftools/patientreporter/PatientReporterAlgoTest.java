@@ -11,6 +11,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.lims.TumorPercentageTestFactory;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
@@ -43,7 +44,8 @@ public class PatientReporterAlgoTest {
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
         new PatientReporterAlgo(RUN_DIRECTORY, buildTestCpctEcrfModel(), hmfSlicingRegion, variantAnalyzer,
-                copyNumberAnalyzer, buildTestReportWriter(), null, false).run();
+                copyNumberAnalyzer, TumorPercentageTestFactory.buildTestTumorPercentages(), buildTestReportWriter(),
+                null, false).run();
     }
 
     @NotNull

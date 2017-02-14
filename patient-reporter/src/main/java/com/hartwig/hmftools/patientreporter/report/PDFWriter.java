@@ -102,12 +102,12 @@ public class PDFWriter implements ReportWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample,
-            @NotNull final String tumorType, @NotNull final String tumorPercentage,
+            @NotNull final String tumorType, @NotNull final String tumorPercentageString,
             @NotNull final NotSequenceableReason reason, @NotNull final String reportLogoPath) {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, tumorPercentage, reportLogoPath),
+                        mainPageTopSection(sample, tumorType, tumorPercentageString, reportLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason));
         // @formatter:on

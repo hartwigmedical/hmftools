@@ -10,6 +10,7 @@ import javax.xml.stream.XMLStreamException;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.lims.TumorPercentages;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
@@ -45,6 +46,9 @@ public class PatientReporterApplication {
     private static final String CPCT_ECRF_ARGS_DESC = "Complete path towards the cpct ecrf xml database.";
     private static final String CPCT_ECRF = "cpct_ecrf";
 
+    private static final String TUMOR_PERCENTAGE_CSV_ARGS_DESC = "Complete path towards a CSV containing tumor percentages.";
+    private static final String TUMOR_PERCENTAGE_CSV = "tumor_percentage_csv";
+
     private static final String REPORT_LOGO_ARGS_DESC = "Complete path to the logo used in the PDF report.";
     private static final String REPORT_LOGO = "report_logo";
 
@@ -75,12 +79,14 @@ public class PatientReporterApplication {
         final CommandLine cmd = createCommandLine(options, args);
 
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
+        final String tumorPercentageCsv = cmd.getOptionValue(TUMOR_PERCENTAGE_CSV);
         final String reportLogo = cmd.getOptionValue(REPORT_LOGO);
         final String reportDirectory = cmd.getOptionValue(REPORT_DIRECTORY);
 
-        if (validGeneralInput(cpctEcrf, reportLogo, reportDirectory)) {
+        if (validGeneralInput(cpctEcrf, tumorPercentageCsv, reportLogo, reportDirectory)) {
             LOGGER.info("Running patient reporter");
 
+            final TumorPercentages tumorPercentages = TumorPercentages.loadFromCsv(tumorPercentageCsv);
             final ReportWriter reportWriter = new PDFWriter(reportDirectory, reportLogo);
 
             if (cmd.hasOption(NOT_SEQUENCEABLE)) {
@@ -91,7 +97,10 @@ public class PatientReporterApplication {
                     final CpctEcrfModel cpctEcrfModel = loadModel(cpctEcrf);
                     final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel,
                             notSequenceableSample);
-                    reportWriter.writeNonSequenceableReport(notSequenceableSample, tumorType, "0%",
+                    final String tumorPercentageString = Long.toString(
+                            Math.round(100D * tumorPercentages.findTumorPercentageForSample(notSequenceableSample)))
+                            + "%";
+                    reportWriter.writeNonSequenceableReport(notSequenceableSample, tumorType, tumorPercentageString,
                             notSequenceableReason);
                 } else {
                     gracefulShutdown(options);
@@ -112,7 +121,7 @@ public class PatientReporterApplication {
                             hmfSlicingRegion);
                     final boolean batchMode = cmd.hasOption(BATCH_MODE);
                     new PatientReporterAlgo(runDirectory, cpctEcrfModel, hmfSlicingRegion, variantAnalyzer,
-                            copyNumberAnalyzer, reportWriter, tmpDirectory, batchMode).run();
+                            copyNumberAnalyzer, tumorPercentages, reportWriter, tmpDirectory, batchMode).run();
                 } else {
                     gracefulShutdown(options);
                 }
@@ -145,6 +154,7 @@ public class PatientReporterApplication {
         options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
         options.addOption(HMF_SLICING_BED, true, HMF_SLICING_BED_ARGS_DESC);
         options.addOption(CPCT_ECRF, true, CPCT_ECRF_ARGS_DESC);
+        options.addOption(TUMOR_PERCENTAGE_CSV, true, TUMOR_PERCENTAGE_CSV_ARGS_DESC);
         options.addOption(REPORT_LOGO, true, REPORT_LOGO_ARGS_DESC);
         options.addOption(REPORT_DIRECTORY, true, REPORT_DIRECTORY_ARGS_DESC);
         options.addOption(TMP_DIRECTORY, true, TMP_DIRECTORY_ARGS_DESC);
@@ -164,10 +174,13 @@ public class PatientReporterApplication {
         return parser.parse(options, args);
     }
 
-    private static boolean validGeneralInput(@Nullable final String cpctEcrf, @Nullable final String reportLogo,
+    private static boolean validGeneralInput(@Nullable final String cpctEcrf,
+            @Nullable final String tumorPercentageCsv, @Nullable final String reportLogo,
             @Nullable final String reportDirectory) {
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
+        } else if (tumorPercentageCsv == null || !exists(tumorPercentageCsv)) {
+            LOGGER.warn(TUMOR_PERCENTAGE_CSV + " has to be an existing file: " + tumorPercentageCsv);
         } else if (reportLogo == null || !exists(reportLogo)) {
             LOGGER.warn(REPORT_LOGO + " has to be an existing file: " + reportLogo);
         } else if (reportDirectory == null || !exists(reportDirectory) || !isDirectory(reportDirectory)) {

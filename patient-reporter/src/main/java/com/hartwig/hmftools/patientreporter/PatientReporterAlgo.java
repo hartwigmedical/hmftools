@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.lims.TumorPercentages;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
@@ -47,6 +48,8 @@ class PatientReporterAlgo {
     @NotNull
     private final CopyNumberAnalyzer copyNumberAnalyzer;
     @NotNull
+    private final TumorPercentages tumorPercentages;
+    @NotNull
     private final ReportWriter reportWriter;
     @Nullable
     private final String tmpDirectory;
@@ -54,13 +57,14 @@ class PatientReporterAlgo {
 
     PatientReporterAlgo(@NotNull final String runDirectory, @NotNull final CpctEcrfModel cpctEcrfModel,
             @NotNull final Slicer hmfSlicingRegion, @NotNull final VariantAnalyzer variantAnalyzer,
-            @NotNull final CopyNumberAnalyzer copyNumberAnalyzer, @NotNull final ReportWriter reportWriter,
-            @Nullable final String tmpDirectory, final boolean batchMode) {
+            @NotNull final CopyNumberAnalyzer copyNumberAnalyzer, @NotNull final TumorPercentages tumorPercentages,
+            @NotNull final ReportWriter reportWriter, @Nullable final String tmpDirectory, final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.cpctEcrfModel = cpctEcrfModel;
         this.hmfSlicingRegion = hmfSlicingRegion;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
+        this.tumorPercentages = tumorPercentages;
         this.reportWriter = reportWriter;
         this.tmpDirectory = tmpDirectory;
         this.batchMode = batchMode;
@@ -135,8 +139,9 @@ class PatientReporterAlgo {
         }
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
+        final double tumorPercentage = tumorPercentages.findTumorPercentageForSample(sample);
         return new PatientReport(sample, variantAnalysis.findings(), copyNumberAnalysis.findings(), mutationalLoad,
-                tumorType, Double.NaN);
+                tumorType, tumorPercentage);
     }
 
     private static void writeToFiles(@NotNull final String baseName, @NotNull final VariantAnalysis variantAnalysis,
