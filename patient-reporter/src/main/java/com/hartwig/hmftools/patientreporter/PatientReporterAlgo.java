@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
-import com.hartwig.hmftools.patientreporter.report.PDFWriter;
+import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -43,21 +43,21 @@ class PatientReporterAlgo {
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final CopyNumberAnalyzer copyNumberAnalyzer;
+    @NotNull
+    private final ReportWriter reportWriter;
     @Nullable
     private final String tmpDirectory;
-    @Nullable
-    private final PDFWriter pdfWriter;
     private final boolean batchMode;
 
     PatientReporterAlgo(@NotNull final String runDirectory, @NotNull final CpctEcrfModel cpctEcrfModel,
             @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
-            @Nullable final String tmpDirectory, @Nullable final PDFWriter pdfWriter, final boolean batchMode) {
+            @NotNull final ReportWriter reportWriter, @Nullable final String tmpDirectory, final boolean batchMode) {
         this.runDirectory = runDirectory;
         this.cpctEcrfModel = cpctEcrfModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
+        this.reportWriter = reportWriter;
         this.tmpDirectory = tmpDirectory;
-        this.pdfWriter = pdfWriter;
         this.batchMode = batchMode;
     }
 
@@ -66,11 +66,7 @@ class PatientReporterAlgo {
             batchRun();
         } else {
             final PatientReport report = patientRun();
-            if (pdfWriter != null) {
-                final String pdfReport = pdfWriter.writeSequenceReport(report);
-                LOGGER.info("  Written PDF report to " + pdfReport);
-
-            }
+            reportWriter.writeSequenceReport(report);
         }
     }
 

@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.util.Collection;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -21,6 +22,8 @@ import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +37,9 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
 
-public class PDFWriter {
+public class PDFWriter implements ReportWriter {
+
+    private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
 
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
@@ -61,25 +66,34 @@ public class PDFWriter {
     }
 
     @NotNull
+    @Override
     public String writeSequenceReport(@NotNull final PatientReport report) throws FileNotFoundException, DRException {
-        final String fileName = fileName(report.sample());
-        final JasperReportBuilder jasperReportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion);
+        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion);
 
-        jasperReportBuilder.toPdf(new FileOutputStream(fileName));
-
-        return fileName;
+        return writeReport(report.sample(), reportBuilder);
     }
 
     @NotNull
+    @Override
     public String writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
             throws FileNotFoundException, DRException {
-        final String fileName = fileName(sample);
-        final JasperReportBuilder jasperReportBuilder = generateNotSequenceableReport(sample, tumorType,
+        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType,
                 tumorPercentage, reason, reportLogo);
 
-        jasperReportBuilder.toPdf(new FileOutputStream(fileName));
+        return writeReport(sample, reportBuilder);
+    }
 
+    @NotNull
+    private String writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
+            throws FileNotFoundException, DRException {
+        final String fileName = fileName(sample);
+        if (Files.exists(new File(fileName).toPath())) {
+            LOGGER.warn("Could not write report as it already exists: " + fileName);
+        } else {
+            report.toPdf(new FileOutputStream(fileName));
+            LOGGER.info("Created patient report at " + fileName);
+        }
         return fileName;
     }
 

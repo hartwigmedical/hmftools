@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import com.google.common.collect.Lists;
@@ -10,12 +11,14 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -38,11 +41,30 @@ public class PatientReporterAlgoTest {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(slicer, slicer, slicer);
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(slicer);
         new PatientReporterAlgo(RUN_DIRECTORY, buildTestCpctEcrfModel(), variantAnalyzer, copyNumberAnalyzer,
-                null, null, false).run();
+                buildTestReportWriter(), null, false).run();
     }
 
     @NotNull
     private static CpctEcrfModel buildTestCpctEcrfModel() {
         return new CpctEcrfModel(Lists.newArrayList(), Lists.newArrayList());
+    }
+
+    private static ReportWriter buildTestReportWriter() {
+        return new ReportWriter() {
+            @NotNull
+            @Override
+            public String writeSequenceReport(@NotNull final PatientReport report)
+                    throws FileNotFoundException, DRException {
+                return Strings.EMPTY;
+            }
+
+            @NotNull
+            @Override
+            public String writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
+                    @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
+                    throws FileNotFoundException, DRException {
+                return Strings.EMPTY;
+            }
+        };
     }
 }
