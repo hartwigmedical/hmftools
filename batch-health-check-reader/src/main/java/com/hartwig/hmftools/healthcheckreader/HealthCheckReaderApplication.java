@@ -105,8 +105,7 @@ public class HealthCheckReaderApplication {
         if (runs != null) {
             for (final File runDirectory : runs) {
                 LOGGER.info("Processing " + runDirectory.getPath());
-                HealthCheckReport report = HealthCheckReportFactory.fromHealthCheckReport(runDirectory.getPath());
-                reports.add(report);
+                reports.add(HealthCheckReportFactory.fromHealthCheckReport(runDirectory.getPath()));
             }
         } else {
             LOGGER.warn(String.format("%s contains no runs!", dataPath));
@@ -122,6 +121,7 @@ public class HealthCheckReaderApplication {
             writer.write(HealthCheckDataToCSV.tumorSample(report));
         }
         writer.close();
+        LOGGER.info("Written results to " + csvOut);
     }
 
     private static void runInSingleMode(@NotNull final String reportPath) throws FileNotFoundException {
