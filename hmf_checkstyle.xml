@@ -1,0 +1,87 @@
+<code_scheme name="hmf_checkstyle">
+    <option name="GENERATE_FINAL_LOCALS" value="true"/>
+    <option name="GENERATE_FINAL_PARAMETERS" value="true"/>
+    <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999"/>
+    <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="9999"/>
+    <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
+        <value/>
+    </option>
+    <option name="IMPORT_LAYOUT_TABLE">
+        <value>
+            <package name="java" withSubpackages="true" static="true"/>
+            <emptyLine/>
+            <package name="javax" withSubpackages="true" static="true"/>
+            <emptyLine/>
+            <package name="mcc" withSubpackages="true" static="true"/>
+            <emptyLine/>
+            <package name="com" withSubpackages="true" static="true"/>
+            <emptyLine/>
+            <package name="nl" withSubpackages="true" static="true"/>
+            <emptyLine/>
+            <package name="org" withSubpackages="true" static="true"/>
+            <emptyLine/>
+            <package name="" withSubpackages="true" static="true"/>
+            <emptyLine/>
+            <package name="java" withSubpackages="true" static="false"/>
+            <emptyLine/>
+            <package name="javax" withSubpackages="true" static="false"/>
+            <emptyLine/>
+            <package name="mcc" withSubpackages="true" static="false"/>
+            <emptyLine/>
+            <package name="com" withSubpackages="true" static="false"/>
+            <emptyLine/>
+            <package name="nl" withSubpackages="true" static="false"/>
+            <emptyLine/>
+            <package name="org" withSubpackages="true" static="false"/>
+            <emptyLine/>
+            <package name="" withSubpackages="true" static="false"/>
+        </value>
+    </option>
+    <option name="RIGHT_MARGIN" value="119"/>
+    <option name="FORMATTER_TAGS_ENABLED" value="true"/>
+    <JavaCodeStyleSettings>
+        <option name="ANNOTATION_PARAMETER_WRAP" value="2"/>
+        <option name="ALIGN_MULTILINE_ANNOTATION_PARAMETERS" value="true"/>
+    </JavaCodeStyleSettings>
+    <XML>
+        <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true"/>
+    </XML>
+    <codeStyleSettings language="JAVA">
+        <option name="KEEP_LINE_BREAKS" value="false"/>
+        <option name="KEEP_FIRST_COLUMN_COMMENT" value="false"/>
+        <option name="KEEP_CONTROL_STATEMENT_IN_ONE_LINE" value="false"/>
+        <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="1"/>
+        <option name="KEEP_BLANK_LINES_IN_CODE" value="1"/>
+        <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="1"/>
+        <option name="ALIGN_MULTILINE_PARAMETERS" value="false"/>
+        <option name="ALIGN_MULTILINE_RESOURCES" value="false"/>
+        <option name="ALIGN_MULTILINE_FOR" value="false"/>
+        <option name="SPACE_WITHIN_ARRAY_INITIALIZER_BRACES" value="true"/>
+        <option name="SPACE_BEFORE_ARRAY_INITIALIZER_LBRACE" value="true"/>
+        <option name="CALL_PARAMETERS_WRAP" value="1"/>
+        <option name="METHOD_PARAMETERS_WRAP" value="1"/>
+        <option name="RESOURCE_LIST_WRAP" value="5"/>
+        <option name="EXTENDS_LIST_WRAP" value="1"/>
+        <option name="THROWS_LIST_WRAP" value="1"/>
+        <option name="EXTENDS_KEYWORD_WRAP" value="1"/>
+        <option name="THROWS_KEYWORD_WRAP" value="1"/>
+        <option name="BINARY_OPERATION_WRAP" value="1"/>
+        <option name="BINARY_OPERATION_SIGN_ON_NEXT_LINE" value="true"/>
+        <option name="TERNARY_OPERATION_WRAP" value="5"/>
+        <option name="ARRAY_INITIALIZER_WRAP" value="1"/>
+        <option name="VARIABLE_ANNOTATION_WRAP" value="2"/>
+        <option name="ENUM_CONSTANTS_WRAP" value="2"/>
+        <arrangement>
+            <groups>
+                <group>
+                    <type>GETTERS_AND_SETTERS</type>
+                    <order>KEEP</order>
+                </group>
+                <group>
+                    <type>OVERRIDDEN_METHODS</type>
+                    <order>KEEP</order>
+                </group>
+            </groups>
+        </arrangement>
+    </codeStyleSettings>
+</code_scheme>

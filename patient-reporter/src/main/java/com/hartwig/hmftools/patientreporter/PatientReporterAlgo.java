@@ -132,7 +132,8 @@ class PatientReporterAlgo {
                 mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
         LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
-        LOGGER.info("  Determined copy number stats for " + copyNumberAnalysis.stats().size() + " regions.");
+        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.stats().size())
+                + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         if (tmpDirectory != null) {
             writeToFiles(tmpDirectory + File.separator + sample, variantAnalysis, copyNumberAnalysis);
