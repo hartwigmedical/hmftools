@@ -21,23 +21,23 @@ import org.jetbrains.annotations.NotNull;
 public class ConsensusRule {
 
     @NotNull
-    private final Slicer giabHighConfidenceRegion;
+    private final Slicer highConfidenceRegion;
     @NotNull
-    private final Slicer cpctSlicingRegion;
+    private final Slicer extremeConfidenceRegion;
 
-    public ConsensusRule(@NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
-        this.giabHighConfidenceRegion = giabHighConfidenceRegion;
-        this.cpctSlicingRegion = cpctSlicingRegion;
+    public ConsensusRule(@NotNull final Slicer highConfidenceRegion, @NotNull final Slicer extremeConfidenceRegion) {
+        this.highConfidenceRegion = highConfidenceRegion;
+        this.extremeConfidenceRegion = extremeConfidenceRegion;
     }
 
     @NotNull
     public List<SomaticVariant> apply(@NotNull List<SomaticVariant> variants) {
         final Predicate<SomaticVariant> snpRule = and(withType(VariantType.SNP),
-                or(withMinCallers(3), isIncludedIn(cpctSlicingRegion),
-                        and(withMinCallers(2), isIncludedIn(giabHighConfidenceRegion),
+                or(withMinCallers(3), isIncludedIn(extremeConfidenceRegion),
+                        and(withMinCallers(2), isIncludedIn(highConfidenceRegion),
                                 or(inCOSMIC(), not(inDBSNP())))));
         final Predicate<SomaticVariant> indelRule = and(withType(VariantType.INDEL),
-                or(withMinCallers(2), isIncludedIn(cpctSlicingRegion)));
+                or(withMinCallers(2), isIncludedIn(extremeConfidenceRegion)));
 
         return filter(variants, or(snpRule, indelRule));
     }

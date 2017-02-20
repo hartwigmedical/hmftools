@@ -21,9 +21,9 @@ public class ConsensusRuleTest {
     @Test
     public void consensusRuleWorks() {
         final Slicer highConfidence = SlicerFactory.forGenomeRegion(region(100, 1000));
-        final Slicer cpctSlicing = SlicerFactory.forGenomeRegion(region(500, 600));
+        final Slicer extremeConfidence = SlicerFactory.forGenomeRegion(region(500, 600));
 
-        final ConsensusRule rule = new ConsensusRule(highConfidence, cpctSlicing);
+        final ConsensusRule rule = new ConsensusRule(highConfidence, extremeConfidence);
 
         final List<SomaticVariant> variants = Lists.newArrayList(cosmicSNPVariantOnPositionWithCallers(300, 2),
                 // KODU: Include
