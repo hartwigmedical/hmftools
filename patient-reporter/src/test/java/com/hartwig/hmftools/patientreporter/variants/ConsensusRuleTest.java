@@ -5,11 +5,11 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
-import com.hartwig.hmftools.patientreporter.slicing.Slicer;
-import com.hartwig.hmftools.patientreporter.slicing.SlicerTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -20,8 +20,8 @@ public class ConsensusRuleTest {
 
     @Test
     public void consensusRuleWorks() {
-        final Slicer highConfidence = SlicerTestFactory.forGenomeRegion(region(100, 1000));
-        final Slicer cpctSlicing = SlicerTestFactory.forGenomeRegion(region(500, 600));
+        final Slicer highConfidence = SlicerFactory.forGenomeRegion(region(100, 1000));
+        final Slicer cpctSlicing = SlicerFactory.forGenomeRegion(region(500, 600));
 
         final ConsensusRule rule = new ConsensusRule(highConfidence, cpctSlicing);
 

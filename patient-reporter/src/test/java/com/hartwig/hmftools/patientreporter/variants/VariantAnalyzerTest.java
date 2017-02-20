@@ -5,13 +5,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
-import com.hartwig.hmftools.patientreporter.slicing.Slicer;
-import com.hartwig.hmftools.patientreporter.slicing.SlicerTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,9 +30,9 @@ public class VariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final Slicer hmfSlicingRegion = SlicerTestFactory.forGenomeRegion(region(350, 450, REGION_ANNOTATION));
-        final Slicer giabHighConfidenceRegion = SlicerTestFactory.forGenomeRegion(region(100, 1000));
-        final Slicer cpctSlicingRegion = SlicerTestFactory.forGenomeRegion(region(400, 500));
+        final Slicer hmfSlicingRegion = SlicerFactory.forGenomeRegion(region(350, 450, REGION_ANNOTATION));
+        final Slicer giabHighConfidenceRegion = SlicerFactory.forGenomeRegion(region(100, 1000));
+        final Slicer cpctSlicingRegion = SlicerFactory.forGenomeRegion(region(400, 500));
 
         final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, giabHighConfidenceRegion,
                 cpctSlicingRegion);

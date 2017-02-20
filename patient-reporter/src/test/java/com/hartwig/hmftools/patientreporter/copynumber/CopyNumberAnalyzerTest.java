@@ -8,9 +8,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationTestFactory;
+import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
 import org.junit.Test;
 
@@ -25,9 +25,9 @@ public class CopyNumberAnalyzerTest {
         final GenomeRegion second = new GenomeRegion(CHROMOSOME, 301, 400);
         final GenomeRegion third = new GenomeRegion(CHROMOSOME, 601, 700);
 
-        final HMFSlicingAnnotation firstAnnotation = HMFSlicingAnnotationTestFactory.create("TRANS1", 1, "GENE1");
-        final HMFSlicingAnnotation secondAnnotation = HMFSlicingAnnotationTestFactory.create("TRANS2", 1, "GENE2");
-        final HMFSlicingAnnotation thirdAnnotation = HMFSlicingAnnotationTestFactory.create("TRANS3", 1, "GENE3");
+        final HMFSlicingAnnotation firstAnnotation = HMFSlicingAnnotationFactory.create("TRANS1", 1, "GENE1");
+        final HMFSlicingAnnotation secondAnnotation = HMFSlicingAnnotationFactory.create("TRANS2", 1, "GENE2");
+        final HMFSlicingAnnotation thirdAnnotation = HMFSlicingAnnotationFactory.create("TRANS3", 1, "GENE3");
 
         final Map<GenomeRegion, HMFSlicingAnnotation> annotations = Maps.newHashMap();
         annotations.put(first, firstAnnotation);

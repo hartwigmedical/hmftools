@@ -2,9 +2,9 @@ package com.hartwig.hmftools.patientreporter.report;
 
 import java.io.FileNotFoundException;
 
+import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.PatientReport;
-import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
 import org.jetbrains.annotations.NotNull;
 

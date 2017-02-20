@@ -12,9 +12,9 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.wi
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.slicing.Slicer;
 
 import org.jetbrains.annotations.NotNull;
 

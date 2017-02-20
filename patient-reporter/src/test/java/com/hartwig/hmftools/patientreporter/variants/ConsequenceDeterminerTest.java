@@ -7,14 +7,14 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationTestFactory;
-import com.hartwig.hmftools.patientreporter.slicing.Slicer;
-import com.hartwig.hmftools.patientreporter.slicing.SlicerTestFactory;
+import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -40,11 +40,11 @@ public class ConsequenceDeterminerTest {
 
     @Test
     public void worksAsExpected() {
-        final Slicer slicer = SlicerTestFactory.forGenomeRegion(
+        final Slicer slicer = SlicerFactory.forGenomeRegion(
                 new GenomeRegion(CHROMOSOME, POSITION - 10, POSITION + 10));
         final Map<String, HMFSlicingAnnotation> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT,
-                HMFSlicingAnnotationTestFactory.create(TRANSCRIPT, TRANSCRIPT_VERSION, Strings.EMPTY));
+                HMFSlicingAnnotationFactory.create(TRANSCRIPT, TRANSCRIPT_VERSION, Strings.EMPTY));
 
         final ConsequenceDeterminer determiner = new ConsequenceDeterminer(slicer, transcriptMap);
 

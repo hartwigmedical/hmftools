@@ -4,20 +4,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class HMFSlicingAnnotationTest {
+public class HMFSlicingAnnotationFactoryTest {
 
     @Test
     public void canCreateFromGenomeRegion() {
-        assertNull(HMFSlicingAnnotation.fromGenomeRegion(toRegion(null)));
-        assertNull(HMFSlicingAnnotation.fromGenomeRegion(toRegion("korneel")));
-        assertNull(HMFSlicingAnnotation.fromGenomeRegion(toRegion("hello world")));
+        assertNull(HMFSlicingAnnotationFactory.fromGenomeRegion(toRegion(null)));
+        assertNull(HMFSlicingAnnotationFactory.fromGenomeRegion(toRegion("korneel")));
+        assertNull(HMFSlicingAnnotationFactory.fromGenomeRegion(toRegion("hello world")));
 
-        final HMFSlicingAnnotation annotation = HMFSlicingAnnotation.fromGenomeRegion(
+        final HMFSlicingAnnotation annotation = HMFSlicingAnnotationFactory.fromGenomeRegion(
                 toRegion("ENST00000361445.4 (MTOR)"));
         assertNotNull(annotation);
         assertEquals("ENST00000361445", annotation.transcriptID());

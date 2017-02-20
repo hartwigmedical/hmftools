@@ -8,11 +8,12 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +44,7 @@ public class VariantAnalyzer {
     private static Map<String, HMFSlicingAnnotation> extractTranscriptMap(final @NotNull Slicer hmfSlicingRegion) {
         final Map<String, HMFSlicingAnnotation> transcriptMap = Maps.newHashMap();
         for (final GenomeRegion region : hmfSlicingRegion.regions()) {
-            final HMFSlicingAnnotation annotation = HMFSlicingAnnotation.fromGenomeRegion(region);
+            final HMFSlicingAnnotation annotation = HMFSlicingAnnotationFactory.fromGenomeRegion(region);
             if (annotation == null) {
                 LOGGER.warn("Could not extract annotation from hmf slicing region: " + region);
             } else {

@@ -10,9 +10,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.patientreporter.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,7 +33,7 @@ public final class CopyNumberAnalyzer {
     public static CopyNumberAnalyzer fromHmfSlicingRegion(@NotNull final Slicer hmfSlicingRegion) {
         final Map<GenomeRegion, HMFSlicingAnnotation> annotations = Maps.newHashMap();
         for (final GenomeRegion region : hmfSlicingRegion.regions()) {
-            final HMFSlicingAnnotation annotation = HMFSlicingAnnotation.fromGenomeRegion(region);
+            final HMFSlicingAnnotation annotation = HMFSlicingAnnotationFactory.fromGenomeRegion(region);
             if (annotation == null) {
                 LOGGER.warn("Could not extract annotation from hmf slicing region: " + region);
             } else {

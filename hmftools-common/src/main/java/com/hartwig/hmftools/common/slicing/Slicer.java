@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.slicing;
+package com.hartwig.hmftools.common.slicing;
 
 import java.util.Collection;
 

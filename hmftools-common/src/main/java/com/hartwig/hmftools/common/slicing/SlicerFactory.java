@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.slicing;
+package com.hartwig.hmftools.common.slicing;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,5 +61,12 @@ public final class SlicerFactory {
         LOGGER.debug("Created slicer from " + bedFile + ": " + slicer.numberOfRegions() + " regions covering "
                 + slicer.numberOfBases() + " bases");
         return slicer;
+    }
+
+    @NotNull
+    public static Slicer forGenomeRegion(@NotNull final GenomeRegion region) {
+        final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
+        regionMap.put(region.chromosome(), region);
+        return new Slicer(regionMap);
     }
 }
