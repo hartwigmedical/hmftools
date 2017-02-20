@@ -8,10 +8,10 @@
         <version>1</version>
     </parent>
 
-    <artifactId>ecrf-analyser</artifactId>
+    <artifactId>consensus-rule-filter</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - ECRF Analyser</name>
+    <name>HMF Tools - Consensus Rule Filter</name>
 
     <dependencies>
         <dependency>
@@ -42,7 +42,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.ecrfanalyser.EcrfAnalysisApplication
+                            <mainClass>com.hartwig.hmftools.consensusrule.ConsensusRuleFilterApplication
                             </mainClass>
                         </manifest>
                     </archive>

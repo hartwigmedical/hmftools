@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.vcf;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -23,9 +24,25 @@ public final class VCFFileLoader {
     }
 
     @NotNull
-    public static VCFSomaticFile loadSomaticVCF(@NotNull String basePath, @NotNull String fileExtension)
+    public static VCFSomaticFile loadSomaticVCF(@NotNull final String basePath, @NotNull final String fileExtension)
             throws IOException, HartwigException {
-        final List<String> lines = loadAllLinesFromVCF(basePath, fileExtension);
+        return toVCFSomaticFile(loadAllLinesFromVCF(basePath, fileExtension));
+    }
+
+    @NotNull
+    public static VCFSomaticFile loadSomaticVCF(@NotNull final String file) throws IOException, HartwigException {
+        return toVCFSomaticFile(loadAllLinesFromVCF(file));
+    }
+
+    @NotNull
+    public static List<GermlineVariant> loadGermlineVCF(@NotNull final String basePath,
+            @NotNull final String fileExtension) throws IOException, HartwigException {
+        final List<String> lines = loadVariantLinesFromVCF(basePath, fileExtension);
+        return lines.stream().map(GermlineVariantFactory::fromVCFLine).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static VCFSomaticFile toVCFSomaticFile(@NotNull final List<String> lines) {
         final Optional<String> headerLine = lines.stream().filter(new VCFHeaderLinePredicate()).findFirst();
         assert headerLine.isPresent();
         final String sample = SomaticVariantFactory.sampleFromHeaderLine(headerLine.get());
@@ -37,21 +54,19 @@ public final class VCFFileLoader {
     }
 
     @NotNull
-    public static List<GermlineVariant> loadGermlineVCF(@NotNull String basePath, @NotNull String fileExtension)
-            throws IOException, HartwigException {
-        final List<String> lines = loadVariantLinesFromVCF(basePath, fileExtension);
-        return lines.stream().map(GermlineVariantFactory::fromVCFLine).collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static List<String> loadAllLinesFromVCF(@NotNull String basePath, @NotNull String fileExtension)
-            throws IOException, HartwigException {
+    private static List<String> loadAllLinesFromVCF(@NotNull final String basePath,
+            @NotNull final String fileExtension) throws IOException, HartwigException {
         return FileReader.build().readLines(PathExtensionFinder.build().findPath(basePath, fileExtension));
     }
 
     @NotNull
-    private static List<String> loadVariantLinesFromVCF(@NotNull String basePath, @NotNull String fileExtension)
-            throws IOException, HartwigException {
+    private static List<String> loadAllLinesFromVCF(@NotNull final String file) throws IOException, HartwigException {
+        return FileReader.build().readLines(new File(file).toPath());
+    }
+
+    @NotNull
+    private static List<String> loadVariantLinesFromVCF(@NotNull final String basePath,
+            @NotNull final String fileExtension) throws IOException, HartwigException {
         final Path vcfPath = PathExtensionFinder.build().findPath(basePath, fileExtension);
         return LineReader.build().readLines(vcfPath, new VCFDataLinePredicate());
     }
