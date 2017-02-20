@@ -22,7 +22,7 @@ public class Slicer {
         if (regionsForChrom == null) {
             return false;
         } else {
-            for (GenomeRegion region : regionsForChrom) {
+            for (final GenomeRegion region : regionsForChrom) {
                 if (variant.position() >= region.start() && variant.position() <= region.end()) {
                     return true;
                 } else if (region.start() > variant.position()) {
@@ -46,7 +46,7 @@ public class Slicer {
     @VisibleForTesting
     public long numberOfBases() {
         long bases = 0;
-        for (GenomeRegion region : regions.values()) {
+        for (final GenomeRegion region : regions.values()) {
             bases += region.bases();
         }
         return bases;

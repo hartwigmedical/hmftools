@@ -30,9 +30,9 @@ public class VariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final Slicer hmfSlicingRegion = SlicerFactory.forGenomeRegion(region(350, 450, REGION_ANNOTATION));
-        final Slicer giabHighConfidenceRegion = SlicerFactory.forGenomeRegion(region(100, 1000));
-        final Slicer cpctSlicingRegion = SlicerFactory.forGenomeRegion(region(400, 500));
+        final Slicer hmfSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(350, 450, REGION_ANNOTATION));
+        final Slicer giabHighConfidenceRegion = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
+        final Slicer cpctSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(400, 500));
 
         final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, giabHighConfidenceRegion,
                 cpctSlicingRegion);

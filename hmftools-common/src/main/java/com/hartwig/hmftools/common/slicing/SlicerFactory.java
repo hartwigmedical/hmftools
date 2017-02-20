@@ -18,6 +18,7 @@ public final class SlicerFactory {
     private static final Logger LOGGER = LogManager.getLogger(SlicerFactory.class);
 
     private static final String FIELD_SEPARATOR = "\t";
+
     private static final int CHROMOSOME_COLUMN = 0;
     private static final int START_COLUMN = 1;
     private static final int END_COLUMN = 2;
@@ -64,7 +65,7 @@ public final class SlicerFactory {
     }
 
     @NotNull
-    public static Slicer forGenomeRegion(@NotNull final GenomeRegion region) {
+    public static Slicer fromSingleGenomeRegion(@NotNull final GenomeRegion region) {
         final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
         regionMap.put(region.chromosome(), region);
         return new Slicer(regionMap);

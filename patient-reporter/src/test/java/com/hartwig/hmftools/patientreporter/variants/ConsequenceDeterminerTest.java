@@ -40,7 +40,7 @@ public class ConsequenceDeterminerTest {
 
     @Test
     public void worksAsExpected() {
-        final Slicer slicer = SlicerFactory.forGenomeRegion(
+        final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(
                 new GenomeRegion(CHROMOSOME, POSITION - 10, POSITION + 10));
         final Map<String, HMFSlicingAnnotation> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT,
