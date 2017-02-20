@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants;
+package com.hartwig.hmftools.common.variant.consensus;
 
 import static org.junit.Assert.assertEquals;
 

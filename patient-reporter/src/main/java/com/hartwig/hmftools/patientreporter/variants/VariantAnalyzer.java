@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
