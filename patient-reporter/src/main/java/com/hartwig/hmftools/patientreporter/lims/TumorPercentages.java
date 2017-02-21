@@ -27,9 +27,12 @@ public class TumorPercentages {
         final List<String> lines = FileReader.build().readLines(new File(csv).toPath());
         for (final String line : lines) {
             final String[] parts = line.split(",");
-            assert parts.length == 2;
-            tumorPercentagesPerSample.put(parts[0],
-                    Double.valueOf(parts[1].replaceAll("\"", Strings.EMPTY).trim()) / 100D);
+            if (parts.length == 2) {
+                tumorPercentagesPerSample.put(parts[0],
+                        Double.valueOf(parts[1].replaceAll("\"", Strings.EMPTY).trim()) / 100D);
+            } else {
+                LOGGER.warn("Invalid row found in tumor percentages csv: " + line);
+            }
         }
         return new TumorPercentages(tumorPercentagesPerSample);
     }
