@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.consensusrule;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -12,6 +16,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
+import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -26,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 public class ConsensusRuleFilterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ConsensusRuleFilterApplication.class);
+    private static final String SOMATIC_EXTENSION = "_melted.vcf";
 
     private static final String HIGH_CONFIDENCE_BED_ARGS_DESC = "The full path towards the high confidence bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
@@ -41,6 +47,15 @@ public class ConsensusRuleFilterApplication {
 
     private static final String OUTPUT_VCF_ARGS_DESC = "The full path where the filtered VCF will be written to.";
     private static final String OUTPUT_VCF = "out_vcf";
+
+    private static final String BATCH_MODE_ARGS_DESC = "If set, runs the consensus filter in batch mode on run_dir";
+    private static final String BATCH_MODE = "batch_mode";
+
+    private static final String BATCH_MODE_IN_DIRECTORY_ARGS_DESC = "When in batch mode, assumes this folder contains individual runs";
+    private static final String BATCH_MODE_IN_DIRECTORY = "batch_mode_in_dir";
+
+    private static final String BATCH_MODE_OUT_DIRECTORY_ARGS_DESC = "When in batch mode, writes files to this directory";
+    private static final String BATCH_MODE_OUT_DIRECTORY = "batch_mode_out_dir";
 
     public static void main(final String... args)
             throws ParseException, IOException, XMLStreamException, HartwigException {
@@ -64,13 +79,21 @@ public class ConsensusRuleFilterApplication {
         final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
         final ConsensusRule consensusRule = new ConsensusRule(highConfidenceSlicer, extremeConfidenceSlicer);
 
-        final ConsensusRuleFilterApplication application = new ConsensusRuleFilterApplication(consensusRule,
-                outputVcf);
+        final ConsensusRuleFilterApplication application = new ConsensusRuleFilterApplication(consensusRule);
 
-        if (inputVcf == null) {
-            application.runOnRunDirectory(runDirectory);
+        if (cmd.hasOption(BATCH_MODE)) {
+            LOGGER.info("Running consensus rule filter in batch mode");
+            final String batchModeInDirectory = cmd.getOptionValue(BATCH_MODE_IN_DIRECTORY);
+            final String batchModeOutDirectory = cmd.getOptionValue(BATCH_MODE_OUT_DIRECTORY);
+            if (batchModeOutDirectory != null && batchModeInDirectory != null) {
+                application.runBatchModeOnDirectory(batchModeInDirectory, batchModeOutDirectory);
+            } else {
+                LOGGER.warn("Output directory or input directory for batch mode not specified!");
+            }
+        } else if (inputVcf == null) {
+            application.runOnRunDirectory(runDirectory, outputVcf);
         } else {
-            application.runOnInputVcf(inputVcf);
+            application.runOnInputVcf(inputVcf, outputVcf);
         }
     }
 
@@ -83,6 +106,9 @@ public class ConsensusRuleFilterApplication {
         options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
         options.addOption(INPUT_VCF, true, INPUT_VCF_ARGS_DESC);
         options.addOption(OUTPUT_VCF, true, OUTPUT_VCF_ARGS_DESC);
+        options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
+        options.addOption(BATCH_MODE_IN_DIRECTORY, true, BATCH_MODE_IN_DIRECTORY_ARGS_DESC);
+        options.addOption(BATCH_MODE_OUT_DIRECTORY, true, BATCH_MODE_OUT_DIRECTORY_ARGS_DESC);
 
         return options;
     }
@@ -96,26 +122,35 @@ public class ConsensusRuleFilterApplication {
 
     @NotNull
     private final ConsensusRule consensusRule;
-    @NotNull
-    private final String outputVcf;
 
-    private ConsensusRuleFilterApplication(@NotNull final ConsensusRule consensusRule,
-            @NotNull final String outputVcf) {
+    private ConsensusRuleFilterApplication(@NotNull final ConsensusRule consensusRule) {
         this.consensusRule = consensusRule;
-        this.outputVcf = outputVcf;
     }
 
-    private void runOnRunDirectory(@NotNull final String runDirectory) throws IOException, HartwigException {
+    private void runBatchModeOnDirectory(@NotNull final String runDirectory, @NotNull final String outputDirectory)
+            throws IOException, HartwigException {
+        for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
+            final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(run.toFile().getPath(), SOMATIC_EXTENSION);
+            final String outputVcf =
+                    outputDirectory + File.separator + variantFile.sample() + "_consensus_filtered.vcf";
+            processVariants(variantFile.variants(), outputVcf);
+        }
+    }
+
+    private void runOnRunDirectory(@NotNull final String runDirectory, @NotNull final String outputVcf)
+            throws IOException, HartwigException {
         LOGGER.info("Loading melted input from " + runDirectory);
-        processVariants(VCFFileLoader.loadSomaticVCF(runDirectory, "_melted.vcf").variants());
+        processVariants(VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION).variants(), outputVcf);
     }
 
-    private void runOnInputVcf(@NotNull final String inputVcf) throws IOException, HartwigException {
+    private void runOnInputVcf(@NotNull final String inputVcf, @NotNull final String outputVcf)
+            throws IOException, HartwigException {
         LOGGER.info("Loading explicit vcf input from " + inputVcf);
-        processVariants(VCFFileLoader.loadSomaticVCF(inputVcf).variants());
+        processVariants(VCFFileLoader.loadSomaticVCF(inputVcf).variants(), outputVcf);
     }
 
-    private void processVariants(@NotNull final List<SomaticVariant> variants) throws IOException {
+    private void processVariants(@NotNull final List<SomaticVariant> variants, @NotNull final String outputVcf)
+            throws IOException {
         LOGGER.info("Processing " + variants.size() + " variants in consensus rule.");
 
         final List<SomaticVariant> filteredVariants = consensusRule.apply(variants);
