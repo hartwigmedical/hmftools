@@ -67,9 +67,13 @@ public class ConsensusRuleFilterApplication {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String inputVcf = cmd.getOptionValue(INPUT_VCF);
         final String outputVcf = cmd.getOptionValue(OUTPUT_VCF);
+        final boolean batchMode = cmd.hasOption(BATCH_MODE);
+        final String batchModeInDirectory = cmd.getOptionValue(BATCH_MODE_IN_DIRECTORY);
+        final String batchModeOutDirectory = cmd.getOptionValue(BATCH_MODE_OUT_DIRECTORY);
 
-        if (highConfidenceBed == null || extremeConfidenceBed == null || (runDirectory == null && inputVcf == null)
-                || outputVcf == null) {
+        final boolean validBatchMode = batchMode && batchModeInDirectory != null && batchModeOutDirectory != null;
+        final boolean validSingleMode = !batchMode && outputVcf != null && (inputVcf != null || runDirectory != null);
+        if (highConfidenceBed == null || extremeConfidenceBed == null || !(validBatchMode || validSingleMode)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Consensus-Rule-Filter", options);
             System.exit(1);
@@ -81,15 +85,9 @@ public class ConsensusRuleFilterApplication {
 
         final ConsensusRuleFilterApplication application = new ConsensusRuleFilterApplication(consensusRule);
 
-        if (cmd.hasOption(BATCH_MODE)) {
+        if (batchMode) {
             LOGGER.info("Running consensus rule filter in batch mode");
-            final String batchModeInDirectory = cmd.getOptionValue(BATCH_MODE_IN_DIRECTORY);
-            final String batchModeOutDirectory = cmd.getOptionValue(BATCH_MODE_OUT_DIRECTORY);
-            if (batchModeOutDirectory != null && batchModeInDirectory != null) {
-                application.runBatchModeOnDirectory(batchModeInDirectory, batchModeOutDirectory);
-            } else {
-                LOGGER.warn("Output directory or input directory for batch mode not specified!");
-            }
+            application.runBatchModeOnDirectory(batchModeInDirectory, batchModeOutDirectory);
         } else if (inputVcf == null) {
             application.runOnRunDirectory(runDirectory, outputVcf);
         } else {
@@ -133,25 +131,26 @@ public class ConsensusRuleFilterApplication {
             final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(run.toFile().getPath(), SOMATIC_EXTENSION);
             final String outputVcf =
                     outputDirectory + File.separator + variantFile.sample() + "_consensus_filtered.vcf";
-            processVariants(variantFile.variants(), outputVcf);
+            processVariants(variantFile, outputVcf);
         }
     }
 
     private void runOnRunDirectory(@NotNull final String runDirectory, @NotNull final String outputVcf)
             throws IOException, HartwigException {
         LOGGER.info("Loading melted input from " + runDirectory);
-        processVariants(VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION).variants(), outputVcf);
+        processVariants(VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION), outputVcf);
     }
 
     private void runOnInputVcf(@NotNull final String inputVcf, @NotNull final String outputVcf)
             throws IOException, HartwigException {
         LOGGER.info("Loading explicit vcf input from " + inputVcf);
-        processVariants(VCFFileLoader.loadSomaticVCF(inputVcf).variants(), outputVcf);
+        processVariants(VCFFileLoader.loadSomaticVCF(inputVcf), outputVcf);
     }
 
-    private void processVariants(@NotNull final List<SomaticVariant> variants, @NotNull final String outputVcf)
+    private void processVariants(@NotNull final VCFSomaticFile inputFile, @NotNull final String outputVcf)
             throws IOException {
-        LOGGER.info("Processing " + variants.size() + " variants in consensus rule.");
+        final List<SomaticVariant> variants = inputFile.variants();
+        LOGGER.info("Processing " + variants.size() + " variants in consensus rule for " + inputFile.sample());
 
         final List<SomaticVariant> filteredVariants = consensusRule.apply(variants);
         LOGGER.info("Filtered variants on consensus rule: " + filteredVariants.size() + " variants remaining.");
