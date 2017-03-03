@@ -1,14 +1,11 @@
 # Ignore intellij project files
 *.iml
-.idea/*
+.idea
 
 # Ignore target directies
-batch-health-check-reader/target
-ecrf-analyser/target
-hmftools-common/target
-patient-reporter/target
-retention-checker/target
-health-checker/target
+target
 
 # Ignore test xml ecrf
 hmftools-common/src/test/resources/ecrf/example/ecrf.xml
+
+.DS_Store

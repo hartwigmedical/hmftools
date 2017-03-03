@@ -16,6 +16,7 @@
         <module>health-checker</module>
         <module>patient-reporter</module>
         <module>retention-checker</module>
+        <module>fastq-stats</module>
     </modules>
 
     <properties>
