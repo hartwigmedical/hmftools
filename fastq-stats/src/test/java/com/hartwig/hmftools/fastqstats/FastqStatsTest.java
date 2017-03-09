@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.fastqstats.test;
+package com.hartwig.hmftools.fastqstats;
 
 import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
-import com.hartwig.hmftools.fastqstats.FastqStats;
-import com.hartwig.hmftools.fastqstats.FastqStatsRunner;
-import com.hartwig.hmftools.fastqstats.FastqTracker;
+
 import org.junit.Test;
 
 public class FastqStatsTest {
