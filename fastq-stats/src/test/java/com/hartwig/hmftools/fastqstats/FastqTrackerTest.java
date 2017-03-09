@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class FastqTrackerTest {
     @Test
-    public void computesCorrectPercentageFor100PercentFile() throws IOException{
+    public void computesCorrectPercentageFor100PercentFile() throws IOException {
         FileInputStream fin = new FileInputStream(new File("./src/test/resources/fastq/q30-100.fastq"));
         FastqReader fr = new FastqReader(fin);
         FastqData data = fr.read();
@@ -20,17 +20,17 @@ public class FastqTrackerTest {
     }
 
     @Test
-    public void computesCorrectPercentageFor0PercentFile() throws IOException{
+    public void computesCorrectPercentageFor0PercentFile() throws IOException {
         FileInputStream fin = new FileInputStream(new File("./src/test/resources/fastq/q30-0.fastq"));
         FastqReader fr = new FastqReader(fin);
         FastqData data = fr.read();
         double q30Percentage = data.getQ30() * 100.0 / data.getYield();
         assertEquals(100, data.getYield());
-        assertEquals(0.0, q30Percentage,0.00001);
+        assertEquals(0.0, q30Percentage, 0.00001);
     }
 
     @Test
-    public void computesCorrectPercentageFor10PercentFile() throws IOException{
+    public void computesCorrectPercentageFor10PercentFile() throws IOException {
         FileInputStream fin = new FileInputStream(new File("./src/test/resources/fastq/q30-10.fastq"));
         FastqReader fr = new FastqReader(fin);
         FastqData data = fr.read();
