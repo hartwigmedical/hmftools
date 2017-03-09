@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
-import static com.hartwig.hmftools.fastqstats.TrackerType.*;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,10 +12,13 @@ public class FastqStats {
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
 
     public static FastqTracker processFile(String fileName) throws IOException{
-        FastqTracker tracker = createDefaultFastqTracker();
-        tracker.putIfAbsent(new TrackerKey(Sample, fileName + "-Yield"), new YieldTracker());
-        tracker.putIfAbsent(new TrackerKey(Sample, fileName + "-Q30"), new PredicateTracker(x -> x >= 30));
-        processFile(fileName, new File(fileName), tracker);
+        FastqTracker tracker = new FastqTracker();
+        File f = new File(fileName);
+        FastqData data = processFile(f, tracker);
+        String lane = f.getName().split("_")[3];
+        tracker.addToFlowcell(data);
+        tracker.addToLane(lane, data);
+        tracker.addToSample(f.getName(), data);
         return tracker;
     }
 
@@ -34,7 +34,7 @@ public class FastqStats {
      */
     public static FastqTracker processDir(File dir) throws IOException{
         File[] files = dir.listFiles();
-        FastqTracker tracker = createDefaultFastqTracker();
+        FastqTracker tracker = new FastqTracker();
 
         for(File f : files){
             if(f.isDirectory() && f.getName().startsWith("HMFreg")){
@@ -44,10 +44,17 @@ public class FastqStats {
                     if(sampleFolder.isDirectory()){
                         LOGGER.info("Found sample folder: " + sampleFolder.getName());
                         String sampleName = sampleFolder.getName();
-                        tracker.putIfAbsent(new TrackerKey(Sample, sampleName + "-Yield"), new YieldTracker());
-                        tracker.putIfAbsent(new TrackerKey(Sample, sampleName + "-Q30"), new PredicateTracker(x -> x >= 30));
                         for(File fastq: sampleFolder.listFiles()){
-                            processFile(sampleName, fastq, tracker);
+                            try {
+                                FastqData data = processFile(fastq, tracker);
+                                String lane = fastq.getName().split("_")[3];
+                                tracker.addToFlowcell(data);
+                                tracker.addToLane(lane, data);
+                                tracker.addToSample(sampleName, data);
+                            }
+                            catch (IOException e) {
+                                LOGGER.info("Ignoring file: " + fastq.getName());
+                            }
                         }
                     }
                 }
@@ -55,48 +62,35 @@ public class FastqStats {
             else if(!f.isDirectory() && f.getName().startsWith("UNDETERMINED")){
                 // undetermined files
                 LOGGER.info("Found undetermined file: " + f.getName());
-                String sampleName = "UNDETERMINED";
-                tracker.putIfAbsent(new TrackerKey(Sample, "UNDETERMINED-Yield"), new YieldTracker());
-                tracker.putIfAbsent(new TrackerKey(Sample, "UNDETERMINED-Q30"), new PredicateTracker(x -> x >= 30));
-                processFile(sampleName, f, tracker);
+                FastqData data = processFile(f, tracker);
+                String lane = f.getName().split("_")[3];
+                tracker.addToFlowcell(data);
+                tracker.addToUndetermined(data);
+                tracker.addToLane(lane, data);
             }
         }
         return tracker;
     }
 
-    private static void processFile(String sample, File f, FastqTracker tracker) throws IOException{
+    private static FastqData processFile(File f, FastqTracker tracker) throws IOException{
         InputStream in;
+        int size = 1048576;
         if(f.getName().endsWith(".fastq.gz")) {
-            in = new GZIPInputStream(new FileInputStream(new File(f.getCanonicalPath())));
+            in = new GZIPInputStream(new FileInputStream(new File(f.getCanonicalPath())), size);
         }
         else if(f.getName().endsWith(".fastq")) {
             in = new FileInputStream(new File(f.getCanonicalPath()));
         }
         else {
-            return;
+            throw new IOException("Unrecognized file format.");
         }
         LOGGER.info("Processing file: " + f.getName());
-        String lane = f.getName().split("_")[3];
-        tracker.putIfAbsent(new TrackerKey(Lane, lane + "-Yield"), new YieldTracker());
-        tracker.putIfAbsent(new TrackerKey(Lane, lane + "-Q30"), new PredicateTracker(x -> x >= 30));
-        FastqReader fr = new FastqReader(in, tracker);
-        TrackerKey[] keys = new TrackerKey[] {
-            new TrackerKey(Flowcell, "Yield"),
-            new TrackerKey(Flowcell, "Q30"),
-            new TrackerKey(Lane, lane+"-Yield"),
-            new TrackerKey(Lane, lane+"-Q30"),
-            new TrackerKey(Sample, sample+"-Yield"),
-            new TrackerKey(Sample, sample+"-Q30")
-        };
-        fr.read(keys);
+        FastqReader fr = new FastqReader(in, size);
+        long startTime = System.currentTimeMillis();
+        FastqData data = fr.read();
+        long endTime = System.currentTimeMillis();
         fr.close();
-        LOGGER.info("Finished processing file: " + f.getName());
-    }
-
-    private static FastqTracker createDefaultFastqTracker(){
-        return new FastqTracker(new TreeMap<TrackerKey, Tracker>(){{
-            put(new TrackerKey(Flowcell, "Yield"), new YieldTracker());
-            put(new TrackerKey(Flowcell, "Q30"), new PredicateTracker(x -> x >= 30));
-        }});
+        LOGGER.info("Finished processing file: " + f.getName() + " in " + (endTime - startTime) + "ms.");
+        return data;
     }
 }

@@ -1,70 +1,62 @@
 package com.hartwig.hmftools.fastqstats;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 public class FastqReader {
-    private BufferedReader reader;
-    private int offset = 33;
-    private FastqTracker tracker;
+    private final BufferedInputStream reader;
+    private final int size;
 
-    public FastqReader(InputStream in, FastqTracker tracker) {
-        this.tracker = tracker;
-        reader = new BufferedReader(new InputStreamReader(in));
+    public FastqReader(InputStream in){
+        size = 8192;
+        reader = new BufferedInputStream(in);
+
     }
 
-    private boolean hasNext() throws IOException {
-        reader.mark(1);
-        int c = reader.read();
-        if (c == -1) {
-            return false;
-        }
-        reader.reset();
-        return true;
+    public FastqReader(InputStream in, int size) {
+        this.size = size;
+        reader = new BufferedInputStream(in, size);
     }
 
     /**
-     * Reads Fastq data and increments counters for the keys passed in as parameter
-     *
-     * @param keys Keys to track for this file
+     * Reads Yield and Q30 counts from this input stream and returns them in a FastqData object
+     * @return FastqData object containing yield and q30 counts
      * @throws IOException
      */
-    public void read(TrackerKey[] keys) throws IOException {
-        while (hasNext()) {
-            // id
-            reader.readLine();
-            String seq = reader.readLine();
-            // + line
-            reader.readLine();
-            readQualLine(seq.length(), keys);
+    public FastqData read() throws IOException{
+        long yield = 0;
+        long q30 = 0;
+        int lineCount = 0;
+        byte[] buf = new byte[size];
+        int read;
+        byte lastRead = 0;
+        while((read = reader.read(buf, 0, size)) != -1){
+            for(int i = 0; i < read; i ++){
+                if(lastRead == '\r' && buf[i] == '\n'){
+                    lastRead = buf[i];
+                    continue;
+                }
+                if(buf[i] == '\r' || buf[i] == '\n'){
+                    lastRead = buf[i];
+                    lineCount ++;
+                    if(lineCount == 4){
+                        lineCount = 0;
+                    }
+                    continue;
+                }
+                if(lineCount == 3) {
+                    yield ++;
+                    if(buf[i] >= 63) {
+                        q30 ++;
+                    }
+                }
+            }
         }
+        return new FastqData(yield, q30);
     }
 
     public void close() throws IOException {
         reader.close();
-    }
-
-    private void readQualLine(int expectedLength, TrackerKey[] keys) throws IOException {
-        int numRead = 0;
-        int c;
-        while ((c = reader.read()) != -1 && c != '\r' && c != '\n') {
-            numRead++;
-            tracker.addValue(keys, c - offset);
-        }
-        if (numRead != expectedLength)
-            throw new IOException("Length mismatch between quality and sequence lines.");
-        handleCRLF(c);
-    }
-
-    private void handleCRLF(int c) throws IOException {
-        if (c == '\r') {
-            reader.mark(1);
-            c = reader.read();
-            if (c != '\n' && c != -1) {
-                reader.reset();
-            }
-        }
     }
 }

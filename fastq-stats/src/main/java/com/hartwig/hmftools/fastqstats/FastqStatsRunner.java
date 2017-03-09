@@ -26,18 +26,18 @@ public final class FastqStatsRunner {
         if (fileName == null && dirName == null) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Fastq-Stats", options);
-        }
-        else if(fileName != null){
+        } else if (fileName != null) {
             FastqTracker tr = FastqStats.processFile(fileName);
-            System.out.println(tr);
-        }
-        else {
+            printOutput(tr);
+        } else {
             File dir = new File(dirName);
-            if(dir.isDirectory()) {
+            if (dir.isDirectory()) {
+                final long startTime = System.currentTimeMillis();
                 FastqTracker tr = FastqStats.processDir(dir);
-                System.out.println(tr);
+                LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
+                printOutput(tr);
             } else {
-                if(!dir.exists()){
+                if (!dir.exists()) {
                     LOGGER.warn("dir " + dir + " does not exist.");
                 }
                 HelpFormatter formatter = new HelpFormatter();
@@ -59,5 +59,24 @@ public final class FastqStatsRunner {
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+
+    public static void printOutput(@NotNull FastqTracker tracker) {
+        LOGGER.info("Flowcell: " + tracker.getFlowcellData().getYield() + ", "
+                + tracker.getFlowcellData().getQ30() * 100.0 / tracker.getFlowcellData().getYield());
+        for (String laneName : tracker.getLanes().keySet()) {
+            FastqData lane = tracker.getLaneData(laneName);
+            LOGGER.info(
+                    "Lane " + laneName + ": " + lane.getYield() + ", " + lane.getQ30() * 100.0 / lane.getYield());
+        }
+        for (String sampleName : tracker.getSamples().keySet()) {
+            FastqData sample = tracker.getSampleData(sampleName);
+            LOGGER.info("Sample " + sampleName + ": " + sample.getYield() + ", "
+                    + sample.getQ30() * 100.0 / sample.getYield());
+        }
+        LOGGER.info("Undetermined: " + tracker.getUndeterminedData().getYield() + ", "
+                + tracker.getUndeterminedData().getQ30() * 100.0 / tracker.getUndeterminedData().getYield());
+        LOGGER.info("Undetermined %: " + tracker.getUndeterminedData().getYield() * 100.0 / tracker.getFlowcellData().getYield());
     }
 }
