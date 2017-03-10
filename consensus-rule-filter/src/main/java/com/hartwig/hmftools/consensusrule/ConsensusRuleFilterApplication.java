@@ -128,6 +128,7 @@ public class ConsensusRuleFilterApplication {
     private void runBatchModeOnDirectory(@NotNull final String runDirectory, @NotNull final String outputDirectory)
             throws IOException, HartwigException {
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
+            LOGGER.info("Processing " + run.toFile().getName());
             final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(run.toFile().getPath(), SOMATIC_EXTENSION);
             final String outputVcf =
                     outputDirectory + File.separator + variantFile.sample() + "_consensus_filtered.vcf";
