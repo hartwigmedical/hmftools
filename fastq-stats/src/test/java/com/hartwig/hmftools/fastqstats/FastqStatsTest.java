@@ -13,7 +13,7 @@ import org.junit.Test;
 public class FastqStatsTest {
     // 100% of baseCalls have a quality score >30
     @Test
-    public void computesCorrectStatsFor100PercentDir() throws IOException {
+    public void computesCorrectStatsFor100PercentDir() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCalls-100");
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir);
@@ -28,7 +28,7 @@ public class FastqStatsTest {
 
     // Sample Z has 50% Q30, others 100%
     @Test
-    public void computesCorrectStatsForIndividualSamples() throws IOException {
+    public void computesCorrectStatsForIndividualSamples() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCalls-100&50");
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir);
@@ -52,7 +52,7 @@ public class FastqStatsTest {
 
     // 50% of baseCalls belong to undetermined sample
     @Test
-    public void computesCorrectPercentageOfUndetermined50() throws IOException {
+    public void computesCorrectPercentageOfUndetermined50() throws IOException, InterruptedException {
         final URL path = Resources.getResource("50UndeterminedBaseCalls");
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir);
@@ -67,7 +67,7 @@ public class FastqStatsTest {
 
     // 100% of baseCalls belong to undetermined sample
     @Test
-    public void computesCorrectPercentageOfUndetermined100() throws IOException {
+    public void computesCorrectPercentageOfUndetermined100() throws IOException, InterruptedException {
         final URL path = Resources.getResource("100UndeterminedBaseCalls");
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir);
@@ -82,7 +82,7 @@ public class FastqStatsTest {
 
     // 50% of baseCalls are undetermined and all undetermined have Q30 of 0
     @Test
-    public void computesCorrectStatsOfUndeterminedLane() throws IOException {
+    public void computesCorrectStatsOfUndeterminedLane() throws IOException, InterruptedException {
         final URL path = Resources.getResource("UndeterminedBaseCalls0Q30");
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir);

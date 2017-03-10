@@ -18,7 +18,7 @@ public final class FastqStatsRunner {
     private static final String FASTQ_FILE = "file";
     private static final String FASTQ_ROOT_DIR = "dir";
 
-    public static void main(String[] args) throws ParseException, IOException {
+    public static void main(String[] args) throws ParseException, IOException, InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String filePath = cmd.getOptionValue(FASTQ_FILE);
