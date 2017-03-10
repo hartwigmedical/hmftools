@@ -19,10 +19,7 @@ public class FastqStats {
         File file = new File(filePath);
         FastqData data = processFile(file);
         String lane = file.getName().split("_")[3];
-        tracker.addToFlowcell(data);
-        tracker.addToLane(lane, data);
-        tracker.addToSample(file.getName(), data);
-        return tracker;
+        return tracker.addToFlowcell(data).addToLane(lane, data).addToSample(file.getName(), data);
     }
 
     /**
@@ -61,9 +58,7 @@ public class FastqStats {
                     for (final File fastq : fastqFiles) {
                         FastqData data = processFile(fastq);
                         String lane = fastq.getName().split("_")[3];
-                        tracker.addToFlowcell(data);
-                        tracker.addToLane(lane, data);
-                        tracker.addToSample(sampleName, data);
+                        tracker = tracker.addToFlowcell(data).addToLane(lane, data).addToSample(sampleName, data);
                     }
                 }
             } else if (!file.isDirectory() && file.getName().startsWith("UNDETERMINED") && (
@@ -72,9 +67,7 @@ public class FastqStats {
                 LOGGER.info("Found undetermined file: " + file.getName());
                 FastqData data = processFile(file);
                 String lane = file.getName().split("_")[3];
-                tracker.addToFlowcell(data);
-                tracker.addToUndetermined(data);
-                tracker.addToLane(lane, data);
+                tracker = tracker.addToFlowcell(data).addToUndetermined(data).addToLane(lane, data);
             }
         }
         return tracker;

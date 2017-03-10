@@ -1,47 +1,54 @@
 package com.hartwig.hmftools.fastqstats;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
+
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Ordering;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FastqTracker {
-    private FastqData flowcell;
-    private TreeMap<String, FastqData> lanes;
-    private TreeMap<String, FastqData> samples;
-    private FastqData undetermined;
+    private final FastqData flowcell;
+    private final Map<String, FastqData> lanes;
+    private final Map<String, FastqData> samples;
+    private final FastqData undetermined;
 
     public FastqTracker() {
         flowcell = new FastqData(0, 0);
         undetermined = new FastqData(0, 0);
-        lanes = new TreeMap<>();
-        samples = new TreeMap<>();
+        lanes = ImmutableSortedMap.of();
+        samples = ImmutableSortedMap.of();
     }
 
-    public void addToFlowcell(@NotNull FastqData data) {
-        flowcell = flowcell.add(data);
+    private FastqTracker(@NotNull FastqData flowcell, @NotNull FastqData undetermined,
+            @NotNull Map<String, FastqData> lanes, @NotNull Map<String, FastqData> samples) {
+        this.flowcell = flowcell;
+        this.undetermined = undetermined;
+        this.lanes = lanes;
+        this.samples = samples;
     }
 
-    public void addToUndetermined(@NotNull FastqData data) {
-        undetermined = undetermined.add(data);
+    @NotNull
+    public FastqTracker addToFlowcell(@NotNull FastqData data) {
+        return new FastqTracker(flowcell.add(data), undetermined, lanes, samples);
     }
 
-    public void addToLane(@NotNull String lane, @NotNull FastqData data) {
-        if (!lanes.containsKey(lane)) {
-            lanes.put(lane, data);
-        } else {
-            FastqData current = lanes.get(lane);
-            lanes.put(lane, current.add(data));
-        }
+    @NotNull
+    public FastqTracker addToUndetermined(@NotNull FastqData data) {
+        return new FastqTracker(flowcell, undetermined.add(data), lanes, samples);
     }
 
-    public void addToSample(@NotNull String sample, @NotNull FastqData data) {
-        if (!samples.containsKey(sample)) {
-            samples.put(sample, data);
-        } else {
-            FastqData current = samples.get(sample);
-            samples.put(sample, current.add(data));
-        }
+    @NotNull
+    public FastqTracker addToLane(@NotNull String lane, @NotNull FastqData data) {
+        Map<String, FastqData> newLanes = addToMap(lanes, lane, data);
+        return new FastqTracker(flowcell, undetermined, newLanes, samples);
+    }
+
+    @NotNull
+    public FastqTracker addToSample(@NotNull String sample, @NotNull FastqData data) {
+        Map<String, FastqData> newSamples = addToMap(samples, sample, data);
+        return new FastqTracker(flowcell, undetermined, lanes, newSamples);
     }
 
     @NotNull
@@ -72,5 +79,18 @@ public class FastqTracker {
     @NotNull
     public Map<String, FastqData> getSamples() {
         return samples;
+    }
+
+    @NotNull
+    private Map<String, FastqData> addToMap(@NotNull Map<String, FastqData> map, @NotNull String key,
+            @NotNull FastqData value) {
+        if (!map.containsKey(key)) {
+            return new ImmutableSortedMap.Builder<String, FastqData>(Ordering.natural()).putAll(map).put(key,
+                    value).build();
+        } else {
+            Map<String, FastqData> copy = new HashMap<>(map);
+            copy.put(key, map.get(key).add(value));
+            return ImmutableSortedMap.copyOf(copy);
+        }
     }
 }
