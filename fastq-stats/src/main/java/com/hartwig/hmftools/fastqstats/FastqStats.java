@@ -71,7 +71,7 @@ public class FastqStats {
                         final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(fastq));
                         addCallback(futureResult,
                                 (data) -> tracker.addDataFromSampleFile(sampleFolder.getName(), lane, data),
-                                (error) -> LOGGER.info("Failed to process file: " + fastq.getName()));
+                                (error) -> LOGGER.error("Failed to process file: " + fastq.getName(), error));
                     }
                 }
             } else if (!file.isDirectory() && file.getName().startsWith("UNDETERMINED") && (
@@ -81,7 +81,7 @@ public class FastqStats {
                 final String lane = file.getName().split("_")[3];
                 final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(file));
                 addCallback(futureResult, (data) -> tracker.addDataFromUndeterminedFile(lane, data),
-                        (error) -> LOGGER.info("Failed to process file: " + file.getName()));
+                        (error) -> LOGGER.error("Failed to process file: " + file.getName(), error));
             }
         }
         threadPool.shutdown();
