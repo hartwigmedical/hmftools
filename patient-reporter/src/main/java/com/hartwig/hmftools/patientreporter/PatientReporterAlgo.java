@@ -72,7 +72,11 @@ class PatientReporterAlgo {
 
     void run() throws IOException, HartwigException, DRException {
         if (batchMode) {
-            batchRun();
+            if (tmpDirectory == null) {
+                LOGGER.warn("Cannot run in batch mode without a tmp directory!");
+            } else {
+                batchRun();
+            }
         } else {
             final PatientReport report = patientRun();
             reportWriter.writeSequenceReport(report, hmfSlicingRegion);
@@ -82,12 +86,13 @@ class PatientReporterAlgo {
     private void batchRun() throws IOException, HartwigException {
         // KODU: We assume "run directory" is a path with a lot of directories on which we can all run in patient mode.
         final VariantConsequence[] consequences = VariantConsequence.values();
+        final List<String> output = Lists.newArrayList();
 
         String header = "SAMPLE,VARIANT_COUNT,PASS_ONLY_COUNT,CONSENSUS_COUNT,MISSENSE_COUNT,CONSEQUENCE_COUNT";
         for (final VariantConsequence consequence : consequences) {
             header += ("," + consequence.name() + "_COUNT");
         }
-        System.out.println(header);
+        output.add(header);
 
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
             final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(run.toFile().getPath());
@@ -99,11 +104,14 @@ class PatientReporterAlgo {
                 consequenceList += ("," + counts.get(consequence).toString());
             }
 
-            System.out.println(
+            output.add(
                     variantFile.sample() + "," + variantFile.variants().size() + "," + analysis.passedVariants().size()
                             + "," + analysis.consensusPassedVariants().size() + ","
                             + analysis.missenseVariants().size() + "," + analysis.findings().size() + consequenceList);
         }
+
+        final String outputFile = tmpDirectory + File.separator + "patient_reports.csv";
+        Files.write(new File(outputFile).toPath(), output);
     }
 
     @NotNull
