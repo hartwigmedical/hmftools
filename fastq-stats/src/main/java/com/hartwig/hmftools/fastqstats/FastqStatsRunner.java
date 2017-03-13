@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.fastqstats;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
@@ -17,26 +19,28 @@ public final class FastqStatsRunner {
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
     private static final String FASTQ_FILE = "file";
     private static final String FASTQ_ROOT_DIR = "dir";
+    private static final String CSV_OUT_DIR = "out";
 
     public static void main(String[] args) throws ParseException, IOException, InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String filePath = cmd.getOptionValue(FASTQ_FILE);
         final String dirPath = cmd.getOptionValue(FASTQ_ROOT_DIR);
+        final String csvOutPath = cmd.getOptionValue(CSV_OUT_DIR);
 
-        if (filePath == null && dirPath == null) {
+        if ((filePath == null && dirPath == null) || csvOutPath == null) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Fastq-Stats", options);
         } else if (filePath != null) {
             FastqTracker tr = FastqStats.processFile(filePath);
-            printOutput(tr);
+            writeOutputToCSV(tr, csvOutPath);
         } else {
             File dir = new File(dirPath);
             if (dir.isDirectory()) {
                 final long startTime = System.currentTimeMillis();
                 FastqTracker tr = FastqStats.processDir(dir);
                 LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
-                printOutput(tr);
+                writeOutputToCSV(tr, csvOutPath);
             } else {
                 if (!dir.exists()) {
                     LOGGER.warn("dir " + dir + " does not exist.");
@@ -52,6 +56,7 @@ public final class FastqStatsRunner {
         final Options options = new Options();
         options.addOption(FASTQ_FILE, true, "Path towards the original fastq file.");
         options.addOption(FASTQ_ROOT_DIR, true, "Path towards the root fastq dir.");
+        options.addOption(CSV_OUT_DIR, true, "Path towards the csv output file.");
         return options;
     }
 
@@ -62,21 +67,26 @@ public final class FastqStatsRunner {
         return parser.parse(options, args);
     }
 
-    public static void printOutput(@NotNull FastqTracker tracker) {
-        LOGGER.info("Flowcell: " + tracker.getFlowcellData().getYield() + ", "
-                + tracker.getFlowcellData().getQ30() * 100.0 / tracker.getFlowcellData().getYield());
+    public static void writeOutputToCSV(@NotNull FastqTracker tracker, @NotNull String csvOutPath) throws IOException {
+        final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
+        writer.write("Flowcell, " + tracker.getFlowcellData().getYield() + ", "
+                + tracker.getFlowcellData().getQ30() * 100.0 / tracker.getFlowcellData().getYield() + "\n");
         for (String laneName : tracker.getLanes().keySet()) {
             FastqData lane = tracker.getLaneData(laneName);
-            LOGGER.info("Lane " + laneName + ": " + lane.getYield() + ", " + lane.getQ30() * 100.0 / lane.getYield());
+            writer.write("Lane " + laneName + ", " + lane.getYield() + ", " + lane.getQ30() * 100.0 / lane.getYield()
+                    + "\n");
         }
         for (String sampleName : tracker.getSamples().keySet()) {
             FastqData sample = tracker.getSampleData(sampleName);
-            LOGGER.info("Sample " + sampleName + ": " + sample.getYield() + ", "
-                    + sample.getQ30() * 100.0 / sample.getYield());
+            writer.write("Sample " + sampleName + ", " + sample.getYield() + ", "
+                    + sample.getQ30() * 100.0 / sample.getYield() + "\n");
         }
-        LOGGER.info("Undetermined: " + tracker.getUndeterminedData().getYield() + ", "
-                + tracker.getUndeterminedData().getQ30() * 100.0 / tracker.getUndeterminedData().getYield());
-        LOGGER.info("Undetermined %: "
-                + tracker.getUndeterminedData().getYield() * 100.0 / tracker.getFlowcellData().getYield());
+        long undeterminedYield = tracker.getUndeterminedData().getYield();
+        double undeterminedQ30 =
+                undeterminedYield == 0 ? 0 : tracker.getUndeterminedData().getQ30() * 100.0 / undeterminedYield;
+        writer.write("Undetermined, " + undeterminedYield + ", " + undeterminedQ30 + "\n");
+        writer.write("Undetermined%, " + undeterminedYield * 100.0 / tracker.getFlowcellData().getYield() + "\n");
+        writer.close();
+        LOGGER.info("Written fastq qc data to " + csvOutPath);
     }
 }
