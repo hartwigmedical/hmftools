@@ -33,10 +33,10 @@ public class EcrfAnalysisApplication {
     private static final String ECRF_XML_PATH = "ecrf";
 
     private static final String CSV_OUT_PATH_ARGS_DESC = "The file to write csv results to.";
-    private static final String CSV_OUT_PATH = "csvout";
+    private static final String CSV_OUT_PATH = "csv_out";
 
-    private static final String VERBOSE_ARGS_DESC = "If provided, will write output to std out.";
-    private static final String VERBOSE = "verbose";
+    private static final String PRINT_TO_STD_OUT_ARGS_DESC = "If set, will write output to std out.";
+    private static final String PRINT_TO_STD_OUT = "print_to_std_out";
 
     private static final String PATIENTS_ARGS_DESC = "A comma-separated list of patients to filter on";
     private static final String PATIENTS = "patients";
@@ -45,7 +45,10 @@ public class EcrfAnalysisApplication {
     private static final String FIELDS = "fields";
 
     private static final String PATIENT_AS_ROW_ARGS_DESC = "If present, patients will be printed as rows rather than columns";
-    private static final String PATIENT_AS_ROW = "patientasrow";
+    private static final String PATIENT_AS_ROW = "patient_as_row";
+
+    private static final String GENERATE_DATAMODEL_ARGS_DESC = "If present, generates a CSV for the datamodel rather than values for specific patients.";
+    private static final String GENERATE_DATAMODEL = "generate_datamodel";
 
     public static void main(final String... args) throws ParseException, IOException, XMLStreamException {
         final Options options = createOptions();
@@ -65,9 +68,11 @@ public class EcrfAnalysisApplication {
         final String fields = cmd.getOptionValue(FIELDS, null);
         final List<String> fieldList = fields != null ? Lists.newArrayList(fields.split(",")) : null;
         final boolean patientAsRow = cmd.hasOption(PATIENT_AS_ROW);
-        final boolean verbose = cmd.hasOption(VERBOSE);
+        final boolean printToStdOut = cmd.hasOption(PRINT_TO_STD_OUT);
+        final boolean generateDatamodel = cmd.hasOption(GENERATE_DATAMODEL);
 
-        new EcrfAnalysisApplication(ecrfXmlPath, csvOut, patientList, fieldList, patientAsRow, verbose).run();
+        new EcrfAnalysisApplication(ecrfXmlPath, csvOut, patientList, fieldList, patientAsRow, printToStdOut,
+                generateDatamodel).run();
     }
 
     @NotNull
@@ -79,7 +84,8 @@ public class EcrfAnalysisApplication {
         options.addOption(PATIENTS, true, PATIENTS_ARGS_DESC);
         options.addOption(FIELDS, true, FIELDS_ARGS_DESC);
         options.addOption(PATIENT_AS_ROW, false, PATIENT_AS_ROW_ARGS_DESC);
-        options.addOption(VERBOSE, false, VERBOSE_ARGS_DESC);
+        options.addOption(PRINT_TO_STD_OUT, false, PRINT_TO_STD_OUT_ARGS_DESC);
+        options.addOption(GENERATE_DATAMODEL, false, GENERATE_DATAMODEL_ARGS_DESC);
 
         return options;
     }
@@ -100,17 +106,19 @@ public class EcrfAnalysisApplication {
     @Nullable
     private final List<String> fieldIds;
     private final boolean patientAsRow;
-    private final boolean verbose;
+    private final boolean printToStdOut;
+    private final boolean generateDatamodel;
 
     private EcrfAnalysisApplication(@NotNull final String ecrfXmlPath, @Nullable final String csvOutPath,
             @NotNull final List<String> patientIds, @Nullable final List<String> fieldIds, final boolean patientAsRow,
-            final boolean verbose) {
+            final boolean printToStdOut, final boolean generateDatamodel) {
         this.ecrfXmlPath = ecrfXmlPath;
         this.csvOutPath = csvOutPath;
         this.patientIds = patientIds;
         this.fieldIds = fieldIds;
         this.patientAsRow = patientAsRow;
-        this.verbose = verbose;
+        this.printToStdOut = printToStdOut;
+        this.generateDatamodel = generateDatamodel;
     }
 
     private void run() throws IOException, XMLStreamException {
@@ -120,11 +128,14 @@ public class EcrfAnalysisApplication {
         final Iterable<EcrfPatient> filteredPatients = model.findPatientsById(patientIds);
 
         if (csvOutPath != null) {
-            //                    writeDatamodelToCSV(model.fields(), csvOutPath);
-            writePatientsToCSV(filteredPatients, filteredFields, csvOutPath, patientAsRow);
+            if (generateDatamodel) {
+                writeDatamodelToCSV(model.fields(), csvOutPath);
+            } else {
+                writePatientsToCSV(filteredPatients, filteredFields, csvOutPath, patientAsRow);
+            }
         }
 
-        if (verbose) {
+        if (printToStdOut) {
             LOGGER.info("Results for requested patients");
             for (final EcrfPatient patient : filteredPatients) {
                 String line = patient.patientId() + ": ";
@@ -136,7 +147,6 @@ public class EcrfAnalysisApplication {
         }
     }
 
-    @SuppressWarnings("unused")
     private static void writePatientsToCSV(@NotNull final Iterable<EcrfPatient> patients,
             @NotNull final Iterable<EcrfField> fields, @NotNull final String csvOutPath, final boolean patientAsRow)
             throws IOException {
@@ -211,8 +221,8 @@ public class EcrfAnalysisApplication {
         return false;
     }
 
-    @SuppressWarnings("unused")
-    private static void writeDatamodelToCSV(@NotNull Iterable<EcrfField> fields, @NotNull String csvOutPath)
+    private static void writeDatamodelToCSV(@NotNull final Iterable<EcrfField> fields,
+            @NotNull final String csvOutPath)
             throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("FIELD, DESCRIPTION, VALUES");
