@@ -95,6 +95,7 @@ class PatientReporterAlgo {
         output.add(header);
 
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
+            LOGGER.info("Running patient reporter batch-mode on " + run.toString());
             final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(run.toFile().getPath());
             final VariantAnalysis analysis = variantAnalyzer.run(variantFile.variants());
 
