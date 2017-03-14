@@ -57,7 +57,7 @@ public class EcrfAnalysisApplication {
         final String ecrfXmlPath = cmd.getOptionValue(ECRF_XML_PATH);
         final String patients = cmd.getOptionValue(PATIENTS);
 
-        if (ecrfXmlPath == null || patients == null) {
+        if (ecrfXmlPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Ecrf-Analyser", options);
             System.exit(1);
