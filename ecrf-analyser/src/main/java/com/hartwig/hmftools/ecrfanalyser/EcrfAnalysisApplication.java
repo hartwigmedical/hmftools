@@ -120,7 +120,7 @@ public class EcrfAnalysisApplication {
         final Iterable<EcrfPatient> filteredPatients = model.findPatientsById(patientIds);
 
         if (csvOutPath != null) {
-//                    writeDatamodelToCSV(model.fields(), csvOutPath);
+            //                    writeDatamodelToCSV(model.fields(), csvOutPath);
             writePatientsToCSV(filteredPatients, filteredFields, csvOutPath, patientAsRow);
         }
 
@@ -137,8 +137,9 @@ public class EcrfAnalysisApplication {
     }
 
     @SuppressWarnings("unused")
-    private static void writePatientsToCSV(@NotNull Iterable<EcrfPatient> patients,
-            @NotNull Iterable<EcrfField> fields, @NotNull String csvOutPath, boolean patientAsRow) throws IOException {
+    private static void writePatientsToCSV(@NotNull final Iterable<EcrfPatient> patients,
+            @NotNull final Iterable<EcrfField> fields, @NotNull final String csvOutPath, final boolean patientAsRow)
+            throws IOException {
         final int rowCount = Iterables.size(patients) + 1;
         final int colCount = Iterables.size(fields) + 1;
         final String[][] table = toDataTable(patients, fields, rowCount, colCount);
@@ -165,17 +166,17 @@ public class EcrfAnalysisApplication {
     }
 
     @NotNull
-    private static String[][] toDataTable(@NotNull Iterable<EcrfPatient> patients, @NotNull Iterable<EcrfField> fields,
-            int rowCount, int colCount) {
+    private static String[][] toDataTable(@NotNull final Iterable<EcrfPatient> patients,
+            final @NotNull Iterable<EcrfField> fields, final int rowCount, final int colCount) {
         final String[][] table = new String[rowCount][colCount];
 
         table[0][0] = "PATIENT";
 
         int currentField = 1;
-        for (EcrfField field : fields) {
+        for (final EcrfField field : fields) {
             table[0][currentField] = field.name();
             int currentPatient = 1;
-            for (EcrfPatient patient : patients) {
+            for (final EcrfPatient patient : patients) {
                 table[currentPatient][0] = patient.patientId();
                 table[currentPatient][currentField] = extractFieldForPatient(patient, field);
                 currentPatient++;
