@@ -55,16 +55,19 @@ public class EcrfAnalysisApplication {
         final CommandLine cmd = createCommandLine(options, args);
 
         final String ecrfXmlPath = cmd.getOptionValue(ECRF_XML_PATH);
-        final String patients = cmd.getOptionValue(PATIENTS);
 
         if (ecrfXmlPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Ecrf-Analyser", options);
             System.exit(1);
         }
-        final String csvOut = cmd.getOptionValue(CSV_OUT_PATH);
-        final List<String> patientList = Lists.newArrayList(patients.split(","));
 
+        final String patients = cmd.getOptionValue(PATIENTS);
+
+        final List<String> patientList =
+                patients == null ? Lists.newArrayList() : Lists.newArrayList(patients.split(","));
+
+        final String csvOut = cmd.getOptionValue(CSV_OUT_PATH);
         final String fields = cmd.getOptionValue(FIELDS, null);
         final List<String> fieldList = fields != null ? Lists.newArrayList(fields.split(",")) : null;
         final boolean patientAsRow = cmd.hasOption(PATIENT_AS_ROW);
@@ -222,8 +225,7 @@ public class EcrfAnalysisApplication {
     }
 
     private static void writeDatamodelToCSV(@NotNull final Iterable<EcrfField> fields,
-            @NotNull final String csvOutPath)
-            throws IOException {
+            @NotNull final String csvOutPath) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("FIELD, DESCRIPTION, VALUES");
 
