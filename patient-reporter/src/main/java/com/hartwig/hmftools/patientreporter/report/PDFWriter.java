@@ -285,6 +285,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
+                            col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             transcriptColumn(),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
