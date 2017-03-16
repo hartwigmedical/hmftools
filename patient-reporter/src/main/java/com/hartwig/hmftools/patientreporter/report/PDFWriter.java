@@ -245,7 +245,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
         final String mutationalLoadAddition =
-                "Patients with a mutational load ≥ 140 could be eligible for immunotherapy "
+                "Patients with a mutational load over 140 could be eligible for immunotherapy "
                         + "within the DRUP. Please contact the DRUP study team (DRUP@nki.nl) for "
                         + "DRUP-related questions. ";
 
