@@ -68,8 +68,8 @@ public class PatientReporterApplication {
     private static final String BATCH_DIRECTORY_ARGS_DESC = "The directory that will be iterated over in batch-mode.";
     private static final String BATCH_DIRECTORY = "batch_directory";
 
-    private static final String BATCH_OUTPUT_FILE_ARGS_DESC = "The file which will contain the results of the batch mode output.";
-    private static final String BATCH_OUTPUT_FILE = "batch_output";
+    private static final String BATCH_OUTPUT_ARGS_DESC = "The file which will contain the results of the batch mode output.";
+    private static final String BATCH_OUTPUT = "batch_output";
 
     private static final String NOT_SEQUENCEABLE_ARGS_DESC = "If set, generates a non-sequenceable report.";
     private static final String NOT_SEQUENCEABLE = "not_sequenceable";
@@ -100,13 +100,14 @@ public class PatientReporterApplication {
 
             reporter.run(notSequenceableSample, notSequenceableReason);
         } else if (validInputForPatientReporter(cmd)) {
+            LOGGER.info("Running patient reporter");
             final Slicer hmfSlicingRegion = buildHmfSlicingRegion(cmd);
             final SinglePatientReporter reporter = buildReporter(hmfSlicingRegion, cmd);
 
             if (cmd.hasOption(BATCH_MODE) && validInputForBatchMode(cmd)) {
                 final BatchReportAnalyser analyser = new BatchReportAnalyser(reporter);
                 final List<String> batchAnalysis = analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
-                Files.write(new File(cmd.getOptionValue(BATCH_OUTPUT_FILE)).toPath(), batchAnalysis);
+                Files.write(new File(cmd.getOptionValue(BATCH_OUTPUT)).toPath(), batchAnalysis);
             } else if (validInputForSinglePatientReport(cmd)) {
                 final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
                 buildReportWriter(cmd).writeSequenceReport(report, hmfSlicingRegion);
@@ -179,12 +180,12 @@ public class PatientReporterApplication {
     private static boolean validInputForBatchMode(@NotNull final CommandLine cmd) {
         if (validInputForPatientReporter(cmd)) {
             final String batchDirectory = cmd.getOptionValue(BATCH_DIRECTORY);
-            final String batchOutputFile = cmd.getOptionValue(BATCH_OUTPUT_FILE);
+            final String batchOutputFile = cmd.getOptionValue(BATCH_OUTPUT);
 
             if (batchDirectory == null || !exists(batchDirectory) && !isDirectory(batchDirectory)) {
                 LOGGER.warn(BATCH_DIRECTORY + " has to be an existing directory: " + batchDirectory);
             } else if (batchOutputFile == null) {
-                LOGGER.warn(BATCH_OUTPUT_FILE + " has to be provided.");
+                LOGGER.warn(BATCH_OUTPUT + " has to be provided.");
             } else {
                 return true;
             }
@@ -287,7 +288,7 @@ public class PatientReporterApplication {
 
         options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
         options.addOption(BATCH_DIRECTORY, true, BATCH_DIRECTORY_ARGS_DESC);
-        options.addOption(BATCH_OUTPUT_FILE, true, BATCH_OUTPUT_FILE_ARGS_DESC);
+        options.addOption(BATCH_OUTPUT, true, BATCH_OUTPUT_ARGS_DESC);
 
         options.addOption(NOT_SEQUENCEABLE, false, NOT_SEQUENCEABLE_ARGS_DESC);
         options.addOption(NOT_SEQUENCEABLE_REASON, true, NOT_SEQUENCEABLE_REASON_ARGS_DESC);

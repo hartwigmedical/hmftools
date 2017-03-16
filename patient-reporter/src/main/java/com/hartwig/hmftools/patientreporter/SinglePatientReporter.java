@@ -62,6 +62,7 @@ class SinglePatientReporter {
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int potentialMNVCount = variantAnalysis.potentialConsequentialMNVs().size();
 
+        LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants after applying pass-only filter : " + Integer.toString(passedCount));
         LOGGER.info("  Number of variants after applying consensus rule : " + Integer.toString(consensusPassedCount));
         LOGGER.info("  Number of missense variants in consensus rule (mutational load) : " + Integer.toString(
