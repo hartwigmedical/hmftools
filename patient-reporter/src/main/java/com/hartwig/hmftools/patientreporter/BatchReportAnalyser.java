@@ -42,6 +42,7 @@ final class BatchReportAnalyser {
         output.add(header);
         LOGGER.info("Running patient reporter batch-mode on " + batchDirectory);
         for (final Path run : Files.list(new File(batchDirectory).toPath()).collect(Collectors.toList())) {
+            LOGGER.info(" Running on " + run.toFile().getPath());
             final VariantAnalysis analysis = singlePatientReporter.runVariantAnalysis(run.toFile().getPath());
 
             final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(analysis.consensusPassedVariants());

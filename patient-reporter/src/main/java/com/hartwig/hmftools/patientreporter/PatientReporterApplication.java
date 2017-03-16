@@ -105,6 +105,7 @@ public class PatientReporterApplication {
             final SinglePatientReporter reporter = buildReporter(hmfSlicingRegion, cmd);
 
             if (cmd.hasOption(BATCH_MODE) && validInputForBatchMode(cmd)) {
+                LOGGER.info("Switching to running patient reporter in batch-mode.");
                 final BatchReportAnalyser analyser = new BatchReportAnalyser(reporter);
                 final List<String> batchAnalysis = analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
                 Files.write(new File(cmd.getOptionValue(BATCH_OUTPUT)).toPath(), batchAnalysis);
