@@ -62,7 +62,7 @@ public class VariantAnalyzer {
     }
 
     @NotNull
-    public VariantAnalysis run(@NotNull final List<SomaticVariant> variants) {
+    public VariantAnalysis run(@NotNull final String sample, @NotNull final List<SomaticVariant> variants) {
         final List<SomaticVariant> passedVariants = passOnly(variants);
         final List<SomaticVariant> consensusPassedVariants = consensusRule.apply(passedVariants);
         final List<SomaticVariant> missenseVariants = filter(consensusPassedVariants, isMissense());
@@ -72,7 +72,7 @@ public class VariantAnalyzer {
         final List<SomaticVariant> potentialConsequentialMNVs = MNVDetector.locatePotentialMNVs(
                 consensusPassedVariants, consequenceOutput.consequentialVariants());
 
-        return new VariantAnalysis(passedVariants, consensusPassedVariants, missenseVariants,
+        return new VariantAnalysis(sample, variants, passedVariants, consensusPassedVariants, missenseVariants,
                 consequenceOutput.consequentialVariants(), potentialConsequentialMNVs, consequenceOutput.findings());
     }
 
