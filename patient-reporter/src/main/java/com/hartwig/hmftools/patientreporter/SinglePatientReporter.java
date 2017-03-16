@@ -69,6 +69,9 @@ class SinglePatientReporter {
                 mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
         LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
+        if (potentialMNVCount > 0) {
+            LOGGER.warn(" !! Non-zero number of potentials MNV ");
+        }
         LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.stats().size())
                 + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
