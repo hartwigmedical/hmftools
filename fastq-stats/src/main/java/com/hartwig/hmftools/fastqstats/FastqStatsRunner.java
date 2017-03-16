@@ -82,9 +82,7 @@ public final class FastqStatsRunner {
                     + sample.getQ30() * 100.0 / sample.getYield() + "\n");
         }
         long undeterminedYield = tracker.getUndeterminedData().getYield();
-        double undeterminedQ30 =
-                undeterminedYield == 0 ? 0 : tracker.getUndeterminedData().getQ30() * 100.0 / undeterminedYield;
-        writer.write("Undetermined, " + undeterminedYield + ", " + undeterminedQ30 + "\n");
+        writer.write("Undetermined, " + undeterminedYield + "\n");
         writer.write("Undetermined%, " + undeterminedYield * 100.0 / tracker.getFlowcellData().getYield() + "\n");
         writer.close();
         LOGGER.info("Written fastq qc data to " + csvOutPath);
