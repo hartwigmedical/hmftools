@@ -4,7 +4,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -58,7 +57,7 @@ class PatientDataSource {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME_FIELD.getName(), GENE_FIELD.getName(),
                 TRANSCRIPT_FIELD.getName(), COPY_NUMBER_TYPE_FIELD.getName(), COPY_NUMBER_FIELD.getName());
 
-        for (final CopyNumberReport copyNumber : Sets.newTreeSet(copyNumbers)) {
+        for (final CopyNumberReport copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosome(), copyNumber.gene(), copyNumber.transcript(),
                     copyNumber.resolveType(), Integer.toString(copyNumber.copyNumber()));
         }

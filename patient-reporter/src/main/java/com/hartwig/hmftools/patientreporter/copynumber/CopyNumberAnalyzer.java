@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +69,7 @@ public final class CopyNumberAnalyzer {
                                 transcript(annotation.transcript()).copyNumber(relevantCNV).build());
             }
         }
+        Collections.sort(reports);
         return new CopyNumberAnalysis(stats, reports);
     }
 
