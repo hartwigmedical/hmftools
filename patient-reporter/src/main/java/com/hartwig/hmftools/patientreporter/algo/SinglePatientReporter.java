@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -17,6 +15,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.lims.TumorPercentages;
+import com.hartwig.hmftools.patientreporter.util.FindingsToCSV;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -122,35 +121,13 @@ public class SinglePatientReporter {
 
         final String varReportFile = baseName + "_variant_report.csv";
         final List<VariantReport> varFindings = variantAnalysis.findings();
-        Files.write(new File(varReportFile).toPath(), varToCSV(varFindings));
+        Files.write(new File(varReportFile).toPath(), FindingsToCSV.varToCSV(varFindings));
         LOGGER.info("    Written " + varFindings.size() + " variants to report to " + varReportFile);
 
         final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
         final String cnvReportFile = baseName + "_copynumber_report.csv";
         final List<CopyNumberReport> cnvFindings = copyNumberAnalysis.findings();
-        Files.write(new File(cnvReportFile).toPath(), cnvToCSV(cnvFindings));
+        Files.write(new File(cnvReportFile).toPath(), FindingsToCSV.cnvToCSV(cnvFindings));
         LOGGER.info("    Written " + cnvFindings.size() + " copy-numbers to report to " + cnvReportFile);
-    }
-
-    @NotNull
-    private static List<String> varToCSV(@NotNull final List<VariantReport> reports) {
-        final List<String> lines = Lists.newArrayList();
-        lines.add("GENE,POSITION,REF,ALT,TRANSCRIPT,CDS,AA,CONSEQUENCE,COSMIC_ID,ALLELE_READ_COUNT,TOTAL_READ_COUNT");
-        lines.addAll(reports.stream().map(
-                report -> report.gene() + "," + report.position() + "," + report.ref() + "," + report.alt() + ","
-                        + report.transcript() + "," + report.hgvsCoding() + "," + report.hgvsProtein() + ","
-                        + report.consequence() + "," + report.cosmicID() + "," + Integer.toString(
-                        report.alleleReadCount()) + "," + Integer.toString(report.totalReadCount())).
-                collect(Collectors.toList()));
-        return lines;
-    }
-
-    @NotNull
-    private static List<String> cnvToCSV(@NotNull final List<CopyNumberReport> reports) {
-        final List<String> lines = Lists.newArrayList();
-        lines.add("GENE,TRANSCRIPT,FINDING");
-        lines.addAll(reports.stream().map(report -> report.gene() + "," + report.transcript() + "," + Integer.toString(
-                report.copyNumber())).collect(Collectors.toList()));
-        return lines;
     }
 }

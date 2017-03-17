@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -72,8 +71,14 @@ public class PatientReporterApplication {
     private static final String BATCH_DIRECTORY_ARGS_DESC = "The directory that will be iterated over in batch-mode.";
     private static final String BATCH_DIRECTORY = "batch_directory";
 
-    private static final String BATCH_OUTPUT_ARGS_DESC = "The file which will contain the results of the batch mode output.";
-    private static final String BATCH_OUTPUT = "batch_output";
+    private static final String BATCH_STATS_ARGS_DESC = "The file which will contain the statistics of the batch mode output.";
+    private static final String BATCH_STATS = "batch_stats";
+
+    private static final String BATCH_VARIANT_FINDINGS_ARGS_DESC = "The file which will contain the variant findings of the batch mode output.";
+    private static final String BATCH_VARIANT_FINDINGS = "batch_variant_findings";
+
+    private static final String BATCH_CNV_FINDINGS_ARGS_DESC = "The file which will contain the cnv findings of the batch mode output.";
+    private static final String BATCH_CNV_FINDINGS = "batch_cnv_findings";
 
     private static final String NOT_SEQUENCEABLE_ARGS_DESC = "If set, generates a non-sequenceable report.";
     private static final String NOT_SEQUENCEABLE = "not_sequenceable";
@@ -110,9 +115,9 @@ public class PatientReporterApplication {
 
             if (cmd.hasOption(BATCH_MODE) && validInputForBatchMode(cmd)) {
                 LOGGER.info("Switching to running patient reporter in batch-mode.");
-                final BatchReportAnalyser analyser = new BatchReportAnalyser(reporter);
-                final List<String> batchAnalysis = analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
-                Files.write(new File(cmd.getOptionValue(BATCH_OUTPUT)).toPath(), batchAnalysis);
+                final BatchReportAnalyser analyser = new BatchReportAnalyser(reporter, cmd.getOptionValue(BATCH_STATS),
+                        cmd.getOptionValue(BATCH_VARIANT_FINDINGS), cmd.getOptionValue(BATCH_CNV_FINDINGS));
+                analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
             } else if (validInputForSinglePatientReport(cmd)) {
                 final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
                 buildReportWriter(cmd).writeSequenceReport(report, hmfSlicingRegion);
@@ -185,12 +190,12 @@ public class PatientReporterApplication {
     private static boolean validInputForBatchMode(@NotNull final CommandLine cmd) {
         if (validInputForPatientReporter(cmd)) {
             final String batchDirectory = cmd.getOptionValue(BATCH_DIRECTORY);
-            final String batchOutputFile = cmd.getOptionValue(BATCH_OUTPUT);
+            final String batchOutputStats = cmd.getOptionValue(BATCH_STATS);
 
             if (batchDirectory == null || !exists(batchDirectory) && !isDirectory(batchDirectory)) {
                 LOGGER.warn(BATCH_DIRECTORY + " has to be an existing directory: " + batchDirectory);
-            } else if (batchOutputFile == null) {
-                LOGGER.warn(BATCH_OUTPUT + " has to be provided.");
+            } else if (batchOutputStats == null) {
+                LOGGER.warn(BATCH_STATS + " has to be provided.");
             } else {
                 return true;
             }
@@ -293,7 +298,9 @@ public class PatientReporterApplication {
 
         options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
         options.addOption(BATCH_DIRECTORY, true, BATCH_DIRECTORY_ARGS_DESC);
-        options.addOption(BATCH_OUTPUT, true, BATCH_OUTPUT_ARGS_DESC);
+        options.addOption(BATCH_STATS, true, BATCH_STATS_ARGS_DESC);
+        options.addOption(BATCH_VARIANT_FINDINGS, true, BATCH_VARIANT_FINDINGS_ARGS_DESC);
+        options.addOption(BATCH_CNV_FINDINGS, true, BATCH_CNV_FINDINGS_ARGS_DESC);
 
         options.addOption(NOT_SEQUENCEABLE, false, NOT_SEQUENCEABLE_ARGS_DESC);
         options.addOption(NOT_SEQUENCEABLE_REASON, true, NOT_SEQUENCEABLE_REASON_ARGS_DESC);

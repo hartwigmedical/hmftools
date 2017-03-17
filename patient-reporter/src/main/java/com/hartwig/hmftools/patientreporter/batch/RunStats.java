@@ -74,4 +74,9 @@ class RunStats {
     List<VariantReport> variantFindings() {
         return variantFindings;
     }
+
+    @NotNull
+    List<CopyNumberReport> copyNumberFindings() {
+        return copyNumberFindings;
+    }
 }
