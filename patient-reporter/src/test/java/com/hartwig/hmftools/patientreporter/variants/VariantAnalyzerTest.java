@@ -59,12 +59,12 @@ public class VariantAnalyzerTest {
                 builder().position(440).annotations(Lists.newArrayList(wrongFeatureType)).build(),
                 builder().position(460).annotations(Lists.newArrayList(rightAnnotation)).build());
 
-        final VariantAnalysis analysis = analyzer.run("TMP", variants);
+        final VariantAnalysis analysis = analyzer.run(variants);
 
         assertEquals(4, analysis.allVariants().size());
         assertEquals(4, analysis.passedVariants().size());
         assertEquals(4, analysis.consensusPassedVariants().size());
-        assertEquals(3, analysis.missenseVariants().size());
+        assertEquals(3, analysis.mutationalLoad());
         assertEquals(1, analysis.findings().size());
     }
 

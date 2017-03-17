@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PatientReport {
+public class PatientReport {
 
     @NotNull
     private final String sample;

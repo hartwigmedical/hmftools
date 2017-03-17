@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
@@ -51,14 +52,19 @@ public class SinglePatientReporter {
 
     @NotNull
     public PatientReport run(@NotNull final String runDirectory) throws IOException, HartwigException {
-        final VariantAnalysis variantAnalysis = runVariantAnalysis(runDirectory);
-        // TODO (KODU): Retrieve sample from metadata if possible.
-        final String sample = variantAnalysis.sample();
-        final CopyNumberAnalysis copyNumberAnalysis = runCopyNumberAnalysis(runDirectory, sample);
+        final GenomeAnalysis genomeAnalysis = analyseGenomeData(runDirectory);
+
+        if (tmpDirectory != null) {
+            writeIntermediateDataToTmpFiles(tmpDirectory, genomeAnalysis);
+        }
+
+        final String sample = genomeAnalysis.sample();
+        final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
+        final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
 
         final int passedCount = variantAnalysis.passedVariants().size();
         final int consensusPassedCount = variantAnalysis.consensusPassedVariants().size();
-        final int mutationalLoad = variantAnalysis.missenseVariants().size();
+        final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int potentialMNVCount = variantAnalysis.potentialConsequentialMNVs().size();
 
@@ -75,11 +81,6 @@ public class SinglePatientReporter {
         LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.stats().size())
                 + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
-        if (tmpDirectory != null) {
-            writeIntermediateDataToTmpFiles(tmpDirectory + File.separator + sample, variantAnalysis,
-                    copyNumberAnalysis);
-        }
-
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final double tumorPercentage = tumorPercentages.findTumorPercentageForSample(sample);
         return new PatientReport(sample, variantAnalysis.findings(), copyNumberAnalysis.findings(), mutationalLoad,
@@ -87,31 +88,30 @@ public class SinglePatientReporter {
     }
 
     @NotNull
-    public VariantAnalysis runVariantAnalysis(@NotNull final String runDirectory)
+    public GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory)
             throws IOException, HartwigException {
         LOGGER.info(" Loading somatic variants...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
         final String sample = variantFile.sample();
         LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for sample " + sample);
 
-        LOGGER.info(" Analyzing somatic variants...");
-        return variantAnalyzer.run(sample, variantFile.variants());
-    }
-
-    @NotNull
-    private CopyNumberAnalysis runCopyNumberAnalysis(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException, HartwigException {
         LOGGER.info(" Loading somatic copy numbers...");
         final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
         LOGGER.info("  " + copyNumbers.size() + " copy number regions loaded for sample " + sample);
 
+        LOGGER.info(" Analyzing somatic variants...");
+        final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
+
         LOGGER.info(" Analyzing somatic copy numbers...");
-        return copyNumberAnalyzer.run(copyNumbers);
+        final CopyNumberAnalysis copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
+
+        return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis);
     }
 
-    private static void writeIntermediateDataToTmpFiles(@NotNull final String baseName,
-            @NotNull final VariantAnalysis variantAnalysis, @NotNull final CopyNumberAnalysis copyNumberAnalysis)
-            throws IOException {
+    private static void writeIntermediateDataToTmpFiles(@NotNull final String basePath,
+            @NotNull final GenomeAnalysis genomeAnalysis) throws IOException {
+        final String baseName = basePath + File.separator + genomeAnalysis.sample();
+        final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
         final String consensusVCF = baseName + "_consensus_variants.vcf";
         VCFFileWriter.writeSomaticVCF(consensusVCF, variantAnalysis.consensusPassedVariants());
         LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
@@ -125,6 +125,7 @@ public class SinglePatientReporter {
         Files.write(new File(varReportFile).toPath(), varToCSV(varFindings));
         LOGGER.info("    Written " + varFindings.size() + " variants to report to " + varReportFile);
 
+        final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
         final String cnvReportFile = baseName + "_copynumber_report.csv";
         final List<CopyNumberReport> cnvFindings = copyNumberAnalysis.findings();
         Files.write(new File(cnvReportFile).toPath(), cnvToCSV(cnvFindings));

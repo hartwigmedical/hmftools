@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.util;
+package com.hartwig.hmftools.patientreporter.batch;
 
 import java.util.List;
 import java.util.Map;
@@ -9,13 +9,13 @@ import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ConsequenceCount {
+final class ConsequenceCount {
 
     private ConsequenceCount() {
     }
 
     @NotNull
-    public static Map<VariantConsequence, Integer> count(@NotNull final List<SomaticVariant> variants) {
+    static Map<VariantConsequence, Integer> count(@NotNull final List<SomaticVariant> variants) {
         final Map<VariantConsequence, Integer> counts = Maps.newHashMap();
         for (final VariantConsequence consequence : VariantConsequence.values()) {
             counts.put(consequence, 0);

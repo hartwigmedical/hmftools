@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
-import com.hartwig.hmftools.patientreporter.algo.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.SinglePatientReporter;
 import com.hartwig.hmftools.patientreporter.batch.BatchReportAnalyser;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
