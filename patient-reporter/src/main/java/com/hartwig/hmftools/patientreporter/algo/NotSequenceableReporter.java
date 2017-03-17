@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.FileNotFoundException;
 
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.exception.DRException;
 
-class NotSequenceableReporter {
+public class NotSequenceableReporter {
 
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
@@ -19,14 +19,15 @@ class NotSequenceableReporter {
     @NotNull
     private final TumorPercentages tumorPercentages;
 
-    NotSequenceableReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final ReportWriter reportWriter,
+    public NotSequenceableReporter(@NotNull final CpctEcrfModel cpctEcrfModel,
+            @NotNull final ReportWriter reportWriter,
             @NotNull final TumorPercentages tumorPercentages) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.reportWriter = reportWriter;
         this.tumorPercentages = tumorPercentages;
     }
 
-    void run(@NotNull final String sample, @NotNull final NotSequenceableReason reason)
+    public void run(@NotNull final String sample, @NotNull final NotSequenceableReason reason)
             throws FileNotFoundException, DRException {
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final String tumorPercentageString =

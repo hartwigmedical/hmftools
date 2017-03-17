@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class SinglePatientReporter {
+public class SinglePatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(SinglePatientReporter.class);
 
     @NotNull
@@ -39,9 +39,9 @@ class SinglePatientReporter {
     @Nullable
     private final String tmpDirectory;
 
-    SinglePatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final VariantAnalyzer variantAnalyzer,
-            @NotNull final CopyNumberAnalyzer copyNumberAnalyzer, @NotNull final TumorPercentages tumorPercentages,
-            @Nullable final String tmpDirectory) {
+    public SinglePatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel,
+            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
+            @NotNull final TumorPercentages tumorPercentages, @Nullable final String tmpDirectory) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
@@ -50,7 +50,7 @@ class SinglePatientReporter {
     }
 
     @NotNull
-    PatientReport run(@NotNull final String runDirectory) throws IOException, HartwigException {
+    public PatientReport run(@NotNull final String runDirectory) throws IOException, HartwigException {
         final VariantAnalysis variantAnalysis = runVariantAnalysis(runDirectory);
         // TODO (KODU): Retrieve sample from metadata if possible.
         final String sample = variantAnalysis.sample();
@@ -87,7 +87,8 @@ class SinglePatientReporter {
     }
 
     @NotNull
-    VariantAnalysis runVariantAnalysis(@NotNull final String runDirectory) throws IOException, HartwigException {
+    public VariantAnalysis runVariantAnalysis(@NotNull final String runDirectory)
+            throws IOException, HartwigException {
         LOGGER.info(" Loading somatic variants...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
         final String sample = variantFile.sample();

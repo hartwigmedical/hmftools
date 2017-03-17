@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public enum NotSequenceableReason {
     }
 
     @NotNull
-    static NotSequenceableReason fromIdentifier(@Nullable final String identifier) {
+    public static NotSequenceableReason fromIdentifier(@Nullable final String identifier) {
         if (identifier == null) {
             return OTHER;
         }

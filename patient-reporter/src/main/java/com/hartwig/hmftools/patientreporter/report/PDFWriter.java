@@ -18,8 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
+import com.hartwig.hmftools.patientreporter.algo.PatientReport;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 

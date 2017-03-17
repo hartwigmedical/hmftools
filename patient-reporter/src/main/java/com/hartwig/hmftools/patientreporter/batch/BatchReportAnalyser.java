@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.batch;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.patientreporter.algo.SinglePatientReporter;
 import com.hartwig.hmftools.patientreporter.util.ConsequenceCount;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 
@@ -19,19 +20,19 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-final class BatchReportAnalyser {
+public class BatchReportAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(SinglePatientReporter.class);
 
     @NotNull
     private final SinglePatientReporter singlePatientReporter;
 
-    BatchReportAnalyser(@NotNull final SinglePatientReporter singlePatientReporter) {
+    public BatchReportAnalyser(@NotNull final SinglePatientReporter singlePatientReporter) {
         this.singlePatientReporter = singlePatientReporter;
     }
 
     @NotNull
-    List<String> run(@NotNull final String batchDirectory) throws IOException, HartwigException {
+    public List<String> run(@NotNull final String batchDirectory) throws IOException, HartwigException {
         final VariantConsequence[] consequences = VariantConsequence.values();
         final List<String> output = Lists.newArrayList();
 
