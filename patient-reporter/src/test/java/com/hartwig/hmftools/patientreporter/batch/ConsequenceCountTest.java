@@ -29,7 +29,7 @@ public class ConsequenceCountTest {
 
         final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(variants);
         assertEquals(VariantConsequence.values().length, counts.size());
-        assertEquals(0, counts.get(VariantConsequence.INITIATOR_CODON_VARIANT).intValue());
+        assertEquals(0, counts.get(VariantConsequence.MISSENSE_VARIANT).intValue());
         assertEquals(1, counts.get(VariantConsequence.FRAMESHIFT_VARIANT).intValue());
         assertEquals(2, counts.get(VariantConsequence.INFRAME_DELETION).intValue());
     }

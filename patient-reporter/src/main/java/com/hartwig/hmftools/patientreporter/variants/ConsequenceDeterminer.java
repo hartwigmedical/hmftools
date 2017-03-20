@@ -35,7 +35,6 @@ class ConsequenceDeterminer {
             VariantConsequence.TRANSCRIPT_ABLATION, VariantConsequence.TRANSCRIPT_AMPLIFICATION,
             VariantConsequence.SPLICE_ACCEPTOR_VARIANT, VariantConsequence.SPLICE_DONOR_VARIANT,
             VariantConsequence.SPLICE_REGION_VARIANT, VariantConsequence.STOP_GAINED, VariantConsequence.STOP_LOST,
-            VariantConsequence.INCOMPLETE_TERMINAL_CODING_VARIANT, VariantConsequence.INITIATOR_CODON_VARIANT,
             VariantConsequence.START_LOST, VariantConsequence.FRAMESHIFT_VARIANT, VariantConsequence.INFRAME_INSERTION,
             VariantConsequence.INFRAME_DELETION, VariantConsequence.MISSENSE_VARIANT);
 
