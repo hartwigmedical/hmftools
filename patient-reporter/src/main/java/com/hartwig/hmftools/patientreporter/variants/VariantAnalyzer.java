@@ -72,7 +72,7 @@ public class VariantAnalyzer {
         final List<SomaticVariant> potentialConsequentialMNVs = MNVDetector.locatePotentialMNVs(
                 consensusPassedVariants, consequenceOutput.consequentialVariants());
 
-        return new VariantAnalysis(passedVariants, consensusPassedVariants, missenseVariants,
+        return new VariantAnalysis(variants, passedVariants, consensusPassedVariants, missenseVariants,
                 consequenceOutput.consequentialVariants(), potentialConsequentialMNVs, consequenceOutput.findings());
     }
 

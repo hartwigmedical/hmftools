@@ -17,6 +17,7 @@ class PatientDataSource {
 
     private static final String COSMIC_IDENTIFIER = "COSM";
 
+    static final FieldBuilder<?> CHROMOSOME_FIELD = field("chromosome", String.class);
     static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
 
@@ -53,12 +54,12 @@ class PatientDataSource {
 
     @NotNull
     static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers) {
-        final DRDataSource copyNumberDatasource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
-                COPY_NUMBER_TYPE_FIELD.getName(), COPY_NUMBER_FIELD.getName());
+        final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME_FIELD.getName(), GENE_FIELD.getName(),
+                TRANSCRIPT_FIELD.getName(), COPY_NUMBER_TYPE_FIELD.getName(), COPY_NUMBER_FIELD.getName());
 
         for (final CopyNumberReport copyNumber : copyNumbers) {
-            copyNumberDatasource.add(copyNumber.gene(), copyNumber.transcript(), copyNumber.resolveType(),
-                    Integer.toString(copyNumber.copyNumber()));
+            copyNumberDatasource.add(copyNumber.chromosome(), copyNumber.gene(), copyNumber.transcript(),
+                    copyNumber.resolveType(), Integer.toString(copyNumber.copyNumber()));
         }
 
         return copyNumberDatasource;

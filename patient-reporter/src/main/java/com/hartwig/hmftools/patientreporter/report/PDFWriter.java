@@ -18,8 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
@@ -163,7 +163,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("Report Date").setStyle(tableHeaderStyle()),
                         cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
                 cmp.verticalList(
-                        cmp.text("Tumor Type").setStyle(tableHeaderStyle()),
+                        cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
                         cmp.text(tumorType).setStyle(dataTableStyle())),
                 cmp.verticalList(
                         cmp.text("Tumor Percentage").setStyle(tableHeaderStyle()),
@@ -244,6 +244,11 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
+        final String mutationalLoadAddition =
+                "Patients with a mutational load over 140 could be eligible for immunotherapy "
+                        + "within the DRUP. Please contact the DRUP study team (DRUP@nki.nl) for "
+                        + "DRUP-related questions. ";
+
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
@@ -264,8 +269,12 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(6),
                 table,
                 cmp.verticalGap(15),
-                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()))
-                        .setStyle(tableHeaderStyle())
+                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " *")
+                        .setStyle(tableHeaderStyle()),
+                cmp.verticalGap(15),
+                cmp.horizontalList(cmp.horizontalGap(10),
+                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                        cmp.text(mutationalLoadAddition).setStyle(fontStyle()))
         );
         // @formatter:on
     }
@@ -276,6 +285,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
+                            col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             transcriptColumn(),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
@@ -342,7 +352,7 @@ public class PDFWriter implements ReportWriter {
                         "The 'transcript' provides a link to the ensembl definition of the transcript "
                                 + "used for filtering.",
                         "The 'predicted effect' provides additional information on the variant, including "
-                                + "the change in coding sequence ('c.'), the change in amino acid ('a.') and "
+                                + "the change in coding sequence ('c.'), the change in protein ('p.') and "
                                 + "the predicted impact on the final protein on the second line of this field.",
                         "The 'cosmic' fields display a link to the COSMIC database which contains "
                                 + "additional information on the variant. If the variant could not be found in the "

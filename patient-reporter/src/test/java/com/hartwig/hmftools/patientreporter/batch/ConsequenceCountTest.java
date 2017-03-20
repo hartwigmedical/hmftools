@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.util;
+package com.hartwig.hmftools.patientreporter.batch;
 
 import static org.junit.Assert.assertEquals;
 

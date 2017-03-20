@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public final class CopyNumberAnalyzer {
     }
 
     @NotNull
-    public CopyNumberAnalysis run(@NotNull List<CopyNumber> copyNumbers) {
+    public CopyNumberAnalysis run(@NotNull final List<CopyNumber> copyNumbers) {
         final Map<GenomeRegion, CopyNumberStats> stats = Maps.newHashMap();
 
         final Multimap<String, CopyNumber> copyNumberPerChromosome = toChromosomeMultiMap(copyNumbers);
@@ -63,10 +64,12 @@ public final class CopyNumberAnalyzer {
 
             if (relevantCNV >= MIN_CNV_FOR_GAIN || relevantCNV <= MAX_CNV_FOR_LOSS) {
                 final HMFSlicingAnnotation annotation = annotations.get(stat.getKey());
-                reports.add(new CopyNumberReport.Builder().gene(annotation.gene()).
-                        transcript(annotation.transcript()).copyNumber(relevantCNV).build());
+                reports.add(
+                        new CopyNumberReport.Builder().chromosome(stat.getKey().chromosome()).gene(annotation.gene()).
+                                transcript(annotation.transcript()).copyNumber(relevantCNV).build());
             }
         }
+        Collections.sort(reports);
         return new CopyNumberAnalysis(stats, reports);
     }
 

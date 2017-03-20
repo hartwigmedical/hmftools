@@ -45,6 +45,7 @@ public class CopyNumberAnalyzerTest {
 
         final List<CopyNumberReport> findings = analysis.findings();
         assertEquals(1, findings.size());
+        assertEquals(CHROMOSOME, findings.get(0).chromosome());
         assertEquals(secondAnnotation.gene(), findings.get(0).gene());
         assertEquals(secondAnnotation.transcript(), findings.get(0).transcript());
         assertEquals(0, findings.get(0).copyNumber());

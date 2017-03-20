@@ -13,8 +13,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
-import com.hartwig.hmftools.patientreporter.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -46,9 +46,9 @@ public class PDFWriterTest {
                 "missense variant").cosmicID("COSM28758").alleleReadCount(57).totalReadCount(121).build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().gene("PIK3CA").transcript(
+        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("3").gene("PIK3CA").transcript(
                 "ENST00000263967.3").copyNumber(6).build();
-        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().gene("ALK").transcript(
+        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().chromosome("2").gene("ALK").transcript(
                 "ENST00000389048.3").copyNumber(0).build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 
