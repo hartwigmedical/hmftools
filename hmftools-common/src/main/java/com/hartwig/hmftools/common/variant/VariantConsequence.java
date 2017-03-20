@@ -9,6 +9,15 @@ import org.jetbrains.annotations.NotNull;
 
 public enum VariantConsequence {
     // KODU: See also http://sequenceontology.org
+    TRANSCRIPT("transcript"),
+    NON_CODING_EXON_VARIANT("non_coding_exon_variant"),
+    INTRON_VARIANT("intron_variant"),
+    INTRAGENIC_VARIANT("intragenic_variant"),
+    SEQUENCE_FEATURE("sequence_feature"),
+    SYNONYMOUS_VARIANT("synonymous_variant", "stop_retained_variant"),
+    UTR_VARIANT("UTR_variant", "3_prime_UTR_variant", "5_prime_UTR_variant",
+            "5_prime_UTR_premature_start_codon_gain_variant"),
+    REGULATORY_REGION_VARIANT("regulatory_region_variant", "TF_binding_site_variant"),
     TRANSCRIPT_ABLATION("transcript_ablation"),
     TRANSCRIPT_AMPLIFICATION("transcript_amplification"),
     SPLICE_ACCEPTOR_VARIANT("splice_acceptor_variant"),
@@ -22,7 +31,7 @@ public enum VariantConsequence {
             "frameshift_truncation", "minus_1_frameshift_variant", "minus_2_frameshift_variant",
             "plus_1_frameshift_variant", "plus_2_frameshift_variant"),
     INFRAME_INSERTION("inframe_insertion", "conservative_inframe_insertion", "disruptive_inframe_insertion"),
-    INFRAME_DELETION("inframe_deletion", "conservative_inframe_insertion", "disruptive_inframe_insertion"),
+    INFRAME_DELETION("inframe_deletion", "conservative_inframe_deletion", "disruptive_inframe_deletion"),
     MISSENSE_VARIANT("missense_variant", "conservative_missense_variant", "non_conservative_missense_variant",
             "rare_amino_avid_variant", "pyrrolysine_loss", "selenocysteine_loss"),
     OTHER(Strings.EMPTY);
