@@ -33,7 +33,7 @@ public enum VariantConsequence {
     INFRAME_INSERTION("inframe_insertion", "conservative_inframe_insertion", "disruptive_inframe_insertion"),
     INFRAME_DELETION("inframe_deletion", "conservative_inframe_deletion", "disruptive_inframe_deletion"),
     MISSENSE_VARIANT("missense_variant", "conservative_missense_variant", "non_conservative_missense_variant",
-            "rare_amino_avid_variant", "pyrrolysine_loss", "selenocysteine_loss"),
+            "rare_amino_acid_variant", "pyrrolysine_loss", "selenocysteine_loss"),
     OTHER(Strings.EMPTY);
 
     @NotNull
