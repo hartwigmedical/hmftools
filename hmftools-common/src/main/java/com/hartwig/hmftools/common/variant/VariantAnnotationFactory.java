@@ -81,6 +81,7 @@ final class VariantAnnotationFactory {
                 }
             }
             if (!found) {
+                LOGGER.warn("Could not resolve consequence: " + part);
                 consequences.add(VariantConsequence.OTHER);
             }
         }
