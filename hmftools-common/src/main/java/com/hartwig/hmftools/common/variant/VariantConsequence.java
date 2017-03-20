@@ -1,39 +1,58 @@
 package com.hartwig.hmftools.common.variant;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public enum VariantConsequence {
+    // KODU: See also http://sequenceontology.org
+    TRANSCRIPT("transcript"),
+    NON_CODING_EXON_VARIANT("non_coding_exon_variant"),
+    INTRON_VARIANT("intron_variant"),
+    INTRAGENIC_VARIANT("intragenic_variant"),
+    SEQUENCE_FEATURE("sequence_feature"),
+    SYNONYMOUS_VARIANT("synonymous_variant", "stop_retained_variant"),
+    UTR_VARIANT("UTR_variant", "3_prime_UTR_variant", "5_prime_UTR_variant",
+            "5_prime_UTR_premature_start_codon_gain_variant"),
+    REGULATORY_REGION_VARIANT("regulatory_region_variant", "TF_binding_site_variant"),
     TRANSCRIPT_ABLATION("transcript_ablation"),
     TRANSCRIPT_AMPLIFICATION("transcript_amplification"),
     SPLICE_ACCEPTOR_VARIANT("splice_acceptor_variant"),
     SPLICE_DONOR_VARIANT("splice_donor_variant"),
-    SPLICE_REGION_VARIANT("splice_region_variant"),
+    SPLICE_REGION_VARIANT("splice_region_variant", "exonic_splice_region_variant",
+            "non_coding_transcript_splice_region_variant"),
     STOP_GAINED("stop_gained"),
     STOP_LOST("stop_lost"),
-    INCOMPLETE_TERMINAL_CODING_VARIANT("incomplete_terminal_coding_variant"),
-    INITIATOR_CODON_VARIANT("initiator_codon_variant"),
     START_LOST("start_lost"),
-    FRAMESHIFT_VARIANT("frameshift_variant"),
-    INFRAME_INSERTION("inframe_insertion"),
-    INFRAME_DELETION("inframe_deletion"),
-    MISSENSE_VARIANT("missense_variant"),
+    FRAMESHIFT_VARIANT("frameshift_variant", "frame_restoring_variant", "frameshift_elongation",
+            "frameshift_truncation", "minus_1_frameshift_variant", "minus_2_frameshift_variant",
+            "plus_1_frameshift_variant", "plus_2_frameshift_variant"),
+    INFRAME_INSERTION("inframe_insertion", "conservative_inframe_insertion", "disruptive_inframe_insertion"),
+    INFRAME_DELETION("inframe_deletion", "conservative_inframe_deletion", "disruptive_inframe_deletion"),
+    MISSENSE_VARIANT("missense_variant", "conservative_missense_variant", "non_conservative_missense_variant",
+            "rare_amino_acid_variant", "pyrrolysine_loss", "selenocysteine_loss"),
     OTHER(Strings.EMPTY);
 
     @NotNull
-    private final String sequenceOntologyTerm;
+    private final String parentSequenceOntologyTerm;
+    @NotNull
+    private final List<String> sequenceOntologySubTerms;
 
-    VariantConsequence(@NotNull final String sequenceOntologyTerm) {
-        this.sequenceOntologyTerm = sequenceOntologyTerm;
+    VariantConsequence(@NotNull final String parentSequenceOntologyTerm,
+            @NotNull final String... sequenceOntologySubTerms) {
+        this.parentSequenceOntologyTerm = parentSequenceOntologyTerm;
+        this.sequenceOntologySubTerms = Lists.newArrayList(sequenceOntologySubTerms);
     }
 
-    @NotNull
-    public String sequenceOntologyTerm() {
-        return sequenceOntologyTerm;
+    public boolean isParentTypeOf(@NotNull final String annotation) {
+        return annotation.equals(parentSequenceOntologyTerm) || sequenceOntologySubTerms.contains(annotation);
     }
 
     @NotNull
     public String readableSequenceOntologyTerm() {
-        return sequenceOntologyTerm.replace("_", " ");
+        return parentSequenceOntologyTerm.replace("_", " ");
     }
 }

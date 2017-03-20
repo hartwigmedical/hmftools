@@ -75,12 +75,13 @@ final class VariantAnnotationFactory {
         for (final String part : parts) {
             boolean found = false;
             for (final VariantConsequence consequence : VariantConsequence.values()) {
-                if (consequence.sequenceOntologyTerm().equals(part)) {
+                if (consequence.isParentTypeOf(part)) {
                     found = true;
                     consequences.add(consequence);
                 }
             }
             if (!found) {
+                LOGGER.warn("Could not resolve consequence: " + part);
                 consequences.add(VariantConsequence.OTHER);
             }
         }

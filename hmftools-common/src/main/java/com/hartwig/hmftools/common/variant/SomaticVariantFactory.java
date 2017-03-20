@@ -116,19 +116,6 @@ public final class SomaticVariantFactory {
         builder.callers(extractCallers(info));
         builder.annotations(VariantAnnotationFactory.fromVCFInfoField(info));
 
-        // KODU: For testing
-        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(info);
-        boolean annotationHasMissense = false;
-        for (final VariantAnnotation annotation : annotations) {
-            annotationHasMissense =
-                    annotationHasMissense || annotation.consequences().contains(VariantConsequence.MISSENSE_VARIANT);
-        }
-        final boolean infoHasMissense = info.contains(VariantConsequence.MISSENSE_VARIANT.sequenceOntologyTerm());
-        if (annotationHasMissense != infoHasMissense) {
-            LOGGER.warn("Mismatch between annotated missense and normal missense: " + info);
-        }
-        // KODU: End testing
-
         final String sampleInfo = values[SAMPLE_COLUMN].trim();
         final ReadCount readCounts = extractReadCounts(sampleInfo);
         if (readCounts == null) {
