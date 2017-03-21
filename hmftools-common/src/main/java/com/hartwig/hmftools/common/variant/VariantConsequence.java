@@ -19,7 +19,7 @@ public enum VariantConsequence {
             "5_prime_UTR_premature_start_codon_gain_variant", "5_prime_UTR_truncation", "3_prime_UTR_truncation"),
     REGULATORY_REGION_VARIANT("regulatory_region_variant", "TF_binding_site_variant"),
     INITIATOR_CODON_VARIANT("initiator_codon_variant"),
-    EXON_LOSS_VARIANT("exon_loss_variant", "exon_lost"),
+    EXON_LOSS_VARIANT("exon_loss_variant", "exon_loss"),
     NON_CANONICAL_START_CODON("non_canonical_start_codon"),
     TRANSCRIPT_ABLATION("transcript_ablation"),
     TRANSCRIPT_AMPLIFICATION("transcript_amplification"),
