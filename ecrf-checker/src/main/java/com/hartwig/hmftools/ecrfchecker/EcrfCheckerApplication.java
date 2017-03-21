@@ -23,10 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class EcrfCheckerApplication {
-
     private static final Logger LOGGER = LogManager.getLogger(EcrfCheckerApplication.class);
-
-    private static final String ECRF_XML_PATH_ARGS_DESC = "The path to the ecrf xml file.";
     private static final String ECRF_XML_PATH = "ecrf";
 
     public static void main(final String... args) throws ParseException, IOException, XMLStreamException {
@@ -45,7 +42,7 @@ public class EcrfCheckerApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(ECRF_XML_PATH, true, ECRF_XML_PATH_ARGS_DESC);
+        options.addOption(ECRF_XML_PATH, true, "The path to the ecrf xml file.");
         return options;
     }
 
