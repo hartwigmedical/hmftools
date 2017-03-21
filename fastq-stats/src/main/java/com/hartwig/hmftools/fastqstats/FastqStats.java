@@ -74,7 +74,7 @@ public class FastqStats {
                                 (error) -> LOGGER.error("Failed to process file: " + fastq.getName(), error));
                     }
                 }
-            } else if (!file.isDirectory() && file.getName().startsWith("UNDETERMINED") && (
+            } else if (!file.isDirectory() && file.getName().startsWith("Undetermined") && (
                     file.getName().endsWith(".fastq.gz") || file.getName().endsWith(".fastq"))) {
                 // undetermined files
                 LOGGER.info("Found undetermined file: " + file.getName());
