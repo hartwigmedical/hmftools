@@ -9,15 +9,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class RunsFolderProcessor {
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
-
+class RunsFolderProcessor {
     @NotNull
-    public static List<CpctRunData> getPatientRunsData(@NotNull File dir) throws IOException, ParseException {
+    static List<CpctRunData> getPatientRunsData(@NotNull File dir) throws IOException, ParseException {
         final List<CpctRunData> runsData = Lists.newArrayList();
         final DateFormat dateFormat = new SimpleDateFormat("yyMMdd");
         final File[] folders = dir.listFiles(File::isDirectory);

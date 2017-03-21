@@ -10,13 +10,13 @@ public class TumorData {
     private final List<String> biopsyLocations;
     private final String entryStage;
 
-    public TumorData(@Nullable String location, @NotNull List<String> biopsyLocations, @Nullable String entryStage) {
+    TumorData(@Nullable String location, @NotNull List<String> biopsyLocations, @Nullable String entryStage) {
         this.location = location;
         this.biopsyLocations = biopsyLocations;
         this.entryStage = entryStage;
     }
 
-    @NotNull
+    @Override
     public String toString() {
         final StringBuffer bf = new StringBuffer();
         bf.append(location).append(" - ").append(entryStage).append(": ").append(biopsyLocations).append("\n");

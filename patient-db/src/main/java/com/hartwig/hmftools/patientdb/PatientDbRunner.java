@@ -43,17 +43,20 @@ public final class PatientDbRunner {
                 LOGGER.info(data.toString());
                 LOGGER.info("Loading ecrf model...");
                 final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
-                final List<String> cpctPatientIds = data.stream().map(CpctRunData::getPatientId).filter(
+                final List<String> cpctPatientIds = data.stream().map(CpctRunData::patientId).filter(
                         id -> id.startsWith("CPCT")).collect(Collectors.toList());
                 final Iterable<EcrfPatient> patients = model.findPatientsById(cpctPatientIds);
                 LOGGER.info("Reading patient data...");
                 final CpctPatientDataReader cpctPatientDataReader = new CpctPatientDataReader(model);
                 final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
+                final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
                 for (final EcrfPatient patient : patients) {
                     final PatientData patientData = cpctPatientDataReader.read(patient);
                     final TumorData tumorData = cpctTumorDataReader.read(patient);
+                    final List<SystemicTherapyData> systemicTherapies = cpctSystemicTherapyReader.read(patient);
                     LOGGER.info(patientData.toString());
                     LOGGER.info(tumorData.toString());
+                    LOGGER.info(systemicTherapies.toString());
                 }
             } else {
                 if (!dir.exists()) {

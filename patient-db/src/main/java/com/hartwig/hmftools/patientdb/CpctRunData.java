@@ -10,7 +10,7 @@ public class CpctRunData {
     private final String tumorSampleId;
     private final String patientId;
 
-    public CpctRunData(@NotNull Date uploadDate, @NotNull String referenceSampleId, @NotNull String tumorSampleId,
+    CpctRunData(@NotNull Date uploadDate, @NotNull String referenceSampleId, @NotNull String tumorSampleId,
             @NotNull String patientId) {
         this.uploadDate = uploadDate;
         this.patientId = patientId;
@@ -18,7 +18,7 @@ public class CpctRunData {
         this.tumorSampleId = tumorSampleId;
     }
 
-    @NotNull
+    @Override
     public String toString() {
         final StringBuffer bf = new StringBuffer();
         bf.append(uploadDate).append("-").append(patientId).append("-").append(referenceSampleId).append("-").append(
@@ -27,7 +27,7 @@ public class CpctRunData {
     }
 
     @NotNull
-    public String getPatientId() {
+    String patientId() {
         return patientId;
     }
 }

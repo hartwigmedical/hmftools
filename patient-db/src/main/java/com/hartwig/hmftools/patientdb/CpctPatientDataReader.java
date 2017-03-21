@@ -19,26 +19,22 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CpctPatientDataReader {
+class CpctPatientDataReader {
     private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private final CpctEcrfModel dataModel;
     private final Map<Integer, String> hospitals;
 
-    public CpctPatientDataReader(@NotNull CpctEcrfModel model) {
-        this.dataModel = model;
+    CpctPatientDataReader(@NotNull CpctEcrfModel model) {
         this.hospitals = getHospitals(model);
     }
 
     @NotNull
-    public PatientData read(@NotNull EcrfPatient patient) {
+    PatientData read(@NotNull EcrfPatient patient) {
         final String sex = GenericReader.getField(patient, "BASELINE.DEMOGRAPHY.DEMOGRAPHY.SEX");
         final String ethnicity = GenericReader.getField(patient, "BASELINE.DEMOGRAPHY.DEMOGRAPHY.ETHNIC");
         final Integer birthYear = getBirthYear(patient, dateFormat);
         final String hospital = getHospital(patient, hospitals);
-        final PatientData patientData = new PatientData(patient.patientId(), null, sex, birthYear, hospital,
-                ethnicity);
-        return patientData;
+        return new PatientData(patient.patientId(), null, sex, birthYear, hospital, ethnicity);
     }
 
     @NotNull
@@ -76,12 +72,12 @@ public class CpctPatientDataReader {
                     calendar.setTime(date);
                     return calendar.get(Calendar.YEAR);
                 } catch (java.text.ParseException e) {
-                    LOGGER.info("BIRTHDTCES field did not contain valid date for patient " + patient.patientId());
+                    LOGGER.warn("BIRTHDTCES field did not contain valid date for patient " + patient.patientId());
                     return null;
                 }
             }
         }
-        LOGGER.info("No completed birth year fields found for patient " + patient.patientId());
+        LOGGER.warn("No completed birth year fields found for patient " + patient.patientId());
         return null;
     }
 
