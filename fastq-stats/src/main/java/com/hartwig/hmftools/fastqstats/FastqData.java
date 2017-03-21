@@ -6,16 +6,16 @@ public class FastqData {
     private final long yield;
     private final long q30;
 
-    public FastqData(long yield, long q30) {
+    FastqData(long yield, long q30) {
         this.q30 = q30;
         this.yield = yield;
     }
 
-    public long getYield() {
+    long yield() {
         return yield;
     }
 
-    public long getQ30() {
+    long q30() {
         return q30;
     }
 

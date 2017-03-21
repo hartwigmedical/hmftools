@@ -8,13 +8,13 @@ import com.google.common.collect.Ordering;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FastqTracker {
+class FastqTracker {
     private final FastqData flowcell;
     private final Map<String, FastqData> lanes;
     private final Map<String, FastqData> samples;
     private final FastqData undetermined;
 
-    public FastqTracker() {
+    FastqTracker() {
         flowcell = new FastqData(0, 0);
         undetermined = new FastqData(0, 0);
         lanes = ImmutableSortedMap.of();
@@ -30,54 +30,54 @@ public class FastqTracker {
     }
 
     @NotNull
-    public FastqTracker addToFlowcell(@NotNull FastqData data) {
+    FastqTracker addToFlowcell(@NotNull FastqData data) {
         return new FastqTracker(flowcell.add(data), undetermined, lanes, samples);
     }
 
     @NotNull
-    public FastqTracker addToUndetermined(@NotNull FastqData data) {
+    FastqTracker addToUndetermined(@NotNull FastqData data) {
         return new FastqTracker(flowcell, undetermined.add(data), lanes, samples);
     }
 
     @NotNull
-    public FastqTracker addToLane(@NotNull String lane, @NotNull FastqData data) {
-        Map<String, FastqData> newLanes = addToMap(lanes, lane, data);
+    FastqTracker addToLane(@NotNull String lane, @NotNull FastqData data) {
+        final Map<String, FastqData> newLanes = addToMap(lanes, lane, data);
         return new FastqTracker(flowcell, undetermined, newLanes, samples);
     }
 
     @NotNull
-    public FastqTracker addToSample(@NotNull String sample, @NotNull FastqData data) {
-        Map<String, FastqData> newSamples = addToMap(samples, sample, data);
+    FastqTracker addToSample(@NotNull String sample, @NotNull FastqData data) {
+        final Map<String, FastqData> newSamples = addToMap(samples, sample, data);
         return new FastqTracker(flowcell, undetermined, lanes, newSamples);
     }
 
     @NotNull
-    public FastqData getFlowcellData() {
+    FastqData flowcell() {
         return flowcell;
     }
 
     @NotNull
-    public FastqData getUndeterminedData() {
+    FastqData undetermined() {
         return undetermined;
     }
 
     @NotNull
-    public FastqData getLaneData(@NotNull String lane) {
+    FastqData lane(@NotNull String lane) {
         return lanes.get(lane);
     }
 
     @NotNull
-    public FastqData getSampleData(@NotNull String sample) {
+    FastqData sample(@NotNull String sample) {
         return samples.get(sample);
     }
 
     @NotNull
-    public Map<String, FastqData> getLanes() {
+    Map<String, FastqData> lanes() {
         return lanes;
     }
 
     @NotNull
-    public Map<String, FastqData> getSamples() {
+    Map<String, FastqData> samples() {
         return samples;
     }
 
@@ -88,7 +88,7 @@ public class FastqTracker {
             return new ImmutableSortedMap.Builder<String, FastqData>(Ordering.natural()).putAll(map).put(key,
                     value).build();
         } else {
-            Map<String, FastqData> copy = new HashMap<>(map);
+            final Map<String, FastqData> copy = new HashMap<>(map);
             copy.put(key, map.get(key).add(value));
             return ImmutableSortedMap.copyOf(copy);
         }

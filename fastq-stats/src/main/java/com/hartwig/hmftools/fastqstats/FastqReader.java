@@ -6,28 +6,22 @@ import java.io.InputStream;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FastqReader {
+class FastqReader {
     private final BufferedInputStream reader;
     private final int size;
 
-    public FastqReader(@NotNull InputStream in) {
+    FastqReader(@NotNull InputStream in) {
         size = 8192;
         reader = new BufferedInputStream(in);
     }
 
-    public FastqReader(@NotNull InputStream in, int size) {
+    FastqReader(@NotNull InputStream in, int size) {
         this.size = size;
         reader = new BufferedInputStream(in, size);
     }
 
-    /**
-     * Reads Yield and Q30 counts from this input stream and returns them in a FastqData object
-     *
-     * @return FastqData object containing yield and q30 counts
-     * @throws IOException
-     */
     @NotNull
-    public FastqData read() throws IOException {
+    FastqData read() throws IOException {
         long yield = 0;
         long q30 = 0;
         int lineCount = 0;
@@ -59,7 +53,7 @@ public class FastqReader {
         return new FastqData(yield, q30);
     }
 
-    public void close() throws IOException {
+    void close() throws IOException {
         reader.close();
     }
 }

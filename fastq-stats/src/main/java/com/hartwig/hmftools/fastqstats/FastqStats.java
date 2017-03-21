@@ -19,15 +19,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class FastqStats {
+class FastqStats {
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
 
     @NotNull
-    public static FastqTracker processFile(@NotNull String filePath) throws IOException {
-        FastqTracker tracker = new FastqTracker();
-        File file = new File(filePath);
-        FastqData data = processFile(file);
-        String lane = file.getName().split("_")[3];
+    static FastqTracker processFile(@NotNull String filePath) throws IOException {
+        final FastqTracker tracker = new FastqTracker();
+        final File file = new File(filePath);
+        final FastqData data = processFile(file);
+        final String lane = file.getName().split("_")[3];
         return tracker.addToFlowcell(data).addToLane(lane, data).addToSample(file.getName(), data);
     }
 
@@ -42,7 +42,7 @@ public class FastqStats {
      * @param dir BaseCalls directory
      */
     @NotNull
-    public static FastqTracker processDir(@NotNull File dir) throws IOException, InterruptedException {
+    static FastqTracker processDir(@NotNull File dir) throws IOException, InterruptedException {
         final File[] files = dir.listFiles();
         if (files == null) {
             throw new IOException("List files in " + dir.getName() + " returned null.");
@@ -76,7 +76,6 @@ public class FastqStats {
                 }
             } else if (!file.isDirectory() && file.getName().startsWith("Undetermined") && (
                     file.getName().endsWith(".fastq.gz") || file.getName().endsWith(".fastq"))) {
-                // undetermined files
                 LOGGER.info("Found undetermined file: " + file.getName());
                 final String lane = file.getName().split("_")[3];
                 final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(file));
@@ -86,12 +85,12 @@ public class FastqStats {
         }
         threadPool.shutdown();
         threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        return tracker.getTracker();
+        return tracker.tracker();
     }
 
     @NotNull
     private static FastqData processFile(@NotNull File f) throws IOException {
-        int size = 1048576;
+        final int size = 1048576;
         final InputStream in;
         if (f.getName().endsWith(".fastq.gz")) {
             in = new GZIPInputStream(new FileInputStream(new File(f.getCanonicalPath())), size);
@@ -102,9 +101,9 @@ public class FastqStats {
         }
         LOGGER.info("Processing file: " + f.getName());
         final FastqReader fr = new FastqReader(in, size);
-        long startTime = System.currentTimeMillis();
+        final long startTime = System.currentTimeMillis();
         final FastqData data = fr.read();
-        long endTime = System.currentTimeMillis();
+        final long endTime = System.currentTimeMillis();
         fr.close();
         LOGGER.info("Finished processing file: " + f.getName() + " in " + (endTime - startTime) + "ms.");
         return data;
@@ -114,12 +113,12 @@ public class FastqStats {
             @NotNull Consumer<Throwable> onFailure) {
         Futures.addCallback(future, new FutureCallback<T>() {
             @Override
-            public void onSuccess(final T t) {
+            public void onSuccess(@NotNull final T t) {
                 onSuccess.accept(t);
             }
 
             @Override
-            public void onFailure(final Throwable throwable) {
+            public void onFailure(@NotNull final Throwable throwable) {
                 onFailure.accept(throwable);
             }
         });

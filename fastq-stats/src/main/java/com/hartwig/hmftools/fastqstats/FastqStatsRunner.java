@@ -29,34 +29,18 @@ public final class FastqStatsRunner {
         final String csvOutPath = cmd.getOptionValue(CSV_OUT_DIR);
 
         if ((filePath == null && dirPath == null) || csvOutPath == null) {
-            HelpFormatter formatter = new HelpFormatter();
+            final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Fastq-Stats", options);
         } else if (filePath != null) {
-            FastqTracker tr = FastqStats.processFile(filePath);
-            writeOutputToCSV("", tr, csvOutPath);
+            final FastqTracker tracker = FastqStats.processFile(filePath);
+            writeOutputToCSV("", tracker, csvOutPath);
         } else {
-            File dir = new File(dirPath);
-            File baseCallsDir = new File(dirPath + "/Data/Intensities/BaseCalls/");
-            String[] dirNameArray = dir.getName().split("_");
-            String flowcellName;
-            if (dirNameArray.length >= 4) {
-                flowcellName = dirNameArray[3];
-            } else {
-                LOGGER.warn("Could not get flowcell name from " + dir.getName());
-                flowcellName = "Unknown";
-            }
-            if (baseCallsDir.isDirectory()) {
-                final long startTime = System.currentTimeMillis();
-                FastqTracker tr = FastqStats.processDir(baseCallsDir);
-                LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
-                writeOutputToCSV(flowcellName, tr, csvOutPath);
-            } else {
-                if (!baseCallsDir.exists()) {
-                    LOGGER.warn("dir " + baseCallsDir + " does not exist.");
-                }
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("Fastq-Stats", options);
-            }
+            final String flowcellName = getFlowcellName(dirPath);
+            final File baseCallsDir = getBaseCallsDir(dirPath);
+            final long startTime = System.currentTimeMillis();
+            final FastqTracker tracker = FastqStats.processDir(baseCallsDir);
+            LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
+            writeOutputToCSV(flowcellName, tracker, csvOutPath);
         }
     }
 
@@ -76,24 +60,58 @@ public final class FastqStatsRunner {
         return parser.parse(options, args);
     }
 
-    public static void writeOutputToCSV(@NotNull String flowcellName, @NotNull FastqTracker tracker,
+    private static void writeOutputToCSV(@NotNull String flowcellName, @NotNull FastqTracker tracker,
             @NotNull String csvOutPath) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
-        writer.write("Flowcell " + flowcellName + ", " + tracker.getFlowcellData().getYield() + ", "
-                + tracker.getFlowcellData().getQ30() * 100.0 / tracker.getFlowcellData().getYield() + "\n");
-        for (String laneName : tracker.getLanes().keySet()) {
-            FastqData lane = tracker.getLaneData(laneName);
-            writer.write("Lane " + laneName + ", " + lane.getYield() + ", " + lane.getQ30() * 100.0 / lane.getYield()
+        writer.write("Flowcell " + flowcellName + ", " + tracker.flowcell().yield() + ", "
+                + tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield() + "\n");
+        for (final String laneName : tracker.lanes().keySet()) {
+            final FastqData lane = tracker.lane(laneName);
+            writer.write("Lane " + laneName + ", " + lane.yield() + ", " + lane.q30() * 100.0 / lane.yield() + "\n");
+        }
+        for (final String sampleName : tracker.samples().keySet()) {
+            final FastqData sample = tracker.sample(sampleName);
+            writer.write("Sample " + sampleName + ", " + sample.yield() + ", " + sample.q30() * 100.0 / sample.yield()
                     + "\n");
         }
-        for (String sampleName : tracker.getSamples().keySet()) {
-            FastqData sample = tracker.getSampleData(sampleName);
-            writer.write("Sample " + sampleName + ", " + sample.getYield() + ", "
-                    + sample.getQ30() * 100.0 / sample.getYield() + "\n");
-        }
-        FastqData undetermined = tracker.getUndeterminedData();
-        writer.write("Sample Undetermined, " + undetermined.getYield() + ", " + undetermined.getQ30() + "\n");
+        final FastqData undetermined = tracker.undetermined();
+        writer.write("Sample Undetermined, " + undetermined.yield() + ", " + undetermined.q30() + "\n");
         writer.close();
         LOGGER.info("Written fastq qc data to " + csvOutPath);
     }
+
+    /**
+     * Looks at the directory name and tries to extract the flowcell name.
+     * Assumes the directory name is composed of multiple parts separated by the '_' character and the flowcell name is
+     * on the 4th position.
+     * Example of a valid directory: 170101_TEST_000_FLOWCELLNAME.
+     *
+     * @param dirPath path to the directory
+     * @return The flowcell name, or "Unknown" if the directory name has less than 4 parts
+     */
+
+    @NotNull
+    static String getFlowcellName(@NotNull String dirPath) {
+        final File dir = new File(dirPath);
+        final String[] dirNameArray = dir.getName().split("_");
+        if (dirNameArray.length >= 4) {
+            return dirNameArray[3];
+        } else {
+            LOGGER.warn("Could not get flowcell name from " + dir.getName());
+            return "Unknown";
+        }
+    }
+
+    @NotNull
+    static File getBaseCallsDir(@NotNull String dirPath) throws IOException {
+        final File baseCallsDir = new File(
+                dirPath + File.separator + "Data" + File.separator + "Intensities" + File.separator + "BaseCalls");
+        if (!baseCallsDir.exists()) {
+            throw new IOException("dir " + baseCallsDir + " does not exist.");
+        } else if (!baseCallsDir.isDirectory()) {
+            throw new IOException(baseCallsDir + " is not a directory.");
+        }
+        return baseCallsDir;
+    }
+
 }
