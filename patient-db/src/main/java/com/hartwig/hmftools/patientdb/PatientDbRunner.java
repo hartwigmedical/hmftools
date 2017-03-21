@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
@@ -50,13 +51,17 @@ public final class PatientDbRunner {
                 final CpctPatientDataReader cpctPatientDataReader = new CpctPatientDataReader(model);
                 final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
                 final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
+                final CpctRadioTherapyReader cpctRadioTherapyReader = new CpctRadioTherapyReader();
                 for (final EcrfPatient patient : patients) {
                     final PatientData patientData = cpctPatientDataReader.read(patient);
-                    final TumorData tumorData = cpctTumorDataReader.read(patient);
-                    final List<SystemicTherapyData> systemicTherapies = cpctSystemicTherapyReader.read(patient);
+                    final Optional<TumorData> tumorDataOpt = cpctTumorDataReader.read(patient);
+                    final Optional<List<SystemicTherapyData>> systemicTherapiesOpt = cpctSystemicTherapyReader.read(
+                            patient);
+                    final Optional<List<RadioTherapyData>> radioTherapiesOpt = cpctRadioTherapyReader.read(patient);
                     LOGGER.info(patientData.toString());
-                    LOGGER.info(tumorData.toString());
-                    LOGGER.info(systemicTherapies.toString());
+                    tumorDataOpt.ifPresent(tumorData -> LOGGER.info(tumorData.toString()));
+                    systemicTherapiesOpt.ifPresent(systemicTherapies -> LOGGER.info(systemicTherapies.toString()));
+                    radioTherapiesOpt.ifPresent(radioTherapies -> LOGGER.info(radioTherapies.toString()));
                 }
             } else {
                 if (!dir.exists()) {

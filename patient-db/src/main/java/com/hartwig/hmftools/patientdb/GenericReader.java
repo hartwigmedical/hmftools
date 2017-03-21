@@ -40,13 +40,13 @@ class GenericReader {
         }
         for (int index = 0; index < values.size(); index++) {
             if (values.get(index) == null) {
-                LOGGER.warn(fieldName + " for " + patient.patientId() + " contains null at index " + index + ".");
+                LOGGER.warn(
+                        fieldName + " for patient " + patient.patientId() + " contains null at index " + index + ".");
             } else if (values.get(index).replaceAll("\\s", "").length() == 0) {
-                LOGGER.warn(fieldName + " for " + patient.patientId() + " contains only whitespaces at index " + index
-                        + ".");
+                LOGGER.warn(fieldName + " for patient " + patient.patientId() + " contains only whitespaces at index "
+                        + index + ".");
             }
         }
         return values;
     }
-
 }

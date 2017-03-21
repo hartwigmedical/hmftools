@@ -2,14 +2,21 @@ package com.hartwig.hmftools.patientdb;
 
 import java.util.Date;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class RadioTherapyData {
-    private final Date date;
+class RadioTherapyData {
+    private final Date endDate;
     private final String site;
 
-    public RadioTherapyData(@NotNull Date date, @NotNull String site) {
-        this.date = date;
+    RadioTherapyData(@Nullable Date endDate, @Nullable String site) {
+        this.endDate = endDate;
         this.site = site;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer bf = new StringBuffer();
+        bf.append(endDate).append(" - ").append(site).append("\n");
+        return bf.toString();
     }
 }
