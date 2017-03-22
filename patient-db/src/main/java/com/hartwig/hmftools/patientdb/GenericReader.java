@@ -25,6 +25,7 @@ class GenericReader {
             LOGGER.warn(fieldName + " for patient " + patient.patientId() + " contains more than 1 value.");
         } else if (values.get(0).replaceAll("\\s", "").length() == 0) {
             LOGGER.warn(fieldName + " for patient " + patient.patientId() + " contains only whitespaces.");
+            return null;
         }
         return values.get(0);
     }

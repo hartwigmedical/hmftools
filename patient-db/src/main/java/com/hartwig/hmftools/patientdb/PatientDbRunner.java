@@ -52,16 +52,19 @@ public final class PatientDbRunner {
                 final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
                 final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
                 final CpctRadioTherapyReader cpctRadioTherapyReader = new CpctRadioTherapyReader();
+                final CpctTreatmentDataReader cpctTreatmentDataReader = new CpctTreatmentDataReader();
                 for (final EcrfPatient patient : patients) {
                     final PatientData patientData = cpctPatientDataReader.read(patient);
                     final Optional<TumorData> tumorDataOpt = cpctTumorDataReader.read(patient);
                     final Optional<List<SystemicTherapyData>> systemicTherapiesOpt = cpctSystemicTherapyReader.read(
                             patient);
                     final Optional<List<RadioTherapyData>> radioTherapiesOpt = cpctRadioTherapyReader.read(patient);
+                    final Optional<TreatmentData> treatmentDataOpt = cpctTreatmentDataReader.read(patient);
                     LOGGER.info(patientData.toString());
                     tumorDataOpt.ifPresent(tumorData -> LOGGER.info(tumorData.toString()));
                     systemicTherapiesOpt.ifPresent(systemicTherapies -> LOGGER.info(systemicTherapies.toString()));
                     radioTherapiesOpt.ifPresent(radioTherapies -> LOGGER.info(radioTherapies.toString()));
+                    treatmentDataOpt.ifPresent(treatmentData -> LOGGER.info(treatmentData.toString()));
                 }
             } else {
                 if (!dir.exists()) {
