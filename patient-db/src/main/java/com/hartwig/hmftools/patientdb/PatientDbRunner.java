@@ -47,7 +47,7 @@ public final class PatientDbRunner {
                 final List<String> cpctPatientIds = data.stream().map(CpctRunData::patientId).filter(
                         id -> id.startsWith("CPCT")).collect(Collectors.toList());
                 final Iterable<EcrfPatient> patients = model.findPatientsById(cpctPatientIds);
-                LOGGER.info("Reading patient data...");
+                LOGGER.info("Reading CPCT patient data...");
                 final CpctPatientDataReader cpctPatientDataReader = new CpctPatientDataReader(model);
                 final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
                 final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
