@@ -28,9 +28,9 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canReadAndWriteCorrectSomaticVariant() {
-        final String part1 = "15\t12345678\trs1;UCSC\tC\tA,G\t<qual>\t";
+        final String part1 = "15 \t 12345678 \t rs1;UCSC \t C \t A,G \t <qual> \t";
         final String part2 = "<filter>";
-        final String part3 = "\tset=varscan-freebayes;\t<format>\t0/1:60,60:121";
+        final String part3 = "\t set=varscan-freebayes; \t <format> \t 0/1:60,60:121";
         final String line = part1 + part2 + part3;
 
         final SomaticVariant variant = SomaticVariantFactory.fromVCFLine(line);
