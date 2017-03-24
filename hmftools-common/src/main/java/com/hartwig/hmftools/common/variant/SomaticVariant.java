@@ -89,6 +89,11 @@ public class SomaticVariant implements Variant {
         return filter;
     }
 
+    @Nullable
+    private String dbsnpID() {
+        return dbsnpID;
+    }
+
     public boolean isDBSNP() {
         return dbsnpID != null;
     }
@@ -172,6 +177,24 @@ public class SomaticVariant implements Variant {
         static Builder fromVCF(@NotNull final String vcfLine) {
             final Builder builder = new Builder();
             builder.originalVCFLine(vcfLine);
+            return builder;
+        }
+
+        @NotNull
+        public static Builder fromVariant(@NotNull final SomaticVariant variant) {
+            final Builder builder = fromVCF(variant.originalVCFLine());
+            builder.type(variant.type());
+            builder.chromosome(variant.chromosome());
+            builder.position(variant.position());
+            builder.ref(variant.ref());
+            builder.alt(variant.alt());
+            builder.filter(variant.filter());
+            builder.dnsnpID(variant.dbsnpID());
+            builder.cosmicID(variant.cosmicID());
+            builder.annotations(variant.annotations());
+            builder.callers(variant.callers());
+            builder.alleleReadCount(variant.alleleReadCount());
+            builder.totalReadCount(variant.totalReadCount());
             return builder;
         }
 

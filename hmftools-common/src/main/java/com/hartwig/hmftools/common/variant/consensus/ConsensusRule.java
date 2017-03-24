@@ -12,13 +12,17 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.wi
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ConsensusRule {
+
+    private static final String CONSENSUS_FILTERED = "CALLER_CONSENSUS";
 
     @NotNull
     private final Predicate<SomaticVariant> consensusRuleFilter;
@@ -44,10 +48,18 @@ public class ConsensusRule {
         return filter(variants, consensusRuleFilter);
     }
 
-    //    @NotNull
-    //    public List<SomaticVariant> updateFilterFlagForUnreliableVariants(@NotNull final List<SomaticVariant> variants) {
-    //        return variants;
-    //    }
+    @NotNull
+    public List<SomaticVariant> updateFilterFlagForUnreliableVariants(@NotNull final List<SomaticVariant> variants) {
+        final List<SomaticVariant> updatedVariants = Lists.newArrayList();
+        for (final SomaticVariant variant : variants) {
+            final SomaticVariant.Builder newVariantBuilder = SomaticVariant.Builder.fromVariant(variant);
+            if (VariantFilter.isPass(variant) && !consensusRuleFilter.test(variant)) {
+                newVariantBuilder.filter(CONSENSUS_FILTERED);
+            }
+            updatedVariants.add(newVariantBuilder.build());
+        }
+        return updatedVariants;
+    }
 
     @NotNull
     private static Predicate<SomaticVariant> isIncludedIn(@NotNull Slicer slicer) {
