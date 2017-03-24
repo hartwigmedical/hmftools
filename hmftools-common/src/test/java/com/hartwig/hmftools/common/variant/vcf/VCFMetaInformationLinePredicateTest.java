@@ -10,8 +10,8 @@ public class VCFMetaInformationLinePredicateTest {
     @Test
     public void vcfMetaInformationLinePredicateWorks() {
         final VCFMetaInformationLinePredicate predicate = new VCFMetaInformationLinePredicate();
-        assertFalse(predicate.test("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample"));
-        assertTrue(predicate.test("##fileformat=VCFv4.1"));
-        assertFalse(predicate.test("1\t1\t.\tC\tA\t.\tPASS\tset=freebayes\tGT:AD:DP\t0/1:48,15:64"));
+        assertFalse(predicate.test(VCFTestConstants.HEADER_LINE));
+        assertTrue(predicate.test(VCFTestConstants.META_INFORMATION_LINE));
+        assertFalse(predicate.test(VCFTestConstants.PASS_DATA_LINE_1));
     }
 }

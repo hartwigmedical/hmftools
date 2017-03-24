@@ -10,8 +10,8 @@ public class VCFHeaderLinePredicateTest {
     @Test
     public void vcfHeaderLinePredicateWorks() {
         final VCFHeaderLinePredicate predicate = new VCFHeaderLinePredicate();
-        assertTrue(predicate.test("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample"));
-        assertFalse(predicate.test("##fileformat=VCFv4.1"));
-        assertFalse(predicate.test("1\t1\t.\tC\tA\t.\tPASS\tset=freebayes\tGT:AD:DP\t0/1:48,15:64"));
+        assertTrue(predicate.test(VCFTestConstants.HEADER_LINE));
+        assertFalse(predicate.test(VCFTestConstants.META_INFORMATION_LINE));
+        assertFalse(predicate.test(VCFTestConstants.PASS_DATA_LINE_1));
     }
 }
