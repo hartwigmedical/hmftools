@@ -17,7 +17,6 @@
         <module>patient-reporter</module>
         <module>fastq-stats</module>
         <module>ecrf-checker</module>
-        <module>patient-db</module>
     </modules>
 
     <properties>
