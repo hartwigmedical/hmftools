@@ -31,7 +31,8 @@ public class VariantAnalyzer {
 
     public static VariantAnalyzer fromSlicingRegions(@NotNull final Slicer hmfSlicingRegion,
             @NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
-        final ConsensusRule consensusRule = new ConsensusRule(giabHighConfidenceRegion, cpctSlicingRegion);
+        final ConsensusRule consensusRule = ConsensusRule.fromGenomeRegions(giabHighConfidenceRegion,
+                cpctSlicingRegion);
         final ConsequenceDeterminer determiner = fromHmfSlicingRegion(hmfSlicingRegion);
         return new VariantAnalyzer(consensusRule, determiner);
     }
@@ -64,7 +65,7 @@ public class VariantAnalyzer {
     @NotNull
     public VariantAnalysis run(@NotNull final List<SomaticVariant> variants) {
         final List<SomaticVariant> passedVariants = passOnly(variants);
-        final List<SomaticVariant> consensusPassedVariants = consensusRule.apply(passedVariants);
+        final List<SomaticVariant> consensusPassedVariants = consensusRule.removeUnreliableVariants(passedVariants);
         final List<SomaticVariant> missenseVariants = filter(consensusPassedVariants, isMissense());
 
         final ConsequenceOutput consequenceOutput = determiner.run(consensusPassedVariants);

@@ -14,7 +14,7 @@ public final class VariantPredicates {
 
     @SafeVarargs
     @NotNull
-    public static Predicate<SomaticVariant> and(@NotNull Predicate<SomaticVariant>... predicates) {
+    public static Predicate<SomaticVariant> and(@NotNull final Predicate<SomaticVariant>... predicates) {
         return variant -> {
             for (final Predicate<SomaticVariant> predicate : predicates) {
                 if (!predicate.test(variant)) {
@@ -27,7 +27,7 @@ public final class VariantPredicates {
 
     @SafeVarargs
     @NotNull
-    public static Predicate<SomaticVariant> or(@NotNull Predicate<SomaticVariant>... predicates) {
+    public static Predicate<SomaticVariant> or(@NotNull final Predicate<SomaticVariant>... predicates) {
         return variant -> {
             for (final Predicate<SomaticVariant> predicate : predicates) {
                 if (predicate.test(variant)) {
@@ -39,7 +39,7 @@ public final class VariantPredicates {
     }
 
     @NotNull
-    public static Predicate<SomaticVariant> not(@NotNull Predicate<SomaticVariant> predicate) {
+    public static Predicate<SomaticVariant> not(@NotNull final Predicate<SomaticVariant> predicate) {
         return variant -> !predicate.test(variant);
     }
 

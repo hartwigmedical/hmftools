@@ -21,26 +21,33 @@ import org.jetbrains.annotations.NotNull;
 public class ConsensusRule {
 
     @NotNull
-    private final Slicer highConfidenceRegion;
-    @NotNull
-    private final Slicer extremeConfidenceRegion;
-
-    public ConsensusRule(@NotNull final Slicer highConfidenceRegion, @NotNull final Slicer extremeConfidenceRegion) {
-        this.highConfidenceRegion = highConfidenceRegion;
-        this.extremeConfidenceRegion = extremeConfidenceRegion;
-    }
+    private final Predicate<SomaticVariant> consensusRuleFilter;
 
     @NotNull
-    public List<SomaticVariant> apply(@NotNull List<SomaticVariant> variants) {
+    public static ConsensusRule fromGenomeRegions(@NotNull final Slicer highConfidenceRegion,
+            @NotNull final Slicer extremeConfidenceRegion) {
         final Predicate<SomaticVariant> snpRule = and(withType(VariantType.SNP),
                 or(withMinCallers(3), isIncludedIn(extremeConfidenceRegion),
-                        and(withMinCallers(2), isIncludedIn(highConfidenceRegion),
-                                or(inCOSMIC(), not(inDBSNP())))));
+                        and(withMinCallers(2), isIncludedIn(highConfidenceRegion), or(inCOSMIC(), not(inDBSNP())))));
         final Predicate<SomaticVariant> indelRule = and(withType(VariantType.INDEL),
                 or(withMinCallers(2), isIncludedIn(extremeConfidenceRegion)));
 
-        return filter(variants, or(snpRule, indelRule));
+        return new ConsensusRule(or(snpRule, indelRule));
     }
+
+    private ConsensusRule(@NotNull final Predicate<SomaticVariant> consensusRuleFilter) {
+        this.consensusRuleFilter = consensusRuleFilter;
+    }
+
+    @NotNull
+    public List<SomaticVariant> removeUnreliableVariants(@NotNull final List<SomaticVariant> variants) {
+        return filter(variants, consensusRuleFilter);
+    }
+
+    //    @NotNull
+    //    public List<SomaticVariant> updateFilterFlagForUnreliableVariants(@NotNull final List<SomaticVariant> variants) {
+    //        return variants;
+    //    }
 
     @NotNull
     private static Predicate<SomaticVariant> isIncludedIn(@NotNull Slicer slicer) {

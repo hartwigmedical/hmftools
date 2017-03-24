@@ -81,7 +81,8 @@ public class ConsensusRuleFilterApplication {
 
         final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
         final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
-        final ConsensusRule consensusRule = new ConsensusRule(highConfidenceSlicer, extremeConfidenceSlicer);
+        final ConsensusRule consensusRule = ConsensusRule.fromGenomeRegions(highConfidenceSlicer,
+                extremeConfidenceSlicer);
 
         final ConsensusRuleFilterApplication application = new ConsensusRuleFilterApplication(consensusRule);
 
@@ -153,7 +154,7 @@ public class ConsensusRuleFilterApplication {
         final List<SomaticVariant> variants = inputFile.variants();
         LOGGER.info("Processing " + variants.size() + " variants in consensus rule for " + inputFile.sample());
 
-        final List<SomaticVariant> filteredVariants = consensusRule.apply(variants);
+        final List<SomaticVariant> filteredVariants = consensusRule.removeUnreliableVariants(variants);
         LOGGER.info("Filtered variants on consensus rule: " + filteredVariants.size() + " variants remaining.");
 
         VCFFileWriter.writeSomaticVCF(outputVcf, filteredVariants);

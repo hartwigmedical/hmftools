@@ -23,7 +23,7 @@ public class ConsensusRuleTest {
         final Slicer highConfidence = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
         final Slicer extremeConfidence = SlicerFactory.fromSingleGenomeRegion(region(500, 600));
 
-        final ConsensusRule rule = new ConsensusRule(highConfidence, extremeConfidence);
+        final ConsensusRule rule = ConsensusRule.fromGenomeRegions(highConfidence, extremeConfidence);
 
         final List<SomaticVariant> variants = Lists.newArrayList(cosmicSNPVariantOnPositionWithCallers(300, 2),
                 // KODU: Include
@@ -35,7 +35,7 @@ public class ConsensusRuleTest {
                 indelVariantOnPositionWithCallers(250, 2) // KODU: Include
         );
 
-        final List<SomaticVariant> filtered = rule.apply(variants);
+        final List<SomaticVariant> filtered = rule.removeUnreliableVariants(variants);
         assertEquals(5, filtered.size());
     }
 

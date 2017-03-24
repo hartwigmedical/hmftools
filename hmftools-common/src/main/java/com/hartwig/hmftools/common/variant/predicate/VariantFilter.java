@@ -16,18 +16,19 @@ public final class VariantFilter {
     }
 
     @NotNull
-    public static <T extends Variant> List<T> passOnly(@NotNull List<T> variants) {
+    public static <T extends Variant> List<T> passOnly(@NotNull final List<T> variants) {
         return filter(variants, new PassFilterPredicate<>());
     }
 
     @NotNull
-    public static List<GermlineVariant> validGermline(@NotNull List<GermlineVariant> variants,
-            @NotNull VariantType type, boolean isRefSample) {
+    public static List<GermlineVariant> validGermline(@NotNull final List<GermlineVariant> variants,
+            @NotNull final VariantType type, final boolean isRefSample) {
         return filter(variants, new ValidGermlineVariantPredicate(type, isRefSample));
     }
 
     @NotNull
-    public static <T extends Variant> List<T> filter(@NotNull List<T> variants, @NotNull Predicate<T> predicate) {
+    public static <T extends Variant> List<T> filter(@NotNull final List<T> variants,
+            @NotNull final Predicate<T> predicate) {
         return variants.stream().filter(predicate).collect(Collectors.toList());
     }
 }
