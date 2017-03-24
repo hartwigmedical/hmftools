@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
+import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
@@ -33,28 +34,14 @@ public class ConsensusRuleFilterApplication {
     private static final Logger LOGGER = LogManager.getLogger(ConsensusRuleFilterApplication.class);
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
 
-    private static final String HIGH_CONFIDENCE_BED_ARGS_DESC = "The full path towards the high confidence bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-
-    private static final String EXTREME_CONFIDENCE_BED_ARGS_DESC = "The full path towards the extreme confidence bed";
     private static final String EXTREME_CONFIDENCE_BED = "extreme_confidence_bed";
-
-    private static final String RUN_DIRECTORY_ARGS_DESC = "The full path towards the run directory";
     private static final String RUN_DIRECTORY = "run_dir";
-
-    private static final String INPUT_VCF_ARGS_DESC = "The full path towards the input VCF to apply consensus rule to";
     private static final String INPUT_VCF = "in_vcf";
-
-    private static final String OUTPUT_VCF_ARGS_DESC = "The full path where the filtered VCF will be written to.";
     private static final String OUTPUT_VCF = "out_vcf";
-
-    private static final String BATCH_MODE_ARGS_DESC = "If set, runs the consensus filter in batch mode on run_dir";
+    private static final String USE_FILTER_FLAG = "use_filter_flag";
     private static final String BATCH_MODE = "batch_mode";
-
-    private static final String BATCH_MODE_IN_DIRECTORY_ARGS_DESC = "When in batch mode, assumes this folder contains individual runs";
     private static final String BATCH_MODE_IN_DIRECTORY = "batch_mode_in_dir";
-
-    private static final String BATCH_MODE_OUT_DIRECTORY_ARGS_DESC = "When in batch mode, writes files to this directory";
     private static final String BATCH_MODE_OUT_DIRECTORY = "batch_mode_out_dir";
 
     public static void main(final String... args)
@@ -67,6 +54,7 @@ public class ConsensusRuleFilterApplication {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String inputVcf = cmd.getOptionValue(INPUT_VCF);
         final String outputVcf = cmd.getOptionValue(OUTPUT_VCF);
+        final boolean useFilterFlag = cmd.hasOption(USE_FILTER_FLAG);
         final boolean batchMode = cmd.hasOption(BATCH_MODE);
         final String batchModeInDirectory = cmd.getOptionValue(BATCH_MODE_IN_DIRECTORY);
         final String batchModeOutDirectory = cmd.getOptionValue(BATCH_MODE_OUT_DIRECTORY);
@@ -81,10 +69,10 @@ public class ConsensusRuleFilterApplication {
 
         final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
         final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
-        final ConsensusRule consensusRule = ConsensusRule.fromGenomeRegions(highConfidenceSlicer,
-                extremeConfidenceSlicer);
+        final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
 
-        final ConsensusRuleFilterApplication application = new ConsensusRuleFilterApplication(consensusRule);
+        final ConsensusRuleFilterApplication application = new ConsensusRuleFilterApplication(consensusRule,
+                useFilterFlag);
 
         if (batchMode) {
             LOGGER.info("Running consensus rule filter in batch mode");
@@ -100,14 +88,18 @@ public class ConsensusRuleFilterApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
-        options.addOption(EXTREME_CONFIDENCE_BED, true, EXTREME_CONFIDENCE_BED_ARGS_DESC);
-        options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
-        options.addOption(INPUT_VCF, true, INPUT_VCF_ARGS_DESC);
-        options.addOption(OUTPUT_VCF, true, OUTPUT_VCF_ARGS_DESC);
-        options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
-        options.addOption(BATCH_MODE_IN_DIRECTORY, true, BATCH_MODE_IN_DIRECTORY_ARGS_DESC);
-        options.addOption(BATCH_MODE_OUT_DIRECTORY, true, BATCH_MODE_OUT_DIRECTORY_ARGS_DESC);
+        options.addOption(HIGH_CONFIDENCE_BED, true, "The full path towards the high confidence bed");
+        options.addOption(EXTREME_CONFIDENCE_BED, true, "The full path towards the extreme confidence bed");
+        options.addOption(RUN_DIRECTORY, true, "The full path towards the run directory");
+        options.addOption(INPUT_VCF, true, "The full path towards the input VCF to apply consensus rule to");
+        options.addOption(OUTPUT_VCF, true, "The full path where the filtered VCF will be written to");
+        options.addOption(USE_FILTER_FLAG, false,
+                "If set, updates the filter flag rather than removing the variants that dont pass consensus rule");
+        options.addOption(BATCH_MODE, false,
+                "If set, runs the consensus filter in batch mode on " + BATCH_MODE_IN_DIRECTORY);
+        options.addOption(BATCH_MODE_IN_DIRECTORY, true,
+                "When in batch mode, assumes this folder contains individual runs");
+        options.addOption(BATCH_MODE_OUT_DIRECTORY, true, "When in batch mode, writes files to this directory");
 
         return options;
     }
@@ -121,9 +113,11 @@ public class ConsensusRuleFilterApplication {
 
     @NotNull
     private final ConsensusRule consensusRule;
+    private final boolean useFilterFlag;
 
-    private ConsensusRuleFilterApplication(@NotNull final ConsensusRule consensusRule) {
+    private ConsensusRuleFilterApplication(@NotNull final ConsensusRule consensusRule, final boolean useFilterFlag) {
         this.consensusRule = consensusRule;
+        this.useFilterFlag = useFilterFlag;
     }
 
     private void runBatchModeOnDirectory(@NotNull final String runDirectory, @NotNull final String outputDirectory)
@@ -154,8 +148,11 @@ public class ConsensusRuleFilterApplication {
         final List<SomaticVariant> variants = inputFile.variants();
         LOGGER.info("Processing " + variants.size() + " variants in consensus rule for " + inputFile.sample());
 
-        final List<SomaticVariant> filteredVariants = consensusRule.removeUnreliableVariants(variants);
-        LOGGER.info("Filtered variants on consensus rule: " + filteredVariants.size() + " variants remaining.");
+        final List<SomaticVariant> filteredVariants = useFilterFlag ?
+                consensusRule.updateFilterFlagForUnreliableVariants(variants) :
+                consensusRule.removeUnreliableVariants(variants);
+        LOGGER.info("Filtered variants on consensus rule: " + VariantFilter.passOnly(filteredVariants).size()
+                + " variants remaining.");
 
         VCFFileWriter.writeSomaticVCF(outputVcf, inputFile, filteredVariants);
         LOGGER.info("Written filtered variants to " + outputVcf);

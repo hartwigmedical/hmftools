@@ -30,7 +30,7 @@ public class ConsensusRule {
     private final Predicate<SomaticVariant> consensusRuleFilter;
 
     @NotNull
-    public static ConsensusRule fromGenomeRegions(@NotNull final Slicer highConfidenceRegion,
+    public static ConsensusRule fromSlicers(@NotNull final Slicer highConfidenceRegion,
             @NotNull final Slicer extremeConfidenceRegion) {
         final Predicate<SomaticVariant> snpRule = and(withType(VariantType.SNP),
                 or(withMinCallers(3), isIncludedIn(extremeConfidenceRegion),

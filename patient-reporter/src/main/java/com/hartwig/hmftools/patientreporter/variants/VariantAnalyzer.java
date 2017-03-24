@@ -31,7 +31,7 @@ public class VariantAnalyzer {
 
     public static VariantAnalyzer fromSlicingRegions(@NotNull final Slicer hmfSlicingRegion,
             @NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
-        final ConsensusRule consensusRule = ConsensusRule.fromGenomeRegions(giabHighConfidenceRegion,
+        final ConsensusRule consensusRule = ConsensusRule.fromSlicers(giabHighConfidenceRegion,
                 cpctSlicingRegion);
         final ConsequenceDeterminer determiner = fromHmfSlicingRegion(hmfSlicingRegion);
         return new VariantAnalyzer(consensusRule, determiner);
