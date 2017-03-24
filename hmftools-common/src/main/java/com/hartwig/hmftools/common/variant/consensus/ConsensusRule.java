@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.wi
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -22,7 +23,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ConsensusRule {
 
-    private static final String CONSENSUS_FILTERED = "CALLER_CONSENSUS";
+    @VisibleForTesting
+    static final String CONSENSUS_FILTERED = "CALLER_CONSENSUS";
 
     @NotNull
     private final Predicate<SomaticVariant> consensusRuleFilter;
@@ -39,7 +41,8 @@ public class ConsensusRule {
         return new ConsensusRule(or(snpRule, indelRule));
     }
 
-    private ConsensusRule(@NotNull final Predicate<SomaticVariant> consensusRuleFilter) {
+    @VisibleForTesting
+    ConsensusRule(@NotNull final Predicate<SomaticVariant> consensusRuleFilter) {
         this.consensusRuleFilter = consensusRuleFilter;
     }
 

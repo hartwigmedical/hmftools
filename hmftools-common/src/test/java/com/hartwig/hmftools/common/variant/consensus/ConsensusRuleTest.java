@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant.consensus;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.slicing.GenomeRegion;
@@ -37,6 +38,27 @@ public class ConsensusRuleTest {
 
         final List<SomaticVariant> filtered = rule.removeUnreliableVariants(variants);
         assertEquals(5, filtered.size());
+    }
+
+    @Test
+    public void updateFilterFlagWorks() {
+        final String filtered = "FILTERED";
+        final String pass = "PASS";
+
+        final SomaticVariant variant1 = new SomaticVariant.Builder().filter(pass).chromosome("1").build();
+        final SomaticVariant variant2 = new SomaticVariant.Builder().filter(filtered).chromosome("1").build();
+        final SomaticVariant variant3 = new SomaticVariant.Builder().filter(pass).chromosome("2").build();
+
+        final Predicate<SomaticVariant> filter = variant -> variant.chromosome().equals("2");
+
+        final ConsensusRule consensusRule = new ConsensusRule(filter);
+
+        final List<SomaticVariant> adjustedVariants = consensusRule.updateFilterFlagForUnreliableVariants(
+                Lists.newArrayList(variant1, variant2, variant3));
+
+        assertEquals(ConsensusRule.CONSENSUS_FILTERED, adjustedVariants.get(0).filter());
+        assertEquals(filtered, adjustedVariants.get(1).filter());
+        assertEquals(pass, adjustedVariants.get(2).filter());
     }
 
     @NotNull
