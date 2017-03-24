@@ -101,12 +101,8 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canRecreateVCFLine() {
-        final String vcfLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t INFO \t 8 \t 9";
+        final String vcfLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
         final SomaticVariant variant = SomaticVariantFactory.fromVCFLine(vcfLine);
         assertEquals(vcfLine, SomaticVariantFactory.toVCFLine(variant));
-
-        final String newInfo = "hello world!";
-        final String withoutInfo = vcfLine.replace(" INFO ", newInfo);
-        assertEquals(withoutInfo, SomaticVariantFactory.toVCFLine(variant, newInfo));
     }
 }

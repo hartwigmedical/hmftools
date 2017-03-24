@@ -53,10 +53,6 @@ public class SinglePatientReporter {
     public PatientReport run(@NotNull final String runDirectory) throws IOException, HartwigException {
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(runDirectory);
 
-        if (tmpDirectory != null) {
-            writeIntermediateDataToTmpFiles(tmpDirectory, genomeAnalysis);
-        }
-
         final String sample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
         final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
@@ -104,19 +100,23 @@ public class SinglePatientReporter {
         LOGGER.info(" Analyzing somatic copy numbers...");
         final CopyNumberAnalysis copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
 
+        if (tmpDirectory != null) {
+            writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);
+        }
+
         return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis);
     }
 
     private static void writeIntermediateDataToTmpFiles(@NotNull final String basePath,
-            @NotNull final GenomeAnalysis genomeAnalysis) throws IOException {
-        final String baseName = basePath + File.separator + genomeAnalysis.sample();
-        final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
+            @NotNull final VCFSomaticFile originalFile, @NotNull final VariantAnalysis variantAnalysis,
+            @NotNull final CopyNumberAnalysis copyNumberAnalysis) throws IOException {
+        final String baseName = basePath + File.separator + originalFile.sample();
         final String consensusVCF = baseName + "_consensus_variants.vcf";
-        VCFFileWriter.writeSomaticVCF(consensusVCF, variantAnalysis.consensusPassedVariants());
+        VCFFileWriter.writeSomaticVCF(consensusVCF, originalFile, variantAnalysis.consensusPassedVariants());
         LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
 
         final String consequentialVCF = baseName + "_consequential_variants.vcf";
-        VCFFileWriter.writeSomaticVCF(consequentialVCF, variantAnalysis.consequentialVariants());
+        VCFFileWriter.writeSomaticVCF(consequentialVCF, originalFile, variantAnalysis.consequentialVariants());
         LOGGER.info("    Written consequential variants to " + consequentialVCF);
 
         final String varReportFile = baseName + "_variant_report.csv";
@@ -124,7 +124,6 @@ public class SinglePatientReporter {
         Files.write(new File(varReportFile).toPath(), FindingsToCSV.varToCSV(varFindings));
         LOGGER.info("    Written " + varFindings.size() + " variants to report to " + varReportFile);
 
-        final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
         final String cnvReportFile = baseName + "_copynumber_report.csv";
         final List<CopyNumberReport> cnvFindings = copyNumberAnalysis.findings();
         Files.write(new File(cnvReportFile).toPath(), FindingsToCSV.cnvToCSV(cnvFindings));

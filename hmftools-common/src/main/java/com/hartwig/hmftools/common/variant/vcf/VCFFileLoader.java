@@ -43,14 +43,16 @@ public final class VCFFileLoader {
 
     @NotNull
     private static VCFSomaticFile toVCFSomaticFile(@NotNull final List<String> lines) {
-        final Optional<String> headerLine = lines.stream().filter(new VCFHeaderLinePredicate()).findFirst();
-        assert headerLine.isPresent();
-        final String sample = SomaticVariantFactory.sampleFromHeaderLine(headerLine.get());
+        final List<String> metaInformationLines = lines.stream().filter(new VCFMetaInformationLinePredicate()).collect(
+                Collectors.toList());
+        final Optional<String> optHeaderLine = lines.stream().filter(new VCFHeaderLinePredicate()).findFirst();
+        assert optHeaderLine.isPresent();
+        final String sample = SomaticVariantFactory.sampleFromHeaderLine(optHeaderLine.get());
 
         final List<String> dataLines = lines.stream().filter(new VCFDataLinePredicate()).collect(Collectors.toList());
         final List<SomaticVariant> variants = dataLines.stream().map(SomaticVariantFactory::fromVCFLine).collect(
                 Collectors.toList());
-        return new VCFSomaticFile(sample, variants);
+        return new VCFSomaticFile(sample, metaInformationLines, optHeaderLine.get(), variants);
     }
 
     @NotNull

@@ -157,7 +157,7 @@ public class ConsensusRuleFilterApplication {
         final List<SomaticVariant> filteredVariants = consensusRule.removeUnreliableVariants(variants);
         LOGGER.info("Filtered variants on consensus rule: " + filteredVariants.size() + " variants remaining.");
 
-        VCFFileWriter.writeSomaticVCF(outputVcf, filteredVariants);
+        VCFFileWriter.writeSomaticVCF(outputVcf, inputFile, filteredVariants);
         LOGGER.info("Written filtered variants to " + outputVcf);
     }
 }

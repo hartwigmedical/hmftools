@@ -64,24 +64,7 @@ public final class SomaticVariantFactory {
 
     @NotNull
     public static String toVCFLine(@NotNull final SomaticVariant variant) {
-        return toVCFLine(variant, null);
-    }
-
-    @NotNull
-    public static String toVCFLine(@NotNull final SomaticVariant variant, @Nullable String newInfoValue) {
-        final String originalVCFLine = variant.originalVCFLine();
-        if (newInfoValue != null) {
-            final String[] values = originalVCFLine.split(VCF_COLUMN_SEPARATOR);
-            String reconstructedVCFLine = values[0];
-            for (int i = 1; i < values.length; i++) {
-                final String value = i == INFO_COLUMN ? newInfoValue : values[i];
-                reconstructedVCFLine += (VCF_COLUMN_SEPARATOR + value);
-            }
-
-            return reconstructedVCFLine;
-        } else {
-            return originalVCFLine;
-        }
+        return variant.originalVCFLine();
     }
 
     @NotNull
