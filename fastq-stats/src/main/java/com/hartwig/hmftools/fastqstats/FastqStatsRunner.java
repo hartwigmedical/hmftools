@@ -20,6 +20,7 @@ public final class FastqStatsRunner {
     private static final String FASTQ_FILE = "file";
     private static final String FASTQ_ROOT_DIR = "dir";
     private static final String CSV_OUT_DIR = "out";
+    private static final String THREAD_COUNT = "threadCount";
 
     public static void main(String[] args) throws ParseException, IOException, InterruptedException {
         final Options options = createOptions();
@@ -27,6 +28,7 @@ public final class FastqStatsRunner {
         final String filePath = cmd.getOptionValue(FASTQ_FILE);
         final String dirPath = cmd.getOptionValue(FASTQ_ROOT_DIR);
         final String csvOutPath = cmd.getOptionValue(CSV_OUT_DIR);
+        final String threadCountArg = cmd.getOptionValue(THREAD_COUNT);
 
         if ((filePath == null && dirPath == null) || csvOutPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -35,10 +37,11 @@ public final class FastqStatsRunner {
             final FastqTracker tracker = FastqStats.processFile(filePath);
             writeOutputToCSV("", tracker, csvOutPath);
         } else {
+            final int threadCount = getThreadCount(threadCountArg);
             final String flowcellName = getFlowcellName(dirPath);
             final File baseCallsDir = getBaseCallsDir(dirPath);
             final long startTime = System.currentTimeMillis();
-            final FastqTracker tracker = FastqStats.processDir(baseCallsDir);
+            final FastqTracker tracker = FastqStats.processDir(baseCallsDir, threadCount);
             LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
             writeOutputToCSV(flowcellName, tracker, csvOutPath);
         }
@@ -50,6 +53,7 @@ public final class FastqStatsRunner {
         options.addOption(FASTQ_FILE, true, "Path towards the original fastq file.");
         options.addOption(FASTQ_ROOT_DIR, true, "Path towards the flowcell dir.");
         options.addOption(CSV_OUT_DIR, true, "Path towards the csv output file.");
+        options.addOption(THREAD_COUNT, true, "Number of max threads to use (only used when running on a directory).");
         return options;
     }
 
@@ -62,9 +66,11 @@ public final class FastqStatsRunner {
 
     private static void writeOutputToCSV(@NotNull String flowcellName, @NotNull FastqTracker tracker,
             @NotNull String csvOutPath) throws IOException {
+
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("Flowcell " + flowcellName + ", " + tracker.flowcell().yield() + ", "
                 + tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield() + "\n");
+
         for (final String laneName : tracker.lanes().keySet()) {
             final FastqData lane = tracker.lane(laneName);
             writer.write("Lane " + laneName + ", " + lane.yield() + ", " + lane.q30() * 100.0 / lane.yield() + "\n");
@@ -74,8 +80,13 @@ public final class FastqStatsRunner {
             writer.write("Sample " + sampleName + ", " + sample.yield() + ", " + sample.q30() * 100.0 / sample.yield()
                     + "\n");
         }
-        final FastqData undetermined = tracker.undetermined();
-        writer.write("Sample Undetermined, " + undetermined.yield() + ", " + undetermined.q30() + "\n");
+        for (final String sampleName : tracker.samples().keySet()) {
+            for (final String laneName : tracker.samples().get(sampleName).keySet()) {
+                final FastqData sampleLaneData = tracker.samples().get(sampleName).get(laneName);
+                writer.write(sampleName + ", " + laneName + ", " + sampleLaneData.yield() + ", "
+                        + sampleLaneData.q30() * 100.0 / sampleLaneData.yield() + "\n");
+            }
+        }
         writer.close();
         LOGGER.info("Written fastq qc data to " + csvOutPath);
     }
@@ -114,4 +125,16 @@ public final class FastqStatsRunner {
         return baseCallsDir;
     }
 
+    static int getThreadCount(String threadCountArg) {
+        try {
+            final int numThreads = Integer.parseInt(threadCountArg);
+            if (numThreads <= 0) {
+                throw new NumberFormatException();
+            }
+            return numThreads;
+        } catch (NumberFormatException e) {
+            LOGGER.info("Couldn't parse thread count parameter > 0; using default value.");
+            return Runtime.getRuntime().availableProcessors();
+        }
+    }
 }

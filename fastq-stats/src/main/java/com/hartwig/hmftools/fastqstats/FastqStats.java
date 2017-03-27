@@ -28,7 +28,7 @@ class FastqStats {
         final File file = new File(filePath);
         final FastqData data = processFile(file);
         final String lane = file.getName().split("_")[3];
-        return tracker.addToFlowcell(data).addToLane(lane, data).addToSample(file.getName(), data);
+        return tracker.addToFlowcell(data).addToSample(file.getName(), lane, data);
     }
 
     /**
@@ -39,18 +39,22 @@ class FastqStats {
      * the start will be assigned to an 'Undetermined' sample. The yield and q30 from these
      * files will count towards the total yield and q30 of the flowcell.
      *
-     * @param dir BaseCalls directory
+     * @param dir         BaseCalls directory
+     * @param threadCount number of maximum threads to use
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
      */
     @NotNull
-    static FastqTracker processDir(@NotNull File dir) throws IOException, InterruptedException {
+    static FastqTracker processDir(@NotNull File dir, int threadCount) throws IOException, InterruptedException {
         final File[] files = dir.listFiles();
         if (files == null) {
             throw new IOException("List files in " + dir.getName() + " returned null.");
         }
         final FastqTrackerWrapper tracker = new FastqTrackerWrapper();
+        LOGGER.info("Using " + threadCount + " threads.");
         final ListeningExecutorService threadPool = MoreExecutors.listeningDecorator(
-                Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
-        LOGGER.info("Number of available processors: " + Runtime.getRuntime().availableProcessors());
+                Executors.newFixedThreadPool(threadCount));
 
         for (final File file : files) {
             if (file.isDirectory() && file.getName().startsWith("HMFreg")) {
@@ -79,7 +83,7 @@ class FastqStats {
                 LOGGER.info("Found undetermined file: " + file.getName());
                 final String lane = file.getName().split("_")[3];
                 final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(file));
-                addCallback(futureResult, (data) -> tracker.addDataFromUndeterminedFile(lane, data),
+                addCallback(futureResult, (data) -> tracker.addDataFromSampleFile("Undetermined", lane, data),
                         (error) -> LOGGER.error("Failed to process file: " + file.getName(), error));
             }
         }
