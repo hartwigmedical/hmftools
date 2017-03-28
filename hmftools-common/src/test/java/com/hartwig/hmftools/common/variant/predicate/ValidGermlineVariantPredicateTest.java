@@ -5,16 +5,18 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.function.Predicate;
 
+import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class ValidGermlineVariantPredicateTest {
 
-    private static final String VARIANT = "1/1:0,3:3:9:103,9,0";
-    private static final String NOT_VARIANT = "./.:773,0:773";
+    private static final GermlineSampleData VARIANT = new GermlineSampleData("1/1", 10, 5);
+    private static final GermlineSampleData NOT_VARIANT = new GermlineSampleData("./.", 10, 5);
 
     @Test
     public void checkSNPVariant() {
@@ -45,8 +47,8 @@ public class ValidGermlineVariantPredicateTest {
     }
 
     @NotNull
-    private static GermlineVariant createVariant(@NotNull final VariantType type, @NotNull final String refData,
-            @NotNull final String tumorData) {
+    private static GermlineVariant createVariant(@NotNull final VariantType type,
+            @NotNull final GermlineSampleData refData, @Nullable final GermlineSampleData tumorData) {
         return new GermlineVariant(type, "AnyFilter", refData, tumorData);
     }
 }

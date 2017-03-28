@@ -17,19 +17,19 @@ final class VariantFactoryFunctions {
     }
 
     @Nullable
-    static ReadCount analyzeAlleleFrequencies(@NotNull final String alleleFrequencyField) {
+    static AlleleFrequencyData analyzeAlleleFrequencies(@NotNull final String alleleFrequencyField) {
         final String[] afFields = alleleFrequencyField.split(ALLELE_FREQUENCY_FIELD_SEPARATOR);
 
         if (afFields.length < 2) {
             return null;
         }
 
-        final int readCount = Integer.valueOf(afFields[1]);
+        final int alleleReadCount = Integer.valueOf(afFields[1]);
         int totalReadCount = 0;
         for (final String afField : afFields) {
             totalReadCount += Integer.valueOf(afField);
         }
 
-        return new ReadCount(readCount, totalReadCount);
+        return new AlleleFrequencyData(alleleReadCount, totalReadCount);
     }
 }

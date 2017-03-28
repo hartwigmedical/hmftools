@@ -19,17 +19,19 @@ public class VariantFactoryFunctionsTest {
 
     @Test
     public void canDetermineAlleleFrequencies() {
-        final ReadCount simpleReadCount = VariantFactoryFunctions.analyzeAlleleFrequencies("60,30");
-        assertNotNull(simpleReadCount);
-        assertEquals(30, simpleReadCount.alleleReadCount());
-        assertEquals(90, simpleReadCount.totalReadCount());
+        final AlleleFrequencyData simpleAlleleFrequencyData = VariantFactoryFunctions.analyzeAlleleFrequencies(
+                "60,30");
+        assertNotNull(simpleAlleleFrequencyData);
+        assertEquals(30, simpleAlleleFrequencyData.alleleReadCount());
+        assertEquals(90, simpleAlleleFrequencyData.totalReadCount());
 
-        final ReadCount complexReadCount = VariantFactoryFunctions.analyzeAlleleFrequencies("60,30,10");
-        assertNotNull(complexReadCount);
-        assertEquals(30, complexReadCount.alleleReadCount());
-        assertEquals(100, complexReadCount.totalReadCount());
+        final AlleleFrequencyData complexAlleleFrequencyData = VariantFactoryFunctions.analyzeAlleleFrequencies(
+                "60,30,10");
+        assertNotNull(complexAlleleFrequencyData);
+        assertEquals(30, complexAlleleFrequencyData.alleleReadCount());
+        assertEquals(100, complexAlleleFrequencyData.totalReadCount());
 
-        final ReadCount invalidReadCount = VariantFactoryFunctions.analyzeAlleleFrequencies("60");
-        assertNull(invalidReadCount);
+        final AlleleFrequencyData invalidAlleleFrequencyData = VariantFactoryFunctions.analyzeAlleleFrequencies("60");
+        assertNull(invalidAlleleFrequencyData);
     }
 }

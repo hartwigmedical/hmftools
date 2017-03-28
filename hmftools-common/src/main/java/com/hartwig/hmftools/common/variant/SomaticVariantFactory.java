@@ -40,7 +40,7 @@ public final class SomaticVariantFactory {
     private static final String CALLER_INTERSECTION_IDENTIFIER = "Intersection";
 
     private static final int SAMPLE_DATA_COLUMN = 9;
-    private static final int ALLELE_FREQUENCY_COLUMN_INDEX = 1;
+    private static final int SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN = 1;
 
     private SomaticVariantFactory() {
     }
@@ -107,12 +107,12 @@ public final class SomaticVariantFactory {
         builder.annotations(VariantAnnotationFactory.fromVCFInfoField(info));
 
         final String sampleData = values[SAMPLE_DATA_COLUMN].trim();
-        final ReadCount readCounts = extractReadCounts(sampleData);
-        if (readCounts == null) {
-            LOGGER.warn("Could not parse read counts from " + line);
+        final AlleleFrequencyData alleleFrequencyData = extractAlleleFrequencyData(sampleData);
+        if (alleleFrequencyData == null) {
+            LOGGER.warn("Could not parse allele frequencies from " + sampleData);
         } else {
-            builder.totalReadCount(readCounts.totalReadCount());
-            builder.alleleReadCount(readCounts.alleleReadCount());
+            builder.totalReadCount(alleleFrequencyData.totalReadCount());
+            builder.alleleReadCount(alleleFrequencyData.alleleReadCount());
         }
 
         return builder.build();
@@ -142,12 +142,12 @@ public final class SomaticVariantFactory {
     }
 
     @Nullable
-    private static ReadCount extractReadCounts(@NotNull final String sampleData) {
+    private static AlleleFrequencyData extractAlleleFrequencyData(@NotNull final String sampleData) {
         final String[] sampleFields = VariantFactoryFunctions.splitSampleDataFields(sampleData);
         if (sampleFields.length < 2) {
             return null;
         }
 
-        return VariantFactoryFunctions.analyzeAlleleFrequencies(sampleFields[ALLELE_FREQUENCY_COLUMN_INDEX]);
+        return VariantFactoryFunctions.analyzeAlleleFrequencies(sampleFields[SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN]);
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GermlineVariant implements Variant {
 
@@ -9,12 +10,12 @@ public class GermlineVariant implements Variant {
     @NotNull
     private final String filter;
     @NotNull
-    private final String refData;
-    @NotNull
-    private final String tumorData;
+    private final GermlineSampleData refData;
+    @Nullable
+    private final GermlineSampleData tumorData;
 
     public GermlineVariant(@NotNull final VariantType type, @NotNull final String filter,
-            @NotNull final String refData, @NotNull final String tumorData) {
+            @NotNull final GermlineSampleData refData, @Nullable final GermlineSampleData tumorData) {
         this.type = type;
         this.filter = filter;
         this.refData = refData;
@@ -32,12 +33,12 @@ public class GermlineVariant implements Variant {
     }
 
     @NotNull
-    public String refData() {
+    public GermlineSampleData refData() {
         return refData;
     }
 
-    @NotNull
-    public String tumorData() {
+    @Nullable
+    public GermlineSampleData tumorData() {
         return tumorData;
     }
 }

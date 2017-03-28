@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.variant;
 
-class ReadCount {
+class AlleleFrequencyData {
 
     private final int alleleReadCount;
     private final int totalReadCount;
 
-    ReadCount(final int alleleReadCount, final int totalReadCount) {
+    AlleleFrequencyData(final int alleleReadCount, final int totalReadCount) {
         this.alleleReadCount = alleleReadCount;
         this.totalReadCount = totalReadCount;
     }

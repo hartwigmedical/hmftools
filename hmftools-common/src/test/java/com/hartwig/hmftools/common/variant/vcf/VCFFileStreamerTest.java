@@ -23,7 +23,7 @@ public class VCFFileStreamerTest {
 
         final GermlineVariant firstVariant = VCFFileStreamer.nextVariant(reader);
         assertNotNull(firstVariant);
-        assertEquals("0/1:12,17:29:99:500,0,440", firstVariant.refData());
+        assertEquals("0/1", firstVariant.refData().genoType());
 
         // KODU: There are 2 more variants in the test file.
         assertNotNull(VCFFileStreamer.nextVariant(reader));

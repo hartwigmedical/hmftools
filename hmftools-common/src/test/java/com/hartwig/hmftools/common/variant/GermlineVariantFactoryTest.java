@@ -1,15 +1,20 @@
 package com.hartwig.hmftools.common.variant;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class GermlineVariantFactoryTest {
 
+    private static final String VALID_SAMPLE_DATA = "0/1:20,10:whatever";
+
     @Test
     public void extractFromNormalVCFLine() {
-        String somewhatValidVCFLine = "1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9 \t 10 \t 11";
+        final String somewhatValidVCFLine =
+                "1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9 \t " + VALID_SAMPLE_DATA + " \t " + VALID_SAMPLE_DATA;
         GermlineVariant variant = GermlineVariantFactory.fromVCFLine(somewhatValidVCFLine);
         assertNotNull(variant);
         assertNotNull(variant.refData());
@@ -18,7 +23,19 @@ public class GermlineVariantFactoryTest {
 
     @Test
     public void extractFromInvalidVCFLine() {
-        String invalidVCFLine = "1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9 ";
+        final String invalidVCFLine = "1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9 ";
         assertNull(GermlineVariantFactory.fromVCFLine(invalidVCFLine));
+    }
+
+    @Test
+    public void canGenerateGermlineSampleData() {
+        final GermlineSampleData validSampleData = GermlineVariantFactory.fromSampleData(VALID_SAMPLE_DATA);
+        assertNotNull(validSampleData);
+        assertEquals("0/1", validSampleData.genoType());
+        assertEquals(10, validSampleData.alleleReadCount());
+        assertEquals(30, validSampleData.totalReadCount());
+
+        assertNull(GermlineVariantFactory.fromSampleData(Strings.EMPTY));
+        assertNull(GermlineVariantFactory.fromSampleData("hi:there"));
     }
 }

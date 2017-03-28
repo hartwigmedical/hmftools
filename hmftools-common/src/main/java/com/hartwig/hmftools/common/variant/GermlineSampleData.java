@@ -5,17 +5,26 @@ import org.jetbrains.annotations.NotNull;
 public class GermlineSampleData {
 
     @NotNull
-    private final String originalSampleData;
-    @NotNull
     private final String genoType;
     private final int totalReadCount;
     private final int alleleReadCount;
 
-    GermlineSampleData(@NotNull final String originalSampleData, @NotNull final String genoType,
-            final int totalReadCount, final int alleleReadCount) {
-        this.originalSampleData = originalSampleData;
+    public GermlineSampleData(@NotNull final String genoType, final int totalReadCount, final int alleleReadCount) {
         this.genoType = genoType;
         this.totalReadCount = totalReadCount;
         this.alleleReadCount = alleleReadCount;
+    }
+
+    @NotNull
+    public String genoType() {
+        return genoType;
+    }
+
+    public int totalReadCount() {
+        return totalReadCount;
+    }
+
+    public int alleleReadCount() {
+        return alleleReadCount;
     }
 }
