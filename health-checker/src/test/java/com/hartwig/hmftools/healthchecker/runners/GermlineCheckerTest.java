@@ -125,12 +125,12 @@ public class GermlineCheckerTest {
             final int expectedHeterozygousCountAbove50VAF, final int expectedHeterozygousCountBelow50VAF) {
         assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, checks.size());
 
-        assertCheck(checks, GermlineCheck.VARIANTS_GERMLINE_SNP, expectedCountSNP);
-        assertCheck(checks, GermlineCheck.VARIANTS_GERMLINE_INDELS, expectedCountIndels);
-        assertCheck(checks, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT, expectedHeterozygousCount);
-        assertCheck(checks, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF,
+        assertCheck(checks, GermlineCheck.GERMLINE_SNP_COUNT, expectedCountSNP);
+        assertCheck(checks, GermlineCheck.GERMLINE_INDEL_COUNT, expectedCountIndels);
+        assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT, expectedHeterozygousCount);
+        assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF,
                 expectedHeterozygousCountAbove50VAF);
-        assertCheck(checks, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF,
+        assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF,
                 expectedHeterozygousCountBelow50VAF);
     }
 

@@ -132,14 +132,14 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     @NotNull
     private static List<HealthCheck> buildChecks(@NotNull final String sample, @NotNull final GermlineStats stats) {
         return Lists.newArrayList(
-                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_SNP.toString(), Long.toString(stats.snpCount)),
-                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_INDELS.toString(),
+                new HealthCheck(sample, GermlineCheck.GERMLINE_SNP_COUNT.toString(), Long.toString(stats.snpCount)),
+                new HealthCheck(sample, GermlineCheck.GERMLINE_INDEL_COUNT.toString(),
                         Long.toString(stats.indelCount)),
-                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT.toString(),
+                new HealthCheck(sample, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT.toString(),
                         Long.toString(stats.heterozygousCount)),
-                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF.toString(),
+                new HealthCheck(sample, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF.toString(),
                         Long.toString(stats.heterozygousCountAbove50VAF)),
-                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF.toString(),
+                new HealthCheck(sample, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF.toString(),
                         Long.toString(stats.heterozygousCountBelow50VAF)));
     }
 
