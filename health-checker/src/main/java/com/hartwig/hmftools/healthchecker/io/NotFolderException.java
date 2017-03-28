@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.context;
+package com.hartwig.hmftools.healthchecker.io;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
 
