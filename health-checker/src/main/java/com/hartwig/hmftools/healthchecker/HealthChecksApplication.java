@@ -31,57 +31,35 @@ import rx.schedulers.Schedulers;
 
 public final class HealthChecksApplication {
 
-    private static final String RUN_DIR_ARG_DESC = "The path containing the data for a single run";
-    private static final String CHECK_TYPE_ARGS_DESC = "The type of check to be executed for a single run";
-    private static final String REPORT_TYPE_ARGS_DESC = "The type of report to be generated: json or stdout.";
-    private static final String REPORT_OUTPUT_PATH_ARGS_DESC = "The path where reports are written to.";
-
-    private static final String REPORT_GENERATED_MSG = "Report generated -> \n%s";
-
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
-    private static final String RUN_DIRECTORY = "rundir";
-    private static final String CHECK_TYPE = "checktype";
-    private static final String REPORT_TYPE = "reporttype";
-    private static final String REPORT_OUTPUT_PATH = "reportout";
-
-    private static final String ALL_CHECKS = "all";
+    private static final String RUN_DIRECTORY = "run_dir";
+    private static final String REPORT_TYPE = "report_type";
+    private static final String REPORT_OUTPUT_PATH = "report_output_path";
 
     @NotNull
     private final RunContext runContext;
-    @NotNull
-    private final String checkType;
     @NotNull
     private final String reportType;
     @NotNull
     private final String reportOutputPath;
 
-    private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String checkType,
-            @NotNull final String reportType, @NotNull final String reportOutputPath) {
+    private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportType,
+            @NotNull final String reportOutputPath) {
         this.runContext = runContext;
-        this.checkType = checkType;
         this.reportType = reportType;
         this.reportOutputPath = reportOutputPath;
     }
 
-    /**
-     * To Run Healthchecks over files in a dir
-     *
-     * @param args - Arguments on how to run the health-checks should contain:
-     *             -rundir [run-directory] -checktype [somatic - all] -reporttype
-     *             [json - stdout] -reportout /path/to/reports
-     * @throws ParseException - In case commandline's arguments could not be parsed.
-     */
     public static void main(final String... args) throws ParseException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
         String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String checkType = cmd.getOptionValue(CHECK_TYPE);
         final String reportType = cmd.getOptionValue(REPORT_TYPE);
         final String reportOutputPath = cmd.getOptionValue(REPORT_OUTPUT_PATH);
 
-        if (runDirectory == null || checkType == null || reportType == null || reportOutputPath == null) {
+        if (runDirectory == null || reportType == null || reportOutputPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
@@ -96,17 +74,16 @@ public final class HealthChecksApplication {
             System.exit(1);
         }
 
-        new HealthChecksApplication(runContext, checkType, reportType, reportOutputPath).run();
+        new HealthChecksApplication(runContext, reportType, reportOutputPath).run();
     }
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(RUN_DIRECTORY, true, RUN_DIR_ARG_DESC);
-        options.addOption(CHECK_TYPE, true, CHECK_TYPE_ARGS_DESC);
-        options.addOption(REPORT_TYPE, true, REPORT_TYPE_ARGS_DESC);
-        options.addOption(REPORT_OUTPUT_PATH, true, REPORT_OUTPUT_PATH_ARGS_DESC);
+        options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
+        options.addOption(REPORT_TYPE, true, "The type of report to be generated: json or stdout.");
+        options.addOption(REPORT_OUTPUT_PATH, true, "The path where reports are written to.");
 
         return options;
     }
@@ -119,23 +96,6 @@ public final class HealthChecksApplication {
     }
 
     private void run() {
-        if (checkType.equalsIgnoreCase(ALL_CHECKS)) {
-            executeAllChecks();
-        } else {
-            final HealthChecksFlyweight flyweight = HealthChecksFlyweight.getInstance();
-            try {
-                final HealthChecker checker = flyweight.getChecker(checkType);
-
-                final Report report = HealthCheckReportFactory.create(reportType);
-                report.addResult(checker.run(runContext));
-            } catch (final NotFoundException e) {
-                LOGGER.error(e.getMessage());
-            }
-            generateReport();
-        }
-    }
-
-    private void executeAllChecks() {
         final HealthChecksFlyweight flyweight = HealthChecksFlyweight.getInstance();
         final Collection<HealthChecker> checkers = flyweight.getAllCheckers();
 
@@ -154,7 +114,7 @@ public final class HealthChecksApplication {
     }
 
     @NotNull
-    private Action1<? super Throwable> createErrorHandler() {
+    private static Action1<? super Throwable> createErrorHandler() {
         return (Action1<Throwable>) throwable -> LOGGER.error(throwable.getMessage());
     }
 
@@ -164,7 +124,7 @@ public final class HealthChecksApplication {
 
             final Optional<String> reportPath = report.generateReport(runContext, reportOutputPath);
             if (reportPath.isPresent()) {
-                LOGGER.info(String.format(REPORT_GENERATED_MSG, reportPath.get()));
+                LOGGER.info(String.format("Report generated -> \n%s", reportPath.get()));
             }
         } catch (final GenerateReportException e) {
             LOGGER.log(Level.ERROR, e.getMessage());
