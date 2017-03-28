@@ -5,6 +5,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -14,6 +20,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Document;
 
 public final class FastqStatsRunner {
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
@@ -92,23 +99,24 @@ public final class FastqStatsRunner {
     }
 
     /**
-     * Looks at the directory name and tries to extract the flowcell name.
-     * Assumes the directory name is composed of multiple parts separated by the '_' character and the flowcell name is
-     * on the 4th position.
-     * Example of a valid directory: 170101_TEST_000_FLOWCELLNAME.
+     * Extracts the flowcell name from the RunInfo.xml file which is assumed to be located in the dirPath directory.
+     * The flowcell name is assumed to be a text node under the <Flowcell> element.
      *
      * @param dirPath path to the directory
-     * @return The flowcell name, or "Unknown" if the directory name has less than 4 parts
+     * @return The flowcell name, or "Unknown" if the flowcell name couldn't be extracted.
      */
 
     @NotNull
     static String getFlowcellName(@NotNull String dirPath) {
-        final File dir = new File(dirPath);
-        final String[] dirNameArray = dir.getName().split("_");
-        if (dirNameArray.length >= 4) {
-            return dirNameArray[3];
-        } else {
-            LOGGER.warn("Could not get flowcell name from " + dir.getName());
+        final File runInfoXml = new File(dirPath + File.separator + "RunInfo.xml");
+        final DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+        try {
+            final DocumentBuilder documentBuilder = domFactory.newDocumentBuilder();
+            final Document xmlDoc = documentBuilder.parse(runInfoXml);
+            final XPath xPath = XPathFactory.newInstance().newXPath();
+            return (String) xPath.evaluate("//Flowcell/text()", xmlDoc, XPathConstants.STRING);
+        } catch (Exception e) {
+            LOGGER.warn("Could not extract flowcell name from " + runInfoXml.getPath());
             return "Unknown";
         }
     }

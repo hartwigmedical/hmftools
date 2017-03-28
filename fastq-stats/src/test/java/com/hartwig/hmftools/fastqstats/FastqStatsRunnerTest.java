@@ -9,9 +9,6 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-/**
- * Created by mvoda on 3/21/17.
- */
 public class FastqStatsRunnerTest {
     private static String RUN_DIR_PATH = Resources.getResource("170101_TEST_000_TESTFLOWCELL").getPath();
 
