@@ -39,10 +39,8 @@ public final class SomaticVariantFactory {
     private static final String CALLER_FILTERED_IDENTIFIER = "filterIn";
     private static final String CALLER_INTERSECTION_IDENTIFIER = "Intersection";
 
-    private static final int SAMPLE_COLUMN = 9;
-    private static final String SAMPLE_FIELD_SEPARATOR = ":";
-    private static final int AF_COLUMN_INDEX = 1;
-    private static final String AF_FIELD_SEPARATOR = ",";
+    private static final int SAMPLE_DATA_COLUMN = 9;
+    private static final int ALLELE_FREQUENCY_COLUMN_INDEX = 1;
 
     private SomaticVariantFactory() {
     }
@@ -50,7 +48,7 @@ public final class SomaticVariantFactory {
     @NotNull
     public static String sampleFromHeaderLine(@NotNull final String headerLine) {
         final String[] values = headerLine.split(VCF_COLUMN_SEPARATOR);
-        final String sample = values[SAMPLE_COLUMN];
+        final String sample = values[SAMPLE_DATA_COLUMN];
         // KODU: In v1.7, the sample would contain the whole path of the VCF.
         if (sample.contains(File.separator)) {
             final String[] parts = sample.split(File.separator);
@@ -108,13 +106,13 @@ public final class SomaticVariantFactory {
         builder.callers(extractCallers(info));
         builder.annotations(VariantAnnotationFactory.fromVCFInfoField(info));
 
-        final String sampleInfo = values[SAMPLE_COLUMN].trim();
-        final ReadCount readCounts = extractReadCounts(sampleInfo);
+        final String sampleData = values[SAMPLE_DATA_COLUMN].trim();
+        final ReadCount readCounts = extractReadCounts(sampleData);
         if (readCounts == null) {
             LOGGER.warn("Could not parse read counts from " + line);
         } else {
-            builder.totalReadCount(readCounts.totalReadCount);
-            builder.alleleReadCount(readCounts.alleleReadCount);
+            builder.totalReadCount(readCounts.totalReadCount());
+            builder.alleleReadCount(readCounts.alleleReadCount());
         }
 
         return builder.build();
@@ -145,33 +143,11 @@ public final class SomaticVariantFactory {
 
     @Nullable
     private static ReadCount extractReadCounts(@NotNull final String sampleData) {
-        final String[] sampleFields = sampleData.split(SAMPLE_FIELD_SEPARATOR);
+        final String[] sampleFields = VariantFactoryFunctions.splitSampleDataFields(sampleData);
         if (sampleFields.length < 2) {
             return null;
         }
 
-        final String[] afFields = sampleFields[AF_COLUMN_INDEX].split(AF_FIELD_SEPARATOR);
-
-        if (afFields.length < 2) {
-            return null;
-        }
-
-        final int readCount = Integer.valueOf(afFields[1]);
-        int totalReadCount = 0;
-        for (final String afField : afFields) {
-            totalReadCount += Integer.valueOf(afField);
-        }
-
-        return new ReadCount(readCount, totalReadCount);
-    }
-
-    private static class ReadCount {
-        private final int alleleReadCount;
-        private final int totalReadCount;
-
-        private ReadCount(final int alleleReadCount, final int totalReadCount) {
-            this.alleleReadCount = alleleReadCount;
-            this.totalReadCount = totalReadCount;
-        }
+        return VariantFactoryFunctions.analyzeAlleleFrequencies(sampleFields[ALLELE_FREQUENCY_COLUMN_INDEX]);
     }
 }
