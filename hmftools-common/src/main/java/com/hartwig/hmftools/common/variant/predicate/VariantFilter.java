@@ -4,9 +4,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,9 +23,8 @@ public final class VariantFilter {
         return filter(variants, new PassFilterPredicate<>());
     }
 
-    public static boolean validGermline(@NotNull final GermlineVariant variant,
-            @NotNull final VariantType type, final boolean isRefSample) {
-        return new ValidGermlineVariantPredicate(type, isRefSample).test(variant);
+    public static boolean validGermlineData(@NotNull final GermlineSampleData sampleData) {
+        return new ValidGermlineSampleDataPredicate().test(sampleData);
     }
 
     @NotNull

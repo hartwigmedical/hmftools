@@ -4,11 +4,10 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
@@ -34,6 +33,9 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     private static final String GERMLINE_VCF_EXTENSION_V1_9 = "_GoNLv5.vcf";
     private static final String GERMLINE_VCF_EXTENSION_V1_10 = ".annotated.vcf";
 
+    private static final List<VariantType> TYPES_TO_INCLUDE = Lists.newArrayList(VariantType.SNP, VariantType.INDEL);
+    private static final String HETEROZYGOUS_GENOTYPE = "0/1";
+
     public GermlineChecker() {
     }
 
@@ -48,28 +50,29 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final BufferedReader reader = openReader(runContext.runDirectory());
 
-        final Map<VariantType, Long> refSampleCountPerType = buildInitialCountMap();
-        final Map<VariantType, Long> tumorSampleCountPerType = buildInitialCountMap();
+        final GermlineStats refStats = new GermlineStats();
+        final GermlineStats tumorStats = new GermlineStats();
 
         GermlineVariant variant = VCFFileStreamer.nextVariant(reader);
         while (variant != null) {
-            if (VariantFilter.isPass(variant)) {
-                for (final VariantType type : typesToInclude()) {
-                    if (VariantFilter.validGermline(variant, type, true)) {
-                        refSampleCountPerType.put(type, refSampleCountPerType.get(type) + 1L);
-                    }
-                    if (runContext.isSomaticRun() && VariantFilter.validGermline(variant, type, false)) {
-                        tumorSampleCountPerType.put(type, tumorSampleCountPerType.get(type) + 1L);
-                    }
+            if (VariantFilter.isPass(variant) && TYPES_TO_INCLUDE.contains(variant.type())) {
+                if (VariantFilter.validGermlineData(variant.refData())) {
+                    updateStats(refStats, variant.type(), variant.refData());
+                }
+
+                GermlineSampleData tumorData = variant.tumorData();
+                if (tumorData != null && VariantFilter.validGermlineData(tumorData)) {
+                    updateStats(tumorStats, variant.type(), tumorData);
                 }
             }
+
             variant = VCFFileStreamer.nextVariant(reader);
         }
 
-        final List<HealthCheck> refChecks = buildChecks(runContext.refSample(), refSampleCountPerType);
+        final List<HealthCheck> refChecks = buildChecks(runContext.refSample(), refStats);
 
         if (runContext.isSomaticRun()) {
-            final List<HealthCheck> tumorChecks = buildChecks(runContext.tumorSample(), tumorSampleCountPerType);
+            final List<HealthCheck> tumorChecks = buildChecks(runContext.tumorSample(), tumorStats);
             return toPatientResult(refChecks, tumorChecks);
         } else {
             return toMultiValueResult(refChecks);
@@ -106,22 +109,38 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
         }
     }
 
-    @NotNull
-    private static Map<VariantType, Long> buildInitialCountMap() {
-        final Map<VariantType, Long> initialCountMap = Maps.newHashMap();
-        for (final VariantType type : typesToInclude()) {
-            initialCountMap.put(type, 0L);
+    private static void updateStats(@NotNull final GermlineStats stats, @NotNull final VariantType type,
+            @NotNull final GermlineSampleData sampleData) {
+        assert TYPES_TO_INCLUDE.contains(type);
+
+        if (type.equals(VariantType.SNP)) {
+            stats.snpCount++;
+        } else if (type.equals(VariantType.INDEL)) {
+            stats.indelCount++;
         }
-        return initialCountMap;
+
+        if (sampleData.genoType().equals(HETEROZYGOUS_GENOTYPE)) {
+            stats.heterozygousCount++;
+            if (sampleData.alleleFrequency() > 0.5) {
+                stats.heterozygousCountAbove50VAF++;
+            } else if (sampleData.alleleFrequency() < 0.5) {
+                stats.heterozygousCountBelow50VAF++;
+            }
+        }
     }
 
     @NotNull
-    private static List<HealthCheck> buildChecks(@NotNull final String sample,
-            @NotNull final Map<VariantType, Long> countsPerType) {
-        return Lists.newArrayList(new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_SNP.toString(),
-                        Long.toString(countsPerType.get(VariantType.SNP))),
+    private static List<HealthCheck> buildChecks(@NotNull final String sample, @NotNull final GermlineStats stats) {
+        return Lists.newArrayList(
+                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_SNP.toString(), Long.toString(stats.snpCount)),
                 new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_INDELS.toString(),
-                        Long.toString(countsPerType.get(VariantType.INDEL))));
+                        Long.toString(stats.indelCount)),
+                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT.toString(),
+                        Long.toString(stats.heterozygousCount)),
+                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF.toString(),
+                        Long.toString(stats.heterozygousCountAbove50VAF)),
+                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF.toString(),
+                        Long.toString(stats.heterozygousCountBelow50VAF)));
     }
 
     @NotNull
@@ -140,8 +159,11 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
         return new MultiValueResult(checkType(), checks);
     }
 
-    @NotNull
-    private static List<VariantType> typesToInclude() {
-        return Lists.newArrayList(VariantType.SNP, VariantType.INDEL);
+    private static class GermlineStats {
+        private long snpCount;
+        private long indelCount;
+        private long heterozygousCount;
+        private long heterozygousCountAbove50VAF;
+        private long heterozygousCountBelow50VAF;
     }
 }

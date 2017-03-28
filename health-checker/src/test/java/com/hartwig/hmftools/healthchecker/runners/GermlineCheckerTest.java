@@ -31,7 +31,7 @@ public class GermlineCheckerTest {
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 
-    private static final int EXPECTED_NUM_CHECKS_PER_SAMPLE = 2;
+    private static final int EXPECTED_NUM_CHECKS_PER_SAMPLE = 5;
     private static final int EXPECTED_SINGLE_SAMPLE_SNPS = 2;
     private static final int EXPECTED_SINGLE_SAMPLE_INDELS = 0;
     private static final int EXPECTED_REF_SNPS = 55;
