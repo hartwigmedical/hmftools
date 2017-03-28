@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import com.google.common.io.Resources;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MetaDataResolverTest {
@@ -25,30 +26,38 @@ public class MetaDataResolverTest {
     }
 
     @Test
-    public void canResolveSingleSampleMetaData() throws FileNotFoundException {
-        final String runName = "RunDirSingleSample";
-        final String singleSampleRunDir = RESOURCE_DIR + File.separator + runName;
-        final RunContext runContext = MetaDataResolver.fromMetaDataFile(singleSampleRunDir);
+    public void canResolveSingleSampleMetaDataWithExplicitNoTumorSample() throws FileNotFoundException {
+        testSingleSample("RunDirSingleSampleWithTumorSample");
+    }
+
+    @Test
+    public void canResolveSingleSampleMetaDataWithoutTumorSample() throws FileNotFoundException {
+        testSingleSample("RunDirSingleSampleNoTumorSample");
+    }
+
+    private static void testSingleSample(@NotNull final String setName) throws FileNotFoundException {
+        final String runDirectory = RESOURCE_DIR + File.separator + setName;
+        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
         assertFalse(runContext.isSomaticRun());
         assertEquals("GIAB", runContext.refSample());
         assertEquals(Strings.EMPTY, runContext.tumorSample());
-        assertEquals(runName, runContext.setName());
-        assertEquals(singleSampleRunDir, runContext.runDirectory());
+        assertEquals(setName, runContext.setName());
+        assertEquals(runDirectory, runContext.runDirectory());
     }
 
     @Test
     public void canResolveSomaticMetaData() throws FileNotFoundException {
-        final String runName = "RunDirSomatic";
-        final String somaticRunDir = RESOURCE_DIR + File.separator + runName;
-        final RunContext runContext = MetaDataResolver.fromMetaDataFile(somaticRunDir);
+        final String setName = "RunDirSomatic";
+        final String runDirectory = RESOURCE_DIR + File.separator + setName;
+        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
         assertTrue(runContext.isSomaticRun());
         assertEquals("CPCT12345678R", runContext.refSample());
         assertEquals("CPCT12345678T", runContext.tumorSample());
-        assertEquals(runName, runContext.setName());
-        assertEquals(somaticRunDir, runContext.runDirectory());
+        assertEquals(setName, runContext.setName());
+        assertEquals(runDirectory, runContext.runDirectory());
     }
 }

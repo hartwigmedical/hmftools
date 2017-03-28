@@ -6,6 +6,7 @@ import java.io.FileReader;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.logging.log4j.util.Strings;
@@ -32,11 +33,13 @@ final class MetaDataResolver {
         final String metaDataFilePath = runDirectory + File.separator + METADATA_FILE;
         if (new File(metaDataFilePath).exists()) {
             final JsonObject json = GSON.fromJson(new FileReader(metaDataFilePath), JsonObject.class);
+
             final String refSample = json.get(REF_SAMPLE_FIELD).getAsString();
-            final String tumorSample = json.get(TUMOR_SAMPLE_FIELD).getAsString();
+            final JsonElement tumorSampleElement = json.get(TUMOR_SAMPLE_FIELD);
+            final String tumorSample = tumorSampleElement != null ? tumorSampleElement.getAsString() : null;
             final String setName = json.get(SET_NAME_FIELD).getAsString();
 
-            final boolean isSomaticRun = !tumorSample.equals(NO_TUMOR_SAMPLE);
+            final boolean isSomaticRun = tumorSample != null && !tumorSample.equals(NO_TUMOR_SAMPLE);
 
             return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY,
                     isSomaticRun);

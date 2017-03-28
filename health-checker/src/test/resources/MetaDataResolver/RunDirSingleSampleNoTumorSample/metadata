@@ -4,6 +4,5 @@
     "output_cluster": "whatever",
     "ref_sample": "GIAB",
     "run_id": 1,
-    "set_name": "RunDirSingleSample",
-    "tumor_sample": "NA"
+    "set_name": "RunDirSingleSampleNoTumorSample"
 }
