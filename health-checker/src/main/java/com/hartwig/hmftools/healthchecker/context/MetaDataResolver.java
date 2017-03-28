@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +37,9 @@ final class MetaDataResolver {
             final String setName = json.get(SET_NAME_FIELD).getAsString();
 
             final boolean isSomaticRun = !tumorSample.equals(NO_TUMOR_SAMPLE);
-            return new RunContextImpl(runDirectory, setName, refSample, tumorSample, true, isSomaticRun);
+
+            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY,
+                    isSomaticRun);
         }
         return null;
     }

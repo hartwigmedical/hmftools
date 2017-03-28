@@ -12,13 +12,13 @@ public final class TestRunContextFactory {
 
     @NotNull
     public static RunContext forSingleSampleTest(@NotNull final String runDirectory, @NotNull final String sample) {
-        return new RunContextImpl(runDirectory, removePath(runDirectory), sample, Strings.EMPTY, false, false);
+        return new RunContextImpl(runDirectory, removePath(runDirectory), sample, Strings.EMPTY, false);
     }
 
     @NotNull
     public static RunContext forSomaticTest(@NotNull final String runDirectory, @NotNull final String refSample,
             @NotNull final String tumorSample) {
-        return new RunContextImpl(runDirectory, removePath(runDirectory), refSample, tumorSample, false, true);
+        return new RunContextImpl(runDirectory, removePath(runDirectory), refSample, tumorSample, true);
     }
 
     @NotNull

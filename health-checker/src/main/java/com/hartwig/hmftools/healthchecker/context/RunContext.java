@@ -8,15 +8,13 @@ public interface RunContext {
     String runDirectory();
 
     @NotNull
-    String runName();
+    String setName();
 
     @NotNull
     String refSample();
 
     @NotNull
     String tumorSample();
-
-    boolean hasPassedTests();
 
     boolean isSomaticRun();
 }

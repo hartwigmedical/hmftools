@@ -96,9 +96,7 @@ final class RunDirectoryResolver {
             throw new MalformedRunDirException(runName);
         }
 
-        final boolean hasPassedTests = parts.length == SINGLE_SAMPLE_RUN_NAME_PARTS;
-
-        return new RunContextImpl(runDirectory, finalRunName, sample, Strings.EMPTY, hasPassedTests, false);
+        return new RunContextImpl(runDirectory, finalRunName, sample, Strings.EMPTY, false);
     }
 
     @NotNull
@@ -116,8 +114,6 @@ final class RunDirectoryResolver {
 
         final String patient = runName.substring(patientPosition, patientPosition + patientNameLength);
         final String runNameUntilPatient = runName.substring(0, patientPosition + patientNameLength);
-
-        final boolean hasPassedTests = runName.length() == runNameUntilPatient.length();
 
         final File[] runContents = new File(runDirectory).listFiles();
         assert runContents != null;
@@ -138,7 +134,7 @@ final class RunDirectoryResolver {
             throw new MalformedRunDirException(runName);
         }
 
-        return new RunContextImpl(runDirectory, runNameUntilPatient, refSample, tumorSample, hasPassedTests, true);
+        return new RunContextImpl(runDirectory, runNameUntilPatient, refSample, tumorSample, true);
     }
 
     @NotNull

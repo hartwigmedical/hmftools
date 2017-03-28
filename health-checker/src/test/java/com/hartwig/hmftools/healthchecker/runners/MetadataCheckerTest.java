@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
-
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
@@ -18,6 +15,9 @@ import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.MetadataCheck;
+
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
 
 public class MetadataCheckerTest {
     private static final String METADATA_BASE_PATH = RunnerTestFunctions.getRunnerResourcePath("metadata");
@@ -36,7 +36,7 @@ public class MetadataCheckerTest {
     private static final String EXPECTED_VERSION_SINGLE_SAMPLE_V1_11 = "v1.11-rc.2";
     private static final String EXPECTED_DATE_SINGLE_SAMPLE = "2017-01-01";
 
-    private static final int EXPECTED_NUM_CHECKS = 4;
+    private static final int EXPECTED_NUM_CHECKS = 3;
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 

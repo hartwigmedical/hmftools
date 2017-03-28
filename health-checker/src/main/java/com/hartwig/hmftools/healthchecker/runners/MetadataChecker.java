@@ -101,9 +101,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     private static List<HealthCheck> toHealthCheckList(@NotNull final String sampleId,
             @NotNull final RunContext runContext, @NotNull final String runDate,
             @NotNull final String pipelineVersion) {
-        return Lists.newArrayList(new HealthCheck(sampleId, MetadataCheck.RUN_NAME.toString(), runContext.runName()),
-                new HealthCheck(sampleId, MetadataCheck.HAS_PASSED_TESTS.toString(),
-                        Boolean.toString(runContext.hasPassedTests())),
+        return Lists.newArrayList(new HealthCheck(sampleId, MetadataCheck.SET_NAME.toString(), runContext.setName()),
                 new HealthCheck(sampleId, MetadataCheck.RUN_DATE.toString(), runDate),
                 new HealthCheck(sampleId, MetadataCheck.PIPELINE_VERSION.toString(), pipelineVersion));
     }
@@ -111,7 +109,7 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     @NotNull
     private static String extractRunDate(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final Path dateTimeLogPath = PathRegexFinder.build().findPath(runContext.runDirectory(),
-                String.format(LOG_FILENAME_FORMAT, runContext.runName()));
+                String.format(LOG_FILENAME_FORMAT, runContext.setName()));
         final Predicate<String> dateLineFilter = runContext.isSomaticRun() ?
                 doesLineMatch(SOMATIC_LINE_TO_GET_DATE_FROM_REGEX) :
                 doesLineMatch(SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM_REGEX);

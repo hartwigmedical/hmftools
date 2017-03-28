@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 
 import com.google.common.io.Resources;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class MetaDataResolverTest {
@@ -32,7 +33,8 @@ public class MetaDataResolverTest {
         assertNotNull(runContext);
         assertFalse(runContext.isSomaticRun());
         assertEquals("GIAB", runContext.refSample());
-        assertEquals(runName, runContext.runName());
+        assertEquals(Strings.EMPTY, runContext.tumorSample());
+        assertEquals(runName, runContext.setName());
         assertEquals(singleSampleRunDir, runContext.runDirectory());
     }
 
@@ -46,7 +48,7 @@ public class MetaDataResolverTest {
         assertTrue(runContext.isSomaticRun());
         assertEquals("CPCT12345678R", runContext.refSample());
         assertEquals("CPCT12345678T", runContext.tumorSample());
-        assertEquals(runName, runContext.runName());
+        assertEquals(runName, runContext.setName());
         assertEquals(somaticRunDir, runContext.runDirectory());
     }
 }

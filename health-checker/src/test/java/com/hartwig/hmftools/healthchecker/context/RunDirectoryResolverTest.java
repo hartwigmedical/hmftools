@@ -52,8 +52,7 @@ public class RunDirectoryResolverTest {
         final RunContext runContext = RunDirectoryResolver.fromRunDirectory(toPath(VALID_CPCT_RUNDIR));
         assertEquals(VALID_CPCT_REF, runContext.refSample());
         assertEquals(VALID_CPCT_TUMOR, runContext.tumorSample());
-        assertEquals(VALID_CPCT_RUN_NAME, runContext.runName());
-        assertTrue(runContext.hasPassedTests());
+        assertEquals(VALID_CPCT_RUN_NAME, runContext.setName());
         assertTrue(runContext.isSomaticRun());
     }
 
@@ -62,8 +61,7 @@ public class RunDirectoryResolverTest {
         final RunContext runContextLowQual = RunDirectoryResolver.fromRunDirectory(toPath(LOW_QUAL_CPCT_RUNDIR));
         assertEquals(LOW_QUAL_CPCT_REF, runContextLowQual.refSample());
         assertEquals(LOW_QUAL_CPCT_TUMOR, runContextLowQual.tumorSample());
-        assertEquals(LOW_QUAL_CPCT_RUN_NAME, runContextLowQual.runName());
-        assertFalse(runContextLowQual.hasPassedTests());
+        assertEquals(LOW_QUAL_CPCT_RUN_NAME, runContextLowQual.setName());
         assertTrue(runContextLowQual.isSomaticRun());
     }
 
@@ -72,8 +70,7 @@ public class RunDirectoryResolverTest {
         final RunContext runContext = RunDirectoryResolver.fromRunDirectory(toPath(VALID_DRUP_RUNDIR));
         assertEquals(VALID_DRUP_REF, runContext.refSample());
         assertEquals(VALID_DRUP_TUMOR, runContext.tumorSample());
-        assertEquals(VALID_DRUP_RUN_NAME, runContext.runName());
-        assertTrue(runContext.hasPassedTests());
+        assertEquals(VALID_DRUP_RUN_NAME, runContext.setName());
         assertTrue(runContext.isSomaticRun());
     }
 
@@ -82,8 +79,7 @@ public class RunDirectoryResolverTest {
         final RunContext runContext = RunDirectoryResolver.fromRunDirectory(toPath(VALID_PMC_RUNDIR));
         assertEquals(VALID_PMC_REF, runContext.refSample());
         assertEquals(VALID_PMC_TUMOR, runContext.tumorSample());
-        assertEquals(VALID_PMC_RUN_NAME, runContext.runName());
-        assertTrue(runContext.hasPassedTests());
+        assertEquals(VALID_PMC_RUN_NAME, runContext.setName());
         assertTrue(runContext.isSomaticRun());
     }
 
@@ -91,8 +87,7 @@ public class RunDirectoryResolverTest {
     public void worksForValidSingleSample() throws HartwigException {
         final RunContext runContext = RunDirectoryResolver.fromRunDirectory(toPath(VALID_SINGLE_SAMPLE_RUNDIR));
         assertEquals(VALID_SINGLE_SAMPLE_NAME, runContext.refSample());
-        assertEquals(VALID_SINGLE_SAMPLE_RUN_NAME, runContext.runName());
-        assertTrue(runContext.hasPassedTests());
+        assertEquals(VALID_SINGLE_SAMPLE_RUN_NAME, runContext.setName());
         assertFalse(runContext.isSomaticRun());
     }
 
@@ -100,8 +95,7 @@ public class RunDirectoryResolverTest {
     public void worksForLowQualSingleSample() throws HartwigException {
         final RunContext runContext = RunDirectoryResolver.fromRunDirectory(toPath(LOW_QUAL_SINGLE_SAMPLE_RUNDIR));
         assertEquals(LOW_QUAL_SINGLE_SAMPLE_NAME, runContext.refSample());
-        assertEquals(LOW_QUAL_SINGLE_SAMPLE_RUN_NAME, runContext.runName());
-        assertFalse(runContext.hasPassedTests());
+        assertEquals(LOW_QUAL_SINGLE_SAMPLE_RUN_NAME, runContext.setName());
         assertFalse(runContext.isSomaticRun());
     }
 
