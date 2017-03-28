@@ -148,6 +148,6 @@ public final class SomaticVariantFactory {
             return null;
         }
 
-        return VariantFactoryFunctions.analyzeAlleleFrequencies(sampleFields[SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN]);
+        return VariantFactoryFunctions.determineAlleleFrequencies(sampleFields[SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN]);
     }
 }

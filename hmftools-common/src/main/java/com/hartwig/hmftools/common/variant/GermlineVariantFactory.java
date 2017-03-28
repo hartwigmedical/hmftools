@@ -56,7 +56,7 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        final AlleleFrequencyData alleleFrequencyData = VariantFactoryFunctions.analyzeAlleleFrequencies(
+        final AlleleFrequencyData alleleFrequencyData = VariantFactoryFunctions.determineAlleleFrequencies(
                 parts[SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN].trim());
         if (alleleFrequencyData == null) {
             LOGGER.warn("Could not parse allele frequencies for germline sample data: " + sampleData);

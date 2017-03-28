@@ -17,7 +17,7 @@ final class VariantFactoryFunctions {
     }
 
     @Nullable
-    static AlleleFrequencyData analyzeAlleleFrequencies(@NotNull final String alleleFrequencyField) {
+    static AlleleFrequencyData determineAlleleFrequencies(@NotNull final String alleleFrequencyField) {
         final String[] afFields = alleleFrequencyField.split(ALLELE_FREQUENCY_FIELD_SEPARATOR);
 
         if (afFields.length < 2) {
