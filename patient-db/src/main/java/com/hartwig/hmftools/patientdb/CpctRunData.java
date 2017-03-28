@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CpctRunData {
-    private final Date uploadDate;
+class CpctRunData {
+    private final LocalDate uploadDate;
     private final String referenceSampleId;
     private final String tumorSampleId;
     private final String patientId;
 
-    CpctRunData(@NotNull Date uploadDate, @NotNull String referenceSampleId, @NotNull String tumorSampleId,
+    CpctRunData(@NotNull LocalDate uploadDate, @NotNull String referenceSampleId, @NotNull String tumorSampleId,
             @NotNull String patientId) {
         this.uploadDate = uploadDate;
         this.patientId = patientId;

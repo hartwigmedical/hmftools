@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.text.DateFormat;
-import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Utils {
+class Utils {
     private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
 
     static int getMaxLength(@NotNull Collection<List<String>> lists, @NotNull String warnMessage) {
@@ -33,10 +33,10 @@ public class Utils {
     }
 
     @Nullable
-    static Date getDate(@Nullable String dateFieldValue, @NotNull DateFormat dateFormat) {
+    static LocalDate getDate(@Nullable String dateFieldValue, @NotNull DateTimeFormatter dateFormatter) {
         try {
-            return dateFormat.parse(dateFieldValue);
-        } catch (ParseException | NullPointerException e) {
+            return LocalDate.parse(dateFieldValue, dateFormatter);
+        } catch (NullPointerException | DateTimeParseException e) {
             return null;
         }
     }
@@ -46,6 +46,15 @@ public class Utils {
         try {
             return list.get(index);
         } catch (NullPointerException | IndexOutOfBoundsException e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    static java.sql.Date toSQLDate(@Nullable LocalDate date) {
+        try {
+            return java.sql.Date.valueOf(date);
+        } catch (NullPointerException e) {
             return null;
         }
     }

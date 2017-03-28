@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.jetbrains.annotations.Nullable;
 
 class RadioTherapyData {
-    private final Date endDate;
+    private final LocalDate endDate;
     private final String site;
 
-    RadioTherapyData(@Nullable Date endDate, @Nullable String site) {
+    RadioTherapyData(@Nullable LocalDate endDate, @Nullable String site) {
         this.endDate = endDate;
         this.site = site;
     }
@@ -18,5 +18,13 @@ class RadioTherapyData {
         final StringBuffer bf = new StringBuffer();
         bf.append(endDate).append(" - ").append(site).append("\n");
         return bf.toString();
+    }
+
+    LocalDate endDate() {
+        return endDate;
+    }
+
+    String site() {
+        return site;
     }
 }

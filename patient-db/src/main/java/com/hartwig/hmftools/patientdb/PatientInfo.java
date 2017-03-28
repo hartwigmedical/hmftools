@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb;
 
 import org.jetbrains.annotations.Nullable;
 
-public class PatientData {
+class PatientInfo {
     private final String cpctId;
     private final String drupId;
     private final String sex;
@@ -10,7 +10,7 @@ public class PatientData {
     private final String hospital;
     private final String ethnicity;
 
-    PatientData(@Nullable String cpctId, @Nullable String drupId, @Nullable String sex, @Nullable Integer birthYear,
+    PatientInfo(@Nullable String cpctId, @Nullable String drupId, @Nullable String sex, @Nullable Integer birthYear,
             @Nullable String hospital, @Nullable String ethnicity) {
         this.cpctId = cpctId;
         this.drupId = drupId;
@@ -26,5 +26,29 @@ public class PatientData {
         bf.append(cpctId).append("/").append(drupId).append(": ").append(birthYear).append(" - ").append(sex).append(
                 " - ").append(hospital).append(" - ").append(ethnicity).append("\n");
         return bf.toString();
+    }
+
+    String cpctId() {
+        return cpctId;
+    }
+
+    String drupId() {
+        return drupId;
+    }
+
+    String sex() {
+        return sex;
+    }
+
+    Integer birthYear() {
+        return birthYear;
+    }
+
+    String hospital() {
+        return hospital;
+    }
+
+    String ethnicity() {
+        return ethnicity;
     }
 }

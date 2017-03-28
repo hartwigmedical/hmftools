@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-public class TumorData {
+class TumorData {
     private final String location;
     private final List<String> biopsyLocations;
     private final String entryStage;
@@ -20,5 +20,17 @@ public class TumorData {
         final StringBuffer bf = new StringBuffer();
         bf.append(location).append(" - ").append(entryStage).append(": ").append(biopsyLocations).append("\n");
         return bf.toString();
+    }
+
+    String location() {
+        return location;
+    }
+
+    String entryStage() {
+        return entryStage;
+    }
+
+    List<String> biopsyLocations() {
+        return biopsyLocations;
     }
 }

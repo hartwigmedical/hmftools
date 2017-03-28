@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,12 +13,16 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class CpctRadioTherapyReader {
+    private static final String FIELD_RADIOENDDATE = "BASELINE.PRETHERAPY.RTP.RADIOTHERENDTC";
+    private static final String FIELD_RADIOSITE = "BASELINE.PRETHERAPY.RTP.RADIOTHERSITE";
+    private static final String FIELD_HADRADIOTHERAPY = "BASELINE.PRETHERAPY.PRETHERAPY.RADIOTHER";
+
     private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
-    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
     Optional<List<RadioTherapyData>> read(@NotNull EcrfPatient patient) {
-        final String hadRadiotherapy = GenericReader.getField(patient, "BASELINE.PRETHERAPY.PRETHERAPY.RADIOTHER");
+        final String hadRadiotherapy = GenericReader.getField(patient, FIELD_HADRADIOTHERAPY);
         if (hadRadiotherapy != null && hadRadiotherapy.toLowerCase().equals("no")) {
             return Optional.empty();
         } else {
@@ -34,19 +37,18 @@ class CpctRadioTherapyReader {
 
     @NotNull
     private List<RadioTherapyData> readData(@NotNull EcrfPatient patient) {
-        final List<String> endDates = GenericReader.getFieldValues(patient, "BASELINE.PRETHERAPY.RTP.RADIOTHERENDTC");
-        final List<String> sites = GenericReader.getFieldValues(patient, "BASELINE.PRETHERAPY.RTP.RADIOTHERSITE");
+        final List<String> endDates = GenericReader.getFieldValues(patient, FIELD_RADIOENDDATE);
+        final List<String> sites = GenericReader.getFieldValues(patient, FIELD_RADIOSITE);
         final int maxLength = Utils.getMaxLength(Lists.newArrayList(endDates, sites),
                 "Not all radio therapy fields contain the same number of values.");
 
         final List<RadioTherapyData> therapies = Lists.newArrayList();
         for (int index = 0; index < maxLength; index++) {
             final String site = Utils.getElemAtIndex(sites, index);
-            final Date endDate = Utils.getDate(Utils.getElemAtIndex(endDates, index), dateFormat);
+            final LocalDate endDate = Utils.getDate(Utils.getElemAtIndex(endDates, index), dateFormatter);
             if (endDate == null) {
-                LOGGER.warn(
-                        "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICENDTC did not contain valid date at index " + index
-                                + " for patient  " + patient.patientId());
+                LOGGER.warn(FIELD_RADIOENDDATE + " did not contain valid date at index " + index + " for patient  "
+                        + patient.patientId());
             }
             therapies.add(new RadioTherapyData(endDate, site));
         }

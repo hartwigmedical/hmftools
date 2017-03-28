@@ -2,12 +2,12 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 
@@ -25,15 +25,23 @@ public final class PatientDbRunner {
     private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
     private static final String RUNS_DIR = "runsDir";
     private static final String ECRF_FILE = "ecrf";
+    private static final String DB_USER = "dbUser";
+    private static final String DB_PASS = "dbPass";
+    private static final String DB_URL = "dbUrl";
 
     public static void main(String[] args)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException {
+            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
+            SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String runFolderPath = cmd.getOptionValue(RUNS_DIR);
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-
-        if (runFolderPath == null) {
+        final String userName = cmd.getOptionValue(DB_USER);
+        final String password = cmd.getOptionValue(DB_PASS);
+        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        final String jdbcUrl = "jdbc:" + databaseUrl;
+        if (runFolderPath == null || ecrfFilePath == null || userName == null || password == null
+                || databaseUrl == null) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-Db", options);
         } else {
@@ -48,23 +56,12 @@ public final class PatientDbRunner {
                         id -> id.startsWith("CPCT")).collect(Collectors.toList());
                 final Iterable<EcrfPatient> patients = model.findPatientsById(cpctPatientIds);
                 LOGGER.info("Reading CPCT patient data...");
-                final CpctPatientDataReader cpctPatientDataReader = new CpctPatientDataReader(model);
-                final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
-                final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
-                final CpctRadioTherapyReader cpctRadioTherapyReader = new CpctRadioTherapyReader();
-                final CpctTreatmentDataReader cpctTreatmentDataReader = new CpctTreatmentDataReader();
+                final CpctPatientReader cpctPatientReader = new CpctPatientReader(model);
+                final DatabaseWriter dbWriter = new DatabaseWriter(userName, password, jdbcUrl);
+                dbWriter.clearTables();
                 for (final EcrfPatient patient : patients) {
-                    final PatientData patientData = cpctPatientDataReader.read(patient);
-                    final Optional<TumorData> tumorDataOpt = cpctTumorDataReader.read(patient);
-                    final Optional<List<SystemicTherapyData>> systemicTherapiesOpt = cpctSystemicTherapyReader.read(
-                            patient);
-                    final Optional<List<RadioTherapyData>> radioTherapiesOpt = cpctRadioTherapyReader.read(patient);
-                    final Optional<TreatmentData> treatmentDataOpt = cpctTreatmentDataReader.read(patient);
-                    LOGGER.info(patientData.toString());
-                    tumorDataOpt.ifPresent(tumorData -> LOGGER.info(tumorData.toString()));
-                    systemicTherapiesOpt.ifPresent(systemicTherapies -> LOGGER.info(systemicTherapies.toString()));
-                    radioTherapiesOpt.ifPresent(radioTherapies -> LOGGER.info(radioTherapies.toString()));
-                    treatmentDataOpt.ifPresent(treatmentData -> LOGGER.info(treatmentData.toString()));
+                    final Patient cpctPatient = cpctPatientReader.read(patient);
+                    dbWriter.writePatient(cpctPatient);
                 }
             } else {
                 if (!dir.exists()) {
@@ -81,6 +78,9 @@ public final class PatientDbRunner {
         final Options options = new Options();
         options.addOption(RUNS_DIR, true, "Path towards the folder containing patient runs.");
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
+        options.addOption(DB_USER, true, "Database user name.");
+        options.addOption(DB_PASS, true, "Database password.");
+        options.addOption(DB_URL, true, "Database url.");
         return options;
     }
 
