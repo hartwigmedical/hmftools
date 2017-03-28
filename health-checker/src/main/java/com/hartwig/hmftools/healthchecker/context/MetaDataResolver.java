@@ -29,21 +29,23 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    static RunContext fromMetaDataFile(@NotNull final String runDirectory) throws FileNotFoundException {
+    static RunContext fromMetaDataFile(@NotNull final String runDirectory) {
         final String metaDataFilePath = runDirectory + File.separator + METADATA_FILE;
-        if (new File(metaDataFilePath).exists()) {
-            final JsonObject json = GSON.fromJson(new FileReader(metaDataFilePath), JsonObject.class);
-
-            final String refSample = json.get(REF_SAMPLE_FIELD).getAsString();
-            final JsonElement tumorSampleElement = json.get(TUMOR_SAMPLE_FIELD);
-            final String tumorSample = tumorSampleElement != null ? tumorSampleElement.getAsString() : null;
-            final String setName = json.get(SET_NAME_FIELD).getAsString();
-
-            final boolean isSomaticRun = tumorSample != null && !tumorSample.equals(NO_TUMOR_SAMPLE);
-
-            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY,
-                    isSomaticRun);
+        final JsonObject json;
+        try {
+            json = GSON.fromJson(new FileReader(metaDataFilePath), JsonObject.class);
+        } catch (FileNotFoundException exception) {
+            return null;
         }
-        return null;
+
+        final String refSample = json.get(REF_SAMPLE_FIELD).getAsString();
+        final JsonElement tumorSampleElement = json.get(TUMOR_SAMPLE_FIELD);
+        final String tumorSample = tumorSampleElement != null ? tumorSampleElement.getAsString() : null;
+        final String setName = json.get(SET_NAME_FIELD).getAsString();
+
+        final boolean isSomaticRun = tumorSample != null && !tumorSample.equals(NO_TUMOR_SAMPLE);
+
+        return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY,
+                isSomaticRun);
     }
 }
