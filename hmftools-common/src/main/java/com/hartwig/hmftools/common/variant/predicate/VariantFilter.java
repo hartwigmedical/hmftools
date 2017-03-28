@@ -24,10 +24,9 @@ public final class VariantFilter {
         return filter(variants, new PassFilterPredicate<>());
     }
 
-    @NotNull
-    public static List<GermlineVariant> validGermline(@NotNull final List<GermlineVariant> variants,
+    public static boolean validGermline(@NotNull final GermlineVariant variant,
             @NotNull final VariantType type, final boolean isRefSample) {
-        return filter(variants, new ValidGermlineVariantPredicate(type, isRefSample));
+        return new ValidGermlineVariantPredicate(type, isRefSample).test(variant);
     }
 
     @NotNull

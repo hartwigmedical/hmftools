@@ -1,20 +1,18 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
+import com.hartwig.hmftools.common.variant.vcf.VCFFileStreamer;
 import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
@@ -22,6 +20,10 @@ import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.GermlineCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("WeakerAccess")
 @ResourceWrapper(type = CheckType.GERMLINE)
@@ -44,18 +46,30 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     @NotNull
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
-        List<GermlineVariant> variants;
-        try {
-            variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(), GERMLINE_VCF_EXTENSION_V1_10);
-        } catch (IOException exception) {
-            variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(), GERMLINE_VCF_EXTENSION_V1_9);
+        final BufferedReader reader = openReader(runContext.runDirectory());
+
+        final Map<VariantType, Long> refSampleCountPerType = buildInitialCountMap();
+        final Map<VariantType, Long> tumorSampleCountPerType = buildInitialCountMap();
+
+        GermlineVariant variant = VCFFileStreamer.nextVariant(reader);
+        while (variant != null) {
+            if (VariantFilter.isPass(variant)) {
+                for (final VariantType type : typesToInclude()) {
+                    if (VariantFilter.validGermline(variant, type, true)) {
+                        refSampleCountPerType.put(type, refSampleCountPerType.get(type) + 1L);
+                    }
+                    if (runContext.isSomaticRun() && VariantFilter.validGermline(variant, type, false)) {
+                        tumorSampleCountPerType.put(type, tumorSampleCountPerType.get(type) + 1L);
+                    }
+                }
+            }
+            variant = VCFFileStreamer.nextVariant(reader);
         }
 
-        variants = VariantFilter.passOnly(variants);
-        final List<HealthCheck> refChecks = calcChecksForSample(variants, runContext.refSample(), true);
-        if (runContext.isSomaticRun()) {
-            final List<HealthCheck> tumorChecks = calcChecksForSample(variants, runContext.tumorSample(), false);
+        final List<HealthCheck> refChecks = buildChecks(runContext.refSample(), refSampleCountPerType);
 
+        if (runContext.isSomaticRun()) {
+            final List<HealthCheck> tumorChecks = buildChecks(runContext.tumorSample(), tumorSampleCountPerType);
             return toPatientResult(refChecks, tumorChecks);
         } else {
             return toMultiValueResult(refChecks);
@@ -84,6 +98,33 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
+    private static BufferedReader openReader(@NotNull final String runDirectory) throws IOException, HartwigException {
+        try {
+            return VCFFileStreamer.getVCFReader(runDirectory, GERMLINE_VCF_EXTENSION_V1_10);
+        } catch (FileNotFoundException exception) {
+            return VCFFileStreamer.getVCFReader(runDirectory, GERMLINE_VCF_EXTENSION_V1_9);
+        }
+    }
+
+    @NotNull
+    private static Map<VariantType, Long> buildInitialCountMap() {
+        final Map<VariantType, Long> initialCountMap = Maps.newHashMap();
+        for (final VariantType type : typesToInclude()) {
+            initialCountMap.put(type, 0L);
+        }
+        return initialCountMap;
+    }
+
+    @NotNull
+    private static List<HealthCheck> buildChecks(@NotNull final String sample,
+            @NotNull final Map<VariantType, Long> countsPerType) {
+        return Lists.newArrayList(new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_SNP.toString(),
+                        Long.toString(countsPerType.get(VariantType.SNP))),
+                new HealthCheck(sample, GermlineCheck.VARIANTS_GERMLINE_INDELS.toString(),
+                        Long.toString(countsPerType.get(VariantType.INDEL))));
+    }
+
+    @NotNull
     private BaseResult toPatientResult(@NotNull final List<HealthCheck> refChecks,
             @NotNull final List<HealthCheck> tumorChecks) {
         HealthCheck.log(LOGGER, refChecks);
@@ -100,20 +141,7 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private static List<HealthCheck> calcChecksForSample(@NotNull List<GermlineVariant> variants,
-            @NotNull final String sampleId, final boolean isRefSample) {
-        final HealthCheck snp = countValidVariantsPerType(sampleId, variants, VariantType.SNP,
-                GermlineCheck.VARIANTS_GERMLINE_SNP, isRefSample);
-        final HealthCheck indel = countValidVariantsPerType(sampleId, variants, VariantType.INDEL,
-                GermlineCheck.VARIANTS_GERMLINE_INDELS, isRefSample);
-        return Arrays.asList(snp, indel);
-    }
-
-    @NotNull
-    private static HealthCheck countValidVariantsPerType(@NotNull final String sampleId,
-            @NotNull final List<GermlineVariant> variants, @NotNull final VariantType type,
-            @NotNull final GermlineCheck check, final boolean isRefSample) {
-        final long count = VariantFilter.validGermline(variants, type, isRefSample).size();
-        return new HealthCheck(sampleId, check.toString(), String.valueOf(count));
+    private static List<VariantType> typesToInclude() {
+        return Lists.newArrayList(VariantType.SNP, VariantType.INDEL);
     }
 }
