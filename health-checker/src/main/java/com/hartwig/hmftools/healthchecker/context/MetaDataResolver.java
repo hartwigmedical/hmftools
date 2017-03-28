@@ -9,12 +9,15 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class MetaDataResolver {
 
+    private static final Logger LOGGER = LogManager.getLogger(MetaDataResolver.class);
     private static final String METADATA_FILE = "metadata";
 
     private static final String REF_SAMPLE_FIELD = "ref_sample";
@@ -38,14 +41,27 @@ final class MetaDataResolver {
             return null;
         }
 
-        final String refSample = json.get(REF_SAMPLE_FIELD).getAsString();
-        final JsonElement tumorSampleElement = json.get(TUMOR_SAMPLE_FIELD);
-        final String tumorSample = tumorSampleElement != null ? tumorSampleElement.getAsString() : null;
-        final String setName = json.get(SET_NAME_FIELD).getAsString();
+        final String refSample = fieldValue(json, REF_SAMPLE_FIELD);
+        final String setName = fieldValue(json, SET_NAME_FIELD);
 
-        final boolean isSomaticRun = tumorSample != null && !tumorSample.equals(NO_TUMOR_SAMPLE);
+        if (refSample == null) {
+            LOGGER.warn("Could not find " + REF_SAMPLE_FIELD + " in metadata file!");
+            return null;
+        } else if (setName == null) {
+            LOGGER.warn("Could not find " + SET_NAME_FIELD + " in metadata file!");
+            return null;
+        } else {
+            final String tumorSample = fieldValue(json, TUMOR_SAMPLE_FIELD);
+            final boolean isSomaticRun = tumorSample != null && !tumorSample.equals(NO_TUMOR_SAMPLE);
 
-        return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY,
-                isSomaticRun);
+            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY,
+                    isSomaticRun);
+        }
+    }
+
+    @Nullable
+    private static String fieldValue(@NotNull final JsonObject object, @NotNull final String fieldName) {
+        final JsonElement subElement = object.get(fieldName);
+        return subElement != null ? subElement.getAsString() : null;
     }
 }

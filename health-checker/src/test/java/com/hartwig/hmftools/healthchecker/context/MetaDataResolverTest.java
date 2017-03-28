@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 
 import com.google.common.io.Resources;
 
@@ -20,22 +19,34 @@ public class MetaDataResolverTest {
     private static final String RESOURCE_DIR = Resources.getResource("MetaDataResolver").getPath();
 
     @Test
-    public void noMetaDataReturnsNull() throws FileNotFoundException {
+    public void noMetaDataReturnsNull() {
         final String noMetaDataRunDir = RESOURCE_DIR + File.separator + "RunDirNoMetaData";
         assertNull(MetaDataResolver.fromMetaDataFile(noMetaDataRunDir));
     }
 
     @Test
-    public void canResolveSingleSampleMetaDataWithExplicitNoTumorSample() throws FileNotFoundException {
+    public void noRefSampleReturnsNull() {
+        final String noRefSampleRunDir = RESOURCE_DIR + File.separator + "RunDirNoRefSample";
+        assertNull(MetaDataResolver.fromMetaDataFile(noRefSampleRunDir));
+    }
+
+    @Test
+    public void noSetNameReturnsNull() {
+        final String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirNoSetName";
+        assertNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir));
+    }
+
+    @Test
+    public void canResolveSingleSampleMetaDataWithExplicitNoTumorSample() {
         testSingleSample("RunDirSingleSampleWithTumorSample");
     }
 
     @Test
-    public void canResolveSingleSampleMetaDataWithoutTumorSample() throws FileNotFoundException {
+    public void canResolveSingleSampleMetaDataWithoutTumorSample() {
         testSingleSample("RunDirSingleSampleNoTumorSample");
     }
 
-    private static void testSingleSample(@NotNull final String setName) throws FileNotFoundException {
+    private static void testSingleSample(@NotNull final String setName) {
         final String runDirectory = RESOURCE_DIR + File.separator + setName;
         final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
@@ -48,7 +59,7 @@ public class MetaDataResolverTest {
     }
 
     @Test
-    public void canResolveSomaticMetaData() throws FileNotFoundException {
+    public void canResolveSomaticMetaData() {
         final String setName = "RunDirSomatic";
         final String runDirectory = RESOURCE_DIR + File.separator + setName;
         final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
