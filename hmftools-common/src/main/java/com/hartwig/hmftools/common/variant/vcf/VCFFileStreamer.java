@@ -30,15 +30,24 @@ public final class VCFFileStreamer {
 
     @Nullable
     public static GermlineVariant nextVariant(@NotNull final BufferedReader reader) throws IOException {
-        String line = reader.readLine();
+        String line = safeReadLine(reader);
         while (line != null) {
             if (VCF_DATA_LINE_PREDICATE.test(line)) {
                 return GermlineVariantFactory.fromVCFLine(line);
             } else {
-                line = reader.readLine();
+                line = safeReadLine(reader);
             }
         }
         reader.close();
         return null;
+    }
+
+    @Nullable
+    private static String safeReadLine(@NotNull final BufferedReader reader) {
+        try {
+            return reader.readLine();
+        } catch (IOException e) {
+            return null;
+        }
     }
 }
