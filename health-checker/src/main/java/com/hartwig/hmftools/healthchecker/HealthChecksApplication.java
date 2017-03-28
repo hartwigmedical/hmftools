@@ -82,7 +82,7 @@ public final class HealthChecksApplication {
         final Options options = new Options();
 
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
-        options.addOption(REPORT_TYPE, true, "The type of report to be generated: json or stdout.");
+        options.addOption(REPORT_TYPE, true, "The type of report to be generated: 'json' or 'stdout'.");
         options.addOption(REPORT_OUTPUT_PATH, true, "The path where reports are written to.");
 
         return options;
