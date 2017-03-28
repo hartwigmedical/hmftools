@@ -61,7 +61,7 @@ final class MetaDataResolver {
 
     @Nullable
     private static String fieldValue(@NotNull final JsonObject object, @NotNull final String fieldName) {
-        final JsonElement subElement = object.get(fieldName);
-        return subElement != null ? subElement.getAsString() : null;
+        final JsonElement element = object.get(fieldName);
+        return element != null ? element.getAsString() : null;
     }
 }
