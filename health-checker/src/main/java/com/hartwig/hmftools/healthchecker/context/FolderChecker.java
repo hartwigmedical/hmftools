@@ -24,7 +24,7 @@ public interface FolderChecker {
             final File folder = new File(directory);
             checkIfDirectoryExist(folder);
             checkIfIsDirectory(folder);
-            checkIfDirectoryIsEmpty(folder);
+            checkIfDirectoryIsNotEmpty(folder);
             return folder.getPath();
         };
     }
@@ -41,16 +41,16 @@ public interface FolderChecker {
         }
     }
 
-    static void checkIfDirectoryIsEmpty(@NotNull final File directory) throws IOException, EmptyFolderException {
+    static void checkIfDirectoryIsNotEmpty(@NotNull final File directory) throws IOException, EmptyFolderException {
         final Path path = directory.toPath();
-        if (!isDirectoryNotEmpty(path)) {
+        if (isDirectoryEmpty(path)) {
             throw new EmptyFolderException(path.toString());
         }
     }
 
-    static boolean isDirectoryNotEmpty(@NotNull final Path path) throws IOException {
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path, getHiddenFilesFilter())) {
-            return directoryStream.iterator().hasNext();
+    static boolean isDirectoryEmpty(@NotNull final Path path) throws IOException {
+        try (final DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path, getHiddenFilesFilter())) {
+            return !directoryStream.iterator().hasNext();
         }
     }
 
