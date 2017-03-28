@@ -27,4 +27,8 @@ public class GermlineSampleData {
     public int alleleReadCount() {
         return alleleReadCount;
     }
+
+    public double alleleFrequency() {
+        return (double) alleleReadCount / totalReadCount;
+    }
 }
