@@ -1,0 +1,9 @@
+{
+    "ini_name": "KG.ini",
+    "output_bucket": "whatever",
+    "output_cluster": "whatever",
+    "ref_sample": "GIAB",
+    "run_id": 1,
+    "set_name": "RunDirSingleSample",
+    "tumor_sample": "NA"
+}
