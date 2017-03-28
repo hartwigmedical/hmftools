@@ -19,7 +19,7 @@ final class JsonReport extends AbstractJsonBaseReport {
     private static final JsonReport INSTANCE = new JsonReport();
 
     private static final Logger LOGGER = LogManager.getLogger(JsonReport.class);
-    private static final String REPORT_NAME = "%s_health_checks_%s.json";
+    private static final String REPORT_NAME = "%s_health_checks.json";
 
     private static final String ERROR_GENERATING_REPORT = "Error occurred whilst generating reports. Error -> %s";
 
@@ -36,9 +36,7 @@ final class JsonReport extends AbstractJsonBaseReport {
             throws GenerateReportException {
         final JsonArray reportArray = computeElements();
 
-        final String runName = toName(runContext.runDirectory());
-        final String fileName = String.format("%s/%s", outputPath,
-                String.format(REPORT_NAME, runName, System.currentTimeMillis()));
+        final String fileName = String.format("%s/%s", outputPath, String.format(REPORT_NAME, runContext.setName()));
 
         try (FileWriter fileWriter = new FileWriter(new File(fileName))) {
             final JsonObject reportJson = new JsonObject();
