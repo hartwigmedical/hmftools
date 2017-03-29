@@ -30,21 +30,9 @@ public class HealthCheckReaderApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthCheckReaderApplication.class);
 
-    private static final String REPORT_PATH_ARGS_DESC = "A path towards a single report to print in STDOUT.";
     private static final String REPORT_PATH = "report";
-
-    private static final String DATA_PATH_ARGS_DESC = "A path which contains multiple health check runs.";
     private static final String DATA_PATH = "data";
-
-    private static final String CSV_OUT_ARGS_DESC = "The file to write csv results to.";
     private static final String CSV_OUT = "csvout";
-
-    @Nullable
-    private final String reportPath;
-    @Nullable
-    private final String dataPath;
-    @Nullable
-    private final String csvOut;
 
     public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
@@ -54,7 +42,10 @@ public class HealthCheckReaderApplication {
         final String dataPath = cmd.getOptionValue(DATA_PATH);
         final String csvOut = cmd.getOptionValue(CSV_OUT);
 
-        if (reportPath == null && dataPath == null || (dataPath != null && csvOut == null)) {
+        final boolean validBatchMode = dataPath != null && csvOut != null;
+        final boolean validSingleMode = reportPath != null;
+
+        if (!validBatchMode && !validSingleMode) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Batch-Health-Check-Reader", options);
             System.exit(1);
@@ -67,9 +58,9 @@ public class HealthCheckReaderApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(REPORT_PATH, true, REPORT_PATH_ARGS_DESC);
-        options.addOption(DATA_PATH, true, DATA_PATH_ARGS_DESC);
-        options.addOption(CSV_OUT, true, CSV_OUT_ARGS_DESC);
+        options.addOption(REPORT_PATH, true, "Path towards a single report to print in STDOUT.");
+        options.addOption(DATA_PATH, true, "Path which contains multiple health check runs.");
+        options.addOption(CSV_OUT, true, "The file to write csv results to in case of batch mode.");
 
         return options;
     }
@@ -80,6 +71,13 @@ public class HealthCheckReaderApplication {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
+
+    @Nullable
+    private final String reportPath;
+    @Nullable
+    private final String dataPath;
+    @Nullable
+    private final String csvOut;
 
     HealthCheckReaderApplication(@Nullable final String reportPath, @Nullable final String dataPath,
             @Nullable final String csvOut) {

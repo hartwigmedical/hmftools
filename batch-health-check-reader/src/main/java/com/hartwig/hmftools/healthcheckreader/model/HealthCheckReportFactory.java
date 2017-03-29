@@ -21,7 +21,7 @@ public final class HealthCheckReportFactory {
     private static final Logger LOGGER = LogManager.getLogger(HealthCheckReportFactory.class);
     private static final Gson GSON = new GsonBuilder().create();
 
-    // KODU: The format of health checks depends on github health-checks project.
+    // KODU: The format of health checks depends on github hmftools project.
     private static final String HEALTH_CHECK_MAIN_OBJECT = "health_checks";
 
     private static final String PATIENT_CHECKS_IDENTIFIER_1 = "check";
