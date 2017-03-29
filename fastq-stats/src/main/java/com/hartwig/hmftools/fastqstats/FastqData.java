@@ -20,7 +20,7 @@ class FastqData {
     }
 
     @NotNull
-    FastqData add(@NotNull FastqData other) {
+    FastqData add(@NotNull final FastqData other) {
         return new FastqData(yield + other.yield, q30 + other.q30);
     }
 }
