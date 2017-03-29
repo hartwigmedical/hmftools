@@ -7,17 +7,18 @@ import java.io.InputStream;
 import org.jetbrains.annotations.NotNull;
 
 class FastqReader {
+    @NotNull
     private final BufferedInputStream reader;
     private final int size;
 
-    FastqReader(@NotNull InputStream in) {
-        size = 8192;
-        reader = new BufferedInputStream(in);
+    FastqReader(@NotNull final InputStream inputStream) {
+        this.size = 8192;
+        this.reader = new BufferedInputStream(inputStream);
     }
 
-    FastqReader(@NotNull InputStream in, int size) {
+    FastqReader(@NotNull final InputStream inputStream, final int size) {
         this.size = size;
-        reader = new BufferedInputStream(in, size);
+        this.reader = new BufferedInputStream(inputStream, size);
     }
 
     @NotNull

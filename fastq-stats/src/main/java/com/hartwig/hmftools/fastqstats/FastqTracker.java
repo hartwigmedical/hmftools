@@ -1,18 +1,20 @@
 package com.hartwig.hmftools.fastqstats;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 
 import org.jetbrains.annotations.NotNull;
 
 class FastqTracker {
+    @NotNull
     private final FastqData flowcell;
+    @NotNull
     private final Map<String, Map<String, FastqData>> samples;
 
     FastqTracker() {
@@ -20,18 +22,19 @@ class FastqTracker {
         samples = ImmutableSortedMap.of();
     }
 
-    private FastqTracker(@NotNull FastqData flowcell, @NotNull Map<String, Map<String, FastqData>> samples) {
+    private FastqTracker(@NotNull final FastqData flowcell,
+            @NotNull final Map<String, Map<String, FastqData>> samples) {
         this.flowcell = flowcell;
         this.samples = samples;
     }
 
     @NotNull
-    FastqTracker addToFlowcell(@NotNull FastqData data) {
+    FastqTracker addToFlowcell(@NotNull final FastqData data) {
         return new FastqTracker(flowcell.add(data), samples);
     }
 
     @NotNull
-    FastqTracker addToSample(@NotNull String sample, @NotNull String lane, @NotNull FastqData data) {
+    FastqTracker addToSample(@NotNull final String sample, @NotNull final String lane, @NotNull final FastqData data) {
         final Map<String, Map<String, FastqData>> newSamples;
         if (!samples.containsKey(sample)) {
             newSamples = addToMap(samples, sample,
@@ -52,13 +55,13 @@ class FastqTracker {
     }
 
     @NotNull
-    FastqData lane(@NotNull String lane) {
+    FastqData lane(@NotNull final String lane) {
         return samples.values().stream().map(lanes -> lanes.get(lane)).filter(Objects::nonNull).reduce(
                 new FastqData(0, 0), FastqData::add);
     }
 
     @NotNull
-    FastqData sample(@NotNull String sample) {
+    FastqData sample(@NotNull final String sample) {
         return samples.get(sample).values().stream().reduce(new FastqData(0, 0), FastqData::add);
     }
 
@@ -75,8 +78,9 @@ class FastqTracker {
     }
 
     @NotNull
-    private <T> Map<String, T> addToMap(@NotNull Map<String, T> map, @NotNull String key, @NotNull T value) {
-        final Map<String, T> copy = new HashMap<>(map);
+    private static <T> Map<String, T> addToMap(@NotNull final Map<String, T> map, @NotNull final String key,
+            @NotNull final T value) {
+        final Map<String, T> copy = Maps.newHashMap(map);
         copy.put(key, value);
         return ImmutableSortedMap.copyOf(copy);
     }

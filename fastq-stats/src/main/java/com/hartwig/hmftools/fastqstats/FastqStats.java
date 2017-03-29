@@ -18,12 +18,13 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class FastqStats {
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
 
     @NotNull
-    static FastqTracker processFile(@NotNull String filePath) throws IOException {
+    static FastqTracker processFile(@NotNull final String filePath) throws IOException {
         final FastqTracker tracker = new FastqTracker();
         final File file = new File(filePath);
         final FastqData data = processFile(file);
@@ -46,7 +47,8 @@ class FastqStats {
      * @throws InterruptedException
      */
     @NotNull
-    static FastqTracker processDir(@NotNull File dir, int threadCount) throws IOException, InterruptedException {
+    static FastqTracker processDir(@NotNull final File dir, final int threadCount)
+            throws IOException, InterruptedException {
         final File[] files = dir.listFiles();
         if (files == null) {
             throw new IOException("List files in " + dir.getName() + " returned null.");
@@ -93,31 +95,33 @@ class FastqStats {
     }
 
     @NotNull
-    private static FastqData processFile(@NotNull File f) throws IOException {
+    private static FastqData processFile(@NotNull final File file) throws IOException {
         final int size = 1048576;
-        final InputStream in;
-        if (f.getName().endsWith(".fastq.gz")) {
-            in = new GZIPInputStream(new FileInputStream(new File(f.getCanonicalPath())), size);
-        } else if (f.getName().endsWith(".fastq")) {
-            in = new FileInputStream(new File(f.getCanonicalPath()));
+        final InputStream inputStream;
+        if (file.getName().endsWith(".fastq.gz")) {
+            inputStream = new GZIPInputStream(new FileInputStream(new File(file.getCanonicalPath())), size);
+        } else if (file.getName().endsWith(".fastq")) {
+            inputStream = new FileInputStream(new File(file.getCanonicalPath()));
         } else {
             throw new IOException("Unrecognized file format.");
         }
-        LOGGER.info("Processing file: " + f.getName());
-        final FastqReader fr = new FastqReader(in, size);
+        LOGGER.info("Processing file: " + file.getName());
+        final FastqReader fastqReader = new FastqReader(inputStream, size);
         final long startTime = System.currentTimeMillis();
-        final FastqData data = fr.read();
+        final FastqData data = fastqReader.read();
         final long endTime = System.currentTimeMillis();
-        fr.close();
-        LOGGER.info("Finished processing file: " + f.getName() + " in " + (endTime - startTime) + "ms.");
+        fastqReader.close();
+
+        LOGGER.info("Finished processing file: " + file.getName() + " in " + (endTime - startTime) + "ms.");
         return data;
     }
 
-    private static <T> void addCallback(@NotNull ListenableFuture<T> future, @NotNull Consumer<T> onSuccess,
-            @NotNull Consumer<Throwable> onFailure) {
+    private static <T> void addCallback(@NotNull final ListenableFuture<T> future,
+            @NotNull final Consumer<T> onSuccess, @NotNull final Consumer<Throwable> onFailure) {
         Futures.addCallback(future, new FutureCallback<T>() {
             @Override
-            public void onSuccess(@NotNull final T t) {
+            public void onSuccess(@Nullable final T t) {
+                assert t != null;
                 onSuccess.accept(t);
             }
 

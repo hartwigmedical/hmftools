@@ -125,7 +125,7 @@ public final class FastqStatsRunner {
     }
 
     @NotNull
-    static File getBaseCallsDir(@NotNull String dirPath) throws IOException {
+    static File getBaseCallsDir(@NotNull final String dirPath) throws IOException {
         final File baseCallsDir = new File(
                 dirPath + File.separator + "Data" + File.separator + "Intensities" + File.separator + "BaseCalls");
         if (!baseCallsDir.exists()) {
@@ -136,7 +136,7 @@ public final class FastqStatsRunner {
         return baseCallsDir;
     }
 
-    static int getThreadCount(String threadCountArg) {
+    static int getThreadCount(@NotNull final String threadCountArg) {
         try {
             final int numThreads = Integer.parseInt(threadCountArg);
             if (numThreads <= 0) {
