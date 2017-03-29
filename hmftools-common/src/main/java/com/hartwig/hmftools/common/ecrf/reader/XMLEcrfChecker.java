@@ -8,7 +8,11 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class XMLEcrfChecker {
+public final class XMLEcrfChecker {
+
+    private XMLEcrfChecker() {
+    }
+
     @NotNull
     public static List<String> checkReferences(@NotNull final XMLEcrfDatamodel datamodel) {
         final List<String> missingDefs = Lists.newArrayList();

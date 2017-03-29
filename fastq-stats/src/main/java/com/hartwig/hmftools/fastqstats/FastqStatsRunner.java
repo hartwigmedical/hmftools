@@ -11,6 +11,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -24,6 +26,7 @@ import org.w3c.dom.Document;
 
 public final class FastqStatsRunner {
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
+
     private static final String FASTQ_FILE = "file";
     private static final String FASTQ_ROOT_DIR = "dir";
     private static final String CSV_OUT_DIR = "out";
@@ -73,7 +76,6 @@ public final class FastqStatsRunner {
 
     private static void writeOutputToCSV(@NotNull String flowcellName, @NotNull FastqTracker tracker,
             @NotNull String csvOutPath) throws IOException {
-
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("Flowcell " + flowcellName + ", " + tracker.flowcell().yield() + ", "
                 + tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield() + "\n");
@@ -107,7 +109,8 @@ public final class FastqStatsRunner {
      */
 
     @NotNull
-    static String getFlowcellName(@NotNull String dirPath) {
+    @VisibleForTesting
+    static String getFlowcellName(@NotNull final String dirPath) {
         final File runInfoXml = new File(dirPath + File.separator + "RunInfo.xml");
         final DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
         try {

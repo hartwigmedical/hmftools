@@ -29,25 +29,12 @@ public class EcrfAnalysisApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(EcrfAnalysisApplication.class);
 
-    private static final String ECRF_XML_PATH_ARGS_DESC = "The path to the ecrf xml file.";
     private static final String ECRF_XML_PATH = "ecrf";
-
-    private static final String CSV_OUT_PATH_ARGS_DESC = "The file to write csv results to.";
     private static final String CSV_OUT_PATH = "csv_out";
-
-    private static final String PRINT_TO_STD_OUT_ARGS_DESC = "If set, will write output to std out.";
     private static final String PRINT_TO_STD_OUT = "print_to_std_out";
-
-    private static final String PATIENTS_ARGS_DESC = "A comma-separated list of patients to filter on";
     private static final String PATIENTS = "patients";
-
-    private static final String FIELDS_ARGS_DESC = "A comma-separated list of fields to filter on";
     private static final String FIELDS = "fields";
-
-    private static final String PATIENT_AS_ROW_ARGS_DESC = "If present, patients will be printed as rows rather than columns";
     private static final String PATIENT_AS_ROW = "patient_as_row";
-
-    private static final String GENERATE_DATAMODEL_ARGS_DESC = "If present, generates a CSV for the datamodel rather than values for specific patients.";
     private static final String GENERATE_DATAMODEL = "generate_datamodel";
 
     public static void main(final String... args) throws ParseException, IOException, XMLStreamException {
@@ -82,13 +69,14 @@ public class EcrfAnalysisApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(ECRF_XML_PATH, true, ECRF_XML_PATH_ARGS_DESC);
-        options.addOption(CSV_OUT_PATH, true, CSV_OUT_PATH_ARGS_DESC);
-        options.addOption(PATIENTS, true, PATIENTS_ARGS_DESC);
-        options.addOption(FIELDS, true, FIELDS_ARGS_DESC);
-        options.addOption(PATIENT_AS_ROW, false, PATIENT_AS_ROW_ARGS_DESC);
-        options.addOption(PRINT_TO_STD_OUT, false, PRINT_TO_STD_OUT_ARGS_DESC);
-        options.addOption(GENERATE_DATAMODEL, false, GENERATE_DATAMODEL_ARGS_DESC);
+        options.addOption(ECRF_XML_PATH, true, "The path to the ecrf xml file.");
+        options.addOption(CSV_OUT_PATH, true, "The file to write csv results to.");
+        options.addOption(PATIENTS, true, "A comma-separated list of patients to filter on");
+        options.addOption(FIELDS, true, "A comma-separated list of fields to filter on");
+        options.addOption(PATIENT_AS_ROW, false, "If present, patients will be printed as rows rather than columns");
+        options.addOption(PRINT_TO_STD_OUT, false, "If set, will write output to std out.");
+        options.addOption(GENERATE_DATAMODEL, false,
+                "If present, generates a CSV for the datamodel rather than values for specific patients.");
 
         return options;
     }

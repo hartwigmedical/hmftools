@@ -65,8 +65,6 @@ public class EcrfCheckerApplication {
         final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
         final XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
         final List<String> missingItems = XMLEcrfChecker.checkReferences(datamodel);
-        for (String missingItem : missingItems) {
-            LOGGER.info(missingItem);
-        }
+        missingItems.forEach(LOGGER::info);
     }
 }
