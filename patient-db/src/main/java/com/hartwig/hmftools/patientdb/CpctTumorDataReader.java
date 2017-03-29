@@ -11,12 +11,14 @@ class CpctTumorDataReader {
     private static final String FIELD_TUMORLOCATION = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
     private static final String FIELD_ENTRYSTAGE = "BASELINE.CARCINOMA.CARCINOMA.ENTRYSTAGE";
     private static final String FIELD_BIOPSYLOCATION = "BIOPSY.BIOPS.BIOPSIES.BILESSITE";
+    private static final String FIELD_BIOPSYLOCATIONOTHER = "BIOPSY.BIOPS.BIOPSIES.BIOTHLESSITE";
 
     @NotNull
     Optional<TumorData> read(@NotNull EcrfPatient patient) {
         final String tumorLocation = GenericReader.getField(patient, FIELD_TUMORLOCATION);
         final String tumorEntryStage = GenericReader.getField(patient, FIELD_ENTRYSTAGE);
-        final List<String> biopsyLocations = GenericReader.getFieldValues(patient, FIELD_BIOPSYLOCATION);
+        final List<String> biopsyLocations = GenericReader.getFieldValuesWithOthers(patient, FIELD_BIOPSYLOCATION,
+                FIELD_BIOPSYLOCATIONOTHER);
         if ((tumorLocation == null || tumorLocation.replaceAll("\\s", "").length() == 0) && (tumorEntryStage == null
                 || tumorEntryStage.replaceAll("\\s", "").length() == 0) && (biopsyLocations == null
                 || biopsyLocations.size() == 0)) {

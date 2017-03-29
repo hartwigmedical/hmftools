@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 class CpctSystemicTherapyReader {
     private static final String FIELD_HADSYSTEMICTREATMENT = "BASELINE.PRETHERAPY.PRETHERAPY.SYSTEMIC";
     private static final String FIELD_SYSTEMICTYPE = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICTYPE";
+    private static final String FIELD_SYSTEMICTYPEOTHER = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICTYPESP";
     private static final String FIELD_TREATMENT = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICREG";
     private static final String FIELD_RESPONSES = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICRESP";
     private static final String FIELD_STARTDATE = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICSTDTC";
@@ -42,11 +43,13 @@ class CpctSystemicTherapyReader {
 
     @NotNull
     private List<SystemicTherapyData> readData(@NotNull EcrfPatient patient) {
-        final List<String> types = GenericReader.getFieldValues(patient, FIELD_SYSTEMICTYPE);
+        final List<String> types = GenericReader.getFieldValuesWithOthers(patient, FIELD_SYSTEMICTYPE,
+                FIELD_SYSTEMICTYPEOTHER);
         final List<String> treatments = GenericReader.getFieldValues(patient, FIELD_TREATMENT);
         final List<String> responses = GenericReader.getFieldValues(patient, FIELD_RESPONSES);
         final List<String> startDates = GenericReader.getFieldValues(patient, FIELD_STARTDATE);
         final List<String> endDates = GenericReader.getFieldValues(patient, FIELD_ENDDATE);
+
         final int maxLength = Utils.getMaxLength(
                 Lists.newArrayList(types, treatments, responses, startDates, endDates),
                 "Not all systemic therapy fields contain the same number of values.");
@@ -70,4 +73,5 @@ class CpctSystemicTherapyReader {
         }
         return therapies;
     }
+
 }
