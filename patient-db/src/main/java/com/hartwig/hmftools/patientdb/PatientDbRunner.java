@@ -23,11 +23,11 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PatientDbRunner {
     private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
-    private static final String RUNS_DIR = "runsDir";
+    private static final String RUNS_DIR = "runs_dir";
     private static final String ECRF_FILE = "ecrf";
-    private static final String DB_USER = "dbUser";
-    private static final String DB_PASS = "dbPass";
-    private static final String DB_URL = "dbUrl";
+    private static final String DB_USER = "db_user";
+    private static final String DB_PASS = "db_pass";
+    private static final String DB_URL = "db_url";
 
     public static void main(String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,

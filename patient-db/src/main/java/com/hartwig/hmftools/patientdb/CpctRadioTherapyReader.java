@@ -28,6 +28,8 @@ class CpctRadioTherapyReader {
         } else {
             final List<RadioTherapyData> data = readData(patient);
             if (data.size() == 0) {
+                LOGGER.warn(patient.patientId() + " had value " + hadRadiotherapy + " instead of No for field "
+                        + FIELD_HADRADIOTHERAPY + " but radio therapy fields contained no values.");
                 return Optional.empty();
             } else {
                 return Optional.of(data);

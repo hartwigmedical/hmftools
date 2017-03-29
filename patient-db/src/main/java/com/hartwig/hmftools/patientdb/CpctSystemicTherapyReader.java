@@ -31,6 +31,8 @@ class CpctSystemicTherapyReader {
         } else {
             final List<SystemicTherapyData> data = readData(patient);
             if (data.size() == 0) {
+                LOGGER.warn(patient.patientId() + " had value " + hadSystemicTreatment + " instead of No for field "
+                        + FIELD_HADSYSTEMICTREATMENT + " but systemic treatment fields contained no values.");
                 return Optional.empty();
             } else {
                 return Optional.of(data);
