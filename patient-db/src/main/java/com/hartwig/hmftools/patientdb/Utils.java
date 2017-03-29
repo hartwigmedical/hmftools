@@ -13,13 +13,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class Utils {
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(Utils.class);
 
-    static int getMaxLength(@NotNull Collection<List<String>> lists, @NotNull String warnMessage) {
-        final Iterator<List<String>> listIterator = lists.iterator();
+    static int getMaxLength(@NotNull Collection<List<?>> lists, @NotNull String warnMessage) {
+        final Iterator<List<?>> listIterator = lists.iterator();
         int maxSize = -1;
         while (listIterator.hasNext()) {
-            List<String> currentList = listIterator.next();
+            List<?> currentList = listIterator.next();
             if (currentList != null) {
                 if (maxSize < currentList.size()) {
                     if (maxSize != -1) {
@@ -34,28 +34,33 @@ class Utils {
 
     @Nullable
     static LocalDate getDate(@Nullable String dateFieldValue, @NotNull DateTimeFormatter dateFormatter) {
+        if (dateFieldValue == null) {
+            return null;
+        }
+
         try {
             return LocalDate.parse(dateFieldValue, dateFormatter);
-        } catch (NullPointerException | DateTimeParseException e) {
+        } catch (DateTimeParseException e) {
             return null;
         }
     }
 
     @Nullable
-    static String getElemAtIndex(@Nullable List<String> list, int index) {
+    static String getElemAtIndex(@Nullable final List<String> list, final int index) {
+        if (list == null) {
+            return null;
+        }
+
         try {
+            // KODU: Convert to checked return statement.
             return list.get(index);
-        } catch (NullPointerException | IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             return null;
         }
     }
 
     @Nullable
     static java.sql.Date toSQLDate(@Nullable LocalDate date) {
-        try {
-            return java.sql.Date.valueOf(date);
-        } catch (NullPointerException e) {
-            return null;
-        }
+        return date != null ? java.sql.Date.valueOf(date) : null;
     }
 }

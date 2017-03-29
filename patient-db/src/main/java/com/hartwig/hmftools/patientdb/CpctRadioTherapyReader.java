@@ -13,11 +13,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class CpctRadioTherapyReader {
+
+    private static final Logger LOGGER = LogManager.getLogger(CpctRadioTherapyReader.class);
+
     private static final String FIELD_RADIOENDDATE = "BASELINE.PRETHERAPY.RTP.RADIOTHERENDTC";
     private static final String FIELD_RADIOSITE = "BASELINE.PRETHERAPY.RTP.RADIOTHERSITE";
     private static final String FIELD_HADRADIOTHERAPY = "BASELINE.PRETHERAPY.PRETHERAPY.RADIOTHER";
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
