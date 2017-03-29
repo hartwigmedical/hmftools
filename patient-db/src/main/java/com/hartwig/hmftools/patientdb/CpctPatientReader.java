@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.jetbrains.annotations.NotNull;
 
 class CpctPatientReader {
@@ -25,11 +26,13 @@ class CpctPatientReader {
 
     @NotNull
     Patient read(@NotNull EcrfPatient patient) {
+        ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
         final PatientInfo patientInfo = cpctPatientInfoReader.read(patient);
         final Optional<TumorData> tumorDataOpt = cpctTumorDataReader.read(patient);
         final Optional<List<SystemicTherapyData>> systemicTherapiesOpt = cpctSystemicTherapyReader.read(patient);
         final Optional<List<RadioTherapyData>> radioTherapiesOpt = cpctRadioTherapyReader.read(patient);
         final Optional<TreatmentData> treatmentDataOpt = cpctTreatmentDataReader.read(patient);
+        ThreadContext.put("cpctHospitalCode", "default");
         return new Patient(patientInfo, tumorDataOpt, systemicTherapiesOpt, radioTherapiesOpt, treatmentDataOpt);
     }
 }

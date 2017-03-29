@@ -4,10 +4,20 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss} - %msg%n"/>
         </Console>
+        <Routing name="RoutingAppender">
+            <Routes pattern="$${ctx:cpctHospitalCode}">
+                <Route>
+                    <File name="${ctx:cpctHospitalCode}" fileName="patient-db-logs/${ctx:cpctHospitalCode}.log">
+                        <PatternLayout pattern="%d{HH:mm:ss} - %msg%n"/>
+                    </File>
+                </Route>
+            </Routes>
+        </Routing>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="RoutingAppender"/>
         </Root>
     </Loggers>
 </Configuration>

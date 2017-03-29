@@ -19,6 +19,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.jetbrains.annotations.NotNull;
 
 public final class PatientDbRunner {
@@ -40,6 +41,7 @@ public final class PatientDbRunner {
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
         final String jdbcUrl = "jdbc:" + databaseUrl;
+        ThreadContext.put("cpctHospitalCode", "default");
         if (runFolderPath == null || ecrfFilePath == null || userName == null || password == null
                 || databaseUrl == null) {
             HelpFormatter formatter = new HelpFormatter();
