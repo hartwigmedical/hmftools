@@ -125,6 +125,7 @@ public final class FastqStatsRunner {
     }
 
     @NotNull
+    @VisibleForTesting
     static File getBaseCallsDir(@NotNull final String dirPath) throws IOException {
         final File baseCallsDir = new File(
                 dirPath + File.separator + "Data" + File.separator + "Intensities" + File.separator + "BaseCalls");
@@ -136,6 +137,7 @@ public final class FastqStatsRunner {
         return baseCallsDir;
     }
 
+    @VisibleForTesting
     static int getThreadCount(@NotNull final String threadCountArg) {
         try {
             final int numThreads = Integer.parseInt(threadCountArg);
