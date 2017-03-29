@@ -80,25 +80,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>properties-maven-plugin</artifactId>
-                <version>1.0.0</version>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>read-project-properties</goal>
-                        </goals>
-                        <configuration>
-                            <files>
-                                <file>${basedir}/src/main/resources/mysql.properties</file>
-                            </files>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
                 <version>${jooq.version}</version>
@@ -114,16 +95,15 @@
                 <configuration>
                     <jdbc>
                         <driver>com.mysql.cj.jdbc.Driver</driver>
-                        <url>jdbc:mysql://${mysql.address}:${mysql.port}/${mysql.database}</url>
-                        <user>${mysql.user}</user>
-                        <password>${mysql.password}</password>
+                        <url>jdbc:mysql://localhost:3306/hmfpatients?useSSL=false&amp;serverTimezone=CET</url>
+                        <user>build</user>
+                        <password>build</password>
                     </jdbc>
 
                     <generator>
                         <database>
                             <name>org.jooq.util.mysql.MySQLDatabase</name>
                             <includes>.*</includes>
-                            <excludes></excludes>
                         </database>
                         <target>
                             <packageName>com.hartwig.hmftools.patientdb.database</packageName>

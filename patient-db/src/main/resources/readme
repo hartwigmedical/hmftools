@@ -1,0 +1,12 @@
+Run the following commands as an admin on mysql on mysql.host defined in mysql.properties, prior to building
+
+mysql> CREATE USER 'build'@'localhost' IDENTIFIED BY 'build';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> CREATE DATABASE hmfpatients;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> GRANT ALL on hmfpatients.* TO 'build'@'localhost';
+Query OK, 0 rows affected (0.00 sec)
+
+Then make sure hmfpatients is filled by running 'generate_database.sql'
