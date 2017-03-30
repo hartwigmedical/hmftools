@@ -39,7 +39,7 @@ public final class CNVFileLoader {
         final Path copynumberPath = PathRegexFinder.build()
                                                    .findPath(basePath, String.format(COPYNUMBER_REGEX, sample));
         try {
-            LOGGER.info("Loading CNV data from " + copynumberPath.toString());
+            LOGGER.debug("Loading CNV data from " + copynumberPath.toString());
             return FileReader.build().readLines(copynumberPath);
         } catch (EmptyFileException e) {
             // if the CNV is empty (but exists) and the ratio file exists, there is no problem (just no CNVs found)
