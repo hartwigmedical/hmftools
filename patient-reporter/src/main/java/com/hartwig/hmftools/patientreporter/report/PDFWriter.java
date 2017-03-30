@@ -228,7 +228,7 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(message).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The received tumor sample for this patient was inadequate to obtain a reliable sequencing " +
+                cmp.text("The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing " +
                                 "result. Therefore whole genome sequencing cannot be performed, " +
                                 "unless additional fresh tumor material can be provided for a new assessment.")
                         .setStyle(fontStyle()),
