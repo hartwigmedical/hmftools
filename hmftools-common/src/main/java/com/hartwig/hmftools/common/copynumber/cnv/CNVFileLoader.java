@@ -6,9 +6,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-
-import org.jetbrains.annotations.NotNull;
-
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.CopyNumberFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -16,7 +13,14 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+
 public final class CNVFileLoader {
+
+    private static final Logger LOGGER = LogManager.getLogger(CNVFileLoader.class);
+
     private static final String COPYNUMBER_REGEX = "%s[_.].*(?<!_normal)_CNVs$";
     private static final String COPYNUMBER_RATIO_REGEX = "%s[_.].*(?<!_normal)_ratio.txt$";
 
@@ -35,6 +39,7 @@ public final class CNVFileLoader {
         final Path copynumberPath = PathRegexFinder.build()
                                                    .findPath(basePath, String.format(COPYNUMBER_REGEX, sample));
         try {
+            LOGGER.info("Loading CNV data from " + copynumberPath.toString());
             return FileReader.build().readLines(copynumberPath);
         } catch (EmptyFileException e) {
             // if the CNV is empty (but exists) and the ratio file exists, there is no problem (just no CNVs found)
