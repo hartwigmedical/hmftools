@@ -56,8 +56,12 @@ public class ConsensusRule {
         final List<SomaticVariant> updatedVariants = Lists.newArrayList();
         for (final SomaticVariant variant : variants) {
             final SomaticVariant.Builder newVariantBuilder = SomaticVariant.Builder.fromVariant(variant);
-            if (VariantFilter.isPass(variant) && !consensusRuleFilter.test(variant)) {
-                newVariantBuilder.filter(CONSENSUS_FILTERED);
+            if (!consensusRuleFilter.test(variant)) {
+                if (VariantFilter.isPass(variant)) {
+                    newVariantBuilder.filter(CONSENSUS_FILTERED);
+                } else {
+                    newVariantBuilder.filter(variant.filter() + ";" + CONSENSUS_FILTERED);
+                }
             }
             updatedVariants.add(newVariantBuilder.build());
         }

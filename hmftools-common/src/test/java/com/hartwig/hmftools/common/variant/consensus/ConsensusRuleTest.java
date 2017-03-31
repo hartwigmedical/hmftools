@@ -57,7 +57,7 @@ public class ConsensusRuleTest {
                 Lists.newArrayList(variant1, variant2, variant3));
 
         assertEquals(ConsensusRule.CONSENSUS_FILTERED, adjustedVariants.get(0).filter());
-        assertEquals(filtered, adjustedVariants.get(1).filter());
+        assertEquals(filtered + ";" + ConsensusRule.CONSENSUS_FILTERED, adjustedVariants.get(1).filter());
         assertEquals(pass, adjustedVariants.get(2).filter());
     }
 
