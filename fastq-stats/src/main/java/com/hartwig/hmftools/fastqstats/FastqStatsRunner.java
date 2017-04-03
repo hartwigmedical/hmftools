@@ -22,6 +22,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
 
 public final class FastqStatsRunner {
@@ -138,7 +139,7 @@ public final class FastqStatsRunner {
     }
 
     @VisibleForTesting
-    static int getThreadCount(@NotNull final String threadCountArg) {
+    static int getThreadCount(@Nullable final String threadCountArg) {
         try {
             final int numThreads = Integer.parseInt(threadCountArg);
             if (numThreads <= 0) {
@@ -146,8 +147,9 @@ public final class FastqStatsRunner {
             }
             return numThreads;
         } catch (NumberFormatException e) {
-            LOGGER.info("Couldn't parse thread count parameter > 0; using default value.");
-            return Runtime.getRuntime().availableProcessors();
+            final int availableThreads = Runtime.getRuntime().availableProcessors();
+            LOGGER.info("Couldn't parse thread count parameter > 0; using default value: " + availableThreads + ".");
+            return availableThreads;
         }
     }
 }
