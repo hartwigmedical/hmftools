@@ -27,7 +27,7 @@ class CpctPatientInfoReader {
     private static final String FIELD_BIRTHYEAR2 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHYEAR";
     private static final String FIELD_BIRTHYEAR3 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHDTCES";
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(CpctPatientInfoReader.class);
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final Map<Integer, String> hospitals;
 

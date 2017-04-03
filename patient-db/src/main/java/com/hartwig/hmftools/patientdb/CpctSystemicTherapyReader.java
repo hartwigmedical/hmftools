@@ -21,7 +21,7 @@ class CpctSystemicTherapyReader {
     private static final String FIELD_STARTDATE = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICSTDTC";
     private static final String FIELD_ENDDATE = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICENDTC";
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(CpctSystemicTherapyReader.class);
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull

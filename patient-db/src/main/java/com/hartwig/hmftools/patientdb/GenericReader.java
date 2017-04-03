@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class GenericReader {
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(GenericReader.class);
 
     @Nullable
     static String getField(@NotNull EcrfPatient patient, @NotNull String fieldName) {

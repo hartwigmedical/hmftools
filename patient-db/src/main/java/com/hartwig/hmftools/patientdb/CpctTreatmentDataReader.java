@@ -17,7 +17,7 @@ class CpctTreatmentDataReader {
     private static final String FIELD_ENDDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.SYSENDT";
     private static final String FIELD_RESPONSES = "TREATMENT.TUMORMEASUREMENT.TUMORMEASUREMENT.BESTRESPON";
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(CpctTreatmentDataReader.class);
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
