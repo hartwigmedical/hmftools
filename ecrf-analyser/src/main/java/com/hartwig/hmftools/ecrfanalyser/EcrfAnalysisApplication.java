@@ -188,7 +188,7 @@ public class EcrfAnalysisApplication {
     }
 
     @NotNull
-    private static String extractFieldForPatient(@NotNull EcrfPatient patient, @NotNull EcrfField field) {
+    private static String extractFieldForPatient(@NotNull final EcrfPatient patient, @NotNull final EcrfField field) {
         final List<String> values = patient.fieldValuesByEcrfField(field);
         String finalValue = Strings.EMPTY;
         if (values != null && containsSomeValue(values)) {
@@ -203,8 +203,8 @@ public class EcrfAnalysisApplication {
         return finalValue.replaceAll(",", ":");
     }
 
-    private static boolean containsSomeValue(@NotNull Iterable<String> strings) {
-        for (String value : strings) {
+    private static boolean containsSomeValue(@NotNull final Iterable<String> strings) {
+        for (final String value : strings) {
             if (!value.isEmpty()) {
                 return true;
             }
@@ -226,7 +226,7 @@ public class EcrfAnalysisApplication {
     }
 
     @NotNull
-    private static String fieldToCSV(@NotNull EcrfField field) {
+    private static String fieldToCSV(@NotNull final EcrfField field) {
         String valuesString = "";
         for (final String value : field.codeList().values()) {
             valuesString += value.replaceAll(",", ":") + "; ";
