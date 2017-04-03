@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumber {
 
-    private static final int EXPECTED_VALUE = 2;
+    private static final int NORMAL_HUMAN_COPY_NUMBER = 2;
 
     @NotNull
     private final String chromosome;
@@ -44,10 +44,10 @@ public class CopyNumber {
     }
 
     public boolean isGain() {
-        return value > EXPECTED_VALUE;
+        return value > NORMAL_HUMAN_COPY_NUMBER;
     }
 
     public boolean isLoss() {
-        return value < EXPECTED_VALUE;
+        return value < NORMAL_HUMAN_COPY_NUMBER;
     }
 }
