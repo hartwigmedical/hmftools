@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class FastqStats {
-    private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(FastqStats.class);
 
     @NotNull
     static FastqTracker processFile(@NotNull final String filePath) throws IOException {
