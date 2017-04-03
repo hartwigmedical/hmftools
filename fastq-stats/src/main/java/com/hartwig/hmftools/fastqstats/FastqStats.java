@@ -29,7 +29,7 @@ class FastqStats {
         final File file = new File(filePath);
         final FastqData data = processFile(file);
         final String lane = getLaneName(file);
-        return tracker.addToFlowcell(data).addToSample(file.getName(), lane, data);
+        return tracker.addToSample(file.getName(), lane, data);
     }
 
     /**

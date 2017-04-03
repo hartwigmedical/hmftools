@@ -17,6 +17,6 @@ class FastqTrackerWrapper {
 
     synchronized void addDataFromSampleFile(@NotNull final String sampleName, @NotNull final String lane,
             @NotNull final FastqData data) {
-        tracker = tracker.addToFlowcell(data).addToSample(sampleName, lane, data);
+        tracker = tracker.addToSample(sampleName, lane, data);
     }
 }

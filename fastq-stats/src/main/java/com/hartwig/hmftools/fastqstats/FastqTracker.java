@@ -13,24 +13,14 @@ import org.jetbrains.annotations.NotNull;
 
 class FastqTracker {
     @NotNull
-    private final FastqData flowcell;
-    @NotNull
     private final Map<String, Map<String, FastqData>> samples;
 
     FastqTracker() {
-        flowcell = new FastqData(0, 0);
         samples = ImmutableSortedMap.of();
     }
 
-    private FastqTracker(@NotNull final FastqData flowcell,
-            @NotNull final Map<String, Map<String, FastqData>> samples) {
-        this.flowcell = flowcell;
+    private FastqTracker(@NotNull final Map<String, Map<String, FastqData>> samples) {
         this.samples = samples;
-    }
-
-    @NotNull
-    FastqTracker addToFlowcell(@NotNull final FastqData data) {
-        return new FastqTracker(flowcell.add(data), samples);
     }
 
     @NotNull
@@ -46,12 +36,12 @@ class FastqTracker {
             final FastqData newValue = currentValue.add(data);
             newSamples = addToMap(samples, sample, addToMap(samples.get(sample), lane, newValue));
         }
-        return new FastqTracker(flowcell, newSamples);
+        return new FastqTracker(newSamples);
     }
 
     @NotNull
     FastqData flowcell() {
-        return flowcell;
+        return samples.keySet().stream().map(this::sample).reduce(new FastqData(0, 0), FastqData::add);
     }
 
     @NotNull
