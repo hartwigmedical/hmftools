@@ -19,6 +19,10 @@ class FastqData {
         return q30;
     }
 
+    double q30Percentage() {
+        return q30 * 100.0 / yield;
+    }
+
     @NotNull
     FastqData add(@NotNull final FastqData other) {
         return new FastqData(yield + other.yield, q30 + other.q30);

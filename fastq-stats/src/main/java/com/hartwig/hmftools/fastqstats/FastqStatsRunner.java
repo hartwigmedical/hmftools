@@ -79,22 +79,21 @@ public final class FastqStatsRunner {
             @NotNull String csvOutPath) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("Flowcell " + flowcellName + ", " + tracker.flowcell().yield() + ", "
-                + tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield() + "\n");
+                + tracker.flowcell().q30Percentage() + "\n");
 
         for (final String laneName : tracker.lanes().keySet()) {
             final FastqData lane = tracker.lane(laneName);
-            writer.write("Lane " + laneName + ", " + lane.yield() + ", " + lane.q30() * 100.0 / lane.yield() + "\n");
+            writer.write("Lane " + laneName + ", " + lane.yield() + ", " + lane.q30Percentage() + "\n");
         }
         for (final String sampleName : tracker.samples().keySet()) {
             final FastqData sample = tracker.sample(sampleName);
-            writer.write("Sample " + sampleName + ", " + sample.yield() + ", " + sample.q30() * 100.0 / sample.yield()
-                    + "\n");
+            writer.write("Sample " + sampleName + ", " + sample.yield() + ", " + sample.q30Percentage() + "\n");
         }
         for (final String sampleName : tracker.samples().keySet()) {
             for (final String laneName : tracker.samples().get(sampleName).keySet()) {
                 final FastqData sampleLaneData = tracker.samples().get(sampleName).get(laneName);
                 writer.write(sampleName + ", " + laneName + ", " + sampleLaneData.yield() + ", "
-                        + sampleLaneData.q30() * 100.0 / sampleLaneData.yield() + "\n");
+                        + sampleLaneData.q30Percentage() + "\n");
             }
         }
         writer.close();

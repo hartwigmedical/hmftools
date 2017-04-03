@@ -19,9 +19,8 @@ public class FastqTrackerTest {
         final FileInputStream fin = new FileInputStream(path);
         final FastqReader fr = new FastqReader(fin);
         final FastqData data = fr.read();
-        final double q30Percentage = data.q30() * 100.0 / data.yield();
         assertEquals(100, data.yield());
-        assertEquals(100.0, q30Percentage, 0.00001);
+        assertEquals(100.0, data.q30Percentage(), 0.00001);
     }
 
     @Test
@@ -30,9 +29,8 @@ public class FastqTrackerTest {
         final FileInputStream fin = new FileInputStream(path);
         final FastqReader fr = new FastqReader(fin);
         final FastqData data = fr.read();
-        final double q30Percentage = data.q30() * 100.0 / data.yield();
         assertEquals(100, data.yield());
-        assertEquals(0.0, q30Percentage, 0.00001);
+        assertEquals(0.0, data.q30Percentage(), 0.00001);
     }
 
     @Test
@@ -41,8 +39,7 @@ public class FastqTrackerTest {
         final FileInputStream fin = new FileInputStream(path);
         final FastqReader fr = new FastqReader(fin);
         final FastqData data = fr.read();
-        final double q30Percentage = data.q30() * 100.0 / data.yield();
         assertEquals(100, data.yield());
-        assertEquals(10.0, q30Percentage, 0.00001);
+        assertEquals(10.0, data.q30Percentage(), 0.00001);
     }
 }

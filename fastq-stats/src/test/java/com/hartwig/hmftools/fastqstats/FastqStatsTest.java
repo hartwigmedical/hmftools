@@ -18,12 +18,10 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
-        final double q30Percentage = tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield();
-        assertEquals(100.0, q30Percentage, 0.00001);
+        assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(300, tracker.lane("L001").yield());
         assertEquals(3, tracker.samples().size());
-        final double laneQ30Percentage = tracker.lane("L001").q30() * 100.0 / tracker.lane("L001").yield();
-        assertEquals(100.0, laneQ30Percentage, 0.00001);
+        assertEquals(100.0, tracker.lane("L001").q30Percentage(), 0.00001);
     }
 
     // Sample Z has 50% Q30, others 100%
@@ -33,18 +31,13 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
-        final double q30Percentage = tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield();
-        assertEquals(83.33, q30Percentage, 0.01);
+        assertEquals(83.33, tracker.flowcell().q30Percentage(), 0.01);
         assertEquals(300, tracker.lane("L001").yield());
-        final double laneQ30Percentage = tracker.lane("L001").q30() * 100.0 / tracker.lane("L001").yield();
-        assertEquals(83.33, laneQ30Percentage, 0.01);
+        assertEquals(83.33, tracker.lane("L001").q30Percentage(), 0.01);
         assertEquals(3, tracker.samples().size());
-        final double sampleXQ30 = tracker.sample("TESTX").q30() * 100.0 / tracker.sample("TESTX").yield();
-        final double sampleYQ30 = tracker.sample("TESTY").q30() * 100.0 / tracker.sample("TESTY").yield();
-        final double sampleZQ30 = tracker.sample("TESTZ").q30() * 100.0 / tracker.sample("TESTZ").yield();
-        assertEquals(100.0, sampleXQ30, 0.00001);
-        assertEquals(100.0, sampleYQ30, 0.00001);
-        assertEquals(50.0, sampleZQ30, 0.00001);
+        assertEquals(100.0, tracker.sample("TESTX").q30Percentage(), 0.00001);
+        assertEquals(100.0, tracker.sample("TESTY").q30Percentage(), 0.00001);
+        assertEquals(50.0, tracker.sample("TESTZ").q30Percentage(), 0.00001);
         assertEquals(100, tracker.samples().get("TESTZ").get("L001").yield());
         assertEquals(50, tracker.samples().get("TESTZ").get("L001").q30());
     }
@@ -56,8 +49,7 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
-        final double q30Percentage = tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield();
-        assertEquals(83.33, q30Percentage, 0.01);
+        assertEquals(83.33, tracker.flowcell().q30Percentage(), 0.01);
         assertEquals(1, tracker.samples().size());
         assertEquals(3, tracker.lanes().size());
         assertEquals(100, tracker.lane("L001").yield());
@@ -65,9 +57,9 @@ public class FastqStatsTest {
         assertEquals(100, tracker.lane("L003").yield());
         assertEquals(100, tracker.samples().get("TESTX").get("L003").yield());
         assertEquals(50, tracker.samples().get("TESTX").get("L003").q30());
-        assertEquals(100, tracker.lane("L001").q30() * 100.0 / tracker.lane("L001").yield(), 0.01);
-        assertEquals(100, tracker.lane("L002").q30() * 100.0 / tracker.lane("L002").yield(), 0.01);
-        assertEquals(50, tracker.lane("L003").q30() * 100.0 / tracker.lane("L003").yield(), 0.01);
+        assertEquals(100, tracker.lane("L001").q30Percentage(), 0.01);
+        assertEquals(100, tracker.lane("L002").q30Percentage(), 0.01);
+        assertEquals(50, tracker.lane("L003").q30Percentage(), 0.01);
     }
 
     // 50% of baseCalls belong to undetermined sample
@@ -77,8 +69,7 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(600, tracker.flowcell().yield());
-        final double q30Percentage = tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield();
-        assertEquals(100.0, q30Percentage, 0.00001);
+        assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(4, tracker.samples().size());
         final double undeterminedPercentage =
                 tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
@@ -95,7 +86,7 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
-        assertEquals(100.0, tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield(), 0.00001);
+        assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(1, tracker.samples().size());
         final double undeterminedPercentage =
                 tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
@@ -112,14 +103,12 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(600, tracker.flowcell().yield());
-        assertEquals(50.0, tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield(), 0.00001);
+        assertEquals(50.0, tracker.flowcell().q30Percentage(), 0.00001);
         final double undeterminedPercentage =
                 tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
         assertEquals(50.0, undeterminedPercentage, 0.00001);
         assertEquals(4, tracker.samples().size());
-        final double undeterminedQ30 =
-                tracker.sample("Undetermined").q30() * 100.0 / tracker.sample("Undetermined").yield();
-        assertEquals(0.0, undeterminedQ30, 0.00001);
+        assertEquals(0.0, tracker.sample("Undetermined").q30Percentage(), 0.00001);
         assertEquals(300, tracker.lane("L002").yield());
         assertEquals(300, tracker.samples().get("Undetermined").get("L002").yield());
         assertEquals(0, tracker.samples().get("Undetermined").get("L002").q30());
@@ -132,11 +121,10 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(200, tracker.flowcell().yield());
-        final double q30Percentage = tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield();
-        assertEquals(100.0, q30Percentage, 0.00001);
+        assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(200, tracker.lane("L001").yield());
         assertEquals(2, tracker.samples().size());
-        final double laneQ30Percentage = tracker.lane("L001").q30() * 100.0 / tracker.lane("L001").yield();
+        final double laneQ30Percentage = tracker.lane("L001").q30Percentage();
         assertEquals(100.0, laneQ30Percentage, 0.00001);
     }
 
@@ -147,7 +135,7 @@ public class FastqStatsTest {
         final File dir = new File(path.getPath());
         final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
         assertEquals(200, tracker.flowcell().yield());
-        assertEquals(100.0, tracker.flowcell().q30() * 100.0 / tracker.flowcell().yield(), 0.00001);
+        assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(1, tracker.samples().size());
         final double undeterminedPercentage =
                 tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
