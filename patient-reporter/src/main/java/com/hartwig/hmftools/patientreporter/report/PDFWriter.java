@@ -441,8 +441,8 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static TextColumnBuilder<?> transcriptColumn() {
-        return col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setWidth(150).setHyperLink(
-                hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle());
+        return col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setHyperLink(
+                hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(125);
     }
 
     @NotNull
@@ -450,6 +450,6 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(
                 cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD)));
+                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD))).setFixedWidth(125);
     }
 }
