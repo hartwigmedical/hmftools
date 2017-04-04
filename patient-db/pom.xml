@@ -10,7 +10,6 @@
 
     <artifactId>patient-db</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
     <name>HMF Tools - Patient Database</name>
 
     <dependencies>

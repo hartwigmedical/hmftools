@@ -9,14 +9,14 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import org.apache.logging.log4j.ThreadContext;
 import org.jetbrains.annotations.NotNull;
 
-class CpctPatientReader {
+public class CpctPatientReader {
     private final CpctPatientInfoReader cpctPatientInfoReader;
     private final CpctTumorDataReader cpctTumorDataReader;
     private final CpctSystemicTherapyReader cpctSystemicTherapyReader;
     private final CpctRadioTherapyReader cpctRadioTherapyReader;
     private final CpctTreatmentDataReader cpctTreatmentDataReader;
 
-    CpctPatientReader(@NotNull CpctEcrfModel model) {
+    public CpctPatientReader(@NotNull CpctEcrfModel model) {
         cpctPatientInfoReader = new CpctPatientInfoReader(model);
         cpctTumorDataReader = new CpctTumorDataReader();
         cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
@@ -25,7 +25,7 @@ class CpctPatientReader {
     }
 
     @NotNull
-    Patient read(@NotNull EcrfPatient patient) {
+    public Patient read(@NotNull EcrfPatient patient) {
         ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
         final PatientInfo patientInfo = cpctPatientInfoReader.read(patient);
         final Optional<TumorData> tumorDataOpt = cpctTumorDataReader.read(patient);

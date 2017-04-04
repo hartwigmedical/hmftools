@@ -38,6 +38,8 @@
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
 
         <hmftools-common.version>1</hmftools-common.version>
+        <patient-db.version>1</patient-db.version>
+
 
         <!-- Used by health checker -->
         <reactivex.version>1.1.5</reactivex.version>
@@ -80,6 +82,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmftools-common</artifactId>
                 <version>${hmftools-common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>patient-db</artifactId>
+                <version>${patient-db.version}</version>
             </dependency>
 
             <dependency>

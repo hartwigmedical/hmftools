@@ -74,6 +74,7 @@ public class CpctEcrfModel {
         return filteredPatients;
 
     }
+
     @Nullable
     public EcrfPatient findPatientById(@NotNull final String patientId) {
         for (final EcrfPatient patient : patients) {
@@ -106,5 +107,10 @@ public class CpctEcrfModel {
             }
         }
         return null;
+    }
+
+    @NotNull
+    public Iterable<EcrfPatient> patients() {
+        return patients;
     }
 }
