@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 class Utils {
     private static final Logger LOGGER = LogManager.getLogger(Utils.class);
 
-    static int getMaxLength(@NotNull Collection<List<?>> lists, @NotNull String warnMessage) {
+    static int getMaxLength(@NotNull final Collection<List<?>> lists, @NotNull final String warnMessage) {
         final Iterator<List<?>> listIterator = lists.iterator();
         int maxSize = -1;
         while (listIterator.hasNext()) {
@@ -33,7 +33,7 @@ class Utils {
     }
 
     @Nullable
-    static LocalDate getDate(@Nullable String dateFieldValue, @NotNull DateTimeFormatter dateFormatter) {
+    static LocalDate getDate(@Nullable final String dateFieldValue, @NotNull final DateTimeFormatter dateFormatter) {
         if (dateFieldValue == null) {
             return null;
         }
@@ -60,7 +60,7 @@ class Utils {
     }
 
     @Nullable
-    static java.sql.Date toSQLDate(@Nullable LocalDate date) {
+    static java.sql.Date toSQLDate(@Nullable final LocalDate date) {
         return date != null ? java.sql.Date.valueOf(date) : null;
     }
 }

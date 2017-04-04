@@ -13,6 +13,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class CpctSystemicTherapyReader {
+    private static final Logger LOGGER = LogManager.getLogger(CpctSystemicTherapyReader.class);
+
     private static final String FIELD_HADSYSTEMICTREATMENT = "BASELINE.PRETHERAPY.PRETHERAPY.SYSTEMIC";
     private static final String FIELD_SYSTEMICTYPE = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICTYPE";
     private static final String FIELD_SYSTEMICTYPEOTHER = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICTYPESP";
@@ -21,11 +23,10 @@ class CpctSystemicTherapyReader {
     private static final String FIELD_STARTDATE = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICSTDTC";
     private static final String FIELD_ENDDATE = "BASELINE.PRETHERAPY.SYSTEMICTRT.SYSTEMICENDTC";
 
-    private static final Logger LOGGER = LogManager.getLogger(CpctSystemicTherapyReader.class);
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    Optional<List<SystemicTherapyData>> read(@NotNull EcrfPatient patient) {
+    Optional<List<SystemicTherapyData>> read(@NotNull final EcrfPatient patient) {
         final String hadSystemicTreatment = GenericReader.getField(patient, FIELD_HADSYSTEMICTREATMENT);
         if (hadSystemicTreatment != null && hadSystemicTreatment.toLowerCase().equals("no")) {
             return Optional.empty();
@@ -42,7 +43,7 @@ class CpctSystemicTherapyReader {
     }
 
     @NotNull
-    private List<SystemicTherapyData> readData(@NotNull EcrfPatient patient) {
+    private List<SystemicTherapyData> readData(@NotNull final EcrfPatient patient) {
         final List<String> types = GenericReader.getFieldValuesWithOthers(patient, FIELD_SYSTEMICTYPE,
                 FIELD_SYSTEMICTYPEOTHER);
         final List<String> treatments = GenericReader.getFieldValues(patient, FIELD_TREATMENT);

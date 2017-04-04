@@ -6,13 +6,17 @@ import org.jetbrains.annotations.Nullable;
 
 class TreatmentData {
     //    private final String type;
+    @Nullable
     private final String treatmentName;
+    @Nullable
     private final LocalDate startDate;
+    @Nullable
     private final LocalDate endDate;
+    @Nullable
     private final String earlyResponse;
 
-    TreatmentData(@Nullable LocalDate startDate, @Nullable LocalDate endDate, @Nullable String treatmentName,
-            @Nullable String earlyResponse) {
+    TreatmentData(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
+            @Nullable final String treatmentName, @Nullable final String earlyResponse) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.treatmentName = treatmentName;

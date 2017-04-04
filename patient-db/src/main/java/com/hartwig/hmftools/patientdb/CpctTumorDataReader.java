@@ -14,7 +14,7 @@ class CpctTumorDataReader {
     private static final String FIELD_BIOPSYLOCATIONOTHER = "BIOPSY.BIOPS.BIOPSIES.BIOTHLESSITE";
 
     @NotNull
-    Optional<TumorData> read(@NotNull EcrfPatient patient) {
+    Optional<TumorData> read(@NotNull final EcrfPatient patient) {
         final String tumorLocation = GenericReader.getField(patient, FIELD_TUMORLOCATION);
         final String tumorEntryStage = GenericReader.getField(patient, FIELD_ENTRYSTAGE);
         final List<String> biopsyLocations = GenericReader.getFieldValuesWithOthers(patient, FIELD_BIOPSYLOCATION,

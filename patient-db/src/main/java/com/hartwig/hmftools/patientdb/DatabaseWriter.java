@@ -17,9 +17,11 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
 class DatabaseWriter {
+    @NotNull
     private final DSLContext context;
 
-    DatabaseWriter(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
+    DatabaseWriter(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
+            throws SQLException {
         final Connection conn = DriverManager.getConnection(url, userName, password);
         this.context = DSL.using(conn, SQLDialect.MYSQL);
     }
@@ -35,7 +37,7 @@ class DatabaseWriter {
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    void writePatient(@NotNull Patient patient) {
+    void writePatient(@NotNull final Patient patient) {
         final int patientId = writePatientInfo(patient.patientInfo());
         patient.tumorData().ifPresent(tumorData -> writeTumorData(patientId, tumorData));
         patient.systemicTherapies().ifPresent(systemicTherapies -> systemicTherapies.forEach(
@@ -45,14 +47,14 @@ class DatabaseWriter {
         patient.treatmentData().ifPresent(treatmentData -> writeTreatmentData(patientId, treatmentData));
     }
 
-    private int writePatientInfo(@NotNull PatientInfo patientInfo) {
+    private int writePatientInfo(@NotNull final PatientInfo patientInfo) {
         return context.insertInto(PATIENTINFO, PATIENTINFO.CPCTID, PATIENTINFO.SEX, PATIENTINFO.BIRTHYEAR,
                 PATIENTINFO.HOSPITAL, PATIENTINFO.ETHNICITY).values(patientInfo.cpctId(), patientInfo.sex(),
                 patientInfo.birthYear(), patientInfo.hospital(), patientInfo.ethnicity()).returning(
                 PATIENTINFO.ID).fetchOne().getValue(PATIENTINFO.ID);
     }
 
-    private void writeTumorData(int patientId, @NotNull TumorData tumorData) {
+    private void writeTumorData(final int patientId, @NotNull final TumorData tumorData) {
         final int tumorDataId = context.insertInto(TUMORDATA, TUMORDATA.LOCATION, TUMORDATA.ENTRYSTAGE,
                 TUMORDATA.PATIENTID).values(tumorData.location(), tumorData.entryStage(), patientId).returning(
                 TUMORDATA.ID).fetchOne().getValue(TUMORDATA.ID);
@@ -62,20 +64,21 @@ class DatabaseWriter {
         }
     }
 
-    private void writeTreatmentData(int patientId, @NotNull TreatmentData treatmentData) {
+    private void writeTreatmentData(final int patientId, @NotNull final TreatmentData treatmentData) {
         context.insertInto(TREATMENTDATA, TREATMENTDATA.NAME, TREATMENTDATA.STARTDATE, TREATMENTDATA.ENDDATE,
                 TREATMENTDATA.EARLYRESPONSE, TREATMENTDATA.PATIENTID).values(treatmentData.treatmentName(),
                 Utils.toSQLDate(treatmentData.startDate()), Utils.toSQLDate(treatmentData.endDate()),
                 treatmentData.earlyResponse(), patientId).execute();
     }
 
-    private void writeRadioTherapyData(int patientId, @NotNull RadioTherapyData radioTherapyData) {
+    private void writeRadioTherapyData(final int patientId, @NotNull final RadioTherapyData radioTherapyData) {
         context.insertInto(RADIOTHERAPYDATA, RADIOTHERAPYDATA.SITE, RADIOTHERAPYDATA.ENDDATE,
                 RADIOTHERAPYDATA.PATIENTID).values(radioTherapyData.site(),
                 Utils.toSQLDate(radioTherapyData.endDate()), patientId).execute();
     }
 
-    private void writeSystemicTherapyData(int patientId, @NotNull SystemicTherapyData systemicTherapyData) {
+    private void writeSystemicTherapyData(final int patientId,
+            @NotNull final SystemicTherapyData systemicTherapyData) {
         context.insertInto(SYSTEMICTHERAPYDATA, SYSTEMICTHERAPYDATA.STARTDATE, SYSTEMICTHERAPYDATA.ENDDATE,
                 SYSTEMICTHERAPYDATA.TYPE, SYSTEMICTHERAPYDATA.TREATMENT, SYSTEMICTHERAPYDATA.BESTRESPONSE,
                 SYSTEMICTHERAPYDATA.PATIENTID).values(Utils.toSQLDate(systemicTherapyData.startDate()),

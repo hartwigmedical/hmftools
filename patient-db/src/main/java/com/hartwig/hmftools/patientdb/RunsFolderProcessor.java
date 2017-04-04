@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 class RunsFolderProcessor {
     @NotNull
-    static List<CpctRunData> getPatientRunsData(@NotNull File dir) throws IOException, ParseException {
+    static List<CpctRunData> getPatientRunsData(@NotNull final File dir) throws IOException, ParseException {
         final List<CpctRunData> runsData = Lists.newArrayList();
         final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
         final File[] folders = dir.listFiles(File::isDirectory);

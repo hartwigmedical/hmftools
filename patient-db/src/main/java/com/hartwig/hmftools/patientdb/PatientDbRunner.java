@@ -24,13 +24,14 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PatientDbRunner {
     private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
+
     private static final String RUNS_DIR = "runs_dir";
     private static final String ECRF_FILE = "ecrf";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(String[] args)
+    public static void main(final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
             SQLException {
         final Options options = createOptions();
@@ -87,7 +88,7 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options)
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options)
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);

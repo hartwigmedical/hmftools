@@ -5,11 +5,15 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 class TumorData {
+    @Nullable
     private final String location;
+    @Nullable
     private final List<String> biopsyLocations;
+    @Nullable
     private final String entryStage;
 
-    TumorData(@Nullable String location, @Nullable List<String> biopsyLocations, @Nullable String entryStage) {
+    TumorData(@Nullable final String location, @Nullable final List<String> biopsyLocations,
+            @Nullable final String entryStage) {
         this.location = location;
         this.biopsyLocations = biopsyLocations;
         this.entryStage = entryStage;

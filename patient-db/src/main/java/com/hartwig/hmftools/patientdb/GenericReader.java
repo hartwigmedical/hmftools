@@ -14,7 +14,7 @@ class GenericReader {
     private static final Logger LOGGER = LogManager.getLogger(GenericReader.class);
 
     @Nullable
-    static String getField(@NotNull EcrfPatient patient, @NotNull String fieldName) {
+    static String getField(@NotNull final EcrfPatient patient, @NotNull final String fieldName) {
         final List<String> values = patient.fieldValuesByName(fieldName);
         if (values == null) {
             LOGGER.warn(fieldName + " not found for patient " + patient.patientId() + ".");
@@ -32,7 +32,7 @@ class GenericReader {
     }
 
     @Nullable
-    static List<String> getFieldValues(@NotNull EcrfPatient patient, @NotNull String fieldName) {
+    static List<String> getFieldValues(@NotNull final EcrfPatient patient, @NotNull final String fieldName) {
         final List<String> values = patient.fieldValuesByName(fieldName);
         if (values == null) {
             LOGGER.warn(fieldName + " not found for patient " + patient.patientId() + ".");
@@ -54,8 +54,8 @@ class GenericReader {
     }
 
     @Nullable
-    static List<String> getFieldValuesWithOthers(@NotNull EcrfPatient patient, @NotNull String fieldName,
-            @NotNull String othersFieldName) {
+    static List<String> getFieldValuesWithOthers(@NotNull final EcrfPatient patient, @NotNull final String fieldName,
+            @NotNull final String othersFieldName) {
         final List<String> values = getFieldValues(patient, fieldName);
         if (hasOthers(values)) {
             final List<String> otherValues = getFieldValues(patient, othersFieldName);
@@ -65,7 +65,7 @@ class GenericReader {
         }
     }
 
-    private static boolean hasOthers(@Nullable List<String> values) {
+    private static boolean hasOthers(@Nullable final List<String> values) {
         if (values != null && values.size() > 0) {
             for (final String value : values) {
                 if (value.toLowerCase().contains("other")) {
@@ -77,7 +77,8 @@ class GenericReader {
     }
 
     @Nullable
-    private static List<String> replaceOthers(@NotNull List<String> values, @Nullable List<String> otherValues) {
+    private static List<String> replaceOthers(@NotNull final List<String> values,
+            @Nullable final List<String> otherValues) {
         final List<String> result = Lists.newArrayList();
         for (int index = 0; index < values.size(); index++) {
             if (values.get(index).replaceAll("\\s", "").toLowerCase().startsWith("other")) {

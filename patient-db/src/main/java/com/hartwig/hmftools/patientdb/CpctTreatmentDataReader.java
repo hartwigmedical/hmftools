@@ -12,16 +12,17 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class CpctTreatmentDataReader {
+    private static final Logger LOGGER = LogManager.getLogger(CpctTreatmentDataReader.class);
+
     private static final String FIELD_TREATMENTNAME = "AFTERBIOPT.TRTAFTER.TRTAFTER.SYSREGPOST";
     private static final String FIELD_STARTDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.SYSSTDT";
     private static final String FIELD_ENDDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.SYSENDT";
     private static final String FIELD_RESPONSES = "TREATMENT.TUMORMEASUREMENT.TUMORMEASUREMENT.BESTRESPON";
 
-    private static final Logger LOGGER = LogManager.getLogger(CpctTreatmentDataReader.class);
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    Optional<TreatmentData> read(@NotNull EcrfPatient patient) {
+    Optional<TreatmentData> read(@NotNull final EcrfPatient patient) {
         final List<String> treatmentNames = GenericReader.getFieldValues(patient, FIELD_TREATMENTNAME);
         final List<String> startDates = GenericReader.getFieldValues(patient, FIELD_STARTDATE);
         final List<String> endDates = GenericReader.getFieldValues(patient, FIELD_ENDDATE);

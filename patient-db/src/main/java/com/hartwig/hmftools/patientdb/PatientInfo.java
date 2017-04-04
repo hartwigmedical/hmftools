@@ -3,15 +3,21 @@ package com.hartwig.hmftools.patientdb;
 import org.jetbrains.annotations.Nullable;
 
 class PatientInfo {
+    @Nullable
     private final String cpctId;
+    @Nullable
     private final String drupId;
+    @Nullable
     private final String sex;
+    @Nullable
     private final Integer birthYear;
+    @Nullable
     private final String hospital;
+    @Nullable
     private final String ethnicity;
 
-    PatientInfo(@Nullable String cpctId, @Nullable String drupId, @Nullable String sex, @Nullable Integer birthYear,
-            @Nullable String hospital, @Nullable String ethnicity) {
+    PatientInfo(@Nullable final String cpctId, @Nullable final String drupId, @Nullable final String sex,
+            @Nullable final Integer birthYear, @Nullable final String hospital, @Nullable final String ethnicity) {
         this.cpctId = cpctId;
         this.drupId = drupId;
         this.sex = sex;
