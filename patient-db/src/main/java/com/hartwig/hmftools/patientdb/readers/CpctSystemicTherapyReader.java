@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.readers;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.Utils;
+import com.hartwig.hmftools.patientdb.data.SystemicTherapyData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

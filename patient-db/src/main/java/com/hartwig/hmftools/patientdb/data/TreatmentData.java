@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
 import org.jetbrains.annotations.Nullable;
 
-class TreatmentData {
+public class TreatmentData {
     //    private final String type;
     @Nullable
     private final String treatmentName;
@@ -15,7 +15,7 @@ class TreatmentData {
     @Nullable
     private final String earlyResponse;
 
-    TreatmentData(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
+    public TreatmentData(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
             @Nullable final String treatmentName, @Nullable final String earlyResponse) {
         this.startDate = startDate;
         this.endDate = endDate;
@@ -23,19 +23,19 @@ class TreatmentData {
         this.earlyResponse = earlyResponse;
     }
 
-    String treatmentName() {
+    public String treatmentName() {
         return treatmentName;
     }
 
-    LocalDate startDate() {
+    public LocalDate startDate() {
         return startDate;
     }
 
-    LocalDate endDate() {
+    public LocalDate endDate() {
         return endDate;
     }
 
-    String earlyResponse() {
+    public String earlyResponse() {
         return earlyResponse;
     }
 }

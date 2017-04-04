@@ -1,10 +1,16 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.readers;
 
 import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.PatientInfo;
+import com.hartwig.hmftools.patientdb.data.RadioTherapyData;
+import com.hartwig.hmftools.patientdb.data.SystemicTherapyData;
+import com.hartwig.hmftools.patientdb.data.TreatmentData;
+import com.hartwig.hmftools.patientdb.data.TumorData;
 
 import org.apache.logging.log4j.ThreadContext;
 import org.jetbrains.annotations.NotNull;

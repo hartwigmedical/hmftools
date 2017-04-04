@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
@@ -16,7 +16,7 @@ public class SystemicTherapyData {
     @Nullable
     private final String bestResponse;
 
-    SystemicTherapyData(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
+    public SystemicTherapyData(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
             @Nullable final String type, @Nullable final String treatment, @Nullable final String bestResponse) {
         this.startDate = startDate;
         this.endDate = endDate;
@@ -25,23 +25,23 @@ public class SystemicTherapyData {
         this.bestResponse = bestResponse;
     }
 
-    LocalDate endDate() {
+    public LocalDate endDate() {
         return endDate;
     }
 
-    LocalDate startDate() {
+    public LocalDate startDate() {
         return startDate;
     }
 
-    String bestResponse() {
+    public String bestResponse() {
         return bestResponse;
     }
 
-    String treatment() {
+    public String treatment() {
         return treatment;
     }
 
-    String type() {
+    public String type() {
         return type;
     }
 }

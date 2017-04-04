@@ -11,6 +11,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.PatientInfo;
+import com.hartwig.hmftools.patientdb.data.RadioTherapyData;
+import com.hartwig.hmftools.patientdb.data.SystemicTherapyData;
+import com.hartwig.hmftools.patientdb.data.TreatmentData;
+import com.hartwig.hmftools.patientdb.data.TumorData;
+
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;

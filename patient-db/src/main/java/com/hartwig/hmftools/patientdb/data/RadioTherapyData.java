@@ -1,25 +1,25 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
 import org.jetbrains.annotations.Nullable;
 
-class RadioTherapyData {
+public class RadioTherapyData {
     @Nullable
     private final LocalDate endDate;
     @Nullable
     private final String site;
 
-    RadioTherapyData(@Nullable final LocalDate endDate, @Nullable final String site) {
+    public RadioTherapyData(@Nullable final LocalDate endDate, @Nullable final String site) {
         this.endDate = endDate;
         this.site = site;
     }
 
-    LocalDate endDate() {
+    public LocalDate endDate() {
         return endDate;
     }
 
-    String site() {
+    public String site() {
         return site;
     }
 }

@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.readers;
 
 import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.data.TumorData;
 
 import org.jetbrains.annotations.NotNull;
 

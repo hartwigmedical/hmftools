@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.data;
 
 import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-class TumorData {
+public class TumorData {
     @Nullable
     private final String location;
     @Nullable
@@ -12,22 +12,22 @@ class TumorData {
     @Nullable
     private final String entryStage;
 
-    TumorData(@Nullable final String location, @Nullable final List<String> biopsyLocations,
+    public TumorData(@Nullable final String location, @Nullable final List<String> biopsyLocations,
             @Nullable final String entryStage) {
         this.location = location;
         this.biopsyLocations = biopsyLocations;
         this.entryStage = entryStage;
     }
 
-    String location() {
+    public String location() {
         return location;
     }
 
-    String entryStage() {
+    public String entryStage() {
         return entryStage;
     }
 
-    List<String> biopsyLocations() {
+    public List<String> biopsyLocations() {
         return biopsyLocations;
     }
 }

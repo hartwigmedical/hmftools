@@ -10,6 +10,10 @@ import javax.xml.stream.XMLStreamException;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.data.CpctRunData;
+import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.readers.CpctPatientReader;
+import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -50,7 +54,7 @@ public final class PatientDbRunner {
         } else {
             final File dir = new File(runFolderPath);
             if (dir.isDirectory()) {
-                final List<CpctRunData> data = RunsFolderProcessor.getPatientRunsData(dir);
+                final List<CpctRunData> data = RunsFolderReader.getPatientRunsData(dir);
                 LOGGER.info("Listing data for " + data.size() + " patients.");
                 LOGGER.info(data.toString());
                 LOGGER.info("Loading ecrf model...");

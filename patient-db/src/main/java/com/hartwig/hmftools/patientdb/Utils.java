@@ -12,10 +12,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class Utils {
+public class Utils {
     private static final Logger LOGGER = LogManager.getLogger(Utils.class);
 
-    static int getMaxLength(@NotNull final Collection<List<?>> lists, @NotNull final String warnMessage) {
+    public static int getMaxLength(@NotNull final Collection<List<?>> lists, @NotNull final String warnMessage) {
         final Iterator<List<?>> listIterator = lists.iterator();
         int maxSize = -1;
         while (listIterator.hasNext()) {
@@ -33,7 +33,8 @@ class Utils {
     }
 
     @Nullable
-    static LocalDate getDate(@Nullable final String dateFieldValue, @NotNull final DateTimeFormatter dateFormatter) {
+    public static LocalDate getDate(@Nullable final String dateFieldValue,
+            @NotNull final DateTimeFormatter dateFormatter) {
         if (dateFieldValue == null) {
             return null;
         }
@@ -46,7 +47,7 @@ class Utils {
     }
 
     @Nullable
-    static String getElemAtIndex(@Nullable final List<String> list, final int index) {
+    public static String getElemAtIndex(@Nullable final List<String> list, final int index) {
         if (list == null) {
             return null;
         }

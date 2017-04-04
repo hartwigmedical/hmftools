@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.readers;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,12 +8,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.data.CpctRunData;
 
 import org.jetbrains.annotations.NotNull;
 
-class RunsFolderProcessor {
+public class RunsFolderReader {
     @NotNull
-    static List<CpctRunData> getPatientRunsData(@NotNull final File dir) throws IOException, ParseException {
+    public static List<CpctRunData> getPatientRunsData(@NotNull final File dir) throws IOException, ParseException {
         final List<CpctRunData> runsData = Lists.newArrayList();
         final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
         final File[] folders = dir.listFiles(File::isDirectory);

@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.data;
 
 import org.jetbrains.annotations.Nullable;
 
-class PatientInfo {
+public class PatientInfo {
     @Nullable
     private final String cpctId;
     @Nullable
@@ -16,7 +16,7 @@ class PatientInfo {
     @Nullable
     private final String ethnicity;
 
-    PatientInfo(@Nullable final String cpctId, @Nullable final String drupId, @Nullable final String sex,
+    public PatientInfo(@Nullable final String cpctId, @Nullable final String drupId, @Nullable final String sex,
             @Nullable final Integer birthYear, @Nullable final String hospital, @Nullable final String ethnicity) {
         this.cpctId = cpctId;
         this.drupId = drupId;
@@ -26,7 +26,7 @@ class PatientInfo {
         this.ethnicity = ethnicity;
     }
 
-    String cpctId() {
+    public String cpctId() {
         return cpctId;
     }
 
@@ -34,19 +34,19 @@ class PatientInfo {
         return drupId;
     }
 
-    String sex() {
+    public String sex() {
         return sex;
     }
 
-    Integer birthYear() {
+    public Integer birthYear() {
         return birthYear;
     }
 
-    String hospital() {
+    public String hospital() {
         return hospital;
     }
 
-    String ethnicity() {
+    public String ethnicity() {
         return ethnicity;
     }
 }

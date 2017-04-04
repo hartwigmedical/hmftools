@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfChecker;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelReader;
-import com.hartwig.hmftools.patientdb.CpctPatientReader;
+import com.hartwig.hmftools.patientdb.readers.CpctPatientReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
