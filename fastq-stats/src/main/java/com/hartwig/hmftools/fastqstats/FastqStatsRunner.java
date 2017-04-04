@@ -78,16 +78,16 @@ public final class FastqStatsRunner {
     private static void writeOutputToCSV(@NotNull String flowcellName, @NotNull FastqTracker tracker,
             @NotNull String csvOutPath) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
-        writer.write("Flowcell " + flowcellName + ", " + tracker.flowcell().yield() + ", "
+        writer.write("Flowcell, " + flowcellName + ", " + tracker.flowcell().yield() + ", "
                 + tracker.flowcell().q30Percentage() + "\n");
 
         for (final String laneName : tracker.lanes().keySet()) {
             final FastqData lane = tracker.lane(laneName);
-            writer.write("Lane " + laneName + ", " + lane.yield() + ", " + lane.q30Percentage() + "\n");
+            writer.write("Lane, " + laneName + ", " + lane.yield() + ", " + lane.q30Percentage() + "\n");
         }
         for (final String sampleName : tracker.samples().keySet()) {
             final FastqData sample = tracker.sample(sampleName);
-            writer.write("Sample " + sampleName + ", " + sample.yield() + ", " + sample.q30Percentage() + "\n");
+            writer.write("Sample, " + sampleName + ", " + sample.yield() + ", " + sample.q30Percentage() + "\n");
         }
         for (final String sampleName : tracker.samples().keySet()) {
             for (final String laneName : tracker.samples().get(sampleName).keySet()) {
