@@ -15,13 +15,6 @@ class RadioTherapyData {
         this.site = site;
     }
 
-    @Override
-    public String toString() {
-        final StringBuffer bf = new StringBuffer();
-        bf.append(endDate).append(" - ").append(site).append("\n");
-        return bf.toString();
-    }
-
     LocalDate endDate() {
         return endDate;
     }

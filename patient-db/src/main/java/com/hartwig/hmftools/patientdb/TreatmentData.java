@@ -23,14 +23,6 @@ class TreatmentData {
         this.earlyResponse = earlyResponse;
     }
 
-    @Override
-    public String toString() {
-        final StringBuffer bf = new StringBuffer();
-        bf.append("(").append(startDate).append("->").append(endDate).append("): ").append(treatmentName).append(
-                " - ").append(earlyResponse).append("\n");
-        return bf.toString();
-    }
-
     String treatmentName() {
         return treatmentName;
     }

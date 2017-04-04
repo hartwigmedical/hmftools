@@ -26,14 +26,6 @@ class PatientInfo {
         this.ethnicity = ethnicity;
     }
 
-    @Override
-    public String toString() {
-        final StringBuffer bf = new StringBuffer();
-        bf.append(cpctId).append("/").append(drupId).append(": ").append(birthYear).append(" - ").append(sex).append(
-                " - ").append(hospital).append(" - ").append(ethnicity).append("\n");
-        return bf.toString();
-    }
-
     String cpctId() {
         return cpctId;
     }

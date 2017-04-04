@@ -22,14 +22,6 @@ class CpctRunData {
         this.tumorSampleId = tumorSampleId;
     }
 
-    @Override
-    public String toString() {
-        final StringBuffer bf = new StringBuffer();
-        bf.append(uploadDate).append("-").append(patientId).append("-").append(referenceSampleId).append("-").append(
-                tumorSampleId).append("\n");
-        return bf.toString();
-    }
-
     @NotNull
     String patientId() {
         return patientId;

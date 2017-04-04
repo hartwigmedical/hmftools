@@ -25,14 +25,6 @@ public class SystemicTherapyData {
         this.bestResponse = bestResponse;
     }
 
-    @Override
-    public String toString() {
-        final StringBuffer bf = new StringBuffer();
-        bf.append("(").append(startDate).append("->").append(endDate).append("): ").append(type).append(" - ").append(
-                treatment).append(" - ").append(bestResponse).append("\n");
-        return bf.toString();
-    }
-
     LocalDate endDate() {
         return endDate;
     }

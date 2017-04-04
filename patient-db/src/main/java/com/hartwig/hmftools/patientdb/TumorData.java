@@ -19,13 +19,6 @@ class TumorData {
         this.entryStage = entryStage;
     }
 
-    @Override
-    public String toString() {
-        final StringBuffer bf = new StringBuffer();
-        bf.append(location).append(" - ").append(entryStage).append(": ").append(biopsyLocations).append("\n");
-        return bf.toString();
-    }
-
     String location() {
         return location;
     }
