@@ -54,6 +54,16 @@ class GenericReader {
         return values;
     }
 
+    /**
+     * Reads the values for fieldName and replaces values that start with 'other' with values from othersFieldName.
+     * Meant to be used for fields like ethnicity, where the last possible value is 'other or unknown', in which case
+     * a different (free text) field is used to fill in ethnicity data.
+     *
+     * @param patient         patient to read fields from.
+     * @param fieldName       name of field to read data form.
+     * @param othersFieldName name of field to read data in case the value in fieldName is something like "other, please specify"
+     * @return list of values for fieldName with 'other' values replaced from othersFieldName
+     */
     @Nullable
     static List<String> getFieldValuesWithOthers(@NotNull final EcrfPatient patient, @NotNull final String fieldName,
             @NotNull final String othersFieldName) {
@@ -69,7 +79,7 @@ class GenericReader {
     private static boolean hasOthers(@Nullable final List<String> values) {
         if (values != null && values.size() > 0) {
             for (final String value : values) {
-                if (value.toLowerCase().contains("other")) {
+                if (value.replaceAll("\\s", "").toLowerCase().startsWith("other")) {
                     return true;
                 }
             }
@@ -77,6 +87,14 @@ class GenericReader {
         return false;
     }
 
+    /**
+     * Iterates over the values list and replaces any value that starts with 'other' with the item found
+     * at the same index in the otherValues list.
+     *
+     * @param values      list of values to check
+     * @param otherValues list of replacement values
+     * @return list of items from the values list, with items starting with 'other' replaced
+     */
     @Nullable
     private static List<String> replaceOthers(@NotNull final List<String> values,
             @Nullable final List<String> otherValues) {
@@ -91,5 +109,4 @@ class GenericReader {
         }
         return result;
     }
-
 }
