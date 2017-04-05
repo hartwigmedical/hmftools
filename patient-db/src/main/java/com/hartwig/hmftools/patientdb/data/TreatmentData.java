@@ -23,18 +23,22 @@ public class TreatmentData {
         this.earlyResponse = earlyResponse;
     }
 
+    @Nullable
     public String treatmentName() {
         return treatmentName;
     }
 
+    @Nullable
     public LocalDate startDate() {
         return startDate;
     }
 
+    @Nullable
     public LocalDate endDate() {
         return endDate;
     }
 
+    @Nullable
     public String earlyResponse() {
         return earlyResponse;
     }

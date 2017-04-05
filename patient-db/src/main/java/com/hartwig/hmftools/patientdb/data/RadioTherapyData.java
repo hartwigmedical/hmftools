@@ -15,10 +15,12 @@ public class RadioTherapyData {
         this.site = site;
     }
 
+    @Nullable
     public LocalDate endDate() {
         return endDate;
     }
 
+    @Nullable
     public String site() {
         return site;
     }

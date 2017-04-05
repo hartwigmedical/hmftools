@@ -28,22 +28,27 @@ public class Patient {
         this.treatmentData = treatmentData;
     }
 
+    @NotNull
     public Optional<List<RadioTherapyData>> radioTherapies() {
         return radioTherapies;
     }
 
+    @NotNull
     public Optional<List<SystemicTherapyData>> systemicTherapies() {
         return systemicTherapies;
     }
 
+    @NotNull
     public Optional<TreatmentData> treatmentData() {
         return treatmentData;
     }
 
+    @NotNull
     public Optional<TumorData> tumorData() {
         return tumorData;
     }
 
+    @NotNull
     public PatientInfo patientInfo() {
         return patientInfo;
     }

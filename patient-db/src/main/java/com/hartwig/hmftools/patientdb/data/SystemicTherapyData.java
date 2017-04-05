@@ -25,22 +25,27 @@ public class SystemicTherapyData {
         this.bestResponse = bestResponse;
     }
 
+    @Nullable
     public LocalDate endDate() {
         return endDate;
     }
 
+    @Nullable
     public LocalDate startDate() {
         return startDate;
     }
 
+    @Nullable
     public String bestResponse() {
         return bestResponse;
     }
 
+    @Nullable
     public String treatment() {
         return treatment;
     }
 
+    @Nullable
     public String type() {
         return type;
     }

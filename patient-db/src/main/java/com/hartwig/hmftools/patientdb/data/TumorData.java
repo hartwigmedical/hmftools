@@ -19,14 +19,17 @@ public class TumorData {
         this.entryStage = entryStage;
     }
 
+    @Nullable
     public String location() {
         return location;
     }
 
+    @Nullable
     public String entryStage() {
         return entryStage;
     }
 
+    @Nullable
     public List<String> biopsyLocations() {
         return biopsyLocations;
     }

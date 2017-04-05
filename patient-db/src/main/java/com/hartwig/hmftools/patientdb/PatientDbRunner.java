@@ -56,7 +56,7 @@ public final class PatientDbRunner {
             if (dir.isDirectory()) {
                 final List<CpctRunData> data = RunsFolderReader.getPatientRunsData(dir);
                 LOGGER.info("Listing data for " + data.size() + " patients.");
-                LOGGER.info(data.toString());
+                data.stream().map(CpctRunData::patientId).forEach(LOGGER::info);
                 LOGGER.info("Loading ecrf model...");
                 final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
                 final List<String> cpctPatientIds = data.stream().map(CpctRunData::patientId).filter(

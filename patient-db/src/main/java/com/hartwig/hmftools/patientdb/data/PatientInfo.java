@@ -26,26 +26,32 @@ public class PatientInfo {
         this.ethnicity = ethnicity;
     }
 
+    @Nullable
     public String cpctId() {
         return cpctId;
     }
 
+    @Nullable
     String drupId() {
         return drupId;
     }
 
+    @Nullable
     public String sex() {
         return sex;
     }
 
+    @Nullable
     public Integer birthYear() {
         return birthYear;
     }
 
+    @Nullable
     public String hospital() {
         return hospital;
     }
 
+    @Nullable
     public String ethnicity() {
         return ethnicity;
     }
