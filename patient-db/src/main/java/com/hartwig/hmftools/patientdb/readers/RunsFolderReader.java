@@ -25,7 +25,7 @@ public class RunsFolderReader {
             final String folderName = folder.getName();
             final String[] names = folderName.split("_");
             LocalDate uploadDate = LocalDate.parse(names[0], dateFormatter);
-            final CpctRunData cpctRunData = new CpctRunData(uploadDate, names[2], names[3], names[4]);
+            final CpctRunData cpctRunData = new CpctRunData(folderName, uploadDate, names[2], names[3], names[4]);
             runsData.add(cpctRunData);
         }
         return runsData;
