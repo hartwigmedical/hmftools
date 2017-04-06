@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSYLOCATIONS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENTINFO;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.RADIOTHERAPYDATA;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANTDATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SYSTEMICTHERAPYDATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTDATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORDATA;
@@ -14,6 +15,7 @@ import java.sql.SQLException;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientInfo;
 import com.hartwig.hmftools.patientdb.data.RadioTherapyData;
+import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 import com.hartwig.hmftools.patientdb.data.SystemicTherapyData;
 import com.hartwig.hmftools.patientdb.data.TreatmentData;
 import com.hartwig.hmftools.patientdb.data.TumorData;
@@ -41,6 +43,7 @@ class DatabaseWriter {
         context.truncate(TREATMENTDATA).execute();
         context.truncate(RADIOTHERAPYDATA).execute();
         context.truncate(SYSTEMICTHERAPYDATA).execute();
+        context.truncate(SOMATICVARIANTDATA).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
@@ -52,6 +55,8 @@ class DatabaseWriter {
         patient.radioTherapies().ifPresent(radioTherapies -> radioTherapies.forEach(
                 radioTherapyData -> writeRadioTherapyData(patientId, radioTherapyData)));
         patient.treatmentData().ifPresent(treatmentData -> writeTreatmentData(patientId, treatmentData));
+        patient.somaticVariants().forEach(
+                somaticVariantData -> writeSomaticVariantData(patientId, somaticVariantData));
     }
 
     private int writePatientInfo(@NotNull final PatientInfo patientInfo) {
@@ -94,5 +99,14 @@ class DatabaseWriter {
                 SYSTEMICTHERAPYDATA.PATIENTID).values(Utils.toSQLDate(systemicTherapyData.startDate()),
                 Utils.toSQLDate(systemicTherapyData.endDate()), systemicTherapyData.type(),
                 systemicTherapyData.treatment(), systemicTherapyData.bestResponse(), patientId).execute();
+    }
+
+    private void writeSomaticVariantData(final int patientId, @NotNull final SomaticVariantData somaticVariantData) {
+        context.insertInto(SOMATICVARIANTDATA, SOMATICVARIANTDATA.GENE, SOMATICVARIANTDATA.POSITION,
+                SOMATICVARIANTDATA.REF, SOMATICVARIANTDATA.ALT, SOMATICVARIANTDATA.COSMICID,
+                SOMATICVARIANTDATA.TOTALREADCOUNT, SOMATICVARIANTDATA.ALLELEREADCOUNT,
+                SOMATICVARIANTDATA.PATIENTID).values(somaticVariantData.gene(), somaticVariantData.position(),
+                somaticVariantData.ref(), somaticVariantData.alt(), somaticVariantData.cosmicID(),
+                somaticVariantData.totalReadCount(), somaticVariantData.alleleReadCount(), patientId).execute();
     }
 }
