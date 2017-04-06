@@ -69,4 +69,13 @@ public class Utils {
     static java.sql.Date toSQLDate(@Nullable final LocalDate date) {
         return date != null ? java.sql.Date.valueOf(date) : null;
     }
+
+    public static boolean anyNotNull(@NotNull final Object... arguments) {
+        for (final Object object : arguments) {
+            if (object != null) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
