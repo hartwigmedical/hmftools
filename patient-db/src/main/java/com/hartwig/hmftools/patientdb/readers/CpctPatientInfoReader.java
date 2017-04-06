@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.PatientInfo;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,6 +30,7 @@ class CpctPatientInfoReader {
     private static final String FIELD_BIRTHYEAR1 = "BASELINE.SELCRIT.SELCRIT.NBIRTHYEAR";
     private static final String FIELD_BIRTHYEAR2 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHYEAR";
     private static final String FIELD_BIRTHYEAR3 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHDTCES";
+    private static final String FIELD_DEATHDATE = "ENDSTUDY.DEATH.DEATH.DDEATHDTC";
 
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -45,7 +47,9 @@ class CpctPatientInfoReader {
         final String ethnicity = GenericReader.getField(patient, FIELD_ETHNICITY);
         final Integer birthYear = getBirthYear(patient);
         final String hospital = getHospital(patient, hospitals);
-        return new PatientInfo(patient.patientId(), null, sex, birthYear, hospital, ethnicity);
+        final String deathDateString = GenericReader.getField(patient, FIELD_DEATHDATE);
+        final LocalDate deathDate = Utils.getDate(deathDateString, dateFormatter);
+        return new PatientInfo(patient.patientId(), null, sex, birthYear, hospital, ethnicity, deathDate);
     }
 
     @NotNull
@@ -96,7 +100,7 @@ class CpctPatientInfoReader {
         final Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
         final String hospital = hospitals.get(hospitalCode);
         if (hospital == null) {
-            LOGGER.info(
+            LOGGER.warn(
                     FIELD_HOSPITALS1 + ", " + FIELD_HOSPITALS2 + " contained no Hospital with code " + hospitalCode);
         }
         return hospital;

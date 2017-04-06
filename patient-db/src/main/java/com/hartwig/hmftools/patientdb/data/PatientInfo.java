@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.data;
 
+import java.time.LocalDate;
+
 import org.jetbrains.annotations.Nullable;
 
 public class PatientInfo {
@@ -15,15 +17,19 @@ public class PatientInfo {
     private final String hospital;
     @Nullable
     private final String ethnicity;
+    @Nullable
+    private final LocalDate deathDate;
 
     public PatientInfo(@Nullable final String cpctId, @Nullable final String drupId, @Nullable final String sex,
-            @Nullable final Integer birthYear, @Nullable final String hospital, @Nullable final String ethnicity) {
+            @Nullable final Integer birthYear, @Nullable final String hospital, @Nullable final String ethnicity,
+            @Nullable final LocalDate deathDate) {
         this.cpctId = cpctId;
         this.drupId = drupId;
         this.sex = sex;
         this.birthYear = birthYear;
         this.hospital = hospital;
         this.ethnicity = ethnicity;
+        this.deathDate = deathDate;
     }
 
     @Nullable
@@ -54,5 +60,10 @@ public class PatientInfo {
     @Nullable
     public String ethnicity() {
         return ethnicity;
+    }
+
+    @Nullable
+    public LocalDate deathDate() {
+        return deathDate;
     }
 }
