@@ -14,13 +14,20 @@ public class TreatmentData {
     private final LocalDate endDate;
     @Nullable
     private final String earlyResponse;
+    @Nullable
+    private final LocalDate radiotherapyStartDate;
+    @Nullable
+    private final LocalDate radiotherapyEndDate;
 
     public TreatmentData(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
-            @Nullable final String treatmentName, @Nullable final String earlyResponse) {
+            @Nullable final String treatmentName, @Nullable final String earlyResponse,
+            @Nullable final LocalDate radiotherapyStartDate, @Nullable final LocalDate radiotherapyEndDate) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.treatmentName = treatmentName;
         this.earlyResponse = earlyResponse;
+        this.radiotherapyStartDate = radiotherapyStartDate;
+        this.radiotherapyEndDate = radiotherapyEndDate;
     }
 
     @Nullable
@@ -41,5 +48,15 @@ public class TreatmentData {
     @Nullable
     public String earlyResponse() {
         return earlyResponse;
+    }
+
+    @Nullable
+    public LocalDate radiotherapyStartDate() {
+        return radiotherapyStartDate;
+    }
+
+    @Nullable
+    public LocalDate radiotherapyEndDate() {
+        return radiotherapyEndDate;
     }
 }

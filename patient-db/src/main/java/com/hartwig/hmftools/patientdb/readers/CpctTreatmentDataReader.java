@@ -20,6 +20,8 @@ class CpctTreatmentDataReader {
     private static final String FIELD_STARTDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.SYSSTDT";
     private static final String FIELD_ENDDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.SYSENDT";
     private static final String FIELD_RESPONSES = "TREATMENT.TUMORMEASUREMENT.TUMORMEASUREMENT.BESTRESPON";
+    private static final String FIELD_RADIO_STARTDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.RADIOSTDTC";
+    private static final String FIELD_RADIO_ENDDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.RADIOENDTC";
 
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -29,6 +31,8 @@ class CpctTreatmentDataReader {
         final List<String> startDates = GenericReader.getFieldValues(patient, FIELD_STARTDATE);
         final List<String> endDates = GenericReader.getFieldValues(patient, FIELD_ENDDATE);
         final List<String> responses = GenericReader.getFieldValues(patient, FIELD_RESPONSES);
+        final List<String> radiotherapyStartDates = GenericReader.getFieldValues(patient, FIELD_RADIO_STARTDATE);
+        final List<String> radiotherapyEndDates = GenericReader.getFieldValues(patient, FIELD_RADIO_ENDDATE);
 
         final String treatmentName = Utils.getElemAtIndex(treatmentNames, 0);
         final String initialResponse = Utils.getElemAtIndex(responses, 0);
@@ -50,10 +54,26 @@ class CpctTreatmentDataReader {
             LOGGER.warn(FIELD_ENDDATE + " did not contain valid date at index 0 " + " for patient  "
                     + patient.patientId());
         }
+        final LocalDate radioTherapyStartDate = Utils.getDate(Utils.getElemAtIndex(radiotherapyStartDates, 0),
+                dateFormatter);
+        if (radioTherapyStartDate == null) {
+            LOGGER.warn(FIELD_RADIO_STARTDATE + " did not contain valid date at index 0 " + " for patient "
+                    + patient.patientId());
+        }
+        final LocalDate radioTherapyEndDate = Utils.getDate(Utils.getElemAtIndex(radiotherapyEndDates, 0),
+                dateFormatter);
+        if (radioTherapyEndDate == null) {
+            LOGGER.warn(FIELD_RADIO_ENDDATE + " did not contain valid date at index 0 " + " for patient  "
+                    + patient.patientId());
+        }
+
         if (startDate == null && endDate == null && (treatmentName == null
-                || treatmentName.replaceAll("\\s", "").length() == 0) && firstResponse == null) {
+                || treatmentName.replaceAll("\\s", "").length() == 0) && firstResponse == null
+                && radioTherapyStartDate == null && radioTherapyEndDate == null) {
             return Optional.empty();
         } else
-            return Optional.of(new TreatmentData(startDate, endDate, treatmentName, firstResponse));
+            return Optional.of(
+                    new TreatmentData(startDate, endDate, treatmentName, firstResponse, radioTherapyStartDate,
+                            radioTherapyEndDate));
     }
 }

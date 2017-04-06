@@ -14,4 +14,4 @@ CREATE TABLE radioTherapyData
  ( id int NOT NULL AUTO_INCREMENT, endDate DATE, site varchar(255), patientId int NOT NULL, PRIMARY KEY (id), FOREIGN KEY (patientId) references patientInfo(id) );
 
 CREATE TABLE treatmentData
- ( id int NOT NULL AUTO_INCREMENT, startDate DATE, endDate DATE, name varchar(255), earlyResponse varchar(255), patientId int NOT NULL, PRIMARY KEY (id), FOREIGN KEY (patientId) references patientInfo(id) );
+ ( id int NOT NULL AUTO_INCREMENT, startDate DATE, endDate DATE, name varchar(255), earlyResponse varchar(255), radiotherapyStartDate DATE, radiotherapyEndDate DATE, patientId int NOT NULL, PRIMARY KEY (id), FOREIGN KEY (patientId) references patientInfo(id) );
