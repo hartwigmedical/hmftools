@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -35,9 +34,8 @@ public class SomaticVariantReader {
             VariantConsequence.START_LOST, VariantConsequence.FRAMESHIFT_VARIANT, VariantConsequence.INFRAME_INSERTION,
             VariantConsequence.INFRAME_DELETION, VariantConsequence.MISSENSE_VARIANT);
 
-    public SomaticVariantReader(@NotNull final Slicer giabHighConfidenceRegion,
-            @NotNull final Slicer cpctSlicingRegion) throws IOException, HartwigException {
-        consensusRule = ConsensusRule.fromSlicers(giabHighConfidenceRegion, cpctSlicingRegion);
+    public SomaticVariantReader(@NotNull final ConsensusRule consensusRule) throws IOException, HartwigException {
+        this.consensusRule = consensusRule;
     }
 
     @NotNull

@@ -7,7 +7,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientInfo;
 import com.hartwig.hmftools.patientdb.data.RadioTherapyData;
@@ -33,15 +33,14 @@ public class CpctPatientReader {
     @NotNull
     private final SomaticVariantReader somaticVariantReader;
 
-    public CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final String highConfidenceBed,
-            @NotNull final String extremeConfidenceBed) throws IOException, HartwigException {
+    public CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final ConsensusRule consensusRule)
+            throws IOException, HartwigException {
         cpctPatientInfoReader = new CpctPatientInfoReader(model);
         cpctTumorDataReader = new CpctTumorDataReader();
         cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
         cpctRadioTherapyReader = new CpctRadioTherapyReader();
         cpctTreatmentDataReader = new CpctTreatmentDataReader();
-        somaticVariantReader = new SomaticVariantReader(SlicerFactory.fromBedFile(highConfidenceBed),
-                SlicerFactory.fromBedFile(extremeConfidenceBed));
+        somaticVariantReader = new SomaticVariantReader(consensusRule);
     }
 
     @NotNull

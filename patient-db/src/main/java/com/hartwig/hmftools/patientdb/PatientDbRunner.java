@@ -11,6 +11,9 @@ import javax.xml.stream.XMLStreamException;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientdb.data.CpctRunData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.readers.CpctPatientReader;
@@ -65,8 +68,11 @@ public final class PatientDbRunner {
                 runDatas.stream().map(CpctRunData::patientId).forEach(LOGGER::info);
                 LOGGER.info("Loading ecrf model...");
                 final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
-                final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, highConfidenceBed,
-                        extremeConfidenceBed);
+                final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
+                final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
+                final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer,
+                        extremeConfidenceSlicer);
+                final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, consensusRule);
                 final DatabaseWriter dbWriter = new DatabaseWriter(userName, password, jdbcUrl);
                 dbWriter.clearTables();
                 final List<CpctRunData> cpctRunDatas = runDatas.stream().filter(
