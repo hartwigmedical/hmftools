@@ -55,7 +55,9 @@ class CpctRadioTherapyReader {
                 LOGGER.warn(FIELD_RADIOENDDATE + " did not contain valid date at index " + index + " for patient  "
                         + patient.patientId());
             }
-            therapies.add(new RadioTherapyData(endDate, site));
+            if (Utils.anyNotNull(endDate, site)) {
+                therapies.add(new RadioTherapyData(endDate, site));
+            }
         }
         return therapies;
     }

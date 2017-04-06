@@ -72,7 +72,9 @@ class CpctSystemicTherapyReader {
                 LOGGER.warn(FIELD_ENDDATE + " did not contain valid date at index " + index + " for patient  "
                         + patient.patientId());
             }
-            therapies.add(new SystemicTherapyData(startDate, endDate, type, treatment, response));
+            if (Utils.anyNotNull(startDate, endDate, type, treatment, response)) {
+                therapies.add(new SystemicTherapyData(startDate, endDate, type, treatment, response));
+            }
         }
         return therapies;
     }

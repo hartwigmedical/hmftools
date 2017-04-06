@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.data.TumorData;
@@ -18,8 +19,12 @@ class CpctTumorDataReader {
     Optional<TumorData> read(@NotNull final EcrfPatient patient) {
         final String tumorLocation = GenericReader.getField(patient, FIELD_TUMORLOCATION);
         final String tumorEntryStage = GenericReader.getField(patient, FIELD_ENTRYSTAGE);
-        final List<String> biopsyLocations = GenericReader.getFieldValuesWithOthers(patient, FIELD_BIOPSYLOCATION,
+        final List<String> biopsyLocationsField = GenericReader.getFieldValuesWithOthers(patient, FIELD_BIOPSYLOCATION,
                 FIELD_BIOPSYLOCATIONOTHER);
+        final List<String> biopsyLocations = biopsyLocationsField == null ?
+                null :
+                biopsyLocationsField.stream().filter(location -> location != null && location.length() > 0).collect(
+                        Collectors.toList());
         if ((tumorLocation == null || tumorLocation.replaceAll("\\s", "").length() == 0) && (tumorEntryStage == null
                 || tumorEntryStage.replaceAll("\\s", "").length() == 0) && (biopsyLocations == null
                 || biopsyLocations.size() == 0)) {
