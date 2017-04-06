@@ -54,7 +54,12 @@ public class Utils {
 
         try {
             // KODU: Convert to checked return statement.
-            return list.get(index);
+            final String elem = list.get(index);
+            if (elem != null && elem.replaceAll("\\s", "").length() == 0) {
+                return null;
+            } else {
+                return elem;
+            }
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
