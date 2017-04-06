@@ -56,9 +56,10 @@ class DatabaseWriter {
 
     private int writePatientInfo(@NotNull final PatientInfo patientInfo) {
         return context.insertInto(PATIENTINFO, PATIENTINFO.CPCTID, PATIENTINFO.SEX, PATIENTINFO.BIRTHYEAR,
-                PATIENTINFO.HOSPITAL, PATIENTINFO.ETHNICITY).values(patientInfo.cpctId(), patientInfo.sex(),
-                patientInfo.birthYear(), patientInfo.hospital(), patientInfo.ethnicity()).returning(
-                PATIENTINFO.ID).fetchOne().getValue(PATIENTINFO.ID);
+                PATIENTINFO.HOSPITAL, PATIENTINFO.ETHNICITY, PATIENTINFO.DEATHDATE).values(patientInfo.cpctId(),
+                patientInfo.sex(), patientInfo.birthYear(), patientInfo.hospital(), patientInfo.ethnicity(),
+                Utils.toSQLDate(patientInfo.deathDate())).returning(PATIENTINFO.ID).fetchOne().getValue(
+                PATIENTINFO.ID);
     }
 
     private void writeTumorData(final int patientId, @NotNull final TumorData tumorData) {
@@ -73,9 +74,11 @@ class DatabaseWriter {
 
     private void writeTreatmentData(final int patientId, @NotNull final TreatmentData treatmentData) {
         context.insertInto(TREATMENTDATA, TREATMENTDATA.NAME, TREATMENTDATA.STARTDATE, TREATMENTDATA.ENDDATE,
-                TREATMENTDATA.EARLYRESPONSE, TREATMENTDATA.PATIENTID).values(treatmentData.treatmentName(),
+                TREATMENTDATA.EARLYRESPONSE, TREATMENTDATA.RADIOTHERAPYSTARTDATE, TREATMENTDATA.RADIOTHERAPYENDDATE,
+                TREATMENTDATA.PATIENTID).values(treatmentData.treatmentName(),
                 Utils.toSQLDate(treatmentData.startDate()), Utils.toSQLDate(treatmentData.endDate()),
-                treatmentData.earlyResponse(), patientId).execute();
+                treatmentData.earlyResponse(), Utils.toSQLDate(treatmentData.radiotherapyStartDate()),
+                Utils.toSQLDate(treatmentData.radiotherapyEndDate()), patientId).execute();
     }
 
     private void writeRadioTherapyData(final int patientId, @NotNull final RadioTherapyData radioTherapyData) {
