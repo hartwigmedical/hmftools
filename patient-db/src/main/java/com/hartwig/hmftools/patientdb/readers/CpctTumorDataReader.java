@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.TumorData;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,12 +26,11 @@ class CpctTumorDataReader {
                 null :
                 biopsyLocationsField.stream().filter(location -> location != null && location.length() > 0).collect(
                         Collectors.toList());
-        if ((tumorLocation == null || tumorLocation.replaceAll("\\s", "").length() == 0) && (tumorEntryStage == null
-                || tumorEntryStage.replaceAll("\\s", "").length() == 0) && (biopsyLocations == null
-                || biopsyLocations.size() == 0)) {
-            return Optional.empty();
-        } else {
+        if (Utils.anyNotNull(tumorLocation, tumorEntryStage) || (biopsyLocations != null
+                && biopsyLocations.size() > 0)) {
             return Optional.of(new TumorData(tumorLocation, biopsyLocations, tumorEntryStage));
+        } else {
+            return Optional.empty();
         }
     }
 }

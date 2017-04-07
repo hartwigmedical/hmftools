@@ -42,7 +42,7 @@ class CpctRadioTherapyReader {
 
     @NotNull
     private List<RadioTherapyData> readData(@NotNull final EcrfPatient patient) {
-        final List<String> endDates = GenericReader.getFieldValues(patient, FIELD_RADIOENDDATE);
+        final List<LocalDate> endDates = GenericReader.getDateFieldValues(patient, FIELD_RADIOENDDATE, dateFormatter);
         final List<String> sites = GenericReader.getFieldValues(patient, FIELD_RADIOSITE);
         final int maxLength = Utils.getMaxLength(Lists.newArrayList(endDates, sites),
                 "Not all radio therapy fields contain the same number of values.");
@@ -50,11 +50,7 @@ class CpctRadioTherapyReader {
         final List<RadioTherapyData> therapies = Lists.newArrayList();
         for (int index = 0; index < maxLength; index++) {
             final String site = Utils.getElemAtIndex(sites, index);
-            final LocalDate endDate = Utils.getDate(Utils.getElemAtIndex(endDates, index), dateFormatter);
-            if (endDate == null) {
-                LOGGER.warn(FIELD_RADIOENDDATE + " did not contain valid date at index " + index + " for patient  "
-                        + patient.patientId());
-            }
+            final LocalDate endDate = Utils.getElemAtIndex(endDates, index);
             if (Utils.anyNotNull(endDate, site)) {
                 therapies.add(new RadioTherapyData(endDate, site));
             }

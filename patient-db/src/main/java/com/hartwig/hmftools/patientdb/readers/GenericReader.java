@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.readers;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -34,24 +36,48 @@ class GenericReader {
 
     @Nullable
     static List<String> getFieldValues(@NotNull final EcrfPatient patient, @NotNull final String fieldName) {
+        final List<String> result = Lists.newArrayList();
         final List<String> values = patient.fieldValuesByName(fieldName);
         if (values == null) {
             LOGGER.warn(fieldName + " not found for patient " + patient.patientId() + ".");
+            return null;
         } else if (values.size() == 0) {
             LOGGER.warn(fieldName + " for patient " + patient.patientId() + " contains no values.");
         } else {
             for (int index = 0; index < values.size(); index++) {
-                if (values.get(index) == null) {
+                final String fieldValue = values.get(index);
+                if (fieldValue == null) {
                     LOGGER.warn(fieldName + " for patient " + patient.patientId() + " contains null at index " + index
                             + ".");
-                } else if (values.get(index).replaceAll("\\s", "").length() == 0) {
+                    result.add(null);
+                } else if (fieldValue.replaceAll("\\s", "").length() == 0) {
                     LOGGER.warn(
                             fieldName + " for patient " + patient.patientId() + " contains only whitespaces at index "
                                     + index + ".");
+                    result.add(null);
+                } else {
+                    result.add(fieldValue);
                 }
             }
         }
-        return values;
+        return result;
+    }
+
+    @Nullable
+    static List<LocalDate> getDateFieldValues(@NotNull final EcrfPatient patient, @NotNull final String fieldName,
+            @NotNull final DateTimeFormatter dateFormatter) {
+        final List<LocalDate> fieldDates = Lists.newArrayList();
+        final List<String> fieldValues = getFieldValues(patient, fieldName);
+        for (int index = 0; index < fieldValues.size(); index++) {
+            final String fieldValue = fieldValues.get(index);
+            final LocalDate fieldDate = Utils.getDate(fieldValue, dateFormatter);
+            if (fieldDate == null) {
+                LOGGER.warn(fieldName + " did not contain valid date at index " + index + " for patient  "
+                        + patient.patientId());
+            }
+            fieldDates.add(fieldDate);
+        }
+        return fieldDates;
     }
 
     /**
@@ -79,7 +105,7 @@ class GenericReader {
     private static boolean hasOthers(@Nullable final List<String> values) {
         if (values != null && values.size() > 0) {
             for (final String value : values) {
-                if (value.replaceAll("\\s", "").toLowerCase().startsWith("other")) {
+                if (value != null && value.replaceAll("\\s", "").toLowerCase().startsWith("other")) {
                     return true;
                 }
             }
@@ -100,11 +126,12 @@ class GenericReader {
             @Nullable final List<String> otherValues) {
         final List<String> result = Lists.newArrayList();
         for (int index = 0; index < values.size(); index++) {
-            if (values.get(index).replaceAll("\\s", "").toLowerCase().startsWith("other")) {
+            final String value = values.get(index);
+            if (value != null && value.replaceAll("\\s", "").toLowerCase().startsWith("other")) {
                 final String otherValue = Utils.getElemAtIndex(otherValues, index);
                 result.add(otherValue);
             } else {
-                result.add(values.get(index));
+                result.add(value);
             }
         }
         return result;

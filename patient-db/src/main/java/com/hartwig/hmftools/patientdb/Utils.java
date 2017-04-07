@@ -47,19 +47,14 @@ public class Utils {
     }
 
     @Nullable
-    public static String getElemAtIndex(@Nullable final List<String> list, final int index) {
+    public static <T> T getElemAtIndex(@Nullable final List<T> list, final int index) {
         if (list == null) {
             return null;
         }
 
         try {
             // KODU: Convert to checked return statement.
-            final String elem = list.get(index);
-            if (elem != null && elem.replaceAll("\\s", "").length() == 0) {
-                return null;
-            } else {
-                return elem;
-            }
+            return list.get(index);
         } catch (IndexOutOfBoundsException e) {
             return null;
         }

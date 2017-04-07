@@ -50,8 +50,8 @@ class CpctSystemicTherapyReader {
                 FIELD_SYSTEMICTYPEOTHER);
         final List<String> treatments = GenericReader.getFieldValues(patient, FIELD_TREATMENT);
         final List<String> responses = GenericReader.getFieldValues(patient, FIELD_RESPONSES);
-        final List<String> startDates = GenericReader.getFieldValues(patient, FIELD_STARTDATE);
-        final List<String> endDates = GenericReader.getFieldValues(patient, FIELD_ENDDATE);
+        final List<LocalDate> startDates = GenericReader.getDateFieldValues(patient, FIELD_STARTDATE, dateFormatter);
+        final List<LocalDate> endDates = GenericReader.getDateFieldValues(patient, FIELD_ENDDATE, dateFormatter);
 
         final int maxLength = Utils.getMaxLength(
                 Lists.newArrayList(types, treatments, responses, startDates, endDates),
@@ -62,16 +62,8 @@ class CpctSystemicTherapyReader {
             final String type = Utils.getElemAtIndex(types, index);
             final String treatment = Utils.getElemAtIndex(treatments, index);
             final String response = Utils.getElemAtIndex(responses, index);
-            final LocalDate startDate = Utils.getDate(Utils.getElemAtIndex(startDates, index), dateFormatter);
-            if (startDate == null) {
-                LOGGER.warn(FIELD_STARTDATE + " did not contain valid date at index " + index + " for patient "
-                        + patient.patientId());
-            }
-            final LocalDate endDate = Utils.getDate(Utils.getElemAtIndex(endDates, index), dateFormatter);
-            if (endDate == null) {
-                LOGGER.warn(FIELD_ENDDATE + " did not contain valid date at index " + index + " for patient  "
-                        + patient.patientId());
-            }
+            final LocalDate startDate = Utils.getElemAtIndex(startDates, index);
+            final LocalDate endDate = Utils.getElemAtIndex(endDates, index);
             if (Utils.anyNotNull(startDate, endDate, type, treatment, response)) {
                 therapies.add(new SystemicTherapyData(startDate, endDate, type, treatment, response));
             }
