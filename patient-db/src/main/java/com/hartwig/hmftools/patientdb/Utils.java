@@ -73,4 +73,13 @@ public class Utils {
         }
         return false;
     }
+
+    public static boolean anyNull(@NotNull final Object... arguments) {
+        for (final Object object : arguments) {
+            if (object == null) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

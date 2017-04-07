@@ -33,13 +33,13 @@ public class CpctPatientReader {
     @NotNull
     private final SomaticVariantReader somaticVariantReader;
 
-    public CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final ConsensusRule consensusRule)
-            throws IOException, HartwigException {
+    public CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final ConsensusRule consensusRule,
+            @NotNull final String treatmentMappingCsv) throws IOException, HartwigException {
         cpctPatientInfoReader = new CpctPatientInfoReader(model);
         cpctTumorDataReader = new CpctTumorDataReader();
         cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
         cpctRadioTherapyReader = new CpctRadioTherapyReader();
-        cpctTreatmentDataReader = new CpctTreatmentDataReader();
+        cpctTreatmentDataReader = new CpctTreatmentDataReader(treatmentMappingCsv);
         somaticVariantReader = new SomaticVariantReader(consensusRule);
     }
 

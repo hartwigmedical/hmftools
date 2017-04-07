@@ -1,11 +1,17 @@
 package com.hartwig.hmftools.patientdb.readers;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.TreatmentData;
 
@@ -24,6 +30,21 @@ public class CpctTreatmentDataReader {
     private static final String FIELD_RADIO_ENDDATE = "AFTERBIOPT.TRTAFTER.TRTAFTER.RADIOENDTC";
 
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    @NotNull
+    private final Map<String, String> treatmentMapping;
+
+    public CpctTreatmentDataReader(@NotNull final String treatmentMappingCsv) throws IOException, EmptyFileException {
+        final Map<String, String> treatmentMapping = Maps.newHashMap();
+        FileReader.build().readLines(new File(treatmentMappingCsv).toPath()).forEach(line -> {
+            final String[] parts = line.split(",");
+            if (parts.length == 2) {
+                treatmentMapping.put(parts[0].toLowerCase().trim(), parts[1].toLowerCase().trim());
+            } else {
+                LOGGER.warn("Invalid row found in treatment mapping csv: " + line);
+            }
+        });
+        this.treatmentMapping = treatmentMapping;
+    }
 
     @NotNull
     public Optional<TreatmentData> read(@NotNull final EcrfPatient patient) {
@@ -50,11 +71,13 @@ public class CpctTreatmentDataReader {
         final LocalDate endDate = Utils.getElemAtIndex(endDates, 0);
         final LocalDate radioTherapyStartDate = Utils.getElemAtIndex(radiotherapyStartDates, 0);
         final LocalDate radioTherapyEndDate = Utils.getElemAtIndex(radiotherapyEndDates, 0);
+        final String treatmentType =
+                treatmentName == null ? null : treatmentMapping.get(treatmentName.toLowerCase().trim());
         if (Utils.anyNotNull(startDate, endDate, treatmentName, firstResponse, radioTherapyStartDate,
-                radioTherapyEndDate)) {
+                radioTherapyEndDate, treatmentType)) {
             return Optional.of(
                     new TreatmentData(startDate, endDate, treatmentName, firstResponse, radioTherapyStartDate,
-                            radioTherapyEndDate));
+                            radioTherapyEndDate, treatmentType));
         } else {
             return Optional.empty();
         }

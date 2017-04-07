@@ -40,6 +40,7 @@ public final class PatientDbRunner {
     private static final String DB_URL = "db_url";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String EXTREME_CONFIDENCE_BED = "extreme_confidence_bed";
+    private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
@@ -54,10 +55,11 @@ public final class PatientDbRunner {
         final String jdbcUrl = "jdbc:" + databaseUrl;
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String extremeConfidenceBed = cmd.getOptionValue(EXTREME_CONFIDENCE_BED);
+        final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
 
         ThreadContext.put("cpctHospitalCode", "default");
-        if (runsFolderPath == null || ecrfFilePath == null || userName == null || password == null
-                || databaseUrl == null || highConfidenceBed == null || extremeConfidenceBed == null) {
+        if (Utils.anyNull(runsFolderPath, ecrfFilePath, userName, password, databaseUrl, highConfidenceBed,
+                extremeConfidenceBed, treatmentMappingCsv)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-Db", options);
         } else {
@@ -72,7 +74,8 @@ public final class PatientDbRunner {
                 final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
                 final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer,
                         extremeConfidenceSlicer);
-                final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, consensusRule);
+                final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, consensusRule,
+                        treatmentMappingCsv);
                 final DatabaseWriter dbWriter = new DatabaseWriter(userName, password, jdbcUrl);
                 dbWriter.clearTables();
                 final List<CpctRunData> cpctRunDatas = runDatas.stream().filter(
@@ -108,6 +111,8 @@ public final class PatientDbRunner {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "The full path towards the high confidence bed");
         options.addOption(EXTREME_CONFIDENCE_BED, true, "The full path towards the extreme confidence bed");
+        options.addOption(TREATMENT_TYPES_CSV, true,
+                "Path towards the .csv file that maps treatment names to treatment types");
         return options;
     }
 

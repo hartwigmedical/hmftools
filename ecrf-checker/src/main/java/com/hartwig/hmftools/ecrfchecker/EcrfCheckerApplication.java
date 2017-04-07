@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.ecrfchecker;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -14,6 +13,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfChecker;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelReader;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.patientdb.readers.CpctPatientInfoReader;
 import com.hartwig.hmftools.patientdb.readers.CpctRadioTherapyReader;
 import com.hartwig.hmftools.patientdb.readers.CpctSystemicTherapyReader;
@@ -36,8 +36,10 @@ public class EcrfCheckerApplication {
     private static final String CHECK_NEW_CPCT = "check_new_cpct";
     private static final String CHECK_REFERENCES = "references";
     private static final String OLD_ECRF_XML_PATH = "old_ecrf";
+    private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
 
-    public static void main(final String... args) throws ParseException, IOException, XMLStreamException {
+    public static void main(final String... args)
+            throws ParseException, IOException, XMLStreamException, EmptyFileException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         final boolean checkNewCpct = cmd.hasOption(CHECK_NEW_CPCT);
@@ -56,11 +58,12 @@ public class EcrfCheckerApplication {
         if (checkNewCpct) {
             final String ecrfXmlPath = cmd.getOptionValue(ECRF_XML_PATH);
             final String oldEcrfXmlPath = cmd.getOptionValue(OLD_ECRF_XML_PATH);
-            if (oldEcrfXmlPath == null || ecrfXmlPath == null) {
+            final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
+            if (oldEcrfXmlPath == null || ecrfXmlPath == null || treatmentMappingCsv == null) {
                 final HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("Ecrf-Checker", options);
             } else {
-                checkNewCpctPatients(ecrfXmlPath, oldEcrfXmlPath);
+                checkNewCpctPatients(ecrfXmlPath, oldEcrfXmlPath, treatmentMappingCsv);
             }
         }
     }
@@ -74,6 +77,8 @@ public class EcrfCheckerApplication {
                 "Flag, if used will find newly added CPCT patients and check if the fields used for patient-db can be read. Reads patients from the -ecrf file and checks the -old_ecrf file to determine which patients are new.");
         options.addOption(ECRF_XML_PATH, true, "The path to the ecrf xml file.");
         options.addOption(OLD_ECRF_XML_PATH, true, "The path to the old ecrf xml file.");
+        options.addOption(TREATMENT_TYPES_CSV, true,
+                "Path towards the .csv file that maps treatment names to treatment types");
         return options;
     }
 
@@ -94,8 +99,8 @@ public class EcrfCheckerApplication {
         LOGGER.info("Checking references...Done");
     }
 
-    private static void checkNewCpctPatients(@NotNull final String ecrfXmlPath, @NotNull final String oldEcrfXmlPath)
-            throws FileNotFoundException, XMLStreamException {
+    private static void checkNewCpctPatients(@NotNull final String ecrfXmlPath, @NotNull final String oldEcrfXmlPath,
+            @NotNull final String treatmentMappingCsv) throws IOException, XMLStreamException, EmptyFileException {
         LOGGER.info("Checking new patients...");
         final CpctEcrfModel oldModel = CpctEcrfModel.loadFromXML(oldEcrfXmlPath);
         final CpctEcrfModel newModel = CpctEcrfModel.loadFromXML(ecrfXmlPath);
@@ -103,7 +108,7 @@ public class EcrfCheckerApplication {
         final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
         final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
         final CpctRadioTherapyReader cpctRadioTherapyReader = new CpctRadioTherapyReader();
-        final CpctTreatmentDataReader cpctTreatmentDataReader = new CpctTreatmentDataReader();
+        final CpctTreatmentDataReader cpctTreatmentDataReader = new CpctTreatmentDataReader(treatmentMappingCsv);
         for (final EcrfPatient patient : newModel.patients()) {
             if (oldModel.findPatientById(patient.patientId()) == null) {
                 LOGGER.info("Found new CPCT patient: " + patient.patientId());

@@ -78,11 +78,12 @@ class DatabaseWriter {
     }
 
     private void writeTreatmentData(final int patientId, @NotNull final TreatmentData treatmentData) {
-        context.insertInto(TREATMENTDATA, TREATMENTDATA.NAME, TREATMENTDATA.STARTDATE, TREATMENTDATA.ENDDATE,
-                TREATMENTDATA.EARLYRESPONSE, TREATMENTDATA.RADIOTHERAPYSTARTDATE, TREATMENTDATA.RADIOTHERAPYENDDATE,
-                TREATMENTDATA.PATIENTID).values(treatmentData.treatmentName(),
-                Utils.toSQLDate(treatmentData.startDate()), Utils.toSQLDate(treatmentData.endDate()),
-                treatmentData.earlyResponse(), Utils.toSQLDate(treatmentData.radiotherapyStartDate()),
+        context.insertInto(TREATMENTDATA, TREATMENTDATA.NAME, TREATMENTDATA.TYPE, TREATMENTDATA.STARTDATE,
+                TREATMENTDATA.ENDDATE, TREATMENTDATA.EARLYRESPONSE, TREATMENTDATA.RADIOTHERAPYSTARTDATE,
+                TREATMENTDATA.RADIOTHERAPYENDDATE, TREATMENTDATA.PATIENTID).values(treatmentData.treatmentName(),
+                treatmentData.type(), Utils.toSQLDate(treatmentData.startDate()),
+                Utils.toSQLDate(treatmentData.endDate()), treatmentData.earlyResponse(),
+                Utils.toSQLDate(treatmentData.radiotherapyStartDate()),
                 Utils.toSQLDate(treatmentData.radiotherapyEndDate()), patientId).execute();
     }
 

@@ -14,7 +14,7 @@ CREATE TABLE radioTherapyData
  ( id int NOT NULL AUTO_INCREMENT, endDate DATE, site varchar(255), patientId int NOT NULL, PRIMARY KEY (id), FOREIGN KEY (patientId) references patientInfo(id) );
 
 CREATE TABLE treatmentData
- ( id int NOT NULL AUTO_INCREMENT, startDate DATE, endDate DATE, name varchar(255), earlyResponse varchar(255), radiotherapyStartDate DATE, radiotherapyEndDate DATE, patientId int NOT NULL, PRIMARY KEY (id), FOREIGN KEY (patientId) references patientInfo(id) );
+ ( id int NOT NULL AUTO_INCREMENT, startDate DATE, endDate DATE, name varchar(255), type varchar(255), earlyResponse varchar(255), radiotherapyStartDate DATE, radiotherapyEndDate DATE, patientId int NOT NULL, PRIMARY KEY (id), FOREIGN KEY (patientId) references patientInfo(id) );
 
 CREATE TABLE somaticVariantData
  ( id int NOT NULL AUTO_INCREMENT, gene varchar(255) NOT NULL, position varchar(255) NOT NULL, ref varchar(255) NOT NULL, alt varchar(255) NOT NULL, cosmicId varchar(255), alleleReadCount int NOT NULL, totalReadCount int NOT NULL, patientId int NOT NULL, PRIMARY KEY (id), FOREIGN KEY (patientId) references patientInfo(id) );

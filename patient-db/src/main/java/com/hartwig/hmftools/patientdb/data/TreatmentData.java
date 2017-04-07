@@ -5,7 +5,8 @@ import java.time.LocalDate;
 import org.jetbrains.annotations.Nullable;
 
 public class TreatmentData {
-    //    private final String type;
+    @Nullable
+    private final String type;
     @Nullable
     private final String treatmentName;
     @Nullable
@@ -21,13 +22,15 @@ public class TreatmentData {
 
     public TreatmentData(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
             @Nullable final String treatmentName, @Nullable final String earlyResponse,
-            @Nullable final LocalDate radiotherapyStartDate, @Nullable final LocalDate radiotherapyEndDate) {
+            @Nullable final LocalDate radiotherapyStartDate, @Nullable final LocalDate radiotherapyEndDate,
+            @Nullable final String type) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.treatmentName = treatmentName;
         this.earlyResponse = earlyResponse;
         this.radiotherapyStartDate = radiotherapyStartDate;
         this.radiotherapyEndDate = radiotherapyEndDate;
+        this.type = type;
     }
 
     @Nullable
@@ -58,5 +61,10 @@ public class TreatmentData {
     @Nullable
     public LocalDate radiotherapyEndDate() {
         return radiotherapyEndDate;
+    }
+
+    @Nullable
+    public String type() {
+        return type;
     }
 }

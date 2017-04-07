@@ -31,7 +31,7 @@ class GenericReader {
             LOGGER.warn(fieldName + " for patient " + patient.patientId() + " contains only whitespaces.");
             return null;
         }
-        return values.get(0);
+        return values.get(0).trim();
     }
 
     @Nullable
@@ -56,7 +56,7 @@ class GenericReader {
                                     + index + ".");
                     result.add(null);
                 } else {
-                    result.add(fieldValue);
+                    result.add(fieldValue.trim());
                 }
             }
         }
