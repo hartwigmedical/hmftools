@@ -38,7 +38,7 @@
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
 
         <hmftools-common.version>1</hmftools-common.version>
-        <patient-db.version>1</patient-db.version>
+        <patient-db.version>1.0</patient-db.version>
 
 
         <!-- Used by health checker -->

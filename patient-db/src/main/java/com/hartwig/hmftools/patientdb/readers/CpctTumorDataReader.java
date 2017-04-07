@@ -10,14 +10,14 @@ import com.hartwig.hmftools.patientdb.data.TumorData;
 
 import org.jetbrains.annotations.NotNull;
 
-class CpctTumorDataReader {
+public class CpctTumorDataReader {
     private static final String FIELD_TUMORLOCATION = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
     private static final String FIELD_ENTRYSTAGE = "BASELINE.CARCINOMA.CARCINOMA.ENTRYSTAGE";
     private static final String FIELD_BIOPSYLOCATION = "BIOPSY.BIOPS.BIOPSIES.BILESSITE";
     private static final String FIELD_BIOPSYLOCATIONOTHER = "BIOPSY.BIOPS.BIOPSIES.BIOTHLESSITE";
 
     @NotNull
-    Optional<TumorData> read(@NotNull final EcrfPatient patient) {
+    public Optional<TumorData> read(@NotNull final EcrfPatient patient) {
         final String tumorLocation = GenericReader.getField(patient, FIELD_TUMORLOCATION);
         final String tumorEntryStage = GenericReader.getField(patient, FIELD_ENTRYSTAGE);
         final List<String> biopsyLocationsField = GenericReader.getFieldValuesWithOthers(patient, FIELD_BIOPSYLOCATION,

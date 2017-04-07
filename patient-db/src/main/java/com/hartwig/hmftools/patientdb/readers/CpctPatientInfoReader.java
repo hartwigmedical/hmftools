@@ -20,7 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class CpctPatientInfoReader {
+public class CpctPatientInfoReader {
     private static final Logger LOGGER = LogManager.getLogger(CpctPatientInfoReader.class);
 
     private static final String FIELD_SEX = "BASELINE.DEMOGRAPHY.DEMOGRAPHY.SEX";
@@ -37,12 +37,12 @@ class CpctPatientInfoReader {
     @NotNull
     private final Map<Integer, String> hospitals;
 
-    CpctPatientInfoReader(@NotNull final CpctEcrfModel model) {
+    public CpctPatientInfoReader(@NotNull final CpctEcrfModel model) {
         this.hospitals = getHospitals(model);
     }
 
     @NotNull
-    PatientInfo read(@NotNull final EcrfPatient patient) {
+    public PatientInfo read(@NotNull final EcrfPatient patient) {
         final String sex = GenericReader.getField(patient, FIELD_SEX);
         final String ethnicity = GenericReader.getField(patient, FIELD_ETHNICITY);
         final Integer birthYear = getBirthYear(patient);

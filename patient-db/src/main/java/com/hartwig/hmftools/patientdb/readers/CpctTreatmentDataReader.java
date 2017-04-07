@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class CpctTreatmentDataReader {
+public class CpctTreatmentDataReader {
     private static final Logger LOGGER = LogManager.getLogger(CpctTreatmentDataReader.class);
 
     private static final String FIELD_TREATMENTNAME = "AFTERBIOPT.TRTAFTER.TRTAFTER.SYSREGPOST";
@@ -26,7 +26,7 @@ class CpctTreatmentDataReader {
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    Optional<TreatmentData> read(@NotNull final EcrfPatient patient) {
+    public Optional<TreatmentData> read(@NotNull final EcrfPatient patient) {
         final List<String> treatmentNames = GenericReader.getFieldValues(patient, FIELD_TREATMENTNAME);
         final List<LocalDate> startDates = GenericReader.getDateFieldValues(patient, FIELD_STARTDATE, dateFormatter);
         final List<LocalDate> endDates = GenericReader.getDateFieldValues(patient, FIELD_ENDDATE, dateFormatter);

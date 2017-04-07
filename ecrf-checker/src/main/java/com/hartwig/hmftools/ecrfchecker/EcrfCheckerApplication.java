@@ -14,7 +14,11 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfChecker;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelReader;
-import com.hartwig.hmftools.patientdb.readers.CpctPatientReader;
+import com.hartwig.hmftools.patientdb.readers.CpctPatientInfoReader;
+import com.hartwig.hmftools.patientdb.readers.CpctRadioTherapyReader;
+import com.hartwig.hmftools.patientdb.readers.CpctSystemicTherapyReader;
+import com.hartwig.hmftools.patientdb.readers.CpctTreatmentDataReader;
+import com.hartwig.hmftools.patientdb.readers.CpctTumorDataReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -95,11 +99,19 @@ public class EcrfCheckerApplication {
         LOGGER.info("Checking new patients...");
         final CpctEcrfModel oldModel = CpctEcrfModel.loadFromXML(oldEcrfXmlPath);
         final CpctEcrfModel newModel = CpctEcrfModel.loadFromXML(ecrfXmlPath);
-        final CpctPatientReader cpctPatientReader = new CpctPatientReader(newModel);
+        final CpctPatientInfoReader cpctPatientInfoReader = new CpctPatientInfoReader(newModel);
+        final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
+        final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
+        final CpctRadioTherapyReader cpctRadioTherapyReader = new CpctRadioTherapyReader();
+        final CpctTreatmentDataReader cpctTreatmentDataReader = new CpctTreatmentDataReader();
         for (final EcrfPatient patient : newModel.patients()) {
             if (oldModel.findPatientById(patient.patientId()) == null) {
                 LOGGER.info("Found new CPCT patient: " + patient.patientId());
-                cpctPatientReader.read(patient);
+                cpctPatientInfoReader.read(patient);
+                cpctTumorDataReader.read(patient);
+                cpctSystemicTherapyReader.read(patient);
+                cpctRadioTherapyReader.read(patient);
+                cpctTreatmentDataReader.read(patient);
             }
         }
         LOGGER.info("Checking new patients...Done");

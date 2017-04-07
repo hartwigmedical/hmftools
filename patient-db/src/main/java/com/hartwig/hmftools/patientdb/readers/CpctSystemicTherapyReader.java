@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class CpctSystemicTherapyReader {
+public class CpctSystemicTherapyReader {
     private static final Logger LOGGER = LogManager.getLogger(CpctSystemicTherapyReader.class);
 
     private static final String FIELD_HADSYSTEMICTREATMENT = "BASELINE.PRETHERAPY.PRETHERAPY.SYSTEMIC";
@@ -28,7 +28,7 @@ class CpctSystemicTherapyReader {
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    Optional<List<SystemicTherapyData>> read(@NotNull final EcrfPatient patient) {
+    public Optional<List<SystemicTherapyData>> read(@NotNull final EcrfPatient patient) {
         final String hadSystemicTreatment = GenericReader.getField(patient, FIELD_HADSYSTEMICTREATMENT);
         if (hadSystemicTreatment != null && hadSystemicTreatment.toLowerCase().equals("no")) {
             return Optional.empty();

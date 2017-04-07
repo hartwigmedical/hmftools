@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class CpctRadioTherapyReader {
+public class CpctRadioTherapyReader {
     private static final Logger LOGGER = LogManager.getLogger(CpctRadioTherapyReader.class);
 
     private static final String FIELD_RADIOENDDATE = "BASELINE.PRETHERAPY.RTP.RADIOTHERENDTC";
@@ -24,7 +24,7 @@ class CpctRadioTherapyReader {
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    Optional<List<RadioTherapyData>> read(@NotNull final EcrfPatient patient) {
+    public Optional<List<RadioTherapyData>> read(@NotNull final EcrfPatient patient) {
         final String hadRadiotherapy = GenericReader.getField(patient, FIELD_HADRADIOTHERAPY);
         if (hadRadiotherapy != null && hadRadiotherapy.toLowerCase().equals("no")) {
             return Optional.empty();
