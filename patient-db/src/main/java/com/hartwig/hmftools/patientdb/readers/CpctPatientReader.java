@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -11,7 +12,6 @@ import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientInfo;
 import com.hartwig.hmftools.patientdb.data.RadioTherapyData;
-import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 import com.hartwig.hmftools.patientdb.data.SystemicTherapyData;
 import com.hartwig.hmftools.patientdb.data.TreatmentData;
 import com.hartwig.hmftools.patientdb.data.TumorData;
@@ -49,14 +49,15 @@ public class CpctPatientReader {
         ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
         final PatientInfo patientInfo = cpctPatientInfoReader.read(patient);
         final Optional<TumorData> tumorDataOpt = cpctTumorDataReader.read(patient);
-        final Optional<List<SystemicTherapyData>> systemicTherapiesOpt = cpctSystemicTherapyReader.read(patient);
-        final Optional<List<RadioTherapyData>> radioTherapiesOpt = cpctRadioTherapyReader.read(patient);
+        final List<SystemicTherapyData> systemicTherapies = cpctSystemicTherapyReader.read(patient);
+        final List<RadioTherapyData> radioTherapies = cpctRadioTherapyReader.read(patient);
         final Optional<TreatmentData> treatmentDataOpt = cpctTreatmentDataReader.read(patient);
-        final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(runDirectoryPath);
+        //MIVO: skip reading somatic variants for now
+        //        final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(runDirectoryPath);
         ThreadContext.put("cpctHospitalCode", "default");
-        return new Patient(patientInfo, tumorDataOpt, systemicTherapiesOpt, radioTherapiesOpt, treatmentDataOpt,
-                somaticVariants);
-        //        return new Patient(patientInfo, tumorDataOpt, systemicTherapiesOpt, radioTherapiesOpt, treatmentDataOpt,
-        //                Lists.newArrayList());
+        //        return new Patient(patientInfo, tumorDataOpt, systemicTherapies, radioTherapies, treatmentDataOpt,
+        //                somaticVariants);
+        return new Patient(patientInfo, tumorDataOpt, systemicTherapies, radioTherapies, treatmentDataOpt,
+                Lists.newArrayList());
     }
 }

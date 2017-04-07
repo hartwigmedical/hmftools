@@ -18,6 +18,7 @@ import com.hartwig.hmftools.patientdb.data.TreatmentData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CpctTreatmentDataReader {
     private static final Logger LOGGER = LogManager.getLogger(CpctTreatmentDataReader.class);
@@ -71,8 +72,7 @@ public class CpctTreatmentDataReader {
         final LocalDate endDate = Utils.getElemAtIndex(endDates, 0);
         final LocalDate radioTherapyStartDate = Utils.getElemAtIndex(radiotherapyStartDates, 0);
         final LocalDate radioTherapyEndDate = Utils.getElemAtIndex(radiotherapyEndDates, 0);
-        final String treatmentType =
-                treatmentName == null ? null : treatmentMapping.get(treatmentName.toLowerCase().trim());
+        final String treatmentType = getTreatmentType(treatmentName);
         if (Utils.anyNotNull(startDate, endDate, treatmentName, firstResponse, radioTherapyStartDate,
                 radioTherapyEndDate, treatmentType)) {
             return Optional.of(
@@ -81,5 +81,10 @@ public class CpctTreatmentDataReader {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Nullable
+    private String getTreatmentType(@Nullable final String treatmentName) {
+        return treatmentName == null ? null : treatmentMapping.get(treatmentName.toLowerCase().trim());
     }
 }

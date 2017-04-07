@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientdb.readers;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -24,19 +23,17 @@ public class CpctRadioTherapyReader {
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    public Optional<List<RadioTherapyData>> read(@NotNull final EcrfPatient patient) {
+    public List<RadioTherapyData> read(@NotNull final EcrfPatient patient) {
         final String hadRadiotherapy = GenericReader.getField(patient, FIELD_HADRADIOTHERAPY);
         if (hadRadiotherapy != null && hadRadiotherapy.toLowerCase().equals("no")) {
-            return Optional.empty();
+            return Lists.newArrayList();
         } else {
             final List<RadioTherapyData> data = readData(patient);
             if (data.size() == 0) {
                 LOGGER.warn(patient.patientId() + " had value " + hadRadiotherapy + " instead of No for field "
                         + FIELD_HADRADIOTHERAPY + " but radio therapy fields contained no values.");
-                return Optional.empty();
-            } else {
-                return Optional.of(data);
             }
+            return data;
         }
     }
 
@@ -57,5 +54,4 @@ public class CpctRadioTherapyReader {
         }
         return therapies;
     }
-
 }

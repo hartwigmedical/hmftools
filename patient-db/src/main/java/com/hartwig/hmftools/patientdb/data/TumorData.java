@@ -2,17 +2,18 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TumorData {
     @Nullable
     private final String location;
-    @Nullable
+    @NotNull
     private final List<String> biopsyLocations;
     @Nullable
     private final String entryStage;
 
-    public TumorData(@Nullable final String location, @Nullable final List<String> biopsyLocations,
+    public TumorData(@Nullable final String location, @NotNull final List<String> biopsyLocations,
             @Nullable final String entryStage) {
         this.location = location;
         this.biopsyLocations = biopsyLocations;
@@ -29,7 +30,7 @@ public class TumorData {
         return entryStage;
     }
 
-    @Nullable
+    @NotNull
     public List<String> biopsyLocations() {
         return biopsyLocations;
     }

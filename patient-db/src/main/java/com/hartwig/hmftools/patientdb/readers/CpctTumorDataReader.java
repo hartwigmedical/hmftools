@@ -22,12 +22,9 @@ public class CpctTumorDataReader {
         final String tumorEntryStage = GenericReader.getField(patient, FIELD_ENTRYSTAGE);
         final List<String> biopsyLocationsField = GenericReader.getFieldValuesWithOthers(patient, FIELD_BIOPSYLOCATION,
                 FIELD_BIOPSYLOCATIONOTHER);
-        final List<String> biopsyLocations = biopsyLocationsField == null ?
-                null :
-                biopsyLocationsField.stream().filter(location -> location != null && location.length() > 0).collect(
-                        Collectors.toList());
-        if (Utils.anyNotNull(tumorLocation, tumorEntryStage) || (biopsyLocations != null
-                && biopsyLocations.size() > 0)) {
+        final List<String> biopsyLocations = biopsyLocationsField.stream().filter(
+                location -> location != null && location.length() > 0).collect(Collectors.toList());
+        if (Utils.anyNotNull(tumorLocation, tumorEntryStage) || biopsyLocations.size() > 0) {
             return Optional.of(new TumorData(tumorLocation, biopsyLocations, tumorEntryStage));
         } else {
             return Optional.empty();

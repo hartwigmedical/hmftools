@@ -50,10 +50,9 @@ class DatabaseWriter {
     void writePatient(@NotNull final Patient patient) {
         final int patientId = writePatientInfo(patient.patientInfo());
         patient.tumorData().ifPresent(tumorData -> writeTumorData(patientId, tumorData));
-        patient.systemicTherapies().ifPresent(systemicTherapies -> systemicTherapies.forEach(
-                systemicTherapyData -> writeSystemicTherapyData(patientId, systemicTherapyData)));
-        patient.radioTherapies().ifPresent(radioTherapies -> radioTherapies.forEach(
-                radioTherapyData -> writeRadioTherapyData(patientId, radioTherapyData)));
+        patient.systemicTherapies().forEach(
+                systemicTherapyData -> writeSystemicTherapyData(patientId, systemicTherapyData));
+        patient.radioTherapies().forEach(radioTherapyData -> writeRadioTherapyData(patientId, radioTherapyData));
         patient.treatmentData().ifPresent(treatmentData -> writeTreatmentData(patientId, treatmentData));
         patient.somaticVariants().forEach(
                 somaticVariantData -> writeSomaticVariantData(patientId, somaticVariantData));

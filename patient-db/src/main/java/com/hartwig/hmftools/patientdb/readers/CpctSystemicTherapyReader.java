@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientdb.readers;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -28,19 +27,17 @@ public class CpctSystemicTherapyReader {
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    public Optional<List<SystemicTherapyData>> read(@NotNull final EcrfPatient patient) {
+    public List<SystemicTherapyData> read(@NotNull final EcrfPatient patient) {
         final String hadSystemicTreatment = GenericReader.getField(patient, FIELD_HADSYSTEMICTREATMENT);
         if (hadSystemicTreatment != null && hadSystemicTreatment.toLowerCase().equals("no")) {
-            return Optional.empty();
+            return Lists.newArrayList();
         } else {
             final List<SystemicTherapyData> data = readData(patient);
             if (data.size() == 0) {
                 LOGGER.warn(patient.patientId() + " had value " + hadSystemicTreatment + " instead of No for field "
                         + FIELD_HADSYSTEMICTREATMENT + " but systemic treatment fields contained no values.");
-                return Optional.empty();
-            } else {
-                return Optional.of(data);
             }
+            return data;
         }
     }
 
@@ -70,5 +67,4 @@ public class CpctSystemicTherapyReader {
         }
         return therapies;
     }
-
 }

@@ -34,13 +34,12 @@ class GenericReader {
         return values.get(0).trim();
     }
 
-    @Nullable
+    @NotNull
     static List<String> getFieldValues(@NotNull final EcrfPatient patient, @NotNull final String fieldName) {
         final List<String> result = Lists.newArrayList();
         final List<String> values = patient.fieldValuesByName(fieldName);
         if (values == null) {
             LOGGER.warn(fieldName + " not found for patient " + patient.patientId() + ".");
-            return null;
         } else if (values.size() == 0) {
             LOGGER.warn(fieldName + " for patient " + patient.patientId() + " contains no values.");
         } else {
@@ -63,7 +62,7 @@ class GenericReader {
         return result;
     }
 
-    @Nullable
+    @NotNull
     static List<LocalDate> getDateFieldValues(@NotNull final EcrfPatient patient, @NotNull final String fieldName,
             @NotNull final DateTimeFormatter dateFormatter) {
         final List<LocalDate> fieldDates = Lists.newArrayList();
@@ -90,7 +89,7 @@ class GenericReader {
      * @param othersFieldName name of field to read data in case the value in fieldName is something like "other, please specify"
      * @return list of values for fieldName with 'other' values replaced from othersFieldName
      */
-    @Nullable
+    @NotNull
     static List<String> getFieldValuesWithOthers(@NotNull final EcrfPatient patient, @NotNull final String fieldName,
             @NotNull final String othersFieldName) {
         final List<String> values = getFieldValues(patient, fieldName);
@@ -102,8 +101,8 @@ class GenericReader {
         }
     }
 
-    private static boolean hasOthers(@Nullable final List<String> values) {
-        if (values != null && values.size() > 0) {
+    private static boolean hasOthers(@NotNull final List<String> values) {
+        if (values.size() > 0) {
             for (final String value : values) {
                 if (value != null && value.replaceAll("\\s", "").toLowerCase().startsWith("other")) {
                     return true;
@@ -121,9 +120,9 @@ class GenericReader {
      * @param otherValues list of replacement values
      * @return list of items from the values list, with items starting with 'other' replaced
      */
-    @Nullable
+    @NotNull
     private static List<String> replaceOthers(@NotNull final List<String> values,
-            @Nullable final List<String> otherValues) {
+            @NotNull final List<String> otherValues) {
         final List<String> result = Lists.newArrayList();
         for (int index = 0; index < values.size(); index++) {
             final String value = values.get(index);

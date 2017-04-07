@@ -11,18 +11,17 @@ public class Patient {
     @NotNull
     private final Optional<TumorData> tumorData;
     @NotNull
-    private final Optional<List<SystemicTherapyData>> systemicTherapies;
+    private final List<SystemicTherapyData> systemicTherapies;
     @NotNull
-    private final Optional<List<RadioTherapyData>> radioTherapies;
+    private final List<RadioTherapyData> radioTherapies;
     @NotNull
     private final Optional<TreatmentData> treatmentData;
     @NotNull
     private final List<SomaticVariantData> somaticVariants;
 
     public Patient(@NotNull final PatientInfo patientInfo, @NotNull final Optional<TumorData> tumorData,
-            @NotNull final Optional<List<SystemicTherapyData>> systemicTherapies,
-            @NotNull final Optional<List<RadioTherapyData>> radioTherapies,
-            @NotNull final Optional<TreatmentData> treatmentData,
+            @NotNull final List<SystemicTherapyData> systemicTherapies,
+            @NotNull final List<RadioTherapyData> radioTherapies, @NotNull final Optional<TreatmentData> treatmentData,
             @NotNull final List<SomaticVariantData> somaticVariants) {
         this.patientInfo = patientInfo;
         this.tumorData = tumorData;
@@ -33,12 +32,12 @@ public class Patient {
     }
 
     @NotNull
-    public Optional<List<RadioTherapyData>> radioTherapies() {
+    public List<RadioTherapyData> radioTherapies() {
         return radioTherapies;
     }
 
     @NotNull
-    public Optional<List<SystemicTherapyData>> systemicTherapies() {
+    public List<SystemicTherapyData> systemicTherapies() {
         return systemicTherapies;
     }
 
