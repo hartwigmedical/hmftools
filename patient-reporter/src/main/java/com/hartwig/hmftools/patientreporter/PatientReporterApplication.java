@@ -38,55 +38,22 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
-    private static final String CPCT_SLICING_BED_ARGS_DESC = "Complete path towards the CPCT slicing bed.";
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
-
-    private static final String HIGH_CONFIDENCE_BED_ARGS_DESC = "Complete path towards the high confidence bed.";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-
-    private static final String HMF_SLICING_BED_ARGS_DESC = "Complete path towards the HMF slicing bed.";
     private static final String HMF_SLICING_BED = "hmf_slicing_bed";
-
-    private static final String CPCT_ECRF_ARGS_DESC = "Complete path towards the cpct ecrf xml database.";
     private static final String CPCT_ECRF = "cpct_ecrf";
-
-    private static final String TUMOR_PERCENTAGE_CSV_ARGS_DESC = "Complete path towards a CSV containing tumor percentages.";
     private static final String TUMOR_PERCENTAGE_CSV = "tumor_percentage_csv";
-
-    private static final String REPORT_LOGO_ARGS_DESC = "Complete path to the logo used in the PDF report.";
     private static final String REPORT_LOGO = "report_logo";
-
-    private static final String REPORT_DIRECTORY_ARGS_DESC = "Complete path to where the PDF reports have to be saved.";
     private static final String REPORT_DIRECTORY = "report_dir";
-
-    private static final String TMP_DIRECTORY_ARGS_DESC = "Complete path where, if provided, temporary output files will be written to.";
     private static final String TMP_DIRECTORY = "tmp_dir";
-
-    private static final String RUN_DIRECTORY_ARGS_DESC = "Complete path towards a single rundir where patient reporter will run on.";
     private static final String RUN_DIRECTORY = "run_dir";
-
-    private static final String BATCH_MODE_ARGS_DESC = "If set, runs in batch mode and generates a CSV with statistics.";
     private static final String BATCH_MODE = "batch_mode";
-
-    private static final String BATCH_DIRECTORY_ARGS_DESC = "The directory that will be iterated over in batch-mode.";
     private static final String BATCH_DIRECTORY = "batch_directory";
-
-    private static final String BATCH_STATS_ARGS_DESC = "The file which will contain the statistics of the batch mode output.";
     private static final String BATCH_STATS = "batch_stats";
-
-    private static final String BATCH_VARIANT_FINDINGS_ARGS_DESC = "The file which will contain the variant findings of the batch mode output.";
     private static final String BATCH_VARIANT_FINDINGS = "batch_variant_findings";
-
-    private static final String BATCH_CNV_FINDINGS_ARGS_DESC = "The file which will contain the cnv findings of the batch mode output.";
     private static final String BATCH_CNV_FINDINGS = "batch_cnv_findings";
-
-    private static final String NOT_SEQUENCEABLE_ARGS_DESC = "If set, generates a non-sequenceable report.";
     private static final String NOT_SEQUENCEABLE = "not_sequenceable";
-
-    private static final String NOT_SEQUENCEABLE_REASON_ARGS_DESC = "Either 'low_tumor_percentage' or 'low_dna_yield'";
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
-
-    private static final String NOT_SEQUENCEABLE_SAMPLE_ARGS_DESC = "In case of non-sequenceable reports, the name of the sample used.";
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
 
     public static void main(final String... args)
@@ -286,25 +253,30 @@ public class PatientReporterApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(CPCT_SLICING_BED, true, CPCT_SLICING_BED_ARGS_DESC);
-        options.addOption(HIGH_CONFIDENCE_BED, true, HIGH_CONFIDENCE_BED_ARGS_DESC);
-        options.addOption(HMF_SLICING_BED, true, HMF_SLICING_BED_ARGS_DESC);
-        options.addOption(CPCT_ECRF, true, CPCT_ECRF_ARGS_DESC);
-        options.addOption(TUMOR_PERCENTAGE_CSV, true, TUMOR_PERCENTAGE_CSV_ARGS_DESC);
-        options.addOption(REPORT_LOGO, true, REPORT_LOGO_ARGS_DESC);
-        options.addOption(REPORT_DIRECTORY, true, REPORT_DIRECTORY_ARGS_DESC);
-        options.addOption(TMP_DIRECTORY, true, TMP_DIRECTORY_ARGS_DESC);
-        options.addOption(RUN_DIRECTORY, true, RUN_DIRECTORY_ARGS_DESC);
+        options.addOption(CPCT_SLICING_BED, true, "Complete path towards the CPCT slicing bed.");
+        options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
+        options.addOption(HMF_SLICING_BED, true, "Complete path towards the HMF slicing bed.");
+        options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
+        options.addOption(TUMOR_PERCENTAGE_CSV, true, "Complete path towards a CSV containing tumor percentages.");
+        options.addOption(REPORT_LOGO, true, "Complete path to the logo used in the PDF report.");
+        options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
+        options.addOption(TMP_DIRECTORY, true,
+                "Complete path where, if provided, temporary output files will be written to.");
+        options.addOption(RUN_DIRECTORY, true,
+                "Complete path towards a single rundir where patient reporter will run on.");
 
-        options.addOption(BATCH_MODE, false, BATCH_MODE_ARGS_DESC);
-        options.addOption(BATCH_DIRECTORY, true, BATCH_DIRECTORY_ARGS_DESC);
-        options.addOption(BATCH_STATS, true, BATCH_STATS_ARGS_DESC);
-        options.addOption(BATCH_VARIANT_FINDINGS, true, BATCH_VARIANT_FINDINGS_ARGS_DESC);
-        options.addOption(BATCH_CNV_FINDINGS, true, BATCH_CNV_FINDINGS_ARGS_DESC);
+        options.addOption(BATCH_MODE, false, "If set, runs in batch mode and generates a CSV with statistics.");
+        options.addOption(BATCH_DIRECTORY, true, "The directory that will be iterated over in batch-mode.");
+        options.addOption(BATCH_STATS, true, "The file which will contain the statistics of the batch mode output.");
+        options.addOption(BATCH_VARIANT_FINDINGS, true,
+                "The file which will contain the variant findings of the batch mode output.");
+        options.addOption(BATCH_CNV_FINDINGS, true,
+                "The file which will contain the cnv findings of the batch mode output.");
 
-        options.addOption(NOT_SEQUENCEABLE, false, NOT_SEQUENCEABLE_ARGS_DESC);
-        options.addOption(NOT_SEQUENCEABLE_REASON, true, NOT_SEQUENCEABLE_REASON_ARGS_DESC);
-        options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, NOT_SEQUENCEABLE_SAMPLE_ARGS_DESC);
+        options.addOption(NOT_SEQUENCEABLE, false, "If set, generates a non-sequenceable report.");
+        options.addOption(NOT_SEQUENCEABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
+        options.addOption(NOT_SEQUENCEABLE_SAMPLE, true,
+                "In case of non-sequenceable reports, the name of the sample used.");
 
         return options;
     }
