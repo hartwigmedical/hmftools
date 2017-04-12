@@ -60,7 +60,7 @@ public final class PatientDbRunner {
         ThreadContext.put("cpctHospitalCode", "default");
         if (Utils.anyNull(runsFolderPath, ecrfFilePath, userName, password, databaseUrl, highConfidenceBed,
                 extremeConfidenceBed, treatmentMappingCsv)) {
-            HelpFormatter formatter = new HelpFormatter();
+            final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-Db", options);
         } else {
             final File runDirectory = new File(runsFolderPath);
@@ -95,7 +95,7 @@ public final class PatientDbRunner {
                 if (!runDirectory.exists()) {
                     LOGGER.warn("dir " + runDirectory + " does not exist.");
                 }
-                HelpFormatter formatter = new HelpFormatter();
+                final HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("Patient-Db", options);
             }
         }

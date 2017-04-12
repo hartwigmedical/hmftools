@@ -1,4 +1,4 @@
-Run the following commands as an admin on mysql on mysql.host defined in mysql.properties, prior to building
+Run the following commands as an admin on mysql prior to building
 
 mysql> CREATE USER 'build'@'localhost' IDENTIFIED BY 'build';
 Query OK, 0 rows affected (0.00 sec)
