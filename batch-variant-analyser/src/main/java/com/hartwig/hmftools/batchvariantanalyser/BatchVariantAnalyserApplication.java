@@ -34,7 +34,7 @@ public class BatchVariantAnalyserApplication {
     private static final Logger LOGGER = LogManager.getLogger(BatchVariantAnalyserApplication.class);
 
     private static final String VCF_INPUT_DIR = "vcf_input_dir";
-    private static final String OUTPUT_CSV = "out_csv";
+    private static final String OUT_CSV = "out_csv";
     private static final String VARIANTS_PER_SAMPLE = "variants_per_sample";
 
     public static void main(final String... args)
@@ -42,7 +42,8 @@ public class BatchVariantAnalyserApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        LOGGER.info(cmd.getArgs());
+        new BatchVariantAnalyserApplication(cmd.getOptionValue(VCF_INPUT_DIR), cmd.getOptionValue(OUT_CSV),
+                Integer.parseInt(cmd.getOptionValue(VARIANTS_PER_SAMPLE))).run();
     }
 
     @NotNull
@@ -51,7 +52,7 @@ public class BatchVariantAnalyserApplication {
 
         options.addOption(VCF_INPUT_DIR, true,
                 "This path should contain a list of consensus-flagged or filtered VCFs.");
-        options.addOption(OUTPUT_CSV, true, "The list of variants will be written to this CSV.");
+        options.addOption(OUT_CSV, true, "The list of variants will be written to this CSV.");
         options.addOption(VARIANTS_PER_SAMPLE, true, "Number of variants to select per sample");
 
         return options;
@@ -65,22 +66,22 @@ public class BatchVariantAnalyserApplication {
     }
 
     @NotNull
-    private final String inputDirectory;
+    private final String vcfInputDir;
     @NotNull
-    private final String outputDirectory;
+    private final String outCsv;
     private final int variantsPerSample;
 
-    public BatchVariantAnalyserApplication(@NotNull final String inputDirectory, @NotNull final String outputDirectory,
+    private BatchVariantAnalyserApplication(@NotNull final String vcfInputDir, @NotNull final String outCsv,
             final int variantsPerSample) {
-        this.inputDirectory = inputDirectory;
-        this.outputDirectory = outputDirectory;
+        this.vcfInputDir = vcfInputDir;
+        this.outCsv = outCsv;
         this.variantsPerSample = variantsPerSample;
     }
 
     private void run() throws IOException, HartwigException {
         final Multimap<String, SomaticVariant> variantsMaps = HashMultimap.create();
         final Random rand = new Random();
-        for (final Path file : Files.list(new File(inputDirectory).toPath()).collect(Collectors.toList())) {
+        for (final Path file : Files.list(new File(vcfInputDir).toPath()).collect(Collectors.toList())) {
             LOGGER.info("Processing " + file.toFile().getName());
             final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(file.toFile().getPath());
             final List<SomaticVariant> variants = VariantFilter.passOnly(variantFile.variants());
@@ -91,7 +92,12 @@ public class BatchVariantAnalyserApplication {
         }
         final List<String> lines = Lists.newArrayList();
         for (Map.Entry<String, SomaticVariant> entry : variantsMaps.entries()) {
-            //            lines.add(entry.getKey())
+            final SomaticVariant variant = entry.getValue();
+            lines.add(
+                    entry.getKey() + "," + variant.chromosome() + "," + variant.position() + ", " + variant.ref() + ","
+                            + variant.alt() + "," + variant.alleleReadCount() + "," + variant.totalReadCount());
         }
+        Files.write(new File(outCsv).toPath(), lines);
+        LOGGER.info("Written " + lines.size() + " variants to " + outCsv);
     }
 }
