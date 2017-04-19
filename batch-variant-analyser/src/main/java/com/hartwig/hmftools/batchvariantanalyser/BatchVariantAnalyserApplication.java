@@ -91,10 +91,10 @@ public class BatchVariantAnalyserApplication {
             }
         }
         final List<String> lines = Lists.newArrayList();
-        for (Map.Entry<String, SomaticVariant> entry : variantsMaps.entries()) {
+        for (final Map.Entry<String, SomaticVariant> entry : variantsMaps.entries()) {
             final SomaticVariant variant = entry.getValue();
             lines.add(
-                    entry.getKey() + "," + variant.chromosome() + "," + variant.position() + ", " + variant.ref() + ","
+                    entry.getKey() + "," + variant.chromosome() + "," + variant.position() + "," + variant.ref() + ","
                             + variant.alt() + "," + variant.alleleReadCount() + "," + variant.totalReadCount());
         }
         Files.write(new File(outCsv).toPath(), lines);
