@@ -253,7 +253,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
                         .columns(
-                            col.column("Gene", PatientDataSource.GENE_FIELD),
+                            col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
                             transcriptColumn(),
@@ -442,7 +442,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static TextColumnBuilder<?> transcriptColumn() {
         return col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setHyperLink(
-                hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(125);
+                hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(100);
     }
 
     @NotNull
@@ -450,6 +450,6 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(
                 cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD))).setFixedWidth(125);
+                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD))).setFixedWidth(160);
     }
 }
