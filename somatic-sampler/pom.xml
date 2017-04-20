@@ -8,10 +8,10 @@
         <version>1</version>
     </parent>
 
-    <artifactId>batch-variant-analyser</artifactId>
+    <artifactId>somatic-sampler</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - Batch Variant Analyser</name>
+    <name>HMF Tools - Somatic Sampler</name>
 
     <dependencies>
         <dependency>
@@ -42,7 +42,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.batchvariantanalyser.BatchVariantAnalyserApplication
+                            <mainClass>com.hartwig.hmftools.somaticsampler.SomaticSamplerApplication
                             </mainClass>
                         </manifest>
                     </archive>

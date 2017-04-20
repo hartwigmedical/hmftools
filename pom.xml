@@ -10,7 +10,7 @@
 
     <modules>
         <module>hmftools-common</module>
-        <module>batch-variant-analyser</module>
+        <module>somatic-sampler</module>
         <module>batch-health-check-reader</module>
         <module>ecrf-analyser</module>
         <module>consensus-rule-filter</module>

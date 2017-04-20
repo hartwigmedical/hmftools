@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.batchvariantanalyser;
+package com.hartwig.hmftools.somaticsampler;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,9 +29,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class BatchVariantAnalyserApplication {
+public class SomaticSamplerApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(BatchVariantAnalyserApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticSamplerApplication.class);
 
     private static final String VCF_INPUT_DIR = "vcf_input_dir";
     private static final String OUT_CSV = "out_csv";
@@ -42,7 +42,7 @@ public class BatchVariantAnalyserApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        new BatchVariantAnalyserApplication(cmd.getOptionValue(VCF_INPUT_DIR), cmd.getOptionValue(OUT_CSV),
+        new SomaticSamplerApplication(cmd.getOptionValue(VCF_INPUT_DIR), cmd.getOptionValue(OUT_CSV),
                 Integer.parseInt(cmd.getOptionValue(VARIANTS_PER_SAMPLE))).run();
     }
 
@@ -71,7 +71,7 @@ public class BatchVariantAnalyserApplication {
     private final String outCsv;
     private final int variantsPerSample;
 
-    private BatchVariantAnalyserApplication(@NotNull final String vcfInputDir, @NotNull final String outCsv,
+    private SomaticSamplerApplication(@NotNull final String vcfInputDir, @NotNull final String outCsv,
             final int variantsPerSample) {
         this.vcfInputDir = vcfInputDir;
         this.outCsv = outCsv;
