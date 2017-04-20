@@ -42,9 +42,9 @@ public class PDFWriterTest {
                 "CA").transcript("ENST00000377970.2").hgvsCoding("c.15_16delGGinsCA").hgvsProtein(
                 "p.ArgVal5ArgIle").consequence("missense variant").cosmicID("").alleleReadCount(12).totalReadCount(
                 88).build();
-        final VariantReport variant3 = new VariantReport.Builder().gene("GNAQ").position("9:80409488").ref("T").alt(
-                "G").transcript("ENST00000286548.4").hgvsCoding("c.626A>C").hgvsProtein("p.Gln209Pro").consequence(
-                "missense variant").cosmicID("COSM28758").alleleReadCount(57).totalReadCount(121).build();
+        final VariantReport variant3 = new VariantReport.Builder().gene("TP53").position("17:7577111").ref(
+                "GCACAAA").alt("G").transcript("ENST00000269305.4").hgvsCoding("c.821_826delTTTGTG").hgvsProtein(
+                "p.Val274_Cys275del").consequence("inframe deletion").alleleReadCount(21).totalReadCount(87).build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
         final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2").gene("ALK").transcript(
