@@ -8,13 +8,13 @@ import java.util.List;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.lims.LimsModel;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
-import com.hartwig.hmftools.patientreporter.lims.TumorPercentages;
 import com.hartwig.hmftools.patientreporter.util.FindingsToCSV;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -31,21 +31,21 @@ public class SinglePatientReporter {
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
     @NotNull
+    private final LimsModel limsModel;
+    @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final CopyNumberAnalyzer copyNumberAnalyzer;
-    @NotNull
-    private final TumorPercentages tumorPercentages;
     @Nullable
     private final String tmpDirectory;
 
-    public SinglePatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel,
+    public SinglePatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
             @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
-            @NotNull final TumorPercentages tumorPercentages, @Nullable final String tmpDirectory) {
+            @Nullable final String tmpDirectory) {
         this.cpctEcrfModel = cpctEcrfModel;
+        this.limsModel = limsModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
-        this.tumorPercentages = tumorPercentages;
         this.tmpDirectory = tmpDirectory;
     }
 
@@ -77,7 +77,7 @@ public class SinglePatientReporter {
                 + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
-        final double tumorPercentage = tumorPercentages.findTumorPercentageForSample(sample);
+        final double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
         return new PatientReport(sample, variantAnalysis.findings(), copyNumberAnalysis.findings(), mutationalLoad,
                 tumorType, tumorPercentage);
     }

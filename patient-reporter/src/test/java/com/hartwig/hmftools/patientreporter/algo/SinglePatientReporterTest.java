@@ -9,11 +9,11 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.lims.TumorPercentageTestFactory;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
@@ -40,8 +40,8 @@ public class SinglePatientReporterTest {
                 hmfSlicingRegion);
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        final SinglePatientReporter algo = new SinglePatientReporter(buildTestCpctEcrfModel(), variantAnalyzer,
-                copyNumberAnalyzer, TumorPercentageTestFactory.buildTestTumorPercentages(), null);
+        final SinglePatientReporter algo = new SinglePatientReporter(buildTestCpctEcrfModel(), Lims.buildEmptyModel(),
+                variantAnalyzer, copyNumberAnalyzer, null);
 
         assertNotNull(algo.run(RUN_DIRECTORY));
     }

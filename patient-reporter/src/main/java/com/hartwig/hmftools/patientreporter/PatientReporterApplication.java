@@ -10,6 +10,8 @@ import javax.xml.stream.XMLStreamException;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsModel;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
@@ -17,7 +19,6 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.SinglePatientReporter;
 import com.hartwig.hmftools.patientreporter.batch.BatchReportAnalyser;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.lims.TumorPercentages;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -42,7 +43,7 @@ public class PatientReporterApplication {
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String HMF_SLICING_BED = "hmf_slicing_bed";
     private static final String CPCT_ECRF = "cpct_ecrf";
-    private static final String TUMOR_PERCENTAGE_CSV = "tumor_percentage_csv";
+    private static final String LIMS_CSV = "lims_csv";
     private static final String REPORT_LOGO = "report_logo";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String TMP_DIRECTORY = "tmp_dir";
@@ -65,14 +66,11 @@ public class PatientReporterApplication {
             final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
             LOGGER.info("Generating non-sequenceable report for " + notSequenceableSample);
 
-            final TumorPercentages tumorPercentages = buildTumorPercentages(cmd);
-            final ReportWriter reportWriter = buildReportWriter(cmd);
-
             final NotSequenceableReason notSequenceableReason = NotSequenceableReason.fromIdentifier(
                     cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
 
-            final NotSequenceableReporter reporter = new NotSequenceableReporter(buildCpctEcrfModel(cmd), reportWriter,
-                    tumorPercentages);
+            final NotSequenceableReporter reporter = new NotSequenceableReporter(buildCpctEcrfModel(cmd),
+                    buildLimsModel(cmd), buildReportWriter(cmd));
 
             reporter.run(notSequenceableSample, notSequenceableReason);
         } else if (validInputForPatientReporter(cmd)) {
@@ -103,9 +101,8 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static TumorPercentages buildTumorPercentages(@NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException {
-        return TumorPercentages.loadFromCsv(cmd.getOptionValue(TUMOR_PERCENTAGE_CSV));
+    private static LimsModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
+        return Lims.buildModelFromCsv(cmd.getOptionValue(LIMS_CSV));
     }
 
     @NotNull
@@ -116,8 +113,8 @@ public class PatientReporterApplication {
                 SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new SinglePatientReporter(buildCpctEcrfModel(cmd), variantAnalyzer, copyNumberAnalyzer,
-                buildTumorPercentages(cmd), cmd.getOptionValue(TMP_DIRECTORY));
+        return new SinglePatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer,
+                copyNumberAnalyzer, cmd.getOptionValue(TMP_DIRECTORY));
     }
 
     @NotNull
@@ -228,12 +225,12 @@ public class PatientReporterApplication {
 
     private static boolean validInputForEcrfAndTumorPercentages(@NotNull final CommandLine cmd) {
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
-        final String tumorPercentageCsv = cmd.getOptionValue(TUMOR_PERCENTAGE_CSV);
+        final String tumorPercentageCsv = cmd.getOptionValue(LIMS_CSV);
 
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
         } else if (tumorPercentageCsv == null || !exists(tumorPercentageCsv)) {
-            LOGGER.warn(TUMOR_PERCENTAGE_CSV + " has to be an existing file: " + tumorPercentageCsv);
+            LOGGER.warn(LIMS_CSV + " has to be an existing file: " + tumorPercentageCsv);
         } else {
             return true;
         }
@@ -257,7 +254,7 @@ public class PatientReporterApplication {
         options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
         options.addOption(HMF_SLICING_BED, true, "Complete path towards the HMF slicing bed.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
-        options.addOption(TUMOR_PERCENTAGE_CSV, true, "Complete path towards a CSV containing tumor percentages.");
+        options.addOption(LIMS_CSV, true, "Complete path towards a CSV containing the LIMS data dump.");
         options.addOption(REPORT_LOGO, true, "Complete path to the logo used in the PDF report.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(TMP_DIRECTORY, true,
