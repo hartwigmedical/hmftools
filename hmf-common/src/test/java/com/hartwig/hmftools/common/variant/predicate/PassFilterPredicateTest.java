@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class PassFilterPredicateTest {
 
-    private final Predicate<Variant> predicate = new PassFilterPredicate();
+    private final Predicate<Variant> predicate = new PassFilterPredicate<>();
 
     @Test
     public void filtersOnFirstPassIdentifier() {

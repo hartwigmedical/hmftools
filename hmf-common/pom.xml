@@ -8,7 +8,7 @@
         <version>1</version>
     </parent>
 
-    <artifactId>hmftools-common</artifactId>
+    <artifactId>hmf-common</artifactId>
     <packaging>jar</packaging>
     <name>HMF Tools - Common</name>
 

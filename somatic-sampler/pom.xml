@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>hmftools-common</artifactId>
+            <artifactId>hmf-common</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

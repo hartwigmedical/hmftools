@@ -6,11 +6,10 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-
-import org.junit.Test;
-
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.exception.HartwigException;
+
+import org.junit.Test;
 
 public class CNVFileLoaderTest {
     private static final String BASE_PATH = Resources.getResource("copynumber").getPath();

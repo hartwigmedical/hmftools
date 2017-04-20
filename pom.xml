@@ -9,7 +9,7 @@
     <name>HMF Genomics Tools</name>
 
     <modules>
-        <module>hmftools-common</module>
+        <module>hmf-common</module>
         <module>somatic-sampler</module>
         <module>batch-health-check-reader</module>
         <module>ecrf-analyser</module>
@@ -38,7 +38,7 @@
         <jooq.version>3.9.1</jooq.version>
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
 
-        <hmftools-common.version>1</hmftools-common.version>
+        <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
 
 
@@ -81,8 +81,8 @@
         <dependencies>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>hmftools-common</artifactId>
-                <version>${hmftools-common.version}</version>
+                <artifactId>hmf-common</artifactId>
+                <version>${hmf-common.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

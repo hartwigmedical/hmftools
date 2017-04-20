@@ -6,6 +6,6 @@
 target
 
 # Ignore test xml ecrf
-hmftools-common/src/test/resources/ecrf/example/ecrf.xml
+hmf-common/src/test/resources/ecrf/example/ecrf.xml
 
 .DS_Store

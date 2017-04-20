@@ -14,7 +14,7 @@ public class GermlineVariant implements Variant {
     @Nullable
     private final GermlineSampleData tumorData;
 
-    public GermlineVariant(@NotNull final VariantType type, @NotNull final String filter,
+    GermlineVariant(@NotNull final VariantType type, @NotNull final String filter,
             @NotNull final GermlineSampleData refData, @Nullable final GermlineSampleData tumorData) {
         this.type = type;
         this.filter = filter;

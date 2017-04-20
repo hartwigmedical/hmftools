@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.ecrf;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -13,7 +12,6 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 
 import org.apache.logging.log4j.LogManager;
