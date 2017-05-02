@@ -13,25 +13,16 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.hartwig.hmftools.common.variant.VariantFactory.*;
+
 public final class SomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactory.class);
-    private static final String VCF_COLUMN_SEPARATOR = "\t";
 
-    private static final int CHROMOSOME_COLUMN = 0;
-    private static final int POSITION_COLUMN = 1;
-
-    private static final int ID_COLUMN = 2;
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
 
-    private static final int REF_COLUMN = 3;
-    private static final int ALT_COLUMN = 4;
-
-    private static final int FILTER_COLUMN = 6;
-
-    private static final int INFO_COLUMN = 7;
     private static final String INFO_FIELD_SEPARATOR = ";";
     private static final String CALLER_ALGO_IDENTIFIER = "set=";
     private static final String CALLER_ALGO_START = "=";
@@ -77,18 +68,8 @@ public final class SomaticVariantFactory {
     @NotNull
     public static SomaticVariant fromVCFLine(@NotNull final String line) {
         final SomaticVariant.Builder builder = SomaticVariant.Builder.fromVCF(line);
-
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
-        final String ref = values[REF_COLUMN].trim();
-        final String alt = values[ALT_COLUMN].trim();
-
-        builder.ref(ref);
-        builder.alt(alt);
-        builder.type(VariantType.fromRefAlt(ref, alt));
-
-        builder.chromosome(values[CHROMOSOME_COLUMN].trim());
-        builder.position(Long.valueOf(values[POSITION_COLUMN].trim()));
-        builder.filter(values[FILTER_COLUMN].trim());
+        VariantFactory.withLine(builder, values);
 
         final String idValue = values[ID_COLUMN].trim();
         if (!idValue.isEmpty()) {

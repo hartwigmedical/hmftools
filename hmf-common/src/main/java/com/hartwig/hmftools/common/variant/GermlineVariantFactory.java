@@ -7,11 +7,12 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.hartwig.hmftools.common.variant.VariantFactory.VCF_COLUMN_SEPARATOR;
+
 public final class GermlineVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineVariantFactory.class);
 
-    private static final String VCF_COLUMN_SEPARATOR = "\t";
 
     private static final int REF_SAMPLE_COLUMN = 9;
     private static final int TUMOR_SAMPLE_COLUMN = 10;
