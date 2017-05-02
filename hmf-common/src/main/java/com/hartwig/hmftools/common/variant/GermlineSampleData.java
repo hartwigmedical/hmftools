@@ -1,34 +1,21 @@
 package com.hartwig.hmftools.common.variant;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
-public class GermlineSampleData {
+@Value.Immutable
+public abstract class GermlineSampleData {
 
     @NotNull
-    private final String genoType;
-    private final int totalReadCount;
-    private final int alleleReadCount;
+    public abstract String genoType();
 
-    public GermlineSampleData(@NotNull final String genoType, final int totalReadCount, final int alleleReadCount) {
-        this.genoType = genoType;
-        this.totalReadCount = totalReadCount;
-        this.alleleReadCount = alleleReadCount;
-    }
+    public abstract int totalReadCount();
 
-    @NotNull
-    public String genoType() {
-        return genoType;
-    }
+    public abstract int alleleReadCount();
 
-    public int totalReadCount() {
-        return totalReadCount;
-    }
-
-    public int alleleReadCount() {
-        return alleleReadCount;
-    }
+    public abstract int combinedDepth();
 
     public double alleleFrequency() {
-        return (double) alleleReadCount / totalReadCount;
+        return (double) alleleReadCount() / totalReadCount();
     }
 }

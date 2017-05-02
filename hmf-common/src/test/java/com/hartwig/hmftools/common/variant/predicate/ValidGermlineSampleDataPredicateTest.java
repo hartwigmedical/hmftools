@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.predicate;
 
+import static com.hartwig.hmftools.common.variant.GermlineSampleDataTest.GERMLINE_SAMPLE_BUILDER;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -7,12 +8,13 @@ import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 
+import com.hartwig.hmftools.common.variant.GermlineSampleDataTest;
 import org.junit.Test;
 
 public class ValidGermlineSampleDataPredicateTest {
 
-    private static final GermlineSampleData VALID = new GermlineSampleData("1/1", 10, 5);
-    private static final GermlineSampleData INVALID = new GermlineSampleData("./.", 10, 5);
+    private static final GermlineSampleData VALID = GERMLINE_SAMPLE_BUILDER.genoType("1/1").build();
+    private static final GermlineSampleData INVALID = GERMLINE_SAMPLE_BUILDER.genoType("./.").build();
 
     @Test
     public void canCheckGermlineSampleDataCorrectly() {

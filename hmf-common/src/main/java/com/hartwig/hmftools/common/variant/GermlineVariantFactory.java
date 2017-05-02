@@ -17,6 +17,7 @@ public final class GermlineVariantFactory {
     private static final int TUMOR_SAMPLE_COLUMN = 10;
     private static final int SAMPLE_DATA_GENOTYPE_COLUMN = 0;
     private static final int SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN = 1;
+    private static final int SAMPLE_DATA_COMBINED_DEPTH_COLUMN = 2;
 
     private GermlineVariantFactory() {
     }
@@ -46,7 +47,7 @@ public final class GermlineVariantFactory {
     @VisibleForTesting
     static GermlineSampleData fromSampleData(@NotNull final String sampleData) {
         final String parts[] = VariantFactoryFunctions.splitSampleDataFields(sampleData);
-        if (parts.length < 2) {
+        if (parts.length < 3) {
             LOGGER.warn("Could not parse germline sample data: " + sampleData);
             return null;
         }
@@ -58,7 +59,12 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        return new GermlineSampleData(parts[SAMPLE_DATA_GENOTYPE_COLUMN].trim(), alleleFrequencyData.totalReadCount(),
-                alleleFrequencyData.alleleReadCount());
+        return ImmutableGermlineSampleData.builder()
+                .genoType(parts[SAMPLE_DATA_GENOTYPE_COLUMN].trim())
+                .alleleReadCount(alleleFrequencyData.alleleReadCount())
+                .totalReadCount(alleleFrequencyData.totalReadCount())
+                .combinedDepth(Integer.valueOf(parts[SAMPLE_DATA_COMBINED_DEPTH_COLUMN]))
+                .build();
+
     }
 }
