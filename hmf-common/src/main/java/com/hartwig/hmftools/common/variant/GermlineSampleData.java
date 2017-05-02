@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
+@Value.Style(allParameters = true)
 @Value.Immutable
 public abstract class GermlineSampleData {
 

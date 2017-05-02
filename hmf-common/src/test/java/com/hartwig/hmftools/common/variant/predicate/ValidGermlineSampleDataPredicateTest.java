@@ -1,20 +1,18 @@
 package com.hartwig.hmftools.common.variant.predicate;
 
-import static com.hartwig.hmftools.common.variant.GermlineSampleDataTest.GERMLINE_SAMPLE_BUILDER;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import com.hartwig.hmftools.common.variant.GermlineSampleData;
+import com.hartwig.hmftools.common.variant.ImmutableGermlineSampleData;
+import org.junit.Test;
 
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.variant.GermlineSampleData;
-
-import com.hartwig.hmftools.common.variant.GermlineSampleDataTest;
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ValidGermlineSampleDataPredicateTest {
 
-    private static final GermlineSampleData VALID = GERMLINE_SAMPLE_BUILDER.genoType("1/1").build();
-    private static final GermlineSampleData INVALID = GERMLINE_SAMPLE_BUILDER.genoType("./.").build();
+    private static final GermlineSampleData VALID = ImmutableGermlineSampleData.of("1/1", 10, 5, 15);
+    private static final GermlineSampleData INVALID = ImmutableGermlineSampleData.of("./.", 10, 5, 15);
 
     @Test
     public void canCheckGermlineSampleDataCorrectly() {

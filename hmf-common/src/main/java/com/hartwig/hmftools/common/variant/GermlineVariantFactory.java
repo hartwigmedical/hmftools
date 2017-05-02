@@ -60,12 +60,10 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        return ImmutableGermlineSampleData.builder()
-                .genoType(parts[SAMPLE_DATA_GENOTYPE_COLUMN].trim())
-                .alleleReadCount(alleleFrequencyData.alleleReadCount())
-                .totalReadCount(alleleFrequencyData.totalReadCount())
-                .combinedDepth(Integer.valueOf(parts[SAMPLE_DATA_COMBINED_DEPTH_COLUMN]))
-                .build();
+        return ImmutableGermlineSampleData.of(parts[SAMPLE_DATA_GENOTYPE_COLUMN].trim(),
+                alleleFrequencyData.totalReadCount(),
+                alleleFrequencyData.alleleReadCount(),
+                Integer.valueOf(parts[SAMPLE_DATA_COMBINED_DEPTH_COLUMN]));
 
     }
 }

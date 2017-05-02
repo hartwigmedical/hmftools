@@ -10,7 +10,7 @@ import org.junit.Test;
 public class GermlineVariantFactoryTest {
 
     private static final String VALID_SAMPLE_DATA = "0/1:20,10:35:whatever";
-    private static final String INVALID_SAMPLE_DATA = "0/1:20,10:whatever";
+    private static final String INVALID_SAMPLE_DATA = "0/1:20,10";
 
     @Test
     public void extractFromNormalVCFLine() {
@@ -28,6 +28,7 @@ public class GermlineVariantFactoryTest {
         assertNull(GermlineVariantFactory.fromVCFLine(invalidVCFLine));
     }
 
+    @Test
     public void extractFromInvalidSampleVCFLine() {
         final String invalidVCFLine =
                 "1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9 \t " + INVALID_SAMPLE_DATA + " \t " + INVALID_SAMPLE_DATA;
