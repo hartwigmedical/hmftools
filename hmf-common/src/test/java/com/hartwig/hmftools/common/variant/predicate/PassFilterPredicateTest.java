@@ -41,6 +41,29 @@ public class PassFilterPredicateTest {
 
         @NotNull
         @Override
+        public String chromosome() {
+            return "1";
+        }
+
+        @Override
+        public long position() {
+            return 0;
+        }
+
+        @NotNull
+        @Override
+        public String ref() {
+            return "A";
+        }
+
+        @NotNull
+        @Override
+        public String alt() {
+            return "T";
+        }
+
+        @NotNull
+        @Override
         public VariantType type() {
             return VariantType.SNP;
         }

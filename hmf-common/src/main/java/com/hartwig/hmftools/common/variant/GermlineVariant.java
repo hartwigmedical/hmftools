@@ -1,44 +1,17 @@
 package com.hartwig.hmftools.common.variant;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GermlineVariant implements Variant {
+@Value.Immutable
+public abstract class GermlineVariant implements Variant {
+    public abstract static class Builder implements VariantBuilder<GermlineVariant> {}
 
     @NotNull
-    private final VariantType type;
-    @NotNull
-    private final String filter;
-    @NotNull
-    private final GermlineSampleData refData;
-    @Nullable
-    private final GermlineSampleData tumorData;
-
-    GermlineVariant(@NotNull final VariantType type, @NotNull final String filter,
-            @NotNull final GermlineSampleData refData, @Nullable final GermlineSampleData tumorData) {
-        this.type = type;
-        this.filter = filter;
-        this.refData = refData;
-        this.tumorData = tumorData;
-    }
-
-    @NotNull
-    public VariantType type() {
-        return type;
-    }
-
-    @NotNull
-    public String filter() {
-        return filter;
-    }
-
-    @NotNull
-    public GermlineSampleData refData() {
-        return refData;
-    }
+    public abstract GermlineSampleData refData();
 
     @Nullable
-    public GermlineSampleData tumorData() {
-        return tumorData;
-    }
+    public abstract GermlineSampleData tumorData();
 }
+

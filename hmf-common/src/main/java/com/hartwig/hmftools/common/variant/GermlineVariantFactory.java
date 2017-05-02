@@ -13,10 +13,6 @@ public final class GermlineVariantFactory {
 
     private static final String VCF_COLUMN_SEPARATOR = "\t";
 
-    private static final int REF_COLUMN = 3;
-    private static final int ALT_COLUMN = 4;
-    private static final int FILTER_COLUMN = 6;
-
     private static final int REF_SAMPLE_COLUMN = 9;
     private static final int TUMOR_SAMPLE_COLUMN = 10;
     private static final int SAMPLE_DATA_GENOTYPE_COLUMN = 0;
@@ -33,8 +29,6 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        final VariantType type = VariantType.fromRefAlt(values[REF_COLUMN].trim(), values[ALT_COLUMN].trim());
-        final String filter = values[FILTER_COLUMN].trim();
         final GermlineSampleData refData = fromSampleData(values[REF_SAMPLE_COLUMN].trim());
         if (refData == null) {
             LOGGER.warn("Could not generate sample data for ref: " + values[REF_SAMPLE_COLUMN].trim());
@@ -44,7 +38,8 @@ public final class GermlineVariantFactory {
         final GermlineSampleData tumorData =
                 values.length > TUMOR_SAMPLE_COLUMN ? fromSampleData(values[TUMOR_SAMPLE_COLUMN].trim()) : null;
 
-        return new GermlineVariant(type, filter, refData, tumorData);
+        final GermlineVariant.Builder builder = ImmutableGermlineVariant.builder().refData(refData).tumorData(tumorData);
+        return VariantFactory.withLine(builder, values).build();
     }
 
     @Nullable
