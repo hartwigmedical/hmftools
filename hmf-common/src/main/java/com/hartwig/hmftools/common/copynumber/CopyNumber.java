@@ -1,42 +1,21 @@
 package com.hartwig.hmftools.common.copynumber;
 
+import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import org.jetbrains.annotations.NotNull;
 
-public class CopyNumber {
+public class CopyNumber extends GenomeRegion {
 
     private static final int NORMAL_HUMAN_COPY_NUMBER = 2;
 
-    @NotNull
-    private final String chromosome;
-    private final long start;
-    private final long end;
     private final int value;
 
     public CopyNumber(@NotNull final String chromosome, final long start, final long end, final int value) {
+        super(chromosome, start, end);
+
         assert end >= start;
         assert value >= 0;
 
-        this.chromosome = chromosome;
-        this.start = start;
-        this.end = end;
         this.value = value;
-    }
-
-    @NotNull
-    public String chromosome() {
-        return chromosome;
-    }
-
-    public long start() {
-        return start;
-    }
-
-    public long end() {
-        return end;
-    }
-
-    public long basesAffected() {
-        return 1 + end - start;
     }
 
     public int value() {
