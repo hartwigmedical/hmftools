@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.slicing;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -20,7 +20,8 @@ class SortedSlicer implements Slicer {
         }
     }
 
-    public boolean test(@NotNull Variant variant) {
+    @Override
+    public boolean test(@NotNull GenomePosition variant) {
         SingleChromosomeSlicer slicer = regions.get(variant.chromosome());
         return slicer != null && slicer.includes(variant);
     }
@@ -40,7 +41,7 @@ class SortedSlicer implements Slicer {
             this.deque = new ArrayDeque<>(reqion);
         }
 
-        boolean includes(@NotNull Variant variant) {
+        boolean includes(@NotNull GenomePosition variant) {
             if (variant.position() < currentPosition) {
                 throw new IllegalArgumentException("Forward slicer only goes forward, never backwards!");
             }

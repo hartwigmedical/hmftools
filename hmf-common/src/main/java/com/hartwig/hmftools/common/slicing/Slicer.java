@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.common.slicing;
 
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.Variant;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.function.Predicate;
 
-public interface Slicer extends Predicate<Variant> {
+public interface Slicer extends Predicate<GenomePosition> {
 
     @NotNull
     Collection<GenomeRegion> regions();

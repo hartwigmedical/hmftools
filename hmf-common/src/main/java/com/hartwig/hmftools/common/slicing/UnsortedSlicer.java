@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.slicing;
 
 import com.google.common.collect.SortedSetMultimap;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -15,7 +15,8 @@ class UnsortedSlicer implements Slicer {
         this.regions = regions;
     }
 
-    public boolean test(@NotNull Variant variant) {
+    @Override
+    public boolean test(@NotNull GenomePosition variant) {
         final Collection<GenomeRegion> regionsForChrom = regions.get(variant.chromosome());
         if (regionsForChrom == null) {
             return false;
