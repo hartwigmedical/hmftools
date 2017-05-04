@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.copynumber;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.ImmutableCopyNumber;
+import com.hartwig.hmftools.common.copynumber.cnv.ImmutableCNVCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
@@ -75,6 +75,6 @@ public class CopyNumberAnalyzerTest {
 
     @NotNull
     private static CopyNumber copyNumber(final long start, final long end, final int value) {
-        return ImmutableCopyNumber.of(value, CHROMOSOME, start, end, null);
+        return ImmutableCNVCopyNumber.of(value, CHROMOSOME, start, end, null);
     }
 }

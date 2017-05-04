@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.copynumber;
 
+import com.hartwig.hmftools.common.copynumber.cnv.ImmutableCNVCopyNumber;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,6 +43,6 @@ public final class CopyNumberFactory {
             throw new HartwigException(String.format(GAIN_LOSS_MISMATCH_WITH_VALUE_ERROR, identification));
         }
 
-        return ImmutableCopyNumber.of(value, chromosome, start, end, null);
+        return ImmutableCNVCopyNumber.of(value, chromosome, start, end, null);
     }
 }
