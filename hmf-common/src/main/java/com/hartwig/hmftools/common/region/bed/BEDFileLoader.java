@@ -4,7 +4,7 @@ import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.slicing;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import org.jetbrains.annotations.NotNull;
 

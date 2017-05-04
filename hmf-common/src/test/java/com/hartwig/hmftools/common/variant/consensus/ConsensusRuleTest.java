@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.variant.consensus;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;

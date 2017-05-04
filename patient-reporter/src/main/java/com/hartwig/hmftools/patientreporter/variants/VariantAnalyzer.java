@@ -1,24 +1,23 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
-import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
-
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+
+import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
+import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
 
 public class VariantAnalyzer {
 

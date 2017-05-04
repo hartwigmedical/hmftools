@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.slicing;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.Variant;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.slicing;
+package com.hartwig.hmftools.common.region;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;

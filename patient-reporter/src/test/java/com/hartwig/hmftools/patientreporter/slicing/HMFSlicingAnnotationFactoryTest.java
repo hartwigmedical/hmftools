@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.slicing;
 
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

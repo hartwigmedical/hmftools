@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.copynumber;
 
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import org.immutables.value.Value;
 
 @Value.Style(allParameters = true)

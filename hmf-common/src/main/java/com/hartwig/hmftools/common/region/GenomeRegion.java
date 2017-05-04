@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.slicing;
+package com.hartwig.hmftools.common.region;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

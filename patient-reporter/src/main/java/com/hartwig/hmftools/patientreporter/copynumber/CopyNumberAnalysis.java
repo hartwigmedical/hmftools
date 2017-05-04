@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.Map;
-
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberAnalysis {
 

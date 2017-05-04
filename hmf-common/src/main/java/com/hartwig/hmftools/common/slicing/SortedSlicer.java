@@ -4,6 +4,7 @@ package com.hartwig.hmftools.common.slicing;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
