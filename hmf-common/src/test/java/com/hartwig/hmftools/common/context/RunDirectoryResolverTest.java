@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.context;
+package com.hartwig.hmftools.common.context;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class RunDirectoryResolverTest {
 
-    private static final String RESOURCE_DIR = "RunDirectoryResolver";
+    private static final String RESOURCE_DIR = "context" + File.separator + "RunDirectoryResolver";
 
     private static final String VALID_CPCT_RUNDIR = "160101_HMFregCPCT_FR10002000_FR20003000_CPCT12345678";
     private static final String VALID_CPCT_RUN_NAME = VALID_CPCT_RUNDIR;

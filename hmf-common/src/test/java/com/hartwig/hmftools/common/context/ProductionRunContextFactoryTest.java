@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.context;
+package com.hartwig.hmftools.common.context;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -11,7 +11,8 @@ import org.junit.Test;
 
 public class ProductionRunContextFactoryTest {
 
-    private static final String RESOURCE_DIR = Resources.getResource("ProductionRunContextFactory").getPath();
+    private static final String RESOURCE_DIR = Resources.getResource(
+            "context" + File.separator + "ProductionRunContextFactory").getPath();
 
     @Test
     public void resolveFromRunDirectoryIfNoMetaDataPresent() throws HartwigException {

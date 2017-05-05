@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.context;
+package com.hartwig.hmftools.common.context;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -16,7 +16,8 @@ import org.junit.Test;
 
 public class MetaDataResolverTest {
 
-    private static final String RESOURCE_DIR = Resources.getResource("MetaDataResolver").getPath();
+    private static final String RESOURCE_DIR = Resources.getResource(
+            "context" + File.separator + "MetaDataResolver").getPath();
 
     @Test
     public void noMetaDataReturnsNull() {

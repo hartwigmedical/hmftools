@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.context;
+package com.hartwig.hmftools.common.context;
 
 import java.io.File;
 
