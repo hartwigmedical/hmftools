@@ -3,9 +3,11 @@ package com.hartwig.hmftools.common.convoy;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import org.immutables.value.Value;
 
+import java.io.Serializable;
+
 @Value.Style(allParameters = true)
 @Value.Immutable
-public abstract class ConvoyCopyNumber implements CopyNumber {
+public abstract class ConvoyCopyNumber implements CopyNumber, Serializable {
 
     public abstract double mBAF();
 

@@ -1,11 +1,35 @@
 package com.hartwig.hmftools.common.convoy;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class ConvoyPurityFactory {
+
+    public static List<ConvoyPurity> create(
+            double minPurity, double maxPurity, int puritySteps,
+            double minNormFactor, double maxNormFactor, int normFactorSteps,
+            double cnvRatioWeighFactor, int maxPloidy,
+            Collection<ConvoyCopyNumber> copyNumbers) {
+        final List<ConvoyPurity> result = Lists.newArrayList();
+
+        double purityIncrements = (maxPurity - minPurity) / puritySteps;
+        double normFactorIncrements = (maxNormFactor - minNormFactor) / normFactorSteps;
+        double sumWeight = copyNumbers.stream().mapToLong(ConvoyCopyNumber::mBAFCount).sum();
+
+        for (double purity = minPurity; purity <= maxPurity; purity+=purityIncrements) {
+            for (double normFactor = minNormFactor; normFactor <= maxNormFactor; normFactor+=normFactorIncrements) {
+                result.add(create(purity, normFactor, cnvRatioWeighFactor, maxPloidy, sumWeight, copyNumbers));
+            }
+        }
+
+        Collections.sort(result);
+        return result;
+    }
 
     public static ConvoyPurity create(double purity, double normFactory, double cnvRatioWeighFactor, Collection<ConvoyCopyNumber> copyNumbers) {
 
