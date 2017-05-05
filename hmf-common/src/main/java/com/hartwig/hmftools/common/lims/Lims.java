@@ -45,6 +45,21 @@ public final class Lims {
     }
 
     @NotNull
+    public static LimsModel buildOldModelFromCsv(@NotNull final String pathToCsv)
+            throws IOException, EmptyFileException {
+        final Map<String, LimsBiopsyData> limsDataPerSample = Maps.newHashMap();
+        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (final String line : lines) {
+            final String[] parts = line.split(",");
+            final String sample = parts[0].trim();
+            final String samplingDate = !parts[1].trim().equals(Strings.EMPTY) ? parts[1].trim() : null;
+            final String arrivalDate = parts[2].trim();
+            limsDataPerSample.put(sample, new LimsBiopsyData(samplingDate, arrivalDate, Double.NaN));
+        }
+        return new LimsModel(limsDataPerSample);
+    }
+
+    @NotNull
     public static LimsModel buildEmptyModel() {
         return new LimsModel(Maps.newHashMap());
     }
