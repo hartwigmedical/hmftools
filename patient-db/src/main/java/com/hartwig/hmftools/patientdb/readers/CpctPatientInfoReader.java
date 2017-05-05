@@ -23,13 +23,15 @@ import org.jetbrains.annotations.Nullable;
 public class CpctPatientInfoReader {
     private static final Logger LOGGER = LogManager.getLogger(CpctPatientInfoReader.class);
 
+    private static final String FIELD_REGISTRATION_DATE = "BASELINE.ELIGIBILITY.ELIGIBILITY.REGDTC";
     private static final String FIELD_SEX = "BASELINE.DEMOGRAPHY.DEMOGRAPHY.SEX";
     private static final String FIELD_ETHNICITY = "BASELINE.DEMOGRAPHY.DEMOGRAPHY.ETHNIC";
-    private static final String FIELD_HOSPITALS1 = "BASELINE.ELIGIBILITY.ELIGIBILITY.HOSPITAL";
-    private static final String FIELD_HOSPITALS2 = "BASELINE.SELCRIT.SELCRIT.NHOSPITAL";
-    private static final String FIELD_BIRTHYEAR1 = "BASELINE.SELCRIT.SELCRIT.NBIRTHYEAR";
-    private static final String FIELD_BIRTHYEAR2 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHYEAR";
-    private static final String FIELD_BIRTHYEAR3 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHDTCES";
+    private static final String FIELD_HOSPITAL1 = "BASELINE.ELIGIBILITY.ELIGIBILITY.HOSPITAL";
+    private static final String FIELD_HOSPITAL2 = "BASELINE.SELCRIT.SELCRIT.NHOSPITAL";
+    private static final String FIELD_BIRTH_YEAR1 = "BASELINE.SELCRIT.SELCRIT.NBIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR2 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHYEAR";
+    private static final String FIELD_BIRTH_YEAR3 = "BASELINE.ELIGIBILITY.ELIGIBILITY.BIRTHDTCES";
+    private static final String FIELD_TUMOR_LOCATION = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
     private static final String FIELD_DEATHDATE = "ENDSTUDY.DEATH.DEATH.DDEATHDTC";
 
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -43,41 +45,46 @@ public class CpctPatientInfoReader {
 
     @NotNull
     public PatientInfo read(@NotNull final EcrfPatient patient) {
-        final String sex = GenericReader.getField(patient, FIELD_SEX);
+        final String registrationDateString = GenericReader.getField(patient, FIELD_REGISTRATION_DATE);
+        final LocalDate registrationDate = Utils.getDate(registrationDateString, dateFormatter);
+        final String gender = GenericReader.getField(patient, FIELD_SEX);
         final String ethnicity = GenericReader.getField(patient, FIELD_ETHNICITY);
         final Integer birthYear = getBirthYear(patient);
         final String hospital = getHospital(patient, hospitals);
+        final String tumorLocation = GenericReader.getField(patient, FIELD_TUMOR_LOCATION);
         final String deathDateString = GenericReader.getField(patient, FIELD_DEATHDATE);
         final LocalDate deathDate = Utils.getDate(deathDateString, dateFormatter);
-        return new PatientInfo(patient.patientId(), null, sex, birthYear, hospital, ethnicity, deathDate);
+
+        return new PatientInfo(patient.patientId(), registrationDate, gender, ethnicity, hospital, birthYear,
+                tumorLocation, deathDate);
     }
 
     @NotNull
     private static Map<Integer, String> getHospitals(@NotNull final CpctEcrfModel datamodel) {
         final Map<Integer, String> hospitals = Maps.newHashMap();
         final Iterable<EcrfField> fields = datamodel.findFieldsById(
-                Lists.newArrayList(FIELD_HOSPITALS1, FIELD_HOSPITALS2));
+                Lists.newArrayList(FIELD_HOSPITAL1, FIELD_HOSPITAL2));
         fields.forEach(field -> hospitals.putAll(field.codeList()));
         return ImmutableMap.copyOf(hospitals);
     }
 
     @Nullable
     private static Integer getBirthYear(@NotNull final EcrfPatient patient) {
-        final List<String> nbirthYearValues = patient.fieldValuesByName(FIELD_BIRTHYEAR1);
+        final List<String> nbirthYearValues = patient.fieldValuesByName(FIELD_BIRTH_YEAR1);
         if (nbirthYearValues != null && nbirthYearValues.size() != 0) {
             final String nbirthYear = nbirthYearValues.get(0);
             if (nbirthYear != null && !nbirthYear.equals("")) {
                 return Integer.parseInt(nbirthYear);
             }
         }
-        final List<String> birthYearValues = patient.fieldValuesByName(FIELD_BIRTHYEAR2);
+        final List<String> birthYearValues = patient.fieldValuesByName(FIELD_BIRTH_YEAR2);
         if (birthYearValues != null && birthYearValues.size() != 0) {
             final String birthYear = birthYearValues.get(0);
             if (birthYear != null && !birthYear.equals("")) {
                 return Integer.parseInt(birthYear);
             }
         }
-        final List<String> birthdtcesValues = patient.fieldValuesByName(FIELD_BIRTHYEAR3);
+        final List<String> birthdtcesValues = patient.fieldValuesByName(FIELD_BIRTH_YEAR3);
         if (birthdtcesValues != null && birthdtcesValues.size() != 0) {
             final String birthdtces = birthdtcesValues.get(0);
             if (birthdtces != null && !birthdtces.equals("")) {
@@ -85,7 +92,7 @@ public class CpctPatientInfoReader {
                     final LocalDate date = LocalDate.parse(birthdtces, dateFormatter);
                     return date.getYear();
                 } catch (DateTimeParseException e) {
-                    LOGGER.warn(FIELD_BIRTHYEAR3 + " did not contain valid date for patient " + patient.patientId());
+                    LOGGER.warn(FIELD_BIRTH_YEAR3 + " did not contain valid date for patient " + patient.patientId());
                     return null;
                 }
             }
@@ -100,8 +107,7 @@ public class CpctPatientInfoReader {
         final Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
         final String hospital = hospitals.get(hospitalCode);
         if (hospital == null) {
-            LOGGER.warn(
-                    FIELD_HOSPITALS1 + ", " + FIELD_HOSPITALS2 + " contained no Hospital with code " + hospitalCode);
+            LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no Hospital with code " + hospitalCode);
         }
         return hospital;
     }
