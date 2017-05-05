@@ -41,18 +41,22 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
 
     @Override
     public void exit(CopyNumber region) {
+        int bafCount = baf.count;
+        if (bafCount > 0) {
+            double myTumorRatio = tumorRatio.meanRatio();
+            if (myTumorRatio >= 0) {
 
-        double myTumorRatio = tumorRatio.meanRatio();
-        double myNormalRatio = normalRatio.meanRatio();
+                double myNormalRatio = normalRatio.meanRatio();
+                ConvoyCopyNumber copyNumber = ImmutableConvoyCopyNumber.builder().from(region)
+                        .mBAFCount(baf.count())
+                        .mBAF(baf.medianBaf())
+                        .tumorRatio(myTumorRatio)
+                        .ratioOfRatio(myTumorRatio / myNormalRatio)
+                        .build();
 
-        ConvoyCopyNumber copyNumber = ImmutableConvoyCopyNumber.builder().from(region)
-                .mBAFCount(baf.count())
-                .mBAF(baf.medianBaf())
-                .tumorRatio(myTumorRatio)
-                .ratioOfRatio(myTumorRatio / myNormalRatio)
-                .build();
-
-        result.add(copyNumber);
+                result.add(copyNumber);
+            }
+        }
     }
 
     private class BetaAlleleFrequencyAccumulator {
@@ -85,29 +89,22 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
 
     private class RatioAccumulator {
         private double sumRatio;
-        private double sumMedianRatio;
         private int count;
 
         private void accumulate(Ratio ratio) {
             if (ratio.ratio() > -1) {
                 count++;
                 sumRatio += ratio.ratio();
-                sumMedianRatio += ratio.medianRatio();
             }
         }
 
         private void reset() {
             count = 0;
             sumRatio = 0;
-            sumMedianRatio = 0;
         }
 
         private double meanRatio() {
             return count > 0 ? sumRatio / count : 0;
-        }
-
-        private double meanMedianRatio() {
-            return count > 0 ? sumMedianRatio / count : 0;
         }
     }
 
