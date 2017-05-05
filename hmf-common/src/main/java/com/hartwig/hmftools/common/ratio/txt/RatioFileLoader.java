@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 public final class RatioFileLoader {
@@ -36,8 +37,13 @@ public final class RatioFileLoader {
     private static List<Ratio> loadRatios(@NotNull final String basePath, @NotNull final String sample, @NotNull final String regex) throws IOException, HartwigException {
         final List<Ratio> results = Lists.newArrayList();
         for (final String line : ratioLines(basePath, sample, regex)) {
-            results.add(RatioFactory.fromRatioLine(line));
+            Ratio ratio = RatioFactory.fromRatioLine(line);
+            if (ratio.ratio() > -1) {
+                results.add(ratio);
+            }
         }
+
+        Collections.sort(results);
         return results;
     }
 
