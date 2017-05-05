@@ -8,17 +8,10 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfChecker;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelReader;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.patientdb.readers.CpctPatientInfoReader;
-import com.hartwig.hmftools.patientdb.readers.CpctRadioTherapyReader;
-import com.hartwig.hmftools.patientdb.readers.CpctSystemicTherapyReader;
-import com.hartwig.hmftools.patientdb.readers.CpctTreatmentDataReader;
-import com.hartwig.hmftools.patientdb.readers.CpctTumorDataReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -55,17 +48,17 @@ public class EcrfCheckerApplication {
             }
         }
 
-        if (checkNewCpct) {
-            final String ecrfXmlPath = cmd.getOptionValue(ECRF_XML_PATH);
-            final String oldEcrfXmlPath = cmd.getOptionValue(OLD_ECRF_XML_PATH);
-            final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
-            if (oldEcrfXmlPath == null || ecrfXmlPath == null || treatmentMappingCsv == null) {
-                final HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("Ecrf-Checker", options);
-            } else {
-                checkNewCpctPatients(ecrfXmlPath, oldEcrfXmlPath, treatmentMappingCsv);
-            }
-        }
+        //        if (checkNewCpct) {
+        //            final String ecrfXmlPath = cmd.getOptionValue(ECRF_XML_PATH);
+        //            final String oldEcrfXmlPath = cmd.getOptionValue(OLD_ECRF_XML_PATH);
+        //            final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
+        //            if (oldEcrfXmlPath == null || ecrfXmlPath == null || treatmentMappingCsv == null) {
+        //                final HelpFormatter formatter = new HelpFormatter();
+        //                formatter.printHelp("Ecrf-Checker", options);
+        //            } else {
+        //                checkNewCpctPatients(ecrfXmlPath, oldEcrfXmlPath, treatmentMappingCsv);
+        //            }
+        //        }
     }
 
     @NotNull
@@ -99,26 +92,26 @@ public class EcrfCheckerApplication {
         LOGGER.info("Checking references...Done");
     }
 
-    private static void checkNewCpctPatients(@NotNull final String ecrfXmlPath, @NotNull final String oldEcrfXmlPath,
-            @NotNull final String treatmentMappingCsv) throws IOException, XMLStreamException, EmptyFileException {
-        LOGGER.info("Checking new patients...");
-        final CpctEcrfModel oldModel = CpctEcrfModel.loadFromXML(oldEcrfXmlPath);
-        final CpctEcrfModel newModel = CpctEcrfModel.loadFromXML(ecrfXmlPath);
-        final CpctPatientInfoReader cpctPatientInfoReader = new CpctPatientInfoReader(newModel);
-        final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
-        final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
-        final CpctRadioTherapyReader cpctRadioTherapyReader = new CpctRadioTherapyReader();
-        final CpctTreatmentDataReader cpctTreatmentDataReader = new CpctTreatmentDataReader(treatmentMappingCsv);
-        for (final EcrfPatient patient : newModel.patients()) {
-            if (oldModel.findPatientById(patient.patientId()) == null) {
-                LOGGER.info("Found new CPCT patient: " + patient.patientId());
-                cpctPatientInfoReader.read(patient);
-                cpctTumorDataReader.read(patient);
-                cpctSystemicTherapyReader.read(patient);
-                cpctRadioTherapyReader.read(patient);
-                cpctTreatmentDataReader.read(patient);
-            }
-        }
-        LOGGER.info("Checking new patients...Done");
-    }
+    //    private static void checkNewCpctPatients(@NotNull final String ecrfXmlPath, @NotNull final String oldEcrfXmlPath,
+    //            @NotNull final String treatmentMappingCsv) throws IOException, XMLStreamException, EmptyFileException {
+    //        LOGGER.info("Checking new patients...");
+    //        final CpctEcrfModel oldModel = CpctEcrfModel.loadFromXML(oldEcrfXmlPath);
+    //        final CpctEcrfModel newModel = CpctEcrfModel.loadFromXML(ecrfXmlPath);
+    //        final CpctPatientInfoReader cpctPatientInfoReader = new CpctPatientInfoReader(newModel);
+    //        final CpctTumorDataReader cpctTumorDataReader = new CpctTumorDataReader();
+    //        final CpctSystemicTherapyReader cpctSystemicTherapyReader = new CpctSystemicTherapyReader();
+    //        final CpctRadioTherapyReader cpctRadioTherapyReader = new CpctRadioTherapyReader();
+    //        final CpctTreatmentDataReader cpctTreatmentDataReader = new CpctTreatmentDataReader(treatmentMappingCsv);
+    //        for (final EcrfPatient patient : newModel.patients()) {
+    //            if (oldModel.findPatientById(patient.patientId()) == null) {
+    //                LOGGER.info("Found new CPCT patient: " + patient.patientId());
+    //                cpctPatientInfoReader.read(patient);
+    //                cpctTumorDataReader.read(patient);
+    //                cpctSystemicTherapyReader.read(patient);
+    //                cpctRadioTherapyReader.read(patient);
+    //                cpctTreatmentDataReader.read(patient);
+    //            }
+    //        }
+    //        LOGGER.info("Checking new patients...Done");
+    //    }
 }
