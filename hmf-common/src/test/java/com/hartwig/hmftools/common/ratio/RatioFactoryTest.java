@@ -15,7 +15,7 @@ public class RatioFactoryTest {
 
         final Ratio ratio = RatioFactory.fromRatioLine(line);
         assertEquals("1", ratio.chromosome());
-        assertEquals(1001, ratio.position());
+        assertEquals(1000, ratio.position());
         assertEquals(0.3, ratio.ratio(), EPSILON);
         assertEquals(0.28, ratio.medianRatio(), EPSILON);
     }

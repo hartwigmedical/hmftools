@@ -17,7 +17,7 @@ public enum RatioFactory {
         final String[] values = ratioLine.split(CNV_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
-        final long position = Long.valueOf(values[START_FIELD_COLUMN].trim()) + 1; // JOBA: Need to verify this!
+        final long position = Long.valueOf(values[START_FIELD_COLUMN].trim());
         final double ratio = Double.valueOf(values[RATIO_COLUMN].trim());
         final double medianRatio = Double.valueOf(values[MEDIAN_RATIO_COLUMN].trim());
 
