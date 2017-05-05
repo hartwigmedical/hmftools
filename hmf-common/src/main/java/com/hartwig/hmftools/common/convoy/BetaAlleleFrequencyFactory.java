@@ -41,10 +41,10 @@ public class BetaAlleleFrequencyFactory {
         if (variant.tumorData() == null ||
                 !GENO_TYPE.contains(variant.refData().genoType()) ||
                 variant.type() != VariantType.SNP ||
-                variant.refData().alleleFrequency() < minRefAlleleFrequency ||
-                variant.refData().alleleFrequency() > maxRefAlleleFrequency ||
-                variant.refData().combinedDepth() < minCombinedDepth ||
-                variant.refData().combinedDepth() > maxCombinedDepth) {
+                variant.refData().alleleFrequency() <= minRefAlleleFrequency ||
+                variant.refData().alleleFrequency() >= maxRefAlleleFrequency ||
+                variant.refData().combinedDepth() <= minCombinedDepth ||
+                variant.refData().combinedDepth() >= maxCombinedDepth) {
             return false;
         }
 
