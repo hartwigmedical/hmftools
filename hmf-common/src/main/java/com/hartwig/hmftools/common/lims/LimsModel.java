@@ -33,4 +33,22 @@ public class LimsModel {
         }
         return dataForSample.tumorPercentage();
     }
+
+    public String findArrivalDateForSample(@NotNull final String sample) {
+        final LimsBiopsyData dataForSample = dataPerSample.get(sample);
+        if (dataForSample == null) {
+            LOGGER.warn(" Could not find LIMS data for " + sample);
+            return null;
+        }
+        return dataForSample.arrivalDate();
+    }
+
+    public String findSamplingDateForSample(@NotNull final String sample) {
+        final LimsBiopsyData dataForSample = dataPerSample.get(sample);
+        if (dataForSample == null) {
+            LOGGER.warn(" Could not find LIMS data for " + sample);
+            return null;
+        }
+        return dataForSample.samplingDate();
+    }
 }
