@@ -68,7 +68,7 @@ public class CpctEcrfModel {
                 filteredPatients.add(patient);
             } else {
                 LOGGER.warn("Did not find patient " + patientId + ": Adding dummy patient.");
-                filteredPatients.add(new EcrfPatient(patientId, Maps.newHashMap()));
+                filteredPatients.add(new EcrfPatient(patientId, Maps.newHashMap(), Maps.newHashMap()));
             }
         }
         return filteredPatients;

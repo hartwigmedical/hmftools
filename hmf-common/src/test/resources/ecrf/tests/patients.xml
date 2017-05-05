@@ -25,5 +25,31 @@
                 </FormData>
             </StudyEventData>
         </SubjectData>
+        <SubjectData SubjectKey="CPCT-04-04-0404">
+            <StudyEventData StudyEventOID="SE.Study" StudyEventRepeatKey="0">
+                <FormData FormOID="FRM.Form" FormRepeatKey="0">
+                    <ItemGroupData ItemGroupOID="GRP.ItemGroup" ItemGroupRepeatKey="1">
+                        <ItemData ItemOID="FLD.FormStatus" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.field1" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.field2" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.BIRTHDTC" Value=""/>
+                    </ItemGroupData>
+                </FormData>
+                <FormData FormOID="FRM.Form" FormRepeatKey="0">
+                    <ItemGroupData ItemGroupOID="GRP.ItemGroup" ItemGroupRepeatKey="2">
+                        <ItemData ItemOID="FLD.FormStatus" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.field1" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.field2" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.BIRTHDTC" Value=""/>
+                    </ItemGroupData>
+                    <ItemGroupData ItemGroupOID="GRP.ItemGroup" ItemGroupRepeatKey="2">
+                        <ItemData ItemOID="FLD.FormStatus" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.field1" Value="1"/>
+                        <ItemData ItemOID="FLD.ItemGroup.field2" Value=""/>
+                        <ItemData ItemOID="FLD.ItemGroup.BIRTHDTC" Value=""/>
+                    </ItemGroupData>
+                </FormData>
+            </StudyEventData>
+        </SubjectData>
     </ClinicalData>
 </ODM>

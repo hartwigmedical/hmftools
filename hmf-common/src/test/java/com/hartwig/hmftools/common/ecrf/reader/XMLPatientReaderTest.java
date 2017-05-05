@@ -44,27 +44,83 @@ public class XMLPatientReaderTest {
         field1Values.put(2, "two");
         field1Values.put(3, "three");
         final EcrfField field1 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field1", "", field1Values);
-        final EcrfField field2 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field2", "",
-                Maps.newHashMap());
+        final EcrfField field2 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field2", "", Maps.newHashMap());
         final EcrfField birthDate = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.BIRTHDTC", "",
                 Maps.newHashMap());
 
         final List<EcrfPatient> patients = XMLPatientReader.readPatients(reader,
                 Lists.newArrayList(field1, field2, birthDate));
 
-        assertEquals(2, patients.size());
+        assertEquals(3, patients.size());
 
         assertEquals(3, patients.get(0).fields().size());
         assertEquals(PATIENT_1, patients.get(0).patientId());
         verifyFirstFieldValue("one", patients.get(0).fieldValuesByEcrfField(field1));
         verifyFirstFieldValue("hi", patients.get(0).fieldValuesByEcrfField(field2));
         verifyFirstFieldValue("2016-01-01", patients.get(0).fieldValuesByEcrfField(birthDate));
+        assertEquals(1, patients.get(0).studyEventsPerOID().size());
+        assertEquals(1, patients.get(0).studyEventsPerOID().get(study).size());
+        assertEquals(1, patients.get(0).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).size());
+        assertEquals(1, patients.get(0).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                0).itemGroupsPerOID().get(itemGroup).size());
+        assertEquals(3, patients.get(0).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                0).itemGroupsPerOID().get(itemGroup).get(0).itemsPerOID().size());
 
         assertEquals(3, patients.get(1).fields().size());
         assertEquals(PATIENT_2, patients.get(1).patientId());
         verifyFirstFieldValue("two", patients.get(1).fieldValuesByEcrfField(field1));
         verifyFirstFieldValue("hi there", patients.get(1).fieldValuesByEcrfField(field2));
         verifyFirstFieldValue("2016-01-01", patients.get(1).fieldValuesByEcrfField(birthDate));
+        assertEquals(1, patients.get(1).studyEventsPerOID().size());
+        assertEquals(1, patients.get(1).studyEventsPerOID().get(study).size());
+        assertEquals(1, patients.get(1).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).size());
+        assertEquals(1, patients.get(1).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                0).itemGroupsPerOID().get(itemGroup).size());
+        assertEquals(3, patients.get(1).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                0).itemGroupsPerOID().get(itemGroup).get(0).itemsPerOID().size());
+    }
+
+    @Test
+    public void determinesEmptyItemGroupAndForm() throws FileNotFoundException, XMLStreamException {
+        final XMLInputFactory factory = XMLInputFactory.newInstance();
+        final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(PATIENTS_TEST));
+
+        final String study = "SE.Study";
+        final String form = "FRM.Form";
+        final String itemGroup = "GRP.ItemGroup";
+        final Map<Integer, String> field1Values = Maps.newHashMap();
+        field1Values.put(1, "one");
+        field1Values.put(2, "two");
+        field1Values.put(3, "three");
+        final EcrfField field1 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field1", "", field1Values);
+        final EcrfField field2 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field2", "", Maps.newHashMap());
+        final EcrfField birthDate = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.BIRTHDTC", "",
+                Maps.newHashMap());
+
+        final List<EcrfPatient> patients = XMLPatientReader.readPatients(reader,
+                Lists.newArrayList(field1, field2, birthDate));
+
+        assertEquals(3, patients.size());
+
+        assertEquals(1, patients.get(2).studyEventsPerOID().size());
+        assertEquals(1, patients.get(2).studyEventsPerOID().get(study).size());
+        assertEquals(2, patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).size());
+        assertEquals(1, patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                0).itemGroupsPerOID().get(itemGroup).size());
+        assertEquals(true, patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                0).itemGroupsPerOID().get(itemGroup).get(0).isEmpty());
+        assertEquals(true,
+                patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(0).isEmpty());
+        assertEquals(2, patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                1).itemGroupsPerOID().get(itemGroup).size());
+        assertEquals(true, patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                1).itemGroupsPerOID().get(itemGroup).get(0).isEmpty());
+        System.out.println(patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                1).itemGroupsPerOID().get(itemGroup).get(1));
+        assertEquals(false, patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+                1).itemGroupsPerOID().get(itemGroup).get(1).isEmpty());
+        assertEquals(false,
+                patients.get(2).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(1).isEmpty());
     }
 
     private static void verifyFirstFieldValue(@NotNull final String expected, @Nullable final List<String> values) {

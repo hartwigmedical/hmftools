@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,10 +15,14 @@ public class EcrfPatient {
     private final String patientId;
     @NotNull
     private final Map<EcrfField, List<String>> fields;
+    @NotNull
+    private final Map<String, List<EcrfStudyEvent>> studyEventsPerOID;
 
-    public EcrfPatient(@NotNull final String patientId, @NotNull final Map<EcrfField, List<String>> fields) {
+    public EcrfPatient(@NotNull final String patientId, @NotNull final Map<EcrfField, List<String>> fields,
+            @NotNull final Map<String, List<EcrfStudyEvent>> studyEventsPerOID) {
         this.patientId = patientId;
         this.fields = fields;
+        this.studyEventsPerOID = studyEventsPerOID;
     }
 
     @NotNull
@@ -42,5 +48,18 @@ public class EcrfPatient {
             }
         }
         return null;
+    }
+
+    @NotNull
+    public Map<String, List<EcrfStudyEvent>> studyEventsPerOID() {
+        return studyEventsPerOID;
+    }
+
+    @NotNull
+    public List<EcrfStudyEvent> studyEventsPerOID(@NotNull final String studyEventOID) {
+        if (studyEventsPerOID().get(studyEventOID) == null) {
+            return Lists.newArrayList();
+        }
+        return studyEventsPerOID.get(studyEventOID);
     }
 }
