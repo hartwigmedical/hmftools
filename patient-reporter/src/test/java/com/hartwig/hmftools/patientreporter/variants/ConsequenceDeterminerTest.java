@@ -1,13 +1,8 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -15,9 +10,13 @@ import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
-
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 public class ConsequenceDeterminerTest {
 
@@ -41,7 +40,7 @@ public class ConsequenceDeterminerTest {
     @Test
     public void worksAsExpected() {
         final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(
-                new GenomeRegion(CHROMOSOME, POSITION - 10, POSITION + 10));
+                ImmutableBEDGenomeRegion.of(CHROMOSOME, POSITION - 10, POSITION + 10, null));
         final Map<String, HMFSlicingAnnotation> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT,
                 HMFSlicingAnnotationFactory.create(TRANSCRIPT, TRANSCRIPT_VERSION, Strings.EMPTY));

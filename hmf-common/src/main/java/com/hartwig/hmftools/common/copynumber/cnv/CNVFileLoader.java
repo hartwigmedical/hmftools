@@ -43,6 +43,7 @@ public final class CNVFileLoader {
             return FileReader.build().readLines(copynumberPath);
         } catch (EmptyFileException e) {
             // if the CNV is empty (but exists) and the ratio file exists, there is no problem (just no CNVs found)
+            // JOBA: Not sure how this works... ratio file contains a header line and CopyNumber is a different field?!?
             final Path ratioPath = PathRegexFinder.build()
                                                   .findPath(basePath, String.format(COPYNUMBER_RATIO_REGEX, sample));
             FileReader.build().readLines(ratioPath);

@@ -1,54 +1,27 @@
 package com.hartwig.hmftools.common.slicing;
 
-import java.util.Collection;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.SortedSetMultimap;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.Variant;
 import org.jetbrains.annotations.NotNull;
 
-public class Slicer {
+import java.util.Collection;
+import java.util.function.Predicate;
+
+public interface Slicer extends Predicate<GenomePosition> {
 
     @NotNull
-    private final SortedSetMultimap<String, GenomeRegion> regions;
+    Collection<GenomeRegion> regions();
 
-    Slicer(@NotNull final SortedSetMultimap<String, GenomeRegion> regions) {
-        this.regions = regions;
+    default int numberOfRegions() {
+        return regions().size();
     }
 
-    public boolean includes(@NotNull SomaticVariant variant) {
-        final Collection<GenomeRegion> regionsForChrom = regions.get(variant.chromosome());
-        if (regionsForChrom == null) {
-            return false;
-        } else {
-            for (final GenomeRegion region : regionsForChrom) {
-                if (variant.position() >= region.start() && variant.position() <= region.end()) {
-                    return true;
-                } else if (region.start() > variant.position()) {
-                    return false;
-                }
-            }
-        }
-
-        return false;
+    default long numberOfBases() {
+        return regions().stream().mapToLong(GenomeRegion::bases).sum();
     }
 
-    @NotNull
-    public Collection<GenomeRegion> regions() {
-        return regions.values();
-    }
-
-    public int numberOfRegions() {
-        return regions.size();
-    }
-
-    @VisibleForTesting
-    public long numberOfBases() {
-        long bases = 0;
-        for (final GenomeRegion region : regions.values()) {
-            bases += region.bases();
-        }
-        return bases;
+    default boolean includes(@NotNull Variant variant) {
+        return test(variant);
     }
 }

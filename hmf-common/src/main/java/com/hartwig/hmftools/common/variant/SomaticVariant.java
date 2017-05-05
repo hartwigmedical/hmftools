@@ -147,7 +147,7 @@ public class SomaticVariant implements Variant {
         return "SomaticVariant{" + "chromosome='" + chromosome + '\'' + ", position=" + position + '}';
     }
 
-    public static class Builder {
+    public static class Builder implements VariantBuilder<SomaticVariant> {
         @NotNull
         private String originalVCFLine = Strings.EMPTY;
 

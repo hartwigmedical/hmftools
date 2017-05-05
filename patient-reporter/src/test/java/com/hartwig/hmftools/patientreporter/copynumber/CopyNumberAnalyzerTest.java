@@ -1,18 +1,20 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.copynumber.cnv.ImmutableCNVCopyNumber;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
+import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
+import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
-
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class CopyNumberAnalyzerTest {
 
@@ -21,9 +23,9 @@ public class CopyNumberAnalyzerTest {
 
     @Test
     public void worksAsExpected() {
-        final GenomeRegion first = new GenomeRegion(CHROMOSOME, 101, 200);
-        final GenomeRegion second = new GenomeRegion(CHROMOSOME, 301, 400);
-        final GenomeRegion third = new GenomeRegion(CHROMOSOME, 601, 700);
+        final GenomeRegion first = region(101, 200);
+        final GenomeRegion second = region(301, 400);
+        final GenomeRegion third = region(601, 700);
 
         final HMFSlicingAnnotation firstAnnotation = HMFSlicingAnnotationFactory.create("TRANS1", 1, "GENE1");
         final HMFSlicingAnnotation secondAnnotation = HMFSlicingAnnotationFactory.create("TRANS2", 1, "GENE2");
@@ -35,10 +37,10 @@ public class CopyNumberAnalyzerTest {
         annotations.put(third, thirdAnnotation);
 
         final List<CopyNumber> copyNumbers = Lists.newArrayList();
-        copyNumbers.add(new CopyNumber(CHROMOSOME, 11, 20, 1));
-        copyNumbers.add(new CopyNumber(CHROMOSOME, 121, 170, 4));
-        copyNumbers.add(new CopyNumber(CHROMOSOME, 191, 260, 5));
-        copyNumbers.add(new CopyNumber(CHROMOSOME, 291, 500, 0));
+        copyNumbers.add(copyNumber(11, 20, 1));
+        copyNumbers.add(copyNumber(121, 170, 4));
+        copyNumbers.add(copyNumber(191, 260, 5));
+        copyNumbers.add(copyNumber(291, 500, 0));
 
         final CopyNumberAnalyzer copyNumberAnalyzer = new CopyNumberAnalyzer(annotations);
         final CopyNumberAnalysis analysis = copyNumberAnalyzer.run(copyNumbers);
@@ -64,5 +66,15 @@ public class CopyNumberAnalyzerTest {
         assertEquals(2, thirdStat.min());
         assertEquals(2, thirdStat.max());
         assertEquals(2D, thirdStat.mean(), EPSILON);
+    }
+
+    @NotNull
+    private static GenomeRegion region(final long start, final long end) {
+        return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end, null);
+    }
+
+    @NotNull
+    private static CopyNumber copyNumber(final long start, final long end, final int value) {
+        return ImmutableCNVCopyNumber.of(value, CHROMOSOME, start, end, null);
     }
 }

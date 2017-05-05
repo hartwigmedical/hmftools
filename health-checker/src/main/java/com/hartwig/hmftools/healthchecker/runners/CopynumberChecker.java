@@ -41,9 +41,9 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
         long totalLoss = 0;
         for (final CopyNumber copyNumber : copynumberLines(runContext)) {
             if (copyNumber.isGain()) {
-                totalGain += copyNumber.basesAffected();
+                totalGain += copyNumber.bases();
             } else if (copyNumber.isLoss()) {
-                totalLoss += copyNumber.basesAffected();
+                totalLoss += copyNumber.bases();
             }
         }
 

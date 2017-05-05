@@ -1,21 +1,21 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class VariantAnalyzerTest {
 
@@ -85,6 +85,6 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static GenomeRegion region(final long start, final long end, @Nullable String annotation) {
-        return new GenomeRegion(CHROMOSOME, start, end, annotation);
+        return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end, annotation);
     }
 }

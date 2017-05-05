@@ -1,26 +1,24 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.io.File;
-import java.io.IOException;
-
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
-
+import net.sf.dynamicreports.report.exception.DRException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import net.sf.dynamicreports.report.exception.DRException;
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.Assert.assertNotNull;
 
 public class SinglePatientReporterTest {
 

@@ -27,6 +27,7 @@
         <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
         <maven.shade.plugin.version>2.4.3</maven.shade.plugin.version>
 
+        <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>1.141</htsjdk.version>
         <intellij.annotations.version>12.0</intellij.annotations.version>
         <google.guava.version>18.0</google.guava.version>

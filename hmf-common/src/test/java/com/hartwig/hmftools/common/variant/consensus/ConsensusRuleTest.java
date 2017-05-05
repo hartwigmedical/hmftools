@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.common.variant.consensus;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-import java.util.function.Predicate;
-
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.slicing.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.function.Predicate;
+
+import static org.junit.Assert.assertEquals;
 
 public class ConsensusRuleTest {
 
@@ -63,7 +63,7 @@ public class ConsensusRuleTest {
 
     @NotNull
     private static GenomeRegion region(final long start, final long end) {
-        return new GenomeRegion(CHROMOSOME, start, end);
+        return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end, null);
     }
 
     @NotNull

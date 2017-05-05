@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.common.variant;
 
-import static org.junit.Assert.assertEquals;
-
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class GermlineSampleDataTest {
 
@@ -11,7 +10,8 @@ public class GermlineSampleDataTest {
 
     @Test
     public void canCalculateAlleleFrequency() {
-        final GermlineSampleData data = new GermlineSampleData(Strings.EMPTY, 20, 10);
+        final GermlineSampleData data = ImmutableGermlineSampleData.of("1/1", 20, 10, 35);
+
         assertEquals(0.5, data.alleleFrequency(), EPSILON);
     }
 }
