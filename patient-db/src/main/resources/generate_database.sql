@@ -8,7 +8,7 @@ CREATE TABLE patientInfo
     birthYear int,
     tumorLocation varchar(255),
     deathDate DATE,
-    PRIMARY KEY (id))
+    PRIMARY KEY (id)
 );
 
 
