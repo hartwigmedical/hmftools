@@ -52,10 +52,9 @@ public class BreakPointInspectorApplication {
 
         // load the file
         final File bamFile = new File(bamPath);
-        final File indexFile = new File(bamPath + ".bai"); // TODO: better java path handling?
         final BAMFileReader reader = constructor.newInstance(
                 bamFile,
-                indexFile,
+                null, // let the library try and find the index
                 true,
                 true,
                 ValidationStringency.DEFAULT_STRINGENCY,
@@ -77,6 +76,12 @@ public class BreakPointInspectorApplication {
         final String breakPoint = cmd.getOptionValue(BREAK_POINT);
         final int range = Integer.parseInt(cmd.getOptionValue(RANGE, "500"));
 
+        if(bamPath == null || breakPoint == null) {
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("Ecrf-Analyser", options);
+            System.exit(1);
+        }
+
         // parse breakpoint location
         final String[] split = breakPoint.split(":");
         final String chromosome = split[0];
@@ -95,6 +100,7 @@ public class BreakPointInspectorApplication {
         {
             final SAMRecord record = results.next();
             System.out.println(record.getReadName());
+            System.out.println(record.getReferencePositionAtReadPosition(1)); // corresponds with POS in SAM format
         }
 
     }
