@@ -24,6 +24,7 @@ public class BreakPointInspectorApplication {
     private static final String BAM_PATH = "bam";
     private static final String BREAK_POINT = "break";
     private static final String RANGE = "range";
+    private static final String SV_LEN = "svlen";
 
     @NotNull
     private static Options createOptions() {
@@ -31,6 +32,7 @@ public class BreakPointInspectorApplication {
         options.addOption(BAM_PATH, true, "input BAM");
         options.addOption(BREAK_POINT, true, "position of break point in chrX:123456 format");
         options.addOption(RANGE, true, "base distance around breakpoint");
+        options.addOption(SV_LEN, true, "length of the SV to inspect");
         return options;
     }
 
@@ -56,8 +58,8 @@ public class BreakPointInspectorApplication {
         final BAMFileReader reader = constructor.newInstance(
                 bamFile,
                 null, // let the library try and find the index
-                true,
-                true,
+                true, // eager decode
+                true, // async I/O
                 ValidationStringency.DEFAULT_STRINGENCY,
                 DefaultSAMRecordFactory.getInstance()
         );
@@ -76,6 +78,7 @@ public class BreakPointInspectorApplication {
         final String bamPath = cmd.getOptionValue(BAM_PATH);
         final String breakPoint = cmd.getOptionValue(BREAK_POINT);
         final int range = Integer.parseInt(cmd.getOptionValue(RANGE, "500"));
+        final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
 
         if(bamPath == null || breakPoint == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -99,10 +102,20 @@ public class BreakPointInspectorApplication {
         // query the position
         final int index = reader.getFileHeader().getSequenceDictionary().getSequenceIndex(chromosome);
         final QueryInterval[] queryIntervals = {
-                new QueryInterval(index, Math.max(0, location - range), location + range)
+                new QueryInterval(index, Math.max(0, location - range), location + range),
+                new QueryInterval(index, Math.max(0, location + svLen - range), location + svLen + range)
         };
 
-        System.out.println(String.join("\t", "Read Name", "Chromosome", "Position", "Mapping Quality", "CIGAR", "Mate Chromosome", "Mate Position", "Insert Size"));
+        System.out.println(String.join("\t",
+                "Read Name",
+                "Chromosome",
+                "Position",
+                "Mapping Quality",
+                "CIGAR",
+                "Mate Chromosome",
+                "Mate Position",
+                "Insert Size"
+        ));
 
         // execute and parse the results
         CloseableIterator<SAMRecord> results = reader.query(queryIntervals, false);
