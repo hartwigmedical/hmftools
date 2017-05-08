@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
@@ -12,10 +9,12 @@ import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.SlicedCheck;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 @ResourceWrapper(type = CheckType.SLICED)
@@ -38,7 +37,7 @@ public class SlicedChecker extends ErrorHandlingChecker implements HealthChecker
     @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final List<GermlineVariant> variants = VCFFileLoader.loadGermlineVCF(runContext.runDirectory(),
-                SLICED_VCF_EXTENSION);
+                SLICED_VCF_EXTENSION).variants();
         final long value = variants.size();
 
         final String sample = runContext.isSomaticRun() ? runContext.tumorSample() : runContext.refSample();

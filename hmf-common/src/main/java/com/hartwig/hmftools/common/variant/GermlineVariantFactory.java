@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +20,16 @@ public final class GermlineVariantFactory {
     private static final int SAMPLE_DATA_COMBINED_DEPTH_COLUMN = 2;
 
     private GermlineVariantFactory() {
+    }
+
+    @NotNull
+    public static String refSampleFromHeaderLine(@NotNull final String headerLine) {
+        return VariantFactory.sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN);
+    }
+
+    @NotNull
+    public static String tumorSampleFromHeaderLine(@NotNull final String headerLine) {
+        return VariantFactory.sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN);
     }
 
     @Nullable
