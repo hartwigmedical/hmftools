@@ -106,6 +106,7 @@ public class BreakPointInspectorApplication {
                 new QueryInterval(index, Math.max(0, location + svLen - range), location + svLen + range)
         };
 
+        // print  header
         System.out.println(String.join("\t",
                 "Read Name",
                 "Chromosome",
@@ -114,7 +115,7 @@ public class BreakPointInspectorApplication {
                 "CIGAR",
                 "Mate Chromosome",
                 "Mate Position",
-                "Insert Size"
+                "Read Length"
         ));
 
         // execute and parse the results
