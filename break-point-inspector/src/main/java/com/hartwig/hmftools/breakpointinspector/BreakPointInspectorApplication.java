@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Set;
 
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloseableIterator;
@@ -28,7 +29,7 @@ public class BreakPointInspectorApplication {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(BAM_PATH, true, "input BAM");
-        options.addOption(BREAK_POINT, true, "position of break point");
+        options.addOption(BREAK_POINT, true, "position of break point in chrX:123456 format");
         options.addOption(RANGE, true, "base distance around breakpoint");
         return options;
     }
@@ -84,6 +85,12 @@ public class BreakPointInspectorApplication {
 
         // parse breakpoint location
         final String[] split = breakPoint.split(":");
+        if(split.length != 2)
+        {
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("Ecrf-Analyser", options);
+            System.exit(1);
+        }
         final String chromosome = split[0];
         final int location = Integer.parseInt(split[1]);
 
@@ -94,13 +101,26 @@ public class BreakPointInspectorApplication {
         final QueryInterval[] queryIntervals = {
                 new QueryInterval(index, Math.max(0, location - range), location + range)
         };
-        CloseableIterator<SAMRecord> results = reader.query(queryIntervals, false);
 
+        System.out.println(String.join("\t", "Read Name", "Chromosome", "Position", "Mapping Quality", "CIGAR", "Mate Chromosome", "Mate Position", "Insert Size"));
+
+        // execute and parse the results
+        CloseableIterator<SAMRecord> results = reader.query(queryIntervals, false);
         while(results.hasNext())
         {
             final SAMRecord record = results.next();
-            System.out.println(record.getReadName());
-            System.out.println(record.getReferencePositionAtReadPosition(1)); // corresponds with POS in SAM format
+            final Set<SAMFlag> flags = record.getSAMFlags();
+
+            System.out.println(String.join("\t",
+                    record.getReadName(),
+                    record.getReferenceName(),
+                    Integer.toString(record.getReferencePositionAtReadPosition(1)),
+                    Integer.toString(record.getMappingQuality()),
+                    record.getCigarString(),
+                    record.getMateReferenceName(),
+                    Integer.toString(record.getMateAlignmentStart()),
+                    Integer.toString(record.getInferredInsertSize())
+            ));
         }
 
     }
