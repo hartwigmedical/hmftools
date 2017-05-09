@@ -24,6 +24,7 @@ public class BreakPointInspectorApplication {
     private static final String BREAK_POINT = "break";
     private static final String RANGE = "range";
     private static final String SV_LEN = "svlen";
+    private static final String INCLUDE_PROPER = "proper";
 
     @NotNull
     private static Options createOptions() {
@@ -32,6 +33,7 @@ public class BreakPointInspectorApplication {
         options.addOption(BREAK_POINT, true, "position of break point in chrX:123456 format");
         options.addOption(RANGE, true, "base distance around breakpoint");
         options.addOption(SV_LEN, true, "length of the SV to inspect");
+        options.addOption(INCLUDE_PROPER, false, "include proper pairs in output");
         return options;
     }
 
@@ -63,6 +65,7 @@ public class BreakPointInspectorApplication {
         final String breakPoint = cmd.getOptionValue(BREAK_POINT);
         final int range = Integer.parseInt(cmd.getOptionValue(RANGE, "500"));
         final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
+        final boolean includePropers = cmd.hasOption(INCLUDE_PROPER);
 
         if(bamPath == null || breakPoint == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -116,7 +119,8 @@ public class BreakPointInspectorApplication {
 
         final Map<String, SAMRecord> firstReadMap = new Hashtable<>();
 
-        int properPairReads = 0;
+        int properPairs = 0;
+        int interestingPairs = 0;
         int zeroQualityMappings = 0;
 
         // execute query and parse the results
@@ -124,11 +128,6 @@ public class BreakPointInspectorApplication {
         while(results.hasNext()) {
             final SAMRecord read = results.next();
 
-            // TODO: should separate pairs from the start of the SV to the end of the SV
-            if(read.getProperPairFlag()) {
-                properPairReads++;
-                continue;
-            }
             if(read.getMappingQuality() == 0) {
                 zeroQualityMappings++;
                 continue;
@@ -140,6 +139,18 @@ public class BreakPointInspectorApplication {
                 assert(firstRead.getReadName().equals(read.getReadName()));
                 assert(firstRead.getMateAlignmentStart() == read.getAlignmentStart());
                 assert(firstRead.getMateReferenceName().equals(read.getReferenceName()));
+                assert(firstRead.getProperPairFlag() == read.getProperPairFlag());
+
+                // TODO: should separate pairs from the start of the SV to the end of the SV
+                if(firstRead.getProperPairFlag()) {
+                    properPairs++;
+                    if(!includePropers)
+                        continue;
+                }
+                else
+                {
+                    interestingPairs++;
+                }
 
                 // TODO: sort output by firstRead position
                 // TODO: or just print record.getSAMString() ??
@@ -171,7 +182,8 @@ public class BreakPointInspectorApplication {
 
         System.out.println();
         System.out.println("STATS");
-        System.out.println("PROPER_PAIRS\t" + properPairReads / 2);
+        System.out.println("INTERESTING_PAIRS\t" + interestingPairs);
+        System.out.println("PROPER_PAIRS\t" + properPairs);
         System.out.println("ZERO_MAPQ\t" + zeroQualityMappings);
 
     }
