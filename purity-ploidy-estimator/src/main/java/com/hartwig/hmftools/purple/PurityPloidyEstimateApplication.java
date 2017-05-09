@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple;
 
+import com.hartwig.hmftools.common.convoy.*;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
@@ -16,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import static com.hartwig.hmftools.common.slicing.SlicerFactory.sortedSlicer;
@@ -25,13 +27,25 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
+    private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;
+    private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
+    private static final int MIN_COMBINED_DEPTH = 10;
+    private static final int MAX_COMBINED_DEPTH = 100;
+    private static final int MAX_PLOIDY = 12;
+    private static final double MIN_PURITY = 0.1;
+    private static final double MAX_PURITY = 1.0;
+    private static final double PURITY_INCREMENTS = 0.01;
+    private static final double MIN_NORM_FACTOR = 0.33;
+    private static final double MAX_NORM_FACTOR = 2;
+    private static final double NORM_FACTOR_INCREMENTS = 0.01;
+    private static final double CNV_RATIO_WEIGHT_FACTOR = 0.2;
+
     // Options
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String VCF_EXTENSION = "vcf_extension";
     private static final String VCF_EXTENSION_DEFAULT = ".annotation.vcf";
     private static final String BED_FILE = "bed";
     private static final String FREEC_DIRECTORY = "freec_dir";
-
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
         final Options options = createOptions();
@@ -54,12 +68,39 @@ public class PurityPloidyEstimateApplication {
 
         LOGGER.info("Loading {} CopyNumber", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        final List<CopyNumber> copyNumbers = CNVFileLoader.loadCNV(freecDirectory, tumorSample);
+        final List<CopyNumber> copyNumbers = PadCopyNumber.pad(CNVFileLoader.loadCNV(freecDirectory, tumorSample));
 
         LOGGER.info("Loading {} Ratio data", tumorSample);
         final List<Ratio> tumorRatio = RatioFileLoader.loadTumorRatios(freecDirectory, tumorSample);
         final List<Ratio> normalRatio = RatioFileLoader.loadNormalRatios(freecDirectory, tumorSample);
 
+        LOGGER.info("Collating data");
+        final BetaAlleleFrequencyFactory bafFactory = new BetaAlleleFrequencyFactory(
+                MIN_REF_ALLELE_FREQUENCY,
+                MAX_REF_ALLELE_FREQUENCY,
+                MIN_COMBINED_DEPTH,
+                MAX_COMBINED_DEPTH);
+        final List<BetaAlleleFrequency> bafs = bafFactory.transform(variants);
+        final List<ConvoyCopyNumber> convoyCopyNumbers = ConvoyCopyNumberFactory.convoyCopyNumbers(copyNumbers, bafs, tumorRatio, normalRatio);
+
+        LOGGER.info("Fitting purity");
+        final List<ConvoyPurity> purity = ConvoyPurityFactory.create(MIN_PURITY,
+                MAX_PURITY,
+                PURITY_INCREMENTS,
+                MIN_NORM_FACTOR,
+                MAX_NORM_FACTOR,
+                NORM_FACTOR_INCREMENTS,
+                CNV_RATIO_WEIGHT_FACTOR,
+                MAX_PLOIDY,
+                convoyCopyNumbers);
+        Collections.sort(purity);
+
+        LOGGER.info("Top fit(s):");
+        for (int i = 0; i < Math.min(5, purity.size()); i++) {
+            LOGGER.info(purity.get(i));
+        }
+
+        LOGGER.info("Complete");
     }
 
     private static String defaultValue(CommandLine cmd, String opt, String defaultValue) {
