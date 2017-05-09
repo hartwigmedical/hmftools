@@ -24,12 +24,12 @@ public final class GermlineVariantFactory {
 
     @NotNull
     public static String refSampleFromHeaderLine(@NotNull final String headerLine) {
-        return sortReferenceAndTumor(sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN), sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN))[0];
+        return sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN);
     }
 
     @NotNull
     public static String tumorSampleFromHeaderLine(@NotNull final String headerLine) {
-        return sortReferenceAndTumor(sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN), sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN))[1];
+        return sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN);
     }
 
     @VisibleForTesting
