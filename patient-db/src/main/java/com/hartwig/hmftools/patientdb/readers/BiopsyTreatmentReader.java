@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 
@@ -49,14 +48,8 @@ public class BiopsyTreatmentReader {
                     LOGGER.warn("Ignoring empty form: " + FORM_TREATMENT + " for patient " + patient.patientId());
                     continue;
                 }
-                String treatmentGiven = null;
-                for (final EcrfItemGroup itemGroup : form.itemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER)) {
-                    for (final String itemValue : itemGroup.itemsPerOID(FIELD_TREATMENT_GIVEN)) {
-                        if (itemValue != null) {
-                            treatmentGiven = itemValue;
-                        }
-                    }
-                }
+                final String treatmentGiven = form.itemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER).get(0).readItemString(
+                        FIELD_TREATMENT_GIVEN, 0);
                 final List<BiopsyTreatmentDrugData> drugs = readDrugs(patient.patientId(),
                         form.itemGroupsPerOID(ITEMGROUP_SYSPOSTBIO));
                 final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
@@ -76,8 +69,8 @@ public class BiopsyTreatmentReader {
                 LOGGER.warn("Ignoring empty item group: " + ITEMGROUP_SYSPOSTBIO + " for patient " + patientId);
                 continue;
             }
-            final LocalDate drugStart = Utils.getDate(itemGroup.itemsPerOID(FIELD_DRUG_START).get(0), dateFormatter);
-            final LocalDate drugEnd = Utils.getDate(itemGroup.itemsPerOID(FIELD_DRUG_END).get(0), dateFormatter);
+            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, dateFormatter);
+            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, dateFormatter);
             final String drugName = itemGroup.readItemString(FIELD_DRUG, 0);
             final String drugType = drugName == null ? null : treatmentMapping.get(drugName.toLowerCase().trim());
             drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));

@@ -59,24 +59,17 @@ public class BiopsyTreatmentResponseReader {
                                 + patient.patientId());
                         continue;
                     }
-                    for (final String responseDateValue : itemGroup.itemsPerOID(FIELD_RESPONSE_DATE)) {
-                        final LocalDate date = Utils.getDate(responseDateValue, dateFormatter);
-                        if (date != null) {
-                            responseDate = date;
-                            break;
-                        }
+                    final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, dateFormatter);
+                    if (date != null) {
+                        responseDate = date;
                     }
-                    for (final String measurementDoneValue : itemGroup.itemsPerOID(FIELD_MEASUREMENT_YN)) {
-                        if (measurementDoneValue != null) {
-                            measurementDone = measurementDoneValue;
-                            break;
-                        }
+                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_YN, 0);
+                    if (measurementDoneValue != null) {
+                        measurementDone = measurementDoneValue;
                     }
-                    for (final String responseValue : itemGroup.itemsPerOID(FIELD_RESPONSE)) {
-                        if (responseValue != null) {
-                            response = responseValue;
-                            break;
-                        }
+                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE, 0);
+                    if (responseValue != null) {
+                        response = responseValue;
                     }
                 }
                 if (assessmentDate == null && responseDate == null) {

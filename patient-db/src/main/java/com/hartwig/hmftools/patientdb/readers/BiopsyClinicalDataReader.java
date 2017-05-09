@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
 
 import org.apache.logging.log4j.LogManager;
@@ -44,16 +43,7 @@ public class BiopsyClinicalDataReader {
                                 + patient.patientId());
                         continue;
                     }
-                    if (itemGroup.itemsPerOID(FIELD_DATE).size() > 1) {
-                        LOGGER.warn("Item group " + ITEMGROUP_BIOPSIES + " had more than 1 item with OID " + FIELD_DATE
-                                + " for patient " + patient.patientId());
-                    }
-                    if (itemGroup.itemsPerOID(FIELD_LOCATION).size() > 1) {
-                        LOGGER.warn(
-                                "Item group " + ITEMGROUP_BIOPSIES + " had more than 1 item with OID " + FIELD_LOCATION
-                                        + " for patient " + patient.patientId());
-                    }
-                    final LocalDate date = Utils.getDate(itemGroup.itemsPerOID(FIELD_DATE).get(0), dateFormatter);
+                    final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, dateFormatter);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0);
                     if (date == null) {
                         LOGGER.warn("Found biopsy with empty date for patient: " + patient.patientId());
