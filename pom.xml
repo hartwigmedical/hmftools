@@ -87,6 +87,13 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
+                <artifactId>hmf-common</artifactId>
+                <version>${hmf-common.version}</version>
+                <scope>test</scope>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
             </dependency>
