@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.hartwig.hmftools.common.variant.VariantFactory.VCF_COLUMN_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.VariantFactory.*;
 
 public final class GermlineVariantFactory {
 
@@ -24,12 +24,41 @@ public final class GermlineVariantFactory {
 
     @NotNull
     public static String refSampleFromHeaderLine(@NotNull final String headerLine) {
-        return VariantFactory.sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN);
+        return sortReferenceAndTumor(sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN), sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN))[0];
     }
 
     @NotNull
     public static String tumorSampleFromHeaderLine(@NotNull final String headerLine) {
-        return VariantFactory.sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN);
+        return sortReferenceAndTumor(sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN), sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN))[1];
+    }
+
+    @VisibleForTesting
+    static String[] sortReferenceAndTumor(@NotNull final String first, @NotNull final String second) {
+        int intersectionLength = sampleIntersectionLength(first, second);
+        if (intersectionLength != 0 && second.length() > intersectionLength) {
+            final String secondRemainder = second.substring(intersectionLength);
+            if (isBloodOrReference(secondRemainder)) {
+                return new String[]{second, first};
+            }
+        }
+
+        return new String[]{first, second};
+    }
+
+    private static boolean isBloodOrReference(String header) {
+        return header.toLowerCase().startsWith("bl") || header.toLowerCase().startsWith("r");
+    }
+
+    private static int sampleIntersectionLength(@NotNull final String first, @NotNull final String second) {
+        int maxIndex = Math.min(first.length(), second.length());
+
+        for (int i = 0; i < maxIndex; i++) {
+            if (first.charAt(i) != second.charAt(i)) {
+                return i;
+            }
+        }
+
+        return maxIndex;
     }
 
     @Nullable
@@ -50,7 +79,7 @@ public final class GermlineVariantFactory {
                 values.length > TUMOR_SAMPLE_COLUMN ? fromSampleData(values[TUMOR_SAMPLE_COLUMN].trim()) : null;
 
         final GermlineVariant.Builder builder = ImmutableGermlineVariant.builder().refData(refData).tumorData(tumorData);
-        return VariantFactory.withLine(builder, values).build();
+        return withLine(builder, values).build();
     }
 
     @Nullable
