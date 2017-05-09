@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.io;
+package com.hartwig.hmftools.common.io;
 
 import java.io.File;
 import java.io.IOException;
