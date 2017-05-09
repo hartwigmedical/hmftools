@@ -9,6 +9,8 @@ import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 import java.util.Collections;
 import java.util.List;
 
+import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
+
 public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
 
     public static List<ConvoyCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
@@ -51,7 +53,7 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
                         .mBAFCount(baf.count())
                         .mBAF(baf.medianBaf())
                         .tumorRatio(myTumorRatio)
-                        .ratioOfRatio(myTumorRatio / myNormalRatio)
+                        .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
                         .build();
 
                 result.add(copyNumber);
