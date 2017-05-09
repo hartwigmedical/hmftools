@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.ecrf.datamodel;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -50,5 +53,19 @@ public class EcrfItemGroup {
             return null;
         }
         return ecrfValue;
+    }
+
+    @Nullable
+    public LocalDate readItemDate(@NotNull final String itemOID, int index,
+            @NotNull final DateTimeFormatter dateFormatter) {
+        final String ecrfValue = itemsPerOID(itemOID).get(index);
+        if (ecrfValue == null) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(ecrfValue, dateFormatter);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 }
