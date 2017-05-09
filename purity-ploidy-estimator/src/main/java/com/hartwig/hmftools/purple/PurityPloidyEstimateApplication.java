@@ -6,9 +6,11 @@ import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.ratio.Ratio;
 import com.hartwig.hmftools.common.ratio.txt.RatioFileLoader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 import org.apache.commons.cli.*;
@@ -19,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static com.hartwig.hmftools.common.slicing.SlicerFactory.sortedSlicer;
 import static java.util.stream.Collectors.toList;
@@ -108,15 +111,18 @@ public class PurityPloidyEstimateApplication {
     }
 
     private static List<GermlineVariant> variants(CommandLine cmd, VCFGermlineFile file) throws IOException, EmptyFileException {
+
+        final Predicate<Variant> filterPredicate = x -> x.filter().equals("PASS") || x.filter().equals(".");
+        final Predicate<GenomePosition> slicerPredicate;
         if (cmd.hasOption(BED_FILE)) {
             final String bedFile = cmd.getOptionValue(BED_FILE);
             LOGGER.info("Slicing variants with bed file: " + bedFile);
-            List<GermlineVariant> variants = file.variants().stream().filter(sortedSlicer(bedFile)).collect(toList());
-            LOGGER.info("Slicing complete");
-            return variants;
+            slicerPredicate = sortedSlicer(bedFile);
         } else {
-            return file.variants();
+            slicerPredicate = x -> true;
         }
+
+        return file.variants().stream().filter(x -> filterPredicate.test(x) && slicerPredicate.test(x)).collect(toList());
     }
 
     private static String freecDirectory(CommandLine cmd, String runDirectory, String refSample, String tumorSample) {
