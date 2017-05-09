@@ -2,13 +2,12 @@ package com.hartwig.hmftools.breakpointinspector;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.util.CloseableIterator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,7 +17,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class BreakPointInspectorApplication {
 
@@ -55,8 +53,7 @@ public class BreakPointInspectorApplication {
     }
 
     public static void main(final String... args)
-            throws ParseException, IOException, InvocationTargetException, NoSuchMethodException,
-            InstantiationException, IllegalAccessException {
+            throws ParseException, IOException {
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
@@ -94,37 +91,88 @@ public class BreakPointInspectorApplication {
                 new QueryInterval(index, Math.max(0, location - range), location + range),
                 new QueryInterval(index, Math.max(0, location + svLen - range), location + svLen + range)
         };
+        QueryInterval.optimizeIntervals(queryIntervals); // handle overlaps
 
         // print  header
         System.out.println(String.join("\t",
-                "Read Name",
-                "Chromosome",
-                "Position",
-                "Mapping Quality",
-                "Flags",
+                "READ_NAME",
+                "TEMPLATE_LENGTH",
+                "ALIGNMENT",
+                "CHROMOSOME",
+                "POS",
+                "MAPQ",
+                "FLAGS",
                 "CIGAR",
-                "Mate Chromosome",
-                "Mate Position",
-                "Read Length"
+                "SEQ",
+                "QUAL",
+                "MATE_CHROMOSOME",
+                "MATE_POS",
+                "MATE_MAPQ",
+                "MATE_FLAGS",
+                "MATE_CIGAR",
+                "MATE_SEQ",
+                "MATE_QUAL"
         ));
 
-        // execute and parse the results
-        CloseableIterator<SAMRecord> results = reader.query(queryIntervals, false);
-        while(results.hasNext()) {
-            final SAMRecord record = results.next();
+        final Map<String, SAMRecord> firstReadMap = new Hashtable<>();
 
-            System.out.println(String.join("\t",
-                    record.getReadName(),
-                    record.getReferenceName(),
-                    Integer.toString(record.getAlignmentStart()),
-                    Integer.toString(record.getMappingQuality()),
-                    getFlagString(record.getSAMFlags()),
-                    record.getCigarString(),
-                    record.getMateReferenceName(),
-                    Integer.toString(record.getMateAlignmentStart()),
-                    Integer.toString(record.getInferredInsertSize())
-            ));
+        int properPairReads = 0;
+        int zeroQualityMappings = 0;
+
+        // execute query and parse the results
+        final SAMRecordIterator results = reader.query(queryIntervals, false);
+        while(results.hasNext()) {
+            final SAMRecord read = results.next();
+
+            // TODO: should separate pairs from the start of the SV to the end of the SV
+            if(read.getProperPairFlag()) {
+                properPairReads++;
+                continue;
+            }
+            if(read.getMappingQuality() == 0) {
+                zeroQualityMappings++;
+                continue;
+            }
+
+            final SAMRecord firstRead = firstReadMap.get(read.getReadName());
+            if(firstRead != null) {
+
+                assert(firstRead.getReadName().equals(read.getReadName()));
+                assert(firstRead.getMateAlignmentStart() == read.getAlignmentStart());
+                assert(firstRead.getMateReferenceName().equals(read.getReferenceName()));
+
+                // TODO: sort output by firstRead position
+                // TODO: or just print record.getSAMString() ??
+                System.out.println(String.join("\t",
+                        // first read
+                        firstRead.getReadName(),
+                        Integer.toString(firstRead.getInferredInsertSize()),
+                        String.join(",", SamPairUtil.getPairOrientation(firstRead).toString(), SamPairUtil.getPairOrientation(read).toString()),
+                        firstRead.getReferenceName(),
+                        Integer.toString(firstRead.getAlignmentStart()),
+                        Integer.toString(firstRead.getMappingQuality()),
+                        getFlagString(firstRead.getSAMFlags()),
+                        firstRead.getCigarString(),
+                        firstRead.getReadString(),
+                        firstRead.getBaseQualityString(),
+                        // second read
+                        read.getReferenceName(),
+                        Integer.toString(read.getAlignmentStart()),
+                        Integer.toString(read.getMappingQuality()),
+                        getFlagString(read.getSAMFlags()),
+                        read.getCigarString(),
+                        read.getReadString(),
+                        read.getBaseQualityString()
+                ));
+            } else {
+                firstReadMap.put(read.getReadName(), read);
+            }
         }
+
+        System.out.println();
+        System.out.println("STATS");
+        System.out.println("PROPER_PAIRS\t" + properPairReads / 2);
+        System.out.println("ZERO_MAPQ\t" + zeroQualityMappings);
 
     }
 }
