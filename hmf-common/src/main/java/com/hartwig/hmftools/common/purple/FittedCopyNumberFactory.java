@@ -17,11 +17,11 @@ public class FittedCopyNumberFactory {
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
     }
 
-    public List<FittedCopyNumber> fittedCopyNumber(double purity, double normFactor, Collection<ConvoyCopyNumber> copyNumbers) {
+    public List<FittedCopyNumber> fittedCopyNumber(double purity, double normFactor, Collection<EnrichedCopyNumber> copyNumbers) {
         return copyNumbers.stream().map(x -> fittedCopyNumber(purity, normFactor, x)).collect(Collectors.toList());
     }
 
-    FittedCopyNumber fittedCopyNumber(double purity, double normFactor, ConvoyCopyNumber copyNumber) {
+    FittedCopyNumber fittedCopyNumber(double purity, double normFactor, EnrichedCopyNumber copyNumber) {
 
         double minDeviation = 0;
         double actualBAF = copyNumber.mBAF();

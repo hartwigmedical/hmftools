@@ -21,8 +21,8 @@ public class FittedCopyNumberFactoryTest {
         assertEquals(0.018, result.deviation(), EPSILON);
     }
 
-    private ConvoyCopyNumber create(double baf, double ratio) {
-        return ImmutableConvoyCopyNumber.of(baf, 1, ratio, 0, 0, 0, "1", 1, 2, null);
+    private EnrichedCopyNumber create(double baf, double ratio) {
+        return ImmutableEnrichedCopyNumber.of(baf, 1, ratio, 0, 0, 0, "1", 1, 2, null);
     }
 
     @Test

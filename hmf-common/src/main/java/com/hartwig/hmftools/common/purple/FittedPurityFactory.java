@@ -29,10 +29,10 @@ public class FittedPurityFactory {
         this.fittedCopyNumberFactory = fittedCopyNumberFactory;
     }
 
-    public List<FittedPurity> fitPurity(Collection<ConvoyCopyNumber> copyNumbers) {
+    public List<FittedPurity> fitPurity(Collection<EnrichedCopyNumber> copyNumbers) {
         final List<FittedPurity> result = Lists.newArrayList();
 
-        double sumWeight = copyNumbers.stream().mapToLong(ConvoyCopyNumber::mBAFCount).sum();
+        double sumWeight = copyNumbers.stream().mapToLong(EnrichedCopyNumber::mBAFCount).sum();
 
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
             for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
@@ -45,13 +45,13 @@ public class FittedPurityFactory {
     }
 
 
-    private FittedPurity fitPurity(double purity, double normFactor, double sumWeight, Collection<ConvoyCopyNumber> copyNumbers) {
+    private FittedPurity fitPurity(double purity, double normFactor, double sumWeight, Collection<EnrichedCopyNumber> copyNumbers) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;
         double modelBAFDeviation = 0;
 
-        for (ConvoyCopyNumber copyNumber : copyNumbers) {
+        for (EnrichedCopyNumber copyNumber : copyNumbers) {
 
             final FittedCopyNumber fittedCopyNumber = fittedCopyNumberFactory.fittedCopyNumber(purity, normFactor, copyNumber);
 

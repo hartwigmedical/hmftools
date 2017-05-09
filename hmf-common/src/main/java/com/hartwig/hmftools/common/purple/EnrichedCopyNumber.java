@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Value.Style(allParameters = true)
 @Value.Immutable
-public abstract class ConvoyCopyNumber implements CopyNumber, Serializable {
+public abstract class EnrichedCopyNumber implements CopyNumber, Serializable {
 
     public abstract double mBAF();
 

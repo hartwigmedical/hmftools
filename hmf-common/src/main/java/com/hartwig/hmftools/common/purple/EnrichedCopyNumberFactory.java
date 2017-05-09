@@ -12,18 +12,18 @@ import java.util.List;
 import static com.hartwig.hmftools.common.numeric.Doubles.positiveOrZero;
 import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
 
-public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
+public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
 
-    public static List<ConvoyCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
-        return new ConvoyCopyNumberFactory(copyNumbers, bafs, tumorRatios, normalRatios).result();
+    public static List<EnrichedCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
+        return new EnrichedCopyNumberFactory(copyNumbers, bafs, tumorRatios, normalRatios).result();
     }
 
-    private final List<ConvoyCopyNumber> result = Lists.newArrayList();
+    private final List<EnrichedCopyNumber> result = Lists.newArrayList();
     private final RatioAccumulator tumorRatio = new RatioAccumulator();
     private final RatioAccumulator normalRatio = new RatioAccumulator();
     private final BetaAlleleFrequencyAccumulator baf = new BetaAlleleFrequencyAccumulator();
 
-    private ConvoyCopyNumberFactory(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
+    private EnrichedCopyNumberFactory(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
         GenomeZipper<CopyNumber> zipper = new GenomeZipper<>(copyNumbers, this);
         zipper.addPositions(bafs, baf::accumulate);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
@@ -31,7 +31,7 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
         zipper.run();
     }
 
-    private List<ConvoyCopyNumber> result() {
+    private List<EnrichedCopyNumber> result() {
         return result;
     }
 
@@ -49,7 +49,7 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
             double myTumorRatio = tumorRatio.meanRatio();
             if (positiveOrZero(myTumorRatio)) {
                 double myNormalRatio = normalRatio.meanRatio();
-                ConvoyCopyNumber copyNumber = ImmutableConvoyCopyNumber.builder().from(region)
+                EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder().from(region)
                         .mBAFCount(baf.count())
                         .mBAF(baf.medianBaf())
                         .tumorRatio(myTumorRatio)

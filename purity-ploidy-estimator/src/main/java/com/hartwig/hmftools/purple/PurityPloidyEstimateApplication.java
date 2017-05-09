@@ -98,15 +98,15 @@ public class PurityPloidyEstimateApplication {
                 MIN_COMBINED_DEPTH,
                 MAX_COMBINED_DEPTH);
         final List<BetaAlleleFrequency> bafs = bafFactory.transform(variants);
-        final List<ConvoyCopyNumber> convoyCopyNumbers = ConvoyCopyNumberFactory.convoyCopyNumbers(copyNumbers, bafs, tumorRatio, normalRatio);
+        final List<EnrichedCopyNumber> enrichedCopyNumbers = EnrichedCopyNumberFactory.convoyCopyNumbers(copyNumbers, bafs, tumorRatio, normalRatio);
 
         LOGGER.info("Enriched copy numbers(s):");
-        for (int i = 0; i < Math.min(5, convoyCopyNumbers.size()); i++) {
-            LOGGER.info(convoyCopyNumbers.get(i));
+        for (int i = 0; i < Math.min(5, enrichedCopyNumbers.size()); i++) {
+            LOGGER.info(enrichedCopyNumbers.get(i));
         }
 
         LOGGER.info("Fitting purity");
-        final List<FittedPurity> purity = fittedPurityFactory.fitPurity(convoyCopyNumbers);
+        final List<FittedPurity> purity = fittedPurityFactory.fitPurity(enrichedCopyNumbers);
         Collections.sort(purity);
 
         LOGGER.info("Top fit(s):");
@@ -117,7 +117,7 @@ public class PurityPloidyEstimateApplication {
         if (!purity.isEmpty()) {
             LOGGER.info("Fitted CopyNumbers:");
             FittedPurity bestFit = purity.get(0);
-            List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(), bestFit.normFactor(), convoyCopyNumbers);
+            List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(), bestFit.normFactor(), enrichedCopyNumbers);
 
             for (int i = 0; i < Math.min(5, fittedCopyNumbers.size()); i++) {
                 LOGGER.info(fittedCopyNumbers.get(i));
