@@ -2,10 +2,10 @@ package com.hartwig.hmftools.common.purple;
 
 import org.junit.Test;
 
-import static com.hartwig.hmftools.common.purple.ConvoyPurityFactory.*;
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.*;
 import static org.junit.Assert.assertEquals;
 
-public class ConvoyPurityFactoryTest {
+public class FittedCopyNumberFactoryTest {
 
     private static double EPSILON = 1e-10;
 

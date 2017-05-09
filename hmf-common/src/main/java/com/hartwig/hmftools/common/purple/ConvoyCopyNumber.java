@@ -15,5 +15,7 @@ public abstract class ConvoyCopyNumber implements CopyNumber, Serializable {
 
     public abstract double tumorRatio();
 
+    public abstract double normalRatio();
+
     public abstract double ratioOfRatio();
 }

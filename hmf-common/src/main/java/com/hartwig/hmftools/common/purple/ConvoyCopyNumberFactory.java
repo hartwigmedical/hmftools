@@ -53,6 +53,7 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
                         .mBAFCount(baf.count())
                         .mBAF(baf.medianBaf())
                         .tumorRatio(myTumorRatio)
+                        .normalRatio(myNormalRatio)
                         .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
                         .build();
 

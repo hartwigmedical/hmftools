@@ -41,29 +41,40 @@ public class PurityPloidyEstimateApplication {
     private static final double MIN_NORM_FACTOR = 0.33;
     private static final double MAX_NORM_FACTOR = 2;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
-    private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
     // Options
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String VCF_EXTENSION = "vcf_extension";
-    private static final String VCF_EXTENSION_DEFAULT = ".annotation.vcf";
     private static final String BED_FILE = "bed";
     private static final String FREEC_DIRECTORY = "freec_dir";
+    private static final String VCF_EXTENSION = "vcf_extension";
+    private static final String VCF_EXTENSION_DEFAULT = ".annotation.vcf";
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
-
+    private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final double cnvRatioWeighFactor = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
 
         if (runDirectory == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Purity Ploidy Estimator (PURPLE)", options);
             System.exit(1);
         }
+
+        final FittedCopyNumberFactory fittedCopyNumberFactory = new FittedCopyNumberFactory(
+                MAX_PLOIDY,
+                defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT));
+
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
+                MIN_PURITY,
+                MAX_PURITY,
+                PURITY_INCREMENTS,
+                MIN_NORM_FACTOR,
+                MAX_NORM_FACTOR,
+                NORM_FACTOR_INCREMENTS,
+                fittedCopyNumberFactory);
 
         LOGGER.info("Loading variant data");
         final String vcfExtention = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
@@ -89,22 +100,28 @@ public class PurityPloidyEstimateApplication {
         final List<BetaAlleleFrequency> bafs = bafFactory.transform(variants);
         final List<ConvoyCopyNumber> convoyCopyNumbers = ConvoyCopyNumberFactory.convoyCopyNumbers(copyNumbers, bafs, tumorRatio, normalRatio);
 
+        LOGGER.info("Enriched copy numbers(s):");
+        for (int i = 0; i < Math.min(5, convoyCopyNumbers.size()); i++) {
+            LOGGER.info(convoyCopyNumbers.get(i));
+        }
+
         LOGGER.info("Fitting purity");
-        final List<ConvoyPurity> purity = ConvoyPurityFactory.create(
-                MIN_PURITY,
-                MAX_PURITY,
-                PURITY_INCREMENTS,
-                MIN_NORM_FACTOR,
-                MAX_NORM_FACTOR,
-                NORM_FACTOR_INCREMENTS,
-                cnvRatioWeighFactor,
-                MAX_PLOIDY,
-                convoyCopyNumbers);
+        final List<FittedPurity> purity = fittedPurityFactory.fitPurity(convoyCopyNumbers);
         Collections.sort(purity);
 
         LOGGER.info("Top fit(s):");
         for (int i = 0; i < Math.min(5, purity.size()); i++) {
             LOGGER.info(purity.get(i));
+        }
+
+        if (!purity.isEmpty()) {
+            LOGGER.info("Fitted CopyNumbers:");
+            FittedPurity bestFit = purity.get(0);
+            List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(), bestFit.normFactor(), convoyCopyNumbers);
+
+            for (int i = 0; i < Math.min(5, fittedCopyNumbers.size()); i++) {
+                LOGGER.info(fittedCopyNumbers.get(i));
+            }
         }
 
         LOGGER.info("Complete");
