@@ -12,8 +12,8 @@ import org.junit.Test;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
-import com.hartwig.hmftools.healthchecker.context.TestRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.CopynumberCheck;

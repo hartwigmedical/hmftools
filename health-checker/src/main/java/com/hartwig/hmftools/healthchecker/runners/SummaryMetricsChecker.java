@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.LineNotFoundException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;

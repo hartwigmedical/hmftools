@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.ZipFilesReader;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;

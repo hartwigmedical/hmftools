@@ -6,7 +6,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;

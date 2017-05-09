@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;

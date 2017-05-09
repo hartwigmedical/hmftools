@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.GenerateReportException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.healthchecker.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
-import com.hartwig.hmftools.healthchecker.io.FolderChecker;
+import com.hartwig.hmftools.common.io.FolderChecker;
 import com.hartwig.hmftools.healthchecker.report.HealthCheckReportFactory;
 import com.hartwig.hmftools.healthchecker.report.Report;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;

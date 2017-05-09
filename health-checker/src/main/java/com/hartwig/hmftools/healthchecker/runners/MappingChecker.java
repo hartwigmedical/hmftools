@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStatData;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStats;
 import com.hartwig.hmftools.healthchecker.flagstatreader.FlagStatsType;
