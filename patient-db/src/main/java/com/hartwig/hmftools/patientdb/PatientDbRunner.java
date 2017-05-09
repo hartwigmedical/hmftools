@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.readers.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
