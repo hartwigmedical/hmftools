@@ -41,7 +41,7 @@ public class PurityPloidyEstimateApplication {
     private static final double MIN_NORM_FACTOR = 0.33;
     private static final double MAX_NORM_FACTOR = 2;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
-    private static final double CNV_RATIO_WEIGHT_FACTOR = 0.2;
+    private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
     // Options
     private static final String RUN_DIRECTORY = "run_dir";
@@ -49,12 +49,15 @@ public class PurityPloidyEstimateApplication {
     private static final String VCF_EXTENSION_DEFAULT = ".annotation.vcf";
     private static final String BED_FILE = "bed";
     private static final String FREEC_DIRECTORY = "freec_dir";
+    private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
+
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
+        final double cnvRatioWeighFactor = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
 
         if (runDirectory == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -87,13 +90,14 @@ public class PurityPloidyEstimateApplication {
         final List<ConvoyCopyNumber> convoyCopyNumbers = ConvoyCopyNumberFactory.convoyCopyNumbers(copyNumbers, bafs, tumorRatio, normalRatio);
 
         LOGGER.info("Fitting purity");
-        final List<ConvoyPurity> purity = ConvoyPurityFactory.create(MIN_PURITY,
+        final List<ConvoyPurity> purity = ConvoyPurityFactory.create(
+                MIN_PURITY,
                 MAX_PURITY,
                 PURITY_INCREMENTS,
                 MIN_NORM_FACTOR,
                 MAX_NORM_FACTOR,
                 NORM_FACTOR_INCREMENTS,
-                CNV_RATIO_WEIGHT_FACTOR,
+                cnvRatioWeighFactor,
                 MAX_PLOIDY,
                 convoyCopyNumbers);
         Collections.sort(purity);
@@ -108,6 +112,16 @@ public class PurityPloidyEstimateApplication {
 
     private static String defaultValue(CommandLine cmd, String opt, String defaultValue) {
         return cmd.hasOption(opt) ? cmd.getOptionValue(opt) : defaultValue;
+    }
+
+    private static double defaultValue(CommandLine cmd, String opt, double defaultValue) {
+        if (cmd.hasOption(opt)) {
+            double result = Double.valueOf(cmd.getOptionValue(opt));
+            LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            return result;
+        }
+
+        return defaultValue;
     }
 
     private static List<GermlineVariant> variants(CommandLine cmd, VCFGermlineFile file) throws IOException, EmptyFileException {
@@ -136,9 +150,10 @@ public class PurityPloidyEstimateApplication {
         final Options options = new Options();
 
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
-        options.addOption(FREEC_DIRECTORY, true, "The path to the freec data. Defaults to ../copyNumber/sampleR_sampleT/freec/");
+        options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
         options.addOption(VCF_EXTENSION, true, "VCF file extension. Defaults to " + VCF_EXTENSION_DEFAULT);
-        options.addOption(BED_FILE, true, "Optionally apply slicing to VCF with specified bed file");
+        options.addOption(BED_FILE, true, "BED file to optionally slice variants with");
+        options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling");
 
         return options;
     }
