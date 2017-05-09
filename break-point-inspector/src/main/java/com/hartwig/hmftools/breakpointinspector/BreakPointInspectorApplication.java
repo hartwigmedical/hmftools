@@ -43,30 +43,6 @@ public class BreakPointInspectorApplication {
         return parser.parse(options, args);
     }
 
-    @NotNull
-    private static BAMFileReader makeReader(@NotNull final String bamPath)
-            throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
-
-        // extremely nasty work around for BAMFileReader constructors not being public
-        final Class<BAMFileReader> klass =  BAMFileReader.class;
-        final Class[] signature = {File.class, File.class, boolean.class, boolean.class, ValidationStringency.class, SAMRecordFactory.class};
-        final Constructor<BAMFileReader> constructor = klass.getDeclaredConstructor(signature);
-        constructor.setAccessible(true);
-
-        // load the file
-        final File bamFile = new File(bamPath);
-        final BAMFileReader reader = constructor.newInstance(
-                bamFile,
-                null, // let the library try and find the index
-                true, // eager decode
-                true, // async I/O
-                ValidationStringency.DEFAULT_STRINGENCY,
-                DefaultSAMRecordFactory.getInstance()
-        );
-
-        return reader;
-    }
-
     public static void main(final String... args)
             throws ParseException, IOException, InvocationTargetException, NoSuchMethodException,
             InstantiationException, IllegalAccessException {
@@ -97,7 +73,9 @@ public class BreakPointInspectorApplication {
         final String chromosome = split[0];
         final int location = Integer.parseInt(split[1]);
 
-        final BAMFileReader reader = makeReader(bamPath);
+        // load the file
+        final File bamFile = new File(bamPath);
+        final SamReader reader = SamReaderFactory.makeDefault().open(bamFile);
 
         // query the position
         final int index = reader.getFileHeader().getSequenceDictionary().getSequenceIndex(chromosome);
