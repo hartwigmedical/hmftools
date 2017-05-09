@@ -44,7 +44,6 @@ public class BiopsyClinicalDataReader {
                                 + patient.patientId());
                         continue;
                     }
-                    LOGGER.info(itemGroup.itemsPerOID());
                     if (itemGroup.itemsPerOID(FIELD_DATE).size() > 1) {
                         LOGGER.warn("Item group " + ITEMGROUP_BIOPSIES + " had more than 1 item with OID " + FIELD_DATE
                                 + " for patient " + patient.patientId());
@@ -55,7 +54,7 @@ public class BiopsyClinicalDataReader {
                                         + " for patient " + patient.patientId());
                     }
                     final LocalDate date = Utils.getDate(itemGroup.itemsPerOID(FIELD_DATE).get(0), dateFormatter);
-                    final String location = itemGroup.itemsPerOID(FIELD_LOCATION).get(0);
+                    final String location = itemGroup.readItemString(FIELD_LOCATION, 0);
                     if (date == null) {
                         LOGGER.warn("Found biopsy with empty date for patient: " + patient.patientId());
                     }

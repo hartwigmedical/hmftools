@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class EcrfItemGroup {
     @NotNull
@@ -40,5 +41,14 @@ public class EcrfItemGroup {
         return itemsPerOID.values().stream().filter(
                 listOfValues -> listOfValues.stream().filter(value -> value != null && !value.trim().isEmpty()).count()
                         > 0).count() == 0;
+    }
+
+    @Nullable
+    public String readItemString(@NotNull final String itemOID, int index) {
+        final String ecrfValue = itemsPerOID(itemOID).get(index);
+        if (ecrfValue != null && ecrfValue.replaceAll("\\s", "").length() == 0) {
+            return null;
+        }
+        return ecrfValue;
     }
 }

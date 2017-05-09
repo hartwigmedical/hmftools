@@ -57,7 +57,8 @@ public class BiopsyTreatmentReader {
                         }
                     }
                 }
-                final List<BiopsyTreatmentDrugData> drugs = readDrugs(form.itemGroupsPerOID(ITEMGROUP_SYSPOSTBIO));
+                final List<BiopsyTreatmentDrugData> drugs = readDrugs(patient.patientId(),
+                        form.itemGroupsPerOID(ITEMGROUP_SYSPOSTBIO));
                 final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
                 final LocalDate treatmentEnd = determineTreatmentEndDate(drugs);
                 treatmentDatas.add(new BiopsyTreatmentData(treatmentGiven, treatmentStart, treatmentEnd, drugs));
@@ -67,15 +68,17 @@ public class BiopsyTreatmentReader {
     }
 
     @NotNull
-    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final List<EcrfItemGroup> itemGroups) {
+    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final String patientId,
+            @NotNull final List<EcrfItemGroup> itemGroups) {
         final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
         for (final EcrfItemGroup itemGroup : itemGroups) {
             if (itemGroup.isEmpty()) {
+                LOGGER.warn("Ignoring empty item group: " + ITEMGROUP_SYSPOSTBIO + " for patient " + patientId);
                 continue;
             }
             final LocalDate drugStart = Utils.getDate(itemGroup.itemsPerOID(FIELD_DRUG_START).get(0), dateFormatter);
             final LocalDate drugEnd = Utils.getDate(itemGroup.itemsPerOID(FIELD_DRUG_END).get(0), dateFormatter);
-            final String drugName = itemGroup.itemsPerOID(FIELD_DRUG).get(0);
+            final String drugName = itemGroup.readItemString(FIELD_DRUG, 0);
             final String drugType = drugName == null ? null : treatmentMapping.get(drugName.toLowerCase().trim());
             drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));
         }
