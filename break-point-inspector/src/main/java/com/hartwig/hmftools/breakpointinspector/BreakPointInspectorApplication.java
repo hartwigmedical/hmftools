@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Set;
 
 import htsjdk.samtools.*;
@@ -41,6 +42,16 @@ public class BreakPointInspectorApplication {
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+    @NotNull
+    private static String getFlagString(final Set<SAMFlag> flags) {
+        ArrayList<String> names = new ArrayList<String>();
+        for(final SAMFlag flag : flags)
+        {
+            names.add(flag.name());
+        }
+        return String.join("|", names);
     }
 
     public static void main(final String... args)
@@ -90,6 +101,7 @@ public class BreakPointInspectorApplication {
                 "Chromosome",
                 "Position",
                 "Mapping Quality",
+                "Flags",
                 "CIGAR",
                 "Mate Chromosome",
                 "Mate Position",
@@ -98,16 +110,15 @@ public class BreakPointInspectorApplication {
 
         // execute and parse the results
         CloseableIterator<SAMRecord> results = reader.query(queryIntervals, false);
-        while(results.hasNext())
-        {
+        while(results.hasNext()) {
             final SAMRecord record = results.next();
-            final Set<SAMFlag> flags = record.getSAMFlags();
 
             System.out.println(String.join("\t",
                     record.getReadName(),
                     record.getReferenceName(),
-                    Integer.toString(record.getReferencePositionAtReadPosition(1)),
+                    Integer.toString(record.getAlignmentStart()),
                     Integer.toString(record.getMappingQuality()),
+                    getFlagString(record.getSAMFlags()),
                     record.getCigarString(),
                     record.getMateReferenceName(),
                     Integer.toString(record.getMateAlignmentStart()),
