@@ -8,21 +8,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
+
 public class ConvoyPurityFactory {
 
     public static List<ConvoyPurity> create(
-            double minPurity, double maxPurity, int puritySteps,
-            double minNormFactor, double maxNormFactor, int normFactorSteps,
-            double cnvRatioWeighFactor, int maxPloidy,
-            Collection<ConvoyCopyNumber> copyNumbers) {
+            double minPurity, double maxPurity, double purityIncrements,
+            double minNormFactor, double maxNormFactor, double normFactorIncrements,
+            double cnvRatioWeighFactor, int maxPloidy, Collection<ConvoyCopyNumber> copyNumbers) {
         final List<ConvoyPurity> result = Lists.newArrayList();
 
-        double purityIncrements = (maxPurity - minPurity) / puritySteps;
-        double normFactorIncrements = (maxNormFactor - minNormFactor) / normFactorSteps;
         double sumWeight = copyNumbers.stream().mapToLong(ConvoyCopyNumber::mBAFCount).sum();
 
-        for (double purity = minPurity; purity <= maxPurity; purity+=purityIncrements) {
-            for (double normFactor = minNormFactor; normFactor <= maxNormFactor; normFactor+=normFactorIncrements) {
+        for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
+            for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
                 result.add(create(purity, normFactor, cnvRatioWeighFactor, maxPloidy, sumWeight, copyNumbers));
             }
         }
@@ -31,45 +30,38 @@ public class ConvoyPurityFactory {
         return result;
     }
 
-    public static ConvoyPurity create(double purity, double normFactory, double cnvRatioWeighFactor, Collection<ConvoyCopyNumber> copyNumbers) {
-
-        double sumWeight = copyNumbers.stream().mapToLong(ConvoyCopyNumber::mBAFCount).sum();
-        return create(purity, normFactory, cnvRatioWeighFactor, 10, sumWeight, copyNumbers);
-    }
-
-    static ConvoyPurity create(double purity, double normFactor, double cnvRatioWeighFactor, int maxPloidy, double sumWeight, Collection<ConvoyCopyNumber> copyNumbers) {
-
+    private static ConvoyPurity create(double purity, double normFactor, double cnvRatioWeighFactor, int maxPloidy,
+                double sumWeight, Collection<ConvoyCopyNumber> copyNumbers) {
         ImmutableConvoyPurity.Builder builder = ImmutableConvoyPurity.builder().purity(purity).normFactor(normFactor);
-        double modelDeviation = 0, diploidProportion = 0, modelBAFDeviation = 0;
+        double modelDeviation = 0;
+        double diploidProportion = 0;
+        double modelBAFDeviation = 0;
 
         for (ConvoyCopyNumber copyNumber : copyNumbers) {
 
-            if (copyNumber.mBAFCount() > 0 && copyNumber.tumorRatio() >= 0) {
+            int fittedPloidy = 0;
+            double minDeviation = 0;
+            double minBafDeviation = 0;
 
-                int fittedPloidy = 0;
-                double minDeviation = 0;
-                double minBafDeviation = 0;
+            for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
+                double modelCNVRatio = modelCNVRatio(purity, normFactor, ploidy);
+                double cnvDeviation = cnvDeviation(cnvRatioWeighFactor, modelCNVRatio, copyNumber.tumorRatio());
+                double modelBAFToMinimizeDeviation = modelBAFToMinimizeDeviation(purity, ploidy, copyNumber.mBAF());
 
-                for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
-                    double modelCNVRatio = modelCNVRatio(purity, normFactor, ploidy);
-                    double cnvDeviation = cnvDeviation(cnvRatioWeighFactor, ploidy, modelCNVRatio, copyNumber.ratioOfRatio()); // TODO: switch to tumor ratio?
-                    double modelBAFToMinimizeDeviation = modelBAFToMinimizeDeviation(purity, ploidy, copyNumber.mBAF());
+                double bafDeviation = Math.abs(copyNumber.mBAF() - modelBAFToMinimizeDeviation);
+                double deviation = ploidy / 2.0 * (bafDeviation + cnvDeviation);
 
-                    double bafDeviation = Math.abs(copyNumber.mBAF() - modelBAFToMinimizeDeviation);
-                    double deviation = bafDeviation + cnvDeviation;
-
-                    if (ploidy == 1 || deviation < minDeviation) {
-                        minDeviation = deviation;
-                        minBafDeviation = bafDeviation;
-                        fittedPloidy = ploidy;
-                    }
+                if (ploidy == 1 || deviation < minDeviation) {
+                    minDeviation = deviation;
+                    minBafDeviation = bafDeviation;
+                    fittedPloidy = ploidy;
                 }
+            }
 
-                modelDeviation += copyNumber.mBAFCount() / sumWeight * minDeviation;
-                modelBAFDeviation += copyNumber.mBAFCount() / sumWeight * minBafDeviation;
-                if (fittedPloidy == 2) {
-                    diploidProportion += diploidProportion + copyNumber.mBAFCount() / sumWeight;
-                }
+            modelDeviation += copyNumber.mBAFCount() / sumWeight * minDeviation;
+            modelBAFDeviation += copyNumber.mBAFCount() / sumWeight * minBafDeviation;
+            if (fittedPloidy == 2) {
+                diploidProportion += copyNumber.mBAFCount() / sumWeight;
             }
         }
 
@@ -86,8 +78,8 @@ public class ConvoyPurityFactory {
     }
 
     @VisibleForTesting
-    static double cnvDeviation(double cnvRatioWeighFactor, int ploidy, double modelCNVRatio, double actualRatio) {
-        return ploidy / 2.0 * cnvRatioWeighFactor * Math.abs(modelCNVRatio - actualRatio);
+    static double cnvDeviation(double cnvRatioWeighFactor, double modelCNVRatio, double actualRatio) {
+        return cnvRatioWeighFactor * Math.abs(modelCNVRatio - actualRatio);
     }
 
     @VisibleForTesting

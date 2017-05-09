@@ -38,14 +38,14 @@ public class ConvoyPurityFactoryTest {
 
     @Test
     public void testCNVDeviation() {
-        assertCNVDeviation(0, 1, 2, 0.3, 0.3);
-        assertCNVDeviation(0, 0.8, 3, 0.4, 0.4);
+        assertCNVDeviation(0, 1, 0.3, 0.3);
+        assertCNVDeviation(0, 0.8, 0.4, 0.4);
 
-        assertCNVDeviation(0.05, 0.5, 2, 1, 1.1);
+        assertCNVDeviation(0.05, 0.5, 1, 1.1);
 
-        assertCNVDeviation(0.1, 1, 2, 1, 1.1);
-        assertCNVDeviation(0.15, 1, 3, 1.5, 1.6);
-        assertCNVDeviation(0.2, 1, 4, 2, 2.1);
+        assertCNVDeviation(0.1, 1, 1, 1.1);
+        assertCNVDeviation(0.1, 1, 1.5, 1.6);
+        assertCNVDeviation(0.1, 1, 2, 2.1);
     }
 
     @Test
@@ -77,8 +77,8 @@ public class ConvoyPurityFactoryTest {
         assertEquals(expectedBAF, modelBAF(purity, ploidy, betaAllele), EPSILON);
     }
 
-    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, int ploidy, double modelCNVRatio, double tumorRatio) {
-        assertEquals(expectedDeviation, cnvDeviation(cnvRatioWeighFactor, ploidy, modelCNVRatio, tumorRatio), EPSILON);
+    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio, double tumorRatio) {
+        assertEquals(expectedDeviation, cnvDeviation(cnvRatioWeighFactor, modelCNVRatio, tumorRatio), EPSILON);
     }
 
     private static void assertModelCNVRatio(double expectedRatio, double purity, double normFactor, int ploidy) {

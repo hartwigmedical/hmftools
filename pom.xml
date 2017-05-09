@@ -19,6 +19,7 @@
         <module>fastq-stats</module>
         <module>ecrf-checker</module>
         <module>patient-db</module>
+        <module>purity-ploidy-estimator</module>
     </modules>
 
     <properties>

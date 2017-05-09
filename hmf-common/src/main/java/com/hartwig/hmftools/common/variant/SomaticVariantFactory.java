@@ -1,17 +1,15 @@
 package com.hartwig.hmftools.common.variant;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.Lists;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.variant.VariantFactory.*;
 
@@ -38,17 +36,7 @@ public final class SomaticVariantFactory {
 
     @NotNull
     public static String sampleFromHeaderLine(@NotNull final String headerLine) {
-        final String[] values = headerLine.split(VCF_COLUMN_SEPARATOR);
-        final String sample = values[SAMPLE_DATA_COLUMN];
-        // KODU: In v1.7, the sample would contain the whole path of the VCF.
-        if (sample.contains(File.separator)) {
-            final String[] parts = sample.split(File.separator);
-            final String[] subParts = parts[parts.length - 1].split("_");
-            // KODU: Assume last part starts with "R_T"
-            return subParts[1];
-        } else {
-            return sample;
-        }
+        return VariantFactory.sampleFromHeaderLine(headerLine, SAMPLE_DATA_COLUMN);
     }
 
     @NotNull

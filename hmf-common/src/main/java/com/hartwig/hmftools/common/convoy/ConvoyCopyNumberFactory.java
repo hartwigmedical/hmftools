@@ -9,6 +9,9 @@ import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 import java.util.Collections;
 import java.util.List;
 
+import static com.hartwig.hmftools.common.numeric.Doubles.positiveOrZero;
+import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
+
 public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
 
     public static List<ConvoyCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
@@ -44,14 +47,13 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
         int bafCount = baf.count;
         if (bafCount > 0) {
             double myTumorRatio = tumorRatio.meanRatio();
-            if (myTumorRatio >= 0) {
-
+            if (positiveOrZero(myTumorRatio)) {
                 double myNormalRatio = normalRatio.meanRatio();
                 ConvoyCopyNumber copyNumber = ImmutableConvoyCopyNumber.builder().from(region)
                         .mBAFCount(baf.count())
                         .mBAF(baf.medianBaf())
                         .tumorRatio(myTumorRatio)
-                        .ratioOfRatio(myTumorRatio / myNormalRatio)
+                        .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
                         .build();
 
                 result.add(copyNumber);
@@ -82,7 +84,6 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
                 Collections.sort(bafs);
                 return bafs.size() % 2 == 0 ? (bafs.get(count / 2) + bafs.get(count / 2 - 1)) / 2 : bafs.get(count / 2);
             }
-
             return 0;
         }
     }
@@ -107,5 +108,4 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
             return count > 0 ? sumRatio / count : 0;
         }
     }
-
 }
