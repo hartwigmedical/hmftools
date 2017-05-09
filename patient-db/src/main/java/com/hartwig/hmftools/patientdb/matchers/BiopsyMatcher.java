@@ -29,7 +29,7 @@ public class BiopsyMatcher {
                 LOGGER.warn("Patient: " + patientId + " contains less entries in ecrf (" + clinicalBiopsies.size()
                         + ") than biopsies sequenced (" + sequencedBiopsies.size() + ").");
             }
-            return matchBiopsiesByDate(sequencedBiopsies, clinicalBiopsies);
+            return matchBiopsiesByDate(patientId, sequencedBiopsies, clinicalBiopsies);
         }
     }
 
@@ -48,7 +48,8 @@ public class BiopsyMatcher {
     }
 
     @NotNull
-    private static List<BiopsyClinicalData> matchBiopsiesByDate(@NotNull final List<BiopsyLimsData> sequencedBiopsies,
+    private static List<BiopsyClinicalData> matchBiopsiesByDate(@NotNull final String patientId,
+            @NotNull final List<BiopsyLimsData> sequencedBiopsies,
             @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
         final List<BiopsyClinicalData> matchedBiopsies = Lists.newArrayList();
         for (final BiopsyLimsData biopsyLimsData : sequencedBiopsies) {
@@ -56,10 +57,10 @@ public class BiopsyMatcher {
             BiopsyClinicalData sequencedBiopsyClinicalData = findBiopsyBeforeArrivalDate(biopsyArrivalDate,
                     clinicalBiopsies);
             if (sequencedBiopsyClinicalData != null) {
-                checkDurationBetweenDates(biopsyArrivalDate, sequencedBiopsyClinicalData.date());
                 final List<Integer> matchedBiopsiesIds = matchedBiopsies.stream().map(BiopsyClinicalData::id).collect(
                         Collectors.toList());
                 if (!matchedBiopsiesIds.contains(sequencedBiopsyClinicalData.id())) {
+                    checkDurationBetweenDates(patientId, biopsyArrivalDate, sequencedBiopsyClinicalData.date());
                     matchedBiopsies.add(new BiopsyClinicalData(sequencedBiopsyClinicalData.id(),
                             sequencedBiopsyClinicalData.date(), sequencedBiopsyClinicalData.location(),
                             sequencedBiopsyClinicalData.treatment(), biopsyLimsData.sampleId()));
@@ -89,13 +90,13 @@ public class BiopsyMatcher {
         return result;
     }
 
-    private static void checkDurationBetweenDates(@NotNull final LocalDate arrivalDate,
-            @Nullable final LocalDate biopsyDate) {
+    private static void checkDurationBetweenDates(@NotNull final String patientId,
+            @NotNull final LocalDate arrivalDate, @Nullable final LocalDate biopsyDate) {
         final int maxDaysBetweenBiopsyDateAndArrival = 180;
         if (biopsyDate != null && Duration.between(biopsyDate.atStartOfDay(), arrivalDate.atStartOfDay()).toDays()
                 > maxDaysBetweenBiopsyDateAndArrival) {
             LOGGER.warn("Time between biopsy date (" + biopsyDate + ") and biopsy arrival date (" + arrivalDate
-                    + " is greater than " + maxDaysBetweenBiopsyDateAndArrival + " days.");
+                    + ") is greater than " + maxDaysBetweenBiopsyDateAndArrival + " days for patient " + patientId);
         }
     }
 }
