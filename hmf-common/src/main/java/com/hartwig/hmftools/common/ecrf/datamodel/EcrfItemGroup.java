@@ -48,24 +48,30 @@ public class EcrfItemGroup {
 
     @Nullable
     public String readItemString(@NotNull final String itemOID, int index) {
-        final String ecrfValue = itemsPerOID(itemOID).get(index);
-        if (ecrfValue != null && ecrfValue.replaceAll("\\s", "").length() == 0) {
-            return null;
+        if (index < itemsPerOID(itemOID).size()) {
+            final String ecrfValue = itemsPerOID(itemOID).get(index);
+            if (ecrfValue != null && ecrfValue.replaceAll("\\s", "").length() == 0) {
+                return null;
+            }
+            return ecrfValue;
         }
-        return ecrfValue;
+        return null;
     }
 
     @Nullable
     public LocalDate readItemDate(@NotNull final String itemOID, int index,
             @NotNull final DateTimeFormatter dateFormatter) {
-        final String ecrfValue = itemsPerOID(itemOID).get(index);
-        if (ecrfValue == null) {
-            return null;
+        if (index < itemsPerOID(itemOID).size()) {
+            final String ecrfValue = itemsPerOID(itemOID).get(index);
+            if (ecrfValue == null) {
+                return null;
+            }
+            try {
+                return LocalDate.parse(ecrfValue, dateFormatter);
+            } catch (DateTimeParseException e) {
+                return null;
+            }
         }
-        try {
-            return LocalDate.parse(ecrfValue, dateFormatter);
-        } catch (DateTimeParseException e) {
-            return null;
-        }
+        return null;
     }
 }
