@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.convoy;
+package com.hartwig.hmftools.common.purple;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;

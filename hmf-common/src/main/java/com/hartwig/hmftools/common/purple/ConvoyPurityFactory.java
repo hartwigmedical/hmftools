@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.convoy;
+package com.hartwig.hmftools.common.purple;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -31,7 +31,7 @@ public class ConvoyPurityFactory {
     }
 
     private static ConvoyPurity create(double purity, double normFactor, double cnvRatioWeighFactor, int maxPloidy,
-                double sumWeight, Collection<ConvoyCopyNumber> copyNumbers) {
+                                       double sumWeight, Collection<ConvoyCopyNumber> copyNumbers) {
         ImmutableConvoyPurity.Builder builder = ImmutableConvoyPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;

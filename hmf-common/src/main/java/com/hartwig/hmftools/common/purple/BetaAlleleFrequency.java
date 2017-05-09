@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.convoy;
+package com.hartwig.hmftools.common.purple;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 import org.immutables.value.Value;

@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.convoy;
+package com.hartwig.hmftools.common.purple;
 
 import org.junit.Test;
 
-import static com.hartwig.hmftools.common.convoy.ConvoyPurityFactory.*;
+import static com.hartwig.hmftools.common.purple.ConvoyPurityFactory.*;
 import static org.junit.Assert.assertEquals;
 
 public class ConvoyPurityFactoryTest {

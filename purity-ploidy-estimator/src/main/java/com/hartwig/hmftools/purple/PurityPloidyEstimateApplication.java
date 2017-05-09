@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.purple;
 
-import com.hartwig.hmftools.common.convoy.*;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
 import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.purple.*;
 import com.hartwig.hmftools.common.ratio.Ratio;
 import com.hartwig.hmftools.common.ratio.txt.RatioFileLoader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
