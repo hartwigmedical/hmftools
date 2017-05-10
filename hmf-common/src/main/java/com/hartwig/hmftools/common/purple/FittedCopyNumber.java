@@ -9,6 +9,8 @@ import java.io.Serializable;
 @Value.Immutable
 public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
+    public abstract int bafCount();
+
     public abstract int fittedPloidy();
 
     public abstract double deviation();
@@ -19,9 +21,11 @@ public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
     public abstract double bafDeviation();
 
-    public abstract double actualCNVRatio();
+    public abstract double tumorCNVRatio();
 
     public abstract double modelCNVRatio();
+
+    public abstract double normalCNVRatio();
 
     public abstract double cnvDeviation();
 }

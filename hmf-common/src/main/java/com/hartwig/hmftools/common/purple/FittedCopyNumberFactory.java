@@ -29,8 +29,10 @@ public class FittedCopyNumberFactory {
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
+                .bafCount(copyNumber.mBAFCount())
                 .actualBAF(actualBAF)
-                .actualCNVRatio(actualRatio);
+                .tumorCNVRatio(actualRatio)
+                .normalCNVRatio(copyNumber.normalRatio());
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelCNVRatio(purity, normFactor, ploidy);
