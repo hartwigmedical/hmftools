@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.cnv.ImmutableCNVCopyNumber;
+import com.hartwig.hmftools.common.freec.ImmutableFreecCopyNumber;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -59,7 +59,7 @@ public enum PadCopyNumber {
         }
 
         private CopyNumber createDefaultCopyNumber(long aStart, long aEnd) {
-            return ImmutableCNVCopyNumber.of(2, chromosome, aStart, aEnd, null);
+            return ImmutableFreecCopyNumber.builder().chromosome(chromosome).start(aStart).end(aEnd).value(2).build();
         }
     }
 }

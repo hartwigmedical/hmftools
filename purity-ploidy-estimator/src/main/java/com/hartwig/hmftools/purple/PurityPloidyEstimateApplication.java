@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.purple;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
-import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.freec.FreecCopyNumberFactory;
+import com.hartwig.hmftools.common.freec.FreecFileLoader;
+import com.hartwig.hmftools.common.freec.FreecRatio;
+import com.hartwig.hmftools.common.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.*;
-import com.hartwig.hmftools.common.ratio.Ratio;
-import com.hartwig.hmftools.common.ratio.txt.RatioFileLoader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
@@ -87,11 +87,11 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Loading {} CopyNumber", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
 
-        final List<CopyNumber> copyNumbers = PadCopyNumber.pad(CNVFileLoader.loadCNV(freecDirectory, tumorSample));
+        final List<CopyNumber> copyNumbers = PadCopyNumber.pad(FreecCopyNumberFactory.loadCNV(freecDirectory, tumorSample));
 
-        LOGGER.info("Loading {} Ratio data", tumorSample);
-        final List<Ratio> tumorRatio = RatioFileLoader.loadTumorRatios(freecDirectory, tumorSample);
-        final List<Ratio> normalRatio = RatioFileLoader.loadNormalRatios(freecDirectory, tumorSample);
+        LOGGER.info("Loading {} FreecRatio data", tumorSample);
+        final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
+        final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
 
         LOGGER.info("Collating data");
         final BetaAlleleFrequencyFactory bafFactory = new BetaAlleleFrequencyFactory(
@@ -107,7 +107,7 @@ public class PurityPloidyEstimateApplication {
         Collections.sort(purity);
 
         if (!purity.isEmpty()) {
-            final String cnvPath = CNVFileLoader.copyNumberPath(freecDirectory, tumorSample);
+            final String cnvPath = FreecFileLoader.copyNumberPath(freecDirectory, tumorSample);
             final String purityFile = cnvPath + ".purity";
             LOGGER.info("Writing fitted purity to: {}", purityFile);
             FittedPurityWriter.writePurity(purityFile, purity);
@@ -154,7 +154,7 @@ public class PurityPloidyEstimateApplication {
     private static String freecDirectory(CommandLine cmd, String runDirectory, String refSample, String tumorSample) {
         return cmd.hasOption(FREEC_DIRECTORY)
                 ? cmd.getOptionValue(FREEC_DIRECTORY)
-                : CNVFileLoaderHelper.getFreecBasePath(runDirectory, refSample, tumorSample);
+                : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
     }
 
     @NotNull

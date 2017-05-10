@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.ratio.Ratio;
+import com.hartwig.hmftools.common.freec.FreecRatio;
 import com.hartwig.hmftools.common.zipper.GenomeZipper;
 import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 
@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
 
 public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
 
-    public static List<EnrichedCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
+    public static List<EnrichedCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
         return new EnrichedCopyNumberFactory(copyNumbers, bafs, tumorRatios, normalRatios).result();
     }
 
@@ -22,7 +22,7 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Copy
     private final RatioAccumulator normalRatio = new RatioAccumulator();
     private final BetaAlleleFrequencyAccumulator baf = new BetaAlleleFrequencyAccumulator();
 
-    private EnrichedCopyNumberFactory(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
+    private EnrichedCopyNumberFactory(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
         GenomeZipper<CopyNumber> zipper = new GenomeZipper<>(copyNumbers, this);
         zipper.addPositions(bafs, baf::accumulate);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
@@ -87,7 +87,7 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Copy
         private double sumRatio;
         private int count;
 
-        private void accumulate(Ratio ratio) {
+        private void accumulate(FreecRatio ratio) {
             if (ratio.ratio() > -1) {
                 count++;
                 sumRatio += ratio.ratio();

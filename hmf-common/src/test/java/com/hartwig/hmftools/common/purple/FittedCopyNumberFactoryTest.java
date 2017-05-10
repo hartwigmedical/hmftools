@@ -13,7 +13,7 @@ public class FittedCopyNumberFactoryTest {
     public void expectedFit() {
 
         FittedCopyNumberFactory victim = new FittedCopyNumberFactory(12, 0.2);
-        FittedCopyNumber result = victim.fittedCopyNumber(0.8, 0.7, create(180d/280d + 0.01, 0.98 - 0.01));
+        FittedCopyNumber result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         System.out.println(result);
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);

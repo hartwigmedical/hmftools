@@ -1,25 +1,38 @@
-package com.hartwig.hmftools.common.copynumber;
+package com.hartwig.hmftools.common.freec;
+
+import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
+public class FreecCopyNumberFactoryTest {
 
-import org.junit.Test;
+    private static final String BASE_PATH = Resources.getResource("copynumber").getPath();
+    private static final String SAMPLE = "sample";
 
-public class CopyNumberFactoryTest {
+    @Test
+    public void canLoadCNVFile() throws IOException, HartwigException {
+        final List<CopyNumber> copyNumbers = FreecCopyNumberFactory.loadCNV(BASE_PATH, SAMPLE);
+        assertEquals(2, copyNumbers.size());
+    }
 
     @Test
     public void canConvertCNVLine() throws HartwigException {
         final String cnvLineGain = "1 \t 1 \t 2 \t 3 \t gain";
         final String cnvLineLoss = "1 \t 1 \t 2 \t 1 \t loss";
 
-        final CopyNumber cnvGain = CopyNumberFactory.fromCNVLine(cnvLineGain);
+        final CopyNumber cnvGain = FreecCopyNumberFactory.fromCNVLine(cnvLineGain);
         assertEquals("1", cnvGain.chromosome());
         assertEquals(2, cnvGain.start());
         assertEquals(2, cnvGain.end());
         assertEquals(3, cnvGain.value());
 
-        final CopyNumber cnvLoss = CopyNumberFactory.fromCNVLine(cnvLineLoss);
+        final CopyNumber cnvLoss = FreecCopyNumberFactory.fromCNVLine(cnvLineLoss);
         assertEquals("1", cnvLoss.chromosome());
         assertEquals(2, cnvLoss.start());
         assertEquals(2, cnvLoss.end());
@@ -29,12 +42,12 @@ public class CopyNumberFactoryTest {
     @Test(expected = HartwigException.class)
     public void lossGainIsNotRecognized() throws HartwigException {
         final String cnvLine = "1 \t 1 \t 2 \t 3 \t hello world";
-        CopyNumberFactory.fromCNVLine(cnvLine);
+        FreecCopyNumberFactory.fromCNVLine(cnvLine);
     }
 
     @Test(expected = HartwigException.class)
     public void lossGainDoesNotMatchWithValue() throws HartwigException {
         final String cnvLine = "1 \t 1 \t 2 \t 1 \t gain";
-        CopyNumberFactory.fromCNVLine(cnvLine);
+        FreecCopyNumberFactory.fromCNVLine(cnvLine);
     }
 }
