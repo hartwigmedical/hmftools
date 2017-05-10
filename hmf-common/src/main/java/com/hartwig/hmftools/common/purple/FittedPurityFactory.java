@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +20,7 @@ public class FittedPurityFactory {
     private final FittedCopyNumberFactory fittedCopyNumberFactory;
 
     public FittedPurityFactory(double minPurity, double maxPurity, double purityIncrements, double minNormFactor,
-            double maxNormFactor, double normFactorIncrements, FittedCopyNumberFactory fittedCopyNumberFactory) {
+                               double maxNormFactor, double normFactorIncrements, FittedCopyNumberFactory fittedCopyNumberFactory) {
         this.minPurity = minPurity;
         this.maxPurity = maxPurity;
         this.purityIncrements = purityIncrements;
@@ -32,18 +33,24 @@ public class FittedPurityFactory {
     public List<FittedPurity> fitPurity(Collection<EnrichedCopyNumber> copyNumbers) {
         final List<FittedPurity> result = Lists.newArrayList();
 
-        double sumWeight = copyNumbers.stream().mapToLong(EnrichedCopyNumber::mBAFCount).sum();
+        int totalBAFCount = 0;
+        List<EnrichedCopyNumber> filteredCopyNumbers = Lists.newArrayList();
+        for (EnrichedCopyNumber copyNumber : copyNumbers) {
+            if (copyNumber.mBAFCount() > 0 && Doubles.positiveOrZero(copyNumber.tumorRatio())) {
+                totalBAFCount += copyNumber.mBAFCount();
+                filteredCopyNumbers.add(copyNumber);
+            }
+        }
 
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
             for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
-                result.add(fitPurity(purity, normFactor, sumWeight, copyNumbers));
+                result.add(fitPurity(purity, normFactor, totalBAFCount, filteredCopyNumbers));
             }
         }
 
         Collections.sort(result);
         return result;
     }
-
 
     private FittedPurity fitPurity(double purity, double normFactor, double sumWeight, Collection<EnrichedCopyNumber> copyNumbers) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);

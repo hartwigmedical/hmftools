@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 import java.util.Collections;
 import java.util.List;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.positiveOrZero;
 import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
 
 public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
@@ -44,22 +43,17 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Copy
 
     @Override
     public void exit(CopyNumber region) {
-        int bafCount = baf.count;
-        if (bafCount > 0) {
-            double myTumorRatio = tumorRatio.meanRatio();
-            if (positiveOrZero(myTumorRatio)) {
-                double myNormalRatio = normalRatio.meanRatio();
-                EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder().from(region)
-                        .mBAFCount(baf.count())
-                        .mBAF(baf.medianBaf())
-                        .tumorRatio(myTumorRatio)
-                        .normalRatio(myNormalRatio)
-                        .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
-                        .build();
+        double myTumorRatio = tumorRatio.meanRatio();
+        double myNormalRatio = normalRatio.meanRatio();
+        EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder().from(region)
+                .mBAFCount(baf.count())
+                .mBAF(baf.medianBaf())
+                .tumorRatio(myTumorRatio)
+                .normalRatio(myNormalRatio)
+                .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
+                .build();
 
-                result.add(copyNumber);
-            }
-        }
+        result.add(copyNumber);
     }
 
     private class BetaAlleleFrequencyAccumulator {

@@ -38,7 +38,7 @@ public class FittedCopyNumberFactory {
             double modelRatio = modelCNVRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, actualRatio);
 
-            double modelBAF = modelBAFToMinimizeDeviation(purity, ploidy, actualBAF);
+            double modelBAF = copyNumber.mBAFCount() == 0 ? 0 : modelBAFToMinimizeDeviation(purity, ploidy, actualBAF);
             double bafDeviation = bafDeviation(modelBAF, actualBAF);
 
             double deviation = ploidy / 2.0 * (bafDeviation + cnvDeviation);
