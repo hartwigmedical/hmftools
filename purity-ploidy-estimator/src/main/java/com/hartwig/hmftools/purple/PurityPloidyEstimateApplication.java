@@ -1,26 +1,45 @@
 package com.hartwig.hmftools.purple;
 
-import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.freec.*;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.purple.*;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
-import org.apache.commons.cli.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import static java.util.stream.Collectors.toList;
+
+import static com.hartwig.hmftools.common.slicing.SlicerFactory.sortedSlicer;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.hartwig.hmftools.common.slicing.SlicerFactory.sortedSlicer;
-import static java.util.stream.Collectors.toList;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
+import com.hartwig.hmftools.common.freec.FreecCopyNumberFactory;
+import com.hartwig.hmftools.common.freec.FreecFileLoader;
+import com.hartwig.hmftools.common.freec.FreecRatio;
+import com.hartwig.hmftools.common.freec.FreecRatioFactory;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.purple.EnrichedCopyNumber;
+import com.hartwig.hmftools.common.purple.EnrichedCopyNumberFactory;
+import com.hartwig.hmftools.common.purple.FittedCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedCopyNumberFactory;
+import com.hartwig.hmftools.common.purple.FittedCopyNumberWriter;
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurityFactory;
+import com.hartwig.hmftools.common.purple.FittedPurityWriter;
+import com.hartwig.hmftools.common.purple.PadCopyNumber;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
+import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class PurityPloidyEstimateApplication {
 
@@ -80,23 +99,19 @@ public class PurityPloidyEstimateApplication {
         final String refSample = vcfFile.refSample();
         final String tumorSample = vcfFile.tumorSample();
 
-        LOGGER.info("Loading {} CopyNumber", tumorSample);
+        LOGGER.info("Loading {} Freec data", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-
         final List<FreecCopyNumber> copyNumbers = PadCopyNumber.pad(FreecCopyNumberFactory.loadFreecCNV(freecDirectory, tumorSample));
-
-        LOGGER.info("Loading {} FreecRatio data", tumorSample);
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
 
         LOGGER.info("Collating data");
-        final BetaAlleleFrequencyFactory bafFactory = new BetaAlleleFrequencyFactory(
+        final EnrichedCopyNumberFactory enrichedCopyNumberFactory = new EnrichedCopyNumberFactory(
                 MIN_REF_ALLELE_FREQUENCY,
                 MAX_REF_ALLELE_FREQUENCY,
                 MIN_COMBINED_DEPTH,
                 MAX_COMBINED_DEPTH);
-        final List<BetaAlleleFrequency> bafs = bafFactory.transform(variants);
-        final List<EnrichedCopyNumber> enrichedCopyNumbers = EnrichedCopyNumberFactory.convoyCopyNumbers(copyNumbers, bafs, tumorRatio, normalRatio);
+        final List<EnrichedCopyNumber> enrichedCopyNumbers = enrichedCopyNumberFactory.enrich(copyNumbers, variants, tumorRatio, normalRatio);
 
         LOGGER.info("Fitting purity");
         final List<FittedPurity> purity = fittedPurityFactory.fitPurity(enrichedCopyNumbers);

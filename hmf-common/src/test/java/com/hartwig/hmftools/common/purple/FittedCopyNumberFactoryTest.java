@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.freec.FreecCopyNumber;
-import org.junit.Test;
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.cnvDeviation;
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAF;
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAFToMinimizeDeviation;
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelCNVRatio;
 
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.*;
 import static org.junit.Assert.assertEquals;
+
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
+
+import org.junit.Test;
 
 public class FittedCopyNumberFactoryTest {
 
@@ -51,6 +56,10 @@ public class FittedCopyNumberFactoryTest {
 
         assertModelCNVRatio(0.8 + 0.36, 0.9, 0.8, 3);
         assertModelCNVRatio(0.8 + 0.72, 0.9, 0.8, 4);
+
+        assertModelCNVRatio(1.2, 1, 0.8, 3);
+        assertModelCNVRatio(1.6, 1, 0.8, 4);
+        assertModelCNVRatio(2.0, 1, 0.8, 5);
     }
 
     @Test
