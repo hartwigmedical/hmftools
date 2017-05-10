@@ -1,23 +1,22 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoader;
-import com.hartwig.hmftools.common.copynumber.cnv.CNVFileLoaderHelper;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.freec.FreecCopyNumberFactory;
+import com.hartwig.hmftools.common.freec.FreecFileLoader;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.runners.checks.CopynumberCheck;
 import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 @ResourceWrapper(type = CheckType.COPYNUMBER)
@@ -53,10 +52,10 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
     @NotNull
     private static List<CopyNumber> copynumberLines(@NotNull final RunContext runContext)
             throws IOException, HartwigException {
-        final String basePath = CNVFileLoaderHelper.getFreecBasePath(runContext.runDirectory(), runContext.refSample(),
+        final String basePath = FreecFileLoader.getFreecBasePath(runContext.runDirectory(), runContext.refSample(),
                 runContext.isSomaticRun() ? runContext.tumorSample() : null);
         final String relevantSample = relevantSample(runContext);
-        return CNVFileLoader.loadCNV(basePath, relevantSample);
+        return FreecCopyNumberFactory.loadCNV(basePath, relevantSample);
     }
 
     @NotNull
@@ -67,7 +66,7 @@ public class CopynumberChecker extends ErrorHandlingChecker implements HealthChe
 
     @NotNull
     private BaseResult toMultiValueResult(@NotNull final RunContext runContext, @NotNull final String totalGain,
-            @NotNull final String totalLoss) {
+                                          @NotNull final String totalLoss) {
         final HealthCheck gainCheck = new HealthCheck(relevantSample(runContext),
                 CopynumberCheck.COPYNUMBER_GENOME_GAIN.toString(), totalGain);
         final HealthCheck lossCheck = new HealthCheck(relevantSample(runContext),

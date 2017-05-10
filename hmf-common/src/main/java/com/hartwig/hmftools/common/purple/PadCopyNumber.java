@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.common.convoy;
+package com.hartwig.hmftools.common.purple;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.cnv.ImmutableCNVCopyNumber;
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
+import com.hartwig.hmftools.common.freec.ImmutableFreecCopyNumber;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -11,10 +11,10 @@ import java.util.function.Consumer;
 public enum PadCopyNumber {
     ;
 
-    public static List<CopyNumber> pad(List<CopyNumber> copyNumbers) {
+    public static List<FreecCopyNumber> pad(List<FreecCopyNumber> copyNumbers) {
         PadCopyNumberForChromosome padder = null;
-        List<CopyNumber> result = Lists.newArrayList();
-        for (CopyNumber copyNumber : copyNumbers) {
+        List<FreecCopyNumber> result = Lists.newArrayList();
+        for (FreecCopyNumber copyNumber : copyNumbers) {
             if (padder == null) {
                 padder = new PadCopyNumberForChromosome(copyNumber.chromosome(), result::add);
             } else if (!padder.chromosome.equals(copyNumber.chromosome())) {
@@ -30,10 +30,10 @@ public enum PadCopyNumber {
     static class PadCopyNumberForChromosome {
 
         private final String chromosome;
-        private final Consumer<CopyNumber> handler;
+        private final Consumer<FreecCopyNumber> handler;
         private long currentPosition = 1;
 
-        PadCopyNumberForChromosome(String chromosome, Consumer<CopyNumber> handler) {
+        PadCopyNumberForChromosome(String chromosome, Consumer<FreecCopyNumber> handler) {
             this.chromosome = chromosome;
             this.handler = handler;
         }
@@ -42,7 +42,7 @@ public enum PadCopyNumber {
             return chromosome;
         }
 
-        void addCopyNumber(CopyNumber number) {
+        void addCopyNumber(FreecCopyNumber number) {
             if (number.start() > currentPosition) {
                 handler.accept(createDefaultCopyNumber(currentPosition, number.start() - 1));
             }
@@ -58,8 +58,8 @@ public enum PadCopyNumber {
             }
         }
 
-        private CopyNumber createDefaultCopyNumber(long aStart, long aEnd) {
-            return ImmutableCNVCopyNumber.of(2, chromosome, aStart, aEnd, null);
+        private FreecCopyNumber createDefaultCopyNumber(long aStart, long aEnd) {
+            return ImmutableFreecCopyNumber.builder().chromosome(chromosome).start(aStart).end(aEnd).value(2).build();
         }
     }
 }

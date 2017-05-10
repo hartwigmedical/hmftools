@@ -1,64 +1,61 @@
-package com.hartwig.hmftools.common.convoy;
+package com.hartwig.hmftools.common.purple;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.ratio.Ratio;
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
+import com.hartwig.hmftools.common.freec.FreecRatio;
 import com.hartwig.hmftools.common.zipper.GenomeZipper;
 import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 
 import java.util.Collections;
 import java.util.List;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.positiveOrZero;
 import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
 
-public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
+public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<FreecCopyNumber> {
 
-    public static List<ConvoyCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
-        return new ConvoyCopyNumberFactory(copyNumbers, bafs, tumorRatios, normalRatios).result();
+    public static List<EnrichedCopyNumber> convoyCopyNumbers(List<FreecCopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
+        return new EnrichedCopyNumberFactory(copyNumbers, bafs, tumorRatios, normalRatios).result();
     }
 
-    private final List<ConvoyCopyNumber> result = Lists.newArrayList();
+    private final List<EnrichedCopyNumber> result = Lists.newArrayList();
     private final RatioAccumulator tumorRatio = new RatioAccumulator();
     private final RatioAccumulator normalRatio = new RatioAccumulator();
     private final BetaAlleleFrequencyAccumulator baf = new BetaAlleleFrequencyAccumulator();
 
-    private ConvoyCopyNumberFactory(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<Ratio> tumorRatios, List<Ratio> normalRatios) {
-        GenomeZipper<CopyNumber> zipper = new GenomeZipper<>(copyNumbers, this);
+    private EnrichedCopyNumberFactory(List<FreecCopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
+        GenomeZipper<FreecCopyNumber> zipper = new GenomeZipper<>(copyNumbers, this);
         zipper.addPositions(bafs, baf::accumulate);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
         zipper.addPositions(normalRatios, normalRatio::accumulate);
         zipper.run();
     }
 
-    private List<ConvoyCopyNumber> result() {
+    private List<EnrichedCopyNumber> result() {
         return result;
     }
 
     @Override
-    public void enter(CopyNumber region) {
+    public void enter(FreecCopyNumber region) {
         baf.reset();
         tumorRatio.reset();
         normalRatio.reset();
     }
 
     @Override
-    public void exit(CopyNumber region) {
-        int bafCount = baf.count;
-        if (bafCount > 0) {
-            double myTumorRatio = tumorRatio.meanRatio();
-            if (positiveOrZero(myTumorRatio)) {
-                double myNormalRatio = normalRatio.meanRatio();
-                ConvoyCopyNumber copyNumber = ImmutableConvoyCopyNumber.builder().from(region)
-                        .mBAFCount(baf.count())
-                        .mBAF(baf.medianBaf())
-                        .tumorRatio(myTumorRatio)
-                        .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
-                        .build();
+    public void exit(FreecCopyNumber region) {
+        double myTumorRatio = tumorRatio.meanRatio();
+        double myNormalRatio = normalRatio.meanRatio();
+        EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder().from(region)
+                .status(region.status())
+                .genotype(region.genotype())
+                .mBAFCount(baf.count())
+                .mBAF(baf.medianBaf())
+                .tumorRatio(myTumorRatio)
+                .normalRatio(myNormalRatio)
+                .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
+                .build();
 
-                result.add(copyNumber);
-            }
-        }
+        result.add(copyNumber);
     }
 
     private class BetaAlleleFrequencyAccumulator {
@@ -92,7 +89,7 @@ public class ConvoyCopyNumberFactory implements GenomeZipperRegionHandler<CopyNu
         private double sumRatio;
         private int count;
 
-        private void accumulate(Ratio ratio) {
+        private void accumulate(FreecRatio ratio) {
             if (ratio.ratio() > -1) {
                 count++;
                 sumRatio += ratio.ratio();

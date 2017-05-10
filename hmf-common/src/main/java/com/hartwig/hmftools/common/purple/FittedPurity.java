@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.common.convoy;
+package com.hartwig.hmftools.common.purple;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
 @Value.Immutable
-public abstract class ConvoyPurity implements Comparable<ConvoyPurity> {
+public abstract class FittedPurity implements Comparable<FittedPurity> {
 
     public abstract double purity();
 
@@ -17,7 +17,7 @@ public abstract class ConvoyPurity implements Comparable<ConvoyPurity> {
     public abstract double diplodProportion();
 
     @Override
-    public int compareTo(@NotNull ConvoyPurity o) {
+    public int compareTo(@NotNull FittedPurity o) {
         return Double.compare(score(), o.score());
     }
 }
