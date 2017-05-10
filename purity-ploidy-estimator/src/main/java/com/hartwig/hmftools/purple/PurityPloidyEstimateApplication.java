@@ -30,6 +30,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
+    // Constants
     private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;
     private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
     private static final int MIN_COMBINED_DEPTH = 10;
@@ -85,6 +86,7 @@ public class PurityPloidyEstimateApplication {
 
         LOGGER.info("Loading {} CopyNumber", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
+
         final List<CopyNumber> copyNumbers = PadCopyNumber.pad(CNVFileLoader.loadCNV(freecDirectory, tumorSample));
 
         LOGGER.info("Loading {} Ratio data", tumorSample);
@@ -100,28 +102,21 @@ public class PurityPloidyEstimateApplication {
         final List<BetaAlleleFrequency> bafs = bafFactory.transform(variants);
         final List<EnrichedCopyNumber> enrichedCopyNumbers = EnrichedCopyNumberFactory.convoyCopyNumbers(copyNumbers, bafs, tumorRatio, normalRatio);
 
-        LOGGER.info("Enriched copy numbers(s):");
-        for (int i = 0; i < Math.min(5, enrichedCopyNumbers.size()); i++) {
-            LOGGER.info(enrichedCopyNumbers.get(i));
-        }
-
         LOGGER.info("Fitting purity");
         final List<FittedPurity> purity = fittedPurityFactory.fitPurity(enrichedCopyNumbers);
         Collections.sort(purity);
 
-        LOGGER.info("Top fit(s):");
-        for (int i = 0; i < Math.min(5, purity.size()); i++) {
-            LOGGER.info(purity.get(i));
-        }
-
         if (!purity.isEmpty()) {
-            LOGGER.info("Fitted CopyNumbers:");
-            FittedPurity bestFit = purity.get(0);
-            List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(), bestFit.normFactor(), enrichedCopyNumbers);
+            final String cnvPath = CNVFileLoader.copyNumberPath(freecDirectory, tumorSample);
+            final String purityFile = cnvPath + ".purity";
+            LOGGER.info("Writing fitted purity to: {}", purityFile);
+            FittedPurityWriter.writePurity(purityFile, purity);
 
-            for (int i = 0; i < Math.min(5, fittedCopyNumbers.size()); i++) {
-                LOGGER.info(fittedCopyNumbers.get(i));
-            }
+            final String fittedFile = cnvPath + ".fitted";
+            LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
+            final FittedPurity bestFit = purity.get(0);
+            final List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(), bestFit.normFactor(), enrichedCopyNumbers);
+            FittedCopyNumberWriter.writeCopyNumber(fittedFile, fittedCopyNumbers);
         }
 
         LOGGER.info("Complete");

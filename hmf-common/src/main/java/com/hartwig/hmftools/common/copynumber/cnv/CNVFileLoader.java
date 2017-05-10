@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.common.copynumber.cnv;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.CopyNumberFactory;
@@ -12,10 +7,14 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 public final class CNVFileLoader {
 
@@ -31,6 +30,12 @@ public final class CNVFileLoader {
             copyNumbers.add(CopyNumberFactory.fromCNVLine(line));
         }
         return copyNumbers;
+    }
+
+    @NotNull
+    public static String copyNumberPath(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+        return PathRegexFinder.build()
+                .findPath(basePath, String.format(COPYNUMBER_REGEX, sample)).toString();
     }
 
     @NotNull
