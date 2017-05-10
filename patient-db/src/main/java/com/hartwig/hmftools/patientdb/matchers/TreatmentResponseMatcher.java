@@ -38,19 +38,23 @@ public class TreatmentResponseMatcher {
     @Nullable
     private static Integer findTreatmentIdForResponse(@NotNull final String patientId,
             @NotNull final BiopsyTreatmentResponseData response, @NotNull final List<BiopsyTreatmentData> treatments) {
-        Integer treatmentId = null;
+        BiopsyTreatmentData matchedTreatment = null;
         for (final BiopsyTreatmentData treatment : treatments) {
             if (responseMatchesTreatment(response, treatment)) {
-                if (treatmentId == null) {
-                    treatmentId = treatment.id();
+                if (matchedTreatment == null) {
+                    matchedTreatment = treatment;
                 } else {
-                    LOGGER.warn(
-                            patientId + ": treatment response can be matched to multiple treatments: " + treatmentId
-                                    + "->" + treatment.id());
+                    LOGGER.warn(patientId + ": treatment response(" + response.date() + ") matched with: "
+                            + matchedTreatment.id() + " (" + matchedTreatment.startDate() + ","
+                            + matchedTreatment.endDate() + ") can also be matched with: " + treatment.id() + " ("
+                            + treatment.startDate() + "," + treatment.endDate() + ")");
                 }
             }
         }
-        return treatmentId;
+        if (matchedTreatment != null) {
+            return matchedTreatment.id();
+        }
+        return null;
     }
 
     private static boolean responseMatchesTreatment(@NotNull final BiopsyTreatmentResponseData response,
@@ -61,7 +65,7 @@ public class TreatmentResponseMatcher {
         if (treatmentStart == null || responseDate == null) {
             return false;
         }
-        return (responseDate.isAfter(treatmentStart) || responseDate.isEqual(treatmentStart)) && (treatmentEnd == null
-                || responseDate.isBefore(treatmentEnd) || responseDate.isEqual(treatmentEnd));
+        return (responseDate.isAfter(treatmentStart) && (treatmentEnd == null || responseDate.isBefore(treatmentEnd)
+                || responseDate.isEqual(treatmentEnd)));
     }
 }
