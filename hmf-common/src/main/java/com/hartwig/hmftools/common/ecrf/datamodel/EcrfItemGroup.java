@@ -9,14 +9,21 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EcrfItemGroup {
+    private static final Logger LOGGER = LogManager.getLogger(EcrfItemGroup.class);
+
+    @NotNull
+    private final String patientId;
     @NotNull
     private final Map<String, List<String>> itemsPerOID;
 
-    public EcrfItemGroup() {
+    public EcrfItemGroup(@NotNull final String patientId) {
+        this.patientId = patientId;
         this.itemsPerOID = Maps.newHashMap();
     }
 
@@ -47,7 +54,7 @@ public class EcrfItemGroup {
     }
 
     @Nullable
-    public String readItemString(@NotNull final String itemOID, int index) {
+    private String readItemString(@NotNull final String itemOID, int index) {
         if (index < itemsPerOID(itemOID).size()) {
             final String ecrfValue = itemsPerOID(itemOID).get(index);
             if (ecrfValue != null && ecrfValue.replaceAll("\\s", "").length() == 0) {
@@ -59,7 +66,7 @@ public class EcrfItemGroup {
     }
 
     @Nullable
-    public LocalDate readItemDate(@NotNull final String itemOID, int index,
+    private LocalDate readItemDate(@NotNull final String itemOID, int index,
             @NotNull final DateTimeFormatter dateFormatter) {
         if (index < itemsPerOID(itemOID).size()) {
             final String ecrfValue = itemsPerOID(itemOID).get(index);
@@ -73,5 +80,24 @@ public class EcrfItemGroup {
             }
         }
         return null;
+    }
+
+    @Nullable
+    public LocalDate readItemDate(@NotNull final String itemOID, int index,
+            @NotNull final DateTimeFormatter dateFormatter, boolean verbose) {
+        final LocalDate itemDate = readItemDate(itemOID, index, dateFormatter);
+        if (itemDate == null && verbose) {
+            LOGGER.warn(patientId + ": empty field: " + itemOID);
+        }
+        return itemDate;
+    }
+
+    @Nullable
+    public String readItemString(@NotNull final String itemOID, int index, boolean verbose) {
+        final String itemString = readItemString(itemOID, index);
+        if (itemString == null && verbose) {
+            LOGGER.warn(patientId + ": empty field: " + itemOID);
+        }
+        return itemString;
     }
 }

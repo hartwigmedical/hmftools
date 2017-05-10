@@ -77,24 +77,24 @@ public final class XMLPatientReader extends EcrfReader {
         String currentStudyEventOID = Strings.EMPTY;
         String currentFormOID = Strings.EMPTY;
         String currentItemGroupOID = Strings.EMPTY;
-        EcrfStudyEvent currentStudy = new EcrfStudyEvent();
-        EcrfForm currentForm = new EcrfForm();
-        EcrfItemGroup currentItemGroup = new EcrfItemGroup();
+        EcrfStudyEvent currentStudy = new EcrfStudyEvent(patientId);
+        EcrfForm currentForm = new EcrfForm(patientId);
+        EcrfItemGroup currentItemGroup = new EcrfItemGroup(patientId);
         while (reader.hasNext() && !isPatientEnd(reader)) {
             if (isStudyEventStart(reader)) {
                 currentStudyEventOID = reader.getAttributeValue("", STUDY_EVENT_OID_ATTRIBUTE);
-                currentStudy = new EcrfStudyEvent();
+                currentStudy = new EcrfStudyEvent(patientId);
                 if (!studyEventsPerOID.containsKey(currentStudyEventOID)) {
                     studyEventsPerOID.put(currentStudyEventOID, Lists.newArrayList());
                 }
                 studyEventsPerOID.get(currentStudyEventOID).add(currentStudy);
             } else if (isFormStart(reader)) {
                 currentFormOID = reader.getAttributeValue("", FORM_OID_ATTRIBUTE);
-                currentForm = new EcrfForm();
+                currentForm = new EcrfForm(patientId);
                 currentStudy.addForm(currentFormOID, currentForm);
             } else if (isItemGroupStart(reader)) {
                 currentItemGroupOID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
-                currentItemGroup = new EcrfItemGroup();
+                currentItemGroup = new EcrfItemGroup(patientId);
                 currentForm.addItemGroup(currentItemGroupOID, currentItemGroup);
             } else if (isFieldStart(reader)) {
                 String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
