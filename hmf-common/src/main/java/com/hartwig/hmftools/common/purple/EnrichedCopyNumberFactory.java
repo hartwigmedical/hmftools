@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
 import com.hartwig.hmftools.common.freec.FreecRatio;
 import com.hartwig.hmftools.common.zipper.GenomeZipper;
 import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
@@ -11,9 +11,9 @@ import java.util.List;
 
 import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
 
-public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<CopyNumber> {
+public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<FreecCopyNumber> {
 
-    public static List<EnrichedCopyNumber> convoyCopyNumbers(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
+    public static List<EnrichedCopyNumber> convoyCopyNumbers(List<FreecCopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
         return new EnrichedCopyNumberFactory(copyNumbers, bafs, tumorRatios, normalRatios).result();
     }
 
@@ -22,8 +22,8 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Copy
     private final RatioAccumulator normalRatio = new RatioAccumulator();
     private final BetaAlleleFrequencyAccumulator baf = new BetaAlleleFrequencyAccumulator();
 
-    private EnrichedCopyNumberFactory(List<CopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
-        GenomeZipper<CopyNumber> zipper = new GenomeZipper<>(copyNumbers, this);
+    private EnrichedCopyNumberFactory(List<FreecCopyNumber> copyNumbers, List<BetaAlleleFrequency> bafs, List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
+        GenomeZipper<FreecCopyNumber> zipper = new GenomeZipper<>(copyNumbers, this);
         zipper.addPositions(bafs, baf::accumulate);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
         zipper.addPositions(normalRatios, normalRatio::accumulate);
@@ -35,17 +35,19 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Copy
     }
 
     @Override
-    public void enter(CopyNumber region) {
+    public void enter(FreecCopyNumber region) {
         baf.reset();
         tumorRatio.reset();
         normalRatio.reset();
     }
 
     @Override
-    public void exit(CopyNumber region) {
+    public void exit(FreecCopyNumber region) {
         double myTumorRatio = tumorRatio.meanRatio();
         double myNormalRatio = normalRatio.meanRatio();
         EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder().from(region)
+                .status(region.status())
+                .genotype(region.genotype())
                 .mBAFCount(baf.count())
                 .mBAF(baf.medianBaf())
                 .tumorRatio(myTumorRatio)

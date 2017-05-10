@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
 import org.immutables.value.Value;
 
 import java.io.Serializable;
@@ -28,4 +29,8 @@ public abstract class FittedCopyNumber implements CopyNumber, Serializable {
     public abstract double normalCNVRatio();
 
     public abstract double cnvDeviation();
+
+    public abstract String genotype();
+
+    public abstract FreecCopyNumber.Status status();
 }

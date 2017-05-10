@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
 import org.junit.Test;
 
 import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.*;
@@ -22,7 +23,7 @@ public class FittedCopyNumberFactoryTest {
     }
 
     private EnrichedCopyNumber create(double baf, double ratio) {
-        return ImmutableEnrichedCopyNumber.of(baf, 1, ratio, 0, 0, 0, "1", 1, 2, null);
+        return ImmutableEnrichedCopyNumber.of(baf, 1, ratio, 0, 0, "-", FreecCopyNumber.Status.UNKNOWN, 0, "1", 1, 2, null);
     }
 
     @Test

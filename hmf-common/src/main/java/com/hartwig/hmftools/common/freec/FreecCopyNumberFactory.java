@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public enum FreecCopyNumberFactory {
@@ -27,7 +28,12 @@ public enum FreecCopyNumberFactory {
 
     @NotNull
     public static List<CopyNumber> loadCNV(@NotNull final String basePath, @NotNull final String sample) throws IOException, HartwigException {
-        final List<CopyNumber> copyNumbers = Lists.newArrayList();
+          return new ArrayList<>(loadFreecCNV(basePath, sample));
+    }
+
+    @NotNull
+    public static List<FreecCopyNumber> loadFreecCNV(@NotNull final String basePath, @NotNull final String sample) throws IOException, HartwigException {
+        final List<FreecCopyNumber> copyNumbers = Lists.newArrayList();
         for (final String line : FreecFileLoader.copyNumberLines(basePath, sample)) {
             copyNumbers.add(FreecCopyNumberFactory.fromCNVLine(line));
         }
@@ -35,7 +41,7 @@ public enum FreecCopyNumberFactory {
     }
 
     @NotNull
-    public static CopyNumber fromCNVLine(@NotNull final String cnvLine) throws HartwigException {
+    static FreecCopyNumber fromCNVLine(@NotNull final String cnvLine) throws HartwigException {
         final String[] values = cnvLine.split(CNV_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();

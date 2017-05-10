@@ -23,20 +23,24 @@ public class FreecCopyNumberFactoryTest {
 
     @Test
     public void canConvertCNVLine() throws HartwigException {
-        final String cnvLineGain = "1 \t 1 \t 2 \t 3 \t gain";
+        final String cnvLineGain = "1 \t 1 \t 2 \t 3 \t gain \t AAB \t 27.30 \t germline";
         final String cnvLineLoss = "1 \t 1 \t 2 \t 1 \t loss";
 
-        final CopyNumber cnvGain = FreecCopyNumberFactory.fromCNVLine(cnvLineGain);
+        final FreecCopyNumber cnvGain = FreecCopyNumberFactory.fromCNVLine(cnvLineGain);
         assertEquals("1", cnvGain.chromosome());
         assertEquals(2, cnvGain.start());
         assertEquals(2, cnvGain.end());
         assertEquals(3, cnvGain.value());
+        assertEquals("AAB", cnvGain.genotype());
+        assertEquals(FreecCopyNumber.Status.GERMLINE, cnvGain.status());
 
-        final CopyNumber cnvLoss = FreecCopyNumberFactory.fromCNVLine(cnvLineLoss);
+        final FreecCopyNumber cnvLoss = FreecCopyNumberFactory.fromCNVLine(cnvLineLoss);
         assertEquals("1", cnvLoss.chromosome());
         assertEquals(2, cnvLoss.start());
         assertEquals(2, cnvLoss.end());
         assertEquals(1, cnvLoss.value());
+        assertEquals("-", cnvLoss.genotype());
+        assertEquals(FreecCopyNumber.Status.UNKNOWN, cnvLoss.status());
     }
 
     @Test(expected = HartwigException.class)

@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.purple;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.freec.FreecCopyNumberFactory;
-import com.hartwig.hmftools.common.freec.FreecFileLoader;
-import com.hartwig.hmftools.common.freec.FreecRatio;
-import com.hartwig.hmftools.common.freec.FreecRatioFactory;
+import com.hartwig.hmftools.common.freec.*;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.*;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
@@ -87,7 +83,7 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Loading {} CopyNumber", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
 
-        final List<CopyNumber> copyNumbers = PadCopyNumber.pad(FreecCopyNumberFactory.loadCNV(freecDirectory, tumorSample));
+        final List<FreecCopyNumber> copyNumbers = PadCopyNumber.pad(FreecCopyNumberFactory.loadFreecCNV(freecDirectory, tumorSample));
 
         LOGGER.info("Loading {} FreecRatio data", tumorSample);
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);

@@ -29,6 +29,8 @@ public class FittedCopyNumberFactory {
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
+                .status(copyNumber.status())
+                .genotype(copyNumber.genotype())
                 .bafCount(copyNumber.mBAFCount())
                 .actualBAF(actualBAF)
                 .tumorCNVRatio(actualRatio)
