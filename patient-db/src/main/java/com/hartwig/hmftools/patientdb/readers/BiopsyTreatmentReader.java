@@ -43,15 +43,9 @@ public class BiopsyTreatmentReader {
     public List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentData> treatmentDatas = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
-            for (final EcrfForm form : studyEvent.formsPerOID(FORM_TREATMENT)) {
-                if (form.isEmpty()) {
-                    LOGGER.warn("Ignoring empty form: " + FORM_TREATMENT + " for patient " + patient.patientId());
-                    continue;
-                }
-                final String treatmentGiven = form.itemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER).get(0).readItemString(
-                        FIELD_TREATMENT_GIVEN, 0);
-                final List<BiopsyTreatmentDrugData> drugs = readDrugs(patient.patientId(),
-                        form.itemGroupsPerOID(ITEMGROUP_SYSPOSTBIO));
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, true)) {
+                final String treatmentGiven = readTreatmentGiven(form);
+                final List<BiopsyTreatmentDrugData> drugs = readDrugs(form);
                 final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
                 final LocalDate treatmentEnd = determineTreatmentEndDate(drugs);
                 treatmentDatas.add(new BiopsyTreatmentData(treatmentGiven, treatmentStart, treatmentEnd, drugs));
@@ -61,17 +55,12 @@ public class BiopsyTreatmentReader {
     }
 
     @NotNull
-    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final String patientId,
-            @NotNull final List<EcrfItemGroup> itemGroups) {
+    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final EcrfForm form) {
         final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
-        for (final EcrfItemGroup itemGroup : itemGroups) {
-            if (itemGroup.isEmpty()) {
-                LOGGER.warn("Ignoring empty item group: " + ITEMGROUP_SYSPOSTBIO + " for patient " + patientId);
-                continue;
-            }
-            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, dateFormatter);
-            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, dateFormatter);
-            final String drugName = itemGroup.readItemString(FIELD_DRUG, 0);
+        for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, true)) {
+            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, dateFormatter, true);
+            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, dateFormatter, true);
+            final String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
             final String drugType = drugName == null ? null : treatmentMapping.get(drugName.toLowerCase().trim());
             drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));
         }
@@ -104,5 +93,14 @@ public class BiopsyTreatmentReader {
             }
             return endDate;
         }
+    }
+
+    @Nullable
+    private static String readTreatmentGiven(@NotNull final EcrfForm form) {
+        final List<EcrfItemGroup> itemGroups = form.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER, true);
+        if (itemGroups.size() > 0) {
+            return itemGroups.get(0).readItemString(FIELD_TREATMENT_GIVEN, 0, true);
+        }
+        return null;
     }
 }

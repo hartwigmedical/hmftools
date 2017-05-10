@@ -21,7 +21,9 @@ public class TreatmentMatcher {
             @NotNull final List<BiopsyClinicalData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
         if (biopsies.size() < treatments.size()) {
             if (biopsies.size() < treatments.size()) {
-                LOGGER.warn("Patient " + patientId + " has more treatments than biopsies.");
+                LOGGER.warn(
+                        patientId + ": has more treatments(" + treatments.size() + ") than biopsies(" + biopsies.size()
+                                + ").");
             }
         }
         if (biopsies.size() == 1 && treatments.size() > 1) {
@@ -64,10 +66,8 @@ public class TreatmentMatcher {
         if (biopsyDate != null && treatmentStartDate != null) {
             if (Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
                     > maxDaysBetweenTreatmentAndBiopsy) {
-                LOGGER.warn(
-                        "Time between biopsy date(" + biopsyDate + ") and treatment start date(" + treatmentStartDate
-                                + ") is greater than " + maxDaysBetweenTreatmentAndBiopsy + " days for patient "
-                                + patientId);
+                LOGGER.warn(patientId + ": time between biopsy date(" + biopsyDate + ") and treatment start date("
+                        + treatmentStartDate + ") is greater than " + maxDaysBetweenTreatmentAndBiopsy + " days.");
             }
         }
     }

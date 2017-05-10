@@ -45,8 +45,8 @@ public class TreatmentResponseMatcher {
                     treatmentId = treatment.id();
                 } else {
                     LOGGER.warn(
-                            "Treatment response for patient " + patientId + " can be matched to multiple treatments: "
-                                    + treatmentId + "->" + treatment.id());
+                            patientId + ": treatment response can be matched to multiple treatments: " + treatmentId
+                                    + "->" + treatment.id());
                 }
             }
         }

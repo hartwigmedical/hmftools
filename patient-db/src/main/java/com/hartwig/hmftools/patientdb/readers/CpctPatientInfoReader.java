@@ -50,12 +50,16 @@ public class CpctPatientInfoReader {
         final String gender = GenericReader.getField(patient, FIELD_SEX);
         final String ethnicity = GenericReader.getField(patient, FIELD_ETHNICITY);
         final Integer birthYear = getBirthYear(patient);
-        final String hospital = getHospital(patient, hospitals);
+        final String impliedHospital = getHospital(patient, hospitals);
         final String tumorLocation = GenericReader.getField(patient, FIELD_TUMOR_LOCATION);
         final String deathDateString = GenericReader.getField(patient, FIELD_DEATHDATE);
         final LocalDate deathDate = Utils.getDate(deathDateString, dateFormatter);
+        final String hospital1 = GenericReader.getField(patient, FIELD_HOSPITAL1);
+        final String hospital2 = GenericReader.getField(patient, FIELD_HOSPITAL2);
+        checkHospitalVsImplied(patient.patientId(), impliedHospital, hospital1, FIELD_HOSPITAL1);
+        checkHospitalVsImplied(patient.patientId(), impliedHospital, hospital2, FIELD_HOSPITAL2);
 
-        return new PatientInfo(patient.patientId(), registrationDate, gender, ethnicity, hospital, birthYear,
+        return new PatientInfo(patient.patientId(), registrationDate, gender, ethnicity, impliedHospital, birthYear,
                 tumorLocation, deathDate);
     }
 
@@ -110,5 +114,13 @@ public class CpctPatientInfoReader {
             LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no Hospital with code " + hospitalCode);
         }
         return hospital;
+    }
+
+    private void checkHospitalVsImplied(@NotNull final String patientId, @Nullable final String impliedHospital,
+            @Nullable final String hospital, @Nullable final String hospitalField) {
+        if (impliedHospital != null && hospital != null && !hospital.equals(impliedHospital)) {
+            LOGGER.warn("value for " + hospitalField + "(" + hospital + ") does not match with determined value("
+                    + impliedHospital + ") for patient " + patientId);
+        }
     }
 }

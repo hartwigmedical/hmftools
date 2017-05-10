@@ -26,7 +26,7 @@ public class BiopsyMatcher {
             return matchBiopsiesByIndex(sequencedBiopsies, clinicalBiopsies);
         } else {
             if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
-                LOGGER.warn("Patient: " + patientId + " contains less entries in ecrf (" + clinicalBiopsies.size()
+                LOGGER.warn(patientId + ": contains less biopsies in ecrf (" + clinicalBiopsies.size()
                         + ") than biopsies sequenced (" + sequencedBiopsies.size() + ").");
             }
             return matchBiopsiesByDate(patientId, sequencedBiopsies, clinicalBiopsies);
@@ -95,8 +95,8 @@ public class BiopsyMatcher {
         final int maxDaysBetweenBiopsyDateAndArrival = 180;
         if (biopsyDate != null && Duration.between(biopsyDate.atStartOfDay(), arrivalDate.atStartOfDay()).toDays()
                 > maxDaysBetweenBiopsyDateAndArrival) {
-            LOGGER.warn("Time between biopsy date (" + biopsyDate + ") and biopsy arrival date (" + arrivalDate
-                    + ") is greater than " + maxDaysBetweenBiopsyDateAndArrival + " days for patient " + patientId);
+            LOGGER.warn(patientId + ": time between biopsy date (" + biopsyDate + ") and biopsy arrival date ("
+                    + arrivalDate + ") is greater than " + maxDaysBetweenBiopsyDateAndArrival + " days.");
         }
     }
 }

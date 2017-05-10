@@ -32,22 +32,10 @@ public class BiopsyClinicalDataReader {
     public static List<BiopsyClinicalData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyClinicalData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
-            for (final EcrfForm form : studyEvent.formsPerOID(FORM_BIOPS)) {
-                if (form.isEmpty()) {
-                    LOGGER.warn("Ignoring empty form: " + FORM_BIOPS + " for patient " + patient.patientId());
-                    continue;
-                }
-                for (final EcrfItemGroup itemGroup : form.itemGroupsPerOID(ITEMGROUP_BIOPSIES)) {
-                    if (itemGroup.isEmpty()) {
-                        LOGGER.warn("Ignoring empty item group: " + ITEMGROUP_BIOPSIES + " for patient "
-                                + patient.patientId());
-                        continue;
-                    }
-                    final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, dateFormatter);
-                    final String location = itemGroup.readItemString(FIELD_LOCATION, 0);
-                    if (date == null) {
-                        LOGGER.warn("Found biopsy with empty date for patient: " + patient.patientId());
-                    }
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, true)) {
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, true)) {
+                    final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, dateFormatter, true);
+                    final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
                     biopsies.add(new BiopsyClinicalData(date, location, null));
                 }
             }

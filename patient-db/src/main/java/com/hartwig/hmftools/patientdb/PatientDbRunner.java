@@ -97,7 +97,7 @@ public final class PatientDbRunner {
                         final List<String> sampleIdsForPatient = runsContexts.stream().map(
                                 RunContext::tumorSample).filter(
                                 sampleId -> sampleId.startsWith(patient.patientId())).collect(Collectors.toList());
-                        LOGGER.info("Samples for patient " + patient.patientId() + ": " + sampleIdsForPatient);
+                        LOGGER.info(patient.patientId() + ": Samples: " + sampleIdsForPatient);
                         final Patient cpctPatient = cpctPatientReader.read(patient, sampleIdsForPatient);
                         dbWriter.writePatient(cpctPatient);
                     }

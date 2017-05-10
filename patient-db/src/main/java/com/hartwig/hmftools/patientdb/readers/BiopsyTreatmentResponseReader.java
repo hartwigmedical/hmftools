@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,51 +33,39 @@ public class BiopsyTreatmentResponseReader {
     public static List<BiopsyTreatmentResponseData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentResponseData> treatmentResponses = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.formsPerOID(FORM_TUMOR_MEASUREMENT)) {
-                if (form.isEmpty()) {
-                    LOGGER.warn(
-                            "Ignoring empty form: " + FORM_TUMOR_MEASUREMENT + " for patient " + patient.patientId());
-                    continue;
-                }
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT, true)) {
                 LocalDate assessmentDate = null;
-                for (final EcrfItemGroup itemGroup : form.itemGroupsPerOID(ITEMGROUP_MEASUREMENT)) {
-                    for (final String assesmentDateValue : itemGroup.itemsPerOID(FIELD_ASSESSMENT_DATE)) {
-                        final LocalDate date = Utils.getDate(assesmentDateValue, dateFormatter);
-                        if (date != null) {
-                            assessmentDate = date;
-                            break;
-                        }
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT, true)) {
+                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE, 0, dateFormatter, true);
+                    if (date != null) {
+                        assessmentDate = date;
+                        break;
                     }
                 }
                 LocalDate responseDate = null;
                 String measurementDone = null;
                 String response = null;
-                for (final EcrfItemGroup itemGroup : form.itemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT)) {
-                    if (itemGroup.isEmpty()) {
-                        LOGGER.warn("Ignoring empty item group: " + ITEMGROUP_TUMOR_MEASUREMENT + " for patient "
-                                + patient.patientId());
-                        continue;
-                    }
-                    final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, dateFormatter);
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT,
+                        true)) {
+                    final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, dateFormatter, true);
                     if (date != null) {
                         responseDate = date;
                     }
-                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_YN, 0);
+                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_YN, 0, true);
                     if (measurementDoneValue != null) {
                         measurementDone = measurementDoneValue;
                     }
-                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE, 0);
+                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE, 0, true);
                     if (responseValue != null) {
                         response = responseValue;
                     }
                 }
                 if (assessmentDate == null && responseDate == null) {
-                    LOGGER.warn("Both assessment date and treatment response date missing for patient: "
-                            + patient.patientId());
+                    LOGGER.warn(patient.patientId() + ": both assessment date and treatment response date missing.");
                 } else {
                     if (assessmentDate != null && responseDate != null && !assessmentDate.isEqual(responseDate)) {
-                        LOGGER.warn("Assessment date(" + assessmentDate + ") differs from treatment response date("
-                                + responseDate + ") for patient: " + patient.patientId());
+                        LOGGER.warn(patient.patientId() + ": assessment date(" + assessmentDate
+                                + ") differs from treatment response date(" + responseDate + ")");
                     }
                     treatmentResponses.add(
                             new BiopsyTreatmentResponseData(assessmentDate, responseDate, response, measurementDone));
