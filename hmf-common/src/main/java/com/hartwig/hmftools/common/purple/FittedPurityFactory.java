@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 import java.util.Collection;
@@ -36,7 +37,7 @@ public class FittedPurityFactory {
         int totalBAFCount = 0;
         List<EnrichedCopyNumber> filteredCopyNumbers = Lists.newArrayList();
         for (EnrichedCopyNumber copyNumber : copyNumbers) {
-            if (copyNumber.mBAFCount() > 0 && Doubles.positiveOrZero(copyNumber.tumorRatio())) {
+            if (copyNumber.mBAFCount() > 0 && Doubles.positiveOrZero(copyNumber.tumorRatio()) && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
                 totalBAFCount += copyNumber.mBAFCount();
                 filteredCopyNumbers.add(copyNumber);
             }
