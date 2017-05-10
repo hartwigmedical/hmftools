@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.common.chromosome;
 
-public class Chromosomes {
+import org.jetbrains.annotations.NotNull;
 
-    public static int asInt(String chromosome) {
+public final class Chromosomes {
+
+    private Chromosomes() {
+    }
+
+    public static int asInt(@NotNull final String chromosome) {
         switch (chromosome) {
             case "X": return 23;
             case "Y": return 24;
@@ -11,7 +16,7 @@ public class Chromosomes {
         return Integer.valueOf(chromosome);
     }
 
-    public static long length(String chromosome) {
+    public static long length(@NotNull final String chromosome) {
         switch (chromosome) {
             case "1": return 249250622;
             case "10": return 135534749;
