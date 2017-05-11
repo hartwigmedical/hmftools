@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 
@@ -62,12 +63,12 @@ public class TreatmentMatcher {
 
     private static void checkDurationBetweenDates(@NotNull final String patientId,
             @Nullable final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
-        final int maxDaysBetweenTreatmentAndBiopsy = 90;
         if (biopsyDate != null && treatmentStartDate != null) {
             if (Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
-                    > maxDaysBetweenTreatmentAndBiopsy) {
+                    > Config.maxDaysBetweenTreatmentAndBiopsy) {
                 LOGGER.warn(patientId + ": time between biopsy date(" + biopsyDate + ") and treatment start date("
-                        + treatmentStartDate + ") is greater than " + maxDaysBetweenTreatmentAndBiopsy + " days.");
+                        + treatmentStartDate + ") is greater than " + Config.maxDaysBetweenTreatmentAndBiopsy
+                        + " days.");
             }
         }
     }
