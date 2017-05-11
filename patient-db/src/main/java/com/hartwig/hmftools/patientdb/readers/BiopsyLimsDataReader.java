@@ -13,6 +13,7 @@ import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BiopsyLimsDataReader {
 
@@ -32,8 +33,8 @@ public class BiopsyLimsDataReader {
 
     @NotNull
     public List<BiopsyLimsData> read(@NotNull final List<String> sampleIds) {
-        return sampleIds.stream().map(
-                sampleId -> new BiopsyLimsData(sampleId, determineArrivalDate(sampleId))).collect(Collectors.toList());
+        return sampleIds.stream().map(sampleId -> new BiopsyLimsData(sampleId, determineArrivalDate(sampleId),
+                determineSamplingDate(sampleId))).collect(Collectors.toList());
     }
 
     @NotNull
@@ -44,5 +45,15 @@ public class BiopsyLimsDataReader {
             return limsArrivalDate;
         else
             return LocalDate.parse(limsOldModel.findArrivalDateForSample(sampleId), dateFormatter);
+    }
+
+    @Nullable
+    private LocalDate determineSamplingDate(@NotNull final String sampleId) {
+        final LocalDate limsSamplingDate = Utils.getDate(limsModel.findSamplingDateForSample(sampleId),
+                newLimsDateFormatter);
+        if (limsSamplingDate != null)
+            return limsSamplingDate;
+        else
+            return Utils.getDate(limsOldModel.findArrivalDateForSample(sampleId), dateFormatter);
     }
 }
