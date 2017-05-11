@@ -34,9 +34,9 @@ public class CpctPatientReader {
 
     public CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final ConsensusRule consensusRule,
             @NotNull final Map<String, String> treatmentMappings, @NotNull final String limsCsv,
-            @NotNull final String limsOldCsv) throws IOException, HartwigException {
+            @NotNull final String limsOldCsv, @NotNull final String umcuCsv) throws IOException, HartwigException {
         cpctPatientInfoReader = new CpctPatientInfoReader(model);
-        biopsyLimsDataReader = new BiopsyLimsDataReader(limsCsv, limsOldCsv);
+        biopsyLimsDataReader = new BiopsyLimsDataReader(limsCsv, limsOldCsv, umcuCsv);
         biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentMappings);
         somaticVariantReader = new SomaticVariantReader(consensusRule);
     }
@@ -44,10 +44,11 @@ public class CpctPatientReader {
     @NotNull
     public Patient read(@NotNull final EcrfPatient patient, @NotNull final List<String> sampleIdsForPatient)
             throws IOException, HartwigException {
+        ThreadContext.put("cpctHospitalCode", "HMF");
+        final List<BiopsyLimsData> sequencedBiopsies = biopsyLimsDataReader.read(sampleIdsForPatient);
         ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
         final PatientInfo patientInfo = cpctPatientInfoReader.read(patient);
         final List<BiopsyClinicalData> clinicalBiopsies = BiopsyClinicalDataReader.read(patient);
-        final List<BiopsyLimsData> sequencedBiopsies = biopsyLimsDataReader.read(sampleIdsForPatient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(patient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(patient);
         final List<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponses(

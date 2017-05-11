@@ -51,9 +51,6 @@ public class BiopsyLimsData {
 
     @NotNull
     public LocalDate date() {
-        if (samplingDate == null) {
-            return arrivalDate;
-        }
-        return samplingDate;
+        return samplingDate != null ? samplingDate : arrivalDate;
     }
 }

@@ -12,10 +12,13 @@ import com.hartwig.hmftools.common.lims.LimsModel;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class BiopsyLimsDataReader {
+    private static final Logger LOGGER = LogManager.getLogger(BiopsyLimsDataReader.class);
 
     private static final DateTimeFormatter newLimsDateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -24,11 +27,17 @@ public class BiopsyLimsDataReader {
     private final LimsModel limsModel;
     @NotNull
     private final LimsModel limsOldModel;
+    @NotNull
+    private final LimsModel limsUmcuModel;
 
-    BiopsyLimsDataReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv)
-            throws IOException, EmptyFileException {
+    BiopsyLimsDataReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv,
+            @NotNull final String limsUmcuCsv) throws IOException, EmptyFileException {
+        LOGGER.info("reading lims file: " + limsCsv);
         this.limsModel = Lims.buildOldModelFromCsv(limsCsv);
+        LOGGER.info("reading lims file: " + limsOldCsv);
         this.limsOldModel = Lims.buildOldModelFromCsv(limsOldCsv);
+        LOGGER.info("reading lims file: " + limsUmcuCsv);
+        this.limsUmcuModel = Lims.buildOldModelFromCsv(limsUmcuCsv);
     }
 
     @NotNull
@@ -43,8 +52,15 @@ public class BiopsyLimsDataReader {
                 newLimsDateFormatter);
         if (limsArrivalDate != null)
             return limsArrivalDate;
-        else
-            return LocalDate.parse(limsOldModel.findArrivalDateForSample(sampleId), dateFormatter);
+        else {
+            final LocalDate umcuArrivalDate = Utils.getDate(limsUmcuModel.findArrivalDateForSample(sampleId),
+                    dateFormatter);
+            final LocalDate hmfArrivalDate = LocalDate.parse(limsOldModel.findArrivalDateForSample(sampleId),
+                    dateFormatter);
+            return umcuArrivalDate == null ?
+                    hmfArrivalDate :
+                    umcuArrivalDate.isBefore(hmfArrivalDate) ? umcuArrivalDate : hmfArrivalDate;
+        }
     }
 
     @Nullable
@@ -53,7 +69,16 @@ public class BiopsyLimsDataReader {
                 newLimsDateFormatter);
         if (limsSamplingDate != null)
             return limsSamplingDate;
-        else
-            return Utils.getDate(limsOldModel.findArrivalDateForSample(sampleId), dateFormatter);
+        else {
+            final LocalDate umcuSamplingDate = Utils.getDate(limsUmcuModel.findSamplingDateForSample(sampleId),
+                    dateFormatter);
+            final LocalDate hmfSamplingDate = Utils.getDate(limsOldModel.findSamplingDateForSample(sampleId),
+                    dateFormatter);
+            return umcuSamplingDate == null ?
+                    hmfSamplingDate :
+                    (hmfSamplingDate == null ?
+                            umcuSamplingDate :
+                            umcuSamplingDate.isBefore(hmfSamplingDate) ? umcuSamplingDate : hmfSamplingDate);
+        }
     }
 }

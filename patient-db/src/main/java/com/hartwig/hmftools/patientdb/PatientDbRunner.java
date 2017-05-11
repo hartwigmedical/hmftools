@@ -48,6 +48,7 @@ public final class PatientDbRunner {
     private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
     private static final String LIMS_CSV = "lims_csv";
     private static final String LIMS_OLD_CSV = "lims_old_csv";
+    private static final String LIMS_UMCU_CSV = "lims_umcu_csv";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
@@ -65,10 +66,11 @@ public final class PatientDbRunner {
         final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
         final String limsCsv = cmd.getOptionValue(LIMS_CSV);
         final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
+        final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
 
         ThreadContext.put("cpctHospitalCode", "default");
         if (Utils.anyNull(runsFolderPath, ecrfFilePath, userName, password, databaseUrl, highConfidenceBed,
-                extremeConfidenceBed, treatmentMappingCsv, limsCsv, limsOldCsv)) {
+                extremeConfidenceBed, treatmentMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-Db", options);
         } else {
@@ -82,7 +84,7 @@ public final class PatientDbRunner {
                 final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer,
                         extremeConfidenceSlicer);
                 final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, consensusRule,
-                        readTreatmentMappingFile(treatmentMappingCsv), limsCsv, limsOldCsv);
+                        readTreatmentMappingFile(treatmentMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
                 final DatabaseWriter dbWriter = new DatabaseWriter(userName, password, jdbcUrl);
                 dbWriter.clearTables();
                 final Set<String> cpctPatientIds = runsContexts.stream().map(
@@ -126,6 +128,7 @@ public final class PatientDbRunner {
                 "Path towards the .csv file that maps treatment names to treatment types");
         options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file");
         options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file");
+        options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file");
         return options;
     }
 
