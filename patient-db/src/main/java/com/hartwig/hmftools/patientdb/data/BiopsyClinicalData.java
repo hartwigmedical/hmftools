@@ -13,8 +13,6 @@ public class BiopsyClinicalData {
     @Nullable
     private final String location;
     @Nullable
-    private final BiopsyTreatmentData treatment;
-    @Nullable
     private final String sampleId;
 
     private static final AtomicInteger idCounter = new AtomicInteger(0);
@@ -23,17 +21,15 @@ public class BiopsyClinicalData {
         return idCounter.getAndIncrement();
     }
 
-    public BiopsyClinicalData(@Nullable final LocalDate date, @Nullable final String location,
-            @Nullable final BiopsyTreatmentData treatment) {
-        this(createId(), date, location, treatment, null);
+    public BiopsyClinicalData(@Nullable final LocalDate date, @Nullable final String location) {
+        this(createId(), date, location, null);
     }
 
     public BiopsyClinicalData(final int id, @Nullable final LocalDate date, @Nullable final String location,
-            @Nullable final BiopsyTreatmentData treatment, @Nullable final String sampleId) {
+            @Nullable final String sampleId) {
         this.id = id;
         this.date = date;
         this.location = location;
-        this.treatment = treatment;
         this.sampleId = sampleId;
     }
 
@@ -49,11 +45,6 @@ public class BiopsyClinicalData {
     @Nullable
     public String location() {
         return location;
-    }
-
-    @Nullable
-    public BiopsyTreatmentData treatment() {
-        return treatment;
     }
 
     @Nullable

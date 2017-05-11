@@ -36,7 +36,7 @@ public class BiopsyClinicalDataReader {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, true)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, dateFormatter, true);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
-                    biopsies.add(new BiopsyClinicalData(date, location, null));
+                    biopsies.add(new BiopsyClinicalData(date, location));
                 }
             }
         }
