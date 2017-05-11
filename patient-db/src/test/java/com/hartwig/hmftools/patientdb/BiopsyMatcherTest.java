@@ -27,14 +27,14 @@ public class BiopsyMatcherTest {
     private final static BiopsyLimsData limsBiopsySep = new BiopsyLimsData("sep", sep2015, null);
     private final static BiopsyLimsData limsBiopsyNov = new BiopsyLimsData("nov", nov2015, null);
 
-    private final static BiopsyClinicalData biopsyJan = new BiopsyClinicalData(jan2015, "", null);
-    private final static BiopsyClinicalData biopsyFeb = new BiopsyClinicalData(feb2015, "", null);
-    private final static BiopsyClinicalData biopsyMar = new BiopsyClinicalData(mar2015, "", null);
-    private final static BiopsyClinicalData biopsyJul = new BiopsyClinicalData(jul2015, "", null);
+    private final static BiopsyClinicalData biopsyJan = new BiopsyClinicalData(jan2015, "");
+    private final static BiopsyClinicalData biopsyFeb = new BiopsyClinicalData(feb2015, "");
+    private final static BiopsyClinicalData biopsyMar = new BiopsyClinicalData(mar2015, "");
+    private final static BiopsyClinicalData biopsyJul = new BiopsyClinicalData(jul2015, "");
 
-    private final static BiopsyClinicalData biopsySep = new BiopsyClinicalData(sep2015, "", null);
+    private final static BiopsyClinicalData biopsySep = new BiopsyClinicalData(sep2015, "");
 
-    private final static BiopsyClinicalData biopsyNull = new BiopsyClinicalData(null, "", null);
+    private final static BiopsyClinicalData biopsyNull = new BiopsyClinicalData(null, "");
 
     // MIVO:    ---biopsy(v)/sample---
     @Test

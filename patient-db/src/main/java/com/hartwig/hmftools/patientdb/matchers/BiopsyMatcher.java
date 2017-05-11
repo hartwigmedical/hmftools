@@ -48,7 +48,7 @@ public class BiopsyMatcher {
                     final BiopsyClinicalData clinicalBiopsy = clinicalBiopsies.get(index);
                     if (index == indices.lastMatchIndex) {
                         matchedBiopsies.add(new BiopsyClinicalData(clinicalBiopsy.id(), clinicalBiopsy.date(),
-                                clinicalBiopsy.location(), clinicalBiopsy.treatment(), sequencedBiopsy.sampleId()));
+                                clinicalBiopsy.location(), sequencedBiopsy.sampleId()));
                     } else
                         matchedBiopsies.add(clinicalBiopsy);
                 }
