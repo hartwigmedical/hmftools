@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.google.common.collect.Lists;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+
+import com.google.common.collect.Lists;
+
+import org.jetbrains.annotations.NotNull;
 
 public enum FittedPurityWriter {
     ;
@@ -15,7 +16,7 @@ public enum FittedPurityWriter {
 
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().map(FittedPurityWriter::transform).forEach(lines::add);
+        purity.stream().limit(10).map(FittedPurityWriter::transform).forEach(lines::add);
 
         Files.write(new File(filePath).toPath(), lines);
     }
