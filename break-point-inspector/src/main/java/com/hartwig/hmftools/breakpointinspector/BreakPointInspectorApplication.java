@@ -24,7 +24,7 @@ public class BreakPointInspectorApplication {
 
     private static final String BAM_PATH = "bam";
     private static final String BREAK_POINT = "break";
-    private static final String RANGE = "range";
+    private static final String PROXIMITY = "proximity";
     private static final String SV_LEN = "svlen";
     private static final String INCLUDE_PROPER = "proper";
 
@@ -33,6 +33,15 @@ public class BreakPointInspectorApplication {
         public int InterestingReadIntersecting = 0;
         public int InterestingReadProximity = 0;
         public int SoftClippedIntersecting = 0;
+        public int MatedToDifferentChromosome = 0;
+        public int UnmappedMate = 0;
+    }
+
+    private static class OrientationStats {
+        public int InnieCount = 0;
+        public int OutieCount = 0;
+        public int TandemCount = 0;
+        public int UnorientedCount = 0;
     }
 
     private static class PairedRead {
@@ -47,7 +56,7 @@ public class BreakPointInspectorApplication {
         final Options options = new Options();
         options.addOption(BAM_PATH, true, "input BAM");
         options.addOption(BREAK_POINT, true, "position of break point in chrX:123456 format");
-        options.addOption(RANGE, true, "base distance around breakpoint");
+        options.addOption(PROXIMITY, true, "base distance around breakpoint");
         options.addOption(SV_LEN, true, "length of the SV to inspect");
         options.addOption(INCLUDE_PROPER, false, "include proper pairs in output");
         return options;
@@ -95,10 +104,12 @@ public class BreakPointInspectorApplication {
     }
 
     private static void printStats(final BreakPointStats stats) {
-        System.out.println("INTERSECTING_INTERESTING_READS\t" + stats.InterestingReadIntersecting);
-        System.out.println("PROXIMITY_INTERESTING_READS\t" + stats.InterestingReadProximity);
-        System.out.println("INTERSECTING_SOFT_CLIPPED_READS\t" + stats.SoftClippedIntersecting);
-        System.out.println("INTERSECTING_NORMAL_READS\t" + stats.NormalReads);
+        System.out.println("INTERESTING_INTERSECTING\t" + stats.InterestingReadIntersecting);
+        System.out.println("INTERESTING_PROXIMITY\t" + stats.InterestingReadProximity);
+        System.out.println("SOFT_CLIPPED_READS_INTERSECTING\t" + stats.SoftClippedIntersecting);
+        System.out.println("MATED_TO_DIFF_CHROMOSOME\t" + stats.MatedToDifferentChromosome);
+        System.out.println("UNMAPPED_MATE\t" + stats.UnmappedMate);
+        System.out.println("NORMAL_INTERSECTING\t" + stats.NormalReads);
     }
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -109,7 +120,7 @@ public class BreakPointInspectorApplication {
         // grab arguments
         final String bamPath = cmd.getOptionValue(BAM_PATH);
         final String breakPoint = cmd.getOptionValue(BREAK_POINT);
-        final int range = Integer.parseInt(cmd.getOptionValue(RANGE, "500"));
+        final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
         final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
         final boolean outputProperPairs = cmd.hasOption(INCLUDE_PROPER);
 
@@ -143,6 +154,7 @@ public class BreakPointInspectorApplication {
 
         BreakPointStats statsLocation1 = new BreakPointStats();
         BreakPointStats statsLocation2 = new BreakPointStats();
+        OrientationStats orientationStats = new OrientationStats();
 
         // execute query and parse the results
         final SAMRecordIterator results = reader.query(queryIntervals, false);
@@ -167,14 +179,22 @@ public class BreakPointInspectorApplication {
                 // filter for the reads we want
                 final boolean differentChromosomes = !read.getReferenceName().equals(read.getMateReferenceName());
                 final boolean oneOfPairUnmapped = read.getReadUnmappedFlag() ^ read.getMateUnmappedFlag();
-                final boolean isSecondaryOrSupplementary = read.getSupplementaryAlignmentFlag();
-                final boolean closerToLocation1 = Math.abs(read.getAlignmentStart() - location1) > Math.abs(read.getAlignmentStart() - location2);
+                final boolean isSecondaryOrSupplementary =
+                        read.getNotPrimaryAlignmentFlag() || read.getSupplementaryAlignmentFlag(); // TODO: ???
+                final boolean closerToLocation1 = Math.abs(read.getAlignmentStart() - location1) < Math.abs(
+                        read.getAlignmentStart() - location2);
 
                 if (differentChromosomes) {
-                    // TODO: classify
+                    if (closerToLocation1)
+                        statsLocation1.MatedToDifferentChromosome++;
+                    else
+                        statsLocation2.MatedToDifferentChromosome++;
                     evidence = true;
                 } else if (oneOfPairUnmapped) {
-                    // TODO: classify
+                    if (closerToLocation1)
+                        statsLocation1.UnmappedMate++;
+                    else
+                        statsLocation2.UnmappedMate++;
                     evidence = true;
                 } else if (isSecondaryOrSupplementary) {
                     // TODO: classify
@@ -201,6 +221,22 @@ public class BreakPointInspectorApplication {
 
                 if (evidence) {
                     evidenceReads.add(read);
+                    if (read.getReadPairedFlag() && !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag()) {
+                        final SamPairUtil.PairOrientation orientation = SamPairUtil.getPairOrientation(read);
+                        switch (orientation) {
+                            case FR:
+                                orientationStats.InnieCount++;
+                                break;
+                            case RF:
+                                orientationStats.OutieCount++;
+                                break;
+                            case TANDEM:
+                                orientationStats.TandemCount++;
+                                break;
+                        }
+                    } else {
+                        orientationStats.UnorientedCount++;
+                    }
                 }
             }
 
@@ -298,5 +334,11 @@ public class BreakPointInspectorApplication {
         printStats(statsLocation1);
         System.out.println("-BP2_STATS-");
         printStats(statsLocation2);
+
+        System.out.println("-ORIENTATION-");
+        System.out.println("INNIE_COUNT\t" + orientationStats.InnieCount);
+        System.out.println("OUTIE_COUNT\t" + orientationStats.OutieCount);
+        System.out.println("TANDEM_COUNT\t" + orientationStats.TandemCount);
+        System.out.println("UNORIENTED_COUNTED\t" + orientationStats.UnorientedCount);
     }
 }
