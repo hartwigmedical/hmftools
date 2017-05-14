@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -26,6 +27,20 @@ public class BreakPointInspectorApplication {
     private static final String RANGE = "range";
     private static final String SV_LEN = "svlen";
     private static final String INCLUDE_PROPER = "proper";
+
+    private static class BreakPointStats {
+        public int NormalReads = 0;
+        public int InterestingReadIntersecting = 0;
+        public int InterestingReadProximity = 0;
+        public int SoftClippedIntersecting = 0;
+    }
+
+    private static class PairedRead {
+        public SAMRecord First = null;
+        public SAMRecord Second = null;
+        public boolean FirstInteresting = false;
+        public boolean SecondInteresting = false;
+    }
 
     @NotNull
     private static Options createOptions() {
@@ -79,6 +94,13 @@ public class BreakPointInspectorApplication {
         return (read.getUnclippedStart() - location) * (read.getUnclippedEnd() - location) < 0;
     }
 
+    private static void printStats(final BreakPointStats stats) {
+        System.out.println("INTERSECTING_INTERESTING_READS\t" + stats.InterestingReadIntersecting);
+        System.out.println("PROXIMITY_INTERESTING_READS\t" + stats.InterestingReadProximity);
+        System.out.println("INTERSECTING_SOFT_CLIPPED_READS\t" + stats.SoftClippedIntersecting);
+        System.out.println("INTERSECTING_NORMAL_READS\t" + stats.NormalReads);
+    }
+
     public static void main(final String... args) throws ParseException, IOException {
 
         final Options options = createOptions();
@@ -115,151 +137,166 @@ public class BreakPointInspectorApplication {
                 new QueryInterval(index, Math.max(0, location2 - range), location2 + range) };
         QueryInterval.optimizeIntervals(queryIntervals); // TODO: this doesn't do what I think it does
 
-        // print  header
-        System.out.println(
-                String.join("\t", "READ_NAME", "TEMPLATE_LENGTH", "ALIGNMENT", "CHROMOSOME", "POS", "MAPQ", "FLAGS",
-                        "CIGAR", "SEQ", "QUAL", "MATE_CHROMOSOME", "MATE_POS", "MATE_MAPQ", "MATE_FLAGS", "MATE_CIGAR",
-                        "MATE_SEQ", "MATE_QUAL"));
-
-        final Map<String, SAMRecord> readMap = new Hashtable<>();
+        final Map<String, PairedRead> readMap = new Hashtable<>();
         final Map<Integer, String> outputMap = new TreeMap<>();
+        final List<SAMRecord> evidenceReads = new ArrayList<>();
 
-        int normalReadsInLocation1 = 0;
-        int normalReadsInLocation2 = 0;
-
-        int interestingReads = 0;
-        int zeroQualityMappings = 0;
+        BreakPointStats statsLocation1 = new BreakPointStats();
+        BreakPointStats statsLocation2 = new BreakPointStats();
 
         // execute query and parse the results
         final SAMRecordIterator results = reader.query(queryIntervals, false);
         while (results.hasNext()) {
             final SAMRecord read = results.next();
 
-            if (read.getMappingQuality() == 0) {
-                zeroQualityMappings++;
-                // continue;
-            }
-
+            // we classify all reads into location 1 or 2
             final boolean spanLocation1 = doesSpanLocation(read, location1);
             final boolean spanLocation2 = doesSpanLocation(read, location2);
-            if (read.getProperPairFlag()) {
-                if (spanLocation1)
-                    normalReadsInLocation1++;
-                if (spanLocation2)
-                    normalReadsInLocation2++;
+
+            final boolean isProper = read.getProperPairFlag(); // i.e. normal insert size, right orientation etc.
+
+            boolean evidence = false;
+            if (isProper) {
+                if (spanLocation1) {
+                    statsLocation1.NormalReads++;
+                }
+                if (spanLocation2) {
+                    statsLocation2.NormalReads++;
+                }
+            } else {
+                // filter for the reads we want
+                final boolean differentChromosomes = !read.getReferenceName().equals(read.getMateReferenceName());
+                final boolean oneOfPairUnmapped = read.getReadUnmappedFlag() ^ read.getMateUnmappedFlag();
+                final boolean isSecondaryOrSupplementary = read.getSupplementaryAlignmentFlag();
+                final boolean closerToLocation1 = Math.abs(read.getAlignmentStart() - location1) > Math.abs(read.getAlignmentStart() - location2);
+
+                if (differentChromosomes) {
+                    // TODO: classify
+                    evidence = true;
+                } else if (oneOfPairUnmapped) {
+                    // TODO: classify
+                    evidence = true;
+                } else if (isSecondaryOrSupplementary) {
+                    // TODO: classify
+                    evidence = true;
+                } else if (spanLocation1) {
+                    statsLocation1.InterestingReadIntersecting++;
+                    evidence = true;
+                } else if (spanLocation2) {
+                    statsLocation2.InterestingReadIntersecting++;
+                    evidence = true;
+                } else if (doesSpanLocationUnclipped(read, location1)) {
+                    statsLocation1.SoftClippedIntersecting++;
+                    evidence = true;
+                } else if (doesSpanLocationUnclipped(read, location2)) {
+                    statsLocation2.SoftClippedIntersecting++;
+                    evidence = true;
+                } else if (closerToLocation1) {
+                    statsLocation1.InterestingReadProximity++;
+                    evidence = true;
+                } else if (!closerToLocation1) {
+                    statsLocation2.InterestingReadProximity++;
+                    evidence = true;
+                }
+
+                if (evidence) {
+                    evidenceReads.add(read);
+                }
             }
 
-            final SAMRecord firstRead = readMap.get(read.getReadName());
-            if (firstRead == null) {
-                // this is the first read we've seen of the pair
-                readMap.put(read.getReadName(), read);
-            } else {
+            PairedRead pairedRead = readMap.get(read.getReadName());
+            if (pairedRead != null) {
                 // we've found the mate
-                readMap.remove(read.getReadName());
-
+                final SAMRecord firstRead = pairedRead.First;
                 assert firstRead.getReadName().equals(read.getReadName());
                 assert firstRead.getMateReferenceName().equals(read.getReferenceName());
                 assert firstRead.getMateAlignmentStart() == read.getAlignmentStart();
                 assert firstRead.getProperPairFlag() == read.getProperPairFlag();
 
-                // filter for the reads we want
-                final boolean differentChromosomes = !read.getReferenceName().equals(read.getMateReferenceName());
-                final boolean oneOfPairUnmapped = read.getReadUnmappedFlag() ^ read.getMateUnmappedFlag();
-                final boolean isSecondaryOrSupplementary = read.getSupplementaryAlignmentFlag();
-                final boolean isProper = read.getProperPairFlag();
-
-                boolean output = false;
-                if (!isProper) {
-                    interestingReads += 2;
-                    output = true;
-                }
-
-                if (!output)
-                    continue;
-
-                // TODO: sort output by firstRead position
-                // @formatter:off
-                outputMap.put(firstRead.getAlignmentStart(),
-                        String.join("\t",
-                            // first read
-                            firstRead.getReadName(),
-                            Integer.toString(firstRead.getInferredInsertSize()),
-                            String.join(",", getOrientationString(firstRead), getOrientationString(read)), // TODO: I believe these should always be the same value
-                            firstRead.getReferenceName(),
-                            Integer.toString(firstRead.getAlignmentStart()),
-                            Integer.toString(firstRead.getMappingQuality()),
-                            getFlagString(firstRead.getSAMFlags()),
-                            firstRead.getCigarString(),
-                            firstRead.getReadString(),
-                            firstRead.getBaseQualityString(),
-                            // second read
-                            read.getReferenceName(),
-                            Integer.toString(read.getAlignmentStart()),
-                            Integer.toString(read.getMappingQuality()),
-                            getFlagString(read.getSAMFlags()),
-                            read.getCigarString(),
-                            read.getReadString(),
-                            read.getBaseQualityString()
-                ));
-                // @formatter:on
+                pairedRead.Second = read;
+                pairedRead.SecondInteresting = evidence;
+            } else {
+                // this is the first read we've seen of the pair
+                pairedRead = new PairedRead();
+                pairedRead.First = read;
+                pairedRead.FirstInteresting = evidence;
+                readMap.put(read.getReadName(), pairedRead);
             }
         }
 
-        // print unpaired reads - may still have mate data
-        for (Map.Entry<String, SAMRecord> entry : readMap.entrySet()) {
-            final SAMRecord read = entry.getValue();
+        for (final PairedRead pair : readMap.values()) {
 
-            // output single reads which are paired
-            boolean output = false;
-            final boolean spanLocation1 = doesSpanLocation(read, location1);
-            final boolean spanLocation2 = doesSpanLocation(read, location2);
-            if (read.getProperPairFlag()) {
-                if (spanLocation1 || spanLocation2) {
-                    output = outputProperPairs;
-                }
-            } else {
-                if (spanLocation1 || spanLocation2) {
-                    interestingReads++;
-                    output = true;
-                } else if (doesSpanLocationUnclipped(read, location1) || doesSpanLocationUnclipped(read, location2)) {
-                    interestingReads++;
-                    output = true;
-                }
-            }
+            assert pair.First != null;
 
-            if (!output)
+            if (!outputProperPairs && !pair.FirstInteresting && !pair.SecondInteresting)
                 continue;
 
             // @formatter:off
-            outputMap.put(read.getAlignmentStart(),
-                    String.join("\t",
-                        read.getReadName(),
-                        Integer.toString(read.getInferredInsertSize()),
-                        getOrientationString(read),
-                        read.getReferenceName(),
-                        Integer.toString(read.getAlignmentStart()),
-                        Integer.toString(read.getMappingQuality()),
-                        getFlagString(read.getSAMFlags()),
-                        read.getCigarString(),
-                        read.getReadString(),
-                        read.getBaseQualityString(),
-                        read.getMateReferenceName(),
-                        Integer.toString(read.getMateAlignmentStart())
-            ));
+            String output = String.join("\t",
+                    pair.First.getReadName(),
+                    Integer.toString(pair.First.getInferredInsertSize()),
+                    getOrientationString(pair.First),
+                    pair.First.getReferenceName(),
+                    Integer.toString(pair.First.getAlignmentStart()),
+                    Integer.toString(pair.First.getMappingQuality()),
+                    getFlagString(pair.First.getSAMFlags()),
+                    pair.First.getCigarString(),
+                    pair.First.getReadString(),
+                    pair.First.getBaseQualityString()
+            );
+            if(pair.Second != null) {
+                output += "\t" + String.join("\t",
+                        pair.Second.getReferenceName(),
+                        Integer.toString(pair.Second.getAlignmentStart()),
+                        Integer.toString(pair.Second.getMappingQuality()),
+                        getFlagString(pair.Second.getSAMFlags()),
+                        pair.Second.getCigarString(),
+                        pair.Second.getReadString(),
+                        pair.Second.getBaseQualityString()
+                );
+            } else {
+                output += "\t" + String.join("\t",
+                        pair.First.getMateReferenceName(),
+                        Integer.toString(pair.First.getMateAlignmentStart())
+                        );
+            }
             // @formatter:on
+
+            outputMap.put(pair.First.getAlignmentStart(), output);
         }
 
-        for (String entry : outputMap.values()) {
+        // print  header
+        // @formatter:off
+        System.out.println(
+                String.join("\t",
+                        "READ_NAME",
+                        "TEMPLATE_LENGTH",
+                        "ALIGNMENT",
+                        "CHROMOSOME",
+                        "POS",
+                        "MAPQ",
+                        "FLAGS",
+                        "CIGAR",
+                        "SEQ",
+                        "QUAL",
+                        "MATE_CHROMOSOME",
+                        "MATE_POS",
+                        "MATE_MAPQ",
+                        "MATE_FLAGS",
+                        "MATE_CIGAR",
+                        "MATE_SEQ",
+                        "MATE_QUAL"
+                ));
+        // @formatter:on
+
+        // print entries sorted by chromosome position
+        for (final String entry : outputMap.values())
             System.out.println(entry);
-        }
 
         System.out.println();
-        System.out.println("-STATS-");
-        System.out.println("INTERESTING_READS\t" + interestingReads);
-        System.out.println("NORMAL_READS_BP1\t" + normalReadsInLocation1);
-        System.out.println("NORMAL_READS_BP2\t" + normalReadsInLocation2);
-        System.out.println("ZERO_MAPQ\t" + zeroQualityMappings);
-        System.out.println("PAIRS_MISSING_READ\t" + readMap.size());
-
+        System.out.println("-BP1_STATS-");
+        printStats(statsLocation1);
+        System.out.println("-BP2_STATS-");
+        printStats(statsLocation2);
     }
 }
