@@ -50,7 +50,7 @@ public class PurityPloidyEstimateApplication {
     private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
     private static final int MIN_COMBINED_DEPTH = 10;
     private static final int MAX_COMBINED_DEPTH = 100;
-    private static final int MAX_PLOIDY = 12;
+    private static final int MAX_PLOIDY = 20;
     private static final double MIN_PURITY = 0.1;
     private static final double MAX_PURITY = 1.0;
     private static final double PURITY_INCREMENTS = 0.01;
