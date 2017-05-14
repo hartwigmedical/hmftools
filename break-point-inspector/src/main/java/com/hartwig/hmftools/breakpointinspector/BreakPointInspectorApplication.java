@@ -41,7 +41,7 @@ public class BreakPointInspectorApplication {
         public int InnieCount = 0;
         public int OutieCount = 0;
         public int TandemCount = 0;
-        public int UnorientedCount = 0;
+        public int UnalignedCount = 0;
     }
 
     private static class PairedRead {
@@ -78,8 +78,12 @@ public class BreakPointInspectorApplication {
         return String.join("|", names);
     }
 
+    private static boolean isOrientable(final SAMRecord read) {
+        return read.getReadPairedFlag() && !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag();
+    }
+
     private static String getOrientationString(final SAMRecord read) {
-        return read.getReadPairedFlag() && !(read.getReadUnmappedFlag() || read.getMateUnmappedFlag()) ?
+        return isOrientable(read) ?
                 SamPairUtil.getPairOrientation(read).toString() :
                 "unaligned";
     }
@@ -235,7 +239,7 @@ public class BreakPointInspectorApplication {
                                 break;
                         }
                     } else {
-                        orientationStats.UnorientedCount++;
+                        orientationStats.UnalignedCount++;
                     }
                 }
             }
@@ -339,6 +343,6 @@ public class BreakPointInspectorApplication {
         System.out.println("INNIE_COUNT\t" + orientationStats.InnieCount);
         System.out.println("OUTIE_COUNT\t" + orientationStats.OutieCount);
         System.out.println("TANDEM_COUNT\t" + orientationStats.TandemCount);
-        System.out.println("UNORIENTED_COUNTED\t" + orientationStats.UnorientedCount);
+        System.out.println("UNALIGNED_COUNTED\t" + orientationStats.UnalignedCount);
     }
 }
