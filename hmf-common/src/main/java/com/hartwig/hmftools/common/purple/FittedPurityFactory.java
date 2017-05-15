@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.purple;
 
+import static com.hartwig.hmftools.common.numeric.Doubles.greaterOrEqual;
 import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
+import static com.hartwig.hmftools.common.numeric.Doubles.positiveOrZero;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -8,10 +10,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
-import com.hartwig.hmftools.common.numeric.Doubles;
 
 public class FittedPurityFactory {
 
+    private final int maxPloidy;
     private final double minPurity;
     private final double maxPurity;
     private final double purityIncrements;
@@ -20,8 +22,9 @@ public class FittedPurityFactory {
     private final double normFactorIncrements;
     private final FittedCopyNumberFactory fittedCopyNumberFactory;
 
-    public FittedPurityFactory(double minPurity, double maxPurity, double purityIncrements, double minNormFactor,
+    public FittedPurityFactory(int maxPloidy, double minPurity, double maxPurity, double purityIncrements, double minNormFactor,
                                double maxNormFactor, double normFactorIncrements, FittedCopyNumberFactory fittedCopyNumberFactory) {
+        this.maxPloidy = maxPloidy;
         this.minPurity = minPurity;
         this.maxPurity = maxPurity;
         this.purityIncrements = purityIncrements;
@@ -37,7 +40,7 @@ public class FittedPurityFactory {
         int totalBAFCount = 0;
         List<EnrichedCopyNumber> filteredCopyNumbers = Lists.newArrayList();
         for (EnrichedCopyNumber copyNumber : copyNumbers) {
-            if (copyNumber.mBAFCount() > 0 && Doubles.positiveOrZero(copyNumber.tumorRatio()) && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
+            if (copyNumber.mBAFCount() > 0 && positiveOrZero(copyNumber.tumorRatio()) && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
                 totalBAFCount += copyNumber.mBAFCount();
                 filteredCopyNumbers.add(copyNumber);
             }
@@ -45,7 +48,10 @@ public class FittedPurityFactory {
 
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
             for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
-                if (Doubles.greaterOrEqual(impliedPloidy(normFactor, purity), 1)) {
+
+                double impliedPloidy = impliedPloidy(normFactor, purity);
+
+                if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
                     result.add(fitPurity(purity, normFactor, totalBAFCount, filteredCopyNumbers));
                 }
             }

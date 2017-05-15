@@ -84,6 +84,7 @@ public class PurityPloidyEstimateApplication {
                 defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT));
 
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
+                MAX_PLOIDY,
                 MIN_PURITY,
                 MAX_PURITY,
                 PURITY_INCREMENTS,
