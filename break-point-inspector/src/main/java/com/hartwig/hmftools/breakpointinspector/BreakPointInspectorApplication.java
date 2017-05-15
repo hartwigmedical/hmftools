@@ -50,6 +50,8 @@ public class BreakPointInspectorApplication {
         public SAMRecord Second = null;
         public boolean FirstInteresting = false;
         public boolean SecondInteresting = false;
+        public boolean FirstIntersect = false;
+        public boolean SecondIntersect = false;
     }
 
     @NotNull
@@ -72,7 +74,7 @@ public class BreakPointInspectorApplication {
 
     @NotNull
     private static String getFlagString(final Set<SAMFlag> flags) {
-        ArrayList<String> names = new ArrayList<String>();
+        ArrayList<String> names = new ArrayList<>();
         for (final SAMFlag flag : flags) {
             names.add(flag.name());
         }
@@ -103,17 +105,9 @@ public class BreakPointInspectorApplication {
         System.exit(1);
     }
 
-    private static boolean intersectsLocation(final SAMRecord first, final SAMRecord second, final int location) {
-        assert first.getInferredInsertSize() == -second.getInferredInsertSize();
-        return (first.getAlignmentStart() + first.getInferredInsertSize()) > location;
-    }
-
-    private static boolean intersectsLocation(final SAMRecord read, final int location) {
-        return (read.getAlignmentStart() - location) * (read.getAlignmentEnd() - location) < 0;
-    }
-
-    private static boolean doesSpanLocationUnclipped(final SAMRecord read, final int location) {
-        return (read.getUnclippedStart() - location) * (read.getUnclippedEnd() - location) < 0;
+    private static boolean readIntersectsLocation(final SAMRecord read, final int location) {
+        assert !read.getReadUnmappedFlag();
+        return read.getAlignmentStart() <= location && read.getAlignmentEnd() >= location;
     }
 
     private static void printStats(final BreakPointStats stats) {
@@ -176,17 +170,15 @@ public class BreakPointInspectorApplication {
 
             // we classify all reads into location 1 or 2
             boolean evidence = false;
-            final boolean intersectsLocation1 = intersectsLocation(read, location1);
-            final boolean intersectsLocation2 = intersectsLocation(read, location2);
+            final boolean intersectsLocation1 = readIntersectsLocation(read, location1);
+            final boolean intersectsLocation2 = readIntersectsLocation(read, location2);
 
             final boolean isProper = read.getProperPairFlag(); // i.e. normal insert size, right orientation etc.
             if (isProper) {
-                if (intersectsLocation1) {
+                if (intersectsLocation1)
                     statsLocation1.NormalReads++;
-                }
-                if (intersectsLocation2) {
+                else if (intersectsLocation2)
                     statsLocation2.NormalReads++;
-                }
             } else {
                 assert !read.getReadUnmappedFlag(); // otherwise how would we get the read?
 
@@ -216,17 +208,23 @@ public class BreakPointInspectorApplication {
                 } else if (isSecondaryOrSupplementary) {
                     // TODO: classify
                     evidence = true;
+                } else if (clipped && read.getAlignmentStart() - 1 == location1) {
+                    statsLocation1.SoftClippedExact++;
+                    evidence = true;
+                } else if (clipped && read.getAlignmentEnd() == location1) {
+                    statsLocation1.SoftClippedExact++;
+                    evidence = true;
+                } else if (clipped && read.getAlignmentStart() - 1 == location2) {
+                    statsLocation2.SoftClippedExact++;
+                    evidence = true;
+                } else if (clipped && read.getAlignmentEnd() == location2) {
+                    statsLocation2.SoftClippedExact++;
+                    evidence = true;
                 } else if (intersectsLocation1) {
                     statsLocation1.InterestingReadIntersecting++;
                     evidence = true;
                 } else if (intersectsLocation2) {
                     statsLocation2.InterestingReadIntersecting++;
-                    evidence = true;
-                } else if (clipped && read.getAlignmentStart() - 1 == location1) {
-                    statsLocation1.SoftClippedExact++;
-                    evidence = true;
-                } else if (clipped && read.getAlignmentEnd() == location2) {
-                    statsLocation2.SoftClippedExact++;
                     evidence = true;
                 } else if (closerToLocation1) {
                     statsLocation1.InterestingReadProximity++;
@@ -270,11 +268,13 @@ public class BreakPointInspectorApplication {
 
                 pairedRead.Second = read;
                 pairedRead.SecondInteresting = evidence;
+                pairedRead.SecondIntersect = intersectsLocation1 || intersectsLocation2;
             } else {
                 // this is the first read we've seen of the pair
                 pairedRead = new PairedRead();
                 pairedRead.First = read;
                 pairedRead.FirstInteresting = evidence;
+                pairedRead.FirstIntersect = intersectsLocation1 || intersectsLocation2;
                 readMap.put(read.getReadName(), pairedRead);
             }
         }
