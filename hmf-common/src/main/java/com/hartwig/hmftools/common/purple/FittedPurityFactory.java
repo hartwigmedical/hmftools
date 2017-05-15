@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 public class FittedPurityFactory {
 
@@ -45,12 +45,18 @@ public class FittedPurityFactory {
 
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
             for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
-                result.add(fitPurity(purity, normFactor, totalBAFCount, filteredCopyNumbers));
+                if (Doubles.greaterOrEqual(impliedPloidy(normFactor, purity), 1)) {
+                    result.add(fitPurity(purity, normFactor, totalBAFCount, filteredCopyNumbers));
+                }
             }
         }
 
         Collections.sort(result);
         return result;
+    }
+
+    private static double impliedPloidy(double normFactor, double purity) {
+        return (1 - normFactor) / purity / normFactor * 2 + 2;
     }
 
     private FittedPurity fitPurity(double purity, double normFactor, double sumWeight, Collection<EnrichedCopyNumber> copyNumbers) {
@@ -76,6 +82,5 @@ public class FittedPurityFactory {
                 .diplodProportion(diploidProportion)
                 .build();
     }
-
 
 }
