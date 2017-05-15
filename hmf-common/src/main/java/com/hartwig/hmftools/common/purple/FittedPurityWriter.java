@@ -27,7 +27,8 @@ public enum FittedPurityWriter {
                 .append("normFactor").append('\t')
                 .append("score").append('\t')
                 .append("modelBAFDeviation").append('\t')
-                .append("diplodProportion")
+                .append("diplodProportion").append('\t')
+                .append("ploidy")
                 .toString();
     }
 
@@ -37,7 +38,8 @@ public enum FittedPurityWriter {
                 .append(purity.normFactor()).append('\t')
                 .append(purity.score()).append('\t')
                 .append(purity.modelBAFDeviation()).append('\t')
-                .append(purity.diplodProportion())
+                .append(purity.diplodProportion()).append('\t')
+                .append(purity.ploidy())
                 .toString();
     }
 

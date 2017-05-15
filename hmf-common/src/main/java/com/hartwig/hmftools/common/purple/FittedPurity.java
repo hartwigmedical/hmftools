@@ -16,6 +16,10 @@ public abstract class FittedPurity implements Comparable<FittedPurity> {
 
     public abstract double diplodProportion();
 
+    public double ploidy() {
+        return (1 - normFactor()) / purity() / normFactor() * 2 + 2;
+    }
+
     @Override
     public int compareTo(@NotNull FittedPurity o) {
         return Double.compare(score(), o.score());
