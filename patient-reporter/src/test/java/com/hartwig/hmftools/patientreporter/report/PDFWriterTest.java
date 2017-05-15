@@ -55,7 +55,7 @@ public class PDFWriterTest {
 
         final int mutationalLoad = 361;
         final String tumorType = "Melanoma";
-        final double tumorPercentage = 0.6;
+        final Double tumorPercentage = 0.6;
 
         final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
                 tumorPercentage);

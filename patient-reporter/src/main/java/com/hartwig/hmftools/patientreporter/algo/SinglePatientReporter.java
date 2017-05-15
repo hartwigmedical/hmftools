@@ -77,14 +77,13 @@ public class SinglePatientReporter {
                 + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
-        final double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
+        final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
         return new PatientReport(sample, variantAnalysis.findings(), copyNumberAnalysis.findings(), mutationalLoad,
                 tumorType, tumorPercentage);
     }
 
     @NotNull
-    public GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory)
-            throws IOException, HartwigException {
+    public GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory) throws IOException, HartwigException {
         LOGGER.info(" Loading somatic variants...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
         final String sample = variantFile.sample();

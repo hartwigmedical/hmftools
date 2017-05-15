@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.format.DateTimeFormatter;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -57,6 +58,8 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
 
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
     public static void main(final String... args)
             throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
         final Options options = createOptions();
@@ -102,7 +105,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static LimsModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
-        return Lims.buildModelFromCsv(cmd.getOptionValue(LIMS_CSV));
+        return Lims.buildModelFromCsv(cmd.getOptionValue(LIMS_CSV), dateFormatter);
     }
 
     @NotNull

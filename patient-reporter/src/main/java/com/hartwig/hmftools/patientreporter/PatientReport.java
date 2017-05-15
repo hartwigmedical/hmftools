@@ -6,6 +6,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PatientReport {
 
@@ -18,11 +19,12 @@ public class PatientReport {
     private final int mutationalLoad;
     @NotNull
     private final String tumorType;
-    private final double tumorPercentage;
+    @Nullable
+    private final Double tumorPercentage;
 
     public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
             @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad,
-            @NotNull final String tumorType, final double tumorPercentage) {
+            @NotNull final String tumorType, @Nullable final Double tumorPercentage) {
         this.sample = sample;
         this.variants = variants;
         this.copyNumbers = copyNumbers;
@@ -56,6 +58,7 @@ public class PatientReport {
     }
 
     public String tumorPercentageString() {
-        return Long.toString(Math.round(tumorPercentage * 100D)) + "%";
+        double percentage = tumorPercentage == null ? Double.NaN : tumorPercentage;
+        return Long.toString(Math.round(percentage * 100D)) + "%";
     }
 }
