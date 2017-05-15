@@ -7,7 +7,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+
+import com.google.common.collect.TreeMultimap;
 
 import htsjdk.samtools.*;
 
@@ -32,13 +33,13 @@ public class BreakPointInspectorApplication {
         public int NormalReads = 0;
         public int InterestingReadIntersecting = 0;
         public int InterestingReadProximity = 0;
-        public int SoftClippedIntersecting = 0;
+        public int SoftClippedExact = 0;
         public int MatedToDifferentChromosome = 0;
         public int UnmappedMate = 0;
     }
 
     private static class OrientationStats {
-        public int InnieCount = 0;
+        public int NormalCount = 0;
         public int OutieCount = 0;
         public int TandemCount = 0;
         public int UnalignedCount = 0;
@@ -83,9 +84,17 @@ public class BreakPointInspectorApplication {
     }
 
     private static String getOrientationString(final SAMRecord read) {
-        return isOrientable(read) ?
-                SamPairUtil.getPairOrientation(read).toString() :
-                "unaligned";
+        if (isOrientable(read)) {
+            switch (SamPairUtil.getPairOrientation(read)) {
+                case FR:
+                    return "NORMAL";
+                case RF:
+                    return "OUTIE";
+                case TANDEM:
+                    return "TANDEM";
+            }
+        }
+        return "UNALIGNED";
     }
 
     private static void printHelpAndExit(final Options options) {
@@ -94,12 +103,12 @@ public class BreakPointInspectorApplication {
         System.exit(1);
     }
 
-    private static boolean doesSpanLocation(final SAMRecord first, final SAMRecord second, final int location) {
+    private static boolean intersectsLocation(final SAMRecord first, final SAMRecord second, final int location) {
         assert first.getInferredInsertSize() == -second.getInferredInsertSize();
         return (first.getAlignmentStart() + first.getInferredInsertSize()) > location;
     }
 
-    private static boolean doesSpanLocation(final SAMRecord read, final int location) {
+    private static boolean intersectsLocation(final SAMRecord read, final int location) {
         return (read.getAlignmentStart() - location) * (read.getAlignmentEnd() - location) < 0;
     }
 
@@ -110,7 +119,7 @@ public class BreakPointInspectorApplication {
     private static void printStats(final BreakPointStats stats) {
         System.out.println("INTERESTING_INTERSECTING\t" + stats.InterestingReadIntersecting);
         System.out.println("INTERESTING_PROXIMITY\t" + stats.InterestingReadProximity);
-        System.out.println("SOFT_CLIPPED_READS_INTERSECTING\t" + stats.SoftClippedIntersecting);
+        System.out.println("SOFT_CLIPPED_READS_EXACT\t" + stats.SoftClippedExact);
         System.out.println("MATED_TO_DIFF_CHROMOSOME\t" + stats.MatedToDifferentChromosome);
         System.out.println("UNMAPPED_MATE\t" + stats.UnmappedMate);
         System.out.println("NORMAL_INTERSECTING\t" + stats.NormalReads);
@@ -153,7 +162,7 @@ public class BreakPointInspectorApplication {
         QueryInterval.optimizeIntervals(queryIntervals); // TODO: this doesn't do what I think it does
 
         final Map<String, PairedRead> readMap = new Hashtable<>();
-        final Map<Integer, String> outputMap = new TreeMap<>();
+        final TreeMultimap<Integer, String> outputMap = TreeMultimap.create();
         final List<SAMRecord> evidenceReads = new ArrayList<>();
 
         BreakPointStats statsLocation1 = new BreakPointStats();
@@ -166,27 +175,30 @@ public class BreakPointInspectorApplication {
             final SAMRecord read = results.next();
 
             // we classify all reads into location 1 or 2
-            final boolean spanLocation1 = doesSpanLocation(read, location1);
-            final boolean spanLocation2 = doesSpanLocation(read, location2);
+            boolean evidence = false;
+            final boolean intersectsLocation1 = intersectsLocation(read, location1);
+            final boolean intersectsLocation2 = intersectsLocation(read, location2);
 
             final boolean isProper = read.getProperPairFlag(); // i.e. normal insert size, right orientation etc.
-
-            boolean evidence = false;
             if (isProper) {
-                if (spanLocation1) {
+                if (intersectsLocation1) {
                     statsLocation1.NormalReads++;
                 }
-                if (spanLocation2) {
+                if (intersectsLocation2) {
                     statsLocation2.NormalReads++;
                 }
             } else {
+                assert !read.getReadUnmappedFlag(); // otherwise how would we get the read?
+
                 // filter for the reads we want
                 final boolean differentChromosomes = !read.getReferenceName().equals(read.getMateReferenceName());
-                final boolean oneOfPairUnmapped = read.getReadUnmappedFlag() ^ read.getMateUnmappedFlag();
+                final boolean mateUnmapped = read.getMateUnmappedFlag();
                 final boolean isSecondaryOrSupplementary =
                         read.getNotPrimaryAlignmentFlag() || read.getSupplementaryAlignmentFlag(); // TODO: ???
                 final boolean closerToLocation1 = Math.abs(read.getAlignmentStart() - location1) < Math.abs(
                         read.getAlignmentStart() - location2);
+                final boolean clipped = read.getUnclippedStart() != read.getAlignmentStart()
+                        || read.getUnclippedEnd() != read.getAlignmentEnd();
 
                 if (differentChromosomes) {
                     if (closerToLocation1)
@@ -194,7 +206,8 @@ public class BreakPointInspectorApplication {
                     else
                         statsLocation2.MatedToDifferentChromosome++;
                     evidence = true;
-                } else if (oneOfPairUnmapped) {
+                } else if (mateUnmapped) {
+                    assert isSecondaryOrSupplementary; // TODO: ???
                     if (closerToLocation1)
                         statsLocation1.UnmappedMate++;
                     else
@@ -203,17 +216,17 @@ public class BreakPointInspectorApplication {
                 } else if (isSecondaryOrSupplementary) {
                     // TODO: classify
                     evidence = true;
-                } else if (spanLocation1) {
+                } else if (intersectsLocation1) {
                     statsLocation1.InterestingReadIntersecting++;
                     evidence = true;
-                } else if (spanLocation2) {
+                } else if (intersectsLocation2) {
                     statsLocation2.InterestingReadIntersecting++;
                     evidence = true;
-                } else if (doesSpanLocationUnclipped(read, location1)) {
-                    statsLocation1.SoftClippedIntersecting++;
+                } else if (clipped && read.getAlignmentStart() - 1 == location1) {
+                    statsLocation1.SoftClippedExact++;
                     evidence = true;
-                } else if (doesSpanLocationUnclipped(read, location2)) {
-                    statsLocation2.SoftClippedIntersecting++;
+                } else if (clipped && read.getAlignmentEnd() == location2) {
+                    statsLocation2.SoftClippedExact++;
                     evidence = true;
                 } else if (closerToLocation1) {
                     statsLocation1.InterestingReadProximity++;
@@ -222,28 +235,30 @@ public class BreakPointInspectorApplication {
                     statsLocation2.InterestingReadProximity++;
                     evidence = true;
                 }
+            }
 
-                if (evidence) {
-                    evidenceReads.add(read);
-                    if (read.getReadPairedFlag() && !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag()) {
-                        final SamPairUtil.PairOrientation orientation = SamPairUtil.getPairOrientation(read);
-                        switch (orientation) {
-                            case FR:
-                                orientationStats.InnieCount++;
-                                break;
-                            case RF:
-                                orientationStats.OutieCount++;
-                                break;
-                            case TANDEM:
-                                orientationStats.TandemCount++;
-                                break;
-                        }
-                    } else {
-                        orientationStats.UnalignedCount++;
+            // classify orientation
+            if (evidence) {
+                evidenceReads.add(read);
+                if (isOrientable(read)) {
+                    final SamPairUtil.PairOrientation orientation = SamPairUtil.getPairOrientation(read);
+                    switch (orientation) {
+                        case FR:
+                            orientationStats.NormalCount++;
+                            break;
+                        case RF:
+                            orientationStats.OutieCount++;
+                            break;
+                        case TANDEM:
+                            orientationStats.TandemCount++;
+                            break;
                     }
+                } else {
+                    orientationStats.UnalignedCount++;
                 }
             }
 
+            // attempt to pair reads
             PairedRead pairedRead = readMap.get(read.getReadName());
             if (pairedRead != null) {
                 // we've found the mate
@@ -340,7 +355,7 @@ public class BreakPointInspectorApplication {
         printStats(statsLocation2);
 
         System.out.println("-ORIENTATION-");
-        System.out.println("INNIE_COUNT\t" + orientationStats.InnieCount);
+        System.out.println("NORMAL_COUNT\t" + orientationStats.NormalCount);
         System.out.println("OUTIE_COUNT\t" + orientationStats.OutieCount);
         System.out.println("TANDEM_COUNT\t" + orientationStats.TandemCount);
         System.out.println("UNALIGNED_COUNTED\t" + orientationStats.UnalignedCount);
