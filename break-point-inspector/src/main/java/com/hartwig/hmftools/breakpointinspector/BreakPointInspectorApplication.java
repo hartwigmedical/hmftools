@@ -31,6 +31,7 @@ public class BreakPointInspectorApplication {
 
     private static class BreakPointStats {
         public int NormalReads = 0;
+        public int NormalProximityReads = 0;
         public int InterestingReadIntersecting = 0;
         public int InterestingReadProximity = 0;
         public int SoftClippedExact = 0;
@@ -110,6 +111,14 @@ public class BreakPointInspectorApplication {
         return read.getAlignmentStart() <= location && read.getAlignmentEnd() >= location;
     }
 
+    private static boolean pairStraddlesLocation(final SAMRecord read, final int location) {
+        assert !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag();
+        if (read.getInferredInsertSize() > 0)
+            return read.getAlignmentStart() <= location && (read.getAlignmentStart() + read.getInferredInsertSize()) >= location;
+        else
+            return read.getMateAlignmentStart() <= location && (read.getMateAlignmentStart() - read.getInferredInsertSize()) >= location;
+    }
+
     private static void printStats(final BreakPointStats stats) {
         System.out.println("INTERESTING_INTERSECTING\t" + stats.InterestingReadIntersecting);
         System.out.println("INTERESTING_PROXIMITY\t" + stats.InterestingReadProximity);
@@ -117,6 +126,7 @@ public class BreakPointInspectorApplication {
         System.out.println("MATED_TO_DIFF_CHROMOSOME\t" + stats.MatedToDifferentChromosome);
         System.out.println("UNMAPPED_MATE\t" + stats.UnmappedMate);
         System.out.println("NORMAL_INTERSECTING\t" + stats.NormalReads);
+        System.out.println("NORMAL_PROXIMITY\t" + stats.NormalProximityReads);
     }
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -179,6 +189,10 @@ public class BreakPointInspectorApplication {
                     statsLocation1.NormalReads++;
                 else if (intersectsLocation2)
                     statsLocation2.NormalReads++;
+                else if (pairStraddlesLocation(read, location1))
+                    statsLocation1.NormalProximityReads++;
+                else if (pairStraddlesLocation(read, location2))
+                    statsLocation2.NormalProximityReads++;
             } else {
                 assert !read.getReadUnmappedFlag(); // otherwise how would we get the read?
 
