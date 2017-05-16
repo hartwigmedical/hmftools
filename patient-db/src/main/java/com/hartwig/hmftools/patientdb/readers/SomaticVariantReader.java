@@ -34,7 +34,7 @@ public class SomaticVariantReader {
             VariantConsequence.START_LOST, VariantConsequence.FRAMESHIFT_VARIANT, VariantConsequence.INFRAME_INSERTION,
             VariantConsequence.INFRAME_DELETION, VariantConsequence.MISSENSE_VARIANT);
 
-    SomaticVariantReader(@NotNull final ConsensusRule consensusRule) throws IOException, HartwigException {
+    public SomaticVariantReader(@NotNull final ConsensusRule consensusRule) throws IOException, HartwigException {
         this.consensusRule = consensusRule;
     }
 

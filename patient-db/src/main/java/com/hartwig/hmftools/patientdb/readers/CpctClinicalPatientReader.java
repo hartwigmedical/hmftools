@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
 import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -22,23 +20,20 @@ import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 import org.apache.logging.log4j.ThreadContext;
 import org.jetbrains.annotations.NotNull;
 
-public class CpctPatientReader {
+public class CpctClinicalPatientReader {
     @NotNull
     private final CpctPatientInfoReader cpctPatientInfoReader;
     @NotNull
     private final BiopsyLimsDataReader biopsyLimsDataReader;
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
-    @NotNull
-    private final SomaticVariantReader somaticVariantReader;
 
-    public CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final ConsensusRule consensusRule,
+    public CpctClinicalPatientReader(@NotNull final CpctEcrfModel model,
             @NotNull final Map<String, String> treatmentMappings, @NotNull final String limsCsv,
             @NotNull final String limsOldCsv, @NotNull final String umcuCsv) throws IOException, HartwigException {
         cpctPatientInfoReader = new CpctPatientInfoReader(model);
         biopsyLimsDataReader = new BiopsyLimsDataReader(limsCsv, limsOldCsv, umcuCsv);
         biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentMappings);
-        somaticVariantReader = new SomaticVariantReader(consensusRule);
     }
 
     @NotNull
@@ -57,13 +52,7 @@ public class CpctPatientReader {
                 clinicalBiopsies, treatments);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies(patient.patientId(),
                 sequencedBiopsies, clinicalBiopsies);
-        //MIVO: skip reading somatic variants for now
-        //        final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(runDirectoryPath);
         ThreadContext.put("cpctHospitalCode", "default");
-        //        return new Patient(patientInfo, tumorDataOpt, systemicTherapies, radioTherapies, treatmentDataOpt,
-        //                somaticVariants);
-        return new Patient(patientInfo, sequencedBiopsies, matchedTreatments, matchedResponses, matchedBiopsies,
-                Lists.newArrayList());
+        return new Patient(patientInfo, sequencedBiopsies, matchedTreatments, matchedResponses, matchedBiopsies);
     }
-
 }

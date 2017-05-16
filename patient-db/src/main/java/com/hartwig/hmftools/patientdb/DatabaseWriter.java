@@ -1,16 +1,17 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSYCLINICALDATA;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSYLIMSDATA;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUGDATA;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENTINFO;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANTDATA;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTDATA;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSEDATA;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALBIOPSIES;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUGS;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.LIMSBIOPSIES;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENTS;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANTS;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSES;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTS;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
 
 import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
 import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
@@ -21,6 +22,8 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientInfo;
 import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -28,6 +31,8 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
 class DatabaseWriter {
+    private static final Logger LOGGER = LogManager.getLogger(DatabaseWriter.class);
+
     @NotNull
     private final DSLContext context;
 
@@ -37,62 +42,69 @@ class DatabaseWriter {
         this.context = DSL.using(conn, SQLDialect.MYSQL);
     }
 
-    void clearTables() {
+    void clearSomaticTables() {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
-        context.truncate(PATIENTINFO).execute();
-        context.truncate(BIOPSYLIMSDATA).execute();
-        context.truncate(BIOPSYCLINICALDATA).execute();
-        context.truncate(TREATMENTDATA).execute();
-        context.truncate(DRUGDATA).execute();
-        context.truncate(TREATMENTRESPONSEDATA).execute();
-        context.truncate(SOMATICVARIANTDATA).execute();
+        context.truncate(SOMATICVARIANTS).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    void writePatient(@NotNull final Patient patient) {
+    void clearClinicalTables() {
+        context.execute("SET FOREIGN_KEY_CHECKS = 0;");
+        context.truncate(PATIENTS).execute();
+        context.truncate(LIMSBIOPSIES).execute();
+        context.truncate(CLINICALBIOPSIES).execute();
+        context.truncate(TREATMENTS).execute();
+        context.truncate(DRUGS).execute();
+        context.truncate(TREATMENTRESPONSES).execute();
+        context.execute("SET FOREIGN_KEY_CHECKS = 1;");
+    }
+
+    void writeSomaticVariants(@NotNull final String sampleId,
+            @NotNull final List<SomaticVariantData> somaticVariants) {
+        somaticVariants.forEach(somaticVariantData -> writeSomaticVariantData(sampleId, somaticVariantData));
+    }
+
+    void writeClinicalData(@NotNull final Patient patient) {
         final int patientId = writePatientInfo(patient.patientInfo());
         patient.sequencedBiopsies().forEach(biopsy -> writeBiopsyLimsData(patientId, biopsy));
         patient.clinicalBiopsies().forEach(biopsy -> writeClinicalBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
         patient.treatmentResponses().forEach(response -> writeTreatmentResponseData(patientId, response));
-        patient.somaticVariants().forEach(
-                somaticVariantData -> writeSomaticVariantData(patientId, somaticVariantData));
     }
 
     private int writePatientInfo(@NotNull final PatientInfo patientInfo) {
-        final Record patientRecord = context.select(PATIENTINFO.ID).from(PATIENTINFO).where(
-                PATIENTINFO.CPCTID.eq(patientInfo.cpctId())).fetchOne();
+        final Record patientRecord = context.select(PATIENTS.ID).from(PATIENTS).where(
+                PATIENTS.CPCTID.eq(patientInfo.cpctId())).fetchOne();
         if (patientRecord != null) {
-            return patientRecord.getValue(PATIENTINFO.ID);
+            return patientRecord.getValue(PATIENTS.ID);
         } else {
-            return context.insertInto(PATIENTINFO, PATIENTINFO.CPCTID, PATIENTINFO.REGISTRATIONDATE,
-                    PATIENTINFO.GENDER, PATIENTINFO.ETHNICITY, PATIENTINFO.HOSPITAL, PATIENTINFO.BIRTHYEAR,
-                    PATIENTINFO.TUMORLOCATION, PATIENTINFO.DEATHDATE).values(patientInfo.cpctId(),
-                    Utils.toSQLDate(patientInfo.registrationDate()), patientInfo.gender(), patientInfo.ethnicity(),
-                    patientInfo.hospital(), patientInfo.birthYear(), patientInfo.tumorLocation(),
-                    Utils.toSQLDate(patientInfo.deathDate())).returning(PATIENTINFO.ID).fetchOne().getValue(
-                    PATIENTINFO.ID);
+            return context.insertInto(PATIENTS, PATIENTS.CPCTID, PATIENTS.REGISTRATIONDATE, PATIENTS.GENDER,
+                    PATIENTS.ETHNICITY, PATIENTS.HOSPITAL, PATIENTS.BIRTHYEAR, PATIENTS.TUMORLOCATION,
+                    PATIENTS.DEATHDATE).values(patientInfo.cpctId(), Utils.toSQLDate(patientInfo.registrationDate()),
+                    patientInfo.gender(), patientInfo.ethnicity(), patientInfo.hospital(), patientInfo.birthYear(),
+                    patientInfo.tumorLocation(), Utils.toSQLDate(patientInfo.deathDate())).returning(
+                    PATIENTS.ID).fetchOne().getValue(PATIENTS.ID);
         }
     }
 
     private void writeBiopsyLimsData(final int patientId, @NotNull final BiopsyLimsData sequencedBiopsy) {
         // MIVO: ignore if primary key (sampleId) is duplicated (happens if a sample is re-sequenced).
-        context.insertInto(BIOPSYLIMSDATA, BIOPSYLIMSDATA.SAMPLEID, BIOPSYLIMSDATA.ARRIVALDATE,
-                BIOPSYLIMSDATA.PATIENTID).values(sequencedBiopsy.sampleId(),
+        context.insertInto(LIMSBIOPSIES, LIMSBIOPSIES.SAMPLEID, LIMSBIOPSIES.ARRIVALDATE,
+                LIMSBIOPSIES.PATIENTID).values(sequencedBiopsy.sampleId(),
                 Utils.toSQLDate(sequencedBiopsy.arrivalDate()), patientId).onDuplicateKeyIgnore().execute();
     }
 
     private void writeClinicalBiopsyData(final int patientId, @NotNull final BiopsyClinicalData clinicalBiopsy) {
-        context.insertInto(BIOPSYCLINICALDATA, BIOPSYCLINICALDATA.ID, BIOPSYCLINICALDATA.LOCATION,
-                BIOPSYCLINICALDATA.DATE, BIOPSYCLINICALDATA.SAMPLEID, BIOPSYCLINICALDATA.PATIENTID).values(
-                clinicalBiopsy.id(), clinicalBiopsy.location(), Utils.toSQLDate(clinicalBiopsy.date()),
-                clinicalBiopsy.sampleId(), patientId).execute();
+        context.insertInto(CLINICALBIOPSIES, CLINICALBIOPSIES.ID, CLINICALBIOPSIES.LOCATION, CLINICALBIOPSIES.DATE,
+                CLINICALBIOPSIES.SAMPLEID, CLINICALBIOPSIES.PATIENTID).values(clinicalBiopsy.id(),
+                clinicalBiopsy.location(), Utils.toSQLDate(clinicalBiopsy.date()), clinicalBiopsy.sampleId(),
+                patientId).execute();
     }
 
     private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatmentData) {
-        context.insertInto(TREATMENTDATA, TREATMENTDATA.ID, TREATMENTDATA.TREATMENTGIVEN, TREATMENTDATA.STARTDATE,
-                TREATMENTDATA.ENDDATE, TREATMENTDATA.NAME, TREATMENTDATA.TYPE, TREATMENTDATA.CLINICALBIOPSYID,
-                TREATMENTDATA.PATIENTID).values(treatmentData.id(), treatmentData.treatmentGiven(),
+        context.insertInto(TREATMENTS, TREATMENTS.ID, TREATMENTS.TREATMENTGIVEN, TREATMENTS.STARTDATE,
+                TREATMENTS.ENDDATE, TREATMENTS.NAME, TREATMENTS.TYPE, TREATMENTS.CLINICALBIOPSYID,
+                TREATMENTS.PATIENTID).values(treatmentData.id(), treatmentData.treatmentGiven(),
                 Utils.toSQLDate(treatmentData.startDate()), Utils.toSQLDate(treatmentData.endDate()),
                 treatmentData.treatmentName(), treatmentData.type(), treatmentData.biopsyId(), patientId).execute();
         treatmentData.drugs().forEach(drug -> writeDrugData(patientId, treatmentData.id(), drug));
@@ -100,28 +112,35 @@ class DatabaseWriter {
 
     private void writeDrugData(final int patientId, final int treatmentId,
             @NotNull final BiopsyTreatmentDrugData drugData) {
-        context.insertInto(DRUGDATA, DRUGDATA.STARTDATE, DRUGDATA.ENDDATE, DRUGDATA.NAME, DRUGDATA.TYPE,
-                DRUGDATA.TREATMENTID, DRUGDATA.PATIENTID).values(Utils.toSQLDate(drugData.startDate()),
-                Utils.toSQLDate(drugData.endDate()), drugData.name(), drugData.type(), treatmentId,
-                patientId).execute();
+        context.insertInto(DRUGS, DRUGS.STARTDATE, DRUGS.ENDDATE, DRUGS.NAME, DRUGS.TYPE, DRUGS.TREATMENTID,
+                DRUGS.PATIENTID).values(Utils.toSQLDate(drugData.startDate()), Utils.toSQLDate(drugData.endDate()),
+                drugData.name(), drugData.type(), treatmentId, patientId).execute();
     }
 
     private void writeTreatmentResponseData(final int patientId,
             @NotNull final BiopsyTreatmentResponseData treatmentResponseData) {
-        context.insertInto(TREATMENTRESPONSEDATA, TREATMENTRESPONSEDATA.DATE, TREATMENTRESPONSEDATA.RESPONSE,
-                TREATMENTRESPONSEDATA.MEASUREMENTDONE, TREATMENTRESPONSEDATA.TREATMENTID,
-                TREATMENTRESPONSEDATA.PATIENTID).values(Utils.toSQLDate(treatmentResponseData.date()),
+        context.insertInto(TREATMENTRESPONSES, TREATMENTRESPONSES.DATE, TREATMENTRESPONSES.RESPONSE,
+                TREATMENTRESPONSES.MEASUREMENTDONE, TREATMENTRESPONSES.TREATMENTID,
+                TREATMENTRESPONSES.PATIENTID).values(Utils.toSQLDate(treatmentResponseData.date()),
                 treatmentResponseData.response(), treatmentResponseData.measurementDone(),
                 treatmentResponseData.treatmentId(), patientId).execute();
 
     }
 
-    private void writeSomaticVariantData(final int patientId, @NotNull final SomaticVariantData somaticVariantData) {
-        context.insertInto(SOMATICVARIANTDATA, SOMATICVARIANTDATA.GENE, SOMATICVARIANTDATA.POSITION,
-                SOMATICVARIANTDATA.REF, SOMATICVARIANTDATA.ALT, SOMATICVARIANTDATA.COSMICID,
-                SOMATICVARIANTDATA.TOTALREADCOUNT, SOMATICVARIANTDATA.ALLELEREADCOUNT,
-                SOMATICVARIANTDATA.PATIENTID).values(somaticVariantData.gene(), somaticVariantData.position(),
-                somaticVariantData.ref(), somaticVariantData.alt(), somaticVariantData.cosmicID(),
-                somaticVariantData.totalReadCount(), somaticVariantData.alleleReadCount(), patientId).execute();
+    private void writeSomaticVariantData(@NotNull final String sampleId,
+            @NotNull final SomaticVariantData somaticVariantData) {
+        final Record limsRecord = context.select(LIMSBIOPSIES.PATIENTID).from(LIMSBIOPSIES).where(
+                LIMSBIOPSIES.SAMPLEID.eq(sampleId)).fetchOne();
+        if (limsRecord != null) {
+            final int patientId = limsRecord.getValue(LIMSBIOPSIES.PATIENTID);
+            context.insertInto(SOMATICVARIANTS, SOMATICVARIANTS.GENE, SOMATICVARIANTS.POSITION, SOMATICVARIANTS.REF,
+                    SOMATICVARIANTS.ALT, SOMATICVARIANTS.COSMICID, SOMATICVARIANTS.TOTALREADCOUNT,
+                    SOMATICVARIANTS.ALLELEREADCOUNT, SOMATICVARIANTS.PATIENTID, SOMATICVARIANTS.SAMPLEID).values(
+                    somaticVariantData.gene(), somaticVariantData.position(), somaticVariantData.ref(),
+                    somaticVariantData.alt(), somaticVariantData.cosmicID(), somaticVariantData.totalReadCount(),
+                    somaticVariantData.alleleReadCount(), patientId, sampleId).execute();
+        } else {
+            LOGGER.warn(sampleId + ": was not found in table " + LIMSBIOPSIES.getName());
+        }
     }
 }
