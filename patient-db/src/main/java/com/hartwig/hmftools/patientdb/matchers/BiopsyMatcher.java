@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.matchers;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -21,77 +22,48 @@ public class BiopsyMatcher {
     public static List<BiopsyClinicalData> matchBiopsies(@NotNull final String patientId,
             @NotNull final List<BiopsyLimsData> sequencedBiopsies,
             @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
+        final List<BiopsyClinicalData> matchedBiopsies = Lists.newArrayList();
         if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
             LOGGER.warn(patientId + ": contains less biopsies in ecrf (" + clinicalBiopsies.size()
                     + ") than biopsies sequenced (" + sequencedBiopsies.size() + ").");
         }
-        final List<BiopsyClinicalData> matchedBiopsies = Lists.newArrayList();
-        int startIndex = 0;
+        List<BiopsyClinicalData> remainingBiopsies = clinicalBiopsies;
         for (final BiopsyLimsData sequencedBiopsy : sequencedBiopsies) {
-            final MatchIndices indices = findMatchIndices(sequencedBiopsy, clinicalBiopsies, startIndex);
-            if (indices.matchCount == 0) {
+            final Map<Boolean, List<BiopsyClinicalData>> partitions = remainingBiopsies.stream().collect(
+                    Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));
+            final List<BiopsyClinicalData> possibleMatches = partitions.get(true);
+            if (possibleMatches.size() == 1 && possibleMatches.get(0).date() != null) {
+                final BiopsyClinicalData clinicalBiopsy = partitions.get(true).get(0);
+                matchedBiopsies.add(
+                        new BiopsyClinicalData(clinicalBiopsy.id(), clinicalBiopsy.date(), clinicalBiopsy.location(),
+                                sequencedBiopsy.sampleId()));
+                remainingBiopsies = partitions.get(false);
+            } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1
+                    && possibleMatches.get(0).date() == null)) {
                 LOGGER.warn(patientId + ": Could not match any clinical biopsy with sequenced biopsy: "
                         + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + ","
                         + sequencedBiopsy.arrivalDate() + "): " + clinicalBiopsies.stream().map(
                         BiopsyClinicalData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
                         sequencedBiopsy));
+                // MIVO: abort finding new matches if we can't match one sequenced biopsy
                 return clinicalBiopsies;
-            } else if (indices.matchCount > 1) {
+            } else if (possibleMatches.size() > 1) {
                 LOGGER.warn(patientId + ": Found more than 1 possible clinical biopsy match for sequenced biopsy: "
                         + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + ","
                         + sequencedBiopsy.arrivalDate() + "): " + clinicalBiopsies.stream().map(
                         BiopsyClinicalData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
                         sequencedBiopsy));
+                // MIVO: abort finding new matches if we can't match one sequenced biopsy
                 return clinicalBiopsies;
-            } else {
-                for (int index = startIndex; index < indices.nextStartIndex; index++) {
-                    final BiopsyClinicalData clinicalBiopsy = clinicalBiopsies.get(index);
-                    if (index == indices.lastMatchIndex) {
-                        matchedBiopsies.add(new BiopsyClinicalData(clinicalBiopsy.id(), clinicalBiopsy.date(),
-                                clinicalBiopsy.location(), sequencedBiopsy.sampleId()));
-                    } else
-                        matchedBiopsies.add(clinicalBiopsy);
-                }
             }
-            startIndex = indices.nextStartIndex;
         }
-        for (int index = startIndex; index < clinicalBiopsies.size(); index++) {
-            matchedBiopsies.add(clinicalBiopsies.get(index));
-        }
+        matchedBiopsies.addAll(remainingBiopsies);
         return matchedBiopsies;
     }
 
-    private static MatchIndices findMatchIndices(@NotNull final BiopsyLimsData sequencedBiopsy,
-            @NotNull final List<BiopsyClinicalData> clinicalBiopsies, int startIndex) {
-        int count = 0;
-        int matchIndex = -1;
-        int nextStartIndex = clinicalBiopsies.size();
-        for (int index = startIndex; index < clinicalBiopsies.size(); index++) {
-            final BiopsyClinicalData clinicalBiopsy = clinicalBiopsies.get(index);
-            final LocalDate clinicalBiopsyDate = clinicalBiopsy.date();
-            if (clinicalBiopsyDate == null) {
-                count++;
-            } else if (isWithinThreshold(sequencedBiopsy, clinicalBiopsy)) {
-                count++;
-                matchIndex = index;
-            } else if (clinicalBiopsyDate.isAfter(sequencedBiopsy.date())) {
-                nextStartIndex = index;
-                break;
-            }
-        }
-        return new MatchIndices(count, matchIndex, nextStartIndex);
-    }
-
-    private static class MatchIndices {
-        final int matchCount;
-        final int lastMatchIndex;
-        final int nextStartIndex;
-
-        MatchIndices(final int matchCount, final int lastMatchIndex, final int nextStartIndex) {
-            this.matchCount = matchCount;
-            this.lastMatchIndex = lastMatchIndex;
-            this.nextStartIndex = nextStartIndex;
-        }
+    private static boolean isPossibleMatch(@NotNull final BiopsyLimsData sequencedBiopsy,
+            @NotNull final BiopsyClinicalData clinicalBiopsy) {
+        return clinicalBiopsy.date() == null || isWithinThreshold(sequencedBiopsy, clinicalBiopsy);
     }
 
     private static boolean isWithinThreshold(@NotNull final BiopsyLimsData sequencedBiopsy,
