@@ -3,9 +3,12 @@ package com.hartwig.hmftools.breakpointinspector;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.TreeMultimap;
 
@@ -27,10 +30,11 @@ public class BreakPointInspectorApplication {
     private static final String PROXIMITY = "proximity";
     private static final String SV_LEN = "svlen";
     private static final String INCLUDE_PROPER = "proper";
+    private static final String INCLUDE_FILTERED = "filtered";
 
-    private enum ReadType {
+    private enum ReadCategory {
         UNSET,
-        NORM,
+        NORMAL,
         SPAN,
         SINGLE,
         DIFF_CHROMOSOME,
@@ -39,22 +43,29 @@ public class BreakPointInspectorApplication {
         CHIMERIC
     }
 
-    private enum ReadClass {
+    private enum LocationInfo {
         FILTERED,
         PROXIMITY,
         INTERSECT,
         STRADDLE,
-        CLIPPED
+        CLIP,
+    }
+
+    private enum Region {
+        UNSET,
+        BP1,
+        BP2
     }
 
     private static class ReadInfo {
         public SAMRecord Read = null;
-        public ReadType Type = ReadType.UNSET;
-        public ReadClass Class = ReadClass.FILTERED;
+        public BreakPointInspectorApplication.Region Region = BreakPointInspectorApplication.Region.UNSET;
+        public ReadCategory Category = ReadCategory.UNSET;
+        public LocationInfo Location = LocationInfo.FILTERED;
     }
 
     private static class ReadCollection {
-        public ArrayList<ReadInfo> ReadInfos = new ArrayList<>();
+        public ArrayList<ReadInfo> Infos = new ArrayList<>();
     }
 
     @NotNull
@@ -64,7 +75,8 @@ public class BreakPointInspectorApplication {
         options.addOption(BREAK_POINT, true, "position of break point in chrX:123456 format");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
         options.addOption(SV_LEN, true, "length of the SV to inspect");
-        options.addOption(INCLUDE_PROPER, false, "include proper pairs in output");
+        options.addOption(INCLUDE_PROPER, false, "include proper reads in output");
+        options.addOption(INCLUDE_FILTERED, false, "included filtered reads in output");
         return options;
     }
 
@@ -93,14 +105,69 @@ public class BreakPointInspectorApplication {
         if (isOrientable(read)) {
             switch (SamPairUtil.getPairOrientation(read)) {
                 case FR:
-                    return "NORM";
+                    return "INWARDS";
                 case RF:
-                    return "OUTIE";
+                    return "OUTWARDS";
                 case TANDEM:
                     return "TANDEM";
             }
         }
         return "UNALIGNED";
+    }
+
+    private static class OrientationStats {
+        public int Inwards = 0;
+        public int Outwards = 0;
+        public int Tandem = 0;
+
+        public int Total() {
+            return Inwards + Outwards + Tandem;
+        }
+    }
+
+    private static OrientationStats[] BP1_STATS = { new OrientationStats(), new OrientationStats() };
+    private static OrientationStats[] BP2_STATS = { new OrientationStats(), new OrientationStats() };
+    private static OrientationStats FILTERED = new OrientationStats();
+
+    private static void applyToStats(final ReadInfo info) {
+        OrientationStats stats = FILTERED;
+
+        // pick breakpoint
+        OrientationStats[] array = { FILTERED, FILTERED };
+        if (info.Region == Region.BP1) {
+            array = BP1_STATS;
+        } else if (info.Region == Region.BP2) {
+            array = BP2_STATS;
+        }
+        // pick type of location
+        switch (info.Location) {
+            case PROXIMITY:
+                stats = array[0];
+                break;
+            case CLIP:
+                stats = array[1];
+                break;
+        }
+        // increment orientation counter
+        if (isOrientable(info.Read)) {
+            final SamPairUtil.PairOrientation orientation = SamPairUtil.getPairOrientation(info.Read);
+            switch (orientation) {
+                case FR:
+                    stats.Inwards++;
+                    break;
+                case RF:
+                    stats.Outwards++;
+                    break;
+                case TANDEM:
+                    stats.Tandem++;
+                    break;
+            }
+        }
+    }
+
+    private static String toString(final OrientationStats stats) {
+        List<Integer> list = Arrays.asList(stats.Inwards, stats.Outwards, stats.Tandem, stats.Total());
+        return list.stream().map(Object::toString).collect(Collectors.joining("\t"));
     }
 
     private static void printHelpAndExit(final Options options) {
@@ -124,7 +191,7 @@ public class BreakPointInspectorApplication {
                     && (read.getMateAlignmentStart() - read.getInferredInsertSize()) >= location;
     }
 
-    public static void main(final String... args) throws ParseException, IOException, RuntimeException {
+    public static void main(final String... args) throws ParseException, IOException {
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
@@ -135,6 +202,7 @@ public class BreakPointInspectorApplication {
         final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
         final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
         final boolean outputProperPairs = cmd.hasOption(INCLUDE_PROPER);
+        final boolean outputFilteredReads = cmd.hasOption(INCLUDE_FILTERED);
 
         if (bamPath == null || breakPoint == null) {
             printHelpAndExit(options);
@@ -154,7 +222,13 @@ public class BreakPointInspectorApplication {
         final SamReader reader = SamReaderFactory.makeDefault().open(bamFile);
 
         // query the position
-        final int refIndex = reader.getFileHeader().getSequenceDictionary().getSequenceIndex(chromosome);
+        int refIndex = reader.getFileHeader().getSequenceIndex(chromosome);
+        if (refIndex < 0 && !chromosome.startsWith("chr"))
+            refIndex = reader.getFileHeader().getSequenceIndex("chr" + chromosome);
+        if (refIndex < 0) {
+            System.out.println("Could not find chromosome in file");
+            System.exit(1);
+        }
         QueryInterval[] queryIntervals = {
                 new QueryInterval(refIndex, Math.max(0, location1 - range), location1 + range),
                 new QueryInterval(refIndex, Math.max(0, location2 - range), location2 + range) };
@@ -170,52 +244,63 @@ public class BreakPointInspectorApplication {
             final SAMRecord read = results.next();
             final ReadCollection collection = readMap.computeIfAbsent(read.getReadName(), k -> new ReadCollection());
             final ReadInfo info = new ReadInfo();
+
             info.Read = read;
-            collection.ReadInfos.add(info);
+            collection.Infos.add(info);
+
+            // if unmapped there's nothing to do
+            if (read.getReadUnmappedFlag()) {
+                info.Region = Region.UNSET;
+                info.Category = ReadCategory.UNMAPPED;
+                info.Location = LocationInfo.FILTERED;
+                continue;
+            }
+
+            // determine the region
+            final boolean closerToRegion1 =
+                    Math.abs(read.getAlignmentStart() - location1) < Math.abs(read.getAlignmentStart() - location2);
+            info.Region = closerToRegion1 ? Region.BP1 : Region.BP2;
+            final int location = closerToRegion1 ? location1 : location2;
 
             if (read.getProperPairFlag()) {
-                info.Type = ReadType.NORM;
+                info.Category = ReadCategory.NORMAL;
                 // only care about normals in Location1
-                if (readIntersectsLocation(read, location1)) {
-                    info.Class = ReadClass.INTERSECT;
-                } else if (pairStraddlesLocation(read, location1)) {
-                    info.Class = ReadClass.STRADDLE;
+                if (readIntersectsLocation(read, location)) {
+                    info.Location = LocationInfo.INTERSECT;
+                } else if (pairStraddlesLocation(read, location)) {
+                    info.Location = LocationInfo.STRADDLE;
                 } else {
-                    info.Class = ReadClass.FILTERED;
+                    info.Location = LocationInfo.FILTERED;
                 }
-            } else if (read.getReadUnmappedFlag()) {
-                info.Type = ReadType.UNMAPPED;
-                info.Class = ReadClass.FILTERED;
             } else if (read.getMateUnmappedFlag()) {
-                info.Type = ReadType.SINGLE;
-                info.Class = ReadClass.FILTERED;
+                info.Category = ReadCategory.SINGLE;
+                info.Location = LocationInfo.FILTERED;
             } else if (read.getReferenceIndex() != read.getMateReferenceIndex()) {
-                info.Type = ReadType.DIFF_CHROMOSOME;
-                info.Class = ReadClass.FILTERED;
+                info.Category = ReadCategory.DIFF_CHROMOSOME;
+                info.Location = LocationInfo.FILTERED;
             } else {
+
                 // determine type
                 if (read.getSupplementaryAlignmentFlag())
-                    info.Type = ReadType.CHIMERIC;
-                else if (read.getNotPrimaryAlignmentFlag())
-                    info.Type = ReadType.SECONDARY;
-                else if (read.getReadPairedFlag())
-                    info.Type = ReadType.SPAN;
+                    info.Category = ReadCategory.CHIMERIC;
+                else if (read.getNotPrimaryAlignmentFlag()) {
+                    info.Category = ReadCategory.SECONDARY;
+                    info.Location = LocationInfo.FILTERED;
+                } else if (read.getReadPairedFlag())
+                    info.Category = ReadCategory.SPAN;
 
                 // determine classification
+
                 final boolean clipped = read.getUnclippedStart() != read.getAlignmentStart()
                         || read.getUnclippedEnd() != read.getAlignmentEnd();
-                if (clipped && read.getAlignmentStart() - 1 == location1) {
-                    info.Class = ReadClass.CLIPPED;
-                } else if (clipped && read.getAlignmentEnd() == location1) {
-                    info.Class = ReadClass.CLIPPED;
-                } else if (clipped && read.getAlignmentStart() - 1 == location2) {
-                    info.Class = ReadClass.CLIPPED;
-                } else if (clipped && read.getAlignmentEnd() == location2) {
-                    info.Class = ReadClass.CLIPPED;
-                } else if (readIntersectsLocation(read, location1) || readIntersectsLocation(read, location2)) {
-                    info.Class = ReadClass.INTERSECT;
+                if (clipped && read.getAlignmentStart() - 1 == location) {
+                    info.Location = LocationInfo.CLIP;
+                } else if (clipped && read.getAlignmentEnd() == location) {
+                    info.Location = LocationInfo.CLIP;
+                } else if (readIntersectsLocation(read, location)) {
+                    info.Location = LocationInfo.CLIP; // map this to clip intentionally
                 } else {
-                    info.Class = ReadClass.PROXIMITY;
+                    info.Location = LocationInfo.PROXIMITY;
                 }
             }
         }
@@ -225,6 +310,7 @@ public class BreakPointInspectorApplication {
         System.out.println(
                 String.join("\t",
                         "READ_NAME",
+                        "REGION",
                         "CLASSIFICATION",
                         "TLEN",
                         "ORIENTATION",
@@ -237,42 +323,59 @@ public class BreakPointInspectorApplication {
                         "SEQ",
                         "QUAL",
                         "MATE_CHROMOSOME",
-                        "MATE_POS"
+                        "MATE_ALIGNMENT_START"
                 ));
         // @formatter:on
 
+        // manta style categorisation
         int negativePairs = 0;
         int positivePairs = 0;
         int negativeSplitReads = 0;
         int positiveSplitReads = 0;
+        int readsMissingMate = 0;
 
-        for (final ReadCollection collection : readMap.values()) {
+        final List<Integer> insertSizes = new ArrayList<>();
+        for (final ReadCollection reads : readMap.values()) {
 
-            if (collection.ReadInfos.size() < 2)
+            // make sure we at least have the primary pairs
+            final List<ReadInfo> pair = reads.Infos.stream().filter(i -> !i.Read.getNotPrimaryAlignmentFlag()).collect(
+                    Collectors.toList());
+            if (pair.size() != 2) {
+                readsMissingMate++;
                 continue;
-
-            final boolean normal =
-                    collection.ReadInfos.size() == 2 && collection.ReadInfos.get(0).Type == ReadType.NORM;
-            if (normal) {
-                if (collection.ReadInfos.stream().allMatch(r -> r.Class == ReadClass.STRADDLE)) {
-                    negativePairs++;
-                } else if (collection.ReadInfos.stream().anyMatch(r -> r.Class == ReadClass.INTERSECT)) {
-                    negativePairs++;
-                    negativeSplitReads++;
-                }
-            } else {
-                if (collection.ReadInfos.stream().allMatch(r -> r.Class == ReadClass.PROXIMITY)) {
-                    positivePairs++;
-                } else if (collection.ReadInfos.stream().anyMatch(r -> r.Class == ReadClass.CLIPPED)) {
-                    positivePairs++;
-                    positiveSplitReads++;
-                }
             }
 
-            for (final ReadInfo info : collection.ReadInfos) {
+            // update the stats
+            final boolean normal = pair.get(0).Category == ReadCategory.NORMAL;
+            if (pair.get(0).Location == LocationInfo.FILTERED || pair.get(1).Location == LocationInfo.FILTERED) {
+                // we won't count these at all
+            } else if (normal) {
+                if (pair.get(0).Region == Region.BP1) {
+                    if (pair.get(0).Location == LocationInfo.STRADDLE
+                            && pair.get(1).Location == LocationInfo.STRADDLE) {
+                        negativePairs++;
+                    } else if (pair.get(0).Location == LocationInfo.INTERSECT
+                            || pair.get(1).Location == LocationInfo.INTERSECT) {
+                        negativePairs++;
+                        negativeSplitReads++;
+                    }
+                }
+            } else {
+                // we should check by orientation too
+                if (pair.get(0).Region != pair.get(1).Region)
+                    positivePairs++;
 
-                if (info.Type == ReadType.NORM) {
-                    switch (info.Class) {
+                final List<LocationInfo> clipOrIntersect = Arrays.asList(LocationInfo.CLIP, LocationInfo.INTERSECT);
+                if (clipOrIntersect.contains(pair.get(0).Location) || clipOrIntersect.contains(pair.get(1).Location))
+                    positiveSplitReads++;
+            }
+
+            // output the reads
+            for (final ReadInfo info : reads.Infos) {
+
+                // determine if we want to output this read
+                if (info.Category == ReadCategory.NORMAL) {
+                    switch (info.Location) {
                         case STRADDLE:
                         case INTERSECT:
                             if (!outputProperPairs) {
@@ -282,15 +385,19 @@ public class BreakPointInspectorApplication {
                         default:
                             continue;
                     }
-                } else if (info.Class == ReadClass.FILTERED) {
-                    continue;
+                } else if (info.Location == LocationInfo.FILTERED) {
+                    if (!outputFilteredReads)
+                        continue;
+                } else {
+                    applyToStats(info);
                 }
 
                 // @formatter:off
                 final SAMRecord r = info.Read;
                 String output = String.join("\t",
                         r.getReadName(),
-                        String.join(",", info.Type.toString(), info.Class.toString()),
+                        info.Region.toString(),
+                        String.join(",", info.Category.toString(), info.Location.toString()),
                         Integer.toString(r.getInferredInsertSize()),
                         getOrientationString(r),
                         r.getReferenceName(),
@@ -313,10 +420,21 @@ public class BreakPointInspectorApplication {
             System.out.println(s);
 
         System.out.println();
-        System.out.println("-EVIDENCE_READS-");
-        System.out.println("PR_NEGATIVE\t" + negativePairs);
-        System.out.println("PR_POSITIVE\t" + positivePairs);
-        System.out.println("SR_NEGATIVE\t" + negativeSplitReads);
-        System.out.println("SR_POSITIVE\t" + positiveSplitReads);
+        System.out.println("PR\tSR");
+        System.out.println(
+                Integer.toString(negativePairs) + ":" + Integer.toString(positivePairs) + "\t" + Integer.toString(
+                        negativeSplitReads) + ":" + Integer.toString(positiveSplitReads));
+
+        // @formatter:off
+        System.out.println(String.join("\t", "-READS-", "INWARDS", "OUTWARDS", "TANDEM", "TOTAL"));
+        System.out.println(String.join("\t", "BP1_PROXIMITY", toString(BP1_STATS[0])));
+        System.out.println(String.join("\t", "BP1_CLIPPED", toString(BP1_STATS[1])));
+        System.out.println(String.join("\t", "BP2_PROXIMITY", toString(BP2_STATS[0])));
+        System.out.println(String.join("\t", "BP2_CLIPPED", toString(BP2_STATS[1])));
+        //System.out.println(String.join("\t", "FILTERED"));
+        //System.out.println(String.join("\t", "TOTAL"));
+
+        System.out.println();
+        System.out.println("READS_MISSING_MATE\t" + readsMissingMate);
     }
 }
