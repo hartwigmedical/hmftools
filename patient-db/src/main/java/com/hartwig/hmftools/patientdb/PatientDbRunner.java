@@ -74,7 +74,7 @@ public final class PatientDbRunner {
         ThreadContext.put("cpctHospitalCode", "default");
         if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-Db", basicOptions);
+            formatter.printHelp("patient-db", basicOptions);
         } else {
             final File runDirectory = new File(runsFolderPath);
             if (runDirectory.isDirectory()) {
@@ -91,7 +91,7 @@ public final class PatientDbRunner {
                     LOGGER.warn("dir " + runDirectory + " does not exist.");
                 }
                 final HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("Patient-Db", basicOptions);
+                formatter.printHelp("patient-db", basicOptions);
             }
         }
     }
@@ -106,9 +106,9 @@ public final class PatientDbRunner {
         final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
         final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentMappingCsv)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-Db -clinical", clinicalOptions);
+            formatter.printHelp("patient-db -clinical", clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
@@ -142,7 +142,7 @@ public final class PatientDbRunner {
         final String extremeConfidenceBed = cmd.getOptionValue(EXTREME_CONFIDENCE_BED);
         if (Utils.anyNull(highConfidenceBed, extremeConfidenceBed)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-Db -somatic", somaticOptions);
+            formatter.printHelp("patient-db -somatic", somaticOptions);
         } else {
             final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
             final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
@@ -207,8 +207,8 @@ public final class PatientDbRunner {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(SOMATIC, false, "Read somatic data");
-        options.addOption(CLINICAL, false, "Read clinical data");
+        options.addOption(SOMATIC, false, "Read somatic data.");
+        options.addOption(CLINICAL, false, "Read clinical data.");
         return options;
     }
 
@@ -217,18 +217,18 @@ public final class PatientDbRunner {
         final Options options = new Options();
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(TREATMENT_TYPES_CSV, true,
-                "Path towards the .csv file that maps treatment names to treatment types");
-        options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file");
-        options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file");
-        options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file");
+                "Path towards the .csv file that maps treatment names to treatment types.");
+        options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file.");
+        options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file.");
+        options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file.");
         return options;
     }
 
     @NotNull
     private static Options createSomaticOptions() {
         final Options options = new Options();
-        options.addOption(HIGH_CONFIDENCE_BED, true, "The full path towards the high confidence bed");
-        options.addOption(EXTREME_CONFIDENCE_BED, true, "The full path towards the extreme confidence bed");
+        options.addOption(HIGH_CONFIDENCE_BED, true, "The full path towards the high confidence bed.");
+        options.addOption(EXTREME_CONFIDENCE_BED, true, "The full path towards the extreme confidence bed.");
         return options;
     }
 
