@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb.matchers;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.Config;
@@ -20,57 +22,56 @@ public class TreatmentMatcher {
     @NotNull
     public static List<BiopsyTreatmentData> matchTreatments(@NotNull final String patientId,
             @NotNull final List<BiopsyClinicalData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
+        final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         if (biopsies.size() < treatments.size()) {
-            if (biopsies.size() < treatments.size()) {
-                LOGGER.warn(
-                        patientId + ": has more treatments(" + treatments.size() + ") than biopsies(" + biopsies.size()
-                                + ").");
-            }
+            LOGGER.warn(patientId + ": has more treatments(" + treatments.size() + ") than biopsies(" + biopsies.size()
+                    + ").");
         }
-        if (biopsies.size() == 1 && treatments.size() > 1) {
-            // MIVO: if we have just 1 biopsy, add all treatments (although this should not happen and be fixed in the ecrf).
-            final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
-            for (final BiopsyTreatmentData treatment : treatments) {
+        List<BiopsyClinicalData> remainingBiopsies = biopsies;
+        for (final BiopsyTreatmentData treatment : treatments) {
+            final String treatmentGiven = treatment.treatmentGiven();
+            if (treatmentGiven == null || treatmentGiven.toLowerCase().equals("no")) {
+                matchedTreatments.add(treatment);
+                continue;
+            }
+            final Map<Boolean, List<BiopsyClinicalData>> partitions = remainingBiopsies.stream().collect(
+                    Collectors.partitioningBy(
+                            clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
+            final List<BiopsyClinicalData> possibleMatches = partitions.get(true);
+            if (possibleMatches.size() == 0) {
+                LOGGER.warn(patientId + ": no biopsy match for treatment [" + treatment.startDate() + " - "
+                        + treatment.endDate() + "]");
+                matchedTreatments.add(treatment);
+            } else if (possibleMatches.size() > 1) {
+                LOGGER.warn(patientId + ": multiple biopsy matches for treatment [" + treatment.startDate() + " - "
+                        + treatment.endDate() + "]: " + possibleMatches.stream().map(
+                        biopsy -> "" + biopsy.date()).collect(Collectors.toList()));
+                matchedTreatments.add(treatment);
+            } else if (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null) {
+                LOGGER.warn(patientId + ": treatment [" + treatment.startDate() + " - " + treatment.endDate()
+                        + "] matched biopsy with null date.");
+                matchedTreatments.add(treatment);
+            } else {
+                final BiopsyClinicalData clinicalBiopsy = possibleMatches.get(0);
                 matchedTreatments.add(
                         new BiopsyTreatmentData(treatment.id(), treatment.treatmentGiven(), treatment.startDate(),
-                                treatment.endDate(), treatment.drugs(), biopsies.get(0).id()));
+                                treatment.endDate(), treatment.drugs(), clinicalBiopsy.id()));
+                remainingBiopsies = partitions.get(false);
             }
-            return matchedTreatments;
-        } else {
-            return matchTreatmentsByIndex(patientId, biopsies, treatments);
-        }
-    }
-
-    @NotNull
-    private static List<BiopsyTreatmentData> matchTreatmentsByIndex(@NotNull final String patientId,
-            @NotNull final List<BiopsyClinicalData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
-        final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
-        for (int index = 0; index < treatments.size(); index++) {
-            final Integer biopsyId;
-            final BiopsyTreatmentData treatment = treatments.get(index);
-            if (index < biopsies.size()) {
-                biopsyId = biopsies.get(index).id();
-                checkDurationBetweenDates(patientId, biopsies.get(index).date(), treatment.startDate());
-            } else {
-                biopsyId = null;
-            }
-            matchedTreatments.add(
-                    new BiopsyTreatmentData(treatment.id(), treatment.treatmentGiven(), treatment.startDate(),
-                            treatment.endDate(), treatment.drugs(), biopsyId));
         }
         return matchedTreatments;
     }
 
-    private static void checkDurationBetweenDates(@NotNull final String patientId,
-            @Nullable final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
-        if (biopsyDate != null && treatmentStartDate != null) {
-            if (Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
-                    > Config.maxDaysBetweenTreatmentAndBiopsy) {
-                LOGGER.warn(patientId + ": time between biopsy date(" + biopsyDate + ") and treatment start date("
-                        + treatmentStartDate + ") is greater than " + Config.maxDaysBetweenTreatmentAndBiopsy
-                        + " days.");
-            }
-        }
+    private static boolean isPossibleMatch(@Nullable final LocalDate biopsyDate,
+            @Nullable final LocalDate treatmentStartDate) {
+        return biopsyDate == null || isWithinThreshold(biopsyDate, treatmentStartDate);
     }
 
+    private static boolean isWithinThreshold(@Nullable final LocalDate biopsyDate,
+            @Nullable final LocalDate treatmentStartDate) {
+        return biopsyDate != null && treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate)
+                || treatmentStartDate.isEqual(biopsyDate))
+                && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
+                < Config.maxDaysBetweenTreatmentAndBiopsy;
+    }
 }
