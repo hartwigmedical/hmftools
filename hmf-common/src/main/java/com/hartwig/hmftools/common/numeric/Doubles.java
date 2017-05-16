@@ -9,6 +9,10 @@ public class Doubles {
         return Math.abs(first - second) < EPSILON;
     }
 
+    public static boolean isZero(double value) {
+        return equal(value, 0);
+    }
+
     public static boolean lessThan(double value, double reference)
     {
         return value - reference < -EPSILON;
