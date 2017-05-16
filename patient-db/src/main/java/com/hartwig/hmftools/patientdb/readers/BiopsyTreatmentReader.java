@@ -45,7 +45,7 @@ public class BiopsyTreatmentReader {
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, true)) {
                 final String treatmentGiven = readTreatmentGiven(form);
-                final List<BiopsyTreatmentDrugData> drugs = readDrugs(form);
+                final List<BiopsyTreatmentDrugData> drugs = readDrugs(patient.patientId(), form);
                 final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
                 final LocalDate treatmentEnd = determineTreatmentEndDate(drugs);
                 treatmentDatas.add(new BiopsyTreatmentData(treatmentGiven, treatmentStart, treatmentEnd, drugs));
@@ -55,11 +55,22 @@ public class BiopsyTreatmentReader {
     }
 
     @NotNull
-    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final EcrfForm form) {
+    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final String patientId, @NotNull final EcrfForm form) {
         final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
         for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, true)) {
             final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, dateFormatter, true);
             final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, dateFormatter, true);
+            if (drugStart != null && drugEnd != null) {
+                if (drugStart.isEqual(drugEnd)) {
+                    LOGGER.warn(
+                            patientId + ": drug startDate (" + drugStart + ") is equal with drug endDate (" + drugEnd
+                                    + ")");
+                }
+                if (drugStart.isAfter(drugEnd)) {
+                    LOGGER.warn(patientId + ": drug startDate (" + drugStart + ") is after drug endDate (" + drugEnd
+                            + ")");
+                }
+            }
             final String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
             final String drugType = drugName == null ? null : treatmentMapping.get(drugName.toLowerCase().trim());
             drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));
