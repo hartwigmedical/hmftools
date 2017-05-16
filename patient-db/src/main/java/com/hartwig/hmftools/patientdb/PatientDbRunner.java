@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
@@ -96,9 +97,12 @@ public final class PatientDbRunner {
                     if (patient == null) {
                         LOGGER.warn("Could not find patient with id: " + patientId + " in ecrf file.");
                     } else {
-                        final List<String> sampleIdsForPatient = runsContexts.stream().map(
-                                RunContext::tumorSample).filter(
-                                sampleId -> sampleId.startsWith(patient.patientId())).collect(Collectors.toList());
+                        final List<String> sampleIdsForPatient = Lists.newArrayList();
+                        runsContexts.forEach(runContext -> {
+                            final String sampleId = runContext.tumorSample();
+                            if (sampleId.startsWith(patient.patientId()) && !sampleIdsForPatient.contains(sampleId))
+                                sampleIdsForPatient.add(sampleId);
+                        });
                         LOGGER.info(patient.patientId() + ": Samples: " + sampleIdsForPatient);
                         final Patient cpctPatient = cpctPatientReader.read(patient, sampleIdsForPatient);
                         dbWriter.writePatient(cpctPatient);
