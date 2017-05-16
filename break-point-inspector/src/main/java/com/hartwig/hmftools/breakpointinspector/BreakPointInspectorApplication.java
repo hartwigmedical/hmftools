@@ -39,7 +39,7 @@ public class BreakPointInspectorApplication {
         CHIMERIC
     }
 
-    private enum ReadClassification {
+    private enum ReadClass {
         FILTERED,
         PROXIMITY,
         INTERSECT,
@@ -50,11 +50,11 @@ public class BreakPointInspectorApplication {
     private static class ReadInfo {
         public SAMRecord Read = null;
         public ReadType Type = ReadType.UNSET;
-        public ReadClassification Classification = ReadClassification.FILTERED;
+        public ReadClass Class = ReadClass.FILTERED;
     }
 
     private static class ReadCollection {
-        public ArrayList<ReadInfo> Reads = new ArrayList<>();
+        public ArrayList<ReadInfo> ReadInfos = new ArrayList<>();
     }
 
     @NotNull
@@ -166,58 +166,56 @@ public class BreakPointInspectorApplication {
         // execute query and parse the results
         final SAMRecordIterator results = reader.query(queryIntervals, false);
         while (results.hasNext()) {
+
             final SAMRecord read = results.next();
             final ReadCollection collection = readMap.computeIfAbsent(read.getReadName(), k -> new ReadCollection());
+            final ReadInfo info = new ReadInfo();
+            info.Read = read;
+            collection.ReadInfos.add(info);
 
-            final ReadInfo readInfo = new ReadInfo();
-            readInfo.Read = read;
-            collection.Reads.add(readInfo);
-
-            final boolean isProper = read.getProperPairFlag(); // i.e. normal insert size, right orientation etc.
-
-            if (isProper) {
-                readInfo.Type = ReadType.NORM;
+            if (read.getProperPairFlag()) {
+                info.Type = ReadType.NORM;
                 // only care about normals in Location1
                 if (readIntersectsLocation(read, location1)) {
-                    readInfo.Classification = ReadClassification.INTERSECT;
+                    info.Class = ReadClass.INTERSECT;
                 } else if (pairStraddlesLocation(read, location1)) {
-                    readInfo.Classification = ReadClassification.STRADDLE;
+                    info.Class = ReadClass.STRADDLE;
                 } else {
-                    readInfo.Classification = ReadClassification.FILTERED;
+                    info.Class = ReadClass.FILTERED;
                 }
             } else if (read.getReadUnmappedFlag()) {
-                readInfo.Type = ReadType.UNMAPPED;
-                readInfo.Classification = ReadClassification.FILTERED;
+                info.Type = ReadType.UNMAPPED;
+                info.Class = ReadClass.FILTERED;
             } else if (read.getMateUnmappedFlag()) {
-                readInfo.Type = ReadType.SINGLE;
-                readInfo.Classification = ReadClassification.FILTERED;
+                info.Type = ReadType.SINGLE;
+                info.Class = ReadClass.FILTERED;
             } else if (read.getReferenceIndex() != read.getMateReferenceIndex()) {
-                readInfo.Type = ReadType.DIFF_CHROMOSOME;
-                readInfo.Classification = ReadClassification.FILTERED;
+                info.Type = ReadType.DIFF_CHROMOSOME;
+                info.Class = ReadClass.FILTERED;
             } else {
                 // determine type
                 if (read.getSupplementaryAlignmentFlag())
-                    readInfo.Type = ReadType.CHIMERIC;
+                    info.Type = ReadType.CHIMERIC;
                 else if (read.getNotPrimaryAlignmentFlag())
-                    readInfo.Type = ReadType.SECONDARY;
+                    info.Type = ReadType.SECONDARY;
                 else if (read.getReadPairedFlag())
-                    readInfo.Type = ReadType.SPAN;
+                    info.Type = ReadType.SPAN;
 
                 // determine classification
                 final boolean clipped = read.getUnclippedStart() != read.getAlignmentStart()
                         || read.getUnclippedEnd() != read.getAlignmentEnd();
                 if (clipped && read.getAlignmentStart() - 1 == location1) {
-                    readInfo.Classification = ReadClassification.CLIPPED;
+                    info.Class = ReadClass.CLIPPED;
                 } else if (clipped && read.getAlignmentEnd() == location1) {
-                    readInfo.Classification = ReadClassification.CLIPPED;
+                    info.Class = ReadClass.CLIPPED;
                 } else if (clipped && read.getAlignmentStart() - 1 == location2) {
-                    readInfo.Classification = ReadClassification.CLIPPED;
+                    info.Class = ReadClass.CLIPPED;
                 } else if (clipped && read.getAlignmentEnd() == location2) {
-                    readInfo.Classification = ReadClassification.CLIPPED;
+                    info.Class = ReadClass.CLIPPED;
                 } else if (readIntersectsLocation(read, location1) || readIntersectsLocation(read, location2)) {
-                    readInfo.Classification = ReadClassification.INTERSECT;
+                    info.Class = ReadClass.INTERSECT;
                 } else {
-                    readInfo.Classification = ReadClassification.PROXIMITY;
+                    info.Class = ReadClass.PROXIMITY;
                 }
             }
         }
@@ -250,51 +248,49 @@ public class BreakPointInspectorApplication {
 
         for (final ReadCollection collection : readMap.values()) {
 
-            for (final ReadInfo info : collection.Reads) {
+            if (collection.ReadInfos.size() < 2)
+                continue;
 
-                // filter reads when missing mate
-                final SAMRecord r = info.Read;
-                if (collection.Reads.stream().noneMatch(s -> r.getAlignmentStart() == s.Read.getMateAlignmentStart()
-                        && r.getReferenceIndex() == s.Read.getMateReferenceIndex()))
-                    continue;
+            final boolean normal =
+                    collection.ReadInfos.size() == 2 && collection.ReadInfos.get(0).Type == ReadType.NORM;
+            if (normal) {
+                if (collection.ReadInfos.stream().allMatch(r -> r.Class == ReadClass.STRADDLE)) {
+                    negativePairs++;
+                } else if (collection.ReadInfos.stream().anyMatch(r -> r.Class == ReadClass.INTERSECT)) {
+                    negativePairs++;
+                    negativeSplitReads++;
+                }
+            } else {
+                if (collection.ReadInfos.stream().allMatch(r -> r.Class == ReadClass.PROXIMITY)) {
+                    positivePairs++;
+                } else if (collection.ReadInfos.stream().anyMatch(r -> r.Class == ReadClass.CLIPPED)) {
+                    positivePairs++;
+                    positiveSplitReads++;
+                }
+            }
+
+            for (final ReadInfo info : collection.ReadInfos) {
 
                 if (info.Type == ReadType.NORM) {
-                    switch (info.Classification) {
-                        case INTERSECT:
-                            negativeSplitReads++;
-                            break;
+                    switch (info.Class) {
                         case STRADDLE:
-                            if (r.getInferredInsertSize() > 0) // we want PAIRS not READS
-                                negativePairs++;
+                        case INTERSECT:
+                            if (!outputProperPairs) {
+                                continue;
+                            }
                             break;
                         default:
                             continue;
                     }
-                    if (!outputProperPairs)
-                        continue;
-                } else if (info.Classification == ReadClassification.FILTERED) {
+                } else if (info.Class == ReadClass.FILTERED) {
                     continue;
-                } else {
-                    switch (info.Classification) {
-                        case CLIPPED:
-                            positiveSplitReads++;
-                            if (r.getInferredInsertSize() > 0)
-                                positivePairs++;
-                            break;
-                        case INTERSECT:
-                        case PROXIMITY:
-                            if (r.getInferredInsertSize() > 0) // we want PAIRS not reads
-                                positivePairs++;
-                            break;
-                        default:
-                            break;
-                    }
                 }
 
                 // @formatter:off
+                final SAMRecord r = info.Read;
                 String output = String.join("\t",
                         r.getReadName(),
-                        String.join(",", info.Type.toString(), info.Classification.toString()),
+                        String.join(",", info.Type.toString(), info.Class.toString()),
                         Integer.toString(r.getInferredInsertSize()),
                         getOrientationString(r),
                         r.getReferenceName(),
