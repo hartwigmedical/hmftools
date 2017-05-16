@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientdb.matchers;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -10,7 +12,6 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class TreatmentResponseMatcher {
 
@@ -20,41 +21,25 @@ public class TreatmentResponseMatcher {
             @NotNull final List<BiopsyTreatmentData> treatments,
             @NotNull final List<BiopsyTreatmentResponseData> responses) {
         final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
-        if (treatments.size() == 1) {
-            for (final BiopsyTreatmentResponseData response : responses) {
-                matchedResponses.add(new BiopsyTreatmentResponseData(treatments.get(0).id(), response.assessmentDate(),
-                        response.responseDate(), response.response(), response.measurementDone()));
-            }
-        } else {
-            for (final BiopsyTreatmentResponseData response : responses) {
-                final Integer treatmentId = findTreatmentIdForResponse(patientId, response, treatments);
-                matchedResponses.add(new BiopsyTreatmentResponseData(treatmentId, response.assessmentDate(),
-                        response.responseDate(), response.response(), response.measurementDone()));
+        for (final BiopsyTreatmentResponseData response : responses) {
+            final Map<Boolean, List<BiopsyTreatmentData>> partitions = treatments.stream().collect(
+                    Collectors.partitioningBy(treatment -> responseMatchesTreatment(response, treatment)));
+            final List<BiopsyTreatmentData> matchedTreatments = partitions.get(true);
+            if (matchedTreatments.size() == 0) {
+                matchedResponses.add(response);
+            } else if (matchedTreatments.size() > 1) {
+                LOGGER.warn(patientId + ": treatment response(" + response.date() + ") matches multiple treatments:"
+                        + matchedTreatments.stream().map(
+                        treatment -> "[" + treatment.startDate() + " - " + treatment.endDate() + "]").collect(
+                        Collectors.toList()));
+                matchedResponses.add(response);
+            } else {
+                matchedResponses.add(
+                        new BiopsyTreatmentResponseData(matchedTreatments.get(0).id(), response.assessmentDate(),
+                                response.responseDate(), response.response(), response.measurementDone()));
             }
         }
         return matchedResponses;
-    }
-
-    @Nullable
-    private static Integer findTreatmentIdForResponse(@NotNull final String patientId,
-            @NotNull final BiopsyTreatmentResponseData response, @NotNull final List<BiopsyTreatmentData> treatments) {
-        BiopsyTreatmentData matchedTreatment = null;
-        for (final BiopsyTreatmentData treatment : treatments) {
-            if (responseMatchesTreatment(response, treatment)) {
-                if (matchedTreatment == null) {
-                    matchedTreatment = treatment;
-                } else {
-                    LOGGER.warn(patientId + ": treatment response(" + response.date() + ") matched with: "
-                            + matchedTreatment.id() + " (" + matchedTreatment.startDate() + ","
-                            + matchedTreatment.endDate() + ") can also be matched with: " + treatment.id() + " ("
-                            + treatment.startDate() + "," + treatment.endDate() + ")");
-                }
-            }
-        }
-        if (matchedTreatment != null) {
-            return matchedTreatment.id();
-        }
-        return null;
     }
 
     private static boolean responseMatchesTreatment(@NotNull final BiopsyTreatmentResponseData response,
