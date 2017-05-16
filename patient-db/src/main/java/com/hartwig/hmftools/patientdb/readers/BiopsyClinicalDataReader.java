@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb.readers;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
@@ -15,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class BiopsyClinicalDataReader {
+class BiopsyClinicalDataReader {
     private static final Logger LOGGER = LogManager.getLogger(BiopsyClinicalDataReader.class);
 
     private static final String STUDY_BIOPSY = "SE.BIOPSY";
@@ -29,7 +31,7 @@ public class BiopsyClinicalDataReader {
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    public static List<BiopsyClinicalData> read(@NotNull final EcrfPatient patient) {
+    static List<BiopsyClinicalData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyClinicalData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, true)) {
@@ -38,6 +40,14 @@ public class BiopsyClinicalDataReader {
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
                     biopsies.add(new BiopsyClinicalData(date, location));
                 }
+            }
+        }
+        final Map<LocalDate, List<BiopsyClinicalData>> groups = biopsies.stream().filter(
+                biopsy -> biopsy.date() != null).collect(Collectors.groupingBy(BiopsyClinicalData::date));
+        for (final LocalDate biopsyDate : groups.keySet()) {
+            final int biopsiesPerDate = groups.get(biopsyDate).size();
+            if (biopsiesPerDate > 1) {
+                LOGGER.warn(patient.patientId() + ": " + biopsiesPerDate + " biopsies with same date: " + biopsyDate);
             }
         }
         return biopsies;
