@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 class BroadRegions {
 
-    private static int MIN_BAF_COUNT = 50;
-    private static double MAX_RATIO_DEVIATION = 0.25;
+    private static final int MIN_BAF_COUNT = 50;
+    private static final double MAX_RATIO_DEVIATION = 0.25;
 
     @NotNull
     private final List<ConsolidatedRegion> result = Lists.newArrayList();

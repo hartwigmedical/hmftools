@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.purple.region;
 
 import com.hartwig.hmftools.common.purple.FittedCopyNumber;
-import com.hartwig.hmftools.common.purple.ImmutableConsolidatedRegion;
 
 class ConsolidatedRegionBuilder {
 
