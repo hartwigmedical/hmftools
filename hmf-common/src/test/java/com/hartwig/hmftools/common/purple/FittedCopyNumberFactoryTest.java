@@ -20,11 +20,10 @@ public class FittedCopyNumberFactoryTest {
 
         FittedCopyNumberFactory victim = new FittedCopyNumberFactory(12, 0.2);
         FittedCopyNumber result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
-        System.out.println(result);
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
-        assertEquals(0.018, result.deviation(), EPSILON);
+        assertEquals(0.011058009947947143, result.deviation(), EPSILON);
     }
 
     private EnrichedCopyNumber create(double baf, double ratio) {

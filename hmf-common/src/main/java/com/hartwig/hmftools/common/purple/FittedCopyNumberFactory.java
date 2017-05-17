@@ -48,7 +48,7 @@ public class FittedCopyNumberFactory {
             double modelBAF = copyNumber.mBAFCount() == 0 ? 0 : modelBAFToMinimizeDeviation(purity, ploidy, actualBAF);
             double bafDeviation = bafDeviation(modelBAF, actualBAF);
 
-            double deviation = ploidy / 2.0 * (bafDeviation + cnvDeviation);
+            double deviation = Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * actualBAF;
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
