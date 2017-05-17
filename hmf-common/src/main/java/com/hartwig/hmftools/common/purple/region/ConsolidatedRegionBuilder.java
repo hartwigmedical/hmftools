@@ -12,15 +12,14 @@ class ConsolidatedRegionBuilder {
     private double sumWeightedBAF;
     private double sumWeightedRatioOfRatios;
 
-    ConsolidatedRegionBuilder(final String chromosome, long start) {
-        this.chromosome = chromosome;
-        this.start = start;
-    }
-
     ConsolidatedRegionBuilder(FittedCopyNumber copyNumber) {
         this.chromosome = copyNumber.chromosome();
         this.start = copyNumber.start();
         extendRegion(copyNumber);
+    }
+
+    public String chromosome() {
+        return chromosome;
     }
 
     double averageBAF() {

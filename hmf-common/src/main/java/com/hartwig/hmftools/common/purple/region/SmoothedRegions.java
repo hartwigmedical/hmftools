@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.region;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -12,8 +13,11 @@ import org.jetbrains.annotations.Nullable;
 
 class SmoothedRegions {
 
+    private static final double DIPLOID_MIN_RATIO = 0.75;
+    private static final double DIPLOID_MAX_RATIO = 1.25;
+
     private static final int MAX_BAF_COUNT = 50;
-    private static final double MAX_BAF_RANGE = 0.1;
+    private static final double MAX_BAF_RANGE = 0.12;
     private static final double MIN_BAF_RANGE = 0.03;
     private static final double RATIO_RANGE = 0.25;
 
@@ -34,32 +38,40 @@ class SmoothedRegions {
             @Nullable
             ConsolidatedRegion nextRegion = i < megaRegions.size() - 1 ? megaRegions.get(i + 1) : null;
 
+            minIndex = Math.max(minIndex, findChromosomeStartIndex(minIndex, currentRegion.chromosome()));
+
+            int chromosomeStartIndex = findChromosomeStartIndex(minIndex, currentRegion.chromosome());
+            minIndex = Math.max(minIndex, chromosomeStartIndex);
+
             int regionStartIndex = findRegionStartIndex(minIndex, currentRegion);
             int regionEndIndex = findRegionEndIndex(regionStartIndex, currentRegion);
 
-            maxIndex = nextRegion == null ? regionEndIndex : findRegionStartIndex(regionEndIndex, nextRegion) - 1;
+            maxIndex = nextRegion == null ? copyNumbers.size() : findRegionStartIndex(regionEndIndex, nextRegion) - 1;
             minIndex = startConsolidatedRegion(minIndex, regionStartIndex, regionEndIndex, maxIndex) + 1;
-
         }
 
         return results;
     }
 
-    private int findRegionStartIndex(int minIndex, ConsolidatedRegion region) {
-        for (int i = minIndex; i < copyNumbers.size(); i++) {
-            FittedCopyNumber copyNumber = copyNumbers.get(i);
-            if (copyNumber.chromosome().equals(region.chromosome()) && copyNumber.start() == region.start()) {
-                return i;
-            }
-        }
-
-        throw new IllegalArgumentException();
+    private int findChromosomeStartIndex(int minIndex, String chromosome) {
+        return indexOf(minIndex, copyNumber -> copyNumber.chromosome().equals(chromosome));
     }
 
-    private int findRegionEndIndex(int minIndex, ConsolidatedRegion region) {
+    private int findRegionStartIndex(int minIndex, ConsolidatedRegion region) {
+        return indexOf(minIndex, copyNumber -> copyNumber.chromosome().equals(region.chromosome())
+                && copyNumber.start() == region.start());
+    }
+
+    private int findRegionEndIndex(int minIndex, final ConsolidatedRegion region) {
+        return indexOf(minIndex,
+                copyNumber -> copyNumber.chromosome().equals(region.chromosome()) && copyNumber.end() == region.end());
+
+    }
+
+    private int indexOf(int minIndex, Predicate<FittedCopyNumber> predicate) {
         for (int i = minIndex; i < copyNumbers.size(); i++) {
             FittedCopyNumber copyNumber = copyNumbers.get(i);
-            if (copyNumber.chromosome().equals(region.chromosome()) && copyNumber.end() == region.end()) {
+            if (predicate.test(copyNumber)) {
                 return i;
             }
         }
@@ -121,11 +133,19 @@ class SmoothedRegions {
         return maxIndex;
     }
 
+    private boolean isDiploid(FittedCopyNumber copyNumber) {
+        return Doubles.greaterOrEqual(copyNumber.normalCNVRatio(), DIPLOID_MIN_RATIO) && Doubles.lessOrEqual(
+                copyNumber.normalCNVRatio(), DIPLOID_MAX_RATIO);
+    }
+
+
     private boolean isSimilar(FittedCopyNumber copyNumber, ConsolidatedRegionBuilder builder) {
 
-        // Discard non-diploid events
-        if (Doubles.lessThan(copyNumber.normalCNVRatio(), 0.75) || Doubles.greaterThan(copyNumber.normalCNVRatio(),
-                1.25)) {
+        if (!builder.chromosome().equals(copyNumber.chromosome())) {
+            return false;
+        }
+
+        if (!isDiploid(copyNumber)) {
             return true;
         }
 
