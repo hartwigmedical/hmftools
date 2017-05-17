@@ -61,7 +61,15 @@ class DatabaseWriter {
 
     void writeSomaticVariants(@NotNull final String sampleId,
             @NotNull final List<SomaticVariantData> somaticVariants) {
-        somaticVariants.forEach(somaticVariantData -> writeSomaticVariantData(sampleId, somaticVariantData));
+        final Record limsRecord = context.select(LIMSBIOPSIES.PATIENTID).from(LIMSBIOPSIES).where(
+                LIMSBIOPSIES.SAMPLEID.eq(sampleId)).fetchOne();
+        if (limsRecord != null) {
+            final int patientId = limsRecord.getValue(LIMSBIOPSIES.PATIENTID);
+            somaticVariants.forEach(
+                    somaticVariantData -> writeSomaticVariantData(patientId, sampleId, somaticVariantData));
+        } else {
+            LOGGER.warn(sampleId + ": was not found in table " + LIMSBIOPSIES.getName());
+        }
     }
 
     void writeClinicalData(@NotNull final Patient patient) {
@@ -127,20 +135,13 @@ class DatabaseWriter {
 
     }
 
-    private void writeSomaticVariantData(@NotNull final String sampleId,
+    private void writeSomaticVariantData(final int patientId, @NotNull final String sampleId,
             @NotNull final SomaticVariantData somaticVariantData) {
-        final Record limsRecord = context.select(LIMSBIOPSIES.PATIENTID).from(LIMSBIOPSIES).where(
-                LIMSBIOPSIES.SAMPLEID.eq(sampleId)).fetchOne();
-        if (limsRecord != null) {
-            final int patientId = limsRecord.getValue(LIMSBIOPSIES.PATIENTID);
-            context.insertInto(SOMATICVARIANTS, SOMATICVARIANTS.GENE, SOMATICVARIANTS.POSITION, SOMATICVARIANTS.REF,
-                    SOMATICVARIANTS.ALT, SOMATICVARIANTS.COSMICID, SOMATICVARIANTS.TOTALREADCOUNT,
-                    SOMATICVARIANTS.ALLELEREADCOUNT, SOMATICVARIANTS.PATIENTID, SOMATICVARIANTS.SAMPLEID).values(
-                    somaticVariantData.gene(), somaticVariantData.position(), somaticVariantData.ref(),
-                    somaticVariantData.alt(), somaticVariantData.cosmicID(), somaticVariantData.totalReadCount(),
-                    somaticVariantData.alleleReadCount(), patientId, sampleId).execute();
-        } else {
-            LOGGER.warn(sampleId + ": was not found in table " + LIMSBIOPSIES.getName());
-        }
+        context.insertInto(SOMATICVARIANTS, SOMATICVARIANTS.GENE, SOMATICVARIANTS.POSITION, SOMATICVARIANTS.REF,
+                SOMATICVARIANTS.ALT, SOMATICVARIANTS.COSMICID, SOMATICVARIANTS.TOTALREADCOUNT,
+                SOMATICVARIANTS.ALLELEREADCOUNT, SOMATICVARIANTS.PATIENTID, SOMATICVARIANTS.SAMPLEID).values(
+                somaticVariantData.gene(), somaticVariantData.position(), somaticVariantData.ref(),
+                somaticVariantData.alt(), somaticVariantData.cosmicID(), somaticVariantData.totalReadCount(),
+                somaticVariantData.alleleReadCount(), patientId, sampleId).execute();
     }
 }
