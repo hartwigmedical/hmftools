@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.freec.FreecCopyNumber;
-import org.immutables.value.Value;
-
 import java.io.Serializable;
 
-@Value.Style(allParameters = true)
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.freec.FreecCopyNumber;
+
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 @Value.Immutable
+@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class})
 public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
     public abstract int bafCount();
@@ -29,6 +32,14 @@ public abstract class FittedCopyNumber implements CopyNumber, Serializable {
     public abstract double normalCNVRatio();
 
     public abstract double cnvDeviation();
+
+    public abstract double ratioOfRatios();
+
+    public abstract double megaRatioOfRatios();
+
+    public abstract double avgRatioOfRatios();
+
+    public abstract double avgBAF();
 
     public abstract String genotype();
 

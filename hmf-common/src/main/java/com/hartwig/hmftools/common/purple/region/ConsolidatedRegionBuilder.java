@@ -1,4 +1,7 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.common.purple.region;
+
+import com.hartwig.hmftools.common.purple.FittedCopyNumber;
+import com.hartwig.hmftools.common.purple.ImmutableConsolidatedRegion;
 
 class ConsolidatedRegionBuilder {
 
@@ -21,16 +24,15 @@ class ConsolidatedRegionBuilder {
         extendRegion(copyNumber);
     }
 
-
-    public double averageBAF() {
+    double averageBAF() {
         return sumWeightedBAF / weight;
     }
 
-    public double averageRatioOfRatios() {
+    double averageRatioOfRatios() {
         return sumWeightedRatioOfRatios / weight;
     }
 
-    public void extendRegion(FittedCopyNumber value) {
+    void extendRegion(FittedCopyNumber value) {
         assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
 
         start = Math.min(value.start(), start);

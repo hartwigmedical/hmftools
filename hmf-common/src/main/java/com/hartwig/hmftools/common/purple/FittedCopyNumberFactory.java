@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 public class FittedCopyNumberFactory {
 
@@ -34,7 +35,11 @@ public class FittedCopyNumberFactory {
                 .bafCount(copyNumber.mBAFCount())
                 .actualBAF(actualBAF)
                 .tumorCNVRatio(actualRatio)
-                .normalCNVRatio(copyNumber.normalRatio());
+                .normalCNVRatio(copyNumber.normalRatio())
+                .megaRatioOfRatios(0)
+                .avgBAF(0)
+                .avgRatioOfRatios(0)
+                .ratioOfRatios(Doubles.replaceNaNWithZero(actualRatio / copyNumber.normalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelCNVRatio(purity, normFactor, ploidy);
