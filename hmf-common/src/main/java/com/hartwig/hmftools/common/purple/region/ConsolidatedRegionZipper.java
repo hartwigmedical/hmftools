@@ -46,9 +46,11 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
     public static List<FittedCopyNumber> insertSmoothRegions(List<ConsolidatedRegion> megaRegions,
             List<FittedCopyNumber> copyNumbers) {
 
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder().from(
-                copyNumber).avgBAF(consolidatedRegion.averageBAF()).avgRatioOfRatios(
-                consolidatedRegion.averageRatioOfRatios()).build();
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
+                .from(copyNumber)
+                .segmentBAF(consolidatedRegion.averageBAF())
+                .segmentRatioOfRatios(consolidatedRegion.averageRatioOfRatios())
+                .build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);
         RegionZipper.zip(megaRegions, copyNumbers, myThing);
@@ -58,8 +60,11 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
     public static List<FittedCopyNumber> insertBroadRegions(List<ConsolidatedRegion> megaRegions,
             List<FittedCopyNumber> copyNumbers) {
 
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder().from(
-                copyNumber).megaRatioOfRatios(consolidatedRegion.averageRatioOfRatios()).build();
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
+                .from(copyNumber)
+                .broadBAF(consolidatedRegion.averageBAF())
+                .broadRatioOfRatios(consolidatedRegion.averageRatioOfRatios())
+                .build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);
         RegionZipper.zip(megaRegions, copyNumbers, myThing);

@@ -13,6 +13,7 @@ class BroadRegions {
 
     private static final int MIN_BAF_COUNT = 50;
     private static final double MAX_RATIO_DEVIATION = 0.25;
+    private static final double MAX_BAF_DEVIATION = 0.25;
 
     @NotNull
     private final List<ConsolidatedRegion> result = Lists.newArrayList();
@@ -58,7 +59,12 @@ class BroadRegions {
     private boolean isLargeDeviation(@NotNull FittedCopyNumber current) {
         assert builder != null;
 
-        return !Doubles.isZero(current.ratioOfRatios()) && Doubles.greaterThan(
-                Math.abs(current.ratioOfRatios() - builder.averageRatioOfRatios()), MAX_RATIO_DEVIATION);
+        double ratioDeviation = Math.abs(current.ratioOfRatios() - builder.averageRatioOfRatios());
+        if (!Doubles.isZero(current.ratioOfRatios()) && Doubles.greaterThan(ratioDeviation, MAX_RATIO_DEVIATION)) {
+            return true;
+        }
+
+        double bafDeviation = Math.abs(current.actualBAF() - builder.averageBAF());
+        return Doubles.greaterThan(bafDeviation, MAX_BAF_DEVIATION);
     }
 }

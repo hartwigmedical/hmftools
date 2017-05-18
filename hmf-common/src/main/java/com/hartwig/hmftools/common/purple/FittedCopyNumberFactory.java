@@ -36,9 +36,11 @@ public class FittedCopyNumberFactory {
                 .actualBAF(actualBAF)
                 .tumorCNVRatio(actualRatio)
                 .normalCNVRatio(copyNumber.normalRatio())
-                .megaRatioOfRatios(0)
-                .avgBAF(0)
-                .avgRatioOfRatios(0)
+                .broadBAF(0)
+                .broadRatioOfRatios(0)
+                .segmentBAF(0)
+                .segmentRatioOfRatios(0)
+                .normalisedTumorRatio(actualRatio / normFactor * 2d)
                 .ratioOfRatios(Doubles.replaceNaNWithZero(actualRatio / copyNumber.normalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {

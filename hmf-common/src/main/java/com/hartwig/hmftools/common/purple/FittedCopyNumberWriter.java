@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+
+import org.jetbrains.annotations.NotNull;
 
 public enum FittedCopyNumberWriter {
     ;
@@ -39,7 +40,12 @@ public enum FittedCopyNumberWriter {
                 .append("normalCNVRatio").append('\t')
                 .append("modelCNVRatio").append('\t')
                 .append("cnvDeviation").append('\t')
-                .append("deviation")
+                .append("deviation").append('\t')
+                .append("ratioOfRatios").append('\t')
+                .append("broadRatioOfRatios").append('\t')
+                .append("broadBAF").append('\t')
+                .append("segmentRatio").append('\t')
+                .append("segmentBAF")
                 .toString();
     }
 
@@ -61,7 +67,12 @@ public enum FittedCopyNumberWriter {
                 .append(copyNumber.normalCNVRatio()).append('\t')
                 .append(copyNumber.modelCNVRatio()).append('\t')
                 .append(copyNumber.cnvDeviation()).append('\t')
-                .append(copyNumber.deviation())
+                .append(copyNumber.deviation()).append('\t')
+                .append(copyNumber.ratioOfRatios()).append('\t')
+                .append(copyNumber.broadRatioOfRatios()).append('\t')
+                .append(copyNumber.broadBAF()).append('\t')
+                .append(copyNumber.segmentRatioOfRatios()).append('\t')
+                .append(copyNumber.segmentBAF())
                 .toString();
 
     }
