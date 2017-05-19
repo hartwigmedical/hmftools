@@ -19,7 +19,7 @@ public class MergeRegionBreaksTest {
         ConsolidatedRegion region2 = create(CHROM1, 10001, 11001, 0.31, 4.3);
         ConsolidatedRegion region3 = create(CHROM1, 11002, 20000, 0.32, 5);
 
-        List<ConsolidatedRegion> regions = MergeRegionBreaks.doStuff(Lists.newArrayList(region1, region2, region3));
+        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(Lists.newArrayList(region1, region2, region3));
         assertEquals(3, regions.size());
         assertRegion(region1, regions.get(0));
         assertRegion(region2, regions.get(1));
@@ -33,7 +33,7 @@ public class MergeRegionBreaksTest {
         ConsolidatedRegion region2 = create(CHROM1, 10001, 11000, 0.31, 4.3);
         ConsolidatedRegion region3 = create(CHROM1, 11001, 20000, 0.32, 5);
 
-        List<ConsolidatedRegion> regions = MergeRegionBreaks.doStuff(Lists.newArrayList(region0, region1, region2, region3));
+        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(Lists.newArrayList(region0, region1, region2, region3));
         assertEquals(3, regions.size());
         assertRegion(region0, regions.get(0));
         assertRegion(create(CHROM1, 5001, 11000, 0.3, 4), regions.get(1));
@@ -47,7 +47,7 @@ public class MergeRegionBreaksTest {
         ConsolidatedRegion region3 = create(CHROM1, 11001, 20000, 0.32, 4);
         ConsolidatedRegion region4 = create(CHROM1, 20001, 30000, 0.32, 4.1);
 
-        List<ConsolidatedRegion> regions = MergeRegionBreaks.doStuff(Lists.newArrayList(region1, region2, region3, region4));
+        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(Lists.newArrayList(region1, region2, region3, region4));
         assertEquals(3, regions.size());
         assertRegion(region1, regions.get(0));
         assertRegion(create(CHROM1, 10001, 20000, 0.32, 4), regions.get(1));
@@ -60,7 +60,7 @@ public class MergeRegionBreaksTest {
         ConsolidatedRegion region2 = create(CHROM1, 10001, 11000, 0.31, 4.7);
         ConsolidatedRegion region3 = create(CHROM1, 11001, 20000, 0.32, 4);
 
-        List<ConsolidatedRegion> regions = MergeRegionBreaks.doStuff(Lists.newArrayList(region1, region2, region3));
+        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(Lists.newArrayList(region1, region2, region3));
         assertEquals(2, regions.size());
         assertRegion(create(CHROM1, 1, 11000, 0.3, 5), regions.get(0));
         assertRegion(region3, regions.get(1));
@@ -72,7 +72,7 @@ public class MergeRegionBreaksTest {
         ConsolidatedRegion region2 = create(CHROM1, 10001, 11000, 0.31, 4.7);
         ConsolidatedRegion region3 = create(CHROM1, 11001, 20000, 0.32, 5);
 
-        List<ConsolidatedRegion> regions = MergeRegionBreaks.doStuff(Lists.newArrayList(region1, region2, region3));
+        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(Lists.newArrayList(region1, region2, region3));
         assertEquals(2, regions.size());
         assertRegion(region1, regions.get(0));
         assertRegion(create(CHROM1, 10001, 20000, 0.32, 5), regions.get(1));

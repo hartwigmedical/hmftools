@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple;
 import java.io.Serializable;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.freec.FreecCopyNumber;
+import com.hartwig.hmftools.common.freec.FreecStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +45,5 @@ public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
     public abstract double segmentBAF();
 
-    public abstract String genotype();
-
-    public abstract FreecCopyNumber.Status status();
+    public abstract FreecStatus status();
 }

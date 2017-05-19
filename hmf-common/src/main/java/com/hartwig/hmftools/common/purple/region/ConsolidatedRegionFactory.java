@@ -18,11 +18,6 @@ public class ConsolidatedRegionFactory {
 
     public static List<ConsolidatedRegion> smooth(List<FittedCopyNumber> copyNumbers,
             List<ConsolidatedRegion> broadRegions) {
-        return new SmoothedRegions(copyNumbers).smooth(broadRegions);
-    }
-
-    public static List<ConsolidatedRegion> smooth2(List<FittedCopyNumber> copyNumbers,
-            List<ConsolidatedRegion> broadRegions) {
 
         final List<ConsolidatedRegion> result = Lists.newArrayList();
 
@@ -33,13 +28,18 @@ public class ConsolidatedRegionFactory {
 
         for (String orderedChromosome : orderedChromosomes) {
 
-            final List<FittedCopyNumber> chromosomeCopyNumbers = copyNumbers.stream().filter(
-                    matchesChromosome(orderedChromosome)).collect(toList());
-            final List<ConsolidatedRegion> chromosomeBroadRegions = broadRegions.stream().filter(
-                    matchesChromosome(orderedChromosome)).collect(toList());
+            final List<FittedCopyNumber> chromosomeCopyNumbers = copyNumbers.stream()
+                    .filter(matchesChromosome(orderedChromosome))
+                    .collect(toList());
 
-            result.addAll(new ChromosomeSmoothedRegion(orderedChromosome, chromosomeBroadRegions,
-                    chromosomeCopyNumbers).getSmoothedRegions());
+            final List<ConsolidatedRegion> chromosomeBroadRegions = broadRegions.stream()
+                    .filter(matchesChromosome(orderedChromosome))
+                    .collect(toList());
+
+            final List<ConsolidatedRegion> smoothRegions = new SmoothedRegions(chromosomeBroadRegions,
+                    chromosomeCopyNumbers).getSmoothedRegions();
+
+            result.addAll(MergeRegionBreaks.merge(smoothRegions));
         }
 
         return result;

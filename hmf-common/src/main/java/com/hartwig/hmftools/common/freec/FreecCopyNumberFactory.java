@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.common.freec;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 public enum FreecCopyNumberFactory {
     ;
@@ -64,7 +65,7 @@ public enum FreecCopyNumberFactory {
         }
 
         if (values.length > STATUS_COLUMN) {
-            builder.status(FreecCopyNumber.Status.valueOf(values[STATUS_COLUMN].trim().toUpperCase()));
+            builder.status(FreecStatus.valueOf(values[STATUS_COLUMN].trim().toUpperCase()));
         }
 
         return builder.build();

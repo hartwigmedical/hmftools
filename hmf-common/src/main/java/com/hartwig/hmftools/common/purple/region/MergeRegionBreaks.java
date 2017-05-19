@@ -13,11 +13,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
-public class MergeRegionBreaks {
+class MergeRegionBreaks {
 
     private static final long MIN_SIZE = 1000;
 
-    public static List<ConsolidatedRegion> doStuff(List<ConsolidatedRegion> region) {
+    static List<ConsolidatedRegion> merge(List<ConsolidatedRegion> region) {
 
         List<ConsolidatedRegion> results = Lists.newArrayList();
 

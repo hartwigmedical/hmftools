@@ -7,12 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class})
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class FreecCopyNumber implements CopyNumber {
-
-    public enum Status {
-        GERMLINE, SOMATIC, UNKNOWN
-    }
 
     @Value.Default
     public String genotype() {
@@ -20,7 +16,7 @@ public abstract class FreecCopyNumber implements CopyNumber {
     }
 
     @Value.Default
-    public Status status() {
-        return Status.UNKNOWN;
+    public FreecStatus status() {
+        return FreecStatus.UNKNOWN;
     }
 }

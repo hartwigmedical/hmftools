@@ -1,20 +1,21 @@
 package com.hartwig.hmftools.common.purple;
 
+import java.util.List;
+import java.util.function.Consumer;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.freec.FreecCopyNumber;
 import com.hartwig.hmftools.common.freec.ImmutableFreecCopyNumber;
-
-import java.util.List;
-import java.util.function.Consumer;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 public enum PadCopyNumber {
     ;
 
-    public static List<FreecCopyNumber> pad(List<FreecCopyNumber> copyNumbers) {
+    public static List<GenomeRegion> pad(List<GenomeRegion> copyNumbers) {
         PadCopyNumberForChromosome padder = null;
-        List<FreecCopyNumber> result = Lists.newArrayList();
-        for (FreecCopyNumber copyNumber : copyNumbers) {
+        List<GenomeRegion> result = Lists.newArrayList();
+        for (GenomeRegion copyNumber : copyNumbers) {
             if (padder == null) {
                 padder = new PadCopyNumberForChromosome(copyNumber.chromosome(), result::add);
             } else if (!padder.chromosome.equals(copyNumber.chromosome())) {
@@ -30,10 +31,10 @@ public enum PadCopyNumber {
     static class PadCopyNumberForChromosome {
 
         private final String chromosome;
-        private final Consumer<FreecCopyNumber> handler;
+        private final Consumer<GenomeRegion> handler;
         private long currentPosition = 1;
 
-        PadCopyNumberForChromosome(String chromosome, Consumer<FreecCopyNumber> handler) {
+        PadCopyNumberForChromosome(String chromosome, Consumer<GenomeRegion> handler) {
             this.chromosome = chromosome;
             this.handler = handler;
         }
@@ -42,7 +43,7 @@ public enum PadCopyNumber {
             return chromosome;
         }
 
-        void addCopyNumber(FreecCopyNumber number) {
+        void addCopyNumber(GenomeRegion number) {
             if (number.start() > currentPosition) {
                 handler.accept(createDefaultCopyNumber(currentPosition, number.start() - 1));
             }

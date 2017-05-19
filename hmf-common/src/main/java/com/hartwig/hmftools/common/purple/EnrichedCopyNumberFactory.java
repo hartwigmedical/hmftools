@@ -8,15 +8,15 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.freec.FreecCopyNumber;
 import com.hartwig.hmftools.common.freec.FreecRatio;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.zipper.GenomeZipper;
 import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 
-public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<FreecCopyNumber> {
+public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<GenomeRegion> {
 
     private static final Set<String> GENO_TYPE = Sets.newHashSet("0/1", "0|1");
     private final double minRefAlleleFrequency;
@@ -37,14 +37,14 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Free
         this.maxCombinedDepth = maxCombinedDepth;
     }
 
-    public List<EnrichedCopyNumber> enrich(List<FreecCopyNumber> copyNumbers, List<GermlineVariant> variants,
+    public List<EnrichedCopyNumber> enrich(List<GenomeRegion> copyNumbers, List<GermlineVariant> variants,
             List<FreecRatio> tumorRatios, List<FreecRatio> normalRatios) {
         baf.reset();
         tumorRatio.reset();
         normalRatio.reset();
         result.clear();
 
-        GenomeZipper<FreecCopyNumber> zipper = new GenomeZipper<>(copyNumbers, this);
+        GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(copyNumbers, this);
         zipper.addPositions(variants, this::variant);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
         zipper.addPositions(normalRatios, normalRatio::accumulate);
@@ -54,20 +54,24 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Free
     }
 
     @Override
-    public void enter(FreecCopyNumber region) {
+    public void enter(GenomeRegion region) {
         baf.reset();
         tumorRatio.reset();
         normalRatio.reset();
     }
 
     @Override
-    public void exit(FreecCopyNumber region) {
+    public void exit(GenomeRegion region) {
         double myTumorRatio = tumorRatio.meanRatio();
         double myNormalRatio = normalRatio.meanRatio();
-        EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder().from(region).status(
-                region.status()).genotype(region.genotype()).mBAFCount(baf.count()).mBAF(baf.medianBaf()).tumorRatio(
-                myTumorRatio).normalRatio(myNormalRatio).ratioOfRatio(
-                replaceNaNWithZero(myTumorRatio / myNormalRatio)).build();
+        EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder()
+                .from(region)
+                .mBAFCount(baf.count())
+                .mBAF(baf.medianBaf())
+                .tumorRatio(myTumorRatio)
+                .normalRatio(myNormalRatio)
+                .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
+                .build();
 
         result.add(copyNumber);
     }

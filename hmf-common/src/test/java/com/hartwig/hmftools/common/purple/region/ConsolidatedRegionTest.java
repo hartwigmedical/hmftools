@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.region;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.freec.FreecCopyNumber;
+import com.hartwig.hmftools.common.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.FittedCopyNumber;
 import com.hartwig.hmftools.common.purple.ImmutableFittedCopyNumber;
 
@@ -76,8 +76,7 @@ public class ConsolidatedRegionTest
                 .modelBAF(0)
                 .tumorCNVRatio(0)
                 .modelCNVRatio(0)
-                .genotype("1/1")
-                .status(FreecCopyNumber.Status.UNKNOWN)
+                .status(FreecStatus.UNKNOWN)
                 .bafDeviation(0)
                 .build();
     }

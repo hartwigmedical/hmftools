@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
+import com.hartwig.hmftools.common.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 public class FittedCopyNumberFactory {
@@ -30,8 +31,7 @@ public class FittedCopyNumberFactory {
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
-                .status(copyNumber.status())
-                .genotype(copyNumber.genotype())
+                .status(FreecStatus.fromNormalRatio(copyNumber.normalRatio()))
                 .bafCount(copyNumber.mBAFCount())
                 .actualBAF(actualBAF)
                 .tumorCNVRatio(actualRatio)

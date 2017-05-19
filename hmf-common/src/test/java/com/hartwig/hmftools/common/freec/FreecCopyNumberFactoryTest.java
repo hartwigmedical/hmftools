@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.common.freec;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.exception.HartwigException;
+
+import org.junit.Test;
 
 public class FreecCopyNumberFactoryTest {
 
@@ -32,7 +33,7 @@ public class FreecCopyNumberFactoryTest {
         assertEquals(2, cnvGain.end());
         assertEquals(3, cnvGain.value());
         assertEquals("AAB", cnvGain.genotype());
-        assertEquals(FreecCopyNumber.Status.GERMLINE, cnvGain.status());
+        assertEquals(FreecStatus.GERMLINE, cnvGain.status());
 
         final FreecCopyNumber cnvLoss = FreecCopyNumberFactory.fromCNVLine(cnvLineLoss);
         assertEquals("1", cnvLoss.chromosome());
@@ -40,7 +41,7 @@ public class FreecCopyNumberFactoryTest {
         assertEquals(2, cnvLoss.end());
         assertEquals(1, cnvLoss.value());
         assertEquals("-", cnvLoss.genotype());
-        assertEquals(FreecCopyNumber.Status.UNKNOWN, cnvLoss.status());
+        assertEquals(FreecStatus.UNKNOWN, cnvLoss.status());
     }
 
     @Test(expected = HartwigException.class)
