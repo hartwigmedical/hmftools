@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.slicing.SlicerFactory.sortedSlicer;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -11,11 +12,10 @@ import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.freec.FreecCopyNumber;
-import com.hartwig.hmftools.common.freec.FreecCopyNumberFactory;
 import com.hartwig.hmftools.common.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.freec.FreecRatio;
 import com.hartwig.hmftools.common.freec.FreecRatioFactory;
+import com.hartwig.hmftools.common.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.EnrichedCopyNumber;
 import com.hartwig.hmftools.common.purple.EnrichedCopyNumberFactory;
@@ -26,6 +26,11 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.FittedPurityWriter;
 import com.hartwig.hmftools.common.purple.PadCopyNumber;
+import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
+import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionFactory;
+import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionWriter;
+import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionZipper;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
@@ -79,19 +84,11 @@ public class PurityPloidyEstimateApplication {
             System.exit(1);
         }
 
-        final FittedCopyNumberFactory fittedCopyNumberFactory = new FittedCopyNumberFactory(
-                MAX_PLOIDY,
+        final FittedCopyNumberFactory fittedCopyNumberFactory = new FittedCopyNumberFactory(MAX_PLOIDY,
                 defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT));
 
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
-                MAX_PLOIDY,
-                MIN_PURITY,
-                MAX_PURITY,
-                PURITY_INCREMENTS,
-                MIN_NORM_FACTOR,
-                MAX_NORM_FACTOR,
-                NORM_FACTOR_INCREMENTS,
-                fittedCopyNumberFactory);
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, MIN_PURITY, MAX_PURITY,
+                PURITY_INCREMENTS, MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedCopyNumberFactory);
 
         LOGGER.info("Loading variant data");
         final String vcfExtention = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
@@ -102,33 +99,41 @@ public class PurityPloidyEstimateApplication {
 
         LOGGER.info("Loading {} Freec data", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        final List<FreecCopyNumber> copyNumbers = PadCopyNumber.pad(FreecCopyNumberFactory.loadFreecCNV(freecDirectory, tumorSample));
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
+        final List<GenomeRegion> regions = PadCopyNumber.pad(FreecRatioRegions.createRegionsFromRatios(tumorRatio));
 
         LOGGER.info("Collating data");
         final EnrichedCopyNumberFactory enrichedCopyNumberFactory = new EnrichedCopyNumberFactory(
-                MIN_REF_ALLELE_FREQUENCY,
-                MAX_REF_ALLELE_FREQUENCY,
-                MIN_COMBINED_DEPTH,
-                MAX_COMBINED_DEPTH);
-        final List<EnrichedCopyNumber> enrichedCopyNumbers = enrichedCopyNumberFactory.enrich(copyNumbers, variants, tumorRatio, normalRatio);
+                MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
+        final List<EnrichedCopyNumber> enrichedCopyNumbers = enrichedCopyNumberFactory.enrich(regions, variants,
+                tumorRatio, normalRatio);
 
         LOGGER.info("Fitting purity");
         final List<FittedPurity> purity = fittedPurityFactory.fitPurity(enrichedCopyNumbers);
         Collections.sort(purity);
 
         if (!purity.isEmpty()) {
-            final String cnvPath = FreecFileLoader.copyNumberPath(freecDirectory, tumorSample);
-            final String purityFile = cnvPath + ".purity";
+            final String purityFile = freecDirectory + File.separator + tumorSample + ".purple.purity";
             LOGGER.info("Writing fitted purity to: {}", purityFile);
             FittedPurityWriter.writePurity(purityFile, purity);
 
-            final String fittedFile = cnvPath + ".fitted";
-            LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
             final FittedPurity bestFit = purity.get(0);
-            final List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(), bestFit.normFactor(), enrichedCopyNumbers);
-            FittedCopyNumberWriter.writeCopyNumber(fittedFile, fittedCopyNumbers);
+            final List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(),
+                    bestFit.normFactor(), enrichedCopyNumbers);
+
+            List<ConsolidatedRegion> broadRegions = ConsolidatedRegionFactory.broad(fittedCopyNumbers);
+            List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedCopyNumbers, broadRegions);
+            final String regionFile = freecDirectory + File.separator + tumorSample + ".purple.regions";
+            ConsolidatedRegionWriter.writeRegions(regionFile, smoothRegions);
+
+            final String fittedFile = freecDirectory + File.separator + tumorSample + ".purple.fitted";
+            LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
+            List<FittedCopyNumber> broadCopyNumber = ConsolidatedRegionZipper.insertBroadRegions(broadRegions,
+                    fittedCopyNumbers);
+            List<FittedCopyNumber> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(smoothRegions,
+                    broadCopyNumber);
+            FittedCopyNumberWriter.writeCopyNumber(fittedFile, smoothCopyNumbers);
         }
 
         LOGGER.info("Complete");
@@ -148,7 +153,8 @@ public class PurityPloidyEstimateApplication {
         return defaultValue;
     }
 
-    private static List<GermlineVariant> variants(CommandLine cmd, VCFGermlineFile file) throws IOException, EmptyFileException {
+    private static List<GermlineVariant> variants(CommandLine cmd, VCFGermlineFile file)
+            throws IOException, EmptyFileException {
 
         final Predicate<Variant> filterPredicate = x -> x.filter().equals("PASS") || x.filter().equals(".");
         final Predicate<GenomePosition> slicerPredicate;
@@ -160,7 +166,10 @@ public class PurityPloidyEstimateApplication {
             slicerPredicate = x -> true;
         }
 
-        return file.variants().stream().filter(x -> filterPredicate.test(x) && slicerPredicate.test(x)).collect(toList());
+        return file.variants()
+                .stream()
+                .filter(x -> filterPredicate.test(x) && slicerPredicate.test(x))
+                .collect(toList());
     }
 
     private static String freecDirectory(CommandLine cmd, String runDirectory, String refSample, String tumorSample) {
@@ -174,7 +183,8 @@ public class PurityPloidyEstimateApplication {
         final Options options = new Options();
 
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
-        options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
+        options.addOption(FREEC_DIRECTORY, true,
+                "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
         options.addOption(VCF_EXTENSION, true, "VCF file extension. Defaults to " + VCF_EXTENSION_DEFAULT);
         options.addOption(BED_FILE, true, "BED file to optionally slice variants with");
         options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling");
