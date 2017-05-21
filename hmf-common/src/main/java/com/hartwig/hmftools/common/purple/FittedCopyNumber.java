@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class})
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class})
 public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
     public abstract int bafCount();
@@ -25,11 +25,11 @@ public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
     public abstract double bafDeviation();
 
-    public abstract double tumorCNVRatio();
+    public abstract double normalRatio();
 
-    public abstract double modelCNVRatio();
+    public abstract double observedTumorRatio();
 
-    public abstract double normalCNVRatio();
+    public abstract double modelTumorRatio();
 
     public abstract double cnvDeviation();
 

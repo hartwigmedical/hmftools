@@ -173,8 +173,8 @@ class SmoothedRegions {
     }
 
     private boolean isDiploid(FittedCopyNumber copyNumber) {
-        return Doubles.greaterOrEqual(copyNumber.normalCNVRatio(), DIPLOID_MIN_RATIO) && Doubles.lessOrEqual(
-                copyNumber.normalCNVRatio(), DIPLOID_MAX_RATIO);
+        return Doubles.greaterOrEqual(copyNumber.normalRatio(), DIPLOID_MIN_RATIO) && Doubles.lessOrEqual(
+                copyNumber.normalRatio(), DIPLOID_MAX_RATIO);
     }
 
     private int indexOfEnd(int minIndex, ConsolidatedRegion region) {

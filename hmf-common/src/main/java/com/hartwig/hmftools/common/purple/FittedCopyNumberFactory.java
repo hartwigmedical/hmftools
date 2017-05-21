@@ -26,25 +26,25 @@ public class FittedCopyNumberFactory {
 
         double minDeviation = 0;
         double observedBAF = copyNumber.mBAF();
-        double actualRatio = copyNumber.tumorRatio();
+        double observedRatio = copyNumber.tumorRatio();
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
                 .status(FreecStatus.fromNormalRatio(copyNumber.normalRatio()))
                 .bafCount(copyNumber.mBAFCount())
                 .observedBAF(observedBAF)
-                .tumorCNVRatio(actualRatio)
-                .normalCNVRatio(copyNumber.normalRatio())
+                .observedTumorRatio(observedRatio)
+                .normalRatio(copyNumber.normalRatio())
                 .broadBAF(0)
                 .broadRatioOfRatios(0)
                 .segmentBAF(0)
                 .segmentRatioOfRatios(0)
-                .normalisedTumorRatio(actualRatio / normFactor * 2d)
-                .ratioOfRatios(Doubles.replaceNaNWithZero(actualRatio / copyNumber.normalRatio() / normFactor * 2));
+                .normalisedTumorRatio(observedRatio / normFactor * 2d)
+                .ratioOfRatios(Doubles.replaceNaNWithZero(observedRatio / copyNumber.normalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelCNVRatio(purity, normFactor, ploidy);
-            double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, actualRatio);
+            double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedRatio);
 
             double modelBAF = copyNumber.mBAFCount() == 0 ? 0 : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
             double bafDeviation = bafDeviation(modelBAF, observedBAF);
@@ -54,7 +54,7 @@ public class FittedCopyNumberFactory {
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
                         .modelBAF(modelBAF)
-                        .modelCNVRatio(modelRatio)
+                        .modelTumorRatio(modelRatio)
                         .bafDeviation(bafDeviation)
                         .cnvDeviation(cnvDeviation)
                         .deviation(deviation);
