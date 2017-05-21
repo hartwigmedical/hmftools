@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.replaceNaNWithZero;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -70,7 +68,6 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Geno
                 .mBAF(baf.medianBaf())
                 .tumorRatio(myTumorRatio)
                 .normalRatio(myNormalRatio)
-                .ratioOfRatio(replaceNaNWithZero(myTumorRatio / myNormalRatio))
                 .build();
 
         result.add(copyNumber);

@@ -25,7 +25,16 @@ public class FittedCopyNumberFactoryTest {
     }
 
     private EnrichedCopyNumber create(double baf, double ratio) {
-        return ImmutableEnrichedCopyNumber.of(baf, 1, ratio, 0, 0,0, "1", 1, 2, null);
+        return ImmutableEnrichedCopyNumber.builder()
+                .mBAF(baf)
+                .mBAFCount(1)
+                .value(1)
+                .chromosome("1")
+                .start(1)
+                .end(2)
+                .tumorRatio(ratio)
+                .normalRatio(1)
+                .build();
     }
 
     @Test
