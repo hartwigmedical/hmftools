@@ -26,14 +26,14 @@ class SmoothedRegions {
         this.broadRegions = broadRegions;
         this.copyNumbers = copyNumbers;
 
-        doStuff();
+        run();
     }
 
     List<ConsolidatedRegion> getSmoothedRegions() {
         return smoothedRegions;
     }
 
-    private void doStuff() {
+    private void run() {
 
         if (!broadRegions.isEmpty()) {
 
@@ -49,7 +49,7 @@ class SmoothedRegions {
                 // Start new builder
                 currentBuilder = new ConsolidatedRegionBuilder(copyNumbers.get(startOfRegionIndex));
 
-                // Go backwards to previous end (+1)
+                // Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
 
                 // Go forwards to end of region
@@ -72,7 +72,7 @@ class SmoothedRegions {
     private int forwardsUntilDifferent(int startIndex, int endIndex, ConsolidatedRegionBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedCopyNumber copyNumber = copyNumbers.get(i);
-            if (isAlmostSimilar(copyNumber, builder)) {
+            if (isSimilar(copyNumber, builder)) {
                 builder.extendRegion(copyNumber);
             } else {
                 return i - 1;
@@ -85,7 +85,7 @@ class SmoothedRegions {
     private ConsolidatedRegionBuilder forwards(int startIndex, int endIndex, ConsolidatedRegionBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedCopyNumber copyNumber = copyNumbers.get(i);
-            if (isVerySimilar(copyNumber, builder)) {
+            if (isSimilar(copyNumber, builder)) {
                 builder.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(builder.build());
@@ -104,7 +104,7 @@ class SmoothedRegions {
         for (int i = startIndex; i >= endIndex; i--) {
 
             FittedCopyNumber copyNumber = copyNumbers.get(i);
-            if (isVerySimilar(copyNumber, reverseBuilder)) {
+            if (isSimilar(copyNumber, reverseBuilder)) {
                 reverseBuilder.extendRegion(copyNumber);
             } else {
                 if (reverseBuilder != forwardBuilder) {
@@ -121,14 +121,6 @@ class SmoothedRegions {
 
         smoothedRegions.addAll(preRegions);
         return forwardBuilder;
-    }
-
-    private boolean isVerySimilar(FittedCopyNumber copyNumber, ConsolidatedRegionBuilder builder) {
-        return isSimilar(copyNumber, builder);
-    }
-
-    private boolean isAlmostSimilar(FittedCopyNumber copyNumber, ConsolidatedRegionBuilder builder) {
-        return isSimilar(copyNumber, builder);
     }
 
     private boolean isSimilar(FittedCopyNumber copyNumber, ConsolidatedRegionBuilder builder) {
@@ -203,5 +195,4 @@ class SmoothedRegions {
 
         throw new IllegalArgumentException();
     }
-
 }

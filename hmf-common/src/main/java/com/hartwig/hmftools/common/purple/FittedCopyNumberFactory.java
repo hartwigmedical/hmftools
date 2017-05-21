@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.copynumber.CopyNumberAlteration;
 import com.hartwig.hmftools.common.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
@@ -68,7 +67,7 @@ public class FittedCopyNumberFactory {
 
     @VisibleForTesting
     static double modelCNVRatio(double purity, double normFactor, int ploidy) {
-        return normFactor + (ploidy - CopyNumberAlteration.NORMAL_HUMAN_COPY_NUMBER) * purity * normFactor / 2d;
+        return normFactor + (ploidy - 2) * purity * normFactor / 2d;
     }
 
     @VisibleForTesting
