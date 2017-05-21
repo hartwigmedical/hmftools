@@ -40,7 +40,7 @@ class ConsolidatedRegionBuilder {
 
 
         double ratio = value.ratioOfRatios();
-        double baf = value.actualBAF();
+        double baf = value.observedBAF();
 
         if (value.bafCount() > 0) {
 

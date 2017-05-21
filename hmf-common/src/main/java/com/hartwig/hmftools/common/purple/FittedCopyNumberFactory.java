@@ -25,14 +25,14 @@ public class FittedCopyNumberFactory {
     FittedCopyNumber fittedCopyNumber(double purity, double normFactor, EnrichedCopyNumber copyNumber) {
 
         double minDeviation = 0;
-        double actualBAF = copyNumber.mBAF();
+        double observedBAF = copyNumber.mBAF();
         double actualRatio = copyNumber.tumorRatio();
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
                 .status(FreecStatus.fromNormalRatio(copyNumber.normalRatio()))
                 .bafCount(copyNumber.mBAFCount())
-                .actualBAF(actualBAF)
+                .observedBAF(observedBAF)
                 .tumorCNVRatio(actualRatio)
                 .normalCNVRatio(copyNumber.normalRatio())
                 .broadBAF(0)
@@ -46,10 +46,10 @@ public class FittedCopyNumberFactory {
             double modelRatio = modelCNVRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, actualRatio);
 
-            double modelBAF = copyNumber.mBAFCount() == 0 ? 0 : modelBAFToMinimizeDeviation(purity, ploidy, actualBAF);
-            double bafDeviation = bafDeviation(modelBAF, actualBAF);
+            double modelBAF = copyNumber.mBAFCount() == 0 ? 0 : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+            double bafDeviation = bafDeviation(modelBAF, observedBAF);
 
-            double deviation = Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * actualBAF;
+            double deviation = Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)

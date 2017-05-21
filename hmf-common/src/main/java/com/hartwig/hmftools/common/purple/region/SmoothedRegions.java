@@ -138,7 +138,7 @@ class SmoothedRegions {
         }
 
         if (bafCount > 0 && !Doubles.isZero(builder.averageBAF())) {
-            double bafDeviation = Math.abs(copyNumber.actualBAF() - builder.averageBAF());
+            double bafDeviation = Math.abs(copyNumber.observedBAF() - builder.averageBAF());
             if (Doubles.greaterThan(bafDeviation, allowedBAFDeviation(bafCount))) {
                 return false;
             }

@@ -64,7 +64,7 @@ class BroadRegions {
             return true;
         }
 
-        double bafDeviation = Math.abs(current.actualBAF() - builder.averageBAF());
+        double bafDeviation = Math.abs(current.observedBAF() - builder.averageBAF());
         return Doubles.greaterThan(bafDeviation, MAX_BAF_DEVIATION);
     }
 }
