@@ -14,7 +14,7 @@ class HighConfidenceRegions {
 
     private static final int MIN_BAF_COUNT = 50;
     private static final double MAX_BAF_DEVIATION = 0.03;
-    private static final double MAX_COPY_NUMBER_DEVIATION = 0.25;
+    private static final double MAX_COPY_NUMBER_DEVIATION = 0.30;
 
     @NotNull
     private final List<ConsolidatedRegion> result = Lists.newArrayList();

@@ -19,8 +19,8 @@ class SmoothedRegions {
     private static final double DIPLOID_MIN_RATIO = 0.75;
     private static final double DIPLOID_MAX_RATIO = 1.25;
 
-    private static final double MIN_RATIO_RANGE = 0.25;
-    private static final double MAX_RATIO_RANGE = 1.25;
+    private static final double MIN_COPY_NUMBER_RANGE = 0.3;
+    private static final double MAX_COPY_NUMBER_RANGE = 1.3;
 
     SmoothedRegions(final List<ConsolidatedRegion> broadRegions, final List<FittedCopyNumber> copyNumbers) {
         this.broadRegions = broadRegions;
@@ -61,7 +61,8 @@ class SmoothedRegions {
                     smoothedRegions.add(currentBuilder.build());
                 } else {
                     int nextStartIndex = indexOfStart(endOfRegionIndex + 1, broadRegions.get(i + 1));
-                    largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1, currentBuilder);
+                    largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1,
+                            currentBuilder);
                     smoothedRegions.add(currentBuilder.build());
                 }
 
@@ -96,7 +97,8 @@ class SmoothedRegions {
         return builder;
     }
 
-    private ConsolidatedRegionBuilder backwards(int startIndex, int endIndex, ConsolidatedRegionBuilder forwardBuilder) {
+    private ConsolidatedRegionBuilder backwards(int startIndex, int endIndex,
+            ConsolidatedRegionBuilder forwardBuilder) {
 
         final Deque<ConsolidatedRegion> preRegions = new ArrayDeque<>();
         ConsolidatedRegionBuilder reverseBuilder = forwardBuilder;
@@ -131,7 +133,8 @@ class SmoothedRegions {
         }
 
         double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        double refNormalisedCopyNumberDeviation = Math.abs(copyNumber.refNormalisedCopyNumber() - builder.averageRefNormalisedCopyNumber());
+        double refNormalisedCopyNumberDeviation = Math.abs(
+                copyNumber.refNormalisedCopyNumber() - builder.averageRefNormalisedCopyNumber());
         double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
         if (Doubles.greaterThan(copyNumberDeviation, allowedCopyNumberDeviation(bafCount))) {
             return false;
@@ -144,32 +147,19 @@ class SmoothedRegions {
             }
         }
 
-
         return true;
     }
 
     static double allowedBAFDeviation(int bafCount) {
-        if (bafCount >= 30) {
-            return 0.03;
-        }
-
-        if (bafCount >= 10) {
-            return 0.06 - 0.001 * bafCount;
-        }
-
-        if (bafCount >= 2) {
-            return -0.0311 * Math.log(bafCount * 0.018);
-        }
-
-        return 0.15;
+        return 1d / Math.pow(Math.max(1, bafCount), 0.95) * 0.38 + 0.022;
     }
 
     static double allowedCopyNumberDeviation(int bafCount) {
         if (bafCount >= 10) {
-            return MIN_RATIO_RANGE;
+            return MIN_COPY_NUMBER_RANGE;
         }
-
-        return (MIN_RATIO_RANGE - MAX_RATIO_RANGE) / 10 * bafCount + MAX_RATIO_RANGE;
+        //(0.3 - 1.3)/10 * x + 1.3
+        return (MIN_COPY_NUMBER_RANGE - MAX_COPY_NUMBER_RANGE) / 10 * bafCount + MAX_COPY_NUMBER_RANGE;
     }
 
     private boolean isDiploid(FittedCopyNumber copyNumber) {
