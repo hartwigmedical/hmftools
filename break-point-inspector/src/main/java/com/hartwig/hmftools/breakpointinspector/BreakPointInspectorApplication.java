@@ -31,8 +31,8 @@ public class BreakPointInspectorApplication {
     private static final String PROXIMITY = "proximity";
     private static final String SV_LEN = "svlen";
 
-    private static final String INCLUDE_PROPER = "proper";
-    private static final String INCLUDE_FILTERED = "filtered";
+    private static final int MANTA_REQ_PAIR_MIN = 50;
+    private static final int MANTA_REQ_SPLIT_MIN = 15;
 
     private enum ReadCategory {
         UNSET,
@@ -125,8 +125,6 @@ public class BreakPointInspectorApplication {
         options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
         options.addOption(SV_LEN, true, "length of the SV to inspect");
-        options.addOption(INCLUDE_PROPER, false, "include proper reads in output");
-        options.addOption(INCLUDE_FILTERED, false, "included filtered reads in output");
         return options;
     }
 
@@ -148,21 +146,6 @@ public class BreakPointInspectorApplication {
 
     private static boolean isOrientable(final SAMRecord read) {
         return read.getReadPairedFlag() && !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag();
-    }
-
-    @NotNull
-    private static String getOrientationString(final SAMRecord read) {
-        if (isOrientable(read)) {
-            switch (SamPairUtil.getPairOrientation(read)) {
-                case FR:
-                    return "INWARDS";
-                case RF:
-                    return "OUTWARDS";
-                case TANDEM:
-                    return "TANDEM";
-            }
-        }
-        return "UNALIGNED";
     }
 
     private static void printHelpAndExit(final Options options) {
@@ -247,9 +230,20 @@ public class BreakPointInspectorApplication {
         }
     }
 
+    private static class OrientationStats {
+        public int InnieCount = 0;
+        public int OutieCount = 0;
+        public int TandemCount = 0;
+
+        public List<Integer> GetData() {
+            return Arrays.asList(InnieCount, OutieCount, TandemCount);
+        }
+    }
+
     private static class SampleStats {
         public BreakPointStats BP1_Stats = new BreakPointStats();
         public BreakPointStats BP2_Stats = new BreakPointStats();
+        public OrientationStats Orientation = new OrientationStats();
 
         public BreakPointStats Get(final Region r) {
             switch (r) {
@@ -310,8 +304,8 @@ public class BreakPointInspectorApplication {
             }
 
             final boolean clipped = p0.Clipping.Length > 0 || p1.Clipping.Length > 0;
-            final boolean pairPossible = p0.Clipping.Length <= 50 && p1.Clipping.Length <= 50;
-            final boolean splitPossible = p0.Clipping.Length >= 15 || p1.Clipping.Length >= 15;
+            final boolean pairPossible = p0.Clipping.Length <= MANTA_REQ_PAIR_MIN && p1.Clipping.Length <= MANTA_REQ_PAIR_MIN;
+            final boolean splitPossible = p0.Clipping.Length >= MANTA_REQ_SPLIT_MIN || p1.Clipping.Length >= MANTA_REQ_SPLIT_MIN;
 
             final BreakPointStats stats0 = p0.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
             final BreakPointStats stats1 = p1.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
@@ -325,7 +319,7 @@ public class BreakPointInspectorApplication {
                     if (p0.Location == Overlap.CLIP) {
                         if (pairPossible && splitPossible) {
                             stats0.PR_SR_Support++;
-                            stats1.PR_SR_Support++;
+                            stats1.PR_Only_Support++; // the split doesn't confirm the other BP
                         } else if (splitPossible) {
                             stats0.SR_Only_Support++;
                         } else if (pairPossible) {
@@ -334,7 +328,7 @@ public class BreakPointInspectorApplication {
                         }
                     } else if (p1.Location == Overlap.CLIP) {
                         if (pairPossible && splitPossible) {
-                            stats0.PR_SR_Support++;
+                            stats0.PR_Only_Support++; // the split doesn't confirm the other BP
                             stats1.PR_SR_Support++;
                         } else if (splitPossible) {
                             stats1.SR_Only_Support++;
@@ -344,7 +338,19 @@ public class BreakPointInspectorApplication {
                         }
                     }
 
-                    // TODO: should also check orientation
+                    if (isOrientable(p0.Read)) { // should always be?
+                        switch (SamPairUtil.getPairOrientation(p0.Read)) {
+                            case FR:
+                                result.Orientation.InnieCount++;
+                                break;
+                            case RF:
+                                result.Orientation.OutieCount++;
+                                break;
+                            case TANDEM:
+                                result.Orientation.TandemCount++;
+                                break;
+                        }
+                    }
                 }
             } else {
                 // normal
@@ -416,12 +422,12 @@ public class BreakPointInspectorApplication {
 
             } else {
                 // determine type
-                if (read.getSupplementaryAlignmentFlag()) {
+                if (read.getMateUnmappedFlag()) {
+                    info.Category = ReadCategory.MATE_UNMAPPED;
+                } else if (read.getSupplementaryAlignmentFlag()) {
                     info.Category = ReadCategory.CHIMERIC;
                 } else if (read.getNotPrimaryAlignmentFlag()) {
                     info.Category = ReadCategory.SECONDARY;
-                } else if (read.getMateUnmappedFlag()) {
-                    info.Category = ReadCategory.MATE_UNMAPPED;
                 } else if (read.getReadPairedFlag())
                     info.Category = ReadCategory.SPAN;
             }
@@ -437,6 +443,7 @@ public class BreakPointInspectorApplication {
                 info.Location = Overlap.PROXIMITY;
             }
 
+            // if normal read and we don't clip, then it's not interesting
             if (normal && info.Location == Overlap.PROXIMITY)
                 info.Location = Overlap.FILTERED;
         }
@@ -491,14 +498,18 @@ public class BreakPointInspectorApplication {
 
         // begin processing
 
+        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
+                location2);
+        final SampleStats refStats = calculateStats(refResult);
+        refStats.Print("REF_");
+
         final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, queryIntervals, location1,
                 location2);
         final SampleStats tumorStats = calculateStats(tumorResult);
         tumorStats.Print("TUMOR_");
 
-        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
-                location2);
-        final SampleStats refStats = calculateStats(refResult);
-        refStats.Print("REF_");
+        System.out.println("INNIE\tOUTIE\tTANDEM");
+        System.out.println(tumorStats.Orientation.GetData().stream().map(i -> Integer.toString(i)).collect(
+                Collectors.joining("\t")));
     }
 }
