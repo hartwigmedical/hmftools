@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.matchers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -12,6 +12,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
 import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class BiopsyMatcherTest {
@@ -222,6 +223,7 @@ public class BiopsyMatcherTest {
         assertEquals(null, matchedBiopsies.get(1).sampleId());
     }
 
+    @NotNull
     private static Comparator<BiopsyClinicalData> clinicalDataComparator = (o1, o2) -> {
         final LocalDate o1Date = o1.date();
         final LocalDate o2Date = o2.date();
@@ -233,5 +235,4 @@ public class BiopsyMatcherTest {
             return o1Date.compareTo(o2Date);
         }
     };
-
 }

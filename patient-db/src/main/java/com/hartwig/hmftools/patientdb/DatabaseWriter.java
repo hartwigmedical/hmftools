@@ -42,12 +42,6 @@ class DatabaseWriter {
         this.context = DSL.using(conn, SQLDialect.MYSQL);
     }
 
-    void clearSomaticTables() {
-        context.execute("SET FOREIGN_KEY_CHECKS = 0;");
-        context.truncate(SOMATICVARIANTS).execute();
-        context.execute("SET FOREIGN_KEY_CHECKS = 1;");
-    }
-
     void clearClinicalTables() {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENTS).execute();
@@ -132,7 +126,6 @@ class DatabaseWriter {
                 TREATMENTRESPONSES.PATIENTID).values(Utils.toSQLDate(treatmentResponseData.date()),
                 treatmentResponseData.response(), treatmentResponseData.measurementDone(),
                 treatmentResponseData.treatmentId(), patientId).execute();
-
     }
 
     private void writeSomaticVariantData(final int patientId, @NotNull final String sampleId,

@@ -15,8 +15,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class BiopsyMatcher {
+public final class BiopsyMatcher {
     private static final Logger LOGGER = LogManager.getLogger(BiopsyMatcher.class);
+
+    private BiopsyMatcher() {
+    }
 
     @NotNull
     public static List<BiopsyClinicalData> matchBiopsies(@NotNull final String patientId,

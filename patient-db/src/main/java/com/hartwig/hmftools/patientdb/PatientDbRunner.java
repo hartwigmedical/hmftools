@@ -61,7 +61,7 @@ public final class PatientDbRunner {
         final Options basicOptions = createBasicOptions();
         final Options somaticOptions = createSomaticOptions();
         final Options clinicalOptions = createClinicalOptions();
-        final Options options = createOptions(basicOptions, somaticOptions, clinicalOptions);
+        final Options options = mergeOptions(basicOptions, somaticOptions, clinicalOptions);
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
         final String userName = cmd.getOptionValue(DB_USER);
@@ -131,7 +131,6 @@ public final class PatientDbRunner {
                 }
             }
         }
-
     }
 
     private static void writeSomaticData(@NotNull final Options somaticOptions, @NotNull final CommandLine cmd,
@@ -191,7 +190,7 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static Options createOptions(@NotNull final Options basicOptions, @NotNull final Options clinicalOptions,
+    private static Options mergeOptions(@NotNull final Options basicOptions, @NotNull final Options clinicalOptions,
             @NotNull final Options somaticOptions) {
         final Options options = new Options();
         basicOptions.getOptions().forEach(options::addOption);
