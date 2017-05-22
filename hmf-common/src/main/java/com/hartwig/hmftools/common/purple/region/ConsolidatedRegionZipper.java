@@ -46,7 +46,8 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
     public static List<FittedCopyNumber> insertSmoothRegions(List<ConsolidatedRegion> megaRegions,
             List<FittedCopyNumber> copyNumbers) {
 
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber
+                .builder()
                 .from(copyNumber)
                 .segmentBAF(consolidatedRegion.averageObservedBAF())
                 .segmentTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
@@ -57,10 +58,11 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
         return myThing.getResult();
     }
 
-    public static List<FittedCopyNumber> insertBroadRegions(List<ConsolidatedRegion> megaRegions,
+    public static List<FittedCopyNumber> insertHighConfidenceRegions(List<ConsolidatedRegion> megaRegions,
             List<FittedCopyNumber> copyNumbers) {
 
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber
+                .builder()
                 .from(copyNumber)
                 .broadBAF(consolidatedRegion.averageObservedBAF())
                 .broadTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())

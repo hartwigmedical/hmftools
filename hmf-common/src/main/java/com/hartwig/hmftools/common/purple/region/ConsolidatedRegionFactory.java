@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.purple.FittedCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 public class ConsolidatedRegionFactory {
-    public static List<ConsolidatedRegion> broad(List<FittedCopyNumber> copyNumbers) {
-        return new BroadRegions().broad(copyNumbers);
+    public static List<ConsolidatedRegion> highConfidence(List<FittedCopyNumber> copyNumbers) {
+        return new HighConfidenceRegions().highConfidence(copyNumbers);
     }
 
     public static List<ConsolidatedRegion> smooth(List<FittedCopyNumber> copyNumbers,

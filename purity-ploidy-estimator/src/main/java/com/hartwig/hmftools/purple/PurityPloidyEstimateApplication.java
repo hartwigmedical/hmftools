@@ -122,14 +122,14 @@ public class PurityPloidyEstimateApplication {
             final List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(),
                     bestFit.normFactor(), enrichedCopyNumbers);
 
-            List<ConsolidatedRegion> broadRegions = ConsolidatedRegionFactory.broad(fittedCopyNumbers);
-            List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedCopyNumbers, broadRegions);
+            List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(fittedCopyNumbers);
+            List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedCopyNumbers, highConfidence);
             final String regionFile = freecDirectory + File.separator + tumorSample + ".purple.regions";
             ConsolidatedRegionWriter.writeRegions(regionFile, smoothRegions);
 
             final String fittedFile = freecDirectory + File.separator + tumorSample + ".purple.fitted";
             LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
-            List<FittedCopyNumber> broadCopyNumber = ConsolidatedRegionZipper.insertBroadRegions(broadRegions,
+            List<FittedCopyNumber> broadCopyNumber = ConsolidatedRegionZipper.insertHighConfidenceRegions(highConfidence,
                     fittedCopyNumbers);
             List<FittedCopyNumber> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(smoothRegions,
                     broadCopyNumber);
