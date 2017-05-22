@@ -10,10 +10,10 @@ public class SmoothedRegionTest {
 
     @Test
     public void stuff() {
-        assertEquals(1.25, SmoothedRegions.allowedRatioDeviation(0), EPSILON);
-        assertEquals(0.75, SmoothedRegions.allowedRatioDeviation(5), EPSILON);
-        assertEquals(0.25, SmoothedRegions.allowedRatioDeviation(10), EPSILON);
-        assertEquals(0.25, SmoothedRegions.allowedRatioDeviation(50), EPSILON);
+        assertEquals(1.25, SmoothedRegions.allowedCopyNumberDeviation(0), EPSILON);
+        assertEquals(0.75, SmoothedRegions.allowedCopyNumberDeviation(5), EPSILON);
+        assertEquals(0.25, SmoothedRegions.allowedCopyNumberDeviation(10), EPSILON);
+        assertEquals(0.25, SmoothedRegions.allowedCopyNumberDeviation(50), EPSILON);
     }
 
 }

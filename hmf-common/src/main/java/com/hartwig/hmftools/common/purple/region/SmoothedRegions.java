@@ -131,7 +131,7 @@ class SmoothedRegions {
         }
 
         double copyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        if (Doubles.greaterThan(copyNumberDeviation, allowedRatioDeviation(bafCount))) {
+        if (Doubles.greaterThan(copyNumberDeviation, allowedCopyNumberDeviation(bafCount))) {
             return false;
         }
 
@@ -162,7 +162,7 @@ class SmoothedRegions {
         return 0.15;
     }
 
-    static double allowedRatioDeviation(int bafCount) {
+    static double allowedCopyNumberDeviation(int bafCount) {
         if (bafCount >= 10) {
             return MIN_RATIO_RANGE;
         }

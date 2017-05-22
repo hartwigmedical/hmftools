@@ -56,11 +56,11 @@ public class PurityPloidyEstimateApplication {
     private static final int MIN_COMBINED_DEPTH = 10;
     private static final int MAX_COMBINED_DEPTH = 100;
     private static final int MAX_PLOIDY = 20;
-    private static final double MIN_PURITY = 0.1;
+    private static final double MIN_PURITY = 0.9;
     private static final double MAX_PURITY = 1.0;
     private static final double PURITY_INCREMENTS = 0.01;
-    private static final double MIN_NORM_FACTOR = 0.33;
-    private static final double MAX_NORM_FACTOR = 2;
+    private static final double MIN_NORM_FACTOR = 0.53;
+    private static final double MAX_NORM_FACTOR = 0.7;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
 
     // Options
