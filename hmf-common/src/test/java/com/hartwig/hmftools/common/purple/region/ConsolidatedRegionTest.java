@@ -77,6 +77,7 @@ public class ConsolidatedRegionTest
                 .observedTumorRatio(0)
                 .modelTumorRatio(0)
                 .status(FreecStatus.UNKNOWN)
+                .refNormalisedCopyNumber(0)
                 .bafDeviation(0)
                 .build();
     }

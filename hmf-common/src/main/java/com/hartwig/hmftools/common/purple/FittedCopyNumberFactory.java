@@ -45,6 +45,7 @@ public class FittedCopyNumberFactory {
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
                 .tumorCopyNumber(tumorCopyNumber)
+                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / copyNumber.normalRatio() / normFactor * 2))
                 .value((int) Math.round(tumorCopyNumber));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {

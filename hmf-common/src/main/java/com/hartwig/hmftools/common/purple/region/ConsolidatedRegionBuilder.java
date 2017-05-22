@@ -12,7 +12,9 @@ class ConsolidatedRegionBuilder {
     private boolean weighWithBaf;
     private int totalWeight;
     private double sumWeightedBAF;
+    private double sumWeightedPurityAdjustedBAF;
     private double sumWeightedCopyNumber;
+    private double sumWeightedRefNormalisedCopyNumber;
 
     ConsolidatedRegionBuilder(FittedCopyNumber copyNumber) {
         this.chromosome = copyNumber.chromosome();
@@ -32,9 +34,18 @@ class ConsolidatedRegionBuilder {
         return totalWeight == 0 ? 0 : sumWeightedBAF / totalWeight;
     }
 
+    double averagePurityAdjustedBAF() {
+        return totalWeight == 0 ? 0 : sumWeightedPurityAdjustedBAF / totalWeight;
+    }
+
     double averageTumorCopyNumber() {
         return totalWeight == 0 ? 0 : sumWeightedCopyNumber / totalWeight;
     }
+
+    double averageRefNormalisedCopyNumber() {
+        return totalWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalWeight;
+    }
+
 
     void extendRegion(FittedCopyNumber value) {
         assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
@@ -55,20 +66,25 @@ class ConsolidatedRegionBuilder {
             long weight = value.bafCount();
             totalWeight += weight;
             sumWeightedBAF += baf * weight;
+            sumWeightedPurityAdjustedBAF += value.purityAdjustedBAF() * weight;
             sumWeightedCopyNumber += ratio * weight;
+            sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * weight;
 
         } else if (!weighWithBaf && !Doubles.isZero(ratio)) {
 
             long weight = Math.max(1, value.bases() / 1000);
             totalWeight += weight;
             sumWeightedCopyNumber += ratio * weight;
+            sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * weight;
         }
     }
 
     private void resetAverage() {
         totalWeight = 0;
         sumWeightedBAF = 0;
+        sumWeightedPurityAdjustedBAF = 0;
         sumWeightedCopyNumber = 0;
+        sumWeightedRefNormalisedCopyNumber = 0;
     }
 
     public ConsolidatedRegion build() {
@@ -78,7 +94,9 @@ class ConsolidatedRegionBuilder {
                 .end(end)
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
+                .averagePurityAdjustedBAF(averagePurityAdjustedBAF())
                 .averageTumorCopyNumber(averageTumorCopyNumber())
+                .averageRefNormalisedCopyNumber(averageRefNormalisedCopyNumber())
                 .build();
     }
 }

@@ -14,5 +14,9 @@ public abstract class ConsolidatedRegion implements GenomeRegion {
 
     public abstract double averageObservedBAF();
 
+    public abstract double averagePurityAdjustedBAF();
+
     public abstract double averageTumorCopyNumber();
+
+    public abstract double averageRefNormalisedCopyNumber();
 }
