@@ -3,12 +3,13 @@ package com.hartwig.hmftools.breakpointinspector;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.common.collect.TreeMultimap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import htsjdk.samtools.*;
 
@@ -38,7 +39,6 @@ public class BreakPointInspectorApplication {
         NORMAL,
         SPAN,
         MATE_UNMAPPED,
-        DIFF_CHROMOSOME,
         UNMAPPED,
         SECONDARY,
         CHIMERIC
@@ -223,7 +223,7 @@ public class BreakPointInspectorApplication {
         return Region.OTHER;
     }
 
-    private static class VariantQueryResult {
+    private static class ClassifiedReadResults {
         public Map<String, ReadCollection> ReadMap = new Hashtable<>();
     }
 
@@ -235,6 +235,16 @@ public class BreakPointInspectorApplication {
         public int SR_Only_Support = 0;
         public int Unmapped_Mate = 0;
         public int Diff_Variant = 0;
+
+        public static List<String> GetHeader() {
+            return Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT",
+                    "SR_ONLY_SUPPORT", "UNMAPPED_MATE", "DIFF_VARIANT");
+        }
+
+        public List<Integer> GetData() {
+            return Arrays.asList(PR_Only_Normal, PR_SR_Normal, PR_Only_Support, PR_SR_Support, SR_Only_Support,
+                    Unmapped_Mate, Diff_Variant);
+        }
     }
 
     private static class SampleStats {
@@ -243,8 +253,6 @@ public class BreakPointInspectorApplication {
 
         public BreakPointStats Get(final Region r) {
             switch (r) {
-                case OTHER:
-                    throw new RuntimeException("invalid stats");
                 case BP1:
                     return BP1_Stats;
                 case BP2:
@@ -254,110 +262,50 @@ public class BreakPointInspectorApplication {
             }
         }
 
-        public void Print() {
-            // @formatter:off
-            System.out.println(String.join("\t",
-                    "BP1_PR_ONLY_NORMAL",
-                    "BP1_PR_SR_NORMAL",
-                    "BP1_PR_ONLY_SUPPORT",
-                    "BP1_PR_SR_SUPPORT",
-                    "BP1_SR_ONLY_SUPPORT",
-                    // BP2
-                    "BP2_PR_ONLY_NORMAL",
-                    "BP2_PR_SR_NORMAL",
-                    "BP2_PR_ONLY_SUPPORT",
-                    "BP2_PR_SR_SUPPORT",
-                    "BP2_SR_ONLY_SUPPORT"
-            ));
-            System.out.println(String.join("\t",
-                    Integer.toString(BP1_Stats.PR_Only_Normal),
-                    Integer.toString(BP1_Stats.PR_SR_Normal),
-                    Integer.toString(BP1_Stats.PR_Only_Support),
-                    Integer.toString(BP1_Stats.PR_SR_Support),
-                    Integer.toString(BP1_Stats.SR_Only_Support),
-                    // BP2
-                    Integer.toString(BP2_Stats.PR_Only_Normal),
-                    Integer.toString(BP2_Stats.PR_SR_Normal),
-                    Integer.toString(BP2_Stats.PR_Only_Support),
-                    Integer.toString(BP2_Stats.PR_SR_Support),
-                    Integer.toString(BP2_Stats.SR_Only_Support)
-            ));
-            // @formatter:on
-            System.out.println();
+        public void Print(final String prefix) {
+            final String header = Stream.concat(BreakPointStats.GetHeader().stream().map(h -> "BP1_" + h),
+                    BreakPointStats.GetHeader().stream().map(h -> "BP2_" + h)).map(h -> prefix + h).collect(
+                    Collectors.joining("\t"));
+            final String data = Stream.concat(BP1_Stats.GetData().stream(), BP2_Stats.GetData().stream()).map(
+                    i -> Integer.toString(i)).collect(Collectors.joining("\t"));
+            System.out.println(header);
+            System.out.println(data);
         }
     }
 
-    private static SampleStats processResult(final VariantQueryResult queryResult) {
+    private static SampleStats calculateStats(final ClassifiedReadResults queryResult) {
 
         final SampleStats result = new SampleStats();
 
-        final TreeMultimap<Integer, String> outputMap = TreeMultimap.create();
         for (final ReadCollection reads : queryResult.ReadMap.values()) {
-
-            // output the reads
-            for (final ReadInfo info : reads.Infos) {
-                final SAMRecord r = info.Read;
-                if (info.Category == ReadCategory.NORMAL && info.Location == Overlap.FILTERED)
-                    continue;
-
-                // @formatter:off
-                String output = String.join("\t",
-                        "T",
-                        r.getReadName(),
-                        info.Region.toString(),
-                        String.join(",", info.Category.toString(), info.Location.toString()),
-                        Integer.toString(r.getInferredInsertSize()),
-                        getOrientationString(r),
-                        r.getReferenceName(),
-                        Integer.toString(r.getAlignmentStart()),
-                        Integer.toString(r.getAlignmentEnd()),
-                        Integer.toString(r.getMappingQuality()),
-                        getFlagString(r.getSAMFlags()),
-                        r.getCigarString(),
-                        r.getReadString(),
-                        r.getBaseQualityString(),
-                        r.getMateReferenceName(),
-                        Integer.toString(r.getMateAlignmentStart())
-                );
-                outputMap.put(r.getAlignmentStart(), output);
-                // @formatter:on
-            }
 
             final List<ReadInfo> pair = reads.Infos;
             final ReadInfo p0 = pair.get(0);
 
             // handle odd sizes
             if (pair.size() < 2) {
-                if (p0.Region == Region.OTHER) {
-                    continue;
-                }
-
-                switch (p0.Category) {
-                    case MATE_UNMAPPED:
-                        result.Get(p0.Region).Unmapped_Mate++;
-                        continue;
-                    case DIFF_CHROMOSOME:
-                        result.Get(p0.Region).Diff_Variant++;
-                        continue;
+                if (p0.Category == ReadCategory.MATE_UNMAPPED) {
+                    result.Get(p0.Region).Unmapped_Mate++;
+                } else if (p0.Category != ReadCategory.NORMAL || p0.Location != Overlap.FILTERED) {
+                    result.Get(p0.Region).Diff_Variant++;
                 }
                 continue;
             } else if (pair.size() > 2) {
                 // TODO: secondary / supplementary reads?
+                System.err.println("condition pair.size() > 3 not implemented: " + p0.Read.getReadName());
                 continue;
             }
 
             final ReadInfo p1 = pair.get(1);
 
-            // TODO: how would this happen?
+            // possible two paired but unmapped reads?
             if (p0.Region == Region.OTHER && p1.Region == Region.OTHER) {
                 continue;
-            } else if (p1.Region == Region.OTHER) {
-                if (p1.Category == ReadCategory.DIFF_CHROMOSOME)
-                    result.Get(p0.Region).Diff_Variant++;
+            } else if (p1.Region == Region.OTHER) { // must be unmapped mate
+                result.Get(p0.Region).Unmapped_Mate++;
                 continue;
-            } else if (p0.Region == Region.OTHER) {
-                if (p0.Category == ReadCategory.DIFF_CHROMOSOME)
-                    result.Get(p1.Region).Diff_Variant++;
+            } else if (p0.Region == Region.OTHER) { // must be unmapped mate
+                result.Get(p1.Region).Unmapped_Mate++;
                 continue;
             }
 
@@ -380,14 +328,19 @@ public class BreakPointInspectorApplication {
                             stats1.PR_SR_Support++;
                         } else if (splitPossible) {
                             stats0.SR_Only_Support++;
+                        } else if (pairPossible) {
+                            stats0.PR_Only_Support++;
+                            stats1.PR_Only_Support++;
                         }
-                    }
-                    if (p1.Location == Overlap.CLIP) {
+                    } else if (p1.Location == Overlap.CLIP) {
                         if (pairPossible && splitPossible) {
                             stats0.PR_SR_Support++;
                             stats1.PR_SR_Support++;
                         } else if (splitPossible) {
                             stats1.SR_Only_Support++;
+                        } else if (pairPossible) {
+                            stats0.PR_Only_Support++;
+                            stats1.PR_Only_Support++;
                         }
                     }
 
@@ -396,26 +349,26 @@ public class BreakPointInspectorApplication {
             } else {
                 // normal
                 if (p0.Location == Overlap.CLIP || p1.Location == Overlap.CLIP) {
-                    if (splitPossible)
+                    if (splitPossible) {
                         stats0.SR_Only_Support++;
+                    }
+                    // TODO: can this also be PR support?
                 } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
                     stats0.PR_Only_Normal++;
                 } else if (p0.Location == Overlap.INTERSECT || p1.Location == Overlap.INTERSECT) {
                     stats0.PR_SR_Normal++;
+                    // TODO: does the intersection have to occur within a certain bound of read?
                 }
             }
         }
 
-        for (String s : outputMap.values())
-            System.err.println(s);
-
         return result;
     }
 
-    private static VariantQueryResult performQuery(final SamReader reader, final QueryInterval[] intervals,
-            final Location bp1, final Location bp2) {
+    private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,
+            final QueryInterval[] intervals, final Location bp1, final Location bp2) {
 
-        final VariantQueryResult result = new VariantQueryResult();
+        final ClassifiedReadResults result = new ClassifiedReadResults();
 
         // execute query and parse the results
         final SAMRecordIterator results = reader.query(intervals, false);
@@ -440,9 +393,7 @@ public class BreakPointInspectorApplication {
             info.Clipping = getClipInfo(read);
             info.Region = determineRegion(read, bp1, bp2);
             if (info.Region == Region.OTHER) {
-                info.Category = ReadCategory.DIFF_CHROMOSOME;
-                info.Location = Overlap.FILTERED;
-                continue;
+                throw new RuntimeException("read from unexpected region");
             }
 
             final Location bp = info.Region == Region.BP1 ? bp1 : bp2;
@@ -515,7 +466,7 @@ public class BreakPointInspectorApplication {
         final File refFile = new File(refBAM);
         final SamReader refReader = SamReaderFactory.makeDefault().open(refFile);
 
-        // query the position
+        // parse the location strings
         final Location location1 = Location.parseLocationString(bp1String,
                 tumorReader.getFileHeader().getSequenceDictionary());
         final Location location2;
@@ -530,6 +481,7 @@ public class BreakPointInspectorApplication {
             return;
         }
 
+        // work out the query intervals
         QueryInterval[] queryIntervals = {
                 new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
                         location1.Position + range),
@@ -537,34 +489,16 @@ public class BreakPointInspectorApplication {
                         location2.Position + range) };
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
-        // print  header
-        // @formatter:off
-        System.err.println(
-                String.join("\t",
-                        "SAMPLE",
-                        "READ_NAME",
-                        "REGION",
-                        "CLASSIFICATION",
-                        "TLEN",
-                        "ORIENTATION",
-                        "CHROMOSOME",
-                        "ALIGNMENT_START",
-                        "ALIGNMENT_END",
-                        "MAPQ",
-                        "FLAGS",
-                        "CIGAR",
-                        "SEQ",
-                        "QUAL",
-                        "MATE_CHROMOSOME",
-                        "MATE_ALIGNMENT_START"
-                ));
-        // @formatter:on
+        // begin processing
 
-        final VariantQueryResult tumorResult = performQuery(tumorReader, queryIntervals, location1, location2);
-        final SampleStats tumorStats = processResult(tumorResult);
-        tumorStats.Print();
+        final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, queryIntervals, location1,
+                location2);
+        final SampleStats tumorStats = calculateStats(tumorResult);
+        tumorStats.Print("TUMOR_");
 
-        // final VariantQueryResult refResult = performQuery(refReader, queryIntervals, location1, location2);
-        // processResult(refResult);
+        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
+                location2);
+        final SampleStats refStats = calculateStats(refResult);
+        refStats.Print("REF_");
     }
 }
