@@ -49,7 +49,7 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
         BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
                 .segmentBAF(consolidatedRegion.averageObservedBAF())
-                .segmentRatioOfRatios(consolidatedRegion.averageTumorCopyNumber())
+                .segmentTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
                 .build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);
@@ -63,7 +63,7 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
         BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
                 .broadBAF(consolidatedRegion.averageObservedBAF())
-                .broadRatioOfRatios(consolidatedRegion.averageTumorCopyNumber())
+                .broadTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
                 .build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);

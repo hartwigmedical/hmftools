@@ -92,6 +92,7 @@ public class MergeRegionBreaksTest {
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
+                .bafCount(0)
                 .averageObservedBAF(baf)
                 .averageTumorCopyNumber(ratio)
                 .build();

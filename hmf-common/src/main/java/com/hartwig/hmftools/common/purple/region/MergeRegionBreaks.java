@@ -58,8 +58,6 @@ class MergeRegionBreaks {
                 .from(primary)
                 .start(min(primary.start(), secondary.start()))
                 .end(max(primary.end(), secondary.end()))
-                .averageObservedBAF(primary.averageObservedBAF())
-                .averageTumorCopyNumber(primary.averageTumorCopyNumber())
                 .build();
     }
 

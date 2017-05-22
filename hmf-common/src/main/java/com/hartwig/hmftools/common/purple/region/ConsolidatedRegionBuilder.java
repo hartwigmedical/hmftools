@@ -10,7 +10,7 @@ class ConsolidatedRegionBuilder {
     private long end;
 
     private boolean weighWithBaf;
-    private long totalWeight;
+    private int totalWeight;
     private double sumWeightedBAF;
     private double sumWeightedCopyNumber;
 
@@ -24,7 +24,7 @@ class ConsolidatedRegionBuilder {
         return chromosome;
     }
 
-    long bafCount() {
+    int bafCount() {
         return weighWithBaf ? totalWeight : 0;
     }
 
@@ -76,6 +76,7 @@ class ConsolidatedRegionBuilder {
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
+                .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
                 .averageTumorCopyNumber(averageTumorCopyNumber())
                 .build();

@@ -41,9 +41,9 @@ public class FittedCopyNumberFactory {
                 .observedNormalRatio(copyNumber.normalRatio())
                 .purityAdjustedBAF(purityAdjustedBAF(purity, observedBAF))
                 .broadBAF(0)
-                .broadRatioOfRatios(0)
+                .broadTumorCopyNumber(0)
                 .segmentBAF(0)
-                .segmentRatioOfRatios(0)
+                .segmentTumorCopyNumber(0)
                 .tumorCopyNumber(tumorCopyNumer);
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {

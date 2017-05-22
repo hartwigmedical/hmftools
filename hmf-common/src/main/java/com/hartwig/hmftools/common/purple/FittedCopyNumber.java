@@ -37,11 +37,11 @@ public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
     public abstract double tumorCopyNumber();
 
-    public abstract double broadRatioOfRatios();
+    public abstract double broadTumorCopyNumber();
 
     public abstract double broadBAF();
 
-    public abstract double segmentRatioOfRatios();
+    public abstract double segmentTumorCopyNumber();
 
     public abstract double segmentBAF();
 

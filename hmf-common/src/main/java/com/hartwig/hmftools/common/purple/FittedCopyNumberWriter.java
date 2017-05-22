@@ -41,7 +41,7 @@ public enum FittedCopyNumberWriter {
                 .append("cnvDeviation").append('\t')
                 .append("deviation").append('\t')
                 .append("tumorCopyNumber").append('\t')
-                .append("broadRatioOfRatios").append('\t')
+                .append("broadTumorCopyNumber").append('\t')
                 .append("broadBAF").append('\t')
                 .append("segmentRatio").append('\t')
                 .append("segmentBAF")
@@ -67,9 +67,9 @@ public enum FittedCopyNumberWriter {
                 .append(copyNumber.cnvDeviation()).append('\t')
                 .append(copyNumber.deviation()).append('\t')
                 .append(copyNumber.tumorCopyNumber()).append('\t')
-                .append(copyNumber.broadRatioOfRatios()).append('\t')
+                .append(copyNumber.broadTumorCopyNumber()).append('\t')
                 .append(copyNumber.broadBAF()).append('\t')
-                .append(copyNumber.segmentRatioOfRatios()).append('\t')
+                .append(copyNumber.segmentTumorCopyNumber()).append('\t')
                 .append(copyNumber.segmentBAF())
                 .toString();
 
