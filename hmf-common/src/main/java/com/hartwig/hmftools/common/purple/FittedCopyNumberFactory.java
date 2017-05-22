@@ -52,9 +52,12 @@ public class FittedCopyNumberFactory {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
-            double modelBAF =
-                    copyNumber.mBAFCount() == 0 ? 0 : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
-            double bafDeviation = bafDeviation(modelBAF, observedBAF);
+            double[] modelBAFWithDeviation = copyNumber.mBAFCount() == 0
+                    ? new double[] { 0, 0 }
+                    : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+
+            double modelBAF = modelBAFWithDeviation[0];
+            double bafDeviation = modelBAFWithDeviation[1];
 
             double deviation =
                     Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
@@ -89,8 +92,8 @@ public class FittedCopyNumberFactory {
     }
 
     @VisibleForTesting
-    static double bafDeviation(double modelBAF, double actualBAF) {
-        if (Doubles.equal(modelBAF, NORMAL_BAF) && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
+    static double bafDeviation(boolean hetrozygous, double modelBAF, double actualBAF) {
+        if (hetrozygous && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
             return 0;
         }
 
@@ -98,15 +101,16 @@ public class FittedCopyNumberFactory {
     }
 
     @VisibleForTesting
-    static double modelBAFToMinimizeDeviation(double purity, int ploidy, double actualBAF) {
+    static double[] modelBAFToMinimizeDeviation(double purity, int ploidy, double actualBAF) {
         double result = 0;
         double deviation = 0;
 
         int minBetaAllele = (int) Math.round(ploidy / 2d);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
 
-            double modelBAF = modelBAF(purity, ploidy, betaAllele);
-            double modelDeviation = bafDeviation(modelBAF, actualBAF);
+            boolean isHetrozygous = ploidy / betaAllele == 2;
+            double modelBAF = isHetrozygous ? NORMAL_BAF : modelBAF(purity, ploidy, betaAllele);
+            double modelDeviation = bafDeviation(isHetrozygous, modelBAF, actualBAF);
 
             if (betaAllele == minBetaAllele || modelDeviation < deviation) {
                 result = modelBAF;
@@ -114,7 +118,7 @@ public class FittedCopyNumberFactory {
             }
         }
 
-        return result;
+        return new double[]{result, deviation};
     }
 
     @VisibleForTesting

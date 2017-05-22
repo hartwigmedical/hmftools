@@ -104,14 +104,14 @@ public class FittedCopyNumberFactoryTest {
 
     @Test
     public void testBAFDeviation() {
-        assertEquals(0.01, bafDeviation(NORMAL_BAF, NORMAL_BAF + 0.01), EPSILON);
-        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF), EPSILON);
-        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
-        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
+        assertEquals(0.01, bafDeviation(true, NORMAL_BAF, NORMAL_BAF + 0.01), EPSILON);
+        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF), EPSILON);
+        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
+        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
     }
 
     private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy, double actualBAF) {
-        assertEquals(expectedBAF, modelBAFToMinimizeDeviation(purity, ploidy, actualBAF), EPSILON);
+        assertEquals(expectedBAF, modelBAFToMinimizeDeviation(purity, ploidy, actualBAF)[0], EPSILON);
     }
 
 
