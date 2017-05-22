@@ -13,9 +13,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class TreatmentResponseMatcher {
-
+public final class TreatmentResponseMatcher {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentResponseMatcher.class);
+
+    private TreatmentResponseMatcher() {
+    }
 
     public static List<BiopsyTreatmentResponseData> matchTreatmentResponses(@NotNull final String patientId,
             @NotNull final List<BiopsyTreatmentData> treatments,
