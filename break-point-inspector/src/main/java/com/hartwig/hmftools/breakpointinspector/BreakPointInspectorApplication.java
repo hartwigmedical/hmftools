@@ -122,7 +122,7 @@ public class BreakPointInspectorApplication {
         options.addOption(REF_PATH, true, "the Reference BAM");
         options.addOption(TUMOR_PATH, true, "the Tumor BAM");
         options.addOption(BREAK_POINT1, true, "position of first break point in chrX:123456 format");
-        options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format");
+        options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format (optional)");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
         options.addOption(SV_LEN, true, "length of the SV to inspect");
         return options;
@@ -150,7 +150,7 @@ public class BreakPointInspectorApplication {
 
     private static void printHelpAndExit(final Options options) {
         final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Break-Point-Inspector", "Retrieve reads from an indexed BAM", options, "", true);
+        formatter.printHelp("Break-Point-Inspector", "Inspect structural variants", options, "", true);
         System.exit(1);
     }
 
