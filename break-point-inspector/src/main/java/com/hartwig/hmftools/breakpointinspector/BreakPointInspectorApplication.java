@@ -7,9 +7,12 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.google.common.collect.TreeMultimap;
 
 import htsjdk.samtools.*;
 
@@ -67,6 +70,7 @@ public class BreakPointInspectorApplication {
     private static class ClipInfo {
         public ClipSide Side = ClipSide.NONE;
         public int Length = 0;
+        public boolean HardClipped = false;
     }
 
     private static class ReadInfo {
@@ -81,7 +85,7 @@ public class BreakPointInspectorApplication {
         public ArrayList<ReadInfo> Infos = new ArrayList<>();
     }
 
-    private static class Location {
+    private static class Location implements Comparable<Location> {
         public int ReferenceIndex = -1;
         public int Position = -1;
 
@@ -113,6 +117,34 @@ public class BreakPointInspectorApplication {
             }
 
             return result;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(ReferenceIndex, Position);
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == null)
+                return false;
+            if (!(obj instanceof Location))
+                return false;
+
+            Location other = (Location) obj;
+            if (ReferenceIndex != other.ReferenceIndex)
+                return false;
+            if (Position != other.Position)
+                return false;
+            return true;
+        }
+
+        @Override
+        public int compareTo(@NotNull final Location o) {
+            final int comp1 = Integer.compare(ReferenceIndex, o.ReferenceIndex);
+            if(comp1 == 0)
+                return Integer.compare(Position, o.Position);
+            return 0;
         }
     }
 
@@ -174,15 +206,17 @@ public class BreakPointInspectorApplication {
         final ClipInfo result = new ClipInfo();
         final Cigar cigar = read.getCigar();
         switch (cigar.getFirstCigarElement().getOperator()) {
-            case S:
             case H:
+                result.HardClipped = true;
+            case S:
                 result.Side = ClipSide.LEFT_CLIP;
                 result.Length = cigar.getFirstCigarElement().getLength();
                 return result;
         }
         switch (cigar.getLastCigarElement().getOperator()) {
-            case S:
             case H:
+                result.HardClipped = true;
+            case S:
                 result.Side = ClipSide.RIGHT_CLIP;
                 result.Length = cigar.getLastCigarElement().getLength();
                 return result;
@@ -240,10 +274,16 @@ public class BreakPointInspectorApplication {
         }
     }
 
+    private static class ClipStats {
+        public String LongestClipSequence = "";
+        public List<SAMRecord> Reads = new ArrayList<>();
+    }
+
     private static class SampleStats {
         public BreakPointStats BP1_Stats = new BreakPointStats();
         public BreakPointStats BP2_Stats = new BreakPointStats();
         public OrientationStats Orientation = new OrientationStats();
+        public Map<Location, ClipStats> Clipping = new Hashtable<>();
 
         public BreakPointStats Get(final Region r) {
             switch (r) {
@@ -276,6 +316,39 @@ public class BreakPointInspectorApplication {
             final List<ReadInfo> pair = reads.Infos;
             final ReadInfo p0 = pair.get(0);
 
+            // update clipping stats
+            for (final ReadInfo info : pair) {
+                final SAMRecord read = info.Read;
+
+                if (info.Location == Overlap.CLIP && !info.Clipping.HardClipped) {
+                    final Location alignment = new Location();
+                    alignment.ReferenceIndex = read.getReferenceIndex();
+                    alignment.Position = info.Clipping.Side == ClipSide.LEFT_CLIP ?
+                            read.getAlignmentStart() :
+                            read.getAlignmentEnd();
+
+                    final ClipStats clip = result.Clipping.computeIfAbsent(alignment, k -> new ClipStats());
+
+                    final String clippedSequence;
+                    if (info.Clipping.Side == ClipSide.LEFT_CLIP) {
+                        clippedSequence = read.getReadString().substring(0, info.Clipping.Length);
+                    } else {
+                        clippedSequence = read.getReadString().substring(read.getReadLength() - info.Clipping.Length);
+                    }
+
+                    if (clippedSequence.length() > clip.LongestClipSequence.length() && clippedSequence.contains(
+                            clip.LongestClipSequence)) {
+                        // the existing sequence supports the new sequence
+                        clip.LongestClipSequence = clippedSequence;
+                    } else if (!clip.LongestClipSequence.contains(clippedSequence)) {
+                        // this read does not support the existing sequence
+                        continue;
+                    }
+
+                    clip.Reads.add(read);
+                }
+            }
+
             // handle odd sizes
             if (pair.size() < 2) {
                 if (p0.Category == ReadCategory.MATE_UNMAPPED) {
@@ -286,7 +359,7 @@ public class BreakPointInspectorApplication {
                 continue;
             } else if (pair.size() > 2) {
                 // TODO: secondary / supplementary reads?
-                System.err.println("condition pair.size() > 3 not implemented: " + p0.Read.getReadName());
+                System.err.println("> 2 read mating not implemented: " + p0.Read.getReadName());
                 continue;
             }
 
@@ -436,62 +509,86 @@ public class BreakPointInspectorApplication {
     public static void main(final String... args) throws ParseException, IOException {
 
         final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(options, args);
+        try {
+            final CommandLine cmd = createCommandLine(options, args);
 
-        // grab arguments
-        final String refBAM = cmd.getOptionValue(REF_PATH);
-        final String tumorBAM = cmd.getOptionValue(TUMOR_PATH);
-        final String bp1String = cmd.getOptionValue(BREAK_POINT1);
-        final String bp2String = cmd.getOptionValue(BREAK_POINT2);
-        final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
-        final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
+            // grab arguments
+            final String refBAM = cmd.getOptionValue(REF_PATH);
+            final String tumorBAM = cmd.getOptionValue(TUMOR_PATH);
+            final String bp1String = cmd.getOptionValue(BREAK_POINT1);
+            final String bp2String = cmd.getOptionValue(BREAK_POINT2);
+            final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
+            final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
 
-        if (refBAM == null || tumorBAM == null || bp1String == null)
+            if (refBAM == null || tumorBAM == null || bp1String == null)
+                printHelpAndExit(options);
+
+            // load the files
+            final File tumorFile = new File(tumorBAM);
+            final SamReader tumorReader = SamReaderFactory.makeDefault().open(tumorFile);
+            final File refFile = new File(refBAM);
+            final SamReader refReader = SamReaderFactory.makeDefault().open(refFile);
+
+            // parse the location strings
+            final Location location1 = Location.parseLocationString(bp1String,
+                    tumorReader.getFileHeader().getSequenceDictionary());
+            final Location location2;
+            if (bp2String != null) {
+                location2 = Location.parseLocationString(bp2String,
+                        tumorReader.getFileHeader().getSequenceDictionary());
+            } else if (svLen > 0) {
+                location2 = new Location();
+                location2.ReferenceIndex = location1.ReferenceIndex;
+                location2.Position = location1.Position + svLen;
+            } else {
+                printHelpAndExit(options);
+                System.exit(1);
+                return;
+            }
+
+            // work out the query intervals
+            QueryInterval[] queryIntervals = {
+                    new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
+                            location1.Position + range),
+                    new QueryInterval(location2.ReferenceIndex, Math.max(0, location2.Position - range),
+                            location2.Position + range) };
+            queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
+
+            // begin processing
+
+            final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
+                    location2);
+            final SampleStats refStats = calculateStats(refResult);
+            refStats.Print("REF_");
+
+            final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, queryIntervals, location1,
+                    location2);
+            final SampleStats tumorStats = calculateStats(tumorResult);
+            tumorStats.Print("TUMOR_");
+
+            // orientation stats
+            System.out.println("#ORIENTATION");
+            System.out.println("INNIE\tOUTIE\tTANDEM");
+            System.out.println(tumorStats.Orientation.GetData().stream().map(i -> Integer.toString(i)).collect(
+                    Collectors.joining("\t")));
+
+            // clipping stats
+            System.out.println("#CLIPPING");
+            System.out.println("CHROM\tPOS\tCLIP_SEQ\tREAD_COUNT");
+            final TreeMultimap<Location, String> sortedClips = TreeMultimap.create();
+            for (final Map.Entry<Location, ClipStats> kv : tumorStats.Clipping.entrySet()) {
+                sortedClips.put(kv.getKey(), String.join("\t",
+                        tumorReader.getFileHeader().getSequence(kv.getKey().ReferenceIndex).getSequenceName(),
+                        Integer.toString(kv.getKey().Position), kv.getValue().LongestClipSequence,
+                        Integer.toString(kv.getValue().Reads.size())));
+            }
+            for (final String s : sortedClips.values()) {
+                System.out.println(s);
+            }
+
+        } catch (ParseException e) {
             printHelpAndExit(options);
-
-        // load the files
-        final File tumorFile = new File(tumorBAM);
-        final SamReader tumorReader = SamReaderFactory.makeDefault().open(tumorFile);
-        final File refFile = new File(refBAM);
-        final SamReader refReader = SamReaderFactory.makeDefault().open(refFile);
-
-        // parse the location strings
-        final Location location1 = Location.parseLocationString(bp1String,
-                tumorReader.getFileHeader().getSequenceDictionary());
-        final Location location2;
-        if (bp2String != null) {
-            location2 = Location.parseLocationString(bp2String, tumorReader.getFileHeader().getSequenceDictionary());
-        } else if (svLen > 0) {
-            location2 = new Location();
-            location2.ReferenceIndex = location1.ReferenceIndex;
-            location2.Position = location1.Position + svLen;
-        } else {
-            printHelpAndExit(options);
-            return;
+            System.exit(1);
         }
-
-        // work out the query intervals
-        QueryInterval[] queryIntervals = {
-                new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
-                        location1.Position + range),
-                new QueryInterval(location2.ReferenceIndex, Math.max(0, location2.Position - range),
-                        location2.Position + range) };
-        queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
-
-        // begin processing
-
-        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
-                location2);
-        final SampleStats refStats = calculateStats(refResult);
-        refStats.Print("REF_");
-
-        final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, queryIntervals, location1,
-                location2);
-        final SampleStats tumorStats = calculateStats(tumorResult);
-        tumorStats.Print("TUMOR_");
-
-        System.out.println("INNIE\tOUTIE\tTANDEM");
-        System.out.println(tumorStats.Orientation.GetData().stream().map(i -> Integer.toString(i)).collect(
-                Collectors.joining("\t")));
     }
 }
