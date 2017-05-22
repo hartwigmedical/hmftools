@@ -303,66 +303,48 @@ public class BreakPointInspectorApplication {
                 continue;
             }
 
-            final boolean clipped = p0.Clipping.Length > 0 || p1.Clipping.Length > 0;
-            final boolean pairPossible = p0.Clipping.Length <= MANTA_REQ_PAIR_MIN && p1.Clipping.Length <= MANTA_REQ_PAIR_MIN;
-            final boolean splitPossible = p0.Clipping.Length >= MANTA_REQ_SPLIT_MIN || p1.Clipping.Length >= MANTA_REQ_SPLIT_MIN;
-
-            final BreakPointStats stats0 = p0.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
-            final BreakPointStats stats1 = p1.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
+            final boolean pairPossible = pair.stream().allMatch(p -> p.Clipping.Length <= MANTA_REQ_PAIR_MIN);
 
             if (p0.Region != p1.Region) {
                 // supports the break point
-                if (pairPossible && !clipped) {
-                    stats0.PR_Only_Support++;
-                    stats1.PR_Only_Support++;
-                } else {
-                    if (p0.Location == Overlap.CLIP) {
-                        if (pairPossible && splitPossible) {
-                            stats0.PR_SR_Support++;
-                            stats1.PR_Only_Support++; // the split doesn't confirm the other BP
-                        } else if (splitPossible) {
-                            stats0.SR_Only_Support++;
-                        } else if (pairPossible) {
-                            stats0.PR_Only_Support++;
-                            stats1.PR_Only_Support++;
-                        }
-                    } else if (p1.Location == Overlap.CLIP) {
-                        if (pairPossible && splitPossible) {
-                            stats0.PR_Only_Support++; // the split doesn't confirm the other BP
-                            stats1.PR_SR_Support++;
-                        } else if (splitPossible) {
-                            stats1.SR_Only_Support++;
-                        } else if (pairPossible) {
-                            stats0.PR_Only_Support++;
-                            stats1.PR_Only_Support++;
-                        }
+                boolean interesting = false;
+                for (final ReadInfo r : pair) {
+                    final boolean splitEvidence =
+                            r.Location == Overlap.CLIP && r.Clipping.Length >= MANTA_REQ_SPLIT_MIN;
+                    if (pairPossible && splitEvidence) {
+                        result.Get(r.Region).PR_SR_Support++;
+                    } else if (pairPossible) {
+                        result.Get(r.Region).PR_Only_Support++;
+                    } else if (splitEvidence) {
+                        result.Get(r.Region).SR_Only_Support++;
                     }
 
-                    if (isOrientable(p0.Read)) { // should always be?
-                        switch (SamPairUtil.getPairOrientation(p0.Read)) {
-                            case FR:
-                                result.Orientation.InnieCount++;
-                                break;
-                            case RF:
-                                result.Orientation.OutieCount++;
-                                break;
-                            case TANDEM:
-                                result.Orientation.TandemCount++;
-                                break;
-                        }
+                    interesting |= pairPossible || splitEvidence;
+                }
+
+                if (interesting) {
+                    switch (SamPairUtil.getPairOrientation(p0.Read)) {
+                        case FR:
+                            result.Orientation.InnieCount++;
+                            break;
+                        case RF:
+                            result.Orientation.OutieCount++;
+                            break;
+                        case TANDEM:
+                            result.Orientation.TandemCount++;
+                            break;
                     }
                 }
             } else {
-                // normal
-                if (p0.Location == Overlap.CLIP || p1.Location == Overlap.CLIP) {
-                    if (splitPossible) {
-                        stats0.SR_Only_Support++;
-                    }
-                    // TODO: can this also be PR support?
+                final BreakPointStats stats = p0.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
+                final boolean splitEvidence = pair.stream().anyMatch(
+                        p -> p.Location == Overlap.CLIP && p.Clipping.Length >= MANTA_REQ_SPLIT_MIN);
+                if (splitEvidence) {
+                    stats.SR_Only_Support++;
                 } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
-                    stats0.PR_Only_Normal++;
+                    stats.PR_Only_Normal++;
                 } else if (p0.Location == Overlap.INTERSECT || p1.Location == Overlap.INTERSECT) {
-                    stats0.PR_SR_Normal++;
+                    stats.PR_SR_Normal++;
                     // TODO: does the intersection have to occur within a certain bound of read?
                 }
             }
