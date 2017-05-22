@@ -19,5 +19,4 @@ public abstract class EnrichedCopyNumber implements CopyNumber, Serializable {
     public abstract double tumorRatio();
 
     public abstract double normalRatio();
-
 }

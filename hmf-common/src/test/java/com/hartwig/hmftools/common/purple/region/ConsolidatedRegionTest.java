@@ -62,6 +62,7 @@ public class ConsolidatedRegionTest
                 .end(end)
                 .bafCount(bafCount)
                 .observedBAF(baf)
+                .purityAdjustedBAF(baf)
                 .ratioOfRatios(ratio)
                 .broadBAF(0)
                 .broadRatioOfRatios(0)
