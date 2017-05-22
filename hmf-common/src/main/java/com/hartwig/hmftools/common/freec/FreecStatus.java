@@ -18,7 +18,7 @@ public enum FreecStatus {
             return UNKNOWN;
         }
 
-        if (Doubles.greaterThan(ratio, GERMLINE_MAX_RATIO) && Doubles.lessThan(ratio, GERMLINE_MIN_RATIO)) {
+        if (Doubles.greaterThan(ratio, GERMLINE_MAX_RATIO) || Doubles.lessThan(ratio, GERMLINE_MIN_RATIO)) {
             return GERMLINE;
         }
 
