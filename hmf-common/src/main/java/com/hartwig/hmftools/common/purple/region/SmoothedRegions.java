@@ -130,13 +130,13 @@ class SmoothedRegions {
             return true;
         }
 
-        double copyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageRatioOfRatios());
+        double copyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageTumorCopyNumber());
         if (Doubles.greaterThan(copyNumberDeviation, allowedRatioDeviation(bafCount))) {
             return false;
         }
 
-        if (bafCount > 0 && !Doubles.isZero(builder.averageBAF())) {
-            double bafDeviation = Math.abs(copyNumber.observedBAF() - builder.averageBAF());
+        if (bafCount > 0 && !Doubles.isZero(builder.averageObservedBAF())) {
+            double bafDeviation = Math.abs(copyNumber.observedBAF() - builder.averageObservedBAF());
             if (Doubles.greaterThan(bafDeviation, allowedBAFDeviation(bafCount))) {
                 return false;
             }

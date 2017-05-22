@@ -12,7 +12,7 @@ class ConsolidatedRegionBuilder {
     private boolean weighWithBaf;
     private long totalWeight;
     private double sumWeightedBAF;
-    private double sumWeightedRatioOfRatios;
+    private double sumWeightedCopyNumber;
 
     ConsolidatedRegionBuilder(FittedCopyNumber copyNumber) {
         this.chromosome = copyNumber.chromosome();
@@ -24,12 +24,16 @@ class ConsolidatedRegionBuilder {
         return chromosome;
     }
 
-    double averageBAF() {
+    long bafCount() {
+        return weighWithBaf ? totalWeight : 0;
+    }
+
+    double averageObservedBAF() {
         return totalWeight == 0 ? 0 : sumWeightedBAF / totalWeight;
     }
 
-    double averageRatioOfRatios() {
-        return totalWeight == 0 ? 0 : sumWeightedRatioOfRatios / totalWeight;
+    double averageTumorCopyNumber() {
+        return totalWeight == 0 ? 0 : sumWeightedCopyNumber / totalWeight;
     }
 
     void extendRegion(FittedCopyNumber value) {
@@ -37,7 +41,6 @@ class ConsolidatedRegionBuilder {
 
         start = Math.min(value.start(), start);
         end = Math.max(value.end(), end);
-
 
         double ratio = value.tumorCopyNumber();
         double baf = value.observedBAF();
@@ -52,24 +55,29 @@ class ConsolidatedRegionBuilder {
             long weight = value.bafCount();
             totalWeight += weight;
             sumWeightedBAF += baf * weight;
-            sumWeightedRatioOfRatios += ratio * weight;
+            sumWeightedCopyNumber += ratio * weight;
 
         } else if (!weighWithBaf && !Doubles.isZero(ratio)) {
 
-            long weight = Math.max(1, value.bases()/1000);
+            long weight = Math.max(1, value.bases() / 1000);
             totalWeight += weight;
-            sumWeightedRatioOfRatios += ratio * weight;
+            sumWeightedCopyNumber += ratio * weight;
         }
     }
 
     private void resetAverage() {
         totalWeight = 0;
         sumWeightedBAF = 0;
-        sumWeightedRatioOfRatios = 0;
+        sumWeightedCopyNumber = 0;
     }
 
     public ConsolidatedRegion build() {
-        return ImmutableConsolidatedRegion.builder().chromosome(chromosome).start(start).end(end).averageBAF(
-                averageBAF()).averageRatioOfRatios(averageRatioOfRatios()).build();
+        return ImmutableConsolidatedRegion.builder()
+                .chromosome(chromosome)
+                .start(start)
+                .end(end)
+                .averageObservedBAF(averageObservedBAF())
+                .averageTumorCopyNumber(averageTumorCopyNumber())
+                .build();
     }
 }

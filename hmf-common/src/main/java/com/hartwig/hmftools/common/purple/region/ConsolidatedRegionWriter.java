@@ -36,8 +36,8 @@ public enum ConsolidatedRegionWriter {
                 .append(region.chromosome()).append('\t')
                 .append(region.start()).append('\t')
                 .append(region.end()).append('\t')
-                .append(region.averageRatioOfRatios()).append('\t')
-                .append(region.averageBAF())
+                .append(region.averageTumorCopyNumber()).append('\t')
+                .append(region.averageObservedBAF())
                 .toString();
     }
 

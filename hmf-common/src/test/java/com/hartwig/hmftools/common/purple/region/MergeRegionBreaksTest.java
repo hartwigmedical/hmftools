@@ -82,8 +82,8 @@ public class MergeRegionBreaksTest {
         assertEquals(expected.chromosome(), victim.chromosome());
         assertEquals(expected.start(), victim.start());
         assertEquals(expected.end(), victim.end());
-        assertEquals(expected.averageBAF(), victim.averageBAF(), EPSILON);
-        assertEquals(expected.averageRatioOfRatios(), victim.averageRatioOfRatios(), EPSILON);
+        assertEquals(expected.averageObservedBAF(), victim.averageObservedBAF(), EPSILON);
+        assertEquals(expected.averageTumorCopyNumber(), victim.averageTumorCopyNumber(), EPSILON);
     }
 
 
@@ -92,8 +92,8 @@ public class MergeRegionBreaksTest {
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
-                .averageBAF(baf)
-                .averageRatioOfRatios(ratio)
+                .averageObservedBAF(baf)
+                .averageTumorCopyNumber(ratio)
                 .build();
     }
 

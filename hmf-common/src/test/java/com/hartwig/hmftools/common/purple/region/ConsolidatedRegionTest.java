@@ -42,8 +42,8 @@ public class ConsolidatedRegionTest
     }
 
     private void assertAverages(ConsolidatedRegion victim, double expectedBAF, double expectedRatio) {
-        assertEquals(expectedBAF, victim.averageBAF(), EPSILON);
-        assertEquals(expectedRatio, victim.averageRatioOfRatios(), EPSILON);
+        assertEquals(expectedBAF, victim.averageObservedBAF(), EPSILON);
+        assertEquals(expectedRatio, victim.averageTumorCopyNumber(), EPSILON);
     }
 
     private static FittedCopyNumber create(long start, long end, double ratio) {

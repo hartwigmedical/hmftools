@@ -59,12 +59,12 @@ class BroadRegions {
     private boolean isLargeDeviation(@NotNull FittedCopyNumber current) {
         assert builder != null;
 
-        double ratioDeviation = Math.abs(current.tumorCopyNumber() - builder.averageRatioOfRatios());
+        double ratioDeviation = Math.abs(current.tumorCopyNumber() - builder.averageTumorCopyNumber());
         if (!Doubles.isZero(current.tumorCopyNumber()) && Doubles.greaterThan(ratioDeviation, MAX_RATIO_DEVIATION)) {
             return true;
         }
 
-        double bafDeviation = Math.abs(current.observedBAF() - builder.averageBAF());
+        double bafDeviation = Math.abs(current.observedBAF() - builder.averageObservedBAF());
         return Doubles.greaterThan(bafDeviation, MAX_BAF_DEVIATION);
     }
 }

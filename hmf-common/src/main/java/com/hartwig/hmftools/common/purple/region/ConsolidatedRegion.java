@@ -10,7 +10,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ConsolidatedRegion implements GenomeRegion {
 
-    public abstract double averageBAF();
+    public abstract int bafCount();
 
-    public abstract double averageRatioOfRatios();
+    public abstract double averageObservedBAF();
+
+    public abstract double averageTumorCopyNumber();
 }
