@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.NORMAL_BAF;
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.bafDeviation;
 import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.cnvDeviation;
 import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAF;
 import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAFToMinimizeDeviation;
@@ -98,6 +100,14 @@ public class FittedCopyNumberFactoryTest {
 
         assertModelBAFToMinimizeDeviation(17d / 27d, 0.7, 3, 0.65);
         assertModelBAFToMinimizeDeviation(24d / 27d, 0.7, 3, 0.95);
+    }
+
+    @Test
+    public void testBAFDeviation() {
+        assertEquals(0.01, bafDeviation(NORMAL_BAF, NORMAL_BAF + 0.01), EPSILON);
+        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF), EPSILON);
+        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
+        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
     }
 
     private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy, double actualBAF) {

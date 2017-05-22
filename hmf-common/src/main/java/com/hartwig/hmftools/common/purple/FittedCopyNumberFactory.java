@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 
 public class FittedCopyNumberFactory {
 
-    private static final double NORMAL_BAF = 0.533;
+    static final double NORMAL_BAF = 0.533;
 
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
@@ -88,7 +88,12 @@ public class FittedCopyNumberFactory {
         return cnvRatioWeighFactor * Math.abs(modelCNVRatio - actualRatio);
     }
 
-    private static double bafDeviation(double modelBAF, double actualBAF) {
+    @VisibleForTesting
+    static double bafDeviation(double modelBAF, double actualBAF) {
+        if (Doubles.equal(modelBAF, NORMAL_BAF) && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
+            return 0;
+        }
+
         return Math.abs(modelBAF - actualBAF);
     }
 
