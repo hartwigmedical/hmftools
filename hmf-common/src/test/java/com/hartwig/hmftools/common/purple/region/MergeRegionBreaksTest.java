@@ -96,6 +96,7 @@ public class MergeRegionBreaksTest {
                 .averageObservedBAF(baf)
                 .averageTumorCopyNumber(ratio)
                 .averageRefNormalisedCopyNumber(0)
+                .averagePurityAdjustedBAF(0)
                 .build();
     }
 
