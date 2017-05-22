@@ -8,7 +8,7 @@ import java.util.Optional;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.common.exception.GenerateReportException;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

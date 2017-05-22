@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.position;
 
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
+
 import org.jetbrains.annotations.NotNull;
 
 public interface GenomePosition extends Comparable<GenomePosition> {
@@ -11,7 +12,7 @@ public interface GenomePosition extends Comparable<GenomePosition> {
     long position();
 
     @Override
-    default int compareTo(@NotNull GenomePosition other) {
+    default int compareTo(@NotNull final GenomePosition other) {
         if (chromosome().equals(other.chromosome())) {
             return Long.compare(position(), other.position());
         }

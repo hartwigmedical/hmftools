@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BiopsyLimsData {
 
@@ -12,6 +13,8 @@ public class BiopsyLimsData {
     private final String sampleId;
     @NotNull
     private final LocalDate arrivalDate;
+    @Nullable
+    private final LocalDate samplingDate;
 
     private static final AtomicInteger idCounter = new AtomicInteger();
 
@@ -19,9 +22,11 @@ public class BiopsyLimsData {
         return idCounter.getAndIncrement();
     }
 
-    public BiopsyLimsData(@NotNull final String sampleId, @NotNull final LocalDate arrivalDate) {
+    public BiopsyLimsData(@NotNull final String sampleId, @NotNull final LocalDate arrivalDate,
+            @Nullable final LocalDate samplingDate) {
         this.sampleId = sampleId;
         this.arrivalDate = arrivalDate;
+        this.samplingDate = samplingDate;
         this.id = createId();
     }
 
@@ -37,5 +42,15 @@ public class BiopsyLimsData {
     @NotNull
     public String sampleId() {
         return sampleId;
+    }
+
+    @Nullable
+    public LocalDate samplingDate() {
+        return samplingDate;
+    }
+
+    @NotNull
+    public LocalDate date() {
+        return samplingDate != null ? samplingDate : arrivalDate;
     }
 }

@@ -1,7 +1,8 @@
-Run the following commands as an admin on mysql prior to building
+Run the following commands as root (admin) on mysql prior to building
 
 mysql> CREATE USER 'build'@'localhost' IDENTIFIED BY 'build';
 Query OK, 0 rows affected (0.00 sec)
+
 
 mysql> CREATE DATABASE hmfpatients;
 Query OK, 1 row affected (0.00 sec)

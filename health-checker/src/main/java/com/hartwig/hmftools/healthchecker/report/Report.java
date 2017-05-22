@@ -3,7 +3,7 @@ package com.hartwig.hmftools.healthchecker.report;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.exception.GenerateReportException;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 
 import org.jetbrains.annotations.NotNull;

@@ -3,8 +3,6 @@ package com.hartwig.hmftools.patientdb;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,23 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class Utils {
     private static final Logger LOGGER = LogManager.getLogger(Utils.class);
-
-    public static int getMaxLength(@NotNull final Collection<List<?>> lists, @NotNull final String warnMessage) {
-        final Iterator<List<?>> listIterator = lists.iterator();
-        int maxSize = -1;
-        while (listIterator.hasNext()) {
-            List<?> currentList = listIterator.next();
-            if (currentList != null) {
-                if (maxSize < currentList.size()) {
-                    if (maxSize != -1) {
-                        LOGGER.warn(warnMessage);
-                    }
-                    maxSize = currentList.size();
-                }
-            }
-        }
-        return maxSize;
-    }
 
     @Nullable
     public static LocalDate getDate(@Nullable final String dateFieldValue,

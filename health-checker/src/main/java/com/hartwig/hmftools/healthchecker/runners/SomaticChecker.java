@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.predicate.VariantPredicates;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;

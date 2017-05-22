@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.common.variant.vcf;
 
-import static org.junit.Assert.assertEquals;
+import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
-
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class VCFFileLoaderTest {
 
@@ -35,7 +32,9 @@ public class VCFFileLoaderTest {
 
     @Test
     public void canLoadGermlineVCF() throws IOException, HartwigException {
-        final List<GermlineVariant> variants = VCFFileLoader.loadGermlineVCF(VARIANT_PATH, GERMLINE_EXTENSION);
-        assertEquals(3, variants.size());
+        final VCFGermlineFile variantFile = VCFFileLoader.loadGermlineVCF(VARIANT_PATH, GERMLINE_EXTENSION);
+        assertEquals("sampleR", variantFile.refSample());
+        assertEquals("sampleT", variantFile.tumorSample());
+        assertEquals(3, variantFile.variants().size());
     }
 }

@@ -3,16 +3,17 @@ package com.hartwig.hmftools.patientdb.matchers;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
 import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class BiopsyMatcher {
     private static final Logger LOGGER = LogManager.getLogger(BiopsyMatcher.class);
@@ -21,81 +22,72 @@ public class BiopsyMatcher {
     public static List<BiopsyClinicalData> matchBiopsies(@NotNull final String patientId,
             @NotNull final List<BiopsyLimsData> sequencedBiopsies,
             @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
-        if (clinicalBiopsies.size() == sequencedBiopsies.size()) {
-            // MIVO: if there's n biopsies sequenced, and n (non-empty) entries in ecrf => match
-            return matchBiopsiesByIndex(sequencedBiopsies, clinicalBiopsies);
-        } else {
-            if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
-                LOGGER.warn("Patient: " + patientId + " contains less entries in ecrf (" + clinicalBiopsies.size()
-                        + ") than biopsies sequenced (" + sequencedBiopsies.size() + ").");
-            }
-            return matchBiopsiesByDate(sequencedBiopsies, clinicalBiopsies);
-        }
-    }
-
-    @NotNull
-    private static List<BiopsyClinicalData> matchBiopsiesByIndex(@NotNull final List<BiopsyLimsData> sequencedBiopsies,
-            @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
         final List<BiopsyClinicalData> matchedBiopsies = Lists.newArrayList();
-        for (int index = 0; index < clinicalBiopsies.size(); index++) {
-            final BiopsyClinicalData clinicalBiopsy = clinicalBiopsies.get(index);
-            final String sampleId = sequencedBiopsies.get(index).sampleId();
-            matchedBiopsies.add(
-                    new BiopsyClinicalData(clinicalBiopsy.id(), clinicalBiopsy.date(), clinicalBiopsy.location(),
-                            clinicalBiopsy.treatment(), sampleId));
+        if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
+            LOGGER.warn(patientId + ": contains less biopsies in ecrf (" + clinicalBiopsies.size()
+                    + ") than biopsies sequenced (" + sequencedBiopsies.size() + ").");
         }
+        List<BiopsyClinicalData> remainingBiopsies = clinicalBiopsies;
+        for (final BiopsyLimsData sequencedBiopsy : sequencedBiopsies) {
+            final Map<Boolean, List<BiopsyClinicalData>> partitions = remainingBiopsies.stream().collect(
+                    Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));
+            final List<BiopsyClinicalData> possibleMatches = partitions.get(true);
+            if (possibleMatches.size() == 1 && possibleMatches.get(0).date() != null) {
+                final BiopsyClinicalData clinicalBiopsy = partitions.get(true).get(0);
+                matchedBiopsies.add(
+                        new BiopsyClinicalData(clinicalBiopsy.id(), clinicalBiopsy.date(), clinicalBiopsy.location(),
+                                sequencedBiopsy.sampleId()));
+                remainingBiopsies = partitions.get(false);
+            } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1
+                    && possibleMatches.get(0).date() == null)) {
+                LOGGER.warn(patientId + ": Could not match any clinical biopsy with sequenced biopsy: "
+                        + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + ","
+                        + sequencedBiopsy.arrivalDate() + "): " + clinicalBiopsies.stream().map(
+                        BiopsyClinicalData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
+                        sequencedBiopsy));
+                // MIVO: abort finding new matches if we can't match one sequenced biopsy
+                return clinicalBiopsies;
+            } else if (possibleMatches.size() > 1) {
+                LOGGER.warn(patientId + ": Found more than 1 possible clinical biopsy match for sequenced biopsy: "
+                        + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + ","
+                        + sequencedBiopsy.arrivalDate() + "): " + clinicalBiopsies.stream().map(
+                        BiopsyClinicalData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
+                        sequencedBiopsy));
+                // MIVO: abort finding new matches if we can't match one sequenced biopsy
+                return clinicalBiopsies;
+            }
+        }
+        matchedBiopsies.addAll(remainingBiopsies);
         return matchedBiopsies;
     }
 
+    private static boolean isPossibleMatch(@NotNull final BiopsyLimsData sequencedBiopsy,
+            @NotNull final BiopsyClinicalData clinicalBiopsy) {
+        return clinicalBiopsy.date() == null || isWithinThreshold(sequencedBiopsy, clinicalBiopsy);
+    }
+
+    private static boolean isWithinThreshold(@NotNull final BiopsyLimsData sequencedBiopsy,
+            @NotNull final BiopsyClinicalData clinicalBiopsy) {
+        final LocalDate biopsyDate = clinicalBiopsy.date();
+        if (biopsyDate != null && (biopsyDate.isBefore(sequencedBiopsy.date()) || biopsyDate.isEqual(
+                sequencedBiopsy.date()))) {
+            final LocalDate limsSamplingDate = sequencedBiopsy.samplingDate();
+            if (limsSamplingDate != null) {
+                return Duration.between(biopsyDate.atStartOfDay(), limsSamplingDate.atStartOfDay()).toDays()
+                        < Config.samplingDateThreshold;
+            } else {
+                return Duration.between(biopsyDate.atStartOfDay(),
+                        sequencedBiopsy.arrivalDate().atStartOfDay()).toDays() < Config.arrivalDateThreshold;
+            }
+        }
+        return false;
+    }
+
     @NotNull
-    private static List<BiopsyClinicalData> matchBiopsiesByDate(@NotNull final List<BiopsyLimsData> sequencedBiopsies,
-            @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
-        final List<BiopsyClinicalData> matchedBiopsies = Lists.newArrayList();
-        for (final BiopsyLimsData biopsyLimsData : sequencedBiopsies) {
-            final LocalDate biopsyArrivalDate = biopsyLimsData.arrivalDate();
-            BiopsyClinicalData sequencedBiopsyClinicalData = findBiopsyBeforeArrivalDate(biopsyArrivalDate,
-                    clinicalBiopsies);
-            if (sequencedBiopsyClinicalData != null) {
-                checkDurationBetweenDates(biopsyArrivalDate, sequencedBiopsyClinicalData.date());
-                final List<Integer> matchedBiopsiesIds = matchedBiopsies.stream().map(BiopsyClinicalData::id).collect(
-                        Collectors.toList());
-                if (!matchedBiopsiesIds.contains(sequencedBiopsyClinicalData.id())) {
-                    matchedBiopsies.add(new BiopsyClinicalData(sequencedBiopsyClinicalData.id(),
-                            sequencedBiopsyClinicalData.date(), sequencedBiopsyClinicalData.location(),
-                            sequencedBiopsyClinicalData.treatment(), biopsyLimsData.sampleId()));
-                }
-            }
+    private static String getMatchDateCriteria(@NotNull final BiopsyLimsData sequencedBiopsy) {
+        if (sequencedBiopsy.samplingDate() != null) {
+            return "sampling date " + sequencedBiopsy.samplingDate() + " threshold: " + Config.samplingDateThreshold;
         }
-        final List<Integer> matchedBiopsiesIds = matchedBiopsies.stream().map(BiopsyClinicalData::id).collect(
-                Collectors.toList());
-        for (final BiopsyClinicalData biopsyClinicalData : clinicalBiopsies) {
-            if (!matchedBiopsiesIds.contains(biopsyClinicalData.id())) {
-                matchedBiopsies.add(biopsyClinicalData);
-            }
-        }
-        return matchedBiopsies;
-    }
-
-    @Nullable
-    private static BiopsyClinicalData findBiopsyBeforeArrivalDate(@NotNull final LocalDate arrivalDate,
-            @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
-        BiopsyClinicalData result = null;
-        for (final BiopsyClinicalData biopsyClinicalData : clinicalBiopsies) {
-            final LocalDate biopsyDate = biopsyClinicalData.date();
-            if (biopsyDate != null && biopsyDate.isBefore(arrivalDate)) {
-                result = biopsyClinicalData;
-            }
-        }
-        return result;
-    }
-
-    private static void checkDurationBetweenDates(@NotNull final LocalDate arrivalDate,
-            @Nullable final LocalDate biopsyDate) {
-        final int maxDaysBetweenBiopsyDateAndArrival = 180;
-        if (biopsyDate != null && Duration.between(biopsyDate.atStartOfDay(), arrivalDate.atStartOfDay()).toDays()
-                > maxDaysBetweenBiopsyDateAndArrival) {
-            LOGGER.warn("Time between biopsy date (" + biopsyDate + ") and biopsy arrival date (" + arrivalDate
-                    + " is greater than " + maxDaysBetweenBiopsyDateAndArrival + " days.");
-        }
+        return "arrival date " + sequencedBiopsy.arrivalDate() + " threshold: " + Config.arrivalDateThreshold;
     }
 }

@@ -6,10 +6,10 @@ import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.healthchecker.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.healthchecker.context.RunContext;
-import com.hartwig.hmftools.healthchecker.io.FolderChecker;
+import com.hartwig.hmftools.common.io.FolderChecker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -28,4 +28,8 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
         }
         return 1;
     }
+
+    default boolean overlaps(GenomeRegion other) {
+        return other.chromosome().equals(chromosome()) && other.end() > start() && other.start() < end();
+    }
 }
