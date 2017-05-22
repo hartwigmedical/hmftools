@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple;
 import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.cnvDeviation;
 import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAF;
 import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAFToMinimizeDeviation;
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelCNVRatio;
+import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelRatio;
 
 import static org.junit.Assert.assertEquals;
 
@@ -114,15 +114,15 @@ public class FittedCopyNumberFactoryTest {
     }
 
     private static void assertModelCNVRatio(double expectedRatio, double purity, double normFactor, int ploidy) {
-        assertEquals(expectedRatio, modelCNVRatio(purity, normFactor, ploidy), EPSILON);
+        assertEquals(expectedRatio, modelRatio(purity, normFactor, ploidy), EPSILON);
     }
 
     private static void diploidModelCNVRatio(double expectedRatio, double purity, double normFactor) {
-        assertEquals(expectedRatio, modelCNVRatio(purity, normFactor, 2), EPSILON);
+        assertEquals(expectedRatio, modelRatio(purity, normFactor, 2), EPSILON);
     }
 
     private static void pureModelCNVRatio(double expectedRatio, double normFactor, int ploidy) {
-        assertEquals(expectedRatio, modelCNVRatio(1, normFactor, ploidy), EPSILON);
+        assertEquals(expectedRatio, modelRatio(1, normFactor, ploidy), EPSILON);
     }
 
 }

@@ -59,8 +59,8 @@ class BroadRegions {
     private boolean isLargeDeviation(@NotNull FittedCopyNumber current) {
         assert builder != null;
 
-        double ratioDeviation = Math.abs(current.ratioOfRatios() - builder.averageRatioOfRatios());
-        if (!Doubles.isZero(current.ratioOfRatios()) && Doubles.greaterThan(ratioDeviation, MAX_RATIO_DEVIATION)) {
+        double ratioDeviation = Math.abs(current.tumorCopyNumber() - builder.averageRatioOfRatios());
+        if (!Doubles.isZero(current.tumorCopyNumber()) && Doubles.greaterThan(ratioDeviation, MAX_RATIO_DEVIATION)) {
             return true;
         }
 

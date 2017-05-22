@@ -54,7 +54,7 @@ public class ConsolidatedRegionTest
         return create("1", start, end, bafCount, baf, ratio);
     }
 
-    private static FittedCopyNumber create(String chromosome, long start, long end, int bafCount, double baf, double ratio) {
+    private static FittedCopyNumber create(String chromosome, long start, long end, int bafCount, double baf, double tumorCopyNumber) {
 
         return ImmutableFittedCopyNumber.builder()
                 .chromosome(chromosome)
@@ -63,12 +63,11 @@ public class ConsolidatedRegionTest
                 .bafCount(bafCount)
                 .observedBAF(baf)
                 .purityAdjustedBAF(baf)
-                .ratioOfRatios(ratio)
+                .tumorCopyNumber(tumorCopyNumber)
                 .broadBAF(0)
                 .broadRatioOfRatios(0)
                 .segmentBAF(0)
                 .segmentRatioOfRatios(0)
-                .normalisedTumorRatio(0)
                 .observedNormalRatio(0)
                 .value(0)
                 .cnvDeviation(0)

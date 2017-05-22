@@ -29,26 +29,26 @@ public class FittedCopyNumberFactory {
 
         double minDeviation = 0;
         double observedBAF = copyNumber.mBAF();
-        double observedRatio = copyNumber.tumorRatio();
+        double observedTumorRatio = copyNumber.tumorRatio();
+        double tumorCopyNumer = copyNumber(purity, normFactor, observedTumorRatio);
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
                 .status(FreecStatus.fromNormalRatio(copyNumber.normalRatio()))
                 .bafCount(copyNumber.mBAFCount())
                 .observedBAF(observedBAF)
-                .observedTumorRatio(observedRatio)
+                .observedTumorRatio(observedTumorRatio)
                 .observedNormalRatio(copyNumber.normalRatio())
                 .purityAdjustedBAF(purityAdjustedBAF(purity, observedBAF))
                 .broadBAF(0)
                 .broadRatioOfRatios(0)
                 .segmentBAF(0)
                 .segmentRatioOfRatios(0)
-                .normalisedTumorRatio(observedRatio / normFactor * 2d)
-                .ratioOfRatios(Doubles.replaceNaNWithZero(observedRatio / copyNumber.normalRatio() / normFactor * 2));
+                .tumorCopyNumber(tumorCopyNumer);
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
-            double modelRatio = modelCNVRatio(purity, normFactor, ploidy);
-            double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedRatio);
+            double modelRatio = modelRatio(purity, normFactor, ploidy);
+            double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
             double modelBAF =
                     copyNumber.mBAFCount() == 0 ? 0 : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
@@ -72,8 +72,13 @@ public class FittedCopyNumberFactory {
     }
 
     @VisibleForTesting
-    static double modelCNVRatio(double purity, double normFactor, int ploidy) {
+    static double modelRatio(double purity, double normFactor, int ploidy) {
         return normFactor + (ploidy - 2) * purity * normFactor / 2d;
+    }
+
+    @VisibleForTesting
+    static double copyNumber(double purity, double normFactor, double tumorRatio) {
+        return 2 + 2 * (tumorRatio - normFactor) / purity / normFactor;
     }
 
     @VisibleForTesting

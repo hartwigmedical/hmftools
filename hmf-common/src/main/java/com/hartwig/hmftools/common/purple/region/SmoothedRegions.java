@@ -130,10 +130,8 @@ class SmoothedRegions {
             return true;
         }
 
-        double ratioOfRatioDeviation = Math.abs(copyNumber.ratioOfRatios() - builder.averageRatioOfRatios());
-        double tumorRatioDeviation = Math.abs(copyNumber.normalisedTumorRatio() - builder.averageRatioOfRatios());
-        double ratioDeviation = Math.min(ratioOfRatioDeviation, tumorRatioDeviation);
-        if (Doubles.greaterThan(ratioDeviation, allowedRatioDeviation(bafCount))) {
+        double copyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageRatioOfRatios());
+        if (Doubles.greaterThan(copyNumberDeviation, allowedRatioDeviation(bafCount))) {
             return false;
         }
 

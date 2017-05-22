@@ -39,7 +39,7 @@ class ConsolidatedRegionBuilder {
         end = Math.max(value.end(), end);
 
 
-        double ratio = value.ratioOfRatios();
+        double ratio = value.tumorCopyNumber();
         double baf = value.observedBAF();
 
         if (value.bafCount() > 0) {

@@ -35,9 +35,7 @@ public abstract class FittedCopyNumber implements CopyNumber, Serializable {
 
     public abstract double cnvDeviation();
 
-    public abstract double normalisedTumorRatio();
-
-    public abstract double ratioOfRatios();
+    public abstract double tumorCopyNumber();
 
     public abstract double broadRatioOfRatios();
 
