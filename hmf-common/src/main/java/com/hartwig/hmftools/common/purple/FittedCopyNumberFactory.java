@@ -34,7 +34,7 @@ public class FittedCopyNumberFactory {
                 .bafCount(copyNumber.mBAFCount())
                 .observedBAF(observedBAF)
                 .observedTumorRatio(observedRatio)
-                .normalRatio(copyNumber.normalRatio())
+                .observedNormalRatio(copyNumber.normalRatio())
                 .broadBAF(0)
                 .broadRatioOfRatios(0)
                 .segmentBAF(0)

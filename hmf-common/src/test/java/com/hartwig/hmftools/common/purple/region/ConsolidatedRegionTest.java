@@ -68,7 +68,7 @@ public class ConsolidatedRegionTest
                 .segmentBAF(0)
                 .segmentRatioOfRatios(0)
                 .normalisedTumorRatio(0)
-                .normalRatio(0)
+                .observedNormalRatio(0)
                 .value(0)
                 .cnvDeviation(0)
                 .deviation(0)
