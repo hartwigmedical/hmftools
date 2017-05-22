@@ -33,6 +33,7 @@ public enum FittedCopyNumberWriter {
                 .append("fittedPloidy").append('\t')
                 .append("bafCount").append('\t')
                 .append("observedBAF").append('\t')
+                .append("purityAdjustedBAF").append('\t')
                 .append("modelBAF").append('\t')
                 .append("bafDeviation").append('\t')
                 .append("observedTumorRatio").append('\t')
@@ -43,7 +44,7 @@ public enum FittedCopyNumberWriter {
                 .append("tumorCopyNumber").append('\t')
                 .append("broadTumorCopyNumber").append('\t')
                 .append("broadBAF").append('\t')
-                .append("segmentRatio").append('\t')
+                .append("segmentTumorCopyNumber").append('\t')
                 .append("segmentBAF")
                 .toString();
     }
@@ -59,6 +60,7 @@ public enum FittedCopyNumberWriter {
                 .append(copyNumber.fittedPloidy()).append('\t')
                 .append(copyNumber.bafCount()).append('\t')
                 .append(copyNumber.observedBAF()).append('\t')
+                .append(copyNumber.purityAdjustedBAF()).append('\t')
                 .append(copyNumber.modelBAF()).append('\t')
                 .append(copyNumber.bafDeviation()).append('\t')
                 .append(copyNumber.observedTumorRatio()).append('\t')

@@ -30,7 +30,7 @@ public class FittedCopyNumberFactory {
         double minDeviation = 0;
         double observedBAF = copyNumber.mBAF();
         double observedTumorRatio = copyNumber.tumorRatio();
-        double tumorCopyNumer = copyNumber(purity, normFactor, observedTumorRatio);
+        double tumorCopyNumber = copyNumber(purity, normFactor, observedTumorRatio);
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
@@ -44,7 +44,8 @@ public class FittedCopyNumberFactory {
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
-                .tumorCopyNumber(tumorCopyNumer);
+                .tumorCopyNumber(tumorCopyNumber)
+                .value((int) Math.round(tumorCopyNumber));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
