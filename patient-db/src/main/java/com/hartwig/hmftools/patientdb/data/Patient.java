@@ -6,9 +6,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class Patient {
     @NotNull
-    private final PatientInfo patientInfo;
+    private final PatientData patientData;
     @NotNull
-    private final List<BiopsyLimsData> sequencedBiopsies;
+    private final List<SampleData> sequencedBiopsies;
     @NotNull
     private final List<BiopsyTreatmentData> treatments;
     @NotNull
@@ -16,11 +16,11 @@ public class Patient {
     @NotNull
     private final List<BiopsyClinicalData> clinicalBiopsies;
 
-    public Patient(@NotNull final PatientInfo patientInfo, @NotNull final List<BiopsyLimsData> sequencedBiopsies,
+    public Patient(@NotNull final PatientData patientData, @NotNull final List<SampleData> sequencedBiopsies,
             @NotNull final List<BiopsyTreatmentData> treatments,
             @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses,
             @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
-        this.patientInfo = patientInfo;
+        this.patientData = patientData;
         this.sequencedBiopsies = sequencedBiopsies;
         this.treatments = treatments;
         this.treatmentResponses = treatmentResponses;
@@ -28,12 +28,12 @@ public class Patient {
     }
 
     @NotNull
-    public PatientInfo patientInfo() {
-        return patientInfo;
+    public PatientData patientInfo() {
+        return patientData;
     }
 
     @NotNull
-    public List<BiopsyLimsData> sequencedBiopsies() {
+    public List<SampleData> sequencedBiopsies() {
         return sequencedBiopsies;
     }
 

@@ -8,11 +8,11 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
-import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PatientInfo;
+import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
@@ -40,19 +40,19 @@ public class CpctClinicalPatientReader {
     public Patient read(@NotNull final EcrfPatient patient, @NotNull final List<String> tumorSamplesForPatient)
             throws IOException, HartwigException {
         ThreadContext.put("cpctHospitalCode", "HMF");
-        final List<BiopsyLimsData> sequencedBiopsies = biopsyLimsDataReader.read(tumorSamplesForPatient);
+        final List<SampleData> sequencedBiopsies = biopsyLimsDataReader.read(tumorSamplesForPatient);
         ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
-        final PatientInfo patientInfo = cpctPatientInfoReader.read(patient);
+        final PatientData patientData = cpctPatientInfoReader.read(patient);
         final List<BiopsyClinicalData> clinicalBiopsies = BiopsyClinicalDataReader.read(patient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(patient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(patient);
-        final List<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponses(
+        final List<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
                 patient.patientId(), treatments, treatmentResponses);
-        final List<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatments(patient.patientId(),
+        final List<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patient.patientId(),
                 clinicalBiopsies, treatments);
-        final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies(patient.patientId(),
+        final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patient.patientId(),
                 sequencedBiopsies, clinicalBiopsies);
         ThreadContext.put("cpctHospitalCode", "default");
-        return new Patient(patientInfo, sequencedBiopsies, matchedTreatments, matchedResponses, matchedBiopsies);
+        return new Patient(patientData, sequencedBiopsies, matchedTreatments, matchedResponses, matchedBiopsies);
     }
 }

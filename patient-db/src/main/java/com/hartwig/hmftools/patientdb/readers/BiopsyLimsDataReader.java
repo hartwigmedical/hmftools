@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsData;
 import com.hartwig.hmftools.common.lims.LimsModel;
 import com.hartwig.hmftools.patientdb.Utils;
-import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,8 +42,8 @@ class BiopsyLimsDataReader {
     }
 
     @NotNull
-    List<BiopsyLimsData> read(@NotNull final List<String> sampleIds) {
-        final List<BiopsyLimsData> limsBiopsies = Lists.newArrayList();
+    List<SampleData> read(@NotNull final List<String> sampleIds) {
+        final List<SampleData> limsBiopsies = Lists.newArrayList();
         sampleIds.forEach(sampleId -> {
             final LimsData hmfLimsData = limsModel.findDataPerSample(sampleId);
             final LimsData oldLimsData = limsOldModel.findDataPerSample(sampleId);
@@ -51,7 +51,7 @@ class BiopsyLimsDataReader {
             if (Utils.anyNotNull(hmfLimsData, oldLimsData, umcuLimsData)) {
                 final LocalDate arrivalDate = determineArrivalDate(hmfLimsData, oldLimsData, umcuLimsData);
                 final LocalDate samplingDate = determineSamplingDate(hmfLimsData, oldLimsData, umcuLimsData);
-                limsBiopsies.add(new BiopsyLimsData(sampleId, arrivalDate, samplingDate));
+                limsBiopsies.add(new SampleData(sampleId, arrivalDate, samplingDate));
             } else {
                 LOGGER.warn("Missing LIMS data for sample: " + sampleId);
             }

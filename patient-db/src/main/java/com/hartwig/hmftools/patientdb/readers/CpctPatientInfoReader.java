@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.data.PatientInfo;
+import com.hartwig.hmftools.patientdb.data.PatientData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,7 +65,7 @@ class CpctPatientInfoReader {
     }
 
     @NotNull
-    PatientInfo read(@NotNull final EcrfPatient patient) {
+    PatientData read(@NotNull final EcrfPatient patient) {
         LOGGER.info("Reading patient " + patient.patientId());
         String gender = null;
         String ethnicity = null;
@@ -127,8 +127,8 @@ class CpctPatientInfoReader {
         }
         checkHospitalVsImplied(patient.patientId(), impliedHospital, hospital1, FIELD_HOSPITAL1);
         checkHospitalVsImplied(patient.patientId(), impliedHospital, hospital2, FIELD_HOSPITAL2);
-        
-        return new PatientInfo(patient.patientId(), registrationDate, gender, ethnicity, impliedHospital, birthYear,
+
+        return new PatientData(patient.patientId(), registrationDate, gender, ethnicity, impliedHospital, birthYear,
                 primaryTumorLocation, deathDate);
     }
 

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
-import com.hartwig.hmftools.patientdb.data.BiopsyLimsData;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,8 +22,8 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    public static List<BiopsyClinicalData> matchBiopsies(@NotNull final String patientId,
-            @NotNull final List<BiopsyLimsData> sequencedBiopsies,
+    public static List<BiopsyClinicalData> matchBiopsiesToTumorSamples(@NotNull final String patientId,
+            @NotNull final List<SampleData> sequencedBiopsies,
             @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
         final List<BiopsyClinicalData> matchedBiopsies = Lists.newArrayList();
         if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
@@ -31,7 +31,7 @@ public final class BiopsyMatcher {
                     + ") than biopsies sequenced (" + sequencedBiopsies.size() + ").");
         }
         List<BiopsyClinicalData> remainingBiopsies = clinicalBiopsies;
-        for (final BiopsyLimsData sequencedBiopsy : sequencedBiopsies) {
+        for (final SampleData sequencedBiopsy : sequencedBiopsies) {
             final Map<Boolean, List<BiopsyClinicalData>> partitions = remainingBiopsies.stream().collect(
                     Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));
             final List<BiopsyClinicalData> possibleMatches = partitions.get(true);
@@ -64,12 +64,12 @@ public final class BiopsyMatcher {
         return matchedBiopsies;
     }
 
-    private static boolean isPossibleMatch(@NotNull final BiopsyLimsData sequencedBiopsy,
+    private static boolean isPossibleMatch(@NotNull final SampleData sequencedBiopsy,
             @NotNull final BiopsyClinicalData clinicalBiopsy) {
         return clinicalBiopsy.date() == null || isWithinThreshold(sequencedBiopsy, clinicalBiopsy);
     }
 
-    private static boolean isWithinThreshold(@NotNull final BiopsyLimsData sequencedBiopsy,
+    private static boolean isWithinThreshold(@NotNull final SampleData sequencedBiopsy,
             @NotNull final BiopsyClinicalData clinicalBiopsy) {
         final LocalDate biopsyDate = clinicalBiopsy.date();
         if (biopsyDate != null && (biopsyDate.isBefore(sequencedBiopsy.date()) || biopsyDate.isEqual(
@@ -87,7 +87,7 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    private static String getMatchDateCriteria(@NotNull final BiopsyLimsData sequencedBiopsy) {
+    private static String getMatchDateCriteria(@NotNull final SampleData sequencedBiopsy) {
         if (sequencedBiopsy.samplingDate() != null) {
             return "sampling date " + sequencedBiopsy.samplingDate() + " threshold: " + Config.SAMPLING_DATE_THRESHOLD;
         }

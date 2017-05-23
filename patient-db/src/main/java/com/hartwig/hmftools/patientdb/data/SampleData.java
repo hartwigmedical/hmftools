@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyLimsData {
+public class SampleData {
 
     private final int id;
     @NotNull
@@ -22,7 +22,7 @@ public class BiopsyLimsData {
         return ID_COUNTER.getAndIncrement();
     }
 
-    public BiopsyLimsData(@NotNull final String sampleId, @NotNull final LocalDate arrivalDate,
+    public SampleData(@NotNull final String sampleId, @NotNull final LocalDate arrivalDate,
             @Nullable final LocalDate samplingDate) {
         this.sampleId = sampleId;
         this.arrivalDate = arrivalDate;

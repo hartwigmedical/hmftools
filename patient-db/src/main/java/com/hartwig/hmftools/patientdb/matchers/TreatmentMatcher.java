@@ -23,7 +23,7 @@ public final class TreatmentMatcher {
     }
 
     @NotNull
-    public static List<BiopsyTreatmentData> matchTreatments(@NotNull final String patientId,
+    public static List<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull final String patientId,
             @NotNull final List<BiopsyClinicalData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         if (biopsies.size() < treatments.size()) {

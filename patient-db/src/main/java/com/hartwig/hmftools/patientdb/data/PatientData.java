@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import org.jetbrains.annotations.Nullable;
 
-public class PatientInfo {
+public class PatientData {
     @Nullable
     private final String cpctId;
     @Nullable
@@ -22,7 +22,7 @@ public class PatientInfo {
     @Nullable
     private final LocalDate deathDate;
 
-    public PatientInfo(@Nullable final String cpctId, @Nullable final LocalDate registrationDate,
+    public PatientData(@Nullable final String cpctId, @Nullable final LocalDate registrationDate,
             @Nullable final String gender, @Nullable final String ethnicity, @Nullable final String hospital,
             @Nullable final Integer birthYear, @Nullable final String primaryTumorLocation,
             @Nullable final LocalDate deathDate) {
