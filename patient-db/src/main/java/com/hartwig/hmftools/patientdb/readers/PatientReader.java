@@ -8,11 +8,11 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
@@ -20,19 +20,19 @@ import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 import org.apache.logging.log4j.ThreadContext;
 import org.jetbrains.annotations.NotNull;
 
-public class CpctClinicalPatientReader {
+public class PatientReader {
     @NotNull
-    private final CpctPatientInfoReader cpctPatientInfoReader;
+    private final CpctPatientReader cpctPatientReader;
     @NotNull
-    private final BiopsyLimsDataReader biopsyLimsDataReader;
+    private final SampleReader sampleReader;
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public CpctClinicalPatientReader(@NotNull final CpctEcrfModel model,
+    public PatientReader(@NotNull final CpctEcrfModel model,
             @NotNull final Map<String, String> treatmentToTypeMappings, @NotNull final String limsCsv,
             @NotNull final String limsOldCsv, @NotNull final String umcuCsv) throws IOException, HartwigException {
-        cpctPatientInfoReader = new CpctPatientInfoReader(model);
-        biopsyLimsDataReader = new BiopsyLimsDataReader(limsCsv, limsOldCsv, umcuCsv);
+        cpctPatientReader = new CpctPatientReader(model);
+        sampleReader = new SampleReader(limsCsv, limsOldCsv, umcuCsv);
         biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentToTypeMappings);
     }
 
@@ -40,10 +40,10 @@ public class CpctClinicalPatientReader {
     public Patient read(@NotNull final EcrfPatient patient, @NotNull final List<String> tumorSamplesForPatient)
             throws IOException, HartwigException {
         ThreadContext.put("cpctHospitalCode", "HMF");
-        final List<SampleData> sequencedBiopsies = biopsyLimsDataReader.read(tumorSamplesForPatient);
+        final List<SampleData> sequencedBiopsies = sampleReader.read(tumorSamplesForPatient);
         ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
-        final PatientData patientData = cpctPatientInfoReader.read(patient);
-        final List<BiopsyData> clinicalBiopsies = BiopsyClinicalDataReader.read(patient);
+        final PatientData patientData = cpctPatientReader.read(patient);
+        final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(patient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(patient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(patient);
         final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patient.patientId(),

@@ -20,8 +20,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class CpctPatientInfoReader {
-    private static final Logger LOGGER = LogManager.getLogger(CpctPatientInfoReader.class);
+class CpctPatientReader {
+    private static final Logger LOGGER = LogManager.getLogger(CpctPatientReader.class);
 
     private static final String STUDY_BASELINE = "SE.BASELINE";
     private static final String STUDY_ENDSTUDY = "SE.ENDSTUDY";
@@ -49,6 +49,7 @@ class CpctPatientInfoReader {
     private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
     private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.CARCINOMA.PTUMLOCS";
 
     private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
@@ -60,7 +61,7 @@ class CpctPatientInfoReader {
     @NotNull
     private final Map<Integer, String> hospitals;
 
-    CpctPatientInfoReader(@NotNull final CpctEcrfModel model) {
+    CpctPatientReader(@NotNull final CpctEcrfModel model) {
         this.hospitals = extractHospitalMap(model);
     }
 
@@ -92,6 +93,11 @@ class CpctPatientInfoReader {
                 for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(
                         ITEMGROUP_CARCINOMA, true)) {
                     primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, true);
+                    if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith(
+                            "other")) {
+                        primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0,
+                                true);
+                    }
                 }
             }
 

@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
-import com.hartwig.hmftools.patientdb.readers.CpctClinicalPatientReader;
+import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.readers.SomaticVariantReader;
 
@@ -113,7 +113,7 @@ public final class PatientDbRunner {
         } else {
             LOGGER.info("Loading ecrf model...");
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
-            final CpctClinicalPatientReader cpctClinicalPatientReader = new CpctClinicalPatientReader(model,
+            final PatientReader patientReader = new PatientReader(model,
                     readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream().map(
                     runContext -> getPatientId(runContext.setName())).filter(
@@ -127,7 +127,7 @@ public final class PatientDbRunner {
                 } else {
                     final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
                     LOGGER.info(patient.patientId() + ": Samples: " + tumorSamplesForPatient);
-                    final Patient cpctPatient = cpctClinicalPatientReader.read(patient, tumorSamplesForPatient);
+                    final Patient cpctPatient = patientReader.read(patient, tumorSamplesForPatient);
                     dbWriter.writeClinicalData(cpctPatient);
                 }
             }

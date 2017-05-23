@@ -30,8 +30,8 @@ class SampleReader {
     @NotNull
     private final LimsModel limsUmcuModel;
 
-    SampleReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv,
-            @NotNull final String limsUmcuCsv) throws IOException, EmptyFileException {
+    SampleReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv, @NotNull final String limsUmcuCsv)
+            throws IOException, EmptyFileException {
         LOGGER.info("Reading lims file: " + limsCsv);
         this.limsModel = Lims.buildModelFromCsv(limsCsv, LIMS_DATE_FORMATTER);
         LOGGER.info("Reading lims file: " + limsOldCsv);
