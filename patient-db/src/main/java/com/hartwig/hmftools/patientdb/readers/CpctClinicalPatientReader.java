@@ -29,11 +29,11 @@ public class CpctClinicalPatientReader {
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
     public CpctClinicalPatientReader(@NotNull final CpctEcrfModel model,
-            @NotNull final Map<String, String> treatmentMappings, @NotNull final String limsCsv,
+            @NotNull final Map<String, String> treatmentToTypeMappings, @NotNull final String limsCsv,
             @NotNull final String limsOldCsv, @NotNull final String umcuCsv) throws IOException, HartwigException {
         cpctPatientInfoReader = new CpctPatientInfoReader(model);
         biopsyLimsDataReader = new BiopsyLimsDataReader(limsCsv, limsOldCsv, umcuCsv);
-        biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentMappings);
+        biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentToTypeMappings);
     }
 
     @NotNull

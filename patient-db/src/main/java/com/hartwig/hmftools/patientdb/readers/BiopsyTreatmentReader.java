@@ -33,10 +33,10 @@ class BiopsyTreatmentReader {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
-    private final Map<String, String> treatmentMapping;
+    private final Map<String, String> treatmentToTypeMapping;
 
-    BiopsyTreatmentReader(@NotNull final Map<String, String> treatmentMapping) {
-        this.treatmentMapping = treatmentMapping;
+    BiopsyTreatmentReader(@NotNull final Map<String, String> treatmentToTypeMapping) {
+        this.treatmentToTypeMapping = treatmentToTypeMapping;
     }
 
     @NotNull
@@ -72,7 +72,7 @@ class BiopsyTreatmentReader {
                 }
             }
             final String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
-            final String drugType = drugName == null ? null : treatmentMapping.get(drugName.toLowerCase().trim());
+            final String drugType = drugName == null ? null : treatmentToTypeMapping.get(drugName.toLowerCase().trim());
             drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));
         }
         return drugs;

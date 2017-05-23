@@ -113,7 +113,7 @@ public final class PatientDbRunner {
             LOGGER.info("Loading ecrf model...");
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
             final CpctClinicalPatientReader cpctClinicalPatientReader = new CpctClinicalPatientReader(model,
-                    readTreatmentMappingFile(treatmentMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
+                    readTreatmentToTypeMappingFile(treatmentMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream().map(
                     runContext -> getPatientId(runContext.setName())).filter(
                     setName -> setName.startsWith("CPCT")).collect(Collectors.toSet());
@@ -175,18 +175,18 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static Map<String, String> readTreatmentMappingFile(@NotNull final String treatmentMappingCsv)
+    private static Map<String, String> readTreatmentToTypeMappingFile(@NotNull final String treatmentToTypeMappingCsv)
             throws IOException, EmptyFileException {
-        final Map<String, String> treatmentMapping = Maps.newHashMap();
-        FileReader.build().readLines(new File(treatmentMappingCsv).toPath()).forEach(line -> {
+        final Map<String, String> treatmentToTypeMapping = Maps.newHashMap();
+        FileReader.build().readLines(new File(treatmentToTypeMappingCsv).toPath()).forEach(line -> {
             final String[] parts = line.split(",");
             if (parts.length == 2) {
-                treatmentMapping.put(parts[0].toLowerCase().trim(), parts[1].toLowerCase().trim());
+                treatmentToTypeMapping.put(parts[0].toLowerCase().trim(), parts[1].toLowerCase().trim());
             } else {
-                LOGGER.warn("Invalid row found in treatment mapping csv: " + line);
+                LOGGER.warn("Invalid row found in treatment to type mapping csv: " + line);
             }
         });
-        return treatmentMapping;
+        return treatmentToTypeMapping;
     }
 
     @NotNull
