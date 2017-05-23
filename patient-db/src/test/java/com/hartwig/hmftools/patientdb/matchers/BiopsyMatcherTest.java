@@ -88,7 +88,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_MAR);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals(null, matchedBiopsies.get(1).sampleId());
@@ -101,7 +101,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_NULL);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals(null, matchedBiopsies.get(1).sampleId());
@@ -114,7 +114,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals(null, matchedBiopsies.get(1).sampleId());
@@ -127,7 +127,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_MAR);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals("jul", matchedBiopsies.get(1).sampleId());
@@ -140,7 +140,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_JAN);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals("jul", matchedBiopsies.get(1).sampleId());
@@ -153,7 +153,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_FEB);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals(null, matchedBiopsies.get(1).sampleId());
@@ -177,7 +177,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_SEP);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals("jul", matchedBiopsies.get(0).sampleId());
         assertEquals(null, matchedBiopsies.get(1).sampleId());
@@ -190,7 +190,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_MAR);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals(null, matchedBiopsies.get(1).sampleId());
@@ -203,7 +203,7 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_SEP);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals("aug", matchedBiopsies.get(0).sampleId());
         assertEquals("nov", matchedBiopsies.get(1).sampleId());
@@ -216,14 +216,14 @@ public class BiopsyMatcherTest {
         final List<BiopsyClinicalData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
         final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsies("patient", sequencedBiopsies,
                 clinicalBiopsies);
-        matchedBiopsies.sort(clinicalDataComparator);
+        matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
         assertEquals(null, matchedBiopsies.get(1).sampleId());
     }
 
     @NotNull
-    private static Comparator<BiopsyClinicalData> clinicalDataComparator = (o1, o2) -> {
+    private static final Comparator<BiopsyClinicalData> CLINICAL_DATA_COMPARATOR = (o1, o2) -> {
         final LocalDate o1Date = o1.date();
         final LocalDate o2Date = o2.date();
         if (o1Date == null) {

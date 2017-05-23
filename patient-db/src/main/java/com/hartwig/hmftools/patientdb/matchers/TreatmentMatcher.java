@@ -75,6 +75,6 @@ public final class TreatmentMatcher {
         return biopsyDate != null && treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate)
                 || treatmentStartDate.isEqual(biopsyDate))
                 && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
-                < Config.maxDaysBetweenTreatmentAndBiopsy;
+                < Config.MAX_DAYS_BETWEEN_TREATMENT_AND_BIOPSY;
     }
 }

@@ -77,10 +77,10 @@ public final class BiopsyMatcher {
             final LocalDate limsSamplingDate = sequencedBiopsy.samplingDate();
             if (limsSamplingDate != null) {
                 return Duration.between(biopsyDate.atStartOfDay(), limsSamplingDate.atStartOfDay()).toDays()
-                        < Config.samplingDateThreshold;
+                        < Config.SAMPLING_DATE_THRESHOLD;
             } else {
                 return Duration.between(biopsyDate.atStartOfDay(),
-                        sequencedBiopsy.arrivalDate().atStartOfDay()).toDays() < Config.arrivalDateThreshold;
+                        sequencedBiopsy.arrivalDate().atStartOfDay()).toDays() < Config.ARRIVAL_DATE_THRESHOLD;
             }
         }
         return false;
@@ -89,8 +89,8 @@ public final class BiopsyMatcher {
     @NotNull
     private static String getMatchDateCriteria(@NotNull final BiopsyLimsData sequencedBiopsy) {
         if (sequencedBiopsy.samplingDate() != null) {
-            return "sampling date " + sequencedBiopsy.samplingDate() + " threshold: " + Config.samplingDateThreshold;
+            return "sampling date " + sequencedBiopsy.samplingDate() + " threshold: " + Config.SAMPLING_DATE_THRESHOLD;
         }
-        return "arrival date " + sequencedBiopsy.arrivalDate() + " threshold: " + Config.arrivalDateThreshold;
+        return "arrival date " + sequencedBiopsy.arrivalDate() + " threshold: " + Config.ARRIVAL_DATE_THRESHOLD;
     }
 }
