@@ -15,7 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class BiopsyTreatmentResponseReader {
+final class BiopsyTreatmentResponseReader {
     private static final Logger LOGGER = LogManager.getLogger(BiopsyTreatmentResponseReader.class);
 
     private static final String STUDY_TREATMENT = "SE.TREATMENT";
@@ -27,16 +27,19 @@ public class BiopsyTreatmentResponseReader {
     private static final String FIELD_MEASUREMENT_YN = "FLD.TUMORMEASUREMENT.TMYN";
     private static final String FIELD_RESPONSE = "FLD.TUMORMEASUREMENT.BESTRESPON";
 
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private BiopsyTreatmentResponseReader() {
+    }
 
     @NotNull
-    public static List<BiopsyTreatmentResponseData> read(@NotNull final EcrfPatient patient) {
+    static List<BiopsyTreatmentResponseData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentResponseData> treatmentResponses = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT, true)) {
                 LocalDate assessmentDate = null;
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT, true)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE, 0, dateFormatter, true);
+                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE, 0, DATE_FORMATTER, true);
                     if (date != null) {
                         assessmentDate = date;
                         break;
@@ -47,7 +50,7 @@ public class BiopsyTreatmentResponseReader {
                 String response = null;
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT,
                         true)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, dateFormatter, true);
+                    final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, DATE_FORMATTER, true);
                     if (date != null) {
                         responseDate = date;
                     }

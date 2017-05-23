@@ -17,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class BiopsyClinicalDataReader {
+final class BiopsyClinicalDataReader {
     private static final Logger LOGGER = LogManager.getLogger(BiopsyClinicalDataReader.class);
 
     private static final String STUDY_BIOPSY = "SE.BIOPSY";
@@ -26,9 +26,11 @@ class BiopsyClinicalDataReader {
 
     private static final String FIELD_DATE = "FLD.BIOPS.BIOPTDT";
     private static final String FIELD_LOCATION = "FLD.BIOPS.BILESSITE";
-    //    private static final String FIELD_LOCATION_OTHER = "FLD.BIOPS.BIOTHLESSITE";
 
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private BiopsyClinicalDataReader() {
+    }
 
     @NotNull
     static List<BiopsyClinicalData> read(@NotNull final EcrfPatient patient) {
@@ -36,7 +38,7 @@ class BiopsyClinicalDataReader {
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, true)) {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, true)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, dateFormatter, true);
+                    final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, DATE_FORMATTER, true);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
                     biopsies.add(new BiopsyClinicalData(date, location));
                 }

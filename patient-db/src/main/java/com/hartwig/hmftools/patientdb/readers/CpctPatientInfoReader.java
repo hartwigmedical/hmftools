@@ -20,7 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CpctPatientInfoReader {
+class CpctPatientInfoReader {
     private static final Logger LOGGER = LogManager.getLogger(CpctPatientInfoReader.class);
 
     private static final String STUDY_BASELINE = "SE.BASELINE";
@@ -40,7 +40,6 @@ public class CpctPatientInfoReader {
 
     private static final String FIELD_SEX = "FLD.DEMOGRAPHY.SEX";
     private static final String FIELD_ETHNICITY = "FLD.DEMOGRAPHY.ETHNIC";
-    //private static final String FIELD_ETHNICITY_SPECIFY = "FLD.DEMOGRAPHY.ETHNICSP";
 
     private static final String FIELD_REGISTRATION_DATE = "FLD.ELIGIBILITY.REGDTC";
     private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
@@ -55,20 +54,19 @@ public class CpctPatientInfoReader {
     private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
     private static final String DATAMODEL_HOSPITAL1 = "BASELINE.ELIGIBILITY.ELIGIBILITY.HOSPITAL";
-
     private static final String DATAMODEL_HOSPITAL2 = "BASELINE.SELCRIT.SELCRIT.NHOSPITAL";
 
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
     private final Map<Integer, String> hospitals;
 
-    public CpctPatientInfoReader(@NotNull final CpctEcrfModel model) {
+    CpctPatientInfoReader(@NotNull final CpctEcrfModel model) {
         this.hospitals = getHospitals(model);
     }
 
     @NotNull
-    public PatientInfo read(@NotNull final EcrfPatient patient) {
+    PatientInfo read(@NotNull final EcrfPatient patient) {
         LOGGER.info("Reading patient " + patient.patientId());
         String gender = null;
         String ethnicity = null;
@@ -101,11 +99,11 @@ public class CpctPatientInfoReader {
             for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY, true)) {
                 for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(
                         ITEMGROUP_ELIGIBILITY, true)) {
-                    registrationDate = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE, 0, dateFormatter,
+                    registrationDate = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE, 0, DATE_FORMATTER,
                             true);
                     hospital1 = eligibilityItemGroup.readItemString(FIELD_HOSPITAL1, 0, false);
                     birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2, 0, false);
-                    birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, dateFormatter, false);
+                    birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, DATE_FORMATTER, false);
                 }
             }
 
@@ -120,7 +118,7 @@ public class CpctPatientInfoReader {
         for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
             for (final EcrfForm deathFrom : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
                 for (final EcrfItemGroup deathItemGroup : deathFrom.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
-                    deathDate = deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, dateFormatter, true);
+                    deathDate = deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER, true);
                 }
             }
         }

@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyTreatmentReader {
+class BiopsyTreatmentReader {
     private static final Logger LOGGER = LogManager.getLogger(BiopsyTreatmentResponseReader.class);
 
     private static final String STUDY_AFTERBIOPT = "SE.AFTERBIOPT";
@@ -30,7 +30,7 @@ public class BiopsyTreatmentReader {
     private static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
     private static final String FIELD_DRUG = "FLD.TRTAFTER.SYSREGPOST";
 
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
     private final Map<String, String> treatmentMapping;
@@ -40,7 +40,7 @@ public class BiopsyTreatmentReader {
     }
 
     @NotNull
-    public List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) {
+    List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentData> treatmentDatas = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, true)) {
@@ -58,8 +58,8 @@ public class BiopsyTreatmentReader {
     private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final String patientId, @NotNull final EcrfForm form) {
         final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
         for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, true)) {
-            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, dateFormatter, true);
-            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, dateFormatter, true);
+            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, true);
+            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, true);
             if (drugStart != null && drugEnd != null) {
                 if (drugStart.isEqual(drugEnd)) {
                     LOGGER.warn(

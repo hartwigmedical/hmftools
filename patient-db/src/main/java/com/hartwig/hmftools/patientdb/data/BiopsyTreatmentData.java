@@ -24,10 +24,10 @@ public class BiopsyTreatmentData {
     @Nullable
     private final Integer biopsyId;
 
-    private static final AtomicInteger idCounter = new AtomicInteger();
+    private static final AtomicInteger ID_COUNTER = new AtomicInteger();
 
     private static int createId() {
-        return idCounter.getAndIncrement();
+        return ID_COUNTER.getAndIncrement();
     }
 
     public BiopsyTreatmentData(final int id, @Nullable final String treatmentGiven,
