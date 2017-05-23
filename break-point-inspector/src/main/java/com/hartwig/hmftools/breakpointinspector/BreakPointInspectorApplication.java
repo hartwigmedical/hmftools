@@ -81,8 +81,8 @@ public class BreakPointInspectorApplication {
         public ClipInfo Clipping = new ClipInfo();
     }
 
-    private static class ReadCollection {
-        public ArrayList<ReadInfo> Infos = new ArrayList<>();
+    private static class NamedReadCollection {
+        public ArrayList<ReadInfo> Reads = new ArrayList<>();
     }
 
     private static class Location implements Comparable<Location> {
@@ -142,7 +142,7 @@ public class BreakPointInspectorApplication {
         @Override
         public int compareTo(@NotNull final Location o) {
             final int comp1 = Integer.compare(ReferenceIndex, o.ReferenceIndex);
-            if(comp1 == 0)
+            if (comp1 == 0)
                 return Integer.compare(Position, o.Position);
             return 0;
         }
@@ -241,7 +241,7 @@ public class BreakPointInspectorApplication {
     }
 
     private static class ClassifiedReadResults {
-        public Map<String, ReadCollection> ReadMap = new Hashtable<>();
+        public Map<String, NamedReadCollection> ReadMap = new Hashtable<>();
     }
 
     private static class BreakPointStats {
@@ -307,17 +307,19 @@ public class BreakPointInspectorApplication {
         }
     }
 
+    private static boolean isMate(final SAMRecord read, final SAMRecord mate) {
+        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex() == mate.getReferenceIndex()
+                && read.getMateAlignmentStart() == mate.getAlignmentStart();
+    }
+
     private static SampleStats calculateStats(final ClassifiedReadResults queryResult) {
 
         final SampleStats result = new SampleStats();
 
-        for (final ReadCollection reads : queryResult.ReadMap.values()) {
-
-            final List<ReadInfo> pair = reads.Infos;
-            final ReadInfo p0 = pair.get(0);
+        for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
 
             // update clipping stats
-            for (final ReadInfo info : pair) {
+            for (final ReadInfo info : collection.Reads) {
                 final SAMRecord read = info.Read;
 
                 if (info.Location == Overlap.CLIP && !info.Clipping.HardClipped) {
@@ -349,76 +351,83 @@ public class BreakPointInspectorApplication {
                 }
             }
 
-            // handle odd sizes
-            if (pair.size() < 2) {
-                if (p0.Category == ReadCategory.MATE_UNMAPPED) {
+            // consider the pairings
+            for (final ReadInfo p0 : collection.Reads) {
+                // find the mate
+                final ReadInfo p1 = collection.Reads.stream().filter(i -> isMate(p0.Read, i.Read)).findFirst().orElse(
+                        null);
+
+                // single read
+                if (p1 == null) {
+                    if (p0.Category == ReadCategory.MATE_UNMAPPED) {
+                        result.Get(p0.Region).Unmapped_Mate++;
+                    } else if (p0.Category != ReadCategory.NORMAL || p0.Location != Overlap.FILTERED) {
+                        result.Get(p0.Region).Diff_Variant++;
+                    }
+                    continue;
+                }
+
+                // don't consider pairs twice from the reverse pairing
+                if (p0.Read.getInferredInsertSize() < 0) {
+                    continue;
+                }
+
+                // possible two paired but unmapped reads?
+                if (p0.Region == Region.OTHER && p1.Region == Region.OTHER) {
+                    continue;
+                } else if (p1.Region == Region.OTHER) { // must be unmapped mate
                     result.Get(p0.Region).Unmapped_Mate++;
-                } else if (p0.Category != ReadCategory.NORMAL || p0.Location != Overlap.FILTERED) {
-                    result.Get(p0.Region).Diff_Variant++;
+                    continue;
+                } else if (p0.Region == Region.OTHER) { // must be unmapped mate
+                    result.Get(p1.Region).Unmapped_Mate++;
+                    continue;
                 }
-                continue;
-            } else if (pair.size() > 2) {
-                // TODO: secondary / supplementary reads?
-                System.err.println("> 2 read mating not implemented: " + p0.Read.getReadName());
-                continue;
-            }
 
-            final ReadInfo p1 = pair.get(1);
+                final List<ReadInfo> pair = Arrays.asList(p0, p1);
+                final boolean pairPossible = pair.stream().allMatch(p -> p.Clipping.Length <= MANTA_REQ_PAIR_MIN);
 
-            // possible two paired but unmapped reads?
-            if (p0.Region == Region.OTHER && p1.Region == Region.OTHER) {
-                continue;
-            } else if (p1.Region == Region.OTHER) { // must be unmapped mate
-                result.Get(p0.Region).Unmapped_Mate++;
-                continue;
-            } else if (p0.Region == Region.OTHER) { // must be unmapped mate
-                result.Get(p1.Region).Unmapped_Mate++;
-                continue;
-            }
+                if (p0.Region != p1.Region) {
+                    // supports the break point
+                    boolean interesting = false;
+                    for (final ReadInfo r : pair) {
+                        final boolean splitEvidence =
+                                r.Location == Overlap.CLIP && r.Clipping.Length >= MANTA_REQ_SPLIT_MIN;
+                        if (pairPossible && splitEvidence) {
+                            result.Get(r.Region).PR_SR_Support++;
+                        } else if (pairPossible) {
+                            result.Get(r.Region).PR_Only_Support++;
+                        } else if (splitEvidence) {
+                            result.Get(r.Region).SR_Only_Support++;
+                        }
 
-            final boolean pairPossible = pair.stream().allMatch(p -> p.Clipping.Length <= MANTA_REQ_PAIR_MIN);
-
-            if (p0.Region != p1.Region) {
-                // supports the break point
-                boolean interesting = false;
-                for (final ReadInfo r : pair) {
-                    final boolean splitEvidence =
-                            r.Location == Overlap.CLIP && r.Clipping.Length >= MANTA_REQ_SPLIT_MIN;
-                    if (pairPossible && splitEvidence) {
-                        result.Get(r.Region).PR_SR_Support++;
-                    } else if (pairPossible) {
-                        result.Get(r.Region).PR_Only_Support++;
-                    } else if (splitEvidence) {
-                        result.Get(r.Region).SR_Only_Support++;
+                        interesting |= pairPossible || splitEvidence;
                     }
 
-                    interesting |= pairPossible || splitEvidence;
-                }
-
-                if (interesting) {
-                    switch (SamPairUtil.getPairOrientation(p0.Read)) {
-                        case FR:
-                            result.Orientation.InnieCount++;
-                            break;
-                        case RF:
-                            result.Orientation.OutieCount++;
-                            break;
-                        case TANDEM:
-                            result.Orientation.TandemCount++;
-                            break;
+                    if (interesting) {
+                        switch (SamPairUtil.getPairOrientation(p0.Read)) {
+                            case FR:
+                                result.Orientation.InnieCount++;
+                                break;
+                            case RF:
+                                result.Orientation.OutieCount++;
+                                break;
+                            case TANDEM:
+                                result.Orientation.TandemCount++;
+                                break;
+                        }
                     }
-                }
-            } else {
-                final BreakPointStats stats = p0.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
-                final boolean splitEvidence = pair.stream().anyMatch(
-                        p -> p.Location == Overlap.CLIP && p.Clipping.Length >= MANTA_REQ_SPLIT_MIN);
-                if (splitEvidence) {
-                    stats.SR_Only_Support++;
-                } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
-                    stats.PR_Only_Normal++;
-                } else if (p0.Location == Overlap.INTERSECT || p1.Location == Overlap.INTERSECT) {
-                    stats.PR_SR_Normal++;
-                    // TODO: does the intersection have to occur within a certain bound of read?
+                } else {
+                    final BreakPointStats stats = p0.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
+                    final boolean splitEvidence = pair.stream().anyMatch(
+                            p -> p.Location == Overlap.CLIP && p.Clipping.Length >= MANTA_REQ_SPLIT_MIN);
+                    if (splitEvidence) {
+                        stats.SR_Only_Support++;
+                    } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
+                        stats.PR_Only_Normal++;
+                    } else if (p0.Location == Overlap.INTERSECT || p1.Location == Overlap.INTERSECT) {
+                        stats.PR_SR_Normal++;
+                        // TODO: does the intersection have to occur within a certain bound of read?
+                    }
                 }
             }
         }
@@ -436,12 +445,12 @@ public class BreakPointInspectorApplication {
         while (results.hasNext()) {
 
             final SAMRecord read = results.next();
-            final ReadCollection collection = result.ReadMap.computeIfAbsent(read.getReadName(),
-                    k -> new ReadCollection());
+            final NamedReadCollection collection = result.ReadMap.computeIfAbsent(read.getReadName(),
+                    k -> new NamedReadCollection());
             final ReadInfo info = new ReadInfo();
 
             info.Read = read;
-            collection.Infos.add(info);
+            collection.Reads.add(info);
 
             // if unmapped there's nothing to do
             if (read.getReadUnmappedFlag()) {
