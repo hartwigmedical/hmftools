@@ -33,9 +33,13 @@ public final class Lims {
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines) {
             final String[] parts = line.split(",");
-            final String sample = parts[0].trim();
-            readLimsLine(sample, line, dateFormatter).ifPresent(
-                    limsBiopsyData -> limsDataPerSample.put(sample, limsBiopsyData));
+            if (parts.length > 0) {
+                final String sample = parts[0].trim();
+                readLimsLine(sample, line, dateFormatter).ifPresent(
+                        limsBiopsyData -> limsDataPerSample.put(sample, limsBiopsyData));
+            } else {
+                LOGGER.warn("SampleID missing from line: " + line + ". Skipping.");
+            }
         }
         return new LimsModel(limsDataPerSample);
     }

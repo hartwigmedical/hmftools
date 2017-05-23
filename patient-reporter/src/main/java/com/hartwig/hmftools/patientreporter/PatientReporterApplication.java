@@ -58,7 +58,7 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
 
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public static void main(final String... args)
             throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
