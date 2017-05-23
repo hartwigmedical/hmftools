@@ -36,14 +36,6 @@ public class EcrfForm {
         return itemGroupsPerOID;
     }
 
-    @NotNull
-    public List<EcrfItemGroup> itemGroupsPerOID(@NotNull final String itemGroupOID) {
-        if (itemGroupsPerOID.get(itemGroupOID) == null) {
-            return Lists.newArrayList();
-        }
-        return itemGroupsPerOID.get(itemGroupOID);
-    }
-
     public boolean isEmpty() {
         return itemGroupsPerOID.values().stream().filter(
                 itemGroups -> itemGroups.stream().filter(group -> !group.isEmpty()).count() > 0).count() == 0;

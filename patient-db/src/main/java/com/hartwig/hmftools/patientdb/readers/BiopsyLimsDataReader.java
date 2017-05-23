@@ -33,11 +33,11 @@ class BiopsyLimsDataReader {
 
     BiopsyLimsDataReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv,
             @NotNull final String limsUmcuCsv) throws IOException, EmptyFileException {
-        LOGGER.info("reading lims file: " + limsCsv);
+        LOGGER.info("Reading lims file: " + limsCsv);
         this.limsModel = Lims.buildModelFromCsv(limsCsv, LIMS_DATE_FORMATTER);
-        LOGGER.info("reading lims file: " + limsOldCsv);
+        LOGGER.info("Reading lims file: " + limsOldCsv);
         this.limsOldModel = Lims.buildModelFromCsv(limsOldCsv, OLD_LIMS_DATE_FORMATTER);
-        LOGGER.info("reading lims file: " + limsUmcuCsv);
+        LOGGER.info("Reading lims file: " + limsUmcuCsv);
         this.limsUmcuModel = Lims.buildModelFromCsv(limsUmcuCsv, OLD_LIMS_DATE_FORMATTER);
     }
 

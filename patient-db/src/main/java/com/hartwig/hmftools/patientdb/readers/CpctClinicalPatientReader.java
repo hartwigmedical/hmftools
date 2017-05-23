@@ -37,10 +37,10 @@ public class CpctClinicalPatientReader {
     }
 
     @NotNull
-    public Patient read(@NotNull final EcrfPatient patient, @NotNull final List<String> sampleIdsForPatient)
+    public Patient read(@NotNull final EcrfPatient patient, @NotNull final List<String> tumorSamplesForPatient)
             throws IOException, HartwigException {
         ThreadContext.put("cpctHospitalCode", "HMF");
-        final List<BiopsyLimsData> sequencedBiopsies = biopsyLimsDataReader.read(sampleIdsForPatient);
+        final List<BiopsyLimsData> sequencedBiopsies = biopsyLimsDataReader.read(tumorSamplesForPatient);
         ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
         final PatientInfo patientInfo = cpctPatientInfoReader.read(patient);
         final List<BiopsyClinicalData> clinicalBiopsies = BiopsyClinicalDataReader.read(patient);

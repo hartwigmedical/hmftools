@@ -84,7 +84,7 @@ class DatabaseWriter {
                     PATIENTS.ETHNICITY, PATIENTS.HOSPITAL, PATIENTS.BIRTHYEAR, PATIENTS.TUMORLOCATION,
                     PATIENTS.DEATHDATE).values(patientInfo.cpctId(), Utils.toSQLDate(patientInfo.registrationDate()),
                     patientInfo.gender(), patientInfo.ethnicity(), patientInfo.hospital(), patientInfo.birthYear(),
-                    patientInfo.tumorLocation(), Utils.toSQLDate(patientInfo.deathDate())).returning(
+                    patientInfo.primaryTumorLocation(), Utils.toSQLDate(patientInfo.deathDate())).returning(
                     PATIENTS.ID).fetchOne().getValue(PATIENTS.ID);
         }
     }

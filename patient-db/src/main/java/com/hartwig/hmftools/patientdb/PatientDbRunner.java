@@ -71,6 +71,7 @@ public final class PatientDbRunner {
         final boolean somatic = cmd.hasOption(SOMATIC);
         final boolean clinical = cmd.hasOption(CLINICAL);
 
+        // KODU: ThreadContext is used throughout patient-db to generate log file per hospital. See also log4j2.xml
         ThreadContext.put("cpctHospitalCode", "default");
         if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical)) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -101,19 +102,19 @@ public final class PatientDbRunner {
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
             SQLException, HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
+        final String treatmentToTypeMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
         final String limsCsv = cmd.getOptionValue(LIMS_CSV);
         final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
         final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db -clinical", clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
             final CpctClinicalPatientReader cpctClinicalPatientReader = new CpctClinicalPatientReader(model,
-                    readTreatmentToTypeMappingFile(treatmentMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
+                    readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream().map(
                     runContext -> getPatientId(runContext.setName())).filter(
                     setName -> setName.startsWith("CPCT")).collect(Collectors.toSet());
@@ -124,9 +125,9 @@ public final class PatientDbRunner {
                 if (patient == null) {
                     LOGGER.warn("Could not find patient with id: " + patientId + " in ecrf file.");
                 } else {
-                    final List<String> sampleIdsForPatient = getSamplesForPatient(patientId, runContexts);
-                    LOGGER.info(patient.patientId() + ": Samples: " + sampleIdsForPatient);
-                    final Patient cpctPatient = cpctClinicalPatientReader.read(patient, sampleIdsForPatient);
+                    final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
+                    LOGGER.info(patient.patientId() + ": Samples: " + tumorSamplesForPatient);
+                    final Patient cpctPatient = cpctClinicalPatientReader.read(patient, tumorSamplesForPatient);
                     dbWriter.writeClinicalData(cpctPatient);
                 }
             }
@@ -157,7 +158,7 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static List<String> getSamplesForPatient(@NotNull final String patientId,
+    private static List<String> getTumorSamplesForPatient(@NotNull final String patientId,
             @NotNull final List<RunContext> runContexts) {
         final List<String> sampleIdsForPatient = Lists.newArrayList();
         runContexts.forEach(runContext -> {

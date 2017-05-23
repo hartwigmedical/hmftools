@@ -42,14 +42,13 @@ class CpctPatientInfoReader {
     private static final String FIELD_ETHNICITY = "FLD.DEMOGRAPHY.ETHNIC";
 
     private static final String FIELD_REGISTRATION_DATE = "FLD.ELIGIBILITY.REGDTC";
-    private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
+    private static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
     private static final String FIELD_BIRTH_YEAR2 = "FLD.ELIGIBILITY.BIRTHYEAR";
     private static final String FIELD_BIRTH_YEAR3 = "FLD.ELIGIBILITY.BIRTHDTCES";
-
+    private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
     private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
-    private static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
 
-    private static final String FIELD_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
 
     private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
@@ -62,7 +61,7 @@ class CpctPatientInfoReader {
     private final Map<Integer, String> hospitals;
 
     CpctPatientInfoReader(@NotNull final CpctEcrfModel model) {
-        this.hospitals = getHospitals(model);
+        this.hospitals = extractHospitalMap(model);
     }
 
     @NotNull
@@ -70,7 +69,7 @@ class CpctPatientInfoReader {
         LOGGER.info("Reading patient " + patient.patientId());
         String gender = null;
         String ethnicity = null;
-        String tumorLocation = null;
+        String primaryTumorLocation = null;
         LocalDate registrationDate = null;
         String hospital1 = null;
         String hospital2 = null;
@@ -92,7 +91,7 @@ class CpctPatientInfoReader {
             for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, true)) {
                 for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(
                         ITEMGROUP_CARCINOMA, true)) {
-                    tumorLocation = carcinomaItemGroup.readItemString(FIELD_TUMOR_LOCATION, 0, true);
+                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, true);
                 }
             }
 
@@ -128,12 +127,13 @@ class CpctPatientInfoReader {
         }
         checkHospitalVsImplied(patient.patientId(), impliedHospital, hospital1, FIELD_HOSPITAL1);
         checkHospitalVsImplied(patient.patientId(), impliedHospital, hospital2, FIELD_HOSPITAL2);
+        
         return new PatientInfo(patient.patientId(), registrationDate, gender, ethnicity, impliedHospital, birthYear,
-                tumorLocation, deathDate);
+                primaryTumorLocation, deathDate);
     }
 
     @NotNull
-    private static Map<Integer, String> getHospitals(@NotNull final CpctEcrfModel datamodel) {
+    private static Map<Integer, String> extractHospitalMap(@NotNull final CpctEcrfModel datamodel) {
         final Map<Integer, String> hospitals = Maps.newHashMap();
         final Iterable<EcrfField> fields = datamodel.findFieldsById(
                 Lists.newArrayList(DATAMODEL_HOSPITAL1, DATAMODEL_HOSPITAL2));
@@ -153,7 +153,7 @@ class CpctPatientInfoReader {
         return hospital;
     }
 
-    private void checkHospitalVsImplied(@NotNull final String patientId, @Nullable final String impliedHospital,
+    private static void checkHospitalVsImplied(@NotNull final String patientId, @Nullable final String impliedHospital,
             @Nullable final String hospital, @Nullable final String hospitalField) {
         if (impliedHospital != null && hospital != null && !hospital.equals(impliedHospital)) {
             LOGGER.warn(patientId + ": " + hospitalField + " value(" + hospital + ") does not match cpctId value("
@@ -162,7 +162,7 @@ class CpctPatientInfoReader {
     }
 
     @Nullable
-    private Integer determineBirthYear(@Nullable final String birthYear1, @Nullable final String birthYear2,
+    private static Integer determineBirthYear(@Nullable final String birthYear1, @Nullable final String birthYear2,
             @Nullable final LocalDate birthYear3) {
         if (birthYear1 != null) {
             return Integer.parseInt(birthYear1);
