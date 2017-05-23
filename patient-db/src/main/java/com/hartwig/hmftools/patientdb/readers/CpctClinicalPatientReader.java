@@ -46,13 +46,13 @@ public class CpctClinicalPatientReader {
         final List<BiopsyData> clinicalBiopsies = BiopsyClinicalDataReader.read(patient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(patient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(patient);
-        final List<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
-                patient.patientId(), treatments, treatmentResponses);
-        final List<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patient.patientId(),
-                clinicalBiopsies, treatments);
         final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patient.patientId(),
                 sequencedBiopsies, clinicalBiopsies);
+        final List<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(
+                patient.patientId(), clinicalBiopsies, treatments);
+        final List<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
+                patient.patientId(), treatments, treatmentResponses);
         ThreadContext.put("cpctHospitalCode", "default");
-        return new Patient(patientData, sequencedBiopsies, matchedTreatments, matchedResponses, matchedBiopsies);
+        return new Patient(patientData, sequencedBiopsies, matchedBiopsies, matchedTreatments, matchedResponses);
     }
 }
