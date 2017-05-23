@@ -7,7 +7,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
+import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
@@ -43,14 +43,14 @@ public class CpctClinicalPatientReader {
         final List<SampleData> sequencedBiopsies = biopsyLimsDataReader.read(tumorSamplesForPatient);
         ThreadContext.put("cpctHospitalCode", patient.patientId().substring(6, 8));
         final PatientData patientData = cpctPatientInfoReader.read(patient);
-        final List<BiopsyClinicalData> clinicalBiopsies = BiopsyClinicalDataReader.read(patient);
+        final List<BiopsyData> clinicalBiopsies = BiopsyClinicalDataReader.read(patient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(patient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(patient);
         final List<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
                 patient.patientId(), treatments, treatmentResponses);
         final List<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patient.patientId(),
                 clinicalBiopsies, treatments);
-        final List<BiopsyClinicalData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patient.patientId(),
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patient.patientId(),
                 sequencedBiopsies, clinicalBiopsies);
         ThreadContext.put("cpctHospitalCode", "default");
         return new Patient(patientData, sequencedBiopsies, matchedTreatments, matchedResponses, matchedBiopsies);

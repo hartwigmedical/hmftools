@@ -14,12 +14,12 @@ public class Patient {
     @NotNull
     private final List<BiopsyTreatmentResponseData> treatmentResponses;
     @NotNull
-    private final List<BiopsyClinicalData> clinicalBiopsies;
+    private final List<BiopsyData> clinicalBiopsies;
 
     public Patient(@NotNull final PatientData patientData, @NotNull final List<SampleData> sequencedBiopsies,
             @NotNull final List<BiopsyTreatmentData> treatments,
             @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses,
-            @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
+            @NotNull final List<BiopsyData> clinicalBiopsies) {
         this.patientData = patientData;
         this.sequencedBiopsies = sequencedBiopsies;
         this.treatments = treatments;
@@ -48,7 +48,7 @@ public class Patient {
     }
 
     @NotNull
-    public List<BiopsyClinicalData> clinicalBiopsies() {
+    public List<BiopsyData> clinicalBiopsies() {
         return clinicalBiopsies;
     }
 

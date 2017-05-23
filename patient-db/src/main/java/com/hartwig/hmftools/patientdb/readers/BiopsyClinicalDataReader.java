@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
+import com.hartwig.hmftools.patientdb.data.BiopsyData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,19 +33,19 @@ final class BiopsyClinicalDataReader {
     }
 
     @NotNull
-    static List<BiopsyClinicalData> read(@NotNull final EcrfPatient patient) {
-        final List<BiopsyClinicalData> biopsies = Lists.newArrayList();
+    static List<BiopsyData> read(@NotNull final EcrfPatient patient) {
+        final List<BiopsyData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, true)) {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, true)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, DATE_FORMATTER, true);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
-                    biopsies.add(new BiopsyClinicalData(date, location));
+                    biopsies.add(new BiopsyData(date, location));
                 }
             }
         }
-        final Map<LocalDate, List<BiopsyClinicalData>> groups = biopsies.stream().filter(
-                biopsy -> biopsy.date() != null).collect(Collectors.groupingBy(BiopsyClinicalData::date));
+        final Map<LocalDate, List<BiopsyData>> groups = biopsies.stream().filter(
+                biopsy -> biopsy.date() != null).collect(Collectors.groupingBy(BiopsyData::date));
         for (final LocalDate biopsyDate : groups.keySet()) {
             final int biopsiesPerDate = groups.get(biopsyDate).size();
             if (biopsiesPerDate > 1) {

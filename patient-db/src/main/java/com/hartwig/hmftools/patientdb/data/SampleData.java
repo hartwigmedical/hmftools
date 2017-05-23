@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class SampleData {
 
-    private final int id;
     @NotNull
     private final String sampleId;
     @NotNull
@@ -16,32 +15,21 @@ public class SampleData {
     @Nullable
     private final LocalDate samplingDate;
 
-    private static final AtomicInteger ID_COUNTER = new AtomicInteger();
-
-    private static int createId() {
-        return ID_COUNTER.getAndIncrement();
-    }
-
     public SampleData(@NotNull final String sampleId, @NotNull final LocalDate arrivalDate,
             @Nullable final LocalDate samplingDate) {
         this.sampleId = sampleId;
         this.arrivalDate = arrivalDate;
         this.samplingDate = samplingDate;
-        this.id = createId();
-    }
-
-    public int id() {
-        return id;
-    }
-
-    @NotNull
-    public LocalDate arrivalDate() {
-        return arrivalDate;
     }
 
     @NotNull
     public String sampleId() {
         return sampleId;
+    }
+
+    @NotNull
+    public LocalDate arrivalDate() {
+        return arrivalDate;
     }
 
     @Nullable

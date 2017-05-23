@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.Config;
-import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
+import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,23 +24,23 @@ public final class TreatmentMatcher {
 
     @NotNull
     public static List<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull final String patientId,
-            @NotNull final List<BiopsyClinicalData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
+            @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         if (biopsies.size() < treatments.size()) {
             LOGGER.warn(patientId + ": has more treatments(" + treatments.size() + ") than biopsies(" + biopsies.size()
                     + ").");
         }
-        List<BiopsyClinicalData> remainingBiopsies = biopsies;
+        List<BiopsyData> remainingBiopsies = biopsies;
         for (final BiopsyTreatmentData treatment : treatments) {
             final String treatmentGiven = treatment.treatmentGiven();
             if (treatmentGiven == null || treatmentGiven.toLowerCase().equals("no")) {
                 matchedTreatments.add(treatment);
                 continue;
             }
-            final Map<Boolean, List<BiopsyClinicalData>> partitions = remainingBiopsies.stream().collect(
+            final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream().collect(
                     Collectors.partitioningBy(
                             clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
-            final List<BiopsyClinicalData> possibleMatches = partitions.get(true);
+            final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 0) {
                 LOGGER.warn(patientId + ": no biopsy match for treatment [" + treatment.startDate() + " - "
                         + treatment.endDate() + "]");
@@ -55,7 +55,7 @@ public final class TreatmentMatcher {
                         + "] matched biopsy with null date.");
                 matchedTreatments.add(treatment);
             } else {
-                final BiopsyClinicalData clinicalBiopsy = possibleMatches.get(0);
+                final BiopsyData clinicalBiopsy = possibleMatches.get(0);
                 matchedTreatments.add(
                         new BiopsyTreatmentData(treatment.id(), treatment.treatmentGiven(), treatment.startDate(),
                                 treatment.endDate(), treatment.drugs(), clinicalBiopsy.id()));

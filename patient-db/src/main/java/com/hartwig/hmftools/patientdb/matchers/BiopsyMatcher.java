@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.Config;
-import com.hartwig.hmftools.patientdb.data.BiopsyClinicalData;
+import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,23 +22,23 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    public static List<BiopsyClinicalData> matchBiopsiesToTumorSamples(@NotNull final String patientId,
+    public static List<BiopsyData> matchBiopsiesToTumorSamples(@NotNull final String patientId,
             @NotNull final List<SampleData> sequencedBiopsies,
-            @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
-        final List<BiopsyClinicalData> matchedBiopsies = Lists.newArrayList();
+            @NotNull final List<BiopsyData> clinicalBiopsies) {
+        final List<BiopsyData> matchedBiopsies = Lists.newArrayList();
         if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
             LOGGER.warn(patientId + ": contains less biopsies in ecrf (" + clinicalBiopsies.size()
                     + ") than biopsies sequenced (" + sequencedBiopsies.size() + ").");
         }
-        List<BiopsyClinicalData> remainingBiopsies = clinicalBiopsies;
+        List<BiopsyData> remainingBiopsies = clinicalBiopsies;
         for (final SampleData sequencedBiopsy : sequencedBiopsies) {
-            final Map<Boolean, List<BiopsyClinicalData>> partitions = remainingBiopsies.stream().collect(
+            final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream().collect(
                     Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));
-            final List<BiopsyClinicalData> possibleMatches = partitions.get(true);
+            final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 1 && possibleMatches.get(0).date() != null) {
-                final BiopsyClinicalData clinicalBiopsy = partitions.get(true).get(0);
+                final BiopsyData clinicalBiopsy = partitions.get(true).get(0);
                 matchedBiopsies.add(
-                        new BiopsyClinicalData(clinicalBiopsy.id(), clinicalBiopsy.date(), clinicalBiopsy.location(),
+                        new BiopsyData(clinicalBiopsy.id(), clinicalBiopsy.date(), clinicalBiopsy.location(),
                                 sequencedBiopsy.sampleId()));
                 remainingBiopsies = partitions.get(false);
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1
@@ -46,7 +46,7 @@ public final class BiopsyMatcher {
                 LOGGER.warn(patientId + ": Could not match any clinical biopsy with sequenced biopsy: "
                         + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + ","
                         + sequencedBiopsy.arrivalDate() + "): " + clinicalBiopsies.stream().map(
-                        BiopsyClinicalData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
+                        BiopsyData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
                         sequencedBiopsy));
                 // MIVO: abort finding new matches if we can't match one sequenced biopsy
                 return clinicalBiopsies;
@@ -54,7 +54,7 @@ public final class BiopsyMatcher {
                 LOGGER.warn(patientId + ": Found more than 1 possible clinical biopsy match for sequenced biopsy: "
                         + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + ","
                         + sequencedBiopsy.arrivalDate() + "): " + clinicalBiopsies.stream().map(
-                        BiopsyClinicalData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
+                        BiopsyData::date).collect(Collectors.toList()) + " on " + getMatchDateCriteria(
                         sequencedBiopsy));
                 // MIVO: abort finding new matches if we can't match one sequenced biopsy
                 return clinicalBiopsies;
@@ -65,12 +65,12 @@ public final class BiopsyMatcher {
     }
 
     private static boolean isPossibleMatch(@NotNull final SampleData sequencedBiopsy,
-            @NotNull final BiopsyClinicalData clinicalBiopsy) {
+            @NotNull final BiopsyData clinicalBiopsy) {
         return clinicalBiopsy.date() == null || isWithinThreshold(sequencedBiopsy, clinicalBiopsy);
     }
 
     private static boolean isWithinThreshold(@NotNull final SampleData sequencedBiopsy,
-            @NotNull final BiopsyClinicalData clinicalBiopsy) {
+            @NotNull final BiopsyData clinicalBiopsy) {
         final LocalDate biopsyDate = clinicalBiopsy.date();
         if (biopsyDate != null && (biopsyDate.isBefore(sequencedBiopsy.date()) || biopsyDate.isEqual(
                 sequencedBiopsy.date()))) {
