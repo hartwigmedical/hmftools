@@ -18,11 +18,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class BiopsyLimsDataReader {
-    private static final Logger LOGGER = LogManager.getLogger(BiopsyLimsDataReader.class);
+class SampleReader {
+    private static final Logger LOGGER = LogManager.getLogger(SampleReader.class);
 
-    private static final DateTimeFormatter LIMS_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-    private static final DateTimeFormatter OLD_LIMS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter LIMS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
     private final LimsModel limsModel;
@@ -31,14 +30,14 @@ class BiopsyLimsDataReader {
     @NotNull
     private final LimsModel limsUmcuModel;
 
-    BiopsyLimsDataReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv,
+    SampleReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv,
             @NotNull final String limsUmcuCsv) throws IOException, EmptyFileException {
         LOGGER.info("Reading lims file: " + limsCsv);
         this.limsModel = Lims.buildModelFromCsv(limsCsv, LIMS_DATE_FORMATTER);
         LOGGER.info("Reading lims file: " + limsOldCsv);
-        this.limsOldModel = Lims.buildModelFromCsv(limsOldCsv, OLD_LIMS_DATE_FORMATTER);
+        this.limsOldModel = Lims.buildModelFromCsv(limsOldCsv, LIMS_DATE_FORMATTER);
         LOGGER.info("Reading lims file: " + limsUmcuCsv);
-        this.limsUmcuModel = Lims.buildModelFromCsv(limsUmcuCsv, OLD_LIMS_DATE_FORMATTER);
+        this.limsUmcuModel = Lims.buildModelFromCsv(limsUmcuCsv, LIMS_DATE_FORMATTER);
     }
 
     @NotNull
