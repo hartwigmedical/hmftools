@@ -17,8 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-final class BiopsyClinicalDataReader {
-    private static final Logger LOGGER = LogManager.getLogger(BiopsyClinicalDataReader.class);
+final class BiopsyReader {
+    private static final Logger LOGGER = LogManager.getLogger(BiopsyReader.class);
 
     private static final String STUDY_BIOPSY = "SE.BIOPSY";
     private static final String FORM_BIOPS = "FRM.BIOPS";
@@ -26,10 +26,11 @@ final class BiopsyClinicalDataReader {
 
     private static final String FIELD_DATE = "FLD.BIOPS.BIOPTDT";
     private static final String FIELD_LOCATION = "FLD.BIOPS.BILESSITE";
+    private static final String FIELD_LOCATION_OTHER = "FLD.BIOPS.BIOTHLESSITE";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private BiopsyClinicalDataReader() {
+    private BiopsyReader() {
     }
 
     @NotNull
@@ -40,7 +41,12 @@ final class BiopsyClinicalDataReader {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, true)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_DATE, 0, DATE_FORMATTER, true);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
-                    biopsies.add(new BiopsyData(date, location));
+                    if (location != null && location.trim().toLowerCase().startsWith("other")) {
+                        final String location_other = itemGroup.readItemString(FIELD_LOCATION_OTHER, 0, true);
+                        biopsies.add(new BiopsyData(date, location_other));
+                    } else {
+                        biopsies.add(new BiopsyData(date, location));
+                    }
                 }
             }
         }
