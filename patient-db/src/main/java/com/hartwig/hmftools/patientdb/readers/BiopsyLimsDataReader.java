@@ -18,11 +18,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyLimsDataReader {
+class BiopsyLimsDataReader {
     private static final Logger LOGGER = LogManager.getLogger(BiopsyLimsDataReader.class);
 
-    private static final DateTimeFormatter newLimsDateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter LIMS_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter OLD_LIMS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
     private final LimsModel limsModel;
@@ -34,15 +34,15 @@ public class BiopsyLimsDataReader {
     BiopsyLimsDataReader(@NotNull final String limsCsv, @NotNull final String limsOldCsv,
             @NotNull final String limsUmcuCsv) throws IOException, EmptyFileException {
         LOGGER.info("reading lims file: " + limsCsv);
-        this.limsModel = Lims.buildModelFromCsv(limsCsv, newLimsDateFormatter);
+        this.limsModel = Lims.buildModelFromCsv(limsCsv, LIMS_DATE_FORMATTER);
         LOGGER.info("reading lims file: " + limsOldCsv);
-        this.limsOldModel = Lims.buildModelFromCsv(limsOldCsv, dateFormatter);
+        this.limsOldModel = Lims.buildModelFromCsv(limsOldCsv, OLD_LIMS_DATE_FORMATTER);
         LOGGER.info("reading lims file: " + limsUmcuCsv);
-        this.limsUmcuModel = Lims.buildModelFromCsv(limsUmcuCsv, dateFormatter);
+        this.limsUmcuModel = Lims.buildModelFromCsv(limsUmcuCsv, OLD_LIMS_DATE_FORMATTER);
     }
 
     @NotNull
-    public List<BiopsyLimsData> read(@NotNull final List<String> sampleIds) {
+    List<BiopsyLimsData> read(@NotNull final List<String> sampleIds) {
         final List<BiopsyLimsData> limsBiopsies = Lists.newArrayList();
         sampleIds.forEach(sampleId -> {
             final LimsData hmfLimsData = limsModel.findDataPerSample(sampleId);
@@ -60,8 +60,8 @@ public class BiopsyLimsDataReader {
     }
 
     @NotNull
-    private LocalDate determineArrivalDate(@Nullable final LimsData hmfLimsData, @Nullable final LimsData oldLimsData,
-            @Nullable final LimsData umcuLimsData) {
+    private static LocalDate determineArrivalDate(@Nullable final LimsData hmfLimsData,
+            @Nullable final LimsData oldLimsData, @Nullable final LimsData umcuLimsData) {
         if (hmfLimsData != null) {
             return hmfLimsData.arrivalDate();
         } else {
@@ -75,8 +75,8 @@ public class BiopsyLimsDataReader {
     }
 
     @Nullable
-    private LocalDate determineSamplingDate(@Nullable final LimsData hmfLimsData, @Nullable final LimsData oldLimsData,
-            @Nullable final LimsData umcuLimsData) {
+    private static LocalDate determineSamplingDate(@Nullable final LimsData hmfLimsData,
+            @Nullable final LimsData oldLimsData, @Nullable final LimsData umcuLimsData) {
         final LocalDate limsSamplingDate = hmfLimsData == null ? null : hmfLimsData.samplingDate();
         if (limsSamplingDate != null)
             return limsSamplingDate;
