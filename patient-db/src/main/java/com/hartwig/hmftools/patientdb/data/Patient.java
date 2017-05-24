@@ -6,35 +6,39 @@ import org.jetbrains.annotations.NotNull;
 
 public class Patient {
     @NotNull
-    private final PatientInfo patientInfo;
+    private final PatientData patientData;
     @NotNull
-    private final List<BiopsyLimsData> sequencedBiopsies;
+    private final List<SampleData> sequencedBiopsies;
+    @NotNull
+    private final List<BiopsyData> clinicalBiopsies;
     @NotNull
     private final List<BiopsyTreatmentData> treatments;
     @NotNull
     private final List<BiopsyTreatmentResponseData> treatmentResponses;
-    @NotNull
-    private final List<BiopsyClinicalData> clinicalBiopsies;
 
-    public Patient(@NotNull final PatientInfo patientInfo, @NotNull final List<BiopsyLimsData> sequencedBiopsies,
-            @NotNull final List<BiopsyTreatmentData> treatments,
-            @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses,
-            @NotNull final List<BiopsyClinicalData> clinicalBiopsies) {
-        this.patientInfo = patientInfo;
+    public Patient(@NotNull final PatientData patientData, @NotNull final List<SampleData> sequencedBiopsies,
+            @NotNull final List<BiopsyData> clinicalBiopsies, @NotNull final List<BiopsyTreatmentData> treatments,
+            @NotNull final List<BiopsyTreatmentResponseData> treatmentResponses) {
+        this.patientData = patientData;
         this.sequencedBiopsies = sequencedBiopsies;
+        this.clinicalBiopsies = clinicalBiopsies;
         this.treatments = treatments;
         this.treatmentResponses = treatmentResponses;
-        this.clinicalBiopsies = clinicalBiopsies;
     }
 
     @NotNull
-    public PatientInfo patientInfo() {
-        return patientInfo;
+    public PatientData patientInfo() {
+        return patientData;
     }
 
     @NotNull
-    public List<BiopsyLimsData> sequencedBiopsies() {
+    public List<SampleData> sequencedBiopsies() {
         return sequencedBiopsies;
+    }
+
+    @NotNull
+    public List<BiopsyData> clinicalBiopsies() {
+        return clinicalBiopsies;
     }
 
     @NotNull
@@ -46,10 +50,4 @@ public class Patient {
     public List<BiopsyTreatmentResponseData> treatmentResponses() {
         return treatmentResponses;
     }
-
-    @NotNull
-    public List<BiopsyClinicalData> clinicalBiopsies() {
-        return clinicalBiopsies;
-    }
-
 }

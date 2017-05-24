@@ -18,11 +18,10 @@ public enum FreecStatus {
             return UNKNOWN;
         }
 
-        if (Doubles.greaterOrEqual(ratio, GERMLINE_MIN_RATIO) && Doubles.lessOrEqual(ratio, GERMLINE_MAX_RATIO)) {
+        if (Doubles.greaterThan(ratio, GERMLINE_MAX_RATIO) || Doubles.lessThan(ratio, GERMLINE_MIN_RATIO)) {
             return GERMLINE;
         }
 
         return SOMATIC;
     }
-
 }

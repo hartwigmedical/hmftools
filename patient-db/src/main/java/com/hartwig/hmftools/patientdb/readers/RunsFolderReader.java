@@ -15,8 +15,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class RunsFolderReader {
+public final class RunsFolderReader {
     private static final Logger LOGGER = LogManager.getLogger(RunsFolderReader.class);
+
+    private RunsFolderReader() {
+    }
 
     @NotNull
     public static List<RunContext> getRunContexts(@NotNull final File dir) throws IOException, ParseException {

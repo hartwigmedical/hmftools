@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyClinicalData {
+public class BiopsyData {
 
     private final int id;
     @Nullable
@@ -15,17 +15,17 @@ public class BiopsyClinicalData {
     @Nullable
     private final String sampleId;
 
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
 
     private static int createId() {
-        return idCounter.getAndIncrement();
+        return ID_COUNTER.getAndIncrement();
     }
 
-    public BiopsyClinicalData(@Nullable final LocalDate date, @Nullable final String location) {
+    public BiopsyData(@Nullable final LocalDate date, @Nullable final String location) {
         this(createId(), date, location, null);
     }
 
-    public BiopsyClinicalData(final int id, @Nullable final LocalDate date, @Nullable final String location,
+    public BiopsyData(final int id, @Nullable final LocalDate date, @Nullable final String location,
             @Nullable final String sampleId) {
         this.id = id;
         this.date = date;

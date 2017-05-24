@@ -16,7 +16,7 @@ public enum FittedPurityWriter {
 
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().limit(10).map(FittedPurityWriter::transform).forEach(lines::add);
+        purity.stream().limit(100).map(FittedPurityWriter::transform).forEach(lines::add);
 
         Files.write(new File(filePath).toPath(), lines);
     }

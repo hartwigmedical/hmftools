@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
-import com.hartwig.hmftools.patientdb.readers.CpctClinicalPatientReader;
+import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.readers.SomaticVariantReader;
 
@@ -61,7 +61,7 @@ public final class PatientDbRunner {
         final Options basicOptions = createBasicOptions();
         final Options somaticOptions = createSomaticOptions();
         final Options clinicalOptions = createClinicalOptions();
-        final Options options = createOptions(basicOptions, somaticOptions, clinicalOptions);
+        final Options options = mergeOptions(basicOptions, somaticOptions, clinicalOptions);
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
         final String userName = cmd.getOptionValue(DB_USER);
@@ -71,6 +71,7 @@ public final class PatientDbRunner {
         final boolean somatic = cmd.hasOption(SOMATIC);
         final boolean clinical = cmd.hasOption(CLINICAL);
 
+        // KODU: ThreadContext is used throughout patient-db to generate log file per hospital. See also log4j2.xml
         ThreadContext.put("cpctHospitalCode", "default");
         if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical)) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -101,19 +102,19 @@ public final class PatientDbRunner {
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
             SQLException, HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
+        final String treatmentToTypeMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
         final String limsCsv = cmd.getOptionValue(LIMS_CSV);
         final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
         final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db -clinical", clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
-            final CpctClinicalPatientReader cpctClinicalPatientReader = new CpctClinicalPatientReader(model,
-                    readTreatmentMappingFile(treatmentMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
+            final PatientReader patientReader = new PatientReader(model,
+                    readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream().map(
                     runContext -> getPatientId(runContext.setName())).filter(
                     setName -> setName.startsWith("CPCT")).collect(Collectors.toSet());
@@ -124,14 +125,13 @@ public final class PatientDbRunner {
                 if (patient == null) {
                     LOGGER.warn("Could not find patient with id: " + patientId + " in ecrf file.");
                 } else {
-                    final List<String> sampleIdsForPatient = getSamplesForPatient(patientId, runContexts);
-                    LOGGER.info(patient.patientId() + ": Samples: " + sampleIdsForPatient);
-                    final Patient cpctPatient = cpctClinicalPatientReader.read(patient, sampleIdsForPatient);
+                    final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
+                    LOGGER.info(patient.patientId() + ": Samples: " + tumorSamplesForPatient);
+                    final Patient cpctPatient = patientReader.read(patient, tumorSamplesForPatient);
                     dbWriter.writeClinicalData(cpctPatient);
                 }
             }
         }
-
     }
 
     private static void writeSomaticData(@NotNull final Options somaticOptions, @NotNull final CommandLine cmd,
@@ -158,7 +158,7 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static List<String> getSamplesForPatient(@NotNull final String patientId,
+    private static List<String> getTumorSamplesForPatient(@NotNull final String patientId,
             @NotNull final List<RunContext> runContexts) {
         final List<String> sampleIdsForPatient = Lists.newArrayList();
         runContexts.forEach(runContext -> {
@@ -176,22 +176,22 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static Map<String, String> readTreatmentMappingFile(@NotNull final String treatmentMappingCsv)
+    private static Map<String, String> readTreatmentToTypeMappingFile(@NotNull final String treatmentToTypeMappingCsv)
             throws IOException, EmptyFileException {
-        final Map<String, String> treatmentMapping = Maps.newHashMap();
-        FileReader.build().readLines(new File(treatmentMappingCsv).toPath()).forEach(line -> {
+        final Map<String, String> treatmentToTypeMapping = Maps.newHashMap();
+        FileReader.build().readLines(new File(treatmentToTypeMappingCsv).toPath()).forEach(line -> {
             final String[] parts = line.split(",");
             if (parts.length == 2) {
-                treatmentMapping.put(parts[0].toLowerCase().trim(), parts[1].toLowerCase().trim());
+                treatmentToTypeMapping.put(parts[0].toLowerCase().trim(), parts[1].toLowerCase().trim());
             } else {
-                LOGGER.warn("Invalid row found in treatment mapping csv: " + line);
+                LOGGER.warn("Invalid row found in treatment to type mapping csv: " + line);
             }
         });
-        return treatmentMapping;
+        return treatmentToTypeMapping;
     }
 
     @NotNull
-    private static Options createOptions(@NotNull final Options basicOptions, @NotNull final Options clinicalOptions,
+    private static Options mergeOptions(@NotNull final Options basicOptions, @NotNull final Options clinicalOptions,
             @NotNull final Options somaticOptions) {
         final Options options = new Options();
         basicOptions.getOptions().forEach(options::addOption);

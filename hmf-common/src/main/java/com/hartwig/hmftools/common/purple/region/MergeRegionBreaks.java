@@ -29,8 +29,8 @@ class MergeRegionBreaks {
 
             if (second != null && third != null && second.bases() == MIN_SIZE && isSameChromosome(first, third)) {
 
-                double myFirstSecondDifference = first.averageRatioOfRatios() - second.averageRatioOfRatios();
-                double mySecondThirdDifference = second.averageRatioOfRatios() - third.averageRatioOfRatios();
+                double myFirstSecondDifference = first.averageTumorCopyNumber() - second.averageTumorCopyNumber();
+                double mySecondThirdDifference = second.averageTumorCopyNumber() - third.averageTumorCopyNumber();
 
                 if (equal(signum(myFirstSecondDifference), signum(mySecondThirdDifference))) {
                     if (lessThan(abs(myFirstSecondDifference), abs(mySecondThirdDifference))) {
@@ -58,8 +58,6 @@ class MergeRegionBreaks {
                 .from(primary)
                 .start(min(primary.start(), secondary.start()))
                 .end(max(primary.end(), secondary.end()))
-                .averageBAF(primary.averageBAF())
-                .averageRatioOfRatios(primary.averageRatioOfRatios())
                 .build();
     }
 

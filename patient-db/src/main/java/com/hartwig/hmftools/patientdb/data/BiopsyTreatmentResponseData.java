@@ -8,16 +8,12 @@ public class BiopsyTreatmentResponseData {
 
     @Nullable
     private final Integer treatmentId;
-
     @Nullable
     private final LocalDate assessmentDate;
-
     @Nullable
     private final LocalDate responseDate;
-
     @Nullable
     private final String response;
-
     @Nullable
     private final String measurementDone;
 

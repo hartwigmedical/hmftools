@@ -13,12 +13,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class TreatmentResponseMatcher {
-
+public final class TreatmentResponseMatcher {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentResponseMatcher.class);
 
-    public static List<BiopsyTreatmentResponseData> matchTreatmentResponses(@NotNull final String patientId,
-            @NotNull final List<BiopsyTreatmentData> treatments,
+    private TreatmentResponseMatcher() {
+    }
+
+    public static List<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(
+            @NotNull final String patientId, @NotNull final List<BiopsyTreatmentData> treatments,
             @NotNull final List<BiopsyTreatmentResponseData> responses) {
         final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
         for (final BiopsyTreatmentResponseData response : responses) {
@@ -47,10 +49,7 @@ public class TreatmentResponseMatcher {
         final LocalDate treatmentStart = treatment.startDate();
         final LocalDate treatmentEnd = treatment.endDate();
         final LocalDate responseDate = response.date();
-        if (treatmentStart == null || responseDate == null) {
-            return false;
-        }
-        return (responseDate.isAfter(treatmentStart) && (treatmentEnd == null || responseDate.isBefore(treatmentEnd)
-                || responseDate.isEqual(treatmentEnd)));
+        return !(treatmentStart == null || responseDate == null) && (responseDate.isAfter(treatmentStart) && (
+                treatmentEnd == null || responseDate.isBefore(treatmentEnd) || responseDate.isEqual(treatmentEnd)));
     }
 }

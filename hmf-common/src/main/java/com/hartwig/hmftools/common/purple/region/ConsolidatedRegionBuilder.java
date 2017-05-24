@@ -10,9 +10,11 @@ class ConsolidatedRegionBuilder {
     private long end;
 
     private boolean weighWithBaf;
-    private long totalWeight;
+    private int totalWeight;
     private double sumWeightedBAF;
-    private double sumWeightedRatioOfRatios;
+    private double sumWeightedPurityAdjustedBAF;
+    private double sumWeightedCopyNumber;
+    private double sumWeightedRefNormalisedCopyNumber;
 
     ConsolidatedRegionBuilder(FittedCopyNumber copyNumber) {
         this.chromosome = copyNumber.chromosome();
@@ -24,13 +26,26 @@ class ConsolidatedRegionBuilder {
         return chromosome;
     }
 
-    double averageBAF() {
+    int bafCount() {
+        return weighWithBaf ? totalWeight : 0;
+    }
+
+    double averageObservedBAF() {
         return totalWeight == 0 ? 0 : sumWeightedBAF / totalWeight;
     }
 
-    double averageRatioOfRatios() {
-        return totalWeight == 0 ? 0 : sumWeightedRatioOfRatios / totalWeight;
+    double averagePurityAdjustedBAF() {
+        return totalWeight == 0 ? 0 : sumWeightedPurityAdjustedBAF / totalWeight;
     }
+
+    double averageTumorCopyNumber() {
+        return totalWeight == 0 ? 0 : sumWeightedCopyNumber / totalWeight;
+    }
+
+    double averageRefNormalisedCopyNumber() {
+        return totalWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalWeight;
+    }
+
 
     void extendRegion(FittedCopyNumber value) {
         assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
@@ -38,9 +53,8 @@ class ConsolidatedRegionBuilder {
         start = Math.min(value.start(), start);
         end = Math.max(value.end(), end);
 
-
-        double ratio = value.ratioOfRatios();
-        double baf = value.actualBAF();
+        double ratio = value.tumorCopyNumber();
+        double baf = value.observedBAF();
 
         if (value.bafCount() > 0) {
 
@@ -52,24 +66,37 @@ class ConsolidatedRegionBuilder {
             long weight = value.bafCount();
             totalWeight += weight;
             sumWeightedBAF += baf * weight;
-            sumWeightedRatioOfRatios += ratio * weight;
+            sumWeightedPurityAdjustedBAF += value.purityAdjustedBAF() * weight;
+            sumWeightedCopyNumber += ratio * weight;
+            sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * weight;
 
         } else if (!weighWithBaf && !Doubles.isZero(ratio)) {
 
-            long weight = Math.max(1, value.bases()/1000);
+            long weight = Math.max(1, value.bases() / 1000);
             totalWeight += weight;
-            sumWeightedRatioOfRatios += ratio * weight;
+            sumWeightedCopyNumber += ratio * weight;
+            sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * weight;
         }
     }
 
     private void resetAverage() {
         totalWeight = 0;
         sumWeightedBAF = 0;
-        sumWeightedRatioOfRatios = 0;
+        sumWeightedPurityAdjustedBAF = 0;
+        sumWeightedCopyNumber = 0;
+        sumWeightedRefNormalisedCopyNumber = 0;
     }
 
     public ConsolidatedRegion build() {
-        return ImmutableConsolidatedRegion.builder().chromosome(chromosome).start(start).end(end).averageBAF(
-                averageBAF()).averageRatioOfRatios(averageRatioOfRatios()).build();
+        return ImmutableConsolidatedRegion.builder()
+                .chromosome(chromosome)
+                .start(start)
+                .end(end)
+                .bafCount(bafCount())
+                .averageObservedBAF(averageObservedBAF())
+                .averagePurityAdjustedBAF(averagePurityAdjustedBAF())
+                .averageTumorCopyNumber(averageTumorCopyNumber())
+                .averageRefNormalisedCopyNumber(averageRefNormalisedCopyNumber())
+                .build();
     }
 }

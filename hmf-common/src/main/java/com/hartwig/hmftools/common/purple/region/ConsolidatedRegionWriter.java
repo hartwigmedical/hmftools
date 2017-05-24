@@ -27,7 +27,9 @@ public enum ConsolidatedRegionWriter {
                 .append("start").append('\t')
                 .append("end").append('\t')
                 .append("copyNumber").append('\t')
-                .append("baf")
+                .append("bafCount").append('\t')
+                .append("observedBAF").append('\t')
+                .append("purityAdjustedBAF")
                 .toString();
     }
 
@@ -36,8 +38,10 @@ public enum ConsolidatedRegionWriter {
                 .append(region.chromosome()).append('\t')
                 .append(region.start()).append('\t')
                 .append(region.end()).append('\t')
-                .append(region.averageRatioOfRatios()).append('\t')
-                .append(region.averageBAF())
+                .append(region.averageTumorCopyNumber()).append('\t')
+                .append(region.bafCount()).append('\t')
+                .append(region.averageObservedBAF()).append('\t')
+                .append(region.averagePurityAdjustedBAF())
                 .toString();
     }
 

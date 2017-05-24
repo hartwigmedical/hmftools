@@ -46,10 +46,11 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
     public static List<FittedCopyNumber> insertSmoothRegions(List<ConsolidatedRegion> megaRegions,
             List<FittedCopyNumber> copyNumbers) {
 
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber
+                .builder()
                 .from(copyNumber)
-                .segmentBAF(consolidatedRegion.averageBAF())
-                .segmentRatioOfRatios(consolidatedRegion.averageRatioOfRatios())
+                .segmentBAF(consolidatedRegion.averageObservedBAF())
+                .segmentTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
                 .build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);
@@ -57,13 +58,14 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
         return myThing.getResult();
     }
 
-    public static List<FittedCopyNumber> insertBroadRegions(List<ConsolidatedRegion> megaRegions,
+    public static List<FittedCopyNumber> insertHighConfidenceRegions(List<ConsolidatedRegion> megaRegions,
             List<FittedCopyNumber> copyNumbers) {
 
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder()
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber
+                .builder()
                 .from(copyNumber)
-                .broadBAF(consolidatedRegion.averageBAF())
-                .broadRatioOfRatios(consolidatedRegion.averageRatioOfRatios())
+                .broadBAF(consolidatedRegion.averageObservedBAF())
+                .broadTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
                 .build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);

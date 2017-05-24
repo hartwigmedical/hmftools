@@ -40,7 +40,7 @@ public class EcrfItemGroup {
     }
 
     @NotNull
-    public List<String> itemsPerOID(@NotNull final String itemOID) {
+    private List<String> itemsPerOID(@NotNull final String itemOID) {
         if (itemsPerOID().get(itemOID) == null) {
             return Lists.newArrayList();
         }

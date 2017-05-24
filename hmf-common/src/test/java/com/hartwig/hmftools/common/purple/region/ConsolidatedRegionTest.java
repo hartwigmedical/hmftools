@@ -42,8 +42,8 @@ public class ConsolidatedRegionTest
     }
 
     private void assertAverages(ConsolidatedRegion victim, double expectedBAF, double expectedRatio) {
-        assertEquals(expectedBAF, victim.averageBAF(), EPSILON);
-        assertEquals(expectedRatio, victim.averageRatioOfRatios(), EPSILON);
+        assertEquals(expectedBAF, victim.averageObservedBAF(), EPSILON);
+        assertEquals(expectedRatio, victim.averageTumorCopyNumber(), EPSILON);
     }
 
     private static FittedCopyNumber create(long start, long end, double ratio) {
@@ -54,29 +54,30 @@ public class ConsolidatedRegionTest
         return create("1", start, end, bafCount, baf, ratio);
     }
 
-    private static FittedCopyNumber create(String chromosome, long start, long end, int bafCount, double baf, double ratio) {
+    private static FittedCopyNumber create(String chromosome, long start, long end, int bafCount, double baf, double tumorCopyNumber) {
 
         return ImmutableFittedCopyNumber.builder()
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
                 .bafCount(bafCount)
-                .actualBAF(baf)
-                .ratioOfRatios(ratio)
+                .observedBAF(baf)
+                .purityAdjustedBAF(baf)
+                .tumorCopyNumber(tumorCopyNumber)
                 .broadBAF(0)
-                .broadRatioOfRatios(0)
+                .broadTumorCopyNumber(0)
                 .segmentBAF(0)
-                .segmentRatioOfRatios(0)
-                .normalisedTumorRatio(0)
-                .normalCNVRatio(0)
+                .segmentTumorCopyNumber(0)
+                .observedNormalRatio(0)
                 .value(0)
                 .cnvDeviation(0)
                 .deviation(0)
                 .fittedPloidy(0)
                 .modelBAF(0)
-                .tumorCNVRatio(0)
-                .modelCNVRatio(0)
+                .observedTumorRatio(0)
+                .modelTumorRatio(0)
                 .status(FreecStatus.UNKNOWN)
+                .refNormalisedCopyNumber(0)
                 .bafDeviation(0)
                 .build();
     }
