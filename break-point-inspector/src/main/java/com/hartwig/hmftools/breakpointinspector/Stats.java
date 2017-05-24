@@ -53,11 +53,14 @@ class Stats {
         List<SAMRecord> HardClippedReads = new ArrayList<>();
     }
 
+    static class ClipStats {
+        Map<Util.Location, Clip> LocationMap = new Hashtable<>();
+    }
     static class Sample {
         BreakPoint BP1_Stats = new BreakPoint();
         BreakPoint BP2_Stats = new BreakPoint();
         Orientation Orientation_Stats = new Orientation();
-        Map<Util.Location, Clip> Clipping_Stats = new Hashtable<>();
+        ClipStats Clipping_Stats = new ClipStats();
 
         BreakPoint Get(final Util.Region r) {
             switch (r) {

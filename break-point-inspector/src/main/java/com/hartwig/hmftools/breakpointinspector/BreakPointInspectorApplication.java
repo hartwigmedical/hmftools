@@ -124,17 +124,15 @@ public class BreakPointInspectorApplication {
                 && read.getMateAlignmentStart() == mate.getAlignmentStart();
     }
 
-    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult) {
-        final Stats.Sample result = new Stats.Sample();
+    private static Stats.ClipStats calculateClippingStats(final ClassifiedReadResults queryResult) {
+        final Stats.ClipStats result = new Stats.ClipStats();
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
-            // update clipping stats
             for (final ReadInfo info : collection.Reads) {
                 final SAMRecord read = info.Read;
-
                 if (info.Location == Overlap.CLIP) {
                     // TODO: handle multiple clip sides
                     final Location alignment = Location.fromSAMRecord(read, info.Clipping.Side == ClipSide.LEFT_CLIP);
-                    final Stats.Clip clip = result.Clipping_Stats.computeIfAbsent(alignment, k -> new Stats.Clip() {{
+                    final Stats.Clip clip = result.LocationMap.computeIfAbsent(alignment, k -> new Stats.Clip() {{
                         Side = info.Clipping.Side;
                     }});
                     if (info.Clipping.HardClipped) {
@@ -161,7 +159,13 @@ public class BreakPointInspectorApplication {
                     }
                 }
             }
+        }
+        return result;
+    }
 
+    private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult) {
+        final Stats.Sample result = new Stats.Sample();
+        for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
             // consider the pairings
             for (final ReadInfo p0 : collection.Reads) {
                 // find the mate
@@ -245,6 +249,12 @@ public class BreakPointInspectorApplication {
         return result;
     }
 
+    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult) {
+        final Stats.Sample result = calculateEvidenceStats(queryResult);
+        result.Clipping_Stats = calculateClippingStats(queryResult);
+        return result;
+    }
+
     private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,
             final QueryInterval[] intervals, final Location bp1, final Location bp2) {
 
@@ -277,13 +287,12 @@ public class BreakPointInspectorApplication {
             }
 
             final Location bp = info.Breakpoint == Region.BP1 ? bp1 : bp2;
-            final boolean clipped = info.Clipping.Side != ClipSide.NONE;
             final boolean normal = read.getProperPairFlag();
 
-            if (read.getProperPairFlag()) {
+            if (normal) {
                 info.Category = ReadCategory.NORMAL;
 
-                if (!clipped) {
+                if (info.Clipping.Side == ClipSide.NONE) {
                     if (readIntersectsLocation(read, bp)) {
                         info.Location = Overlap.INTERSECT;
                     } else if (pairStraddlesLocation(read, bp)) {
@@ -307,9 +316,10 @@ public class BreakPointInspectorApplication {
             }
 
             // determine classification
-            if (clipped && read.getAlignmentStart() - 1 == bp.Position) {
+            // TODO: double check clipping conditions
+            if (info.Clipping.Side == ClipSide.LEFT_CLIP && read.getAlignmentStart() - 1 == bp.Position) {
                 info.Location = Overlap.CLIP;
-            } else if (clipped && read.getAlignmentEnd() == bp.Position) {
+            } else if (info.Clipping.Side == ClipSide.RIGHT_CLIP && read.getAlignmentEnd() == bp.Position) {
                 info.Location = Overlap.CLIP;
             } else {
                 info.Location = Overlap.PROXIMITY;
@@ -349,16 +359,17 @@ public class BreakPointInspectorApplication {
         data.addAll(tumorStats.GetData());
         System.out.println(String.join("\t", data));
 
-        if (tumorStats.Clipping_Stats.isEmpty())
+        if (tumorStats.Clipping_Stats.LocationMap.isEmpty())
             return;
 
         // clipping stats
         System.out.println("#CLIPPING");
         System.out.println("POS\tCLIP_SEQ\tREAD_COUNT");
         final TreeMultimap<Location, String> sortedClips = TreeMultimap.create();
-        for (final Map.Entry<Location, Clip> kv : tumorStats.Clipping_Stats.entrySet()) {
+        for (final Map.Entry<Location, Clip> kv : tumorStats.Clipping_Stats.LocationMap.entrySet()) {
+            final Location alignment = kv.getKey();
             final Clip stats = kv.getValue();
-            sortedClips.put(kv.getKey(), String.join("\t", kv.getKey().toString(),
+            sortedClips.put(alignment, String.join("\t", alignment.toString(),
                     (stats.Side == ClipSide.RIGHT_CLIP ? "*" : "") + stats.LongestClipSequence + (
                             stats.Side == ClipSide.LEFT_CLIP ? "*" : ""), Integer.toString(stats.Reads.size())));
         }
