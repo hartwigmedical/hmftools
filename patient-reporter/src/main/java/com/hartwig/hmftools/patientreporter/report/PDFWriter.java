@@ -1,5 +1,18 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
+
+import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.util.Collection;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -7,8 +20,15 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
+import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
@@ -18,19 +38,6 @@ import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.util.Collection;
-
-import static net.sf.dynamicreports.report.builder.DynamicReports.*;
 
 public class PDFWriter implements ReportWriter {
 
@@ -58,9 +65,10 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     @Override
-    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final Slicer hmfSlicingRegion)
-            throws FileNotFoundException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion);
+    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final Slicer hmfSlicingRegion,
+            @NotNull final DrupFilter drupFilter) throws FileNotFoundException, DRException {
+        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion,
+                drupFilter);
 
         return writeReport(report.sample(), reportBuilder);
     }
@@ -113,7 +121,8 @@ public class PDFWriter implements ReportWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final String reportLogoPath, @NotNull final Slicer hmfSlicingRegion) {
+            @NotNull final String reportLogoPath, @NotNull final Slicer hmfSlicingRegion,
+            @NotNull final DrupFilter drupFilter) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
@@ -122,7 +131,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(report),
+                        variantReport(report, drupFilter),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberReport(report));
 
@@ -237,11 +246,16 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report) {
+    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report,
+            @NotNull final DrupFilter drupFilter) {
         final String mutationalLoadAddition =
                 "Patients with a mutational load over 140 could be eligible for immunotherapy "
                         + "within the DRUP. Please contact the DRUP study team (DRUP@nki.nl) for "
-                        + "DRUP-related questions. ";
+                        + "DRUP-related questions.";
+
+        final String geneMutationAddition =
+                "If any gene is annotated, it means that it has variants which might indicate eligibility for trials within the DRUP. "
+                        + "Please contact the DRUP study team (DRUP@nki.nl) for DRUP-related questions.";
 
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
@@ -255,7 +269,7 @@ public class PDFWriter implements ReportWriter {
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
-                        .setDataSource(PatientDataSource.fromVariants(report.variants())) :
+                        .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
@@ -263,11 +277,15 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(6),
                 table,
                 cmp.verticalGap(15),
-                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " *")
+                cmp.horizontalList(cmp.horizontalGap(10),
+                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                        cmp.text(geneMutationAddition).setStyle(fontStyle())),
+                cmp.verticalGap(15),
+                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " **")
                         .setStyle(tableHeaderStyle()),
                 cmp.verticalGap(15),
                 cmp.horizontalList(cmp.horizontalGap(10),
-                        cmp.text("*").setStyle(fontStyle()).setWidth(2),
+                        cmp.text("**").setStyle(fontStyle()).setWidth(2),
                         cmp.text(mutationalLoadAddition).setStyle(fontStyle()))
         );
         // @formatter:on
