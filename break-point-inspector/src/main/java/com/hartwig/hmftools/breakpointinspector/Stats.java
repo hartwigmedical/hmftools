@@ -9,6 +9,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.TreeMultimap;
+
 import htsjdk.samtools.SAMRecord;
 
 class Stats {
@@ -41,6 +43,7 @@ class Stats {
         static List<String> GetHeader() {
             return Arrays.asList("INNIE", "OUTIE", "TANDEM");
         }
+
         List<Integer> GetData() {
             return Arrays.asList(InnieCount, OutieCount, TandemCount);
         }
@@ -51,11 +54,30 @@ class Stats {
         String LongestClipSequence = "";
         List<SAMRecord> Reads = new ArrayList<>();
         List<SAMRecord> HardClippedReads = new ArrayList<>();
+
+        @Override
+        public String toString() {
+            return (Side == Util.ClipSide.RIGHT_CLIP ? "*" : "") + LongestClipSequence + (
+                    Side == Util.ClipSide.LEFT_CLIP ? "*" : "") + "," + Reads.size();
+        }
     }
 
     static class ClipStats {
         Map<Util.Location, Clip> LocationMap = new Hashtable<>();
+
+        @Override
+        public String toString() {
+            final TreeMultimap<Util.Location, String> sortedClips = TreeMultimap.create();
+            for (final Map.Entry<Util.Location, Clip> kv : LocationMap.entrySet()) {
+                final Util.Location alignment = kv.getKey();
+                final Clip stats = kv.getValue();
+                sortedClips.put(alignment, alignment + "," + stats);
+            }
+
+            return String.join(";", sortedClips.values());
+        }
     }
+
     static class Sample {
         BreakPoint BP1_Stats = new BreakPoint();
         BreakPoint BP2_Stats = new BreakPoint();

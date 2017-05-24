@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.TreeMultimap;
 
 import htsjdk.samtools.*;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -357,25 +354,8 @@ public class BreakPointInspectorApplication {
         final ArrayList<String> data = new ArrayList<>(headers);
         data.addAll(refStats.GetData());
         data.addAll(tumorStats.GetData());
+        data.add(tumorStats.Clipping_Stats.toString());
         System.out.println(String.join("\t", data));
-
-        if (tumorStats.Clipping_Stats.LocationMap.isEmpty())
-            return;
-
-        // clipping stats
-        System.out.println("#CLIPPING");
-        System.out.println("POS\tCLIP_SEQ\tREAD_COUNT");
-        final TreeMultimap<Location, String> sortedClips = TreeMultimap.create();
-        for (final Map.Entry<Location, Clip> kv : tumorStats.Clipping_Stats.LocationMap.entrySet()) {
-            final Location alignment = kv.getKey();
-            final Clip stats = kv.getValue();
-            sortedClips.put(alignment, String.join("\t", alignment.toString(),
-                    (stats.Side == ClipSide.RIGHT_CLIP ? "*" : "") + stats.LongestClipSequence + (
-                            stats.Side == ClipSide.LEFT_CLIP ? "*" : ""), Integer.toString(stats.Reads.size())));
-        }
-        for (final String s : sortedClips.values()) {
-            System.out.println(s);
-        }
     }
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -407,6 +387,7 @@ public class BreakPointInspectorApplication {
                     Arrays.asList("ID", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_HOMSEQ", "MANTA_INSSEQ"));
             header.addAll(prefixList(Sample.GetHeader(), "REF_"));
             header.addAll(prefixList(Sample.GetHeader(), "TUMOR_"));
+            header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
             if (vcfPath != null) {
