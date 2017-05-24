@@ -4,17 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.TreeMultimap;
 
 import htsjdk.samtools.*;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -22,6 +20,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import static com.hartwig.hmftools.breakpointinspector.Util.*;
+import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,120 +34,10 @@ public class BreakPointInspectorApplication {
     private static final String BREAK_POINT2 = "bp2";
     private static final String PROXIMITY = "proximity";
     private static final String SV_LEN = "svlen";
+    private static final String VCF = "vcf";
 
     private static final int MANTA_REQ_PAIR_MIN = 50;
     private static final int MANTA_REQ_SPLIT_MIN = 15;
-
-    private enum ReadCategory {
-        UNSET,
-        NORMAL,
-        SPAN,
-        MATE_UNMAPPED,
-        UNMAPPED,
-        SECONDARY,
-        CHIMERIC
-    }
-
-    private enum Overlap {
-        FILTERED,
-        PROXIMITY,
-        INTERSECT,
-        STRADDLE,
-        CLIP,
-    }
-
-    private enum Region {
-        OTHER,
-        BP1,
-        BP2
-    }
-
-    private enum ClipSide {
-        NONE,
-        LEFT_CLIP,
-        RIGHT_CLIP
-    }
-
-    private static class ClipInfo {
-        public ClipSide Side = ClipSide.NONE;
-        public int Length = 0;
-        public boolean HardClipped = false;
-    }
-
-    private static class ReadInfo {
-        public SAMRecord Read = null;
-        public BreakPointInspectorApplication.Region Region = BreakPointInspectorApplication.Region.OTHER;
-        public ReadCategory Category = ReadCategory.UNSET;
-        public Overlap Location = Overlap.FILTERED;
-        public ClipInfo Clipping = new ClipInfo();
-    }
-
-    private static class NamedReadCollection {
-        public ArrayList<ReadInfo> Reads = new ArrayList<>();
-    }
-
-    private static class Location implements Comparable<Location> {
-        public int ReferenceIndex = -1;
-        public int Position = -1;
-
-        public static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary)
-                throws RuntimeException {
-            final Location result = new Location();
-
-            final String[] split = location.split(":");
-            if (split.length != 2)
-                throw new RuntimeException(location + " is not a valid location string");
-
-            final String chromosome = split[0];
-            try {
-                result.Position = Integer.parseInt(split[1]);
-            } catch (NumberFormatException e) {
-                throw new RuntimeException(location + " is not a valid location string");
-            }
-
-            // query the position
-            result.ReferenceIndex = dictionary.getSequenceIndex(chromosome);
-            if (result.ReferenceIndex < 0) {
-                if (!chromosome.startsWith("chr"))
-                    result.ReferenceIndex = dictionary.getSequenceIndex("chr" + chromosome);
-                else
-                    result.ReferenceIndex = dictionary.getSequenceIndex(chromosome.substring(3));
-            }
-            if (result.ReferenceIndex < 0) {
-                throw new RuntimeException(chromosome + " is not in the BAM");
-            }
-
-            return result;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(ReferenceIndex, Position);
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == null)
-                return false;
-            if (!(obj instanceof Location))
-                return false;
-
-            Location other = (Location) obj;
-            if (ReferenceIndex != other.ReferenceIndex)
-                return false;
-            if (Position != other.Position)
-                return false;
-            return true;
-        }
-
-        @Override
-        public int compareTo(@NotNull final Location o) {
-            final int comp1 = Integer.compare(ReferenceIndex, o.ReferenceIndex);
-            if (comp1 == 0)
-                return Integer.compare(Position, o.Position);
-            return 0;
-        }
-    }
 
     @NotNull
     private static Options createOptions() {
@@ -157,6 +48,7 @@ public class BreakPointInspectorApplication {
         options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format (optional)");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
         options.addOption(SV_LEN, true, "length of the SV to inspect");
+        options.addOption(VCF, true, "VCF file to batch inspect");
         return options;
     }
 
@@ -165,19 +57,6 @@ public class BreakPointInspectorApplication {
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static String getFlagString(final Set<SAMFlag> flags) {
-        ArrayList<String> names = new ArrayList<>();
-        for (final SAMFlag flag : flags) {
-            names.add(flag.name());
-        }
-        return String.join("|", names);
-    }
-
-    private static boolean isOrientable(final SAMRecord read) {
-        return read.getReadPairedFlag() && !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag();
     }
 
     private static void printHelpAndExit(final Options options) {
@@ -240,81 +119,15 @@ public class BreakPointInspectorApplication {
         return Region.OTHER;
     }
 
-    private static class ClassifiedReadResults {
-        public Map<String, NamedReadCollection> ReadMap = new Hashtable<>();
-    }
-
-    private static class BreakPointStats {
-        public int PR_Only_Normal = 0;
-        public int PR_SR_Normal = 0;
-        public int PR_Only_Support = 0;
-        public int PR_SR_Support = 0;
-        public int SR_Only_Support = 0;
-        public int Unmapped_Mate = 0;
-        public int Diff_Variant = 0;
-
-        public static List<String> GetHeader() {
-            return Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT",
-                    "SR_ONLY_SUPPORT", "UNMAPPED_MATE", "DIFF_VARIANT");
-        }
-
-        public List<Integer> GetData() {
-            return Arrays.asList(PR_Only_Normal, PR_SR_Normal, PR_Only_Support, PR_SR_Support, SR_Only_Support,
-                    Unmapped_Mate, Diff_Variant);
-        }
-    }
-
-    private static class OrientationStats {
-        public int InnieCount = 0;
-        public int OutieCount = 0;
-        public int TandemCount = 0;
-
-        public List<Integer> GetData() {
-            return Arrays.asList(InnieCount, OutieCount, TandemCount);
-        }
-    }
-
-    private static class ClipStats {
-        public String LongestClipSequence = "";
-        public List<SAMRecord> Reads = new ArrayList<>();
-    }
-
-    private static class SampleStats {
-        public BreakPointStats BP1_Stats = new BreakPointStats();
-        public BreakPointStats BP2_Stats = new BreakPointStats();
-        public OrientationStats Orientation = new OrientationStats();
-        public Map<Location, ClipStats> Clipping = new Hashtable<>();
-
-        public BreakPointStats Get(final Region r) {
-            switch (r) {
-                case BP1:
-                    return BP1_Stats;
-                case BP2:
-                    return BP2_Stats;
-                default:
-                    throw new RuntimeException("invalid stats");
-            }
-        }
-
-        public void Print(final String prefix) {
-            final String header = Stream.concat(BreakPointStats.GetHeader().stream().map(h -> "BP1_" + h),
-                    BreakPointStats.GetHeader().stream().map(h -> "BP2_" + h)).map(h -> prefix + h).collect(
-                    Collectors.joining("\t"));
-            final String data = Stream.concat(BP1_Stats.GetData().stream(), BP2_Stats.GetData().stream()).map(
-                    i -> Integer.toString(i)).collect(Collectors.joining("\t"));
-            System.out.println(header);
-            System.out.println(data);
-        }
-    }
-
     private static boolean isMate(final SAMRecord read, final SAMRecord mate) {
-        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex() == mate.getReferenceIndex()
+        return read.getReadName().equals(mate.getReadName())
+                && read.getMateReferenceIndex() == mate.getReferenceIndex()
                 && read.getMateAlignmentStart() == mate.getAlignmentStart();
     }
 
-    private static SampleStats calculateStats(final ClassifiedReadResults queryResult) {
+    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult) {
 
-        final SampleStats result = new SampleStats();
+        final Stats.Sample result = new Stats.Sample();
 
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
 
@@ -323,13 +136,8 @@ public class BreakPointInspectorApplication {
                 final SAMRecord read = info.Read;
 
                 if (info.Location == Overlap.CLIP && !info.Clipping.HardClipped) {
-                    final Location alignment = new Location();
-                    alignment.ReferenceIndex = read.getReferenceIndex();
-                    alignment.Position = info.Clipping.Side == ClipSide.LEFT_CLIP ?
-                            read.getAlignmentStart() :
-                            read.getAlignmentEnd();
-
-                    final ClipStats clip = result.Clipping.computeIfAbsent(alignment, k -> new ClipStats());
+                    final Location alignment = Location.fromSAMRecord(read, info.Clipping.Side == ClipSide.LEFT_CLIP);
+                    final Stats.Clip clip = result.Clipping_Stats.computeIfAbsent(alignment, k -> new Stats.Clip());
 
                     final String clippedSequence;
                     if (info.Clipping.Side == ClipSide.LEFT_CLIP) {
@@ -360,9 +168,9 @@ public class BreakPointInspectorApplication {
                 // single read
                 if (p1 == null) {
                     if (p0.Category == ReadCategory.MATE_UNMAPPED) {
-                        result.Get(p0.Region).Unmapped_Mate++;
+                        result.Get(p0.Breakpoint).Unmapped_Mate++;
                     } else if (p0.Category != ReadCategory.NORMAL || p0.Location != Overlap.FILTERED) {
-                        result.Get(p0.Region).Diff_Variant++;
+                        result.Get(p0.Breakpoint).Diff_Variant++;
                     }
                     continue;
                 }
@@ -373,31 +181,31 @@ public class BreakPointInspectorApplication {
                 }
 
                 // possible two paired but unmapped reads?
-                if (p0.Region == Region.OTHER && p1.Region == Region.OTHER) {
+                if (p0.Breakpoint == Region.OTHER && p1.Breakpoint == Region.OTHER) {
                     continue;
-                } else if (p1.Region == Region.OTHER) { // must be unmapped mate
-                    result.Get(p0.Region).Unmapped_Mate++;
+                } else if (p1.Breakpoint == Region.OTHER) { // must be unmapped mate
+                    result.Get(p0.Breakpoint).Unmapped_Mate++;
                     continue;
-                } else if (p0.Region == Region.OTHER) { // must be unmapped mate
-                    result.Get(p1.Region).Unmapped_Mate++;
+                } else if (p0.Breakpoint == Region.OTHER) { // must be unmapped mate
+                    result.Get(p1.Breakpoint).Unmapped_Mate++;
                     continue;
                 }
 
                 final List<ReadInfo> pair = Arrays.asList(p0, p1);
                 final boolean pairPossible = pair.stream().allMatch(p -> p.Clipping.Length <= MANTA_REQ_PAIR_MIN);
 
-                if (p0.Region != p1.Region) {
+                if (p0.Breakpoint != p1.Breakpoint) {
                     // supports the break point
                     boolean interesting = false;
                     for (final ReadInfo r : pair) {
                         final boolean splitEvidence =
                                 r.Location == Overlap.CLIP && r.Clipping.Length >= MANTA_REQ_SPLIT_MIN;
                         if (pairPossible && splitEvidence) {
-                            result.Get(r.Region).PR_SR_Support++;
+                            result.Get(r.Breakpoint).PR_SR_Support++;
                         } else if (pairPossible) {
-                            result.Get(r.Region).PR_Only_Support++;
+                            result.Get(r.Breakpoint).PR_Only_Support++;
                         } else if (splitEvidence) {
-                            result.Get(r.Region).SR_Only_Support++;
+                            result.Get(r.Breakpoint).SR_Only_Support++;
                         }
 
                         interesting |= pairPossible || splitEvidence;
@@ -406,18 +214,18 @@ public class BreakPointInspectorApplication {
                     if (interesting) {
                         switch (SamPairUtil.getPairOrientation(p0.Read)) {
                             case FR:
-                                result.Orientation.InnieCount++;
+                                result.Orientation_Stats.InnieCount++;
                                 break;
                             case RF:
-                                result.Orientation.OutieCount++;
+                                result.Orientation_Stats.OutieCount++;
                                 break;
                             case TANDEM:
-                                result.Orientation.TandemCount++;
+                                result.Orientation_Stats.TandemCount++;
                                 break;
                         }
                     }
                 } else {
-                    final BreakPointStats stats = p0.Region == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
+                    final Stats.BreakPoint stats = p0.Breakpoint == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
                     final boolean splitEvidence = pair.stream().anyMatch(
                             p -> p.Location == Overlap.CLIP && p.Clipping.Length >= MANTA_REQ_SPLIT_MIN);
                     if (splitEvidence) {
@@ -454,19 +262,19 @@ public class BreakPointInspectorApplication {
 
             // if unmapped there's nothing to do
             if (read.getReadUnmappedFlag()) {
-                info.Region = Region.OTHER;
+                info.Breakpoint = Region.OTHER;
                 info.Category = ReadCategory.UNMAPPED;
                 info.Location = Overlap.FILTERED;
                 continue;
             }
 
             info.Clipping = getClipInfo(read);
-            info.Region = determineRegion(read, bp1, bp2);
-            if (info.Region == Region.OTHER) {
+            info.Breakpoint = determineRegion(read, bp1, bp2);
+            if (info.Breakpoint == Region.OTHER) {
                 throw new RuntimeException("read from unexpected region");
             }
 
-            final Location bp = info.Region == Region.BP1 ? bp1 : bp2;
+            final Location bp = info.Breakpoint == Region.BP1 ? bp1 : bp2;
             final boolean clipped = info.Clipping.Side != ClipSide.NONE;
             final boolean normal = read.getProperPairFlag();
 
@@ -511,8 +319,52 @@ public class BreakPointInspectorApplication {
             if (normal && info.Location == Overlap.PROXIMITY)
                 info.Location = Overlap.FILTERED;
         }
+        results.close();
 
         return result;
+    }
+
+    private static void processStructuralVariant(final List<String> headers, final SamReader refReader,
+            final SamReader tumorReader, final Location location1, final Location location2, final int range) {
+        // work out the query intervals
+        QueryInterval[] queryIntervals = {
+                new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
+                        location1.Position + range),
+                new QueryInterval(location2.ReferenceIndex, Math.max(0, location2.Position - range),
+                        location2.Position + range) };
+        queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
+
+        // begin processing
+
+        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
+                location2);
+        final Sample refStats = calculateStats(refResult);
+
+        final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, queryIntervals, location1,
+                location2);
+        final Sample tumorStats = calculateStats(tumorResult);
+
+        final ArrayList<String> data = new ArrayList<>(headers);
+        data.addAll(refStats.GetData());
+        data.addAll(tumorStats.GetData());
+        System.out.println(String.join("\t", data));
+
+        if (tumorStats.Clipping_Stats.isEmpty())
+            return;
+
+        // clipping stats
+        System.out.println("#CLIPPING");
+        System.out.println("CHROM\tPOS\tCLIP_SEQ\tREAD_COUNT");
+        final TreeMultimap<Location, String> sortedClips = TreeMultimap.create();
+        for (final Map.Entry<Location, Clip> kv : tumorStats.Clipping_Stats.entrySet()) {
+            sortedClips.put(kv.getKey(), String.join("\t",
+                    tumorReader.getFileHeader().getSequence(kv.getKey().ReferenceIndex).getSequenceName(),
+                    Integer.toString(kv.getKey().Position), kv.getValue().LongestClipSequence,
+                    Integer.toString(kv.getValue().Reads.size())));
+        }
+        for (final String s : sortedClips.values()) {
+            System.out.println(s);
+        }
     }
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -526,10 +378,11 @@ public class BreakPointInspectorApplication {
             final String tumorBAM = cmd.getOptionValue(TUMOR_PATH);
             final String bp1String = cmd.getOptionValue(BREAK_POINT1);
             final String bp2String = cmd.getOptionValue(BREAK_POINT2);
+            final String vcfPath = cmd.getOptionValue(VCF);
             final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
-            final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
 
-            if (refBAM == null || tumorBAM == null || bp1String == null)
+            if (refBAM == null || tumorBAM == null || (vcfPath != null && bp1String != null) || (bp2String != null
+                    && cmd.getOptionValue(SV_LEN) != null))
                 printHelpAndExit(options);
 
             // load the files
@@ -538,61 +391,72 @@ public class BreakPointInspectorApplication {
             final File refFile = new File(refBAM);
             final SamReader refReader = SamReaderFactory.makeDefault().open(refFile);
 
-            // parse the location strings
-            final Location location1 = Location.parseLocationString(bp1String,
-                    tumorReader.getFileHeader().getSequenceDictionary());
-            final Location location2;
-            if (bp2String != null) {
-                location2 = Location.parseLocationString(bp2String,
-                        tumorReader.getFileHeader().getSequenceDictionary());
-            } else if (svLen > 0) {
-                location2 = new Location();
-                location2.ReferenceIndex = location1.ReferenceIndex;
-                location2.Position = location1.Position + svLen;
+            // output the header
+            final ArrayList<String> header = new ArrayList<>(
+                    Arrays.asList("ID", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_HOMSEQ", "MANTA_INSSEQ"));
+            header.addAll(prefixList(Sample.GetHeader(), "REF_"));
+            header.addAll(prefixList(Sample.GetHeader(), "TUMOR_"));
+            System.out.println(String.join("\t", header));
+
+            if (vcfPath != null) {
+                final File vcfFile = new File(vcfPath);
+                final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+
+                for (final VariantContext variant : vcfReader) {
+                    if (variant.isFiltered())
+                        continue;
+
+                    final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
+                    final Location location1 = Location.parseLocationString(location,
+                            tumorReader.getFileHeader().getSequenceDictionary());
+                    final Location location2;
+
+                    final String variantType = variant.getAttributeAsString("SVTYPE", "");
+                    switch (variantType) {
+                        case "DEL":
+                        case "DUP":
+                        case "INV":
+                            final int svLen = Math.abs(variant.getAttributeAsInt("SVLEN", 0));
+                            location2 = location1.add(svLen);
+                            break;
+                        case "BND":
+                            final String call = variant.getAlternateAllele(0).getDisplayString();
+                            final String[] split = call.split("[\\]\\[]");
+                            location2 = Location.parseLocationString(split[1],
+                                    tumorReader.getFileHeader().getSequenceDictionary());
+                            break;
+                        default:
+                            System.err.println(variant.getID() + " : UNEXPECTED SVTYPE=" + variantType);
+                            continue;
+                    }
+
+                    final List<String> extraHeaders = Arrays.asList(variant.getID(), location1.toString(),
+                            location2.toString(), variant.getAttributeAsString("SVLEN", "."),
+                            variant.getAttributeAsString("HOMSEQ", "."),
+                            variant.getAttributeAsString("SVINSSEQ", "."));
+                    processStructuralVariant(extraHeaders, refReader, tumorReader, location1, location2, range);
+                }
             } else {
-                printHelpAndExit(options);
-                System.exit(1);
-                return;
-            }
+                final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
 
-            // work out the query intervals
-            QueryInterval[] queryIntervals = {
-                    new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
-                            location1.Position + range),
-                    new QueryInterval(location2.ReferenceIndex, Math.max(0, location2.Position - range),
-                            location2.Position + range) };
-            queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
+                // parse the location strings
+                final Location location1 = Location.parseLocationString(bp1String,
+                        tumorReader.getFileHeader().getSequenceDictionary());
+                final Location location2;
+                if (bp2String != null) {
+                    location2 = Location.parseLocationString(bp2String,
+                            tumorReader.getFileHeader().getSequenceDictionary());
+                } else if (svLen > 0) {
+                    location2 = location1.add(svLen);
+                } else {
+                    printHelpAndExit(options);
+                    System.exit(1);
+                    return;
+                }
 
-            // begin processing
-
-            final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
-                    location2);
-            final SampleStats refStats = calculateStats(refResult);
-            refStats.Print("REF_");
-
-            final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, queryIntervals, location1,
-                    location2);
-            final SampleStats tumorStats = calculateStats(tumorResult);
-            tumorStats.Print("TUMOR_");
-
-            // orientation stats
-            System.out.println("#ORIENTATION");
-            System.out.println("INNIE\tOUTIE\tTANDEM");
-            System.out.println(tumorStats.Orientation.GetData().stream().map(i -> Integer.toString(i)).collect(
-                    Collectors.joining("\t")));
-
-            // clipping stats
-            System.out.println("#CLIPPING");
-            System.out.println("CHROM\tPOS\tCLIP_SEQ\tREAD_COUNT");
-            final TreeMultimap<Location, String> sortedClips = TreeMultimap.create();
-            for (final Map.Entry<Location, ClipStats> kv : tumorStats.Clipping.entrySet()) {
-                sortedClips.put(kv.getKey(), String.join("\t",
-                        tumorReader.getFileHeader().getSequence(kv.getKey().ReferenceIndex).getSequenceName(),
-                        Integer.toString(kv.getKey().Position), kv.getValue().LongestClipSequence,
-                        Integer.toString(kv.getValue().Reads.size())));
-            }
-            for (final String s : sortedClips.values()) {
-                System.out.println(s);
+                final List<String> extraHeaders = Arrays.asList("manual", location1.toString(), location2.toString(),
+                        svLen > 0 ? Integer.toString(svLen) : ".", ".", ".");
+                processStructuralVariant(extraHeaders, refReader, tumorReader, location1, location2, range);
             }
 
         } catch (ParseException e) {
