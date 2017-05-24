@@ -47,8 +47,10 @@ class Stats {
     }
 
     static class Clip {
+        Util.ClipSide Side = Util.ClipSide.NONE;
         String LongestClipSequence = "";
         List<SAMRecord> Reads = new ArrayList<>();
+        List<SAMRecord> HardClippedReads = new ArrayList<>();
     }
 
     static class Sample {

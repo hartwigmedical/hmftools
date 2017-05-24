@@ -10,7 +10,6 @@ import java.util.Map;
 import com.google.common.collect.TreeMultimap;
 
 import htsjdk.samtools.*;
-import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -126,36 +125,40 @@ public class BreakPointInspectorApplication {
     }
 
     private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult) {
-
         final Stats.Sample result = new Stats.Sample();
-
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
-
             // update clipping stats
             for (final ReadInfo info : collection.Reads) {
                 final SAMRecord read = info.Read;
 
-                if (info.Location == Overlap.CLIP && !info.Clipping.HardClipped) {
+                if (info.Location == Overlap.CLIP) {
+                    // TODO: handle multiple clip sides
                     final Location alignment = Location.fromSAMRecord(read, info.Clipping.Side == ClipSide.LEFT_CLIP);
-                    final Stats.Clip clip = result.Clipping_Stats.computeIfAbsent(alignment, k -> new Stats.Clip());
-
-                    final String clippedSequence;
-                    if (info.Clipping.Side == ClipSide.LEFT_CLIP) {
-                        clippedSequence = read.getReadString().substring(0, info.Clipping.Length);
+                    final Stats.Clip clip = result.Clipping_Stats.computeIfAbsent(alignment, k -> new Stats.Clip() {{
+                        Side = info.Clipping.Side;
+                    }});
+                    if (info.Clipping.HardClipped) {
+                        clip.HardClippedReads.add(read);
                     } else {
-                        clippedSequence = read.getReadString().substring(read.getReadLength() - info.Clipping.Length);
-                    }
+                        final String clippedSequence;
+                        if (info.Clipping.Side == ClipSide.LEFT_CLIP) {
+                            clippedSequence = read.getReadString().substring(0, info.Clipping.Length);
+                        } else {
+                            clippedSequence = read.getReadString().substring(
+                                    read.getReadLength() - info.Clipping.Length);
+                        }
 
-                    if (clippedSequence.length() > clip.LongestClipSequence.length() && clippedSequence.contains(
-                            clip.LongestClipSequence)) {
-                        // the existing sequence supports the new sequence
-                        clip.LongestClipSequence = clippedSequence;
-                    } else if (!clip.LongestClipSequence.contains(clippedSequence)) {
-                        // this read does not support the existing sequence
-                        continue;
-                    }
+                        if (clippedSequence.length() > clip.LongestClipSequence.length() && clippedSequence.contains(
+                                clip.LongestClipSequence)) {
+                            // the existing sequence supports the new sequence
+                            clip.LongestClipSequence = clippedSequence;
+                        } else if (!clip.LongestClipSequence.contains(clippedSequence)) {
+                            // this read does not support the existing sequence
+                            continue;
+                        }
 
-                    clip.Reads.add(read);
+                        clip.Reads.add(read);
+                    }
                 }
             }
 
@@ -239,7 +242,6 @@ public class BreakPointInspectorApplication {
                 }
             }
         }
-
         return result;
     }
 
@@ -309,8 +311,6 @@ public class BreakPointInspectorApplication {
                 info.Location = Overlap.CLIP;
             } else if (clipped && read.getAlignmentEnd() == bp.Position) {
                 info.Location = Overlap.CLIP;
-            } else if (readIntersectsLocation(read, bp)) {
-                info.Location = Overlap.CLIP; // map this to clip intentionally
             } else {
                 info.Location = Overlap.PROXIMITY;
             }
@@ -354,13 +354,13 @@ public class BreakPointInspectorApplication {
 
         // clipping stats
         System.out.println("#CLIPPING");
-        System.out.println("CHROM\tPOS\tCLIP_SEQ\tREAD_COUNT");
+        System.out.println("POS\tCLIP_SEQ\tREAD_COUNT");
         final TreeMultimap<Location, String> sortedClips = TreeMultimap.create();
         for (final Map.Entry<Location, Clip> kv : tumorStats.Clipping_Stats.entrySet()) {
-            sortedClips.put(kv.getKey(), String.join("\t",
-                    tumorReader.getFileHeader().getSequence(kv.getKey().ReferenceIndex).getSequenceName(),
-                    Integer.toString(kv.getKey().Position), kv.getValue().LongestClipSequence,
-                    Integer.toString(kv.getValue().Reads.size())));
+            final Clip stats = kv.getValue();
+            sortedClips.put(kv.getKey(), String.join("\t", kv.getKey().toString(),
+                    (stats.Side == ClipSide.RIGHT_CLIP ? "*" : "") + stats.LongestClipSequence + (
+                            stats.Side == ClipSide.LEFT_CLIP ? "*" : ""), Integer.toString(stats.Reads.size())));
         }
         for (final String s : sortedClips.values()) {
             System.out.println(s);
