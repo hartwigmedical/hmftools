@@ -82,6 +82,6 @@ public class FittedPurityScoreFactory {
     @VisibleForTesting
     static boolean isPolyclonal(double copyNumber) {
         double remainder = Math.abs(copyNumber - Math.round(copyNumber));
-        return Doubles.lessThan(remainder, POLYCLONAL_DISTANCE);
+        return Doubles.greaterThan(remainder, POLYCLONAL_DISTANCE);
     }
 }

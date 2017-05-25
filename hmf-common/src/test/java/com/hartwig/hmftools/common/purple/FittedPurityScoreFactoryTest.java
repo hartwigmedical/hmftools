@@ -12,13 +12,15 @@ public class FittedPurityScoreFactoryTest
 
     @Test
     public void testPolyclonalProportion() {
+        assertTrue(isPolyclonal(2.749));
+
         assertFalse(isPolyclonal(2.75));
+        assertFalse(isPolyclonal(2.751));
+        assertFalse(isPolyclonal(3.0));
+        assertFalse(isPolyclonal(3.249));
+        assertFalse(isPolyclonal(3.25));
 
-        assertTrue(isPolyclonal(2.751));
-        assertTrue(isPolyclonal(3.0));
-        assertTrue(isPolyclonal(3.249));
-
-        assertFalse(isPolyclonal(3.5));
+        assertTrue(isPolyclonal(3.251));
     }
 
 }
