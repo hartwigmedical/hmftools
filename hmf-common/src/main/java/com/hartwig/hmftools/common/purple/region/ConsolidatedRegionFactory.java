@@ -40,7 +40,7 @@ public enum ConsolidatedRegionFactory {
             final List<ConsolidatedRegion> smoothRegions = new SmoothedRegions(chromosomeBroadRegions,
                     chromosomeCopyNumbers).getSmoothedRegions();
 
-            result.addAll(MergeRegionBreaks.merge(smoothRegions));
+            result.addAll(RegionStepFilter.filter(smoothRegions));
         }
 
         return result;

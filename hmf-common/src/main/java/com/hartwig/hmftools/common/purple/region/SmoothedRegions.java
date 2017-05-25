@@ -159,7 +159,6 @@ class SmoothedRegions {
         if (bafCount >= 10) {
             return MIN_COPY_NUMBER_RANGE;
         }
-        //(0.3 - 1.3)/10 * x + 1.3
         return (MIN_COPY_NUMBER_RANGE - MAX_COPY_NUMBER_RANGE) / 10 * bafCount + MAX_COPY_NUMBER_RANGE;
     }
 

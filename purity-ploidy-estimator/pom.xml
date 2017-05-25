@@ -27,6 +27,10 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>patient-db</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

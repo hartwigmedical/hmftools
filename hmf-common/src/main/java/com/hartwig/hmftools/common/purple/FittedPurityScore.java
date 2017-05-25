@@ -3,7 +3,9 @@ package com.hartwig.hmftools.common.purple;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public abstract class PurityBounds {
+public abstract class FittedPurityScore {
+
+    public abstract double polyclonalProportion();
 
     public abstract double minPurity();
 
