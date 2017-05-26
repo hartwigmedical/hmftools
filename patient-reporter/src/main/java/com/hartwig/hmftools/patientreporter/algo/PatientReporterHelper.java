@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.freec.FreecCopyNumberFactory;
+import com.hartwig.hmftools.common.copynumber.freec.FreecCopyNumberFactory;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import org.apache.logging.log4j.LogManager;

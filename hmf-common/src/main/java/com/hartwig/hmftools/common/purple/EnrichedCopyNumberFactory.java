@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.freec.FreecRatio;
+import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;

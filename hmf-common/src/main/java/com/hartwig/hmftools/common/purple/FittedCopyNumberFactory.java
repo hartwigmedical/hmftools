@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.freec.FreecStatus;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 public class FittedCopyNumberFactory {
@@ -81,8 +81,7 @@ public class FittedCopyNumberFactory {
         return normFactor + (ploidy - 2) * purity * normFactor / 2d;
     }
 
-    @VisibleForTesting
-    static double copyNumber(double purity, double normFactor, double tumorRatio) {
+    private static double copyNumber(double purity, double normFactor, double tumorRatio) {
         return 2 + 2 * (tumorRatio - normFactor) / purity / normFactor;
     }
 
@@ -130,10 +129,8 @@ public class FittedCopyNumberFactory {
         return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
     }
 
-    @VisibleForTesting
-    static double purityAdjustedBAF(double purity, double observedBAF) {
+    private static double purityAdjustedBAF(double purity, double observedBAF) {
         assert (Doubles.greaterThan(purity, 0));
         return (observedBAF - (1 - purity) * NORMAL_BAF) / purity;
     }
-
 }

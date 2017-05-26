@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.freec;
+package com.hartwig.hmftools.common.copynumber.freec;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -20,12 +20,14 @@ public enum FreecRatioFactory {
     private static final int ESTIMATED_BAF_COLUMN = 6;
 
     @NotNull
-    public static List<FreecRatio> loadNormalRatios(@NotNull final String basePath, @NotNull final String sample) throws IOException, HartwigException {
+    public static List<FreecRatio> loadNormalRatios(@NotNull final String basePath, @NotNull final String sample)
+            throws IOException, HartwigException {
         return loadRatios(FreecFileLoader.normalRatioLines(basePath, sample));
     }
 
     @NotNull
-    public static List<FreecRatio> loadTumorRatios(@NotNull final String basePath, @NotNull final String sample) throws IOException, HartwigException {
+    public static List<FreecRatio> loadTumorRatios(@NotNull final String basePath, @NotNull final String sample)
+            throws IOException, HartwigException {
         return loadRatios(FreecFileLoader.tumorRatioLines(basePath, sample));
     }
 
@@ -43,7 +45,8 @@ public enum FreecRatioFactory {
     }
 
     @NotNull
-    private static List<FreecRatio> loadRatios(@NotNull final List<String> lines) throws IOException, HartwigException {
+    private static List<FreecRatio> loadRatios(@NotNull final List<String> lines)
+            throws IOException, HartwigException {
         final List<FreecRatio> results = Lists.newArrayList();
         for (final String line : lines) {
             FreecRatio ratio = fromRatioLine(line);

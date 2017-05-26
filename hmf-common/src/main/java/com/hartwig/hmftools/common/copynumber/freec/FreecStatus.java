@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.freec;
+package com.hartwig.hmftools.common.copynumber.freec;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 

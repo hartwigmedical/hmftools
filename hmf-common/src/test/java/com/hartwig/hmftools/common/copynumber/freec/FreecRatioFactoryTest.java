@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.freec;
+package com.hartwig.hmftools.common.copynumber.freec;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;

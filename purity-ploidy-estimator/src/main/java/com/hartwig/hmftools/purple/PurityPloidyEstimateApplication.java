@@ -12,10 +12,10 @@ import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.freec.FreecFileLoader;
-import com.hartwig.hmftools.common.freec.FreecRatio;
-import com.hartwig.hmftools.common.freec.FreecRatioFactory;
-import com.hartwig.hmftools.common.freec.FreecRatioRegions;
+import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
+import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
+import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
+import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.EnrichedCopyNumber;
 import com.hartwig.hmftools.common.purple.EnrichedCopyNumberFactory;
@@ -88,10 +88,10 @@ public class PurityPloidyEstimateApplication {
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, MIN_PURITY, MAX_PURITY,
                 PURITY_INCREMENTS, MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedCopyNumberFactory);
 
-        LOGGER.info("Loading variant data");
+        LOGGER.info("Loading germline variant data");
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
-        final List<GermlineVariant> variants = variants(cmd, vcfFile);
+        final List<GermlineVariant> variants = filteredVariants(cmd, vcfFile);
         final String refSample = vcfFile.refSample();
         final String tumorSample = vcfFile.tumorSample();
 
@@ -120,7 +120,8 @@ public class PurityPloidyEstimateApplication {
             final List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(),
                     bestFit.normFactor(), enrichedCopyNumbers);
 
-            final List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(fittedCopyNumbers);
+            final List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(
+                    fittedCopyNumbers);
             final List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedCopyNumbers,
                     highConfidence);
             final String regionFile = freecDirectory + File.separator + tumorSample + ".purple.regions";
@@ -130,8 +131,8 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
             final List<FittedCopyNumber> broadCopyNumber = ConsolidatedRegionZipper.insertHighConfidenceRegions(
                     highConfidence, fittedCopyNumbers);
-            final List<FittedCopyNumber> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(smoothRegions,
-                    broadCopyNumber);
+            final List<FittedCopyNumber> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(
+                    smoothRegions, broadCopyNumber);
             FittedCopyNumberWriter.writeCopyNumber(fittedFile, smoothCopyNumbers);
         }
 
@@ -156,8 +157,8 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static List<GermlineVariant> variants(@NotNull final CommandLine cmd, @NotNull final VCFGermlineFile file)
-            throws IOException, EmptyFileException {
+    private static List<GermlineVariant> filteredVariants(@NotNull final CommandLine cmd,
+            @NotNull final VCFGermlineFile file) throws IOException, EmptyFileException {
         final Predicate<Variant> filterPredicate = x -> x.filter().equals("PASS") || x.filter().equals(".");
         final Predicate<GenomePosition> slicerPredicate;
         if (cmd.hasOption(BED_FILE)) {

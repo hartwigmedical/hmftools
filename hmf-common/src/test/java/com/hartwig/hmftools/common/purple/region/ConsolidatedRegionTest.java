@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.region;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.freec.FreecStatus;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.FittedCopyNumber;
 import com.hartwig.hmftools.common.purple.ImmutableFittedCopyNumber;
 

@@ -5,8 +5,8 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
-import com.hartwig.hmftools.common.freec.FreecCopyNumber;
-import com.hartwig.hmftools.common.freec.ImmutableFreecCopyNumber;
+import com.hartwig.hmftools.common.copynumber.freec.FreecCopyNumber;
+import com.hartwig.hmftools.common.copynumber.freec.ImmutableFreecCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 public enum PadCopyNumber {
