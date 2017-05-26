@@ -4,9 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import htsjdk.samtools.*;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -19,6 +24,8 @@ import org.apache.commons.cli.ParseException;
 
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
+
+import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -358,6 +365,12 @@ public class BreakPointInspectorApplication {
         System.out.println(String.join("\t", data));
     }
 
+    private static List<String> parseMantaPRSR(final Genotype genotype) {
+        String pr = (String) genotype.getExtendedAttribute("PR", "0,0");
+        String sr = (String) genotype.getExtendedAttribute("SR", "0,0");
+        return Stream.concat(Arrays.stream(pr.split(",")), Arrays.stream(sr.split(","))).collect(Collectors.toList());
+    }
+
     public static void main(final String... args) throws ParseException, IOException {
 
         final Options options = createOptions();
@@ -383,8 +396,10 @@ public class BreakPointInspectorApplication {
             final SamReader refReader = SamReaderFactory.makeDefault().open(refFile);
 
             // output the header
-            final ArrayList<String> header = new ArrayList<>(
-                    Arrays.asList("ID", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_HOMSEQ", "MANTA_INSSEQ"));
+            final ArrayList<String> header = Lists.newArrayList("ID", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN",
+                    "MANTA_REF_PR_NORMAL", "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL", "MANTA_REF_SR_SUPPORT",
+                    "MANTA_TUMOR_PR_NORMAL", "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL",
+                    "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
             header.addAll(prefixList(Sample.GetHeader(), "REF_"));
             header.addAll(prefixList(Sample.GetHeader(), "TUMOR_"));
             header.add("TUMOR_CLIP_INFO");
@@ -393,6 +408,18 @@ public class BreakPointInspectorApplication {
             if (vcfPath != null) {
                 final File vcfFile = new File(vcfPath);
                 final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+
+                // work out the reference sample
+                final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
+                final Predicate<String> isRef = s -> s.endsWith("R") || s.endsWith("BL");
+                final String refSampleName = samples.stream().filter(isRef).findFirst().orElse(null);
+                final String tumorSampleName = samples.stream().filter(
+                        s -> s.endsWith("T") || !isRef.test(s)).findFirst().orElse(null);
+                if (refSampleName == null || tumorSampleName == null) {
+                    System.err.println("could not determine tumor and sample from VCF");
+                    System.exit(1);
+                    return;
+                }
 
                 for (final VariantContext variant : vcfReader) {
                     if (variant.isFiltered())
@@ -422,10 +449,15 @@ public class BreakPointInspectorApplication {
                             continue;
                     }
 
-                    final List<String> extraHeaders = Arrays.asList(variant.getID(), location1.toString(),
-                            location2.toString(), variant.getAttributeAsString("SVLEN", "."),
-                            variant.getAttributeAsString("HOMSEQ", "."),
-                            variant.getAttributeAsString("SVINSSEQ", "."));
+                    final List<String> extraHeaders = Lists.newArrayList(variant.getID(), location1.toString(),
+                            location2.toString(), variant.getAttributeAsString("SVLEN", "."));
+
+                    extraHeaders.addAll(parseMantaPRSR(variant.getGenotype(refSampleName)));
+                    extraHeaders.addAll(parseMantaPRSR(variant.getGenotype(tumorSampleName)));
+
+                    extraHeaders.add(variant.getAttributeAsString("HOMSEQ", "."));
+                    extraHeaders.add(variant.getAttributeAsString("SVINSSEQ", "."));
+
                     processStructuralVariant(extraHeaders, refReader, tumorReader, location1, location2, range);
                 }
             } else {
@@ -446,8 +478,9 @@ public class BreakPointInspectorApplication {
                     return;
                 }
 
-                final List<String> extraHeaders = Arrays.asList("manual", location1.toString(), location2.toString(),
-                        svLen > 0 ? Integer.toString(svLen) : ".", ".", ".");
+                final List<String> extraHeaders = Lists.newArrayList("manual", location1.toString(),
+                        location2.toString(), svLen > 0 ? Integer.toString(svLen) : ".");
+                extraHeaders.addAll(Collections.nCopies(10, "."));
                 processStructuralVariant(extraHeaders, refReader, tumorReader, location1, location2, range);
             }
 
