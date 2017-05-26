@@ -11,6 +11,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
 
+import org.jetbrains.annotations.NotNull;
+
 public class FittedPurityFactory {
 
     private final int maxPloidy;
@@ -20,10 +22,12 @@ public class FittedPurityFactory {
     private final double minNormFactor;
     private final double maxNormFactor;
     private final double normFactorIncrements;
+    @NotNull
     private final FittedCopyNumberFactory fittedCopyNumberFactory;
 
-    public FittedPurityFactory(int maxPloidy, double minPurity, double maxPurity, double purityIncrements, double minNormFactor,
-                               double maxNormFactor, double normFactorIncrements, FittedCopyNumberFactory fittedCopyNumberFactory) {
+    public FittedPurityFactory(final int maxPloidy, final double minPurity, final double maxPurity,
+            final double purityIncrements, final double minNormFactor, final double maxNormFactor,
+            final double normFactorIncrements, @NotNull final FittedCopyNumberFactory fittedCopyNumberFactory) {
         this.maxPloidy = maxPloidy;
         this.minPurity = minPurity;
         this.maxPurity = maxPurity;
@@ -34,20 +38,23 @@ public class FittedPurityFactory {
         this.fittedCopyNumberFactory = fittedCopyNumberFactory;
     }
 
-    public List<FittedPurity> fitPurity(Collection<EnrichedCopyNumber> copyNumbers) {
+    @NotNull
+    public List<FittedPurity> fitPurity(@NotNull final Collection<EnrichedCopyNumber> copyNumbers) {
         final List<FittedPurity> result = Lists.newArrayList();
 
         int totalBAFCount = 0;
-        List<EnrichedCopyNumber> filteredCopyNumbers = Lists.newArrayList();
-        for (EnrichedCopyNumber copyNumber : copyNumbers) {
-            if (copyNumber.mBAFCount() > 0 && positiveOrZero(copyNumber.tumorRatio()) && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
+        final List<EnrichedCopyNumber> filteredCopyNumbers = Lists.newArrayList();
+        for (final EnrichedCopyNumber copyNumber : copyNumbers) {
+            if (copyNumber.mBAFCount() > 0 && positiveOrZero(copyNumber.tumorRatio())
+                    && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
                 totalBAFCount += copyNumber.mBAFCount();
                 filteredCopyNumbers.add(copyNumber);
             }
         }
 
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
-            for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
+            for (double normFactor = minNormFactor; lessOrEqual(normFactor,
+                    maxNormFactor); normFactor += normFactorIncrements) {
 
                 double impliedPloidy = impliedPloidy(normFactor, purity);
 
@@ -65,7 +72,9 @@ public class FittedPurityFactory {
         return (1 - normFactor) / purity / normFactor * 2 + 2;
     }
 
-    private FittedPurity fitPurity(double purity, double normFactor, double sumWeight, Collection<EnrichedCopyNumber> copyNumbers) {
+    @NotNull
+    private FittedPurity fitPurity(double purity, double normFactor, double sumWeight,
+            Collection<EnrichedCopyNumber> copyNumbers) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;
@@ -73,7 +82,8 @@ public class FittedPurityFactory {
 
         for (EnrichedCopyNumber copyNumber : copyNumbers) {
 
-            final FittedCopyNumber fittedCopyNumber = fittedCopyNumberFactory.fittedCopyNumber(purity, normFactor, copyNumber);
+            final FittedCopyNumber fittedCopyNumber = fittedCopyNumberFactory.fittedCopyNumber(purity, normFactor,
+                    copyNumber);
 
             modelDeviation += copyNumber.mBAFCount() / sumWeight * fittedCopyNumber.deviation();
             modelBAFDeviation += copyNumber.mBAFCount() / sumWeight * fittedCopyNumber.bafDeviation();
@@ -82,11 +92,7 @@ public class FittedPurityFactory {
             }
         }
 
-        return builder
-                .score(modelDeviation)
-                .modelBAFDeviation(modelBAFDeviation)
-                .diplodProportion(diploidProportion)
-                .build();
+        return builder.score(modelDeviation).modelBAFDeviation(modelBAFDeviation).diploidProportion(
+                diploidProportion).build();
     }
-
 }

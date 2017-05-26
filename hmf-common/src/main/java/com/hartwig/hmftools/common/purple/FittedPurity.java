@@ -14,7 +14,7 @@ public abstract class FittedPurity implements Comparable<FittedPurity> {
 
     public abstract double modelBAFDeviation();
 
-    public abstract double diplodProportion();
+    public abstract double diploidProportion();
 
     public double ploidy() {
         return (1 - normFactor()) / purity() / normFactor() * 2 + 2;

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MergeRegionBreaksTest {
@@ -33,7 +34,8 @@ public class MergeRegionBreaksTest {
         ConsolidatedRegion region2 = create(CHROM1, 10001, 11000, 0.31, 4.3);
         ConsolidatedRegion region3 = create(CHROM1, 11001, 20000, 0.32, 5);
 
-        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(Lists.newArrayList(region0, region1, region2, region3));
+        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(
+                Lists.newArrayList(region0, region1, region2, region3));
         assertEquals(3, regions.size());
         assertRegion(region0, regions.get(0));
         assertRegion(create(CHROM1, 5001, 11000, 0.3, 4), regions.get(1));
@@ -47,7 +49,8 @@ public class MergeRegionBreaksTest {
         ConsolidatedRegion region3 = create(CHROM1, 11001, 20000, 0.32, 4);
         ConsolidatedRegion region4 = create(CHROM1, 20001, 30000, 0.32, 4.1);
 
-        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(Lists.newArrayList(region1, region2, region3, region4));
+        List<ConsolidatedRegion> regions = MergeRegionBreaks.merge(
+                Lists.newArrayList(region1, region2, region3, region4));
         assertEquals(3, regions.size());
         assertRegion(region1, regions.get(0));
         assertRegion(create(CHROM1, 10001, 20000, 0.32, 4), regions.get(1));
@@ -86,18 +89,11 @@ public class MergeRegionBreaksTest {
         assertEquals(expected.averageTumorCopyNumber(), victim.averageTumorCopyNumber(), EPSILON);
     }
 
-
-    private ConsolidatedRegion create(String chromosome, long start, long end, double baf, double ratio) {
-        return ImmutableConsolidatedRegion.builder()
-                .chromosome(chromosome)
-                .start(start)
-                .end(end)
-                .bafCount(0)
-                .averageObservedBAF(baf)
-                .averageTumorCopyNumber(ratio)
-                .averageRefNormalisedCopyNumber(0)
-                .averagePurityAdjustedBAF(0)
-                .build();
+    @NotNull
+    private static ConsolidatedRegion create(@NotNull String chromosome, long start, long end, double baf,
+            double ratio) {
+        return ImmutableConsolidatedRegion.builder().chromosome(chromosome).start(start).end(end).bafCount(
+                0).averageObservedBAF(baf).averageTumorCopyNumber(ratio).averageRefNormalisedCopyNumber(
+                0).averagePurityAdjustedBAF(0).build();
     }
-
 }

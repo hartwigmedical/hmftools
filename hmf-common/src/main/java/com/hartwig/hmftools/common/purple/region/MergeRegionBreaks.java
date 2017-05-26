@@ -13,12 +13,15 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
-class MergeRegionBreaks {
+import org.jetbrains.annotations.NotNull;
+
+enum MergeRegionBreaks {
+    ;
 
     private static final long MIN_SIZE = 1000;
 
-    static List<ConsolidatedRegion> merge(List<ConsolidatedRegion> region) {
-
+    @NotNull
+    static List<ConsolidatedRegion> merge(@NotNull final List<ConsolidatedRegion> region) {
         List<ConsolidatedRegion> results = Lists.newArrayList();
 
         int i = 0;
@@ -28,7 +31,6 @@ class MergeRegionBreaks {
             ConsolidatedRegion third = i + 2 < region.size() ? region.get(i + 2) : null;
 
             if (second != null && third != null && second.bases() == MIN_SIZE && isSameChromosome(first, third)) {
-
                 double myFirstSecondDifference = first.averageTumorCopyNumber() - second.averageTumorCopyNumber();
                 double mySecondThirdDifference = second.averageTumorCopyNumber() - third.averageTumorCopyNumber();
 
@@ -53,16 +55,14 @@ class MergeRegionBreaks {
         return results;
     }
 
-    private static ConsolidatedRegion merge(ConsolidatedRegion primary, ConsolidatedRegion secondary) {
-        return ImmutableConsolidatedRegion.builder()
-                .from(primary)
-                .start(min(primary.start(), secondary.start()))
-                .end(max(primary.end(), secondary.end()))
-                .build();
+    @NotNull
+    private static ConsolidatedRegion merge(@NotNull final ConsolidatedRegion primary,
+            @NotNull final ConsolidatedRegion secondary) {
+        return ImmutableConsolidatedRegion.builder().from(primary).start(min(primary.start(), secondary.start())).end(
+                max(primary.end(), secondary.end())).build();
     }
 
-    private static boolean isSameChromosome(GenomeRegion region1, GenomeRegion region2) {
+    private static boolean isSameChromosome(@NotNull final GenomeRegion region1, @NotNull final GenomeRegion region2) {
         return region1.chromosome().equals(region2.chromosome());
     }
-
 }

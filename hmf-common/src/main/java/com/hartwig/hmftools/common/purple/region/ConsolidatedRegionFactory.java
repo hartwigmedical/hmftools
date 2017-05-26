@@ -6,35 +6,36 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.FittedCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
-public class ConsolidatedRegionFactory {
-    public static List<ConsolidatedRegion> highConfidence(List<FittedCopyNumber> copyNumbers) {
+import org.jetbrains.annotations.NotNull;
+
+public enum ConsolidatedRegionFactory {
+    ;
+
+    @NotNull
+    public static List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedCopyNumber> copyNumbers) {
         return new HighConfidenceRegions().highConfidence(copyNumbers);
     }
 
-    public static List<ConsolidatedRegion> smooth(List<FittedCopyNumber> copyNumbers,
-            List<ConsolidatedRegion> broadRegions) {
-
+    @NotNull
+    public static List<ConsolidatedRegion> smooth(@NotNull final List<FittedCopyNumber> copyNumbers,
+            @NotNull final List<ConsolidatedRegion> broadRegions) {
         final List<ConsolidatedRegion> result = Lists.newArrayList();
 
-        final Set<String> orderedChromosomes = new LinkedHashSet<>();
-        for (ConsolidatedRegion broadRegion : broadRegions) {
-            orderedChromosomes.add(broadRegion.chromosome());
-        }
+        final Set<String> orderedChromosomes = broadRegions.stream().map(GenomeRegion::chromosome).collect(
+                Collectors.toCollection(LinkedHashSet::new));
 
-        for (String orderedChromosome : orderedChromosomes) {
+        for (final String orderedChromosome : orderedChromosomes) {
+            final List<FittedCopyNumber> chromosomeCopyNumbers = copyNumbers.stream().filter(
+                    matchesChromosome(orderedChromosome)).collect(toList());
 
-            final List<FittedCopyNumber> chromosomeCopyNumbers = copyNumbers.stream()
-                    .filter(matchesChromosome(orderedChromosome))
-                    .collect(toList());
-
-            final List<ConsolidatedRegion> chromosomeBroadRegions = broadRegions.stream()
-                    .filter(matchesChromosome(orderedChromosome))
-                    .collect(toList());
+            final List<ConsolidatedRegion> chromosomeBroadRegions = broadRegions.stream().filter(
+                    matchesChromosome(orderedChromosome)).collect(toList());
 
             final List<ConsolidatedRegion> smoothRegions = new SmoothedRegions(chromosomeBroadRegions,
                     chromosomeCopyNumbers).getSmoothedRegions();
@@ -45,8 +46,8 @@ public class ConsolidatedRegionFactory {
         return result;
     }
 
-    private static <T extends GenomeRegion> Predicate<T> matchesChromosome(String chromosome) {
+    @NotNull
+    private static <T extends GenomeRegion> Predicate<T> matchesChromosome(@NotNull final String chromosome) {
         return t -> t.chromosome().equals(chromosome);
     }
-
 }

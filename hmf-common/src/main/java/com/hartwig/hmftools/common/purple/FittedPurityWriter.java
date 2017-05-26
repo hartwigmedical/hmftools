@@ -12,8 +12,8 @@ import org.jetbrains.annotations.NotNull;
 public enum FittedPurityWriter {
     ;
 
-    public static void writePurity(@NotNull final String filePath, @NotNull Collection<FittedPurity> purity) throws IOException {
-
+    public static void writePurity(@NotNull final String filePath, @NotNull final Collection<FittedPurity> purity)
+            throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         purity.stream().limit(100).map(FittedPurityWriter::transform).forEach(lines::add);
@@ -21,26 +21,15 @@ public enum FittedPurityWriter {
         Files.write(new File(filePath).toPath(), lines);
     }
 
+    @NotNull
     private static String header() {
-        return new StringBuilder()
-                .append("purity").append('\t')
-                .append("normFactor").append('\t')
-                .append("score").append('\t')
-                .append("modelBAFDeviation").append('\t')
-                .append("diplodProportion").append('\t')
-                .append("ploidy")
-                .toString();
+        return "purity" + '\t' + "normFactor" + '\t' + "score" + '\t' + "modelBAFDeviation" + '\t'
+                + "diploidProportion" + '\t' + "ploidy";
     }
 
-    private static String transform(FittedPurity purity) {
-        return new StringBuilder()
-                .append(purity.purity()).append('\t')
-                .append(purity.normFactor()).append('\t')
-                .append(purity.score()).append('\t')
-                .append(purity.modelBAFDeviation()).append('\t')
-                .append(purity.diplodProportion()).append('\t')
-                .append(purity.ploidy())
-                .toString();
+    @NotNull
+    private static String transform(@NotNull final FittedPurity purity) {
+        return String.valueOf(purity.purity()) + '\t' + purity.normFactor() + '\t' + purity.score() + '\t'
+                + purity.modelBAFDeviation() + '\t' + purity.diploidProportion() + '\t' + purity.ploidy();
     }
-
 }

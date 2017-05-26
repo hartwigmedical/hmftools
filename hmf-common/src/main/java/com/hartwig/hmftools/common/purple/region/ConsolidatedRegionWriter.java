@@ -12,8 +12,8 @@ import org.jetbrains.annotations.NotNull;
 public enum ConsolidatedRegionWriter {
     ;
 
-    public static void writeRegions(@NotNull final String filePath, @NotNull Collection<ConsolidatedRegion> purity) throws IOException {
-
+    public static void writeRegions(@NotNull final String filePath, @NotNull Collection<ConsolidatedRegion> purity)
+            throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         purity.stream().map(ConsolidatedRegionWriter::transform).forEach(lines::add);
@@ -21,28 +21,16 @@ public enum ConsolidatedRegionWriter {
         Files.write(new File(filePath).toPath(), lines);
     }
 
+    @NotNull
     private static String header() {
-        return new StringBuilder()
-                .append("chromosome").append('\t')
-                .append("start").append('\t')
-                .append("end").append('\t')
-                .append("copyNumber").append('\t')
-                .append("bafCount").append('\t')
-                .append("observedBAF").append('\t')
-                .append("purityAdjustedBAF")
-                .toString();
+        return "chromosome" + '\t' + "start" + '\t' + "end" + '\t' + "copyNumber" + '\t' + "bafCount" + '\t'
+                + "observedBAF" + '\t' + "purityAdjustedBAF";
     }
 
-    private static String transform(ConsolidatedRegion region) {
-        return new StringBuilder()
-                .append(region.chromosome()).append('\t')
-                .append(region.start()).append('\t')
-                .append(region.end()).append('\t')
-                .append(region.averageTumorCopyNumber()).append('\t')
-                .append(region.bafCount()).append('\t')
-                .append(region.averageObservedBAF()).append('\t')
-                .append(region.averagePurityAdjustedBAF())
-                .toString();
+    @NotNull
+    private static String transform(@NotNull final ConsolidatedRegion region) {
+        return region.chromosome() + '\t' + region.start() + '\t' + region.end() + '\t'
+                + region.averageTumorCopyNumber() + '\t' + region.bafCount() + '\t' + region.averageObservedBAF()
+                + '\t' + region.averagePurityAdjustedBAF();
     }
-
 }

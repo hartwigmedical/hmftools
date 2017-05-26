@@ -24,13 +24,11 @@ class HighConfidenceRegions {
     @Nullable
     private FittedCopyNumber last;
 
-    List<ConsolidatedRegion> highConfidence(List<FittedCopyNumber> copyNumbers) {
-        for (FittedCopyNumber copyNumber : copyNumbers) {
-            if (copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC && !Doubles.isZero(
-                    copyNumber.observedTumorRatio())) {
-                process(copyNumber);
-            }
-        }
+    @NotNull
+    List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedCopyNumber> copyNumbers) {
+        copyNumbers.stream().filter(
+                copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
+                        && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);
 
         endRegion();
         return result;
