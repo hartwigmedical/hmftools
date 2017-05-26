@@ -21,7 +21,7 @@ public enum FreecCopyNumberFactory {
     private static final int VALUE_COLUMN = 3;
     private static final int ALTERATION_COLUMN = 4;
 
-    // Optional columns
+    // JOBA: Optional columns
     private static final int GENOTYPE_COLUMN = 5;
     private static final int STATUS_COLUMN = 7;
 

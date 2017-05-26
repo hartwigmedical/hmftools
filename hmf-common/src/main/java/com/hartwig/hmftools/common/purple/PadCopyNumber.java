@@ -9,13 +9,16 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecCopyNumber;
 import com.hartwig.hmftools.common.copynumber.freec.ImmutableFreecCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
+import org.jetbrains.annotations.NotNull;
+
 public enum PadCopyNumber {
     ;
 
-    public static List<GenomeRegion> pad(List<GenomeRegion> copyNumbers) {
+    @NotNull
+    public static List<GenomeRegion> pad(@NotNull final List<GenomeRegion> copyNumbers) {
         PadCopyNumberForChromosome padder = null;
-        List<GenomeRegion> result = Lists.newArrayList();
-        for (GenomeRegion copyNumber : copyNumbers) {
+        final List<GenomeRegion> result = Lists.newArrayList();
+        for (final GenomeRegion copyNumber : copyNumbers) {
             if (padder == null) {
                 padder = new PadCopyNumberForChromosome(copyNumber.chromosome(), result::add);
             } else if (!padder.chromosome.equals(copyNumber.chromosome())) {
@@ -28,22 +31,25 @@ public enum PadCopyNumber {
         return result;
     }
 
-    static class PadCopyNumberForChromosome {
+    private static class PadCopyNumberForChromosome {
 
+        @NotNull
         private final String chromosome;
+        @NotNull
         private final Consumer<GenomeRegion> handler;
         private long currentPosition = 1;
 
-        PadCopyNumberForChromosome(String chromosome, Consumer<GenomeRegion> handler) {
+        PadCopyNumberForChromosome(@NotNull final String chromosome, @NotNull final Consumer<GenomeRegion> handler) {
             this.chromosome = chromosome;
             this.handler = handler;
         }
 
+        @NotNull
         String getChromosome() {
             return chromosome;
         }
 
-        void addCopyNumber(GenomeRegion number) {
+        void addCopyNumber(@NotNull final GenomeRegion number) {
             if (number.start() > currentPosition) {
                 handler.accept(createDefaultCopyNumber(currentPosition, number.start() - 1));
             }
@@ -59,8 +65,9 @@ public enum PadCopyNumber {
             }
         }
 
-        private FreecCopyNumber createDefaultCopyNumber(long aStart, long aEnd) {
-            return ImmutableFreecCopyNumber.builder().chromosome(chromosome).start(aStart).end(aEnd).value(2).build();
+        @NotNull
+        private FreecCopyNumber createDefaultCopyNumber(long start, long end) {
+            return ImmutableFreecCopyNumber.builder().chromosome(chromosome).start(start).end(end).value(2).build();
         }
     }
 }

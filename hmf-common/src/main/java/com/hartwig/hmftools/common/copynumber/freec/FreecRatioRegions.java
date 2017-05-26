@@ -12,14 +12,12 @@ public enum FreecRatioRegions {
     ;
 
     @NotNull
-    public static List<GenomeRegion> createRegionsFromRatios(@NotNull List<FreecRatio> ratios) {
-
-        List<GenomeRegion> result = Lists.newArrayList();
+    public static List<GenomeRegion> createRegionsFromRatios(@NotNull final List<FreecRatio> ratios) {
+        final List<GenomeRegion> result = Lists.newArrayList();
 
         FreecRatio start = null;
         FreecRatio end = null;
-        for (FreecRatio ratio : ratios) {
-
+        for (final FreecRatio ratio : ratios) {
             if (start == null) {
                 start = ratio;
                 end = ratio;
@@ -39,18 +37,14 @@ public enum FreecRatioRegions {
         return result;
     }
 
-    private static FreecCopyNumber create(@NotNull FreecRatio first, @NotNull FreecRatio second) {
-        return ImmutableFreecCopyNumber.builder()
-                .chromosome(first.chromosome())
-                .start(first.position())
-                .end(second.position() - 1)
-                .value(0)
-                .build();
+    @NotNull
+    private static FreecCopyNumber create(@NotNull final FreecRatio first, @NotNull final FreecRatio second) {
+        return ImmutableFreecCopyNumber.builder().chromosome(first.chromosome()).start(first.position()).end(
+                second.position() - 1).value(0).build();
     }
 
-    private static boolean isSameRegion(@NotNull FreecRatio first, @NotNull FreecRatio second) {
-        return first.chromosome().equals(second.chromosome()) &&
-                Doubles.equal(first.medianRatio(), second.medianRatio()) &&
-                Doubles.equal(first.estimatedBAF(), second.estimatedBAF());
+    private static boolean isSameRegion(@NotNull final FreecRatio first, @NotNull final FreecRatio second) {
+        return first.chromosome().equals(second.chromosome()) && Doubles.equal(first.medianRatio(),
+                second.medianRatio()) && Doubles.equal(first.estimatedBAF(), second.estimatedBAF());
     }
 }
