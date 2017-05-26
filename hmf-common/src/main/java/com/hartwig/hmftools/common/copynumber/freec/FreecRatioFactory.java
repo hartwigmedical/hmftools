@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
 
@@ -32,6 +33,22 @@ public enum FreecRatioFactory {
     }
 
     @NotNull
+    private static List<FreecRatio> loadRatios(@NotNull final List<String> lines)
+            throws IOException, HartwigException {
+        final List<FreecRatio> results = Lists.newArrayList();
+        for (final String line : lines) {
+            final FreecRatio ratio = fromRatioLine(line);
+            if (ratio.ratio() > -1) {
+                results.add(ratio);
+            }
+        }
+
+        Collections.sort(results);
+        return results;
+    }
+
+    @NotNull
+    @VisibleForTesting
     static FreecRatio fromRatioLine(@NotNull final String ratioLine) throws HartwigException {
         final String[] values = ratioLine.split(CNV_COLUMN_SEPARATOR);
 
@@ -42,20 +59,5 @@ public enum FreecRatioFactory {
         final double estimatedBAF = Double.valueOf(values[ESTIMATED_BAF_COLUMN].trim());
 
         return ImmutableFreecRatio.of(estimatedBAF, ratio, medianRatio, chromosome, position);
-    }
-
-    @NotNull
-    private static List<FreecRatio> loadRatios(@NotNull final List<String> lines)
-            throws IOException, HartwigException {
-        final List<FreecRatio> results = Lists.newArrayList();
-        for (final String line : lines) {
-            FreecRatio ratio = fromRatioLine(line);
-            if (ratio.ratio() > -1) {
-                results.add(ratio);
-            }
-        }
-
-        Collections.sort(results);
-        return results;
     }
 }
