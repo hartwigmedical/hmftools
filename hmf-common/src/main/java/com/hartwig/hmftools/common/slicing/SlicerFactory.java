@@ -28,5 +28,4 @@ public enum SlicerFactory {
         regionMap.put(region.chromosome(), region);
         return new UnsortedSlicer(regionMap);
     }
-
 }

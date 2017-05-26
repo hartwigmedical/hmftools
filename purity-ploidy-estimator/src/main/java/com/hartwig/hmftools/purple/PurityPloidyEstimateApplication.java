@@ -50,7 +50,6 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    // Constants
     private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;
     private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
     private static final int MIN_COMBINED_DEPTH = 10;
@@ -63,7 +62,6 @@ public class PurityPloidyEstimateApplication {
     private static final double MAX_NORM_FACTOR = 2.0;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
 
-    // Options
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String BED_FILE = "bed";
     private static final String FREEC_DIRECTORY = "freec_dir";
@@ -91,8 +89,8 @@ public class PurityPloidyEstimateApplication {
                 PURITY_INCREMENTS, MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedCopyNumberFactory);
 
         LOGGER.info("Loading variant data");
-        final String vcfExtention = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
-        final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtention);
+        final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
+        final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
         final List<GermlineVariant> variants = variants(cmd, vcfFile);
         final String refSample = vcfFile.refSample();
         final String tumorSample = vcfFile.tumorSample();
@@ -122,16 +120,17 @@ public class PurityPloidyEstimateApplication {
             final List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(),
                     bestFit.normFactor(), enrichedCopyNumbers);
 
-            List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(fittedCopyNumbers);
-            List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedCopyNumbers, highConfidence);
+            final List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(fittedCopyNumbers);
+            final List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedCopyNumbers,
+                    highConfidence);
             final String regionFile = freecDirectory + File.separator + tumorSample + ".purple.regions";
             ConsolidatedRegionWriter.writeRegions(regionFile, smoothRegions);
 
             final String fittedFile = freecDirectory + File.separator + tumorSample + ".purple.fitted";
             LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
-            List<FittedCopyNumber> broadCopyNumber = ConsolidatedRegionZipper.insertHighConfidenceRegions(highConfidence,
-                    fittedCopyNumbers);
-            List<FittedCopyNumber> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(smoothRegions,
+            final List<FittedCopyNumber> broadCopyNumber = ConsolidatedRegionZipper.insertHighConfidenceRegions(
+                    highConfidence, fittedCopyNumbers);
+            final List<FittedCopyNumber> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(smoothRegions,
                     broadCopyNumber);
             FittedCopyNumberWriter.writeCopyNumber(fittedFile, smoothCopyNumbers);
         }
@@ -139,13 +138,16 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Complete");
     }
 
-    private static String defaultValue(CommandLine cmd, String opt, String defaultValue) {
+    @NotNull
+    private static String defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt,
+            @NotNull final String defaultValue) {
         return cmd.hasOption(opt) ? cmd.getOptionValue(opt) : defaultValue;
     }
 
-    private static double defaultValue(CommandLine cmd, String opt, double defaultValue) {
+    private static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt,
+            final double defaultValue) {
         if (cmd.hasOption(opt)) {
-            double result = Double.valueOf(cmd.getOptionValue(opt));
+            final double result = Double.valueOf(cmd.getOptionValue(opt));
             LOGGER.info("Using non default value {} for parameter {}", result, opt);
             return result;
         }
@@ -153,9 +155,9 @@ public class PurityPloidyEstimateApplication {
         return defaultValue;
     }
 
-    private static List<GermlineVariant> variants(CommandLine cmd, VCFGermlineFile file)
+    @NotNull
+    private static List<GermlineVariant> variants(@NotNull final CommandLine cmd, @NotNull final VCFGermlineFile file)
             throws IOException, EmptyFileException {
-
         final Predicate<Variant> filterPredicate = x -> x.filter().equals("PASS") || x.filter().equals(".");
         final Predicate<GenomePosition> slicerPredicate;
         if (cmd.hasOption(BED_FILE)) {
@@ -166,16 +168,16 @@ public class PurityPloidyEstimateApplication {
             slicerPredicate = x -> true;
         }
 
-        return file.variants()
-                .stream()
-                .filter(x -> filterPredicate.test(x) && slicerPredicate.test(x))
-                .collect(toList());
+        return file.variants().stream().filter(x -> filterPredicate.test(x) && slicerPredicate.test(x)).collect(
+                toList());
     }
 
-    private static String freecDirectory(CommandLine cmd, String runDirectory, String refSample, String tumorSample) {
-        return cmd.hasOption(FREEC_DIRECTORY)
-                ? cmd.getOptionValue(FREEC_DIRECTORY)
-                : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
+    @NotNull
+    private static String freecDirectory(@NotNull final CommandLine cmd, @NotNull final String runDirectory,
+            @NotNull final String refSample, @NotNull final String tumorSample) {
+        return cmd.hasOption(FREEC_DIRECTORY) ?
+                cmd.getOptionValue(FREEC_DIRECTORY) :
+                FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
     }
 
     @NotNull
