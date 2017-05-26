@@ -63,7 +63,7 @@ class DatabaseWriter {
 
     private void addCopynumberRecord(InsertValuesStep9 inserter, String sample, ConsolidatedRegion region) {
         inserter.values(sample, region.chromosome(), region.start(), region.end(), region.bafCount(),
-                region.averageObservedBAF(), region.averagePurityAdjustedBAF(), region.averageTumorCopyNumber(),
+                region.averageObservedBAF(), region.averageActualBAF(), region.averageTumorCopyNumber(),
                 timestamp);
     }
 }

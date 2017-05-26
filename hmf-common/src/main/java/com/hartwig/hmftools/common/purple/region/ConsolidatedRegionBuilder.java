@@ -96,9 +96,8 @@ class ConsolidatedRegionBuilder {
                 .end(end)
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
-                .averagePurityAdjustedBAF(averagePurityAdjustedBAF())
+                .averageActualBAF(averagePurityAdjustedBAF())
                 .averageTumorCopyNumber(averageTumorCopyNumber())
-                .averageRefNormalisedCopyNumber(averageRefNormalisedCopyNumber())
                 .build();
     }
 }
