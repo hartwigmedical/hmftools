@@ -42,13 +42,13 @@ public class BreakPointInspectorApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(REF_PATH, true, "the Reference BAM");
-        options.addOption(TUMOR_PATH, true, "the Tumor BAM");
+        options.addOption(REF_PATH, true, "the Reference BAM (indexed)");
+        options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
         options.addOption(BREAK_POINT1, true, "position of first break point in chrX:123456 format");
         options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format (optional)");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
-        options.addOption(SV_LEN, true, "length of the SV to inspect");
-        options.addOption(VCF, true, "VCF file to batch inspect");
+        options.addOption(SV_LEN, true, "length of the SV to inspect (>0)");
+        options.addOption(VCF, true, "VCF file to batch inspect (can be compressed)");
         return options;
     }
 

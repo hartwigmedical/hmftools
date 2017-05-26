@@ -29,7 +29,7 @@ class Util {
         PROXIMITY,
         INTERSECT,
         STRADDLE,
-        CLIP,
+        CLIP
     }
 
     enum Region {
@@ -41,7 +41,7 @@ class Util {
     enum ClipSide {
         NONE,
         LEFT_CLIP,
-        RIGHT_CLIP
+        RIGHT_CLIP,
     }
 
     static List<String> prefixList(final List<String> list, final String prefix) {
@@ -53,36 +53,36 @@ class Util {
     }
 
     static class ClipInfo {
-        public ClipSide Side = ClipSide.NONE;
-        public int Length = 0;
-        public boolean HardClipped = false;
+        ClipSide Side = ClipSide.NONE;
+        int Length = 0;
+        boolean HardClipped = false;
     }
 
     static class ReadInfo {
-        public SAMRecord Read = null;
-        public Region Breakpoint = Region.OTHER;
-        public ReadCategory Category = ReadCategory.UNSET;
-        public Overlap Location = Overlap.FILTERED;
-        public ClipInfo Clipping = new ClipInfo();
+        SAMRecord Read = null;
+        Region Breakpoint = Region.OTHER;
+        ReadCategory Category = ReadCategory.UNSET;
+        Overlap Location = Overlap.FILTERED;
+        ClipInfo Clipping = new ClipInfo();
     }
 
     static class NamedReadCollection {
-        public ArrayList<ReadInfo> Reads = new ArrayList<>();
+        ArrayList<ReadInfo> Reads = new ArrayList<>();
     }
 
     static class ClassifiedReadResults {
-        public Map<String, NamedReadCollection> ReadMap = new Hashtable<>();
+        Map<String, NamedReadCollection> ReadMap = new Hashtable<>();
     }
 
     static class Location implements Comparable<Location> {
-        public String ReferenceName;
-        public int ReferenceIndex = -1;
-        public int Position = -1;
+        String ReferenceName;
+        int ReferenceIndex = -1;
+        int Position = -1;
 
         private Location() {
         }
 
-        public static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary)
+        static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary)
                 throws RuntimeException {
             final Location result = new Location();
 
@@ -114,11 +114,11 @@ class Util {
             return result;
         }
 
-        public static Location fromSAMRecord(final SAMRecord record) {
+        static Location fromSAMRecord(final SAMRecord record) {
             return fromSAMRecord(record, true);
         }
 
-        public static Location fromSAMRecord(final SAMRecord record, boolean alignmentStart) {
+        static Location fromSAMRecord(final SAMRecord record, boolean alignmentStart) {
             final Location result = new Location();
             result.ReferenceName = record.getReferenceName();
             result.ReferenceIndex = record.getReferenceIndex();
@@ -126,7 +126,7 @@ class Util {
             return result;
         }
 
-        public Location add(int delta) {
+        Location add(int delta) {
             final Location result = new Location();
             result.ReferenceName = this.ReferenceName;
             result.ReferenceIndex = this.ReferenceIndex;

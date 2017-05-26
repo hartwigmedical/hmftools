@@ -9,10 +9,7 @@ import htsjdk.samtools.*;
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
-public class Analysis {
-
-    private static final int MANTA_REQ_PAIR_MIN = 50;
-    private static final int MANTA_REQ_SPLIT_MIN = 15;
+class Analysis {
 
     private static boolean readIntersectsLocation(final SAMRecord read, final Location location) {
         assert !read.getReadUnmappedFlag();
@@ -33,6 +30,7 @@ public class Analysis {
     private static ClipInfo getClipInfo(final SAMRecord read) {
         final ClipInfo result = new ClipInfo();
         final Cigar cigar = read.getCigar();
+
         switch (cigar.getFirstCigarElement().getOperator()) {
             case H:
                 result.HardClipped = true;
@@ -69,9 +67,8 @@ public class Analysis {
     }
 
     private static boolean isMate(final SAMRecord read, final SAMRecord mate) {
-        return read.getReadName().equals(mate.getReadName())
-                && read.getMateReferenceIndex() == mate.getReferenceIndex()
-                && read.getMateAlignmentStart() == mate.getAlignmentStart();
+        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(
+                mate.getReferenceIndex()) && read.getMateAlignmentStart() == mate.getAlignmentStart();
     }
 
     private static Stats.ClipStats calculateClippingStats(final ClassifiedReadResults queryResult) {
@@ -149,42 +146,32 @@ public class Analysis {
                 }
 
                 final List<ReadInfo> pair = Arrays.asList(p0, p1);
-                final boolean pairPossible = pair.stream().allMatch(p -> p.Clipping.Length <= MANTA_REQ_PAIR_MIN);
 
                 if (p0.Breakpoint != p1.Breakpoint) {
                     // supports the break point
-                    boolean interesting = false;
                     for (final ReadInfo r : pair) {
-                        final boolean splitEvidence =
-                                r.Location == Overlap.CLIP && r.Clipping.Length >= MANTA_REQ_SPLIT_MIN;
-                        if (pairPossible && splitEvidence) {
+                        final boolean splitEvidence = r.Location == Overlap.CLIP;
+                        if (splitEvidence) {
                             result.Get(r.Breakpoint).PR_SR_Support++;
-                        } else if (pairPossible) {
+                        } else {
                             result.Get(r.Breakpoint).PR_Only_Support++;
-                        } else if (splitEvidence) {
-                            result.Get(r.Breakpoint).SR_Only_Support++;
                         }
-
-                        interesting |= pairPossible || splitEvidence;
                     }
 
-                    if (interesting) {
-                        switch (SamPairUtil.getPairOrientation(p0.Read)) {
-                            case FR:
-                                result.Orientation_Stats.InnieCount++;
-                                break;
-                            case RF:
-                                result.Orientation_Stats.OutieCount++;
-                                break;
-                            case TANDEM:
-                                result.Orientation_Stats.TandemCount++;
-                                break;
-                        }
+                    switch (SamPairUtil.getPairOrientation(p0.Read)) {
+                        case FR:
+                            result.Orientation_Stats.InnieCount++;
+                            break;
+                        case RF:
+                            result.Orientation_Stats.OutieCount++;
+                            break;
+                        case TANDEM:
+                            result.Orientation_Stats.TandemCount++;
+                            break;
                     }
                 } else {
                     final Stats.BreakPoint stats = p0.Breakpoint == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
-                    final boolean splitEvidence = pair.stream().anyMatch(
-                            p -> p.Location == Overlap.CLIP && p.Clipping.Length >= MANTA_REQ_SPLIT_MIN);
+                    final boolean splitEvidence = pair.stream().anyMatch(p -> p.Location == Overlap.CLIP);
                     if (splitEvidence) {
                         stats.SR_Only_Support++;
                     } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
