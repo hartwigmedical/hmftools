@@ -17,6 +17,19 @@ public class FittedCopyNumberFactoryTest {
     private static final double EPSILON = 1e-10;
 
     @Test
+    public void testPurityAdjustedBaf() {
+        testPurityAdjustedBaf(0.8, 3, 1);
+        testPurityAdjustedBaf(0.8, 3, 2);
+        testPurityAdjustedBaf(0.9, 4, 1);
+    }
+
+    private void testPurityAdjustedBaf(double purity, int ploidy, int alleleCount) {
+        double expectedPurityAdjustedBAF = 1d * alleleCount / ploidy;
+        double observedBAF = FittedCopyNumberFactory.modelBAF(purity, ploidy, alleleCount);
+        assertEquals(expectedPurityAdjustedBAF, FittedCopyNumberFactory.purityAdjustedBAF(purity, ploidy, observedBAF), EPSILON);
+    }
+
+    @Test
     public void expectedFit() {
         final FittedCopyNumberFactory victim = new FittedCopyNumberFactory(12, 0.2);
         final FittedCopyNumber result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
