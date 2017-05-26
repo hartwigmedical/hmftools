@@ -13,7 +13,7 @@ public enum FreecStatus {
     private static final double GERMLINE_MAX_RATIO = 1.25;
 
     @NotNull
-    public static FreecStatus fromNormalRatio(double ratio) {
+    public static FreecStatus fromNormalRatio(final double ratio) {
         if (Doubles.isZero(ratio)) {
             return UNKNOWN;
         }
