@@ -1,21 +1,22 @@
 package com.hartwig.hmftools.common.slicing;
 
+import static org.junit.Assert.assertSame;
+
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.Variant;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertSame;
-
 public class SlicerTest {
 
-    private Slicer unsortedSlicer;
-    private Slicer sortedSlicer;
+    private Slicer forwardSlicer;
+    private Slicer bidirectionalSlicer;
 
     @Before
     public void setup() {
@@ -24,30 +25,30 @@ public class SlicerTest {
         regionMap.put("X", ImmutableBEDGenomeRegion.of("X", 300, 400, null));
         regionMap.put("Y", ImmutableBEDGenomeRegion.of("Y", 500, 600, null));
 
-        unsortedSlicer = new UnsortedSlicer(regionMap);
-        sortedSlicer = new SortedSlicer(regionMap);
+        bidirectionalSlicer = new BidirectionalSlicer(regionMap);
+        forwardSlicer = new ForwardSlicer(regionMap);
     }
 
     @Test
     public void excludedChromosomes() {
-        excludedChromosomes(sortedSlicer);
-        excludedChromosomes(unsortedSlicer);
+        excludedChromosomes(forwardSlicer);
+        excludedChromosomes(bidirectionalSlicer);
     }
 
     @Test
     public void sortedVariants() {
-        sortedVariants(unsortedSlicer);
-        sortedVariants(sortedSlicer);
+        sortedVariants(bidirectionalSlicer);
+        sortedVariants(forwardSlicer);
     }
 
     @Test
-    public void unsortedSlicerWithUnsortedVariants() {
-        unsortedVariants(unsortedSlicer);
+    public void bidirectionalSlicerWithUnsortedVariants() {
+        unsortedVariants(bidirectionalSlicer);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void sortedSlicerWithUnsortedVariants() {
-        unsortedVariants(sortedSlicer);
+    public void forwardSlicerWithUnsortedVariants() {
+        unsortedVariants(forwardSlicer);
     }
 
     private void excludedChromosomes(Slicer aSlicer) {
