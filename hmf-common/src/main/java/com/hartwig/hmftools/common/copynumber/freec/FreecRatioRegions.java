@@ -50,6 +50,6 @@ public enum FreecRatioRegions {
     }
 
     private static boolean isDiscontiguous(@NotNull final FreecRatio first, @NotNull final FreecRatio second) {
-        return !first.chromosome().equals(second.chromosome()) || second.position() - first.position() != 1000;
+        return !first.chromosome().equals(second.chromosome()) || second.position() - first.position() != SEGMENT_SIZE;
     }
 }
