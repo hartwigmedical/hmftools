@@ -1,23 +1,16 @@
 package com.hartwig.hmftools.purple;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.common.slicing.SlicerFactory.sortedSlicer;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.EnrichedRegion;
 import com.hartwig.hmftools.common.purple.EnrichedRegionFactory;
 import com.hartwig.hmftools.common.purple.FittedCopyNumber;
@@ -34,7 +27,7 @@ import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionZipper;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 
@@ -70,7 +63,6 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String BED_FILE = "bed";
     private static final String FREEC_DIRECTORY = "freec_dir";
     private static final String VCF_EXTENSION = "vcf_extension";
     private static final String VCF_EXTENSION_DEFAULT = ".annotation.vcf";
@@ -100,7 +92,7 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Loading germline variant data");
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
-        final List<GermlineVariant> variants = filteredVariants(cmd, vcfFile);
+        final List<GermlineVariant> variants = VariantFilter.passOnly(vcfFile.variants());
         final String refSample = vcfFile.refSample();
         final String tumorSample = vcfFile.tumorSample();
 
@@ -171,23 +163,6 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static List<GermlineVariant> filteredVariants(@NotNull final CommandLine cmd,
-            @NotNull final VCFGermlineFile file) throws IOException, EmptyFileException {
-        final Predicate<Variant> filterPredicate = x -> x.filter().equals("PASS") || x.filter().equals(".");
-        final Predicate<GenomePosition> slicerPredicate;
-        if (cmd.hasOption(BED_FILE)) {
-            final String bedFile = cmd.getOptionValue(BED_FILE);
-            LOGGER.info("Slicing variants with bed file: " + bedFile);
-            slicerPredicate = sortedSlicer(bedFile);
-        } else {
-            slicerPredicate = x -> true;
-        }
-
-        return file.variants().stream().filter(x -> filterPredicate.test(x) && slicerPredicate.test(x)).collect(
-                toList());
-    }
-
-    @NotNull
     private static String freecDirectory(@NotNull final CommandLine cmd, @NotNull final String runDirectory,
             @NotNull final String refSample, @NotNull final String tumorSample) {
         return cmd.hasOption(FREEC_DIRECTORY) ?
@@ -203,7 +178,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(FREEC_DIRECTORY, true,
                 "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
         options.addOption(VCF_EXTENSION, true, "VCF file extension. Defaults to " + VCF_EXTENSION_DEFAULT);
-        options.addOption(BED_FILE, true, "BED file to optionally slice variants with");
         options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
