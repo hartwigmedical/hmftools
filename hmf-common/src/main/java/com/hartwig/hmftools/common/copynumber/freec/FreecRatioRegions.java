@@ -25,24 +25,25 @@ public enum FreecRatioRegions {
             } else if (isSameRegion(start, ratio)) {
                 end = ratio;
             } else {
-                result.add(create(start, end));
+                result.add(create(start, end.position() - 1));
                 start = ratio;
                 end = ratio;
             }
         }
 
         if (start != null) {
-            result.add(create(start, end));
+            result.add(create(start, end.position() + 999));
         }
 
         return result;
     }
 
     @NotNull
-    private static GenomeRegion create(@NotNull final FreecRatio first, @NotNull final FreecRatio second) {
-        // KODU: Why is 1 subtracted from second.position()?
-        return ImmutableBEDGenomeRegion.builder().chromosome(first.chromosome()).start(first.position()).end(
-                second.position() - 1).build();
+    private static GenomeRegion create(@NotNull final FreecRatio startOfCurrentRegion,long end) {
+
+
+        return ImmutableBEDGenomeRegion.builder().chromosome(startOfCurrentRegion.chromosome()).start(startOfCurrentRegion.position()).end(
+                end).build();
     }
 
     private static boolean isSameRegion(@NotNull final FreecRatio first, @NotNull final FreecRatio second) {
