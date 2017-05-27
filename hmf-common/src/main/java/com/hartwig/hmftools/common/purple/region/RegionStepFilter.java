@@ -15,13 +15,13 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-enum MergeRegionBreaks {
+enum RegionStepFilter {
     ;
 
     private static final long MIN_SIZE = 1000;
 
     @NotNull
-    static List<ConsolidatedRegion> merge(@NotNull final List<ConsolidatedRegion> region) {
+    static List<ConsolidatedRegion> filter(@NotNull final List<ConsolidatedRegion> region) {
         List<ConsolidatedRegion> results = Lists.newArrayList();
 
         int i = 0;

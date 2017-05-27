@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 
 import org.jetbrains.annotations.NotNull;
 
-public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<GenomeRegion> {
+public class EnrichedRegionFactory implements GenomeZipperRegionHandler<GenomeRegion> {
 
     private static final Set<String> GENO_TYPE = Sets.newHashSet("0/1", "0|1");
 
@@ -25,12 +25,12 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Geno
     private final long minCombinedDepth;
     private final long maxCombinedDepth;
 
-    private final List<EnrichedCopyNumber> result = Lists.newArrayList();
+    private final List<EnrichedRegion> result = Lists.newArrayList();
     private final BAFAccumulator baf = new BAFAccumulator();
     private final RatioAccumulator tumorRatio = new RatioAccumulator();
     private final RatioAccumulator normalRatio = new RatioAccumulator();
 
-    public EnrichedCopyNumberFactory(final double minRefAlleleFrequency, final double maxRefAlleleFrequency,
+    public EnrichedRegionFactory(final double minRefAlleleFrequency, final double maxRefAlleleFrequency,
             final long minCombinedDepth, final long maxCombinedDepth) {
         this.minRefAlleleFrequency = minRefAlleleFrequency;
         this.maxRefAlleleFrequency = maxRefAlleleFrequency;
@@ -39,7 +39,7 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Geno
     }
 
     @NotNull
-    public List<EnrichedCopyNumber> enrich(@NotNull final List<GenomeRegion> copyNumbers,
+    public List<EnrichedRegion> enrich(@NotNull final List<GenomeRegion> copyNumbers,
             @NotNull final List<GermlineVariant> variants, @NotNull final List<FreecRatio> tumorRatios,
             @NotNull final List<FreecRatio> normalRatios) {
         baf.reset();
@@ -67,7 +67,7 @@ public class EnrichedCopyNumberFactory implements GenomeZipperRegionHandler<Geno
     public void exit(@NotNull final GenomeRegion region) {
         double myTumorRatio = tumorRatio.meanRatio();
         double myNormalRatio = normalRatio.meanRatio();
-        EnrichedCopyNumber copyNumber = ImmutableEnrichedCopyNumber.builder().from(region).mBAFCount(baf.count()).mBAF(
+        EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder().from(region).mBAFCount(baf.count()).mBAF(
                 baf.medianBaf()).tumorRatio(myTumorRatio).normalRatio(myNormalRatio).build();
 
         result.add(copyNumber);

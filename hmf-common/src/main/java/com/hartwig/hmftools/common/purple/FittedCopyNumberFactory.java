@@ -24,11 +24,11 @@ public class FittedCopyNumberFactory {
 
     @NotNull
     public List<FittedCopyNumber> fittedCopyNumber(final double purity, final double normFactor,
-            @NotNull final Collection<EnrichedCopyNumber> copyNumbers) {
+            @NotNull final Collection<EnrichedRegion> copyNumbers) {
         return copyNumbers.stream().map(x -> fittedCopyNumber(purity, normFactor, x)).collect(Collectors.toList());
     }
 
-    FittedCopyNumber fittedCopyNumber(double purity, double normFactor, EnrichedCopyNumber copyNumber) {
+    FittedCopyNumber fittedCopyNumber(double purity, double normFactor, EnrichedRegion copyNumber) {
         double minDeviation = 0;
         double observedBAF = copyNumber.mBAF();
         double observedTumorRatio = copyNumber.tumorRatio();
@@ -41,7 +41,7 @@ public class FittedCopyNumberFactory {
                 .observedBAF(observedBAF)
                 .observedTumorRatio(observedTumorRatio)
                 .observedNormalRatio(copyNumber.normalRatio())
-                .purityAdjustedBAF(purityAdjustedBAF(purity, observedBAF))
+                .purityAdjustedBAF(purityAdjustedBAF(purity, 0, observedBAF))
                 .broadBAF(0)
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)
@@ -131,7 +131,7 @@ public class FittedCopyNumberFactory {
         return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
     }
 
-    private static double purityAdjustedBAF(final double purity, final double observedBAF) {
+    static double purityAdjustedBAF(final double purity, final double ploidy, final double observedBAF) {
         assert (Doubles.greaterThan(purity, 0));
         return (observedBAF - (1 - purity) * NORMAL_BAF) / purity;
     }

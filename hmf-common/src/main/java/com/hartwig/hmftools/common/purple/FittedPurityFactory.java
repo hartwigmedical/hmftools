@@ -39,12 +39,12 @@ public class FittedPurityFactory {
     }
 
     @NotNull
-    public List<FittedPurity> fitPurity(@NotNull final Collection<EnrichedCopyNumber> copyNumbers) {
+    public List<FittedPurity> fitPurity(@NotNull final Collection<EnrichedRegion> copyNumbers) {
         final List<FittedPurity> result = Lists.newArrayList();
 
         int totalBAFCount = 0;
-        final List<EnrichedCopyNumber> filteredCopyNumbers = Lists.newArrayList();
-        for (final EnrichedCopyNumber copyNumber : copyNumbers) {
+        final List<EnrichedRegion> filteredCopyNumbers = Lists.newArrayList();
+        for (final EnrichedRegion copyNumber : copyNumbers) {
             if (copyNumber.mBAFCount() > 0 && positiveOrZero(copyNumber.tumorRatio())
                     && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
                 totalBAFCount += copyNumber.mBAFCount();
@@ -74,17 +74,15 @@ public class FittedPurityFactory {
 
     @NotNull
     private FittedPurity fitPurity(double purity, double normFactor, double sumWeight,
-            Collection<EnrichedCopyNumber> copyNumbers) {
+            Collection<EnrichedRegion> copyNumbers) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;
         double modelBAFDeviation = 0;
 
-        for (EnrichedCopyNumber copyNumber : copyNumbers) {
-
+        for (EnrichedRegion copyNumber : copyNumbers) {
             final FittedCopyNumber fittedCopyNumber = fittedCopyNumberFactory.fittedCopyNumber(purity, normFactor,
                     copyNumber);
-
             modelDeviation += copyNumber.mBAFCount() / sumWeight * fittedCopyNumber.deviation();
             modelBAFDeviation += copyNumber.mBAFCount() / sumWeight * fittedCopyNumber.bafDeviation();
             if (fittedCopyNumber.fittedPloidy() == 2) {

@@ -31,6 +31,6 @@ public enum ConsolidatedRegionWriter {
     private static String transform(@NotNull final ConsolidatedRegion region) {
         return region.chromosome() + '\t' + region.start() + '\t' + region.end() + '\t'
                 + region.averageTumorCopyNumber() + '\t' + region.bafCount() + '\t' + region.averageObservedBAF()
-                + '\t' + region.averagePurityAdjustedBAF();
+                + '\t' + region.averageActualBAF();
     }
 }

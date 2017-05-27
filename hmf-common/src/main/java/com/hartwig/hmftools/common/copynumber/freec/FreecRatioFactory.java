@@ -58,6 +58,7 @@ public enum FreecRatioFactory {
         final double medianRatio = Double.valueOf(values[MEDIAN_RATIO_COLUMN].trim());
         final double estimatedBAF = Double.valueOf(values[ESTIMATED_BAF_COLUMN].trim());
 
-        return ImmutableFreecRatio.of(estimatedBAF, ratio, medianRatio, chromosome, position);
+        return ImmutableFreecRatio.builder().chromosome(chromosome).position(position).ratio(ratio)
+                .medianRatio(medianRatio).estimatedBAF(estimatedBAF).build();
     }
 }

@@ -40,8 +40,8 @@ public class FittedCopyNumberFactoryTest {
     }
 
     @NotNull
-    private static EnrichedCopyNumber create(final double baf, final double ratio) {
-        return ImmutableEnrichedCopyNumber.builder().mBAF(baf).mBAFCount(1).value(1).chromosome("1").start(1).end(
+    private static EnrichedRegion create(final double baf, final double ratio) {
+        return ImmutableEnrichedRegion.builder().mBAF(baf).mBAFCount(1).chromosome("1").start(1).end(
                 2).tumorRatio(ratio).normalRatio(1).build();
     }
 
