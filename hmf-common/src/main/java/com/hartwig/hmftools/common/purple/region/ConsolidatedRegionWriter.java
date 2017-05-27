@@ -24,7 +24,7 @@ public enum ConsolidatedRegionWriter {
     @NotNull
     private static String header() {
         return "chromosome" + '\t' + "start" + '\t' + "end" + '\t' + "copyNumber" + '\t' + "bafCount" + '\t'
-                + "observedBAF" + '\t' + "purityAdjustedBAF";
+                + "observedBAF" + '\t' + "actualBAF";
     }
 
     @NotNull

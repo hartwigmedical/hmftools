@@ -44,7 +44,7 @@ class DatabaseWriter {
                 PURITY.DIPLOIDPROPORTION, PURITY.POLYCLONALPROPORTION, PURITY.MINPURITY, PURITY.MAXPURITY,
                 PURITY.MINPLOIDY, PURITY.MAXPLOIDY, PURITY.MODIFIED)
                 .values(sample, purity.purity(), purity.normFactor(), purity.score(), purity.ploidy(),
-                        purity.diplodProportion(), score.polyclonalProportion(), score.minPurity(), score.maxPurity(),
+                        purity.diploidProportion(), score.polyclonalProportion(), score.minPurity(), score.maxPurity(),
                         score.minPloidy(), score.maxPloidy(), timestamp)
                 .execute();
 

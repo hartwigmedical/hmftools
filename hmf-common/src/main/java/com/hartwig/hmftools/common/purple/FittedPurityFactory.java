@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.purity.PurityAdjustment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -56,7 +57,7 @@ public class FittedPurityFactory {
             for (double normFactor = minNormFactor; lessOrEqual(normFactor,
                     maxNormFactor); normFactor += normFactorIncrements) {
 
-                double impliedPloidy = impliedPloidy(normFactor, purity);
+                double impliedPloidy = PurityAdjustment.purityAdjustedCopynumber(purity, normFactor, 1);
 
                 if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
                     result.add(fitPurity(purity, normFactor, totalBAFCount, filteredCopyNumbers));
@@ -66,10 +67,6 @@ public class FittedPurityFactory {
 
         Collections.sort(result);
         return result;
-    }
-
-    private static double impliedPloidy(double normFactor, double purity) {
-        return (1 - normFactor) / purity / normFactor * 2 + 2;
     }
 
     @NotNull
