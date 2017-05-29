@@ -129,7 +129,6 @@ public class PDFWriter implements ReportWriter {
                         mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(),
                                 reportLogoPath),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantReport(report, drupFilter),
