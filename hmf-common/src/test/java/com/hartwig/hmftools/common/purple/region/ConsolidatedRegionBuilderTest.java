@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedCopyNumber;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ConsolidatedRegionTest {
+public class ConsolidatedRegionBuilderTest {
     private static final double EPSILON = 1e-10;
 
     @Test
@@ -55,12 +55,32 @@ public class ConsolidatedRegionTest {
     }
 
     @NotNull
-    private static FittedCopyNumber create(@NotNull String chromosome, long start, long end, int bafCount, double baf,
+    public static FittedCopyNumber create(@NotNull String chromosome, long start, long end, int bafCount, double baf,
             double tumorCopyNumber) {
-        return ImmutableFittedCopyNumber.builder().chromosome(chromosome).start(start).end(end).bafCount(
-                bafCount).observedBAF(baf).purityAdjustedBAF(baf).tumorCopyNumber(tumorCopyNumber).broadBAF(
-                0).broadTumorCopyNumber(0).segmentBAF(0).segmentTumorCopyNumber(0).observedNormalRatio(0).value(
-                0).cnvDeviation(0).deviation(0).fittedPloidy(0).modelBAF(0).observedTumorRatio(0).modelTumorRatio(
-                0).status(FreecStatus.UNKNOWN).refNormalisedCopyNumber(0).bafDeviation(0).build();
+        return ImmutableFittedCopyNumber.builder()
+                .chromosome(chromosome)
+                .start(start)
+                .end(end)
+                .bafCount(bafCount)
+                .observedBAF(baf)
+                .purityAdjustedBAF(baf)
+                .tumorCopyNumber(tumorCopyNumber)
+                .broadBAF(0)
+                .broadTumorCopyNumber(0)
+                .segmentBAF(0)
+                .segmentTumorCopyNumber(0)
+                .observedNormalRatio(1.0)
+                .observedNormalRatio(1.0)
+                .value(0)
+                .cnvDeviation(0)
+                .deviation(0)
+                .fittedPloidy(0)
+                .modelBAF(0)
+                .observedTumorRatio(0)
+                .modelTumorRatio(0)
+                .status(FreecStatus.UNKNOWN)
+                .refNormalisedCopyNumber(tumorCopyNumber)
+                .bafDeviation(0)
+                .build();
     }
 }

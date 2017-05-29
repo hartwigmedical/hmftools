@@ -85,24 +85,24 @@ class SmoothedRegions {
 
     @NotNull
     private ConsolidatedRegionBuilder forwards(int startIndex, int endIndex,
-            @NotNull ConsolidatedRegionBuilder builder) {
+            final @NotNull ConsolidatedRegionBuilder builder) {
+        ConsolidatedRegionBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedCopyNumber copyNumber = copyNumbers.get(i);
             if (isSimilar(copyNumber, builder)) {
                 builder.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(builder.build());
-                // KODU: why change input param? Dodgy?
-                builder = new ConsolidatedRegionBuilder(copyNumber);
+                current = new ConsolidatedRegionBuilder(copyNumber);
             }
         }
 
-        return builder;
+        return current;
     }
 
     @NotNull
     private ConsolidatedRegionBuilder backwards(int startIndex, int endIndex,
-            @NotNull ConsolidatedRegionBuilder forwardBuilder) {
+            @NotNull final ConsolidatedRegionBuilder forwardBuilder) {
         final Deque<ConsolidatedRegion> preRegions = new ArrayDeque<>();
         ConsolidatedRegionBuilder reverseBuilder = forwardBuilder;
 
@@ -126,7 +126,7 @@ class SmoothedRegions {
         return forwardBuilder;
     }
 
-    private boolean isSimilar(@NotNull final FittedCopyNumber copyNumber,
+    private static boolean isSimilar(@NotNull final FittedCopyNumber copyNumber,
             @NotNull final ConsolidatedRegionBuilder builder) {
         int bafCount = copyNumber.bafCount();
         if (!isDiploid(copyNumber)) {
@@ -162,7 +162,7 @@ class SmoothedRegions {
         return (MIN_COPY_NUMBER_RANGE - MAX_COPY_NUMBER_RANGE) / 10 * bafCount + MAX_COPY_NUMBER_RANGE;
     }
 
-    private boolean isDiploid(@NotNull final FittedCopyNumber copyNumber) {
+    private static boolean isDiploid(@NotNull final FittedCopyNumber copyNumber) {
         return Doubles.greaterOrEqual(copyNumber.observedNormalRatio(), DIPLOID_MIN_RATIO) && Doubles.lessOrEqual(
                 copyNumber.observedNormalRatio(), DIPLOID_MAX_RATIO);
     }
