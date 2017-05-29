@@ -32,16 +32,12 @@ public class LoadSomaticVariants {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+        final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading VCF File");
         final VCFSomaticFile vcfFile = VCFFileLoader.loadSomaticVCF(vcfFileLocation);
 
         LOGGER.info("Persisting variants to database");
-        final DatabaseAccess dbAccess = new DatabaseAccess(userName, password, jdbcUrl);
         dbAccess.writeComprehensiveSomaticVariants(vcfFile.sample(), vcfFile.variants());
 
         LOGGER.info("Complete");
@@ -62,5 +58,13 @@ public class LoadSomaticVariants {
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+    private static DatabaseAccess databaseAccess(CommandLine cmd) throws SQLException {
+        final String userName = cmd.getOptionValue(DB_USER);
+        final String password = cmd.getOptionValue(DB_PASS);
+        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        final String jdbcUrl = "jdbc:" + databaseUrl;
+        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

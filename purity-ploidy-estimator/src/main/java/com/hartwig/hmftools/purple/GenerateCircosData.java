@@ -37,14 +37,9 @@ public class GenerateCircosData {
         final CommandLine cmd = createCommandLine(args, options);
         final String sample = cmd.getOptionValue(SAMPLE);
         final String output = cmd.getOptionValue(OUTPUT_DIR);
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-
+        final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Loading {} data from database");
-        final DatabaseAccess dbAccess = new DatabaseAccess(userName, password, jdbcUrl);
         final FittedPurity purity = dbAccess.readFittedPurity(sample);
         if (purity == null) {
             LOGGER.error("Purity not available");
@@ -95,5 +90,13 @@ public class GenerateCircosData {
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+    private static DatabaseAccess databaseAccess(CommandLine cmd) throws SQLException {
+        final String userName = cmd.getOptionValue(DB_USER);
+        final String password = cmd.getOptionValue(DB_PASS);
+        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        final String jdbcUrl = "jdbc:" + databaseUrl;
+        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

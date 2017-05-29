@@ -73,11 +73,9 @@ public class PurityPloidyEstimateApplication {
     public static void main(final String... args) throws ParseException, IOException, HartwigException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
+        final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final DatabaseAccess databaseWriter = new DatabaseAccess(cmd.getOptionValue(DB_USER),
-                cmd.getOptionValue(DB_PASS), cmd.getOptionValue(DB_URL));
-
         if (runDirectory == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Purity Ploidy Estimator (PURPLE)", options);
@@ -129,8 +127,8 @@ public class PurityPloidyEstimateApplication {
 
             final FittedPurityScore score = FittedPurityScoreFactory.score(purity, smoothRegions);
             LOGGER.info("Persisting to database");
-            databaseWriter.writePurity(tumorSample, bestFit, score);
-            databaseWriter.writeCopynumbers(tumorSample, smoothRegions);
+            dbAccess.writePurity(tumorSample, bestFit, score);
+            dbAccess.writeCopynumbers(tumorSample, smoothRegions);
 
             if (cmd.hasOption(DEBUG)) {
                 final String fittedFile = freecDirectory + File.separator + tumorSample + ".purple.fitted";
@@ -193,5 +191,13 @@ public class PurityPloidyEstimateApplication {
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+    private static DatabaseAccess databaseAccess(CommandLine cmd) throws SQLException {
+        final String userName = cmd.getOptionValue(DB_USER);
+        final String password = cmd.getOptionValue(DB_PASS);
+        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        final String jdbcUrl = "jdbc:" + databaseUrl;
+        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }
