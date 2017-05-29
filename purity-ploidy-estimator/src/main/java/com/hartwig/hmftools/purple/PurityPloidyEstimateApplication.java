@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -74,7 +75,7 @@ public class PurityPloidyEstimateApplication {
         final CommandLine cmd = createCommandLine(options, args);
 
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final DatabaseWriter databaseWriter = new DatabaseWriter(cmd.getOptionValue(DB_USER),
+        final DatabaseAccess databaseWriter = new DatabaseAccess(cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS), cmd.getOptionValue(DB_URL));
 
         if (runDirectory == null) {

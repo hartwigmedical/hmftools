@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
@@ -13,36 +13,80 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
+import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
-class DatabaseWriter {
-    private static final Logger LOGGER = LogManager.getLogger(DatabaseWriter.class);
+public class DatabaseAccess {
+    private static final Logger LOGGER = LogManager.getLogger(DatabaseAccess.class);
 
     @NotNull
     private final DSLContext context;
+    @NotNull
+    private final PurityDAO purityDAO;
+    @NotNull
+    private final CopyNumberDAO copyNumberDAO;
+    @NotNull
+    private final ComprehensiveSomaticVariantDAO somaticVariantDAO;
 
-    DatabaseWriter(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
+    public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
             throws SQLException {
         final Connection conn = DriverManager.getConnection(url, userName, password);
         this.context = DSL.using(conn, SQLDialect.MYSQL);
+        purityDAO = new PurityDAO(context);
+        copyNumberDAO = new CopyNumberDAO(context);
+        somaticVariantDAO = new ComprehensiveSomaticVariantDAO(context);
     }
 
-    void clearClinicalTables() {
+    public void writePurity(@NotNull final String sampleId, @NotNull FittedPurity purity,
+            @NotNull FittedPurityScore score) {
+        purityDAO.write(sampleId, purity, score);
+    }
+
+    @Nullable
+    public FittedPurity readFittedPurity(@NotNull final String sampleId) {
+        return purityDAO.readFittedPurity(sampleId);
+    }
+
+    public void writeComprehensiveSomaticVariants(@NotNull final String sampleId, @NotNull List<SomaticVariant> variants) {
+        somaticVariantDAO.write(sampleId, variants);
+    }
+
+    @NotNull
+    public List<SomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId) {
+        return somaticVariantDAO.read(sampleId);
+    }
+
+    public void writeCopynumbers(@NotNull final String sample, @NotNull List<ConsolidatedRegion> regions) {
+        copyNumberDAO.write(sample, regions);
+    }
+
+    @NotNull
+    public List<ConsolidatedRegion> readCopynumbers(@NotNull final String sample) {
+        return copyNumberDAO.read(sample);
+    }
+
+
+    public void clearClinicalTables() {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENT).execute();
         context.truncate(SAMPLE).execute();
@@ -53,7 +97,7 @@ class DatabaseWriter {
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    void writeSomaticVariants(@NotNull final String sampleId,
+    public void writeSomaticVariants(@NotNull final String sampleId,
             @NotNull final List<SomaticVariantData> somaticVariants) {
         final Record sampleRecord = context.select(SAMPLE.PATIENTID).from(SAMPLE).where(
                 SAMPLE.SAMPLEID.eq(sampleId)).fetchOne();
@@ -66,7 +110,7 @@ class DatabaseWriter {
         }
     }
 
-    void writeClinicalData(@NotNull final Patient patient) {
+    public void writeClinicalData(@NotNull final Patient patient) {
         final int patientId = writePatientData(patient.patientInfo());
         patient.sequencedBiopsies().forEach(biopsy -> writeSampleData(patientId, biopsy));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));

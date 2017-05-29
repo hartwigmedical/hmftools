@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
@@ -80,7 +81,7 @@ public final class PatientDbRunner {
             final File runDirectory = new File(runsFolderPath);
             if (runDirectory.isDirectory()) {
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
-                final DatabaseWriter dbWriter = new DatabaseWriter(userName, password, jdbcUrl);
+                final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
                 if (clinical) {
                     writeClinicalData(clinicalOptions, cmd, runContexts, dbWriter);
                 }
@@ -98,7 +99,7 @@ public final class PatientDbRunner {
     }
 
     private static void writeClinicalData(@NotNull final Options clinicalOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseWriter dbWriter)
+            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
             SQLException, HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
@@ -135,7 +136,7 @@ public final class PatientDbRunner {
     }
 
     private static void writeSomaticData(@NotNull final Options somaticOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseWriter dbWriter)
+            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
             SQLException, HartwigException {
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);

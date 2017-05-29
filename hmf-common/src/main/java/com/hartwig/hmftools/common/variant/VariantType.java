@@ -10,7 +10,7 @@ public enum VariantType {
     private static final String MULTIPLE_ALTS_IDENTIFIER = ",";
 
     @NotNull
-    static VariantType fromRefAlt(@NotNull final String refValue, @NotNull final String altValue) {
+    public static VariantType fromRefAlt(@NotNull final String refValue, @NotNull final String altValue) {
         final String[] allAlts = altValue.split(MULTIPLE_ALTS_IDENTIFIER);
 
         VariantType type = VariantType.SNP;
