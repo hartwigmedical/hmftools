@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.copynumber;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.freec.ImmutableFreecCopyNumber;
+import com.hartwig.hmftools.common.copynumber.freec.ImmutableFreecCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;

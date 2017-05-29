@@ -29,5 +29,4 @@ public class SmoothedRegionTest {
         assertTrue(greaterThan(allowedBAFDeviation(14), 0.052));
         assertTrue(greaterThan(allowedBAFDeviation(46), 0.03));
     }
-
 }

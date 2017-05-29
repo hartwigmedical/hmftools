@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.freec;
+package com.hartwig.hmftools.common.copynumber.freec;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,19 +21,21 @@ public enum FreecCopyNumberFactory {
     private static final int VALUE_COLUMN = 3;
     private static final int ALTERATION_COLUMN = 4;
 
-    // Optional columns
+    // JOBA: Optional columns
     private static final int GENOTYPE_COLUMN = 5;
     private static final int STATUS_COLUMN = 7;
 
     private static final String GAIN_LOSS_MISMATCH_WITH_VALUE_ERROR = "gain/loss identifier does not match with value: %s";
 
     @NotNull
-    public static List<CopyNumber> loadCNV(@NotNull final String basePath, @NotNull final String sample) throws IOException, HartwigException {
-          return new ArrayList<>(loadFreecCNV(basePath, sample));
+    public static List<CopyNumber> loadCNV(@NotNull final String basePath, @NotNull final String sample)
+            throws IOException, HartwigException {
+        return new ArrayList<>(loadFreecCNV(basePath, sample));
     }
 
     @NotNull
-    public static List<FreecCopyNumber> loadFreecCNV(@NotNull final String basePath, @NotNull final String sample) throws IOException, HartwigException {
+    public static List<FreecCopyNumber> loadFreecCNV(@NotNull final String basePath, @NotNull final String sample)
+            throws IOException, HartwigException {
         final List<FreecCopyNumber> copyNumbers = Lists.newArrayList();
         for (final String line : FreecFileLoader.copyNumberLines(basePath, sample)) {
             copyNumbers.add(FreecCopyNumberFactory.fromCNVLine(line));
@@ -53,12 +55,13 @@ public enum FreecCopyNumberFactory {
         final CopyNumberAlteration alteration = CopyNumberAlteration.fromString(alterationString);
 
         if (!alteration.equals(CopyNumberAlteration.fromCopyNumber(value))) {
-            final String identification = chromosome + "[" + Long.toString(start - 1) + " - " + Long.toString(end) + "]";
+            final String identification =
+                    chromosome + "[" + Long.toString(start - 1) + " - " + Long.toString(end) + "]";
             throw new HartwigException(String.format(GAIN_LOSS_MISMATCH_WITH_VALUE_ERROR, identification));
         }
 
-        final ImmutableFreecCopyNumber.Builder builder =
-                ImmutableFreecCopyNumber.builder().chromosome(chromosome).start(start).end(end).value(value);
+        final ImmutableFreecCopyNumber.Builder builder = ImmutableFreecCopyNumber.builder().chromosome(
+                chromosome).start(start).end(end).value(value);
 
         if (values.length > GENOTYPE_COLUMN) {
             builder.genotype(values[GENOTYPE_COLUMN].trim());

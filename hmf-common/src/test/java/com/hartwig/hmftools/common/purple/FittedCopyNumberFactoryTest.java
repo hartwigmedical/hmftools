@@ -9,34 +9,27 @@ import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelRa
 
 import static org.junit.Assert.assertEquals;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FittedCopyNumberFactoryTest {
 
-    private static double EPSILON = 1e-10;
+    private static final double EPSILON = 1e-10;
 
     @Test
     public void expectedFit() {
-
-        FittedCopyNumberFactory victim = new FittedCopyNumberFactory(12, 0.2);
-        FittedCopyNumber result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
+        final FittedCopyNumberFactory victim = new FittedCopyNumberFactory(12, 0.2);
+        final FittedCopyNumber result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
         assertEquals(0.011058009947947143, result.deviation(), EPSILON);
     }
 
-    private EnrichedCopyNumber create(double baf, double ratio) {
-        return ImmutableEnrichedCopyNumber.builder()
-                .mBAF(baf)
-                .mBAFCount(1)
-                .value(1)
-                .chromosome("1")
-                .start(1)
-                .end(2)
-                .tumorRatio(ratio)
-                .normalRatio(1)
-                .build();
+    @NotNull
+    private static EnrichedRegion create(final double baf, final double ratio) {
+        return ImmutableEnrichedRegion.builder().mBAF(baf).mBAFCount(1).chromosome("1").start(1).end(
+                2).tumorRatio(ratio).normalRatio(1).build();
     }
 
     @Test
@@ -110,16 +103,17 @@ public class FittedCopyNumberFactoryTest {
         assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
     }
 
-    private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy, double actualBAF) {
+    private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy,
+            double actualBAF) {
         assertEquals(expectedBAF, modelBAFToMinimizeDeviation(purity, ploidy, actualBAF)[0], EPSILON);
     }
-
 
     private static void assertModelBAF(double expectedBAF, double purity, int ploidy, int betaAllele) {
         assertEquals(expectedBAF, modelBAF(purity, ploidy, betaAllele), EPSILON);
     }
 
-    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio, double tumorRatio) {
+    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio,
+            double tumorRatio) {
         assertEquals(expectedDeviation, cnvDeviation(cnvRatioWeighFactor, modelCNVRatio, tumorRatio), EPSILON);
     }
 
@@ -134,5 +128,4 @@ public class FittedCopyNumberFactoryTest {
     private static void pureModelCNVRatio(double expectedRatio, double normFactor, int ploidy) {
         assertEquals(expectedRatio, modelRatio(1, normFactor, ploidy), EPSILON);
     }
-
 }

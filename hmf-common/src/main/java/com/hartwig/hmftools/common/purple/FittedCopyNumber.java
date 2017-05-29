@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple;
 import java.io.Serializable;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.freec.FreecStatus;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -84,3 +84,36 @@ CREATE TABLE somaticVariant
     FOREIGN KEY (sampleId) REFERENCES sample(sampleId),
     FOREIGN KEY (patientId) references patient(id)
 );
+
+CREATE TABLE copyNumber
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    start int not null,
+    end int not null,
+    bafCount int not null,
+    observedBaf DOUBLE PRECISION not null,
+    actualBaf DOUBLE PRECISION not null,
+    copyNumber DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+CREATE TABLE purity
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    purity DOUBLE PRECISION not null,
+    normFactor DOUBLE PRECISION not null,
+    score DOUBLE PRECISION not null,
+    ploidy DOUBLE PRECISION not null,
+    diploidProportion DOUBLE PRECISION not null,
+    polyclonalProportion DOUBLE PRECISION not null,
+    minPurity DOUBLE PRECISION not null,
+    maxPurity DOUBLE PRECISION not null,
+    minPloidy DOUBLE PRECISION not null,
+    maxPloidy DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);

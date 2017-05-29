@@ -1,18 +1,19 @@
 package com.hartwig.hmftools.common.slicing;
 
+import java.util.Collection;
+
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-
-class UnsortedSlicer implements Slicer {
+class BidirectionalSlicer implements Slicer {
 
     @NotNull
     private final SortedSetMultimap<String, GenomeRegion> regions;
 
-    UnsortedSlicer(@NotNull final SortedSetMultimap<String, GenomeRegion> regions) {
+    BidirectionalSlicer(@NotNull final SortedSetMultimap<String, GenomeRegion> regions) {
         this.regions = regions;
     }
 

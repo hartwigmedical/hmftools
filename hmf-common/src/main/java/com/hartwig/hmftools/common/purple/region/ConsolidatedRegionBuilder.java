@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.purple.region;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.FittedCopyNumber;
 
+import org.jetbrains.annotations.NotNull;
+
 class ConsolidatedRegionBuilder {
 
     private final String chromosome;
@@ -16,7 +18,7 @@ class ConsolidatedRegionBuilder {
     private double sumWeightedCopyNumber;
     private double sumWeightedRefNormalisedCopyNumber;
 
-    ConsolidatedRegionBuilder(FittedCopyNumber copyNumber) {
+    ConsolidatedRegionBuilder(@NotNull final FittedCopyNumber copyNumber) {
         this.chromosome = copyNumber.chromosome();
         this.start = copyNumber.start();
         extendRegion(copyNumber);
@@ -26,7 +28,7 @@ class ConsolidatedRegionBuilder {
         return chromosome;
     }
 
-    int bafCount() {
+    private int bafCount() {
         return weighWithBaf ? totalWeight : 0;
     }
 
@@ -34,7 +36,7 @@ class ConsolidatedRegionBuilder {
         return totalWeight == 0 ? 0 : sumWeightedBAF / totalWeight;
     }
 
-    double averagePurityAdjustedBAF() {
+    private double averagePurityAdjustedBAF() {
         return totalWeight == 0 ? 0 : sumWeightedPurityAdjustedBAF / totalWeight;
     }
 
@@ -46,8 +48,7 @@ class ConsolidatedRegionBuilder {
         return totalWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalWeight;
     }
 
-
-    void extendRegion(FittedCopyNumber value) {
+    void extendRegion(@NotNull final FittedCopyNumber value) {
         assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
 
         start = Math.min(value.start(), start);
@@ -87,6 +88,7 @@ class ConsolidatedRegionBuilder {
         sumWeightedRefNormalisedCopyNumber = 0;
     }
 
+    @NotNull
     public ConsolidatedRegion build() {
         return ImmutableConsolidatedRegion.builder()
                 .chromosome(chromosome)
@@ -94,9 +96,8 @@ class ConsolidatedRegionBuilder {
                 .end(end)
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
-                .averagePurityAdjustedBAF(averagePurityAdjustedBAF())
+                .averageActualBAF(averagePurityAdjustedBAF())
                 .averageTumorCopyNumber(averageTumorCopyNumber())
-                .averageRefNormalisedCopyNumber(averageRefNormalisedCopyNumber())
                 .build();
     }
 }

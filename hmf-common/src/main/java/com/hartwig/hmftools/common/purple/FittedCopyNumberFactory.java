@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.common.purple;
 
+import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedBAF;
+import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedCopynumber;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.freec.FreecStatus;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
+
+import org.jetbrains.annotations.NotNull;
 
 public class FittedCopyNumberFactory {
 
@@ -20,17 +25,17 @@ public class FittedCopyNumberFactory {
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
     }
 
-    public List<FittedCopyNumber> fittedCopyNumber(double purity, double normFactor,
-            Collection<EnrichedCopyNumber> copyNumbers) {
+    @NotNull
+    public List<FittedCopyNumber> fittedCopyNumber(final double purity, final double normFactor,
+            @NotNull final Collection<EnrichedRegion> copyNumbers) {
         return copyNumbers.stream().map(x -> fittedCopyNumber(purity, normFactor, x)).collect(Collectors.toList());
     }
 
-    FittedCopyNumber fittedCopyNumber(double purity, double normFactor, EnrichedCopyNumber copyNumber) {
-
+    FittedCopyNumber fittedCopyNumber(double purity, double normFactor, EnrichedRegion copyNumber) {
         double minDeviation = 0;
         double observedBAF = copyNumber.mBAF();
         double observedTumorRatio = copyNumber.tumorRatio();
-        double tumorCopyNumber = copyNumber(purity, normFactor, observedTumorRatio);
+        double tumorCopyNumber = purityAdjustedCopynumber(purity, normFactor, observedTumorRatio);
 
         ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
                 .from(copyNumber)
@@ -39,7 +44,6 @@ public class FittedCopyNumberFactory {
                 .observedBAF(observedBAF)
                 .observedTumorRatio(observedTumorRatio)
                 .observedNormalRatio(copyNumber.normalRatio())
-                .purityAdjustedBAF(purityAdjustedBAF(purity, observedBAF))
                 .broadBAF(0)
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)
@@ -68,6 +72,7 @@ public class FittedCopyNumberFactory {
                         .modelTumorRatio(modelRatio)
                         .bafDeviation(bafDeviation)
                         .cnvDeviation(cnvDeviation)
+                        .purityAdjustedBAF(purityAdjustedBAF(purity, ploidy, observedBAF))
                         .deviation(deviation);
                 minDeviation = deviation;
             }
@@ -81,10 +86,10 @@ public class FittedCopyNumberFactory {
         return normFactor + (ploidy - 2) * purity * normFactor / 2d;
     }
 
-    @VisibleForTesting
-    static double copyNumber(double purity, double normFactor, double tumorRatio) {
+    private static double copyNumber(double purity, double normFactor, double tumorRatio) {
         return 2 + 2 * (tumorRatio - normFactor) / purity / normFactor;
     }
+
 
     @VisibleForTesting
     static double cnvDeviation(double cnvRatioWeighFactor, double modelCNVRatio, double actualRatio) {
@@ -92,8 +97,8 @@ public class FittedCopyNumberFactory {
     }
 
     @VisibleForTesting
-    static double bafDeviation(boolean hetrozygous, double modelBAF, double actualBAF) {
-        if (hetrozygous && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
+    static double bafDeviation(boolean heterozygous, double modelBAF, double actualBAF) {
+        if (heterozygous && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
             return 0;
         }
 
@@ -101,7 +106,7 @@ public class FittedCopyNumberFactory {
     }
 
     @VisibleForTesting
-    static double[] modelBAFToMinimizeDeviation(double purity, int ploidy, double actualBAF) {
+    static double[] modelBAFToMinimizeDeviation(final double purity, final int ploidy, final double actualBAF) {
         double result = 0;
         double deviation = 0;
 
@@ -122,18 +127,11 @@ public class FittedCopyNumberFactory {
     }
 
     @VisibleForTesting
-    static double modelBAF(double purity, int ploidy, int alleleCount) {
+    public static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
         if (ploidy / alleleCount == 2) {
             return NORMAL_BAF;
         }
 
         return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
     }
-
-    @VisibleForTesting
-    static double purityAdjustedBAF(double purity, double observedBAF) {
-        assert (Doubles.greaterThan(purity, 0));
-        return (observedBAF - (1 - purity) * NORMAL_BAF) / purity;
-    }
-
 }

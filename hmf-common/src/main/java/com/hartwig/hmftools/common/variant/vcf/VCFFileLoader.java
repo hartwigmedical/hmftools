@@ -1,11 +1,6 @@
 package com.hartwig.hmftools.common.variant.vcf;
 
-import com.google.common.base.Preconditions;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
-import com.hartwig.hmftools.common.io.reader.FileReader;
-import com.hartwig.hmftools.common.variant.*;
-import org.jetbrains.annotations.NotNull;
+import static java.util.stream.Collectors.toList;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +8,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.toList;
+import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
+import com.hartwig.hmftools.common.io.reader.FileReader;
+import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.Variant;
+
+import org.jetbrains.annotations.NotNull;
 
 public final class VCFFileLoader {
 
@@ -43,7 +48,12 @@ public final class VCFFileLoader {
         final String header = extractHeader(lines);
         final String sample = SomaticVariantFactory.sampleFromHeaderLine(header);
         final List<SomaticVariant> variants = variants(lines, SomaticVariantFactory::fromVCFLine);
-        return ImmutableVCFSomaticFile.of(sample, metaInformationLines, header, variants);
+        return ImmutableVCFSomaticFile.builder()
+                .sample(sample)
+                .originalMetaInformationLines(metaInformationLines)
+                .originalHeaderLine(header)
+                .variants(variants)
+                .build();
     }
 
     @NotNull
@@ -53,7 +63,13 @@ public final class VCFFileLoader {
         final String refSample = GermlineVariantFactory.refSampleFromHeaderLine(header);
         final String tumorSample = GermlineVariantFactory.tumorSampleFromHeaderLine(header);
         final List<GermlineVariant> variants = variants(lines, GermlineVariantFactory::fromVCFLine);
-        return ImmutableVCFGermlineFile.of(refSample, tumorSample, metaInformationLines, header, variants);
+        return ImmutableVCFGermlineFile.builder()
+                .refSample(refSample)
+                .tumorSample(tumorSample)
+                .originalMetaInformationLines(metaInformationLines)
+                .originalHeaderLine(header)
+                .variants(variants)
+                .build();
     }
 
     @NotNull

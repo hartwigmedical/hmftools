@@ -13,8 +13,8 @@ import org.jetbrains.annotations.NotNull;
 public enum FittedCopyNumberWriter {
     ;
 
-    public static void writeCopyNumber(@NotNull final String filePath, @NotNull Collection<FittedCopyNumber> copyNumbers) throws IOException {
-
+    public static void writeCopyNumber(@NotNull final String filePath,
+            @NotNull Collection<FittedCopyNumber> copyNumbers) throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         copyNumbers.stream().map(FittedCopyNumberWriter::transform).forEach(lines::add);
@@ -22,62 +22,30 @@ public enum FittedCopyNumberWriter {
         Files.write(new File(filePath).toPath(), lines);
     }
 
+    @NotNull
     private static String header() {
-        return new StringBuilder()
-                .append("chromosome").append('\t')
-                .append("start").append('\t')
-                .append("end").append('\t')
-                .append("copyNumber").append('\t')
-                .append("alteration").append('\t')
-                .append("status").append('\t')
-                .append("fittedPloidy").append('\t')
-                .append("bafCount").append('\t')
-                .append("observedBAF").append('\t')
-                .append("purityAdjustedBAF").append('\t')
-                .append("modelBAF").append('\t')
-                .append("bafDeviation").append('\t')
-                .append("observedTumorRatio").append('\t')
-                .append("observedNormalRatio").append('\t')
-                .append("modelTumorRatio").append('\t')
-                .append("cnvDeviation").append('\t')
-                .append("deviation").append('\t')
-                .append("tumorCopyNumber").append('\t')
-                .append("broadTumorCopyNumber").append('\t')
-                .append("broadBAF").append('\t')
-                .append("segmentTumorCopyNumber").append('\t')
-                .append("segmentBAF")
-                .toString();
+        return "chromosome" + '\t' + "start" + '\t' + "end" + '\t' + "copyNumber" + '\t' + "alteration" + '\t'
+                + "status" + '\t' + "fittedPloidy" + '\t' + "bafCount" + '\t' + "observedBAF" + '\t'
+                + "purityAdjustedBAF" + '\t' + "modelBAF" + '\t' + "bafDeviation" + '\t' + "observedTumorRatio" + '\t'
+                + "observedNormalRatio" + '\t' + "modelTumorRatio" + '\t' + "cnvDeviation" + '\t' + "deviation" + '\t'
+                + "tumorCopyNumber" + '\t' + "broadTumorCopyNumber" + '\t' + "broadBAF" + '\t'
+                + "segmentTumorCopyNumber" + '\t' + "segmentBAF";
     }
 
-    private static String transform(FittedCopyNumber copyNumber) {
-        return new StringBuilder()
-                .append(copyNumber.chromosome()).append('\t')
-                .append(copyNumber.start()).append('\t')
-                .append(copyNumber.end()).append('\t')
-                .append(copyNumber.value()).append('\t')
-                .append(alteration(copyNumber)).append('\t')
-                .append(copyNumber.status().toString().toLowerCase()).append('\t')
-                .append(copyNumber.fittedPloidy()).append('\t')
-                .append(copyNumber.bafCount()).append('\t')
-                .append(copyNumber.observedBAF()).append('\t')
-                .append(copyNumber.purityAdjustedBAF()).append('\t')
-                .append(copyNumber.modelBAF()).append('\t')
-                .append(copyNumber.bafDeviation()).append('\t')
-                .append(copyNumber.observedTumorRatio()).append('\t')
-                .append(copyNumber.observedNormalRatio()).append('\t')
-                .append(copyNumber.modelTumorRatio()).append('\t')
-                .append(copyNumber.cnvDeviation()).append('\t')
-                .append(copyNumber.deviation()).append('\t')
-                .append(copyNumber.tumorCopyNumber()).append('\t')
-                .append(copyNumber.broadTumorCopyNumber()).append('\t')
-                .append(copyNumber.broadBAF()).append('\t')
-                .append(copyNumber.segmentTumorCopyNumber()).append('\t')
-                .append(copyNumber.segmentBAF())
-                .toString();
-
+    @NotNull
+    private static String transform(@NotNull final FittedCopyNumber copyNumber) {
+        return copyNumber.chromosome() + '\t' + copyNumber.start() + '\t' + copyNumber.end() + '\t'
+                + copyNumber.value() + '\t' + alteration(copyNumber) + '\t'
+                + copyNumber.status().toString().toLowerCase() + '\t' + copyNumber.fittedPloidy() + '\t'
+                + copyNumber.bafCount() + '\t' + copyNumber.observedBAF() + '\t' + copyNumber.purityAdjustedBAF()
+                + '\t' + copyNumber.modelBAF() + '\t' + copyNumber.bafDeviation() + '\t'
+                + copyNumber.observedTumorRatio() + '\t' + copyNumber.observedNormalRatio() + '\t'
+                + copyNumber.modelTumorRatio() + '\t' + copyNumber.cnvDeviation() + '\t' + copyNumber.deviation()
+                + '\t' + copyNumber.tumorCopyNumber() + '\t' + copyNumber.broadTumorCopyNumber() + '\t'
+                + copyNumber.broadBAF() + '\t' + copyNumber.segmentTumorCopyNumber() + '\t' + copyNumber.segmentBAF();
     }
 
-    private static String alteration(CopyNumber copyNumber) {
+    private static String alteration(@NotNull final CopyNumber copyNumber) {
         return copyNumber.isGain() ? "gain" : copyNumber.isLoss() ? "lost" : "neutral";
     }
 }

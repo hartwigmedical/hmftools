@@ -9,10 +9,12 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedCopyNumber;
 import com.hartwig.hmftools.common.zipper.RegionZipper;
 import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ConsolidatedRegionZipper implements RegionZipperHandler<ConsolidatedRegion, FittedCopyNumber> {
 
+    @NotNull
     private final BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform;
     private final List<FittedCopyNumber> result = Lists.newArrayList();
 
@@ -20,11 +22,12 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
     private ConsolidatedRegion consolidatedRegion;
 
     private ConsolidatedRegionZipper(
-            final BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform) {
+            @NotNull final BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform) {
         this.transform = transform;
     }
 
-    private List<FittedCopyNumber> getResult() {
+    @NotNull
+    private List<FittedCopyNumber> result() {
         return result;
     }
 
@@ -40,37 +43,29 @@ public class ConsolidatedRegionZipper implements RegionZipperHandler<Consolidate
         } else {
             result.add(copyNumber);
         }
-
     }
 
-    public static List<FittedCopyNumber> insertSmoothRegions(List<ConsolidatedRegion> megaRegions,
-            List<FittedCopyNumber> copyNumbers) {
-
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber
-                .builder()
-                .from(copyNumber)
-                .segmentBAF(consolidatedRegion.averageObservedBAF())
-                .segmentTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
-                .build();
+    @NotNull
+    public static List<FittedCopyNumber> insertSmoothRegions(@NotNull final List<ConsolidatedRegion> megaRegions,
+            @NotNull final List<FittedCopyNumber> copyNumbers) {
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder().from(
+                copyNumber).segmentBAF(consolidatedRegion.averageObservedBAF()).segmentTumorCopyNumber(
+                consolidatedRegion.averageTumorCopyNumber()).build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);
         RegionZipper.zip(megaRegions, copyNumbers, myThing);
-        return myThing.getResult();
+        return myThing.result();
     }
 
-    public static List<FittedCopyNumber> insertHighConfidenceRegions(List<ConsolidatedRegion> megaRegions,
-            List<FittedCopyNumber> copyNumbers) {
-
-        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber
-                .builder()
-                .from(copyNumber)
-                .broadBAF(consolidatedRegion.averageObservedBAF())
-                .broadTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
-                .build();
+    @NotNull
+    public static List<FittedCopyNumber> insertHighConfidenceRegions(
+            @NotNull final List<ConsolidatedRegion> megaRegions, @NotNull final List<FittedCopyNumber> copyNumbers) {
+        BiFunction<ConsolidatedRegion, FittedCopyNumber, FittedCopyNumber> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedCopyNumber.builder().from(
+                copyNumber).broadBAF(consolidatedRegion.averageObservedBAF()).broadTumorCopyNumber(
+                consolidatedRegion.averageTumorCopyNumber()).build();
 
         ConsolidatedRegionZipper myThing = new ConsolidatedRegionZipper(transform);
         RegionZipper.zip(megaRegions, copyNumbers, myThing);
-        return myThing.getResult();
+        return myThing.result();
     }
-
 }

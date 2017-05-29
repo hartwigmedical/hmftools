@@ -1,20 +1,24 @@
 package com.hartwig.hmftools.common.slicing;
 
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-class SortedSlicer implements Slicer {
+class ForwardSlicer implements Slicer {
 
     private final Map<String, SingleChromosomeSlicer> regions = Maps.newHashMap();
 
-    SortedSlicer(@NotNull final SortedSetMultimap<String, GenomeRegion> regions) {
+    ForwardSlicer(@NotNull final SortedSetMultimap<String, GenomeRegion> regions) {
         for (final String chromosome : regions.keySet()) {
             SortedSet<GenomeRegion> region = regions.get(chromosome);
             this.regions.put(chromosome, new SingleChromosomeSlicer(region));
@@ -22,8 +26,8 @@ class SortedSlicer implements Slicer {
     }
 
     @Override
-    public boolean test(@NotNull GenomePosition variant) {
-        SingleChromosomeSlicer slicer = regions.get(variant.chromosome());
+    public boolean test(@NotNull final GenomePosition variant) {
+        final SingleChromosomeSlicer slicer = regions.get(variant.chromosome());
         return slicer != null && slicer.includes(variant);
     }
 
@@ -33,16 +37,17 @@ class SortedSlicer implements Slicer {
         return regions.values().stream().flatMap(x -> x.deque.stream()).collect(Collectors.toList());
     }
 
-    class SingleChromosomeSlicer {
+    private static class SingleChromosomeSlicer {
 
+        @NotNull
         private final Deque<GenomeRegion> deque;
         private long currentPosition;
 
-        SingleChromosomeSlicer(SortedSet<GenomeRegion> reqion) {
-            this.deque = new ArrayDeque<>(reqion);
+        SingleChromosomeSlicer(@NotNull SortedSet<GenomeRegion> region) {
+            this.deque = new ArrayDeque<>(region);
         }
 
-        boolean includes(@NotNull GenomePosition variant) {
+        boolean includes(@NotNull final GenomePosition variant) {
             if (variant.position() < currentPosition) {
                 throw new IllegalArgumentException("Forward slicer only goes forward, never backwards!");
             }

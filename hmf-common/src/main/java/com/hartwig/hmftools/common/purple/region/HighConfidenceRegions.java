@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple.region;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.freec.FreecStatus;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.FittedCopyNumber;
 
@@ -24,13 +24,11 @@ class HighConfidenceRegions {
     @Nullable
     private FittedCopyNumber last;
 
-    List<ConsolidatedRegion> highConfidence(List<FittedCopyNumber> copyNumbers) {
-        for (FittedCopyNumber copyNumber : copyNumbers) {
-            if (copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC && !Doubles.isZero(
-                    copyNumber.observedTumorRatio())) {
-                process(copyNumber);
-            }
-        }
+    @NotNull
+    List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedCopyNumber> copyNumbers) {
+        copyNumbers.stream().filter(
+                copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
+                        && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);
 
         endRegion();
         return result;
