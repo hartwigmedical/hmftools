@@ -87,6 +87,7 @@ public final class VCFFileLoader {
     private static String extractHeader(@NotNull final List<String> lines) {
         final Optional<String> optHeaderLine = lines.stream().filter(new VCFHeaderLinePredicate()).findFirst();
         Preconditions.checkState(optHeaderLine.isPresent());
+        assert optHeaderLine.isPresent();
         return optHeaderLine.get();
     }
 
@@ -99,5 +100,4 @@ public final class VCFFileLoader {
     private static <T extends Variant> List<T> variants(@NotNull final List<String> lines, Function<String, T> transform) {
         return lines.stream().filter(new VCFDataLinePredicate()).map(transform).collect(toList());
     }
-
 }

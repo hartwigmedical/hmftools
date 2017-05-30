@@ -15,5 +15,4 @@ public class PurityPloidyEstimateApplicationTest {
         assertEquals(0.33, PurityPloidyEstimateApplication.MIN_NORM_FACTOR, EPSILON);
         assertEquals(2.0, PurityPloidyEstimateApplication.MAX_NORM_FACTOR, EPSILON);
     }
-
 }
