@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.common.purple.region;
 
 import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedBAF;
 import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedCopynumber;

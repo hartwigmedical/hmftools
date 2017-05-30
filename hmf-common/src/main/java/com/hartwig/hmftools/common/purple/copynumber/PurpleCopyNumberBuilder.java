@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 

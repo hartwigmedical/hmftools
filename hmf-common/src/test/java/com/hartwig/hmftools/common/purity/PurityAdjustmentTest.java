@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purity;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.purple.FittedRegionFactory;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 
 import org.junit.Test;
 

@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.common.purple.region;
 
-import static com.hartwig.hmftools.common.purple.FittedRegionFactory.NORMAL_BAF;
-import static com.hartwig.hmftools.common.purple.FittedRegionFactory.bafDeviation;
-import static com.hartwig.hmftools.common.purple.FittedRegionFactory.cnvDeviation;
-import static com.hartwig.hmftools.common.purple.FittedRegionFactory.modelBAF;
-import static com.hartwig.hmftools.common.purple.FittedRegionFactory.modelBAFToMinimizeDeviation;
-import static com.hartwig.hmftools.common.purple.FittedRegionFactory.modelRatio;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.NORMAL_BAF;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.bafDeviation;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.cnvDeviation;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAF;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAFToMinimizeDeviation;
+import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelRatio;
 
 import static org.junit.Assert.assertEquals;
 

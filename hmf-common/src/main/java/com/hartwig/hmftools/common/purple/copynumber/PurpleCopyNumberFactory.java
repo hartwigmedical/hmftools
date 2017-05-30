@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;

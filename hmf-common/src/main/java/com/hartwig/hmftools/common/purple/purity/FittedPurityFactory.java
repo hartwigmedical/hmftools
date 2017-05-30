@@ -11,9 +11,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.purity.PurityAdjustment;
-import com.hartwig.hmftools.common.purple.FittedRegion;
-import com.hartwig.hmftools.common.purple.FittedRegionFactory;
-import com.hartwig.hmftools.common.purple.ObservedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 

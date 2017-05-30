@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.FittedRegion;
-import com.hartwig.hmftools.common.purple.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.zipper.RegionZipper;
 import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 
@@ -54,9 +54,9 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
                 copyNumber).segmentBAF(consolidatedRegion.averageObservedBAF()).segmentTumorCopyNumber(
                 consolidatedRegion.averageTumorCopyNumber()).build();
 
-        PurpleRegionZipper myThing = new PurpleRegionZipper(transform);
-        RegionZipper.zip(smoothRegions, fittedRegions, myThing);
-        return myThing.result();
+        PurpleRegionZipper zipper = new PurpleRegionZipper(transform);
+        RegionZipper.zip(smoothRegions, fittedRegions, zipper);
+        return zipper.result();
     }
 
     @NotNull
@@ -67,8 +67,8 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
                 copyNumber).broadBAF(consolidatedRegion.averageObservedBAF()).broadTumorCopyNumber(
                 consolidatedRegion.averageTumorCopyNumber()).build();
 
-        PurpleRegionZipper myThing = new PurpleRegionZipper(transform);
-        RegionZipper.zip(highConfidenceRegions, fittedRegions, myThing);
-        return myThing.result();
+        PurpleRegionZipper zipper = new PurpleRegionZipper(transform);
+        RegionZipper.zip(highConfidenceRegions, fittedRegions, zipper);
+        return zipper.result();
     }
 }

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
-import com.hartwig.hmftools.common.purple.FittedRegion;
-import com.hartwig.hmftools.common.purple.ImmutableFittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

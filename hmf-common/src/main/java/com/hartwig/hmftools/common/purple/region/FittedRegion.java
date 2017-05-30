@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.common.purple.region;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 

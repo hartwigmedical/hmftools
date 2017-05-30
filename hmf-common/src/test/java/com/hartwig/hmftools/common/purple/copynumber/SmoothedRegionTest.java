@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.junit.Test;
 

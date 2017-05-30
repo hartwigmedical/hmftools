@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.common.purple.region;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
