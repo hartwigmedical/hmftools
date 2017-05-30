@@ -64,7 +64,7 @@ public class PurityPloidyEstimateApplication {
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String FREEC_DIRECTORY = "freec_dir";
     private static final String VCF_EXTENSION = "vcf_extension";
-    private static final String VCF_EXTENSION_DEFAULT = ".annotation.vcf";
+    private static final String VCF_EXTENSION_DEFAULT = ".annotated.vcf";
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
