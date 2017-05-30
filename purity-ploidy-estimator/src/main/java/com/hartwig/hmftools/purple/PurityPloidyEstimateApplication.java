@@ -110,10 +110,6 @@ public class PurityPloidyEstimateApplication {
         Collections.sort(fittedPurities);
 
         if (!fittedPurities.isEmpty()) {
-            final String purityFile = freecDirectory + File.separator + tumorSample + ".purple.purity";
-            LOGGER.info("Writing fitted purity to: {}", purityFile);
-            FittedPurityWriter.writePurity(purityFile, fittedPurities);
-
             final FittedPurity bestFit = fittedPurities.get(0);
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(),
                     bestFit.normFactor(), observedRegions);
@@ -128,6 +124,10 @@ public class PurityPloidyEstimateApplication {
             dbAccess.writeCopynumbers(tumorSample, smoothRegions);
 
             if (cmd.hasOption(DEBUG)) {
+                final String purityFile = freecDirectory + File.separator + tumorSample + ".purple.purity";
+                LOGGER.info("Writing fitted purity to: {}", purityFile);
+                FittedPurityWriter.writePurity(purityFile, fittedPurities);
+
                 final String fittedFile = freecDirectory + File.separator + tumorSample + ".purple.fitted";
                 LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
                 final List<FittedRegion> broadCopyNumber = PurpleRegionZipper.insertHighConfidenceRegions(
