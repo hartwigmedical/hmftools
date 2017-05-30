@@ -1,22 +1,22 @@
-package com.hartwig.hmftools.patientreporter.cosmic;
+package com.hartwig.hmftools.patientreporter.genePanel;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CosmicData {
+public class GenePanelData {
     @NotNull
     private final String entrezId;
 
-    @Nullable
-    private final String role;
+    @NotNull
+    private final String type;
 
     @NotNull
     private final String chromosomeBand;
 
-    public CosmicData(@NotNull final String entrezId, @Nullable final String role,
+    public GenePanelData(@NotNull final String entrezId, @NotNull final String type,
             @NotNull final String chromosomeBand) {
         this.entrezId = entrezId;
-        this.role = role;
+        this.type = type;
         this.chromosomeBand = chromosomeBand;
     }
 
@@ -26,8 +26,8 @@ public class CosmicData {
     }
 
     @Nullable
-    public String role() {
-        return role;
+    public String type() {
+        return type;
     }
 
     @NotNull

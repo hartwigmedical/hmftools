@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.patientreporter.cosmic.CosmicCensus;
+import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ class GenePanelDataSource {
 
     @NotNull
     static JRDataSource fromCosmic(@NotNull final Collection<HMFSlicingAnnotation> genes,
-            @NotNull final CosmicCensus cosmicCensus) {
+            @NotNull final GenePanelModel genePanelModel) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
                 ROLE_IN_CANCER_FIELD.getName(), GENE2_FIELD.getName(), TRANSCRIPT2_FIELD.getName(),
                 ROLE_IN_CANCER2_FIELD.getName());
@@ -37,8 +37,9 @@ class GenePanelDataSource {
         for (final List<HMFSlicingAnnotation> annotationPair : Iterables.partition(genes, 2)) {
             final HMFSlicingAnnotation annotation1 = annotationPair.get(0);
             final HMFSlicingAnnotation annotation2 = annotationPair.get(1);
-            genePanelDataSource.add(annotation1.gene(), annotation1.transcript(), "Onco", annotation2.gene(),
-                    annotation2.transcript(), "Onco");
+            genePanelDataSource.add(annotation1.gene(), annotation1.transcript(),
+                    genePanelModel.type(annotation1.gene()), annotation2.gene(), annotation2.transcript(),
+                    genePanelModel.type(annotation2.gene()));
         }
 
         return genePanelDataSource;

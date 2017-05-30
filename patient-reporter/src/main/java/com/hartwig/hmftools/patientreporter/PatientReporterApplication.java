@@ -20,8 +20,8 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.SinglePatientReporter;
 import com.hartwig.hmftools.patientreporter.batch.BatchReportAnalyser;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.cosmic.CosmicCensus;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -60,7 +60,7 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
-    private static final String COSMIC_CSV = "cosmic_csv";
+    private static final String GENE_PANEL_CSV = "gene_panel_csv";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -85,7 +85,7 @@ public class PatientReporterApplication {
             final Slicer hmfSlicingRegion = buildHmfSlicingRegion(cmd);
             final SinglePatientReporter reporter = buildReporter(hmfSlicingRegion, cmd);
             final DrupFilter drupFilter = buildDrupFilter(cmd);
-            final CosmicCensus cosmicCensus = buildCosmicCensus(cmd);
+            final GenePanelModel genePanelModel = buildGenePanel(cmd);
 
             if (cmd.hasOption(BATCH_MODE) && validInputForBatchMode(cmd)) {
                 LOGGER.info("Switching to running patient reporter in batch-mode.");
@@ -94,7 +94,7 @@ public class PatientReporterApplication {
                 analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
             } else if (validInputForSinglePatientReport(cmd)) {
                 final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
-                buildReportWriter(cmd).writeSequenceReport(report, hmfSlicingRegion, drupFilter, cosmicCensus);
+                buildReportWriter(cmd).writeSequenceReport(report, hmfSlicingRegion, drupFilter, genePanelModel);
             } else {
                 printUsageAndExit(options);
             }
@@ -115,9 +115,8 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static CosmicCensus buildCosmicCensus(@NotNull final CommandLine cmd)
-            throws IOException, HartwigException {
-        return new CosmicCensus(cmd.getOptionValue(COSMIC_CSV));
+    private static GenePanelModel buildGenePanel(@NotNull final CommandLine cmd) throws IOException, HartwigException {
+        return new GenePanelModel(cmd.getOptionValue(GENE_PANEL_CSV));
     }
 
     @NotNull
@@ -296,7 +295,7 @@ public class PatientReporterApplication {
                 "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DRUP_GENES_CSV, true,
                 "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(COSMIC_CSV, true, "Path towards a CSV containing Cosmic census data.");
+        options.addOption(GENE_PANEL_CSV, true, "Path towards a CSV containing gene panel data.");
         return options;
     }
 

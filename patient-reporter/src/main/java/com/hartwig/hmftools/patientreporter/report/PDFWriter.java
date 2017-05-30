@@ -21,8 +21,8 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.cosmic.CosmicCensus;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
@@ -69,10 +69,10 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     @Override
     public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter, @NotNull final CosmicCensus cosmicCensus)
+            @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel)
             throws FileNotFoundException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion,
-                drupFilter, cosmicCensus);
+                drupFilter, genePanelModel);
 
         return writeReport(report.sample(), reportBuilder);
     }
@@ -126,7 +126,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
             @NotNull final String reportLogoPath, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter, @NotNull final CosmicCensus cosmicCensus) {
+            @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
@@ -144,7 +144,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         cmp.text("HMF Sequencing Report - Additional Information").setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        filteringSection(hmfSlicingRegion, cosmicCensus),
+                        filteringSection(hmfSlicingRegion, genePanelModel),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -302,7 +302,6 @@ public class PDFWriter implements ReportWriter {
                         .columns(
                             col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
                             col.column("Gene", PatientDataSource.GENE_FIELD),
-                            transcriptColumn(),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
                         .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
@@ -317,7 +316,7 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> filteringSection(@NotNull final Slicer hmfSlicingRegion,
-            @NotNull final CosmicCensus cosmicCensus) {
+            @NotNull final GenePanelModel genePanelModel) {
         final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on filtering",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
@@ -327,12 +326,12 @@ public class PDFWriter implements ReportWriter {
                         "The definition of canonical transcripts can be found on http://www.ensembl.org/Help/Glossary?id=346"));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                createGenePanel(hmfSlicingRegion.regions(), cosmicCensus));
+                createGenePanel(hmfSlicingRegion.regions(), genePanelModel));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> createGenePanel(@NotNull final Collection<GenomeRegion> regions,
-            @NotNull final CosmicCensus cosmicCensus) {
+            @NotNull final GenePanelModel genePanelModel) {
         //@formatter:off
         final List<HMFSlicingAnnotation> annotations = Lists.newArrayList();
         for (final GenomeRegion region : regions) {
@@ -360,7 +359,7 @@ public class PDFWriter implements ReportWriter {
                         col.column("Role in cancer", GenePanelDataSource.ROLE_IN_CANCER2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
                     .setStyle(dataTableStyle())
-                    .setDataSource(GenePanelDataSource.fromCosmic(annotations, cosmicCensus));
+                    .setDataSource(GenePanelDataSource.fromCosmic(annotations, genePanelModel));
         return table;
         // @formatter:on
     }
