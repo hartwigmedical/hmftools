@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.purple;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -6,13 +6,14 @@ import java.util.function.BiFunction;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.FittedRegion;
 import com.hartwig.hmftools.common.purple.ImmutableFittedRegion;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.zipper.RegionZipper;
 import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, FittedRegion> {
+class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, FittedRegion> {
 
     @NotNull
     private final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform;
@@ -46,7 +47,7 @@ public class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber,
     }
 
     @NotNull
-    public static List<FittedRegion> insertSmoothRegions(@NotNull final List<PurpleCopyNumber> smoothRegions,
+    static List<FittedRegion> insertSmoothRegions(@NotNull final List<PurpleCopyNumber> smoothRegions,
             @NotNull final List<FittedRegion> fittedRegions) {
         BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedRegion
                 .builder().from(
@@ -59,7 +60,7 @@ public class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber,
     }
 
     @NotNull
-    public static List<FittedRegion> insertHighConfidenceRegions(
+    static List<FittedRegion> insertHighConfidenceRegions(
             @NotNull final List<PurpleCopyNumber> highConfidenceRegions, @NotNull final List<FittedRegion> fittedRegions) {
         BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedRegion
                 .builder().from(

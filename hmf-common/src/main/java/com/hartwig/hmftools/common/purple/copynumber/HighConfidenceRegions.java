@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.List;
 
@@ -25,8 +25,8 @@ class HighConfidenceRegions {
     private FittedRegion last;
 
     @NotNull
-    List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> copyNumbers) {
-        copyNumbers.stream().filter(
+    List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
+        fittedRegions.stream().filter(
                 copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
                         && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);
 

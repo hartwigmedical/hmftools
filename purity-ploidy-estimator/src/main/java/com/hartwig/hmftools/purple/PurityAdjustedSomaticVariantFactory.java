@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.region.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.zipper.GenomeZipper;

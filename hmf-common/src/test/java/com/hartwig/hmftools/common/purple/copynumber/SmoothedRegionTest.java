@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 import static com.hartwig.hmftools.common.numeric.Doubles.lessThan;
-import static com.hartwig.hmftools.common.purple.region.SmoothedRegions.allowedBAFDeviation;
-import static com.hartwig.hmftools.common.purple.region.SmoothedRegions.allowedCopyNumberDeviation;
+import static com.hartwig.hmftools.common.purple.copynumber.SmoothedRegions.allowedBAFDeviation;
+import static com.hartwig.hmftools.common.purple.copynumber.SmoothedRegions.allowedCopyNumberDeviation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

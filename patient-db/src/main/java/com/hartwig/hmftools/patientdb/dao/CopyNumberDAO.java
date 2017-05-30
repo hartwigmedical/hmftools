@@ -8,8 +8,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.region.ImmutablePurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.region.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -28,12 +28,12 @@ class CopyNumberDAO {
 
     @NotNull
     public List<PurpleCopyNumber> read(@NotNull final String sample) {
-        List<PurpleCopyNumber> regions = Lists.newArrayList();
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
 
         Result<Record> result = context.select().from(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
-            regions.add(ImmutablePurpleCopyNumber.builder()
+            copyNumbers.add(ImmutablePurpleCopyNumber.builder()
                     .chromosome(record.getValue(COPYNUMBER.CHROMOSOME))
                     .start(record.getValue(COPYNUMBER.START))
                     .end(record.getValue(COPYNUMBER.END))
@@ -44,11 +44,11 @@ class CopyNumberDAO {
                     .build());
         }
 
-        Collections.sort(regions);
-        return regions;
+        Collections.sort(copyNumbers);
+        return copyNumbers;
     }
 
-    public void write(@NotNull final String sample, @NotNull List<PurpleCopyNumber> regions) {
+    public void write(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
@@ -56,7 +56,7 @@ class CopyNumberDAO {
                 COPYNUMBER.START, COPYNUMBER.END, COPYNUMBER.BAFCOUNT, COPYNUMBER.OBSERVEDBAF, COPYNUMBER.ACTUALBAF,
                 COPYNUMBER.COPYNUMBER_, COPYNUMBER.MODIFIED);
 
-        regions.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
+        copyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
         inserter.execute();
     }
 

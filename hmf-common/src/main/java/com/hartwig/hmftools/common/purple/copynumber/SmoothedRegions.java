@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -25,9 +25,9 @@ class SmoothedRegions {
     private static final double MAX_COPY_NUMBER_RANGE = 1.3;
 
     SmoothedRegions(@NotNull final List<PurpleCopyNumber> broadRegions,
-            @NotNull final List<FittedRegion> copyNumbers) {
+            @NotNull final List<FittedRegion> fittedRegions) {
         this.broadRegions = broadRegions;
-        this.copyNumbers = copyNumbers;
+        this.copyNumbers = fittedRegions;
 
         run();
     }

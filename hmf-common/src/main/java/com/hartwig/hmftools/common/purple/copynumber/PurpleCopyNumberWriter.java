@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.io.File;
 import java.io.IOException;

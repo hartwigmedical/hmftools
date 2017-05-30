@@ -16,14 +16,13 @@ import com.hartwig.hmftools.common.purple.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.FittedRegionWriter;
 import com.hartwig.hmftools.common.purple.ObservedRegion;
 import com.hartwig.hmftools.common.purple.ObservedRegionFactory;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityWriter;
-import com.hartwig.hmftools.common.purple.region.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.region.PurpleCopyNumberFactory;
-import com.hartwig.hmftools.common.purple.region.PurpleRegionZipper;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
@@ -107,15 +106,15 @@ public class PurityPloidyEstimateApplication {
                 tumorRatio, normalRatio);
 
         LOGGER.info("Fitting purity");
-        final List<FittedPurity> purity = fittedPurityFactory.fitPurity(observedRegions);
-        Collections.sort(purity);
+        final List<FittedPurity> fittedPurities = fittedPurityFactory.fitPurity(observedRegions);
+        Collections.sort(fittedPurities);
 
-        if (!purity.isEmpty()) {
+        if (!fittedPurities.isEmpty()) {
             final String purityFile = freecDirectory + File.separator + tumorSample + ".purple.purity";
             LOGGER.info("Writing fitted purity to: {}", purityFile);
-            FittedPurityWriter.writePurity(purityFile, purity);
+            FittedPurityWriter.writePurity(purityFile, fittedPurities);
 
-            final FittedPurity bestFit = purity.get(0);
+            final FittedPurity bestFit = fittedPurities.get(0);
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(),
                     bestFit.normFactor(), observedRegions);
 
@@ -123,7 +122,7 @@ public class PurityPloidyEstimateApplication {
             final List<PurpleCopyNumber> smoothRegions = PurpleCopyNumberFactory.smooth(fittedRegions,
                     highConfidence);
 
-            final FittedPurityScore score = FittedPurityScoreFactory.score(purity, smoothRegions);
+            final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurities, smoothRegions);
             LOGGER.info("Persisting to database");
             dbAccess.writePurity(tumorSample, bestFit, score);
             dbAccess.writeCopynumbers(tumorSample, smoothRegions);
