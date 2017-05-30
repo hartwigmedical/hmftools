@@ -12,10 +12,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.patientreporter.PatientReport;
@@ -30,12 +31,15 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
+import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
+import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriter implements ReportWriter {
@@ -330,13 +334,14 @@ public class PDFWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> createGenePanel(@NotNull final Collection<GenomeRegion> regions,
             @NotNull final CosmicCensus cosmicCensus) {
         //@formatter:off
-        final Collection<String> genes = Sets.newTreeSet();
+        final List<HMFSlicingAnnotation> annotations = Lists.newArrayList();
         for (final GenomeRegion region : regions) {
             final HMFSlicingAnnotation annotation = HMFSlicingAnnotationFactory.fromGenomeRegion(region);
             // KODU: The annotation should always be present on the HMF slicing regions!
             assert annotation != null;
-            genes.add(annotation.gene());
+            annotations.add(annotation);
         }
+        annotations.sort(Comparator.comparing(HMFSlicingAnnotation::gene));
 
         final ComponentBuilder<?, ?> table = cmp.subreport(
                 baseTable().fields(GenePanelDataSource.genePanelFields())
@@ -344,16 +349,18 @@ public class PDFWriter implements ReportWriter {
                         col.emptyColumn().setFixedWidth(40),
                         col.column("Gene", GenePanelDataSource.GENE_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
-                                .setHyperLink(hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(100),
+                                .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
+                                .setStyle(linkStyle()).setFixedWidth(100),
                         col.column("Role in cancer", GenePanelDataSource.ROLE_IN_CANCER_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
-                                .setHyperLink(hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(100),
+                                .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
+                                .setStyle(linkStyle()).setFixedWidth(100),
                         col.column("Role in cancer", GenePanelDataSource.ROLE_IN_CANCER2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
                     .setStyle(dataTableStyle())
-                    .setDataSource(GenePanelDataSource.fromCosmic(genes, cosmicCensus));
+                    .setDataSource(GenePanelDataSource.fromCosmic(annotations, cosmicCensus));
         return table;
         // @formatter:on
     }
@@ -460,6 +467,17 @@ public class PDFWriter implements ReportWriter {
     private static TextColumnBuilder<?> transcriptColumn() {
         return col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setHyperLink(
                 hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(100);
+    }
+
+    @NotNull
+    private static AbstractSimpleExpression<String> fieldTranscriptLink(@NotNull final FieldBuilder<?> field) {
+        return new AbstractSimpleExpression<String>() {
+            @Override
+            public String evaluate(@NotNull final ReportParameters data) {
+                return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + data.getValue(
+                        field.getName());
+            }
+        };
     }
 
     @NotNull
