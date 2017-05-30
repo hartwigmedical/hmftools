@@ -45,6 +45,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
+    private static final String VERSION = "2.0";
 
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
@@ -142,7 +143,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> helpPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Sequencing Report - Additional Information").setStyle(sectionHeaderStyle()),
+                        cmp.text("HMF Sequencing Report v" + VERSION + " - Additional Information").setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         filteringSection(hmfSlicingRegion, genePanelModel),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
