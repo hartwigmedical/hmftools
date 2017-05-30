@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.FittedCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,10 +22,10 @@ class HighConfidenceRegions {
     @Nullable
     private ConsolidatedRegionBuilder builder;
     @Nullable
-    private FittedCopyNumber last;
+    private FittedRegion last;
 
     @NotNull
-    List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedCopyNumber> copyNumbers) {
+    List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedRegion> copyNumbers) {
         copyNumbers.stream().filter(
                 copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
                         && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);
@@ -34,7 +34,7 @@ class HighConfidenceRegions {
         return result;
     }
 
-    private void process(@NotNull FittedCopyNumber current) {
+    private void process(@NotNull FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
             builder = new ConsolidatedRegionBuilder(current);
@@ -53,11 +53,11 @@ class HighConfidenceRegions {
         }
     }
 
-    private boolean isNewChromosome(@NotNull FittedCopyNumber current, @Nullable FittedCopyNumber previous) {
+    private boolean isNewChromosome(@NotNull FittedRegion current, @Nullable FittedRegion previous) {
         return previous != null && !current.chromosome().equals(previous.chromosome());
     }
 
-    private boolean isLargeDeviation(@NotNull FittedCopyNumber current) {
+    private boolean isLargeDeviation(@NotNull FittedRegion current) {
         assert builder != null;
 
         double copyNumberDeviation = Math.abs(current.tumorCopyNumber() - builder.averageTumorCopyNumber());

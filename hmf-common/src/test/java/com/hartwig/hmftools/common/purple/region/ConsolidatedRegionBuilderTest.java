@@ -3,8 +3,8 @@ package com.hartwig.hmftools.common.purple.region;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
-import com.hartwig.hmftools.common.purple.FittedCopyNumber;
-import com.hartwig.hmftools.common.purple.ImmutableFittedCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedRegion;
+import com.hartwig.hmftools.common.purple.ImmutableFittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -46,18 +46,18 @@ public class ConsolidatedRegionBuilderTest {
         assertEquals(expectedRatio, victim.averageTumorCopyNumber(), EPSILON);
     }
 
-    private static FittedCopyNumber create(long start, long end, double ratio) {
+    private static FittedRegion create(long start, long end, double ratio) {
         return create("1", start, end, 0, 0, ratio);
     }
 
-    private static FittedCopyNumber create(long start, long end, int bafCount, double baf, double ratio) {
+    private static FittedRegion create(long start, long end, int bafCount, double baf, double ratio) {
         return create("1", start, end, bafCount, baf, ratio);
     }
 
     @NotNull
-    public static FittedCopyNumber create(@NotNull String chromosome, long start, long end, int bafCount, double baf,
+    public static FittedRegion create(@NotNull String chromosome, long start, long end, int bafCount, double baf,
             double tumorCopyNumber) {
-        return ImmutableFittedCopyNumber.builder()
+        return ImmutableFittedRegion.builder()
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
@@ -71,7 +71,6 @@ public class ConsolidatedRegionBuilderTest {
                 .segmentTumorCopyNumber(0)
                 .observedNormalRatio(1.0)
                 .observedNormalRatio(1.0)
-                .value(0)
                 .cnvDeviation(0)
                 .deviation(0)
                 .fittedPloidy(0)

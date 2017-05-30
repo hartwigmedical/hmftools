@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purity;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.purple.FittedCopyNumberFactory;
+import com.hartwig.hmftools.common.purple.FittedRegionFactory;
 
 import org.junit.Test;
 
@@ -19,7 +19,7 @@ public class PurityAdjustmentTest {
 
     private void testPurityAdjustedBaf(double purity, int ploidy, int alleleCount) {
         double expectedPurityAdjustedBAF = 1d * alleleCount / ploidy;
-        double observedBAF = FittedCopyNumberFactory.modelBAF(purity, ploidy, alleleCount);
+        double observedBAF = FittedRegionFactory.modelBAF(purity, ploidy, alleleCount);
         assertEquals(expectedPurityAdjustedBAF, PurityAdjustment.purityAdjustedBAF(purity, ploidy, observedBAF), EPSILON);
     }
 }

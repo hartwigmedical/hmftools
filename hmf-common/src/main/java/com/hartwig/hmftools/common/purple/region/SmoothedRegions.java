@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.FittedCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ class SmoothedRegions {
     private final List<ConsolidatedRegion> smoothedRegions = Lists.newArrayList();
 
     private final List<ConsolidatedRegion> broadRegions;
-    private final List<FittedCopyNumber> copyNumbers;
+    private final List<FittedRegion> copyNumbers;
 
     private static final double DIPLOID_MIN_RATIO = 0.75;
     private static final double DIPLOID_MAX_RATIO = 1.25;
@@ -25,7 +25,7 @@ class SmoothedRegions {
     private static final double MAX_COPY_NUMBER_RANGE = 1.3;
 
     SmoothedRegions(@NotNull final List<ConsolidatedRegion> broadRegions,
-            @NotNull final List<FittedCopyNumber> copyNumbers) {
+            @NotNull final List<FittedRegion> copyNumbers) {
         this.broadRegions = broadRegions;
         this.copyNumbers = copyNumbers;
 
@@ -72,7 +72,7 @@ class SmoothedRegions {
 
     private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull ConsolidatedRegionBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
-            FittedCopyNumber copyNumber = copyNumbers.get(i);
+            FittedRegion copyNumber = copyNumbers.get(i);
             if (isSimilar(copyNumber, builder)) {
                 builder.extendRegion(copyNumber);
             } else {
@@ -88,7 +88,7 @@ class SmoothedRegions {
             final @NotNull ConsolidatedRegionBuilder builder) {
         ConsolidatedRegionBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
-            FittedCopyNumber copyNumber = copyNumbers.get(i);
+            FittedRegion copyNumber = copyNumbers.get(i);
             if (isSimilar(copyNumber, builder)) {
                 builder.extendRegion(copyNumber);
             } else {
@@ -107,7 +107,7 @@ class SmoothedRegions {
         ConsolidatedRegionBuilder reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
-            final FittedCopyNumber copyNumber = copyNumbers.get(i);
+            final FittedRegion copyNumber = copyNumbers.get(i);
             if (isSimilar(copyNumber, reverseBuilder)) {
                 reverseBuilder.extendRegion(copyNumber);
             } else {
@@ -126,7 +126,7 @@ class SmoothedRegions {
         return forwardBuilder;
     }
 
-    private static boolean isSimilar(@NotNull final FittedCopyNumber copyNumber,
+    private static boolean isSimilar(@NotNull final FittedRegion copyNumber,
             @NotNull final ConsolidatedRegionBuilder builder) {
         int bafCount = copyNumber.bafCount();
         if (!isDiploid(copyNumber)) {
@@ -162,7 +162,7 @@ class SmoothedRegions {
         return (MIN_COPY_NUMBER_RANGE - MAX_COPY_NUMBER_RANGE) / 10 * bafCount + MAX_COPY_NUMBER_RANGE;
     }
 
-    private static boolean isDiploid(@NotNull final FittedCopyNumber copyNumber) {
+    private static boolean isDiploid(@NotNull final FittedRegion copyNumber) {
         return Doubles.greaterOrEqual(copyNumber.observedNormalRatio(), DIPLOID_MIN_RATIO) && Doubles.lessOrEqual(
                 copyNumber.observedNormalRatio(), DIPLOID_MAX_RATIO);
     }
@@ -175,9 +175,9 @@ class SmoothedRegions {
         return indexOf(minIndex, copyNumber -> copyNumber.start() == region.start());
     }
 
-    private int indexOf(int minIndex, @NotNull Predicate<FittedCopyNumber> predicate) {
+    private int indexOf(int minIndex, @NotNull Predicate<FittedRegion> predicate) {
         for (int i = minIndex; i < copyNumbers.size(); i++) {
-            FittedCopyNumber copyNumber = copyNumbers.get(i);
+            FittedRegion copyNumber = copyNumbers.get(i);
             if (predicate.test(copyNumber)) {
                 return i;
             }

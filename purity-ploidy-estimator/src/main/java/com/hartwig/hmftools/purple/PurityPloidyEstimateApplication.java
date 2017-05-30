@@ -13,14 +13,14 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.EnrichedRegion;
 import com.hartwig.hmftools.common.purple.EnrichedRegionFactory;
-import com.hartwig.hmftools.common.purple.FittedCopyNumber;
-import com.hartwig.hmftools.common.purple.FittedCopyNumberFactory;
-import com.hartwig.hmftools.common.purple.FittedCopyNumberWriter;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.FittedPurityWriter;
+import com.hartwig.hmftools.common.purple.FittedRegion;
+import com.hartwig.hmftools.common.purple.FittedRegionFactory;
+import com.hartwig.hmftools.common.purple.FittedRegionWriter;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionZipper;
@@ -81,11 +81,11 @@ public class PurityPloidyEstimateApplication {
             System.exit(1);
         }
 
-        final FittedCopyNumberFactory fittedCopyNumberFactory = new FittedCopyNumberFactory(MAX_PLOIDY,
+        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(MAX_PLOIDY,
                 defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT));
 
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, MIN_PURITY, MAX_PURITY,
-                PURITY_INCREMENTS, MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedCopyNumberFactory);
+                PURITY_INCREMENTS, MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedRegionFactory);
 
         LOGGER.info("Loading germline variant data");
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
@@ -116,12 +116,11 @@ public class PurityPloidyEstimateApplication {
             FittedPurityWriter.writePurity(purityFile, purity);
 
             final FittedPurity bestFit = purity.get(0);
-            final List<FittedCopyNumber> fittedCopyNumbers = fittedCopyNumberFactory.fittedCopyNumber(bestFit.purity(),
+            final List<FittedRegion> fittedRegions = fittedRegionFactory.fittedCopyNumber(bestFit.purity(),
                     bestFit.normFactor(), enrichedCopyNumbers);
 
-            final List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(
-                    fittedCopyNumbers);
-            final List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedCopyNumbers,
+            final List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(fittedRegions);
+            final List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedRegions,
                     highConfidence);
 
             final FittedPurityScore score = FittedPurityScoreFactory.score(purity, smoothRegions);
@@ -132,11 +131,11 @@ public class PurityPloidyEstimateApplication {
             if (cmd.hasOption(DEBUG)) {
                 final String fittedFile = freecDirectory + File.separator + tumorSample + ".purple.fitted";
                 LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
-                final List<FittedCopyNumber> broadCopyNumber = ConsolidatedRegionZipper.insertHighConfidenceRegions(
-                        highConfidence, fittedCopyNumbers);
-                final List<FittedCopyNumber> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(
+                final List<FittedRegion> broadCopyNumber = ConsolidatedRegionZipper.insertHighConfidenceRegions(
+                        highConfidence, fittedRegions);
+                final List<FittedRegion> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(
                         smoothRegions, broadCopyNumber);
-                FittedCopyNumberWriter.writeCopyNumber(fittedFile, smoothCopyNumbers);
+                FittedRegionWriter.writeCopyNumber(fittedFile, smoothCopyNumbers);
             }
         }
 

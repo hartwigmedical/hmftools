@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.FittedCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedRegion;
 
 import org.junit.Test;
 
@@ -38,7 +38,7 @@ public class SmoothedRegionTest {
     @Test
     public void beforeFirstBroadRegion() {
         final List<ConsolidatedRegion> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
-        final List<FittedCopyNumber> copyNumbers = Lists.newArrayList(
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(
                 createFittedCopyNumber(1, 300, 1),
                 createFittedCopyNumber(301, 1000, 2),
                 createFittedCopyNumber(1001, 2000, 2));
@@ -55,7 +55,7 @@ public class SmoothedRegionTest {
         final List<ConsolidatedRegion> broadRegions = Lists.newArrayList(
                 createRegion(1001, 2000, 2),
                 createRegion(3001, 4000, 3));
-        final List<FittedCopyNumber> copyNumbers = Lists.newArrayList(
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(
                 createFittedCopyNumber(1001, 2000, 2),
                 createFittedCopyNumber(2001, 2200, 2),
                 createFittedCopyNumber(2201, 2500, 1),
@@ -73,7 +73,7 @@ public class SmoothedRegionTest {
     @Test
     public void afterLastBroadRegion() {
         final List<ConsolidatedRegion> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
-        final List<FittedCopyNumber> copyNumbers = Lists.newArrayList(
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(
                 createFittedCopyNumber(1001, 2000, 2),
                 createFittedCopyNumber(2001, 3000, 2),
                 createFittedCopyNumber(3001, 5000, 5));
@@ -92,7 +92,7 @@ public class SmoothedRegionTest {
         assertEquals(expectedCopyNumber, victim.averageTumorCopyNumber(), EPSILON);
     }
 
-    private FittedCopyNumber createFittedCopyNumber(long start, long end, double copyNumber) {
+    private FittedRegion createFittedCopyNumber(long start, long end, double copyNumber) {
         return ConsolidatedRegionBuilderTest.create("1", start, end, 10, 0.5, copyNumber);
     }
 

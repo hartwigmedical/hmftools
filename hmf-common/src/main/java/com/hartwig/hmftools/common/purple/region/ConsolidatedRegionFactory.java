@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.FittedCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +18,12 @@ public enum ConsolidatedRegionFactory {
     ;
 
     @NotNull
-    public static List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedCopyNumber> copyNumbers) {
-        return new HighConfidenceRegions().highConfidence(copyNumbers);
+    public static List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
+        return new HighConfidenceRegions().highConfidence(fittedRegions);
     }
 
     @NotNull
-    public static List<ConsolidatedRegion> smooth(@NotNull final List<FittedCopyNumber> copyNumbers,
+    public static List<ConsolidatedRegion> smooth(@NotNull final List<FittedRegion> fittedRegions,
             @NotNull final List<ConsolidatedRegion> broadRegions) {
         final List<ConsolidatedRegion> result = Lists.newArrayList();
 
@@ -31,7 +31,7 @@ public enum ConsolidatedRegionFactory {
                 Collectors.toCollection(LinkedHashSet::new));
 
         for (final String orderedChromosome : orderedChromosomes) {
-            final List<FittedCopyNumber> chromosomeCopyNumbers = copyNumbers.stream().filter(
+            final List<FittedRegion> chromosomeCopyNumbers = fittedRegions.stream().filter(
                     matchesChromosome(orderedChromosome)).collect(toList());
 
             final List<ConsolidatedRegion> chromosomeBroadRegions = broadRegions.stream().filter(

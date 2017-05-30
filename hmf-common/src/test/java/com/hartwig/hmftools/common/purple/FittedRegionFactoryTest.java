@@ -1,25 +1,25 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.NORMAL_BAF;
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.bafDeviation;
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.cnvDeviation;
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAF;
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelBAFToMinimizeDeviation;
-import static com.hartwig.hmftools.common.purple.FittedCopyNumberFactory.modelRatio;
+import static com.hartwig.hmftools.common.purple.FittedRegionFactory.NORMAL_BAF;
+import static com.hartwig.hmftools.common.purple.FittedRegionFactory.bafDeviation;
+import static com.hartwig.hmftools.common.purple.FittedRegionFactory.cnvDeviation;
+import static com.hartwig.hmftools.common.purple.FittedRegionFactory.modelBAF;
+import static com.hartwig.hmftools.common.purple.FittedRegionFactory.modelBAFToMinimizeDeviation;
+import static com.hartwig.hmftools.common.purple.FittedRegionFactory.modelRatio;
 
 import static org.junit.Assert.assertEquals;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class FittedCopyNumberFactoryTest {
+public class FittedRegionFactoryTest {
 
     private static final double EPSILON = 1e-10;
 
     @Test
     public void expectedFit() {
-        final FittedCopyNumberFactory victim = new FittedCopyNumberFactory(12, 0.2);
-        final FittedCopyNumber result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
+        final FittedRegionFactory victim = new FittedRegionFactory(12, 0.2);
+        final FittedRegion result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);

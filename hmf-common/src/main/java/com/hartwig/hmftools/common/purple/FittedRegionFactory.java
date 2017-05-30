@@ -13,31 +13,31 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FittedCopyNumberFactory {
+public class FittedRegionFactory {
 
     static final double NORMAL_BAF = 0.533;
 
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
 
-    public FittedCopyNumberFactory(int maxPloidy, double cnvRatioWeightFactor) {
+    public FittedRegionFactory(int maxPloidy, double cnvRatioWeightFactor) {
         this.maxPloidy = maxPloidy;
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
     }
 
     @NotNull
-    public List<FittedCopyNumber> fittedCopyNumber(final double purity, final double normFactor,
+    public List<FittedRegion> fittedCopyNumber(final double purity, final double normFactor,
             @NotNull final Collection<EnrichedRegion> copyNumbers) {
         return copyNumbers.stream().map(x -> fittedCopyNumber(purity, normFactor, x)).collect(Collectors.toList());
     }
 
-    FittedCopyNumber fittedCopyNumber(double purity, double normFactor, EnrichedRegion copyNumber) {
+    FittedRegion fittedCopyNumber(double purity, double normFactor, EnrichedRegion copyNumber) {
         double minDeviation = 0;
         double observedBAF = copyNumber.mBAF();
         double observedTumorRatio = copyNumber.tumorRatio();
         double tumorCopyNumber = purityAdjustedCopynumber(purity, normFactor, observedTumorRatio);
 
-        ImmutableFittedCopyNumber.Builder builder = ImmutableFittedCopyNumber.builder()
+        ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(copyNumber)
                 .status(FreecStatus.fromNormalRatio(copyNumber.normalRatio()))
                 .bafCount(copyNumber.mBAFCount())
@@ -49,8 +49,7 @@ public class FittedCopyNumberFactory {
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
                 .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / copyNumber.normalRatio() / normFactor * 2))
-                .value((int) Math.round(tumorCopyNumber));
+                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / copyNumber.normalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);

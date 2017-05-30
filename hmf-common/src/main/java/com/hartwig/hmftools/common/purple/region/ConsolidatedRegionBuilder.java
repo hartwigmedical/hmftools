@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.region;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.FittedCopyNumber;
+import com.hartwig.hmftools.common.purple.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,10 +18,10 @@ class ConsolidatedRegionBuilder {
     private double sumWeightedCopyNumber;
     private double sumWeightedRefNormalisedCopyNumber;
 
-    ConsolidatedRegionBuilder(@NotNull final FittedCopyNumber copyNumber) {
-        this.chromosome = copyNumber.chromosome();
-        this.start = copyNumber.start();
-        extendRegion(copyNumber);
+    ConsolidatedRegionBuilder(@NotNull final FittedRegion fittedRegion) {
+        this.chromosome = fittedRegion.chromosome();
+        this.start = fittedRegion.start();
+        extendRegion(fittedRegion);
     }
 
     public String chromosome() {
@@ -48,7 +48,7 @@ class ConsolidatedRegionBuilder {
         return totalWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalWeight;
     }
 
-    void extendRegion(@NotNull final FittedCopyNumber value) {
+    void extendRegion(@NotNull final FittedRegion value) {
         assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
 
         start = Math.min(value.start(), start);
