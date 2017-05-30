@@ -22,8 +22,7 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
     @Nullable
     private PurpleCopyNumber consolidatedRegion;
 
-    private PurpleRegionZipper(
-            @NotNull final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform) {
+    private PurpleRegionZipper(@NotNull final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform) {
         this.transform = transform;
     }
 
@@ -46,13 +45,21 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
         }
     }
 
+    static List<FittedRegion> updateRegionsWithCopyNumbers(@NotNull final List<FittedRegion> fittedRegions,
+            @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
+            @NotNull final List<PurpleCopyNumber> smoothRegions) {
+        return insertHighConfidenceRegions(highConfidenceRegions, insertSmoothRegions(smoothRegions, fittedRegions));
+    }
+
     @NotNull
     static List<FittedRegion> insertSmoothRegions(@NotNull final List<PurpleCopyNumber> smoothRegions,
             @NotNull final List<FittedRegion> fittedRegions) {
         BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedRegion
-                .builder().from(
-                copyNumber).segmentBAF(consolidatedRegion.averageObservedBAF()).segmentTumorCopyNumber(
-                consolidatedRegion.averageTumorCopyNumber()).build();
+                .builder()
+                .from(copyNumber)
+                .segmentBAF(consolidatedRegion.averageObservedBAF())
+                .segmentTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
+                .build();
 
         PurpleRegionZipper zipper = new PurpleRegionZipper(transform);
         RegionZipper.zip(smoothRegions, fittedRegions, zipper);
@@ -60,12 +67,14 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
     }
 
     @NotNull
-    static List<FittedRegion> insertHighConfidenceRegions(
-            @NotNull final List<PurpleCopyNumber> highConfidenceRegions, @NotNull final List<FittedRegion> fittedRegions) {
+    static List<FittedRegion> insertHighConfidenceRegions(@NotNull final List<PurpleCopyNumber> highConfidenceRegions,
+            @NotNull final List<FittedRegion> fittedRegions) {
         BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform = (consolidatedRegion, copyNumber) -> ImmutableFittedRegion
-                .builder().from(
-                copyNumber).broadBAF(consolidatedRegion.averageObservedBAF()).broadTumorCopyNumber(
-                consolidatedRegion.averageTumorCopyNumber()).build();
+                .builder()
+                .from(copyNumber)
+                .broadBAF(consolidatedRegion.averageObservedBAF())
+                .broadTumorCopyNumber(consolidatedRegion.averageTumorCopyNumber())
+                .build();
 
         PurpleRegionZipper zipper = new PurpleRegionZipper(transform);
         RegionZipper.zip(highConfidenceRegions, fittedRegions, zipper);
