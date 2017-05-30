@@ -100,7 +100,7 @@ public class PurityPloidyEstimateApplication {
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
-        LOGGER.info("Combining observations");
+        LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(
                 MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
         final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants,

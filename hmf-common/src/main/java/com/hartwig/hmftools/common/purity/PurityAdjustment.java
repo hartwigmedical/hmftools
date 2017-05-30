@@ -5,19 +5,21 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 public enum PurityAdjustment {
     ;
 
-    public static double purityAdjustedCopynumber(double purity, double normFactor, double ratio) {
+    public static double purityAdjustedCopyNumber(final double purity, final double normFactor, final double ratio) {
         return 2 + 2 * (ratio - normFactor) / purity / normFactor;
     }
 
-    public static double purityAdjustedSomaticVariants(double purity, double ploidy, double observedVAF) {
+    public static double purityAdjustedSomaticVariants(final double purity, final double ploidy,
+            final double observedVAF) {
         return purityAdjustedFrequency(purity, ploidy, observedVAF, 0);
     }
 
-    public static double purityAdjustedBAF(double purity, int ploidy, double observedBAF) {
+    public static double purityAdjustedBAF(final double purity, final int ploidy, final double observedBAF) {
         return purityAdjustedFrequency(purity, ploidy, observedBAF, 0.5);
     }
 
-    private static double purityAdjustedFrequency(double purity, double ploidy, double observedFrequency, double normalFrequency) {
+    private static double purityAdjustedFrequency(final double purity, final double ploidy,
+            final double observedFrequency, final double normalFrequency) {
         assert (Doubles.greaterThan(ploidy, 0));
         assert (Doubles.greaterThan(purity, 0));
 
@@ -27,5 +29,4 @@ public enum PurityAdjustment {
 
         return (observedFrequency * (normalPloidy + tumorPloidy) - normalAmount) / ploidy / purity;
     }
-
 }

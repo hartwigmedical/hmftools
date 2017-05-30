@@ -21,5 +21,4 @@ public class FittedPurityScoreFactoryTest
 
         assertTrue(isPolyclonal(3.251));
     }
-
 }

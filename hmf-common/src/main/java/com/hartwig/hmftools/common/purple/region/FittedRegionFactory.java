@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.region;
 
 import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedBAF;
-import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedCopynumber;
+import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedCopyNumber;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,12 +15,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactory {
 
+    @VisibleForTesting
     static final double NORMAL_BAF = 0.533;
 
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
 
-    public FittedRegionFactory(int maxPloidy, double cnvRatioWeightFactor) {
+    public FittedRegionFactory(final int maxPloidy, final double cnvRatioWeightFactor) {
         this.maxPloidy = maxPloidy;
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
     }
@@ -37,25 +38,21 @@ public class FittedRegionFactory {
         double minDeviation = 0;
         double observedBAF = observedRegion.observedBAF();
         double observedTumorRatio = observedRegion.observedTumorRatio();
-        double tumorCopyNumber = purityAdjustedCopynumber(purity, normFactor, observedTumorRatio);
+        double tumorCopyNumber = purityAdjustedCopyNumber(purity, normFactor, observedTumorRatio);
 
-        ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
-                .from(observedRegion)
-                .status(FreecStatus.fromNormalRatio(observedRegion.observedNormalRatio()))
-                .broadBAF(0)
-                .broadTumorCopyNumber(0)
-                .segmentBAF(0)
-                .segmentTumorCopyNumber(0)
-                .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
+        ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder().from(observedRegion).status(
+                FreecStatus.fromNormalRatio(observedRegion.observedNormalRatio())).broadBAF(0).broadTumorCopyNumber(
+                0).segmentBAF(0).segmentTumorCopyNumber(0).tumorCopyNumber(tumorCopyNumber).refNormalisedCopyNumber(
+                Doubles.replaceNaNWithZero(
+                        observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
-            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0
-                    ? new double[] { 0, 0 }
-                    : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0 ?
+                    new double[] { 0, 0 } :
+                    modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
@@ -64,13 +61,9 @@ public class FittedRegionFactory {
                     Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
 
             if (ploidy == 1 || deviation < minDeviation) {
-                builder.fittedPloidy(ploidy)
-                        .modelBAF(modelBAF)
-                        .modelTumorRatio(modelRatio)
-                        .bafDeviation(bafDeviation)
-                        .cnvDeviation(cnvDeviation)
-                        .purityAdjustedBAF(purityAdjustedBAF(purity, ploidy, observedBAF))
-                        .deviation(deviation);
+                builder.fittedPloidy(ploidy).modelBAF(modelBAF).modelTumorRatio(modelRatio).bafDeviation(
+                        bafDeviation).cnvDeviation(cnvDeviation).purityAdjustedBAF(
+                        purityAdjustedBAF(purity, ploidy, observedBAF)).deviation(deviation);
                 minDeviation = deviation;
             }
         }
@@ -79,17 +72,18 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    static double modelRatio(double purity, double normFactor, int ploidy) {
+    static double modelRatio(final double purity, final double normFactor, final int ploidy) {
         return normFactor + (ploidy - 2) * purity * normFactor / 2d;
     }
 
     @VisibleForTesting
-    static double cnvDeviation(double cnvRatioWeighFactor, double modelCNVRatio, double actualRatio) {
+    static double cnvDeviation(final double cnvRatioWeighFactor, final double modelCNVRatio,
+            final double actualRatio) {
         return cnvRatioWeighFactor * Math.abs(modelCNVRatio - actualRatio);
     }
 
     @VisibleForTesting
-    static double bafDeviation(boolean heterozygous, double modelBAF, double actualBAF) {
+    static double bafDeviation(final boolean heterozygous, final double modelBAF, final double actualBAF) {
         if (heterozygous && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
             return 0;
         }
@@ -105,9 +99,9 @@ public class FittedRegionFactory {
         int minBetaAllele = (int) Math.round(ploidy / 2d);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
 
-            boolean isHetrozygous = ploidy / betaAllele == 2;
-            double modelBAF = isHetrozygous ? NORMAL_BAF : modelBAF(purity, ploidy, betaAllele);
-            double modelDeviation = bafDeviation(isHetrozygous, modelBAF, actualBAF);
+            boolean isHeterozygous = ploidy / betaAllele == 2;
+            double modelBAF = isHeterozygous ? NORMAL_BAF : modelBAF(purity, ploidy, betaAllele);
+            double modelDeviation = bafDeviation(isHeterozygous, modelBAF, actualBAF);
 
             if (betaAllele == minBetaAllele || modelDeviation < deviation) {
                 result = modelBAF;
@@ -115,7 +109,7 @@ public class FittedRegionFactory {
             }
         }
 
-        return new double[]{result, deviation};
+        return new double[] { result, deviation };
     }
 
     @VisibleForTesting

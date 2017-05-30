@@ -40,7 +40,7 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     }
 
     @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<GenomeRegion> segments,
+    public List<ObservedRegion> combine(@NotNull final List<GenomeRegion> regions,
             @NotNull final List<GermlineVariant> variants, @NotNull final List<FreecRatio> tumorRatios,
             @NotNull final List<FreecRatio> normalRatios) {
         baf.reset();
@@ -48,7 +48,7 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
         normalRatio.reset();
         result.clear();
 
-        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(segments, this);
+        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(regions, this);
         zipper.addPositions(variants, this::variant);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
         zipper.addPositions(normalRatios, normalRatio::accumulate);

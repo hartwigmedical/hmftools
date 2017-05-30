@@ -47,23 +47,22 @@ public class FittedPurityFactory {
         final List<FittedPurity> result = Lists.newArrayList();
 
         int totalBAFCount = 0;
-        final List<ObservedRegion> filteredCopyNumbers = Lists.newArrayList();
-        for (final ObservedRegion copyNumber : observedRegions) {
-            if (copyNumber.bafCount() > 0 && positiveOrZero(copyNumber.observedTumorRatio())
-                    && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
-                totalBAFCount += copyNumber.bafCount();
-                filteredCopyNumbers.add(copyNumber);
+        final List<ObservedRegion> filteredRegions = Lists.newArrayList();
+        for (final ObservedRegion region : observedRegions) {
+            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio())
+                    && Chromosomes.asInt(region.chromosome()) <= 22) {
+                totalBAFCount += region.bafCount();
+                filteredRegions.add(region);
             }
         }
 
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
             for (double normFactor = minNormFactor; lessOrEqual(normFactor,
                     maxNormFactor); normFactor += normFactorIncrements) {
-
-                double impliedPloidy = PurityAdjustment.purityAdjustedCopynumber(purity, normFactor, 1);
+                double impliedPloidy = PurityAdjustment.purityAdjustedCopyNumber(purity, normFactor, 1);
 
                 if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
-                    result.add(fitPurity(purity, normFactor, totalBAFCount, filteredCopyNumbers));
+                    result.add(fitPurity(purity, normFactor, totalBAFCount, filteredRegions));
                 }
             }
         }
@@ -73,16 +72,15 @@ public class FittedPurityFactory {
     }
 
     @NotNull
-    private FittedPurity fitPurity(double purity, double normFactor, double sumWeight,
-            Collection<ObservedRegion> observedRegions) {
+    private FittedPurity fitPurity(final double purity, final double normFactor, final double sumWeight,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;
         double modelBAFDeviation = 0;
 
-        for (ObservedRegion enrichedRegion : observedRegions) {
-            final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor,
-                    enrichedRegion);
+        for (final ObservedRegion enrichedRegion : observedRegions) {
+            final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
             modelDeviation += enrichedRegion.bafCount() / sumWeight * fittedRegion.deviation();
             modelBAFDeviation += enrichedRegion.bafCount() / sumWeight * fittedRegion.bafDeviation();
             if (fittedRegion.fittedPloidy() == 2) {

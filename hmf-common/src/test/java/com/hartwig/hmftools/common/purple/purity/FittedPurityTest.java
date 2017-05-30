@@ -16,12 +16,7 @@ public class FittedPurityTest {
 
     @NotNull
     private static FittedPurity create(final double purity, final double normFactor) {
-        return ImmutableFittedPurity.builder()
-                .score(0)
-                .diploidProportion(0)
-                .modelBAFDeviation(0)
-                .purity(purity)
-                .normFactor(normFactor)
-                .build();
+        return ImmutableFittedPurity.builder().score(0).diploidProportion(0).modelBAFDeviation(0).purity(
+                purity).normFactor(normFactor).build();
     }
 }

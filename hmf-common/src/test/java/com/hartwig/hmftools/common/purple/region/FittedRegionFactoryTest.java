@@ -28,15 +28,8 @@ public class FittedRegionFactoryTest {
 
     @NotNull
     private static ObservedRegion create(final double baf, final double ratio) {
-        return ImmutableEnrichedRegion.builder()
-                .observedBAF(baf)
-                .bafCount(1)
-                .chromosome("1")
-                .start(1)
-                .end(2)
-                .observedTumorRatio(ratio)
-                .observedNormalRatio(1)
-                .build();
+        return ImmutableEnrichedRegion.builder().observedBAF(baf).bafCount(1).chromosome("1").start(1).end(
+                2).observedTumorRatio(ratio).observedNormalRatio(1).build();
     }
 
     @Test

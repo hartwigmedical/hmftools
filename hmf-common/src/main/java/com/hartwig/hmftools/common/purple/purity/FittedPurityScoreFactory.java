@@ -18,58 +18,50 @@ public class FittedPurityScoreFactory {
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
     @NotNull
-    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities, @NotNull final List<PurpleCopyNumber> regions) {
-        ImmutableFittedPurityScore.Builder builder = ImmutableFittedPurityScore.builder()
-                .minPloidy(0)
-                .minPurity(0)
-                .maxPloidy(0)
-                .maxPurity(0)
-                .polyclonalProportion(polyclonalProproption(regions));
+    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities,
+            @NotNull final List<PurpleCopyNumber> regions) {
+        ImmutableFittedPurityScore.Builder builder = ImmutableFittedPurityScore.builder().minPloidy(0).minPurity(
+                0).maxPloidy(0).maxPurity(0).polyclonalProportion(polyclonalProproption(regions));
 
         if (!purities.isEmpty()) {
             Collections.sort(purities);
 
-            FittedPurity best = purities.get(0);
+            final FittedPurity best = purities.get(0);
 
-            List<FittedPurity> withinPercent = purities.stream()
-                    .filter(inPercentRange(PERCENT_RANGE, best.score()))
-                    .collect(Collectors.toList());
+            final List<FittedPurity> withinPercent = purities.stream().filter(
+                    inPercentRange(PERCENT_RANGE, best.score())).collect(Collectors.toList());
 
-            withinPercent.stream()
-                    .max(FittedPurityScoreFactory::comparePloidy)
-                    .ifPresent(x -> builder.maxPloidy(x.ploidy()));
-            withinPercent.stream()
-                    .min(FittedPurityScoreFactory::comparePloidy)
-                    .ifPresent(x -> builder.minPloidy(x.ploidy()));
-            withinPercent.stream()
-                    .max(FittedPurityScoreFactory::comparePurity)
-                    .ifPresent(x -> builder.maxPurity(x.purity()));
-            withinPercent.stream()
-                    .min(FittedPurityScoreFactory::comparePurity)
-                    .ifPresent(x -> builder.minPurity(x.purity()));
+            withinPercent.stream().max(FittedPurityScoreFactory::comparePloidy).ifPresent(
+                    x -> builder.maxPloidy(x.ploidy()));
+            withinPercent.stream().min(FittedPurityScoreFactory::comparePloidy).ifPresent(
+                    x -> builder.minPloidy(x.ploidy()));
+            withinPercent.stream().max(FittedPurityScoreFactory::comparePurity).ifPresent(
+                    x -> builder.maxPurity(x.purity()));
+            withinPercent.stream().min(FittedPurityScoreFactory::comparePurity).ifPresent(
+                    x -> builder.minPurity(x.purity()));
         }
 
         return builder.build();
     }
 
-    private static int comparePurity(@NotNull FittedPurity o1, @NotNull FittedPurity o2) {
+    private static int comparePurity(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
         return Double.compare(o1.purity(), o2.purity());
     }
 
-    private static int comparePloidy(@NotNull FittedPurity o1, @NotNull FittedPurity o2) {
+    private static int comparePloidy(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
         return Double.compare(o1.ploidy(), o2.ploidy());
     }
 
     @NotNull
-    private static Predicate<FittedPurity> inPercentRange(double percent, double score) {
+    private static Predicate<FittedPurity> inPercentRange(final double percent, final double score) {
         return fittedPurity -> Doubles.lessOrEqual(Math.abs((fittedPurity.score() - score) / score), percent);
     }
 
-    private static double polyclonalProproption(@NotNull Collection<PurpleCopyNumber> regions) {
+    private static double polyclonalProproption(@NotNull final Collection<PurpleCopyNumber> regions) {
         int polyclonalCount = 0;
         int totalCount = 0;
 
-        for (PurpleCopyNumber region : regions) {
+        for (final PurpleCopyNumber region : regions) {
             totalCount += region.bafCount();
             if (isPolyclonal(region.averageTumorCopyNumber())) {
                 polyclonalCount += region.bafCount();
@@ -80,7 +72,7 @@ public class FittedPurityScoreFactory {
     }
 
     @VisibleForTesting
-    static boolean isPolyclonal(double copyNumber) {
+    static boolean isPolyclonal(final double copyNumber) {
         double remainder = Math.abs(copyNumber - Math.round(copyNumber));
         return Doubles.greaterThan(remainder, POLYCLONAL_DISTANCE);
     }
