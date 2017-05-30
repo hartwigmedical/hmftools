@@ -48,12 +48,8 @@ public final class VCFFileLoader {
         final String header = extractHeader(lines);
         final String sample = SomaticVariantFactory.sampleFromHeaderLine(header);
         final List<SomaticVariant> variants = variants(lines, SomaticVariantFactory::fromVCFLine);
-        return ImmutableVCFSomaticFile.builder()
-                .sample(sample)
-                .originalMetaInformationLines(metaInformationLines)
-                .originalHeaderLine(header)
-                .variants(variants)
-                .build();
+        return ImmutableVCFSomaticFile.builder().sample(sample).originalMetaInformationLines(
+                metaInformationLines).originalHeaderLine(header).variants(variants).build();
     }
 
     @NotNull
@@ -63,13 +59,9 @@ public final class VCFFileLoader {
         final String refSample = GermlineVariantFactory.refSampleFromHeaderLine(header);
         final String tumorSample = GermlineVariantFactory.tumorSampleFromHeaderLine(header);
         final List<GermlineVariant> variants = variants(lines, GermlineVariantFactory::fromVCFLine);
-        return ImmutableVCFGermlineFile.builder()
-                .refSample(refSample)
-                .tumorSample(tumorSample)
-                .originalMetaInformationLines(metaInformationLines)
-                .originalHeaderLine(header)
-                .variants(variants)
-                .build();
+        return ImmutableVCFGermlineFile.builder().refSample(refSample).tumorSample(
+                tumorSample).originalMetaInformationLines(metaInformationLines).originalHeaderLine(header).variants(
+                variants).build();
     }
 
     @NotNull
@@ -97,7 +89,8 @@ public final class VCFFileLoader {
     }
 
     @NotNull
-    private static <T extends Variant> List<T> variants(@NotNull final List<String> lines, Function<String, T> transform) {
+    private static <T extends Variant> List<T> variants(@NotNull final List<String> lines,
+            Function<String, T> transform) {
         return lines.stream().filter(new VCFDataLinePredicate()).map(transform).collect(toList());
     }
 }
