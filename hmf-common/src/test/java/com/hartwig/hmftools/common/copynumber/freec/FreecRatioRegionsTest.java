@@ -14,28 +14,30 @@ public class FreecRatioRegionsTest {
 
     @Test
     public void testSingleRegion() {
-        FreecRatio ratio = create("1", 1001, 0.5, 1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio));
+        final FreecRatio ratio = create("1", 1001, 0.5, 1);
+        final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio));
         assertEquals(1, regions.size());
         assertRegion(regions.get(0), 1001, 2000);
     }
 
     @Test
-    public void testMulipleSimilarRegions() {
-        FreecRatio ratio1 = create("1", 1001, 0.5, 1);
-        FreecRatio ratio2 = create("1", 2001, 0.5, 1);
-        FreecRatio ratio3 = create("1", 3001, 0.5, 1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
+    public void testMultipleSimilarRegions() {
+        final FreecRatio ratio1 = create("1", 1001, 0.5, 1);
+        final FreecRatio ratio2 = create("1", 2001, 0.5, 1);
+        final FreecRatio ratio3 = create("1", 3001, 0.5, 1);
+        final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(
+                Lists.newArrayList(ratio1, ratio2, ratio3));
         assertEquals(1, regions.size());
         assertRegion(regions.get(0), 1001, 4000);
     }
 
     @Test
     public void testMultipleRegionsDifferentBAF() {
-        FreecRatio ratio1 = create("1", 1001, 0.5, 1);
-        FreecRatio ratio2 = create("1", 2001, 0.5, 1);
-        FreecRatio ratio3 = create("1", 3001, 0.7, 1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
+        final FreecRatio ratio1 = create("1", 1001, 0.5, 1);
+        final FreecRatio ratio2 = create("1", 2001, 0.5, 1);
+        final FreecRatio ratio3 = create("1", 3001, 0.7, 1);
+        final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(
+                Lists.newArrayList(ratio1, ratio2, ratio3));
         assertEquals(2, regions.size());
         assertRegion(regions.get(0), 1001, 3000);
         assertRegion(regions.get(1), 3001, 4000);
@@ -46,7 +48,8 @@ public class FreecRatioRegionsTest {
         FreecRatio ratio1 = create("1", 1001, 0.5, 1);
         FreecRatio ratio2 = create("1", 2001, 0.5, 1);
         FreecRatio ratio3 = create("1", 3001, 0.5, 1.1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
+        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(
+                Lists.newArrayList(ratio1, ratio2, ratio3));
         assertEquals(2, regions.size());
         assertRegion(regions.get(0), 1001, 3000);
         assertRegion(regions.get(1), 3001, 4000);
@@ -57,7 +60,8 @@ public class FreecRatioRegionsTest {
         FreecRatio ratio1 = create("1", 1001, 0.5, 1);
         FreecRatio ratio2 = create("1", 2001, 0.5, 1);
         FreecRatio ratio3 = create("2", 1001, 0.5, 1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
+        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(
+                Lists.newArrayList(ratio1, ratio2, ratio3));
         assertEquals(2, regions.size());
         assertRegion(regions.get(0), 1001, 3000);
         assertRegion(regions.get(1), 1001, 2000);
@@ -65,38 +69,37 @@ public class FreecRatioRegionsTest {
 
     @Test
     public void testMultipleRegionsMissingSections() {
-        FreecRatio ratio1 = create("1", 1001, 0.5, 1);
-        FreecRatio ratio2 = create("1", 2001, 0.5, 1);
-        FreecRatio ratio3 = create("1", 4001, 0.5, 1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
+        final FreecRatio ratio1 = create("1", 1001, 0.5, 1);
+        final FreecRatio ratio2 = create("1", 2001, 0.5, 1);
+        final FreecRatio ratio3 = create("1", 4001, 0.5, 1);
+        final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(
+                Lists.newArrayList(ratio1, ratio2, ratio3));
         assertEquals(1, regions.size());
         assertRegion(regions.get(0), 1001, 5000);
     }
 
     @Test
     public void testMultipleRegionsWithBreaks() {
-        FreecRatio ratio1 = create("1", 1001, 0.5, 1);
-        FreecRatio ratio2 = create("1", 2001, 0.5, 1);
-        FreecRatio ratio3 = create("1", 4001, 0.7, 1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
+        final FreecRatio ratio1 = create("1", 1001, 0.5, 1);
+        final FreecRatio ratio2 = create("1", 2001, 0.5, 1);
+        final FreecRatio ratio3 = create("1", 4001, 0.7, 1);
+        final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(
+                Lists.newArrayList(ratio1, ratio2, ratio3));
         assertEquals(2, regions.size());
         assertRegion(regions.get(0), 1001, 3000);
         assertRegion(regions.get(1), 4001, 5000);
     }
 
-    private void assertRegion(GenomeRegion victim, long expectedStart, long expectedEnd) {
-        assertEquals(expectedStart, victim.start());
-        assertEquals(expectedEnd, victim.end());
+    private static void assertRegion(@NotNull final GenomeRegion region, final long expectedStart,
+            final long expectedEnd) {
+        assertEquals(expectedStart, region.start());
+        assertEquals(expectedEnd, region.end());
     }
 
-
-    private static FreecRatio create(@NotNull  String chromosome, long position, double estimatedBaf, double medianRatio) {
-        return ImmutableFreecRatio.builder()
-                .chromosome(chromosome)
-                .position(position)
-                .estimatedBAF(estimatedBaf)
-                .ratio(medianRatio)
-                .medianRatio(medianRatio)
-                .build();
+    @NotNull
+    private static FreecRatio create(@NotNull final String chromosome, final long position, final double estimatedBaf,
+            final double medianRatio) {
+        return ImmutableFreecRatio.builder().chromosome(chromosome).position(position).estimatedBAF(
+                estimatedBaf).ratio(medianRatio).medianRatio(medianRatio).build();
     }
 }

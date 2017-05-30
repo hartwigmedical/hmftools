@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRegion> {
 
-    private static final Set<String> GENO_TYPE = Sets.newHashSet("0/1", "0|1");
+    private static final Set<String> HETEROZYGOUS_GENO_TYPES = Sets.newHashSet("0/1", "0|1");
 
     private final double minRefAlleleFrequency;
     private final double maxRefAlleleFrequency;
@@ -40,7 +40,7 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     }
 
     @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<GenomeRegion> copyNumbers,
+    public List<ObservedRegion> combine(@NotNull final List<GenomeRegion> segments,
             @NotNull final List<GermlineVariant> variants, @NotNull final List<FreecRatio> tumorRatios,
             @NotNull final List<FreecRatio> normalRatios) {
         baf.reset();
@@ -48,7 +48,7 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
         normalRatio.reset();
         result.clear();
 
-        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(copyNumbers, this);
+        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(segments, this);
         zipper.addPositions(variants, this::variant);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
         zipper.addPositions(normalRatios, normalRatio::accumulate);
@@ -68,21 +68,16 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     public void exit(@NotNull final GenomeRegion region) {
         double myTumorRatio = tumorRatio.meanRatio();
         double myNormalRatio = normalRatio.meanRatio();
-        EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder()
-                .from(region)
-                .bafCount(baf.count())
-                .observedBAF(baf.medianBaf())
-                .observedTumorRatio(myTumorRatio)
-                .observedNormalRatio(myNormalRatio)
-                .build();
+        EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder().from(region).bafCount(baf.count()).observedBAF(
+                baf.medianBaf()).observedTumorRatio(myTumorRatio).observedNormalRatio(myNormalRatio).build();
 
         result.add(copyNumber);
     }
 
     private void variant(@NotNull final GermlineVariant variant) {
         final GermlineSampleData tumorData = variant.tumorData();
-        if (tumorData == null || !GENO_TYPE.contains(variant.refData().genoType()) || variant.type() != VariantType.SNP
-                || variant.refData().alleleFrequency() <= minRefAlleleFrequency
+        if (tumorData == null || !HETEROZYGOUS_GENO_TYPES.contains(variant.refData().genoType())
+                || variant.type() != VariantType.SNP || variant.refData().alleleFrequency() <= minRefAlleleFrequency
                 || variant.refData().alleleFrequency() >= maxRefAlleleFrequency
                 || variant.refData().combinedDepth() <= minCombinedDepth
                 || variant.refData().combinedDepth() >= maxCombinedDepth) {
