@@ -26,6 +26,7 @@ public class FreecRatioFactoryTest {
         assertEquals(1000, ratio.position());
         assertEquals(0.3, ratio.ratio(), EPSILON);
         assertEquals(0.28, ratio.medianRatio(), EPSILON);
+        assertEquals(2, ratio.estimatedBAF(), EPSILON);
     }
 
     @Test

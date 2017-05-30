@@ -38,7 +38,7 @@ public enum FreecRatioRegions {
     }
 
     @NotNull
-    private static GenomeRegion create(@NotNull final FreecRatio start, FreecRatio end) {
+    private static GenomeRegion create(@NotNull final FreecRatio start, @NotNull final FreecRatio end) {
         return ImmutableBEDGenomeRegion.builder().chromosome(start.chromosome())
                 .start(start.position()).end(end.position() + SEGMENT_SIZE - 1).build();
     }
@@ -47,5 +47,4 @@ public enum FreecRatioRegions {
         return !first.chromosome().equals(second.chromosome()) || !Doubles.equal(first.medianRatio(),
                 second.medianRatio()) || !Doubles.equal(first.estimatedBAF(), second.estimatedBAF());
     }
-
 }

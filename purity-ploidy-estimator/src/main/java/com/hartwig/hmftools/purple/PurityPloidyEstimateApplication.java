@@ -96,6 +96,7 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Loading {} Freec data", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
+        // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
