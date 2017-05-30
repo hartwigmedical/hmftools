@@ -34,7 +34,7 @@ class HighConfidenceRegions {
         return result;
     }
 
-    private void process(@NotNull FittedRegion current) {
+    private void process(@NotNull final FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
             builder = new PurpleCopyNumberBuilder(current);
@@ -53,11 +53,12 @@ class HighConfidenceRegions {
         }
     }
 
-    private boolean isNewChromosome(@NotNull FittedRegion current, @Nullable FittedRegion previous) {
+    private static boolean isNewChromosome(@NotNull final FittedRegion current,
+            @Nullable final FittedRegion previous) {
         return previous != null && !current.chromosome().equals(previous.chromosome());
     }
 
-    private boolean isLargeDeviation(@NotNull FittedRegion current) {
+    private boolean isLargeDeviation(@NotNull final FittedRegion current) {
         assert builder != null;
 
         double copyNumberDeviation = Math.abs(current.tumorCopyNumber() - builder.averageTumorCopyNumber());
