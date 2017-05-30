@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ConsolidatedRegion implements GenomeRegion {
+public abstract class PurpleCopyNumber implements CopyNumber {
 
     public abstract int bafCount();
 
@@ -18,4 +18,8 @@ public abstract class ConsolidatedRegion implements GenomeRegion {
 
     public abstract double averageTumorCopyNumber();
 
+    @Override
+    public int value() {
+        return (int) Math.round(averageTumorCopyNumber());
+    }
 }

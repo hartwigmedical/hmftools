@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.purple.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class ConsolidatedRegionBuilder {
+class PurpleCopyNumberBuilder {
 
     private final String chromosome;
     private long start = 1;
@@ -18,7 +18,7 @@ class ConsolidatedRegionBuilder {
     private double sumWeightedCopyNumber;
     private double sumWeightedRefNormalisedCopyNumber;
 
-    ConsolidatedRegionBuilder(@NotNull final FittedRegion fittedRegion) {
+    PurpleCopyNumberBuilder(@NotNull final FittedRegion fittedRegion) {
         this.chromosome = fittedRegion.chromosome();
         this.start = fittedRegion.start();
         extendRegion(fittedRegion);
@@ -89,8 +89,8 @@ class ConsolidatedRegionBuilder {
     }
 
     @NotNull
-    public ConsolidatedRegion build() {
-        return ImmutableConsolidatedRegion.builder()
+    public PurpleCopyNumber build() {
+        return ImmutablePurpleCopyNumber.builder()
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)

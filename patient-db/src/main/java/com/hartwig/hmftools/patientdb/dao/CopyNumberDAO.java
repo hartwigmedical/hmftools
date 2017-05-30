@@ -8,8 +8,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
-import com.hartwig.hmftools.common.purple.region.ImmutableConsolidatedRegion;
+import com.hartwig.hmftools.common.purple.region.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.region.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -27,13 +27,13 @@ class CopyNumberDAO {
     }
 
     @NotNull
-    public List<ConsolidatedRegion> read(@NotNull final String sample) {
-        List<ConsolidatedRegion> regions = Lists.newArrayList();
+    public List<PurpleCopyNumber> read(@NotNull final String sample) {
+        List<PurpleCopyNumber> regions = Lists.newArrayList();
 
         Result<Record> result = context.select().from(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
-            regions.add(ImmutableConsolidatedRegion.builder()
+            regions.add(ImmutablePurpleCopyNumber.builder()
                     .chromosome(record.getValue(COPYNUMBER.CHROMOSOME))
                     .start(record.getValue(COPYNUMBER.START))
                     .end(record.getValue(COPYNUMBER.END))
@@ -48,7 +48,7 @@ class CopyNumberDAO {
         return regions;
     }
 
-    public void write(@NotNull final String sample, @NotNull List<ConsolidatedRegion> regions) {
+    public void write(@NotNull final String sample, @NotNull List<PurpleCopyNumber> regions) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
@@ -61,7 +61,7 @@ class CopyNumberDAO {
     }
 
     private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep9 inserter, String sample,
-            ConsolidatedRegion region) {
+            PurpleCopyNumber region) {
         inserter.values(sample, region.chromosome(), region.start(), region.end(), region.bafCount(),
                 region.averageObservedBAF(), region.averageActualBAF(), region.averageTumorCopyNumber(), timestamp);
     }

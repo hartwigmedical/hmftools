@@ -9,14 +9,14 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum ConsolidatedRegionWriter {
+public enum PurpleCopyNumberWriter {
     ;
 
-    public static void writeRegions(@NotNull final String filePath, @NotNull Collection<ConsolidatedRegion> purity)
+    public static void writeRegions(@NotNull final String filePath, @NotNull Collection<PurpleCopyNumber> purity)
             throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().map(ConsolidatedRegionWriter::transform).forEach(lines::add);
+        purity.stream().map(PurpleCopyNumberWriter::transform).forEach(lines::add);
 
         Files.write(new File(filePath).toPath(), lines);
     }
@@ -28,7 +28,7 @@ public enum ConsolidatedRegionWriter {
     }
 
     @NotNull
-    private static String transform(@NotNull final ConsolidatedRegion region) {
+    private static String transform(@NotNull final PurpleCopyNumber region) {
         return region.chromosome() + '\t' + region.start() + '\t' + region.end() + '\t'
                 + region.averageTumorCopyNumber() + '\t' + region.bafCount() + '\t' + region.averageObservedBAF()
                 + '\t' + region.averageActualBAF();

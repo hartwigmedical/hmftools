@@ -8,7 +8,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
+import com.hartwig.hmftools.common.purple.region.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -46,7 +46,7 @@ public class GenerateCircosData {
             System.exit(-1);
         }
 
-        final List<ConsolidatedRegion> copyNumber = dbAccess.readCopynumbers(sample);
+        final List<PurpleCopyNumber> copyNumber = dbAccess.readCopynumbers(sample);
         if (copyNumber.isEmpty()) {
             LOGGER.error("Copynumber not available");
             System.exit(-1);
@@ -69,7 +69,7 @@ public class GenerateCircosData {
                 x -> x.averageTumorCopyNumber() - 2);
 
         CircosFileWriter.writeRegions(output + File.separator + sample + ".baf.circos", copyNumber,
-                ConsolidatedRegion::averageActualBAF);
+                PurpleCopyNumber::averageActualBAF);
 
         LOGGER.info("Complete Successfully");
     }

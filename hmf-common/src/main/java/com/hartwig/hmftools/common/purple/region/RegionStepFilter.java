@@ -21,14 +21,14 @@ enum RegionStepFilter {
     private static final long MIN_SIZE = 1000;
 
     @NotNull
-    static List<ConsolidatedRegion> filter(@NotNull final List<ConsolidatedRegion> region) {
-        List<ConsolidatedRegion> results = Lists.newArrayList();
+    static List<PurpleCopyNumber> filter(@NotNull final List<PurpleCopyNumber> region) {
+        List<PurpleCopyNumber> results = Lists.newArrayList();
 
         int i = 0;
         while (i < region.size()) {
-            ConsolidatedRegion first = region.get(i);
-            ConsolidatedRegion second = i + 1 < region.size() ? region.get(i + 1) : null;
-            ConsolidatedRegion third = i + 2 < region.size() ? region.get(i + 2) : null;
+            PurpleCopyNumber first = region.get(i);
+            PurpleCopyNumber second = i + 1 < region.size() ? region.get(i + 1) : null;
+            PurpleCopyNumber third = i + 2 < region.size() ? region.get(i + 2) : null;
 
             if (second != null && third != null && second.bases() == MIN_SIZE && isSameChromosome(first, third)) {
                 double myFirstSecondDifference = first.averageTumorCopyNumber() - second.averageTumorCopyNumber();
@@ -56,9 +56,9 @@ enum RegionStepFilter {
     }
 
     @NotNull
-    private static ConsolidatedRegion merge(@NotNull final ConsolidatedRegion primary,
-            @NotNull final ConsolidatedRegion secondary) {
-        return ImmutableConsolidatedRegion.builder().from(primary).start(min(primary.start(), secondary.start())).end(
+    private static PurpleCopyNumber merge(@NotNull final PurpleCopyNumber primary,
+            @NotNull final PurpleCopyNumber secondary) {
+        return ImmutablePurpleCopyNumber.builder().from(primary).start(min(primary.start(), secondary.start())).end(
                 max(primary.end(), secondary.end())).build();
     }
 

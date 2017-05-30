@@ -9,12 +9,12 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedRegion;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ConsolidatedRegionBuilderTest {
+public class PurpleCopyNumberBuilderTest {
     private static final double EPSILON = 1e-10;
 
     @Test
     public void averageOnLengthUntilNonZeroBafCount() {
-        final ConsolidatedRegionBuilder builder = new ConsolidatedRegionBuilder(create(1, 100_000_000, 3));
+        final PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(create(1, 100_000_000, 3));
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(100_000_001, 200_000_000, 4));
@@ -29,19 +29,19 @@ public class ConsolidatedRegionBuilderTest {
 
     @Test
     public void averageOnLengthForNonZeroRatio() {
-        ConsolidatedRegionBuilder builder = new ConsolidatedRegionBuilder(create(1, 100, 3));
+        PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(create(1, 100, 3));
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(101, 200, 0));
         assertAverages(builder, 0, 3);
     }
 
-    private static void assertAverages(@NotNull ConsolidatedRegionBuilder victim, double expectedBAF,
+    private static void assertAverages(@NotNull PurpleCopyNumberBuilder victim, double expectedBAF,
             double expectedRatio) {
         assertAverages(victim.build(), expectedBAF, expectedRatio);
     }
 
-    private static void assertAverages(@NotNull ConsolidatedRegion victim, double expectedBAF, double expectedRatio) {
+    private static void assertAverages(@NotNull PurpleCopyNumber victim, double expectedBAF, double expectedRatio) {
         assertEquals(expectedBAF, victim.averageObservedBAF(), EPSILON);
         assertEquals(expectedRatio, victim.averageTumorCopyNumber(), EPSILON);
     }

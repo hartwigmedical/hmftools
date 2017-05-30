@@ -13,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 class SmoothedRegions {
 
-    private final List<ConsolidatedRegion> smoothedRegions = Lists.newArrayList();
+    private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
 
-    private final List<ConsolidatedRegion> broadRegions;
+    private final List<PurpleCopyNumber> broadRegions;
     private final List<FittedRegion> copyNumbers;
 
     private static final double DIPLOID_MIN_RATIO = 0.75;
@@ -24,7 +24,7 @@ class SmoothedRegions {
     private static final double MIN_COPY_NUMBER_RANGE = 0.3;
     private static final double MAX_COPY_NUMBER_RANGE = 1.3;
 
-    SmoothedRegions(@NotNull final List<ConsolidatedRegion> broadRegions,
+    SmoothedRegions(@NotNull final List<PurpleCopyNumber> broadRegions,
             @NotNull final List<FittedRegion> copyNumbers) {
         this.broadRegions = broadRegions;
         this.copyNumbers = copyNumbers;
@@ -33,22 +33,22 @@ class SmoothedRegions {
     }
 
     @NotNull
-    List<ConsolidatedRegion> getSmoothedRegions() {
+    List<PurpleCopyNumber> getSmoothedRegions() {
         return smoothedRegions;
     }
 
     private void run() {
         if (!broadRegions.isEmpty()) {
             int largestIncludedIndex = -1;
-            ConsolidatedRegionBuilder currentBuilder;
+            PurpleCopyNumberBuilder currentBuilder;
 
             for (int i = 0; i < broadRegions.size(); i++) {
-                final ConsolidatedRegion currentRegion = broadRegions.get(i);
+                final PurpleCopyNumber currentRegion = broadRegions.get(i);
                 int startOfRegionIndex = indexOfStart(largestIncludedIndex + 1, currentRegion);
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new ConsolidatedRegionBuilder(copyNumbers.get(startOfRegionIndex));
+                currentBuilder = new PurpleCopyNumberBuilder(copyNumbers.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -70,7 +70,7 @@ class SmoothedRegions {
         }
     }
 
-    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull ConsolidatedRegionBuilder builder) {
+    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull PurpleCopyNumberBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = copyNumbers.get(i);
             if (isSimilar(copyNumber, builder)) {
@@ -84,16 +84,16 @@ class SmoothedRegions {
     }
 
     @NotNull
-    private ConsolidatedRegionBuilder forwards(int startIndex, int endIndex,
-            final @NotNull ConsolidatedRegionBuilder builder) {
-        ConsolidatedRegionBuilder current = builder;
+    private PurpleCopyNumberBuilder forwards(int startIndex, int endIndex,
+            final @NotNull PurpleCopyNumberBuilder builder) {
+        PurpleCopyNumberBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = copyNumbers.get(i);
             if (isSimilar(copyNumber, builder)) {
                 builder.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(builder.build());
-                current = new ConsolidatedRegionBuilder(copyNumber);
+                current = new PurpleCopyNumberBuilder(copyNumber);
             }
         }
 
@@ -101,10 +101,10 @@ class SmoothedRegions {
     }
 
     @NotNull
-    private ConsolidatedRegionBuilder backwards(int startIndex, int endIndex,
-            @NotNull final ConsolidatedRegionBuilder forwardBuilder) {
-        final Deque<ConsolidatedRegion> preRegions = new ArrayDeque<>();
-        ConsolidatedRegionBuilder reverseBuilder = forwardBuilder;
+    private PurpleCopyNumberBuilder backwards(int startIndex, int endIndex,
+            @NotNull final PurpleCopyNumberBuilder forwardBuilder) {
+        final Deque<PurpleCopyNumber> preRegions = new ArrayDeque<>();
+        PurpleCopyNumberBuilder reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
             final FittedRegion copyNumber = copyNumbers.get(i);
@@ -114,7 +114,7 @@ class SmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder.build());
                 }
-                reverseBuilder = new ConsolidatedRegionBuilder(copyNumber);
+                reverseBuilder = new PurpleCopyNumberBuilder(copyNumber);
             }
         }
 
@@ -127,7 +127,7 @@ class SmoothedRegions {
     }
 
     private static boolean isSimilar(@NotNull final FittedRegion copyNumber,
-            @NotNull final ConsolidatedRegionBuilder builder) {
+            @NotNull final PurpleCopyNumberBuilder builder) {
         int bafCount = copyNumber.bafCount();
         if (!isDiploid(copyNumber)) {
             return true;
@@ -167,11 +167,11 @@ class SmoothedRegions {
                 copyNumber.observedNormalRatio(), DIPLOID_MAX_RATIO);
     }
 
-    private int indexOfEnd(int minIndex, @NotNull ConsolidatedRegion region) {
+    private int indexOfEnd(int minIndex, @NotNull PurpleCopyNumber region) {
         return indexOf(minIndex, copyNumber -> copyNumber.end() == region.end());
     }
 
-    private int indexOfStart(int minIndex, @NotNull ConsolidatedRegion region) {
+    private int indexOfStart(int minIndex, @NotNull PurpleCopyNumber region) {
         return indexOf(minIndex, copyNumber -> copyNumber.start() == region.start());
     }
 

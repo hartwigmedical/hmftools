@@ -14,18 +14,18 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum ConsolidatedRegionFactory {
+public enum PurpleCopyNumberFactory {
     ;
 
     @NotNull
-    public static List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
+    public static List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
         return new HighConfidenceRegions().highConfidence(fittedRegions);
     }
 
     @NotNull
-    public static List<ConsolidatedRegion> smooth(@NotNull final List<FittedRegion> fittedRegions,
-            @NotNull final List<ConsolidatedRegion> broadRegions) {
-        final List<ConsolidatedRegion> result = Lists.newArrayList();
+    public static List<PurpleCopyNumber> smooth(@NotNull final List<FittedRegion> fittedRegions,
+            @NotNull final List<PurpleCopyNumber> broadRegions) {
+        final List<PurpleCopyNumber> result = Lists.newArrayList();
 
         final Set<String> orderedChromosomes = broadRegions.stream().map(GenomeRegion::chromosome).collect(
                 Collectors.toCollection(LinkedHashSet::new));
@@ -34,10 +34,10 @@ public enum ConsolidatedRegionFactory {
             final List<FittedRegion> chromosomeCopyNumbers = fittedRegions.stream().filter(
                     matchesChromosome(orderedChromosome)).collect(toList());
 
-            final List<ConsolidatedRegion> chromosomeBroadRegions = broadRegions.stream().filter(
+            final List<PurpleCopyNumber> chromosomeBroadRegions = broadRegions.stream().filter(
                     matchesChromosome(orderedChromosome)).collect(toList());
 
-            final List<ConsolidatedRegion> smoothRegions = new SmoothedRegions(chromosomeBroadRegions,
+            final List<PurpleCopyNumber> smoothRegions = new SmoothedRegions(chromosomeBroadRegions,
                     chromosomeCopyNumbers).getSmoothedRegions();
 
             result.addAll(RegionStepFilter.filter(smoothRegions));

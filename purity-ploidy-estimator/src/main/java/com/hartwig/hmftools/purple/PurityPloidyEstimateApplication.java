@@ -21,9 +21,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityWriter;
-import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
-import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionFactory;
-import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionZipper;
+import com.hartwig.hmftools.common.purple.region.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.region.PurpleCopyNumberFactory;
+import com.hartwig.hmftools.common.purple.region.PurpleRegionZipper;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
@@ -119,8 +119,8 @@ public class PurityPloidyEstimateApplication {
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(),
                     bestFit.normFactor(), observedRegions);
 
-            final List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(fittedRegions);
-            final List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedRegions,
+            final List<PurpleCopyNumber> highConfidence = PurpleCopyNumberFactory.highConfidence(fittedRegions);
+            final List<PurpleCopyNumber> smoothRegions = PurpleCopyNumberFactory.smooth(fittedRegions,
                     highConfidence);
 
             final FittedPurityScore score = FittedPurityScoreFactory.score(purity, smoothRegions);
@@ -131,9 +131,9 @@ public class PurityPloidyEstimateApplication {
             if (cmd.hasOption(DEBUG)) {
                 final String fittedFile = freecDirectory + File.separator + tumorSample + ".purple.fitted";
                 LOGGER.info("Writing fitted copy numbers to: {}", fittedFile);
-                final List<FittedRegion> broadCopyNumber = ConsolidatedRegionZipper.insertHighConfidenceRegions(
+                final List<FittedRegion> broadCopyNumber = PurpleRegionZipper.insertHighConfidenceRegions(
                         highConfidence, fittedRegions);
-                final List<FittedRegion> smoothCopyNumbers = ConsolidatedRegionZipper.insertSmoothRegions(
+                final List<FittedRegion> smoothCopyNumbers = PurpleRegionZipper.insertSmoothRegions(
                         smoothRegions, broadCopyNumber);
                 FittedRegionWriter.writeCopyNumber(fittedFile, smoothCopyNumbers);
             }

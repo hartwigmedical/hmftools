@@ -17,15 +17,15 @@ class HighConfidenceRegions {
     private static final double MAX_COPY_NUMBER_DEVIATION = 0.30;
 
     @NotNull
-    private final List<ConsolidatedRegion> result = Lists.newArrayList();
+    private final List<PurpleCopyNumber> result = Lists.newArrayList();
 
     @Nullable
-    private ConsolidatedRegionBuilder builder;
+    private PurpleCopyNumberBuilder builder;
     @Nullable
     private FittedRegion last;
 
     @NotNull
-    List<ConsolidatedRegion> highConfidence(@NotNull final List<FittedRegion> copyNumbers) {
+    List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> copyNumbers) {
         copyNumbers.stream().filter(
                 copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
                         && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);
@@ -37,7 +37,7 @@ class HighConfidenceRegions {
     private void process(@NotNull FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
-            builder = new ConsolidatedRegionBuilder(current);
+            builder = new PurpleCopyNumberBuilder(current);
         } else {
             assert builder != null;
             builder.extendRegion(current);

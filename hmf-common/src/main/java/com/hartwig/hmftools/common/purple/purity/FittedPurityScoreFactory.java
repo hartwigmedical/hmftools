@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
+import com.hartwig.hmftools.common.purple.region.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ public class FittedPurityScoreFactory {
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
     @NotNull
-    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities, @NotNull final List<ConsolidatedRegion> regions) {
+    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities, @NotNull final List<PurpleCopyNumber> regions) {
         ImmutableFittedPurityScore.Builder builder = ImmutableFittedPurityScore.builder()
                 .minPloidy(0)
                 .minPurity(0)
@@ -65,11 +65,11 @@ public class FittedPurityScoreFactory {
         return fittedPurity -> Doubles.lessOrEqual(Math.abs((fittedPurity.score() - score) / score), percent);
     }
 
-    private static double polyclonalProproption(@NotNull Collection<ConsolidatedRegion> regions) {
+    private static double polyclonalProproption(@NotNull Collection<PurpleCopyNumber> regions) {
         int polyclonalCount = 0;
         int totalCount = 0;
 
-        for (ConsolidatedRegion region : regions) {
+        for (PurpleCopyNumber region : regions) {
             totalCount += region.bafCount();
             if (isPolyclonal(region.averageTumorCopyNumber())) {
                 polyclonalCount += region.bafCount();

@@ -37,13 +37,13 @@ public class SmoothedRegionTest {
 
     @Test
     public void beforeFirstBroadRegion() {
-        final List<ConsolidatedRegion> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
         final List<FittedRegion> copyNumbers = Lists.newArrayList(
                 createFittedCopyNumber(1, 300, 1),
                 createFittedCopyNumber(301, 1000, 2),
                 createFittedCopyNumber(1001, 2000, 2));
 
-        final List<ConsolidatedRegion> results = new SmoothedRegions(broadRegions, copyNumbers).getSmoothedRegions();
+        final List<PurpleCopyNumber> results = new SmoothedRegions(broadRegions, copyNumbers).getSmoothedRegions();
         assertEquals(2, results.size());
 
         assertRegion(results.get(0), 1, 300, 1);
@@ -52,7 +52,7 @@ public class SmoothedRegionTest {
 
     @Test
     public void betweenBroadRegions() {
-        final List<ConsolidatedRegion> broadRegions = Lists.newArrayList(
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(
                 createRegion(1001, 2000, 2),
                 createRegion(3001, 4000, 3));
         final List<FittedRegion> copyNumbers = Lists.newArrayList(
@@ -62,7 +62,7 @@ public class SmoothedRegionTest {
                 createFittedCopyNumber(2501, 3000, 3),
                 createFittedCopyNumber(3001, 4000, 3));
 
-        final List<ConsolidatedRegion> results = new SmoothedRegions(broadRegions, copyNumbers).getSmoothedRegions();
+        final List<PurpleCopyNumber> results = new SmoothedRegions(broadRegions, copyNumbers).getSmoothedRegions();
         assertEquals(3, results.size());
 
         assertRegion(results.get(0), 1001, 2200, 2);
@@ -72,13 +72,13 @@ public class SmoothedRegionTest {
 
     @Test
     public void afterLastBroadRegion() {
-        final List<ConsolidatedRegion> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
         final List<FittedRegion> copyNumbers = Lists.newArrayList(
                 createFittedCopyNumber(1001, 2000, 2),
                 createFittedCopyNumber(2001, 3000, 2),
                 createFittedCopyNumber(3001, 5000, 5));
 
-        final List<ConsolidatedRegion> results = new SmoothedRegions(broadRegions, copyNumbers).getSmoothedRegions();
+        final List<PurpleCopyNumber> results = new SmoothedRegions(broadRegions, copyNumbers).getSmoothedRegions();
         assertEquals(2, results.size());
 
         assertRegion(results.get(0), 1001, 3000, 2);
@@ -86,18 +86,18 @@ public class SmoothedRegionTest {
     }
 
 
-    private void assertRegion(ConsolidatedRegion victim, long expectedStart, long expectedEnd, double expectedCopyNumber) {
+    private void assertRegion(PurpleCopyNumber victim, long expectedStart, long expectedEnd, double expectedCopyNumber) {
         assertEquals(expectedStart, victim.start());
         assertEquals(expectedEnd, victim.end());
         assertEquals(expectedCopyNumber, victim.averageTumorCopyNumber(), EPSILON);
     }
 
     private FittedRegion createFittedCopyNumber(long start, long end, double copyNumber) {
-        return ConsolidatedRegionBuilderTest.create("1", start, end, 10, 0.5, copyNumber);
+        return PurpleCopyNumberBuilderTest.create("1", start, end, 10, 0.5, copyNumber);
     }
 
-    private ConsolidatedRegion createRegion(long start, long end, double copyNumber) {
-        return ImmutableConsolidatedRegion.builder()
+    private PurpleCopyNumber createRegion(long start, long end, double copyNumber) {
+        return ImmutablePurpleCopyNumber.builder()
                 .chromosome("1")
                 .start(start)
                 .end(end)
