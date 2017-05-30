@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
-import java.io.Serializable;
-
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -11,25 +8,17 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class})
-public abstract class FittedRegion implements GenomeRegion, Serializable {
-
-    public abstract int bafCount();
+public abstract class FittedRegion implements ObservedRegion {
 
     public abstract int fittedPloidy();
 
     public abstract double deviation();
-
-    public abstract double observedBAF();
 
     public abstract double modelBAF();
 
     public abstract double purityAdjustedBAF();
 
     public abstract double bafDeviation();
-
-    public abstract double observedNormalRatio();
-
-    public abstract double observedTumorRatio();
 
     public abstract double modelTumorRatio();
 

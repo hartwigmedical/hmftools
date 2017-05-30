@@ -26,36 +26,34 @@ public class FittedRegionFactory {
     }
 
     @NotNull
-    public List<FittedRegion> fittedCopyNumber(final double purity, final double normFactor,
-            @NotNull final Collection<EnrichedRegion> copyNumbers) {
-        return copyNumbers.stream().map(x -> fittedCopyNumber(purity, normFactor, x)).collect(Collectors.toList());
+    public List<FittedRegion> fitRegion(final double purity, final double normFactor,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
+        return observedRegions.stream().map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
-    FittedRegion fittedCopyNumber(double purity, double normFactor, EnrichedRegion copyNumber) {
+    @NotNull
+    FittedRegion fitRegion(final double purity, final double normFactor,
+            final @NotNull ObservedRegion observedRegion) {
         double minDeviation = 0;
-        double observedBAF = copyNumber.mBAF();
-        double observedTumorRatio = copyNumber.tumorRatio();
+        double observedBAF = observedRegion.observedBAF();
+        double observedTumorRatio = observedRegion.observedTumorRatio();
         double tumorCopyNumber = purityAdjustedCopynumber(purity, normFactor, observedTumorRatio);
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
-                .from(copyNumber)
-                .status(FreecStatus.fromNormalRatio(copyNumber.normalRatio()))
-                .bafCount(copyNumber.mBAFCount())
-                .observedBAF(observedBAF)
-                .observedTumorRatio(observedTumorRatio)
-                .observedNormalRatio(copyNumber.normalRatio())
+                .from(observedRegion)
+                .status(FreecStatus.fromNormalRatio(observedRegion.observedNormalRatio()))
                 .broadBAF(0)
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
                 .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / copyNumber.normalRatio() / normFactor * 2));
+                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
-            double[] modelBAFWithDeviation = copyNumber.mBAFCount() == 0
+            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0
                     ? new double[] { 0, 0 }
                     : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 

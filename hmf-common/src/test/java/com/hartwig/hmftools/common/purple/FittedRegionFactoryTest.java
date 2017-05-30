@@ -19,7 +19,7 @@ public class FittedRegionFactoryTest {
     @Test
     public void expectedFit() {
         final FittedRegionFactory victim = new FittedRegionFactory(12, 0.2);
-        final FittedRegion result = victim.fittedCopyNumber(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
+        final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
@@ -27,9 +27,16 @@ public class FittedRegionFactoryTest {
     }
 
     @NotNull
-    private static EnrichedRegion create(final double baf, final double ratio) {
-        return ImmutableEnrichedRegion.builder().mBAF(baf).mBAFCount(1).chromosome("1").start(1).end(
-                2).tumorRatio(ratio).normalRatio(1).build();
+    private static ObservedRegion create(final double baf, final double ratio) {
+        return ImmutableEnrichedRegion.builder()
+                .observedBAF(baf)
+                .bafCount(1)
+                .chromosome("1")
+                .start(1)
+                .end(2)
+                .observedTumorRatio(ratio)
+                .observedNormalRatio(1)
+                .build();
     }
 
     @Test

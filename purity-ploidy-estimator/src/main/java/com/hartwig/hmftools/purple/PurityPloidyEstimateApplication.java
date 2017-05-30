@@ -11,8 +11,6 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.EnrichedRegion;
-import com.hartwig.hmftools.common.purple.EnrichedRegionFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
@@ -21,6 +19,8 @@ import com.hartwig.hmftools.common.purple.FittedPurityWriter;
 import com.hartwig.hmftools.common.purple.FittedRegion;
 import com.hartwig.hmftools.common.purple.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.FittedRegionWriter;
+import com.hartwig.hmftools.common.purple.ObservedRegion;
+import com.hartwig.hmftools.common.purple.ObservedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionZipper;
@@ -100,14 +100,14 @@ public class PurityPloidyEstimateApplication {
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
-        LOGGER.info("Collating data");
-        final EnrichedRegionFactory enrichedCopyNumberFactory = new EnrichedRegionFactory(
+        LOGGER.info("Combining observations");
+        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(
                 MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final List<EnrichedRegion> enrichedCopyNumbers = enrichedCopyNumberFactory.enrich(regions, variants,
+        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants,
                 tumorRatio, normalRatio);
 
         LOGGER.info("Fitting purity");
-        final List<FittedPurity> purity = fittedPurityFactory.fitPurity(enrichedCopyNumbers);
+        final List<FittedPurity> purity = fittedPurityFactory.fitPurity(observedRegions);
         Collections.sort(purity);
 
         if (!purity.isEmpty()) {
@@ -116,8 +116,8 @@ public class PurityPloidyEstimateApplication {
             FittedPurityWriter.writePurity(purityFile, purity);
 
             final FittedPurity bestFit = purity.get(0);
-            final List<FittedRegion> fittedRegions = fittedRegionFactory.fittedCopyNumber(bestFit.purity(),
-                    bestFit.normFactor(), enrichedCopyNumbers);
+            final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(),
+                    bestFit.normFactor(), observedRegions);
 
             final List<ConsolidatedRegion> highConfidence = ConsolidatedRegionFactory.highConfidence(fittedRegions);
             final List<ConsolidatedRegion> smoothRegions = ConsolidatedRegionFactory.smooth(fittedRegions,

@@ -40,15 +40,15 @@ public class FittedPurityFactory {
     }
 
     @NotNull
-    public List<FittedPurity> fitPurity(@NotNull final Collection<EnrichedRegion> copyNumbers) {
+    public List<FittedPurity> fitPurity(@NotNull final Collection<ObservedRegion> observedRegions) {
         final List<FittedPurity> result = Lists.newArrayList();
 
         int totalBAFCount = 0;
-        final List<EnrichedRegion> filteredCopyNumbers = Lists.newArrayList();
-        for (final EnrichedRegion copyNumber : copyNumbers) {
-            if (copyNumber.mBAFCount() > 0 && positiveOrZero(copyNumber.tumorRatio())
+        final List<ObservedRegion> filteredCopyNumbers = Lists.newArrayList();
+        for (final ObservedRegion copyNumber : observedRegions) {
+            if (copyNumber.bafCount() > 0 && positiveOrZero(copyNumber.observedTumorRatio())
                     && Chromosomes.asInt(copyNumber.chromosome()) <= 22) {
-                totalBAFCount += copyNumber.mBAFCount();
+                totalBAFCount += copyNumber.bafCount();
                 filteredCopyNumbers.add(copyNumber);
             }
         }
@@ -71,19 +71,19 @@ public class FittedPurityFactory {
 
     @NotNull
     private FittedPurity fitPurity(double purity, double normFactor, double sumWeight,
-            Collection<EnrichedRegion> enrichedRegions) {
+            Collection<ObservedRegion> observedRegions) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;
         double modelBAFDeviation = 0;
 
-        for (EnrichedRegion enrichedRegion : enrichedRegions) {
-            final FittedRegion fittedRegion = fittedRegionFactory.fittedCopyNumber(purity, normFactor,
+        for (ObservedRegion enrichedRegion : observedRegions) {
+            final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor,
                     enrichedRegion);
-            modelDeviation += enrichedRegion.mBAFCount() / sumWeight * fittedRegion.deviation();
-            modelBAFDeviation += enrichedRegion.mBAFCount() / sumWeight * fittedRegion.bafDeviation();
+            modelDeviation += enrichedRegion.bafCount() / sumWeight * fittedRegion.deviation();
+            modelBAFDeviation += enrichedRegion.bafCount() / sumWeight * fittedRegion.bafDeviation();
             if (fittedRegion.fittedPloidy() == 2) {
-                diploidProportion += enrichedRegion.mBAFCount() / sumWeight;
+                diploidProportion += enrichedRegion.bafCount() / sumWeight;
             }
         }
 
