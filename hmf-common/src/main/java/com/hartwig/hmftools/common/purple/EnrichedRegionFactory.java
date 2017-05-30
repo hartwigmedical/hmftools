@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
@@ -122,7 +123,7 @@ public class EnrichedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
         private int count;
 
         private void accumulate(@NotNull final FreecRatio ratio) {
-            if (ratio.ratio() > -1) {
+            if (Doubles.greaterThan(ratio.ratio(), -1)) {
                 count++;
                 sumRatio += ratio.ratio();
             }

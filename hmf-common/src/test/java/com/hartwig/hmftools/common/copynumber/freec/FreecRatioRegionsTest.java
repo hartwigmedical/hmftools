@@ -24,9 +24,10 @@ public class FreecRatioRegionsTest {
     public void testMulipleSimilarRegions() {
         FreecRatio ratio1 = create("1", 1001, 0.5, 1);
         FreecRatio ratio2 = create("1", 2001, 0.5, 1);
-        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2));
+        FreecRatio ratio3 = create("1", 3001, 0.5, 1);
+        List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
         assertEquals(1, regions.size());
-        assertRegion(regions.get(0), 1001, 3000);
+        assertRegion(regions.get(0), 1001, 4000);
     }
 
     @Test
@@ -68,9 +69,8 @@ public class FreecRatioRegionsTest {
         FreecRatio ratio2 = create("1", 2001, 0.5, 1);
         FreecRatio ratio3 = create("1", 4001, 0.5, 1);
         List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(Lists.newArrayList(ratio1, ratio2, ratio3));
-        assertEquals(2, regions.size());
-        assertRegion(regions.get(0), 1001, 3000);
-        assertRegion(regions.get(1), 4001, 5000);
+        assertEquals(1, regions.size());
+        assertRegion(regions.get(0), 1001, 5000);
     }
 
     @Test

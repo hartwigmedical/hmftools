@@ -86,11 +86,6 @@ public class FittedCopyNumberFactory {
         return normFactor + (ploidy - 2) * purity * normFactor / 2d;
     }
 
-    private static double copyNumber(double purity, double normFactor, double tumorRatio) {
-        return 2 + 2 * (tumorRatio - normFactor) / purity / normFactor;
-    }
-
-
     @VisibleForTesting
     static double cnvDeviation(double cnvRatioWeighFactor, double modelCNVRatio, double actualRatio) {
         return cnvRatioWeighFactor * Math.abs(modelCNVRatio - actualRatio);

@@ -19,37 +19,33 @@ public enum FreecRatioRegions {
         final List<GenomeRegion> result = Lists.newArrayList();
 
         FreecRatio start = null;
-        long endPosition = 0;
+        FreecRatio end = null;
         for (final FreecRatio ratio : ratios) {
             if (start == null) {
                 start = ratio;
             } else if (isNewRegion(start, ratio)) {
-                result.add(create(start, endPosition));
+                result.add(create(start, end));
                 start = ratio;
             }
-
-            endPosition = ratio.position() + SEGMENT_SIZE - 1;
+            end = ratio;
         }
 
         if (start != null) {
-            result.add(create(start, endPosition));
+            result.add(create(start, end));
         }
 
         return result;
     }
 
     @NotNull
-    private static GenomeRegion create(@NotNull final FreecRatio startOfCurrentRegion,long end) {
-        return ImmutableBEDGenomeRegion.builder().chromosome(startOfCurrentRegion.chromosome())
-                .start(startOfCurrentRegion.position()).end(end).build();
+    private static GenomeRegion create(@NotNull final FreecRatio start, FreecRatio end) {
+        return ImmutableBEDGenomeRegion.builder().chromosome(start.chromosome())
+                .start(start.position()).end(end.position() + SEGMENT_SIZE - 1).build();
     }
 
     private static boolean isNewRegion(@NotNull final FreecRatio first, @NotNull final FreecRatio second) {
-        return isDiscontiguous(first, second) || !Doubles.equal(first.medianRatio(),
-                second.medianRatio()) || !Doubles.equal(first.estimatedBAF(), second.estimatedBAF()) ;
+        return !first.chromosome().equals(second.chromosome()) || !Doubles.equal(first.medianRatio(),
+                second.medianRatio()) || !Doubles.equal(first.estimatedBAF(), second.estimatedBAF());
     }
 
-    private static boolean isDiscontiguous(@NotNull final FreecRatio first, @NotNull final FreecRatio second) {
-        return !first.chromosome().equals(second.chromosome()) || second.position() - first.position() != SEGMENT_SIZE;
-    }
 }

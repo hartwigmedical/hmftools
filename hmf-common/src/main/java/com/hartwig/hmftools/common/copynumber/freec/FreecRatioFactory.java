@@ -38,9 +38,7 @@ public enum FreecRatioFactory {
         final List<FreecRatio> results = Lists.newArrayList();
         for (final String line : lines) {
             final FreecRatio ratio = fromRatioLine(line);
-            if (ratio.ratio() > -1) {
-                results.add(ratio);
-            }
+            results.add(ratio);
         }
 
         Collections.sort(results);
