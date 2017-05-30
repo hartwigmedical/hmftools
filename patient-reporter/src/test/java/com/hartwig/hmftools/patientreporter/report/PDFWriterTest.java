@@ -11,11 +11,14 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.cosmic.CosmicCensus;
+import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,9 +34,11 @@ public class PDFWriterTest {
 
     private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
     private static final String REPORT_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
+    private static final String DRUP_GENES_CSV = RESOURCE_PATH + File.separator + "drup_genes.csv";
+    private static final String COSMIC_CSV = RESOURCE_PATH + File.separator + "cosmic.csv";
 
     @Test
-    public void canGeneratePatientReport() throws DRException, IOException, EmptyFileException {
+    public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
         final VariantReport variant1 = new VariantReport.Builder().gene("BRAF").position("7:140453136").ref("A").alt(
                 "T").transcript("ENST00000377970.6").hgvsCoding("c.1799T>A").hgvsProtein("p.Val600Glu").consequence(
@@ -59,9 +64,11 @@ public class PDFWriterTest {
 
         final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
                 tumorPercentage);
+        final DrupFilter drupFilter = new DrupFilter(DRUP_GENES_CSV);
+        final CosmicCensus cosmicCensus = new CosmicCensus(COSMIC_CSV);
 
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, REPORT_LOGO,
-                createHMFSlicingRegion());
+                createHMFSlicingRegion(), drupFilter, cosmicCensus);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
