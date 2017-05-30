@@ -32,7 +32,7 @@ public class FittedRegionFactory {
     }
 
     @NotNull
-    FittedRegion fitRegion(final double purity, final double normFactor,
+    public FittedRegion fitRegion(final double purity, final double normFactor,
             final @NotNull ObservedRegion observedRegion) {
         double minDeviation = 0;
         double observedBAF = observedRegion.observedBAF();

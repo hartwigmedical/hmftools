@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;

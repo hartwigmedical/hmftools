@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.purple.FittedPurityScoreFactory.isPolyclonal;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.isPolyclonal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -9,7 +9,6 @@ import org.junit.Test;
 
 public class FittedPurityScoreFactoryTest
 {
-
     @Test
     public void testPolyclonalProportion() {
         assertTrue(isPolyclonal(2.749));

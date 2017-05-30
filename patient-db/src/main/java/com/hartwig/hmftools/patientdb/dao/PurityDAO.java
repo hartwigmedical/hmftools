@@ -5,9 +5,9 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import com.hartwig.hmftools.common.purple.FittedPurity;
-import com.hartwig.hmftools.common.purple.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
