@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.purple.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.FittedPurityWriter;
-import com.hartwig.hmftools.common.purple.PadCopyNumber;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegion;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ConsolidatedRegionZipper;
@@ -99,7 +98,7 @@ public class PurityPloidyEstimateApplication {
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
-        final List<GenomeRegion> regions = PadCopyNumber.pad(FreecRatioRegions.createRegionsFromRatios(tumorRatio));
+        final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
         LOGGER.info("Collating data");
         final EnrichedRegionFactory enrichedCopyNumberFactory = new EnrichedRegionFactory(
