@@ -1,0 +1,245 @@
+<<include etc/colors_fonts_patterns.conf>>
+<<include ideogram.conf>>
+<<include ticks.conf>>
+
+<image>
+	<<include etc/image.conf>>
+</image>
+
+karyotype = data/karyotype/karyotype.human.txt
+
+chromosomes_units           = 1000000
+chromosomes                 = -hsX;-hsY
+chromosomes_display_default = yes
+
+# Default is to clip the data to range min/max.
+<plots>
+
+	# -----------------------------------------------------------
+	# Somatic Variants Scatter Plot (Purple)
+	<plot>
+		skip_run = yes
+		min_value_change = 0.1
+
+		type = scatter
+		file = SAMPLE.snp.circos
+		r0   = 0.775r
+		r1   = 0.975r
+		min  = 0
+		max  = 1
+		color = purple
+		glyph = circle
+
+		<axes>
+			<axis>
+				color     = lpurple
+				thickness = 1
+				spacing   = 0.25r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlpurple_a5
+			</background>
+		</backgrounds>
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# CopyNumber - 4+ interesting data points
+	<plot>
+		type = scatter
+		file = SAMPLE.cnv.circos
+		r0   = 0.75r
+		r1   = 0.75r
+		min  = 0
+		max  = 5
+		glyph = circle
+		glyph_size = 8
+		color = green
+
+		<rules>
+			<rule>
+				condition = var(value) < 2
+				show = no
+				flow = continue
+			</rule>
+			<rule>
+				condition = var(value) > 4
+				glyph_size = eval(int(remap_int(var(value),4,12,15,30)))
+			</rule>
+		</rules>
+	</plot>
+
+	# -----------------------------------------------------------
+	# CopyNumber Gain (Green)
+	<plot>
+		type = histogram
+		file = SAMPLE.cnv.circos
+		r0   = 0.60r
+		r1   = 0.75r
+		min  = 0
+		max  = 4
+		glyph = circle
+		glyph_size = 8
+		color = green
+		fill_color = green
+
+		<axes>
+			<axis>
+				color     = lgreen
+				thickness = 2
+				spacing   = 0.25r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlgreen_a5
+			</background>
+		</backgrounds>
+
+		<rules>
+			<rule>
+				condition = var(value) < 0.03
+				#show = no
+			</rule>
+		</rules>
+
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# CopyNumber Loss (Red)
+	<plot>
+		type = histogram
+		file = SAMPLE.cnv.circos
+		r0   = 0.55r
+		r1   = 0.60r
+		min  = -2
+		max  = 0
+		color = red
+		glyph = circle
+		glyph_size = 8
+		fill_color = red
+
+		<axes>
+			<axis>
+				color     = lred
+				thickness = 1
+				spacing   = 0.5r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlred_a5
+			</background>
+		</backgrounds>
+
+		<rules>
+			<rule>
+				condition = var(value) > 0.001
+				#show = no
+			</rule>
+		</rules>
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# CopyNumber - <2 interesting data points
+	<plot>
+		type = scatter
+		file = SAMPLE.cnv.circos
+		r0   = 0.55r
+		r1   = 0.55r
+		min  = -2
+		max  = 0
+		glyph = circle
+		glyph_size = 8
+		color = red
+
+		<rules>
+			<rule>
+				condition  = 1
+				#fill_color = eval( "red_a" . remap_int(var(value),-3,3,1,5) )
+				flow       = continue
+			</rule>
+			<rule>
+				condition = var(value) > -0.5
+				show = no
+			</rule>
+		</rules>
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# BAF Backgound and axis
+	<plot>
+		type = histogram
+		r0   = 0.425r
+		r1   = 0.525r
+
+		<axes>
+			<axis>
+				color     = lblue
+				thickness = 2
+				spacing   = 0.25r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlblue_a5
+			</background>
+		</backgrounds>
+	</plot>
+
+
+	# -----------------------------------------------------------
+	# scatter plot for values [0,5]
+	<plot>
+		type = histogram
+		file = SAMPLE.baf.circos
+		r0   = 0.475r
+		r1   = 0.525r
+		min  = 0.533
+		max  = 1
+		color = vdblue
+		fill_color = vdblue
+		thickness = 4
+
+
+		<rules>
+			<rule>
+				condition = var(value) <= 0
+				show = no
+			</rule>
+		</rules>
+	</plot>
+
+	<plot>
+		orientation = in
+		type = histogram
+		file = SAMPLE.baf.circos
+		r0   = 0.425r
+		r1   = 0.475r
+		min  = 0.533
+		max  = 1
+		color = vdblue
+		fill_color = vdblue
+		thickness = 4
+
+		<rules>
+			<rule>
+				condition = var(value) <= 0
+				show = no
+			</rule>
+		</rules>
+	</plot>
+
+
+</plots>
+
+<<include etc/housekeeping.conf>>
