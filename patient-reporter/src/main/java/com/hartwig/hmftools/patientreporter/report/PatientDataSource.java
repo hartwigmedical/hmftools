@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -56,15 +57,16 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers) {
+    static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers,
+            @NotNull final GenePanelModel genePanelModel) {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME_FIELD.getName(), GENE_FIELD.getName(),
                 TRANSCRIPT_FIELD.getName(), COPY_NUMBER_TYPE_FIELD.getName(), COPY_NUMBER_FIELD.getName());
 
         for (final CopyNumberReport copyNumber : copyNumbers) {
-            copyNumberDatasource.add(copyNumber.chromosome(), copyNumber.gene(), copyNumber.transcript(),
-                    copyNumber.resolveType(), Integer.toString(copyNumber.copyNumber()));
+            copyNumberDatasource.add(copyNumber.chromosome() + genePanelModel.chromosomeBand(copyNumber.gene()),
+                    copyNumber.gene(), copyNumber.transcript(), copyNumber.resolveType(),
+                    Integer.toString(copyNumber.copyNumber()));
         }
-
         return copyNumberDatasource;
     }
 

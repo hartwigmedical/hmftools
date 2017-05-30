@@ -137,7 +137,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantReport(report, drupFilter),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(report));
+                        copyNumberReport(report, genePanelModel));
 
         final ComponentBuilder<?, ?> helpPage =
                 cmp.verticalList(
@@ -295,7 +295,8 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report,
+            @NotNull final GenePanelModel genePanelModel) {
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
@@ -304,7 +305,7 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
+                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers(), genePanelModel))) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
