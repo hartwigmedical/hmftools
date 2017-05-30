@@ -6,7 +6,7 @@ public enum PurityAdjustment {
     ;
 
     public static double purityAdjustedCopynumber(double purity, double normFactor, double ratio) {
-        return 2 + 2 * (ratio - normFactor) / purity / normFactor * 2;
+        return 2 + 2 * (ratio - normFactor) / purity / normFactor;
     }
 
     public static double purityAdjustedSomaticVariants(double purity, double ploidy, double observedVAF) {
