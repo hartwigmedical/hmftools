@@ -68,8 +68,9 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     public void exit(@NotNull final GenomeRegion region) {
         double myTumorRatio = tumorRatio.meanRatio();
         double myNormalRatio = normalRatio.meanRatio();
-        EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder().from(region).bafCount(baf.count()).observedBAF(
-                baf.medianBaf()).observedTumorRatio(myTumorRatio).observedNormalRatio(myNormalRatio).build();
+        final EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder().from(region).bafCount(
+                baf.count()).observedBAF(baf.medianBaf()).observedTumorRatio(myTumorRatio).observedNormalRatio(
+                myNormalRatio).build();
 
         result.add(copyNumber);
     }
@@ -98,7 +99,7 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
             bafs.clear();
         }
 
-        private void accumulate(double baf) {
+        private void accumulate(final double baf) {
             count++;
             bafs.add(baf);
         }

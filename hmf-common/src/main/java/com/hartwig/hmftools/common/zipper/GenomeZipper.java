@@ -24,12 +24,13 @@ public class GenomeZipper<R extends GenomeRegion> {
     private final GenomeZipperRegionHandler<R> regionHandler;
     private final List<InnerPosition<?>> innerPositions = Lists.newArrayList();
 
-    public <P extends GenomePosition> void addPositions(@NotNull List<P> positions, @NotNull Consumer<P> handler) {
+    public <P extends GenomePosition> void addPositions(@NotNull final List<P> positions,
+            @NotNull final Consumer<P> handler) {
         addPositions(positions, (x, y) -> handler.accept(y));
     }
 
-    public <P extends GenomePosition> void addPositions(@NotNull List<P> positions,
-            @NotNull BiConsumer<R, P> handler) {
+    public <P extends GenomePosition> void addPositions(@NotNull final List<P> positions,
+            @NotNull final BiConsumer<R, P> handler) {
         innerPositions.add(new InnerPosition<>(positions, handler));
     }
 
@@ -57,10 +58,10 @@ public class GenomeZipper<R extends GenomeRegion> {
             this.handler = handler;
         }
 
-        private void apply(R region) {
+        private void apply(@NotNull final R region) {
             while (index < positions.size()) {
-                P position = positions.get(index);
-                int compare = compare(position, region);
+                final P position = positions.get(index);
+                final int compare = compare(position, region);
                 if (compare > 0) {
                     break;
                 } else if (compare == 0) {
