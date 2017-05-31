@@ -19,10 +19,10 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberWriter;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreWriter;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityWriter;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
@@ -138,7 +138,7 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberWriter.writeRegions(copyNumberFilename, smoothRegions);
 
             final String purityFilename = outputFileName(outputDirectory, tumorSample, ".purity");
-            FittedPurityWriter.writePurity(purityFilename, fittedPurities);
+            FittedPurityFile.writePurity(purityFilename, fittedPurities);
 
             final String scoreFilename = outputFileName(outputDirectory, tumorSample, ".score");
             FittedPurityScoreWriter.writeScore(scoreFilename, score);

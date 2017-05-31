@@ -61,9 +61,13 @@ public class FittedRegionFactory {
                     Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
 
             if (ploidy == 1 || deviation < minDeviation) {
-                builder.fittedPloidy(ploidy).modelBAF(modelBAF).modelTumorRatio(modelRatio).bafDeviation(
-                        bafDeviation).cnvDeviation(cnvDeviation).purityAdjustedBAF(
-                        purityAdjustedBAF(purity, ploidy, observedBAF)).deviation(deviation);
+                builder.fittedPloidy(ploidy)
+                        .modelBAF(modelBAF)
+                        .modelTumorRatio(modelRatio)
+                        .bafDeviation(bafDeviation)
+                        .cnvDeviation(cnvDeviation)
+                        .purityAdjustedBAF(purityAdjustedBAF(purity, ploidy, observedBAF))
+                        .deviation(deviation);
                 minDeviation = deviation;
             }
         }
