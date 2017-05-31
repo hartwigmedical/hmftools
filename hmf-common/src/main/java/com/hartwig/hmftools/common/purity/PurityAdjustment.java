@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purity;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 
 public enum PurityAdjustment {
     ;
@@ -9,19 +9,10 @@ public enum PurityAdjustment {
         return 2 + 2 * (ratio - normFactor) / purity / normFactor;
     }
 
-    public static double purityAdjustedSomaticVariants(final double purity, final double ploidy,
-            final double observedVAF) {
-        return purityAdjustedFrequency(purity, ploidy, observedVAF, 0);
-    }
-
-    public static double purityAdjustedBAF(final double purity, final int ploidy, final double observedBAF) {
-        return purityAdjustedFrequency(purity, ploidy, observedBAF, 0.5);
-    }
-
-    private static double purityAdjustedFrequency(final double purity, final double ploidy,
+    public static double purityAdjustedFrequency(final double purity, final double ploidy,
             final double observedFrequency, final double normalFrequency) {
-        assert (Doubles.greaterThan(ploidy, 0));
-        assert (Doubles.greaterThan(purity, 0));
+        assert (greaterThan(ploidy, 0));
+        assert (greaterThan(purity, 0));
 
         double normalPloidy = 2 * (1 - purity);
         double tumorPloidy = ploidy * purity;

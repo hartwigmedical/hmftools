@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedSomaticVariants;
+import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedFrequency;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -55,6 +55,10 @@ class PurityAdjustedSomaticVariantFactory implements GenomeZipperRegionHandler<P
         double purityAdjustedFrequency = purityAdjustedSomaticVariants(purity, ploidy, variant.alleleFrequency());
         return SomaticVariant.Builder.fromVariant(variant)
                 .alleleReadCount((int) Math.round(purityAdjustedFrequency * 10000)).totalReadCount(10000).build();
+    }
 
+    private static double purityAdjustedSomaticVariants(final double purity, final double ploidy,
+            final double observedVAF) {
+        return purityAdjustedFrequency(purity, ploidy, observedVAF, 0);
     }
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedBAF;
+import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedCopyNumber;
 
 import java.util.Collection;
@@ -10,13 +10,13 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purity.PurityAdjustment;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactory {
 
-    @VisibleForTesting
-    static final double NORMAL_BAF = 0.533;
+    static final double NORMAL_BAF = 0.542;
 
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
@@ -40,19 +40,24 @@ public class FittedRegionFactory {
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double tumorCopyNumber = purityAdjustedCopyNumber(purity, normFactor, observedTumorRatio);
 
-        ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder().from(observedRegion).status(
-                FreecStatus.fromNormalRatio(observedRegion.observedNormalRatio())).broadBAF(0).broadTumorCopyNumber(
-                0).segmentBAF(0).segmentTumorCopyNumber(0).tumorCopyNumber(tumorCopyNumber).refNormalisedCopyNumber(
-                Doubles.replaceNaNWithZero(
+        ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
+                .from(observedRegion)
+                .status(FreecStatus.fromNormalRatio(observedRegion.observedNormalRatio()))
+                .broadBAF(0)
+                .broadTumorCopyNumber(0)
+                .segmentBAF(0)
+                .segmentTumorCopyNumber(0)
+                .tumorCopyNumber(tumorCopyNumber)
+                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(
                         observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
-            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0 ?
-                    new double[] { 0, 0 } :
-                    modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0
+                    ? new double[] { 0, 0 }
+                    : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
@@ -117,7 +122,18 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    public static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
+    static double purityAdjustedBAF(final double purity, final int ploidy, final double observedBAF) {
+        double adjustedObservedBAF = ploidy % 2 == 0 && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF)
+                ? 0.5
+                : observedBAF;
+
+        return PurityAdjustment.purityAdjustedFrequency(purity, ploidy, adjustedObservedBAF, 0.5);
+    }
+
+    @VisibleForTesting
+    static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
+        assert (alleleCount >= ploidy / 2);
+
         if (ploidy / alleleCount == 2) {
             return NORMAL_BAF;
         }
