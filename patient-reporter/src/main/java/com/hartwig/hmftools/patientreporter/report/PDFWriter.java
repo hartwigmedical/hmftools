@@ -174,7 +174,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
                         cmp.text(tumorType).setStyle(dataTableStyle())),
                 cmp.verticalList(
-                        cmp.text("Tumor Percentage").setStyle(tableHeaderStyle()),
+                        cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
                         cmp.text(tumorPercentage).setStyle(dataTableStyle()))
         );
 
