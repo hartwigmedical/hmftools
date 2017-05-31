@@ -303,6 +303,7 @@ public class PDFWriter implements ReportWriter {
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
                             col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
+                            col.column("Band", PatientDataSource.BAND_FIELD),
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
