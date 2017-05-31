@@ -45,7 +45,9 @@ public class BreakPointInspectorApplication {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(REF_PATH, true, "the Reference BAM (indexed)");
+        options.addOption(REF_EVIDENCE_PATH, true, "the Reference evidence BAM to output");
         options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
+        options.addOption(TUMOR_EVIDENCE_PATH, true, "the Tumor evidence BAM to output");
         options.addOption(BREAK_POINT1, true, "position of first break point in chrX:123456 format");
         options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format (optional)");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
@@ -103,7 +105,7 @@ public class BreakPointInspectorApplication {
             SAMFileWriter tumorWriter = null;
             if (tumorEvidencePath != null) {
                 tumorEvidenceBAM = new File(tumorEvidencePath);
-                tumorWriter = new SAMFileWriterFactory().makeBAMWriter(tumorReader.getFileHeader(), true,
+                tumorWriter = new SAMFileWriterFactory().makeBAMWriter(tumorReader.getFileHeader(), false,
                         tumorEvidenceBAM);
             }
 
@@ -111,8 +113,7 @@ public class BreakPointInspectorApplication {
             SAMFileWriter refWriter = null;
             if (refEvidencePath != null) {
                 refEvidenceBAM = new File(refEvidencePath);
-                refWriter = new SAMFileWriterFactory().makeBAMWriter(refReader.getFileHeader(), true,
-                        refEvidenceBAM);
+                refWriter = new SAMFileWriterFactory().makeBAMWriter(refReader.getFileHeader(), false, refEvidenceBAM);
             }
 
             // output the header
@@ -150,22 +151,24 @@ public class BreakPointInspectorApplication {
                             tumorReader.getFileHeader().getSequenceDictionary());
                     final Location location2;
 
-                    final String variantType = variant.getAttributeAsString("SVTYPE", "");
-                    switch (variantType) {
-                        case "DEL":
-                        case "DUP":
-                        case "INV":
+                    switch (variant.getStructuralVariantType()) {
+                        case DEL:
+                        case DUP:
+                        case INV:
                             final int svLen = Math.abs(variant.getAttributeAsInt("SVLEN", 0));
+                            final boolean inv3 = variant.getAttributeAsBoolean("INV3", false);
+                            final boolean inv5 = variant.getAttributeAsBoolean("INV5", false);
                             location2 = location1.add(svLen);
                             break;
-                        case "BND":
+                        case BND:
                             final String call = variant.getAlternateAllele(0).getDisplayString();
                             final String[] split = call.split("[\\]\\[]");
                             location2 = Location.parseLocationString(split[1],
                                     tumorReader.getFileHeader().getSequenceDictionary());
                             break;
                         default:
-                            System.err.println(variant.getID() + " : UNEXPECTED SVTYPE=" + variantType);
+                            System.err.println(
+                                    variant.getID() + " : UNEXPECTED SVTYPE=" + variant.getStructuralVariantType());
                             continue;
                     }
 
@@ -178,7 +181,8 @@ public class BreakPointInspectorApplication {
                     extraData.add(variant.getAttributeAsString("HOMSEQ", "."));
                     extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
 
-                    Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, location1, location2, range);
+                    Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter,
+                            location1, location2, range);
                 }
             } else {
                 final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
@@ -201,7 +205,8 @@ public class BreakPointInspectorApplication {
                 final List<String> extraData = Lists.newArrayList("manual", location1.toString(), location2.toString(),
                         svLen > 0 ? Integer.toString(svLen) : ".");
                 extraData.addAll(Collections.nCopies(10, "."));
-                Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, location1, location2, range);
+                Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, location1,
+                        location2, range);
             }
 
             // close all the files
