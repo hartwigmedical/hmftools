@@ -33,7 +33,6 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
-import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
@@ -47,6 +46,7 @@ public class PDFWriter implements ReportWriter {
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
     private static final String VERSION = "2.0";
 
+    // MIVO: change font to monospace to remove text truncation issue (see gene panel tpye column for example)
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
 
@@ -56,6 +56,7 @@ public class PDFWriter implements ReportWriter {
     private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
     private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 4;
     private static final int SECTION_VERTICAL_GAP = 25;
+    private static final int PADDING = 1;
 
     @NotNull
     private final String reportDirectory;
@@ -181,9 +182,9 @@ public class PDFWriter implements ReportWriter {
         return cmp.horizontalList(
                 cmp.image(reportLogoPath),
                 cmp.verticalList(
-                        cmp.text("HMF Sequencing Report - " + sample).
-                                setStyle(fontStyle().bold().setFontSize(14)
-                                        .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                        cmp.text("HMF Sequencing Report - " + sample)
+                                .setStyle(fontStyle().bold().setFontSize(14)
+                                    .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                                 .setHeight(50),
                         mainDiagnosisInfo)
@@ -353,15 +354,14 @@ public class PDFWriter implements ReportWriter {
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
                                 .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Role in cancer", GenePanelDataSource.ROLE_IN_CANCER_FIELD).setFixedWidth(75),
+                        col.column("Type", GenePanelDataSource.GENE_TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
                                 .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Role in cancer", GenePanelDataSource.ROLE_IN_CANCER2_FIELD).setFixedWidth(75),
+                        col.column("Type", GenePanelDataSource.GENE2_TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
-                    .setStyle(dataTableStyle())
                     .setDataSource(GenePanelDataSource.fromCosmic(annotations, genePanelModel));
         return table;
         // @formatter:on
@@ -441,13 +441,14 @@ public class PDFWriter implements ReportWriter {
     private static StyleBuilder tableHeaderStyle() {
         return fontStyle().bold().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setVerticalTextAlignment(
                 VerticalTextAlignment.MIDDLE).setFontSize(10).setBorder(stl.pen1Point()).setBackgroundColor(
-                BORKIE_COLOR);
+                BORKIE_COLOR).setPadding(PADDING);
     }
 
     @NotNull
     private static StyleBuilder dataStyle() {
         return fontStyle().setFontSize(8).setHorizontalTextAlignment(
-                HorizontalTextAlignment.CENTER).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE);
+                HorizontalTextAlignment.CENTER).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE).setPadding(
+                PADDING);
     }
 
     @NotNull
@@ -463,12 +464,6 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static StyleBuilder fontStyle() {
         return stl.style().setFontName(FONT);
-    }
-
-    @NotNull
-    private static TextColumnBuilder<?> transcriptColumn() {
-        return col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setHyperLink(
-                hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(100);
     }
 
     @NotNull
