@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.VariantFactory.VCF_COLUMN_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.VariantFactory.sampleFromHeaderLine;
+import static com.hartwig.hmftools.common.variant.VariantFactory.withLine;
+
 import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static com.hartwig.hmftools.common.variant.VariantFactory.*;
 
 public final class GermlineVariantFactory {
 
@@ -102,6 +105,5 @@ public final class GermlineVariantFactory {
                 alleleFrequencyData.totalReadCount(),
                 alleleFrequencyData.alleleReadCount(),
                 Integer.valueOf(parts[SAMPLE_DATA_COMBINED_DEPTH_COLUMN]));
-
     }
 }

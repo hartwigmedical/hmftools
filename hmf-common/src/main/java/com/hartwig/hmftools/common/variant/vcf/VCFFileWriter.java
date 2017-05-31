@@ -19,9 +19,17 @@ public final class VCFFileWriter {
     }
 
     public static void writeSomaticVCF(@NotNull final String filePath, @NotNull final VCFSomaticFile originalFile,
-            @NotNull final List<SomaticVariant> newVariants) throws IOException {
+            @NotNull final List<SomaticVariant> newVariants)
+            throws IOException {
+        writeSomaticVCF(filePath, originalFile, newVariants, Lists.newArrayList());
+    }
+
+    public static void writeSomaticVCF(@NotNull final String filePath, @NotNull final VCFSomaticFile originalFile,
+            @NotNull final List<SomaticVariant> newVariants, @NotNull final List<String> additionalMetaInformation)
+            throws IOException {
         final Collection<String> vcfLines = Lists.newArrayList();
         vcfLines.addAll(originalFile.originalMetaInformationLines());
+        vcfLines.addAll(additionalMetaInformation);
         vcfLines.add(originalFile.originalHeaderLine());
         vcfLines.addAll(newVariants.stream().map(SomaticVariantFactory::toVCFLine).collect(Collectors.toList()));
 

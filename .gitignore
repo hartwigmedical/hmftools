@@ -8,4 +8,6 @@ target
 # Ignore test xml ecrf
 hmf-common/src/test/resources/ecrf/example/ecrf.xml
 
+# Ignore log file in patient db
+patient-db/patient-db-logs/*.log
 .DS_Store

@@ -11,3 +11,10 @@ mysql> GRANT ALL on hmfpatients.* TO 'build'@'localhost';
 Query OK, 0 rows affected (0.00 sec)
 
 Then make sure hmfpatients is filled by running 'generate_database.sql'
+
+
+CREATE USER 'build'@'localhost' IDENTIFIED BY 'build';
+DROP DATABASE IF EXISTS hmfpatients;
+CREATE DATABASE hmfpatients;
+GRANT ALL on hmfpatients.* TO 'build'@'localhost';
+USE hmfpatients;

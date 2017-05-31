@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
@@ -33,6 +34,7 @@ public class ConsensusRuleFilterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ConsensusRuleFilterApplication.class);
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
+    private static final String FLAG_HEADER = "##FILTER=<ID=CALLER_CONSENSUS,Description=\"HMF-filter: Not enough support from the various somatic callers\">";
 
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String EXTREME_CONFIDENCE_BED = "extreme_confidence_bed";
@@ -125,8 +127,8 @@ public class ConsensusRuleFilterApplication {
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
             LOGGER.info("Processing " + run.toFile().getName());
             final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(run.toFile().getPath(), SOMATIC_EXTENSION);
-            final String outputVcf =
-                    outputDirectory + File.separator + variantFile.sample() + "_consensus_filtered.vcf";
+            final String extension = useFilterFlag ? "_consensus_flagged.vcf" : "_consensus_filtered.vcf";
+            final String outputVcf = outputDirectory + File.separator + variantFile.sample() + extension;
             processVariants(variantFile, outputVcf);
         }
     }
@@ -154,7 +156,10 @@ public class ConsensusRuleFilterApplication {
         LOGGER.info("Filtered variants on consensus rule: " + VariantFilter.passOnly(filteredVariants).size()
                 + " variants remaining.");
 
-        VCFFileWriter.writeSomaticVCF(outputVcf, inputFile, filteredVariants);
+        final List<String> additionalMetaInformation = useFilterFlag ?
+                Lists.newArrayList(FLAG_HEADER) :
+                Lists.newArrayList();
+        VCFFileWriter.writeSomaticVCF(outputVcf, inputFile, filteredVariants, additionalMetaInformation);
         LOGGER.info("Written filtered variants to " + outputVcf);
     }
 }

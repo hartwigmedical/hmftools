@@ -5,6 +5,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -37,14 +39,16 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromVariants(@NotNull final List<VariantReport> variants) {
+    static JRDataSource fromVariants(@NotNull final List<VariantReport> variants,
+            @NotNull final DrupFilter drupFilter) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(), POSITION_FIELD.getName(),
                 VARIANT_FIELD.getName(), TRANSCRIPT_FIELD.getName(), HGVS_CODING_FIELD.getName(),
                 HGVS_PROTEIN_FIELD.getName(), EFFECT_FIELD.getName(), COSMIC_FIELD.getName(),
                 COSMIC_NR_FIELD.getName(), ALLELE_FREQUENCY_FIELD.getName());
 
         for (final VariantReport variant : variants) {
-            variantDataSource.add(variant.gene(), variant.position(), toVariant(variant), variant.transcript(),
+            final String variantText = drupFilter.test(variant) ? variant.gene() + "*" : variant.gene();
+            variantDataSource.add(variantText, variant.position(), toVariant(variant), variant.transcript(),
                     variant.hgvsCoding(), variant.hgvsProtein(), variant.consequence(), variant.cosmicID(),
                     stripCosmicIdentifier(variant.cosmicID()), toAlleleFrequency(variant));
         }
@@ -53,15 +57,16 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers) {
+    static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers,
+            @NotNull final GenePanelModel genePanelModel) {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME_FIELD.getName(), GENE_FIELD.getName(),
                 TRANSCRIPT_FIELD.getName(), COPY_NUMBER_TYPE_FIELD.getName(), COPY_NUMBER_FIELD.getName());
 
         for (final CopyNumberReport copyNumber : copyNumbers) {
-            copyNumberDatasource.add(copyNumber.chromosome(), copyNumber.gene(), copyNumber.transcript(),
-                    copyNumber.resolveType(), Integer.toString(copyNumber.copyNumber()));
+            copyNumberDatasource.add(copyNumber.chromosome() + genePanelModel.chromosomeBand(copyNumber.gene()),
+                    copyNumber.gene(), copyNumber.transcript(), copyNumber.resolveType(),
+                    Integer.toString(copyNumber.copyNumber()));
         }
-
         return copyNumberDatasource;
     }
 

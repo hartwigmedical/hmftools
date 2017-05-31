@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public enum FreecRatioFactory {
     ;
 
-    private static final String CNV_COLUMN_SEPARATOR = "\t";
+    private static final String RATIO_COLUMN_SEPARATOR = "\t";
     private static final int CHROMOSOME_COLUMN = 0;
     private static final int START_FIELD_COLUMN = 1;
     private static final int RATIO_COLUMN = 2;
@@ -38,9 +38,7 @@ public enum FreecRatioFactory {
         final List<FreecRatio> results = Lists.newArrayList();
         for (final String line : lines) {
             final FreecRatio ratio = fromRatioLine(line);
-            if (ratio.ratio() > -1) {
-                results.add(ratio);
-            }
+            results.add(ratio);
         }
 
         Collections.sort(results);
@@ -50,7 +48,7 @@ public enum FreecRatioFactory {
     @NotNull
     @VisibleForTesting
     static FreecRatio fromRatioLine(@NotNull final String ratioLine) throws HartwigException {
-        final String[] values = ratioLine.split(CNV_COLUMN_SEPARATOR);
+        final String[] values = ratioLine.split(RATIO_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
         final long position = Long.valueOf(values[START_FIELD_COLUMN].trim());
