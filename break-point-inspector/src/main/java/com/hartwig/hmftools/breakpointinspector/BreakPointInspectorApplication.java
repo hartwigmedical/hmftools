@@ -32,7 +32,9 @@ import org.jetbrains.annotations.NotNull;
 public class BreakPointInspectorApplication {
 
     private static final String REF_PATH = "ref";
+    private static final String REF_EVIDENCE_PATH = "ref_evidence";
     private static final String TUMOR_PATH = "tumor";
+    private static final String TUMOR_EVIDENCE_PATH = "tumor_evidence";
     private static final String BREAK_POINT1 = "bp1";
     private static final String BREAK_POINT2 = "bp2";
     private static final String PROXIMITY = "proximity";
@@ -78,22 +80,40 @@ public class BreakPointInspectorApplication {
             final CommandLine cmd = createCommandLine(options, args);
 
             // grab arguments
-            final String refBAM = cmd.getOptionValue(REF_PATH);
-            final String tumorBAM = cmd.getOptionValue(TUMOR_PATH);
+            final String refPath = cmd.getOptionValue(REF_PATH);
+            final String refEvidencePath = cmd.getOptionValue(REF_EVIDENCE_PATH);
+            final String tumorPath = cmd.getOptionValue(TUMOR_PATH);
+            final String tumorEvidencePath = cmd.getOptionValue(TUMOR_EVIDENCE_PATH);
             final String bp1String = cmd.getOptionValue(BREAK_POINT1);
             final String bp2String = cmd.getOptionValue(BREAK_POINT2);
             final String vcfPath = cmd.getOptionValue(VCF);
             final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
-            if (refBAM == null || tumorBAM == null || (vcfPath != null && bp1String != null) || (bp2String != null
+            if (refPath == null || tumorPath == null || (vcfPath != null && bp1String != null) || (bp2String != null
                     && cmd.getOptionValue(SV_LEN) != null))
                 printHelpAndExit(options);
 
             // load the files
-            final File tumorFile = new File(tumorBAM);
-            final SamReader tumorReader = SamReaderFactory.makeDefault().open(tumorFile);
-            final File refFile = new File(refBAM);
-            final SamReader refReader = SamReaderFactory.makeDefault().open(refFile);
+            final File tumorBAM = new File(tumorPath);
+            final SamReader tumorReader = SamReaderFactory.makeDefault().open(tumorBAM);
+            final File refBAM = new File(refPath);
+            final SamReader refReader = SamReaderFactory.makeDefault().open(refBAM);
+
+            final File tumorEvidenceBAM;
+            SAMFileWriter tumorWriter = null;
+            if (tumorEvidencePath != null) {
+                tumorEvidenceBAM = new File(tumorEvidencePath);
+                tumorWriter = new SAMFileWriterFactory().makeBAMWriter(tumorReader.getFileHeader(), true,
+                        tumorEvidenceBAM);
+            }
+
+            final File refEvidenceBAM;
+            SAMFileWriter refWriter = null;
+            if (refEvidencePath != null) {
+                refEvidenceBAM = new File(refEvidencePath);
+                refWriter = new SAMFileWriterFactory().makeBAMWriter(refReader.getFileHeader(), true,
+                        refEvidenceBAM);
+            }
 
             // output the header
             final ArrayList<String> header = Lists.newArrayList("ID", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN",
@@ -158,7 +178,7 @@ public class BreakPointInspectorApplication {
                     extraData.add(variant.getAttributeAsString("HOMSEQ", "."));
                     extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
 
-                    Analysis.processStructuralVariant(extraData, refReader, tumorReader, location1, location2, range);
+                    Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, location1, location2, range);
                 }
             } else {
                 final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
@@ -178,11 +198,19 @@ public class BreakPointInspectorApplication {
                     return;
                 }
 
-                final List<String> extraData = Lists.newArrayList("manual", location1.toString(),
-                        location2.toString(), svLen > 0 ? Integer.toString(svLen) : ".");
+                final List<String> extraData = Lists.newArrayList("manual", location1.toString(), location2.toString(),
+                        svLen > 0 ? Integer.toString(svLen) : ".");
                 extraData.addAll(Collections.nCopies(10, "."));
-                Analysis.processStructuralVariant(extraData, refReader, tumorReader, location1, location2, range);
+                Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, location1, location2, range);
             }
+
+            // close all the files
+            refReader.close();
+            tumorReader.close();
+            if (refWriter != null)
+                refWriter.close();
+            if (tumorWriter != null)
+                tumorWriter.close();
 
         } catch (ParseException e) {
             printHelpAndExit(options);

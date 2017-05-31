@@ -9,6 +9,8 @@ import htsjdk.samtools.*;
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
+import org.jetbrains.annotations.Nullable;
+
 class Analysis {
 
     private static boolean readIntersectsLocation(final SAMRecord read, final Location location) {
@@ -193,7 +195,8 @@ class Analysis {
     }
 
     private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,
-            final QueryInterval[] intervals, final Location bp1, final Location bp2) {
+            @Nullable SAMFileWriter evidenceWriter, final QueryInterval[] intervals, final Location bp1,
+            final Location bp2) {
 
         final ClassifiedReadResults result = new ClassifiedReadResults();
 
@@ -202,6 +205,10 @@ class Analysis {
         while (results.hasNext()) {
 
             final SAMRecord read = results.next();
+            if (evidenceWriter != null) {
+                evidenceWriter.addAlignment(read);
+            }
+
             final NamedReadCollection collection = result.ReadMap.computeIfAbsent(read.getReadName(),
                     k -> new NamedReadCollection());
             final ReadInfo info = new ReadInfo();
@@ -272,7 +279,8 @@ class Analysis {
     }
 
     static void processStructuralVariant(final List<String> extraData, final SamReader refReader,
-            final SamReader tumorReader, final Location location1, final Location location2, final int range) {
+            @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
+            @Nullable final SAMFileWriter tumorWriter, Location location1, final Location location2, final int range) {
         // work out the query intervals
         QueryInterval[] queryIntervals = {
                 new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
@@ -283,12 +291,12 @@ class Analysis {
 
         // begin processing
 
-        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, queryIntervals, location1,
-                location2);
+        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals,
+                location1, location2);
         final Sample refStats = calculateStats(refResult);
 
-        final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, queryIntervals, location1,
-                location2);
+        final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, tumorWriter, queryIntervals,
+                location1, location2);
         final Sample tumorStats = calculateStats(tumorResult);
 
         final ArrayList<String> data = new ArrayList<>(extraData);
