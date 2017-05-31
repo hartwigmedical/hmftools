@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -14,9 +15,16 @@ import org.jetbrains.annotations.NotNull;
 public enum FittedPurityFile {
     ;
 
+    private static final int MAX_RECORDS = 100;
     private static final String DELIMITER = "\t";
+    static final String HEADER_PREFIX = "#";
 
-    public static void writePurity(@NotNull final String filePath, @NotNull final List<FittedPurity> purity)
+    @NotNull
+    public static List<FittedPurity> read(@NotNull final String filePath) throws IOException {
+        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    }
+
+    public static void write(@NotNull final String filePath, @NotNull final List<FittedPurity> purity)
             throws IOException {
         Files.write(new File(filePath).toPath(), toLines(purity));
     }
@@ -25,19 +33,28 @@ public enum FittedPurityFile {
     static List<String> toLines(@NotNull final List<FittedPurity> purity) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().limit(100).map(FittedPurityFile::toString).forEach(lines::add);
+        purity.stream().limit(MAX_RECORDS).map(FittedPurityFile::toString).forEach(lines::add);
         return lines;
     }
 
     @NotNull
-    static List<FittedPurity> fromLines(    @NotNull List<String> lines) {
-        return lines.stream().filter(x -> !x.startsWith("#")).map(FittedPurityFile::fromString).collect(toList());
+    static List<FittedPurity> fromLines(@NotNull List<String> lines) {
+        return lines.stream()
+                .filter(x -> !x.startsWith(HEADER_PREFIX))
+                .map(FittedPurityFile::fromString)
+                .collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return "#purity" + '\t' + "normFactor" + '\t' + "score" + '\t' + "modelBAFDeviation" + '\t'
-                + "diploidProportion" + '\t' + "ploidy";
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
+                .add("purity")
+                .add("normFactor")
+                .add("score")
+                .add("modelBAFDeviation")
+                .add("diploidProportion")
+                .add("ploidy")
+                .toString();
     }
 
     @NotNull

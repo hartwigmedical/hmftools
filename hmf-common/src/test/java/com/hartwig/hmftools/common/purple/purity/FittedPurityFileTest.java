@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Random;
@@ -15,15 +16,15 @@ public class FittedPurityFileTest {
     @Test
     public void testHeaderIsGenerated() {
         int size = 4;
-        final List<FittedPurity> purities = createPurities(size);
+        final List<FittedPurity> purities = create(size);
         final List<String> toLines = FittedPurityFile.toLines(purities);
         assertEquals(size + 1, toLines.size());
-        assertEquals('#', toLines.get(0).charAt(0));
+        assertTrue(toLines.get(0).startsWith(FittedPurityFile.HEADER_PREFIX));
     }
 
     @Test
     public void testInputAndOutput() {
-        final List<FittedPurity> expected = createPurities(5);
+        final List<FittedPurity> expected = create(5);
         final List<FittedPurity> victim = FittedPurityFile.fromLines(FittedPurityFile.toLines(expected));
 
         assertEquals(expected.size(), victim.size());
@@ -33,7 +34,7 @@ public class FittedPurityFileTest {
     }
 
     @NotNull
-    private List<FittedPurity> createPurities(int count) {
+    private List<FittedPurity> create(int count) {
         Random random = new Random();
         final List<FittedPurity> result = Lists.newArrayList();
         for (int i = 0; i < count; i++) {

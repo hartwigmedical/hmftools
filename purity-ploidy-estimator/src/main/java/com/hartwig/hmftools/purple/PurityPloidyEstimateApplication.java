@@ -16,13 +16,13 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberWriter;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreWriter;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
@@ -135,13 +135,13 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Writing to file location: {}", outputDirectory);
 
             final String copyNumberFilename = outputFileName(outputDirectory, tumorSample, ".cnv");
-            PurpleCopyNumberWriter.writeRegions(copyNumberFilename, smoothRegions);
+            PurpleCopyNumberFile.write(copyNumberFilename, smoothRegions);
 
             final String purityFilename = outputFileName(outputDirectory, tumorSample, ".purity");
-            FittedPurityFile.writePurity(purityFilename, fittedPurities);
+            FittedPurityFile.write(purityFilename, fittedPurities);
 
             final String scoreFilename = outputFileName(outputDirectory, tumorSample, ".score");
-            FittedPurityScoreWriter.writeScore(scoreFilename, score);
+            FittedPurityScoreFile.write(scoreFilename, score);
 
             final String regionsFilename = outputFileName(outputDirectory, tumorSample, ".fitted");
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions,
