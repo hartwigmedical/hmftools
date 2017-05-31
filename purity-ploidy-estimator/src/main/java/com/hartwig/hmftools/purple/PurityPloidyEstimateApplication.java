@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFact
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory.smooth;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -134,27 +133,16 @@ public class PurityPloidyEstimateApplication {
             final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, freecDirectory);
             LOGGER.info("Writing to file location: {}", outputDirectory);
 
-            final String copyNumberFilename = outputFileName(outputDirectory, tumorSample, ".cnv");
-            PurpleCopyNumberFile.write(copyNumberFilename, smoothRegions);
+            PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
+            FittedPurityFile.write(outputDirectory, tumorSample, fittedPurities);
+            FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
 
-            final String purityFilename = outputFileName(outputDirectory, tumorSample, ".purity");
-            FittedPurityFile.write(purityFilename, fittedPurities);
-
-            final String scoreFilename = outputFileName(outputDirectory, tumorSample, ".score");
-            FittedPurityScoreFile.write(scoreFilename, score);
-
-            final String regionsFilename = outputFileName(outputDirectory, tumorSample, ".fitted");
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions,
                     highConfidence, smoothRegions);
-            FittedRegionWriter.writeCopyNumber(regionsFilename, enrichedFittedRegions);
+            FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
         }
 
         LOGGER.info("Complete");
-    }
-
-    @NotNull
-    private static String outputFileName(String outputDir, String tumorSample, String extention) {
-        return outputDir + File.separator + tumorSample + ".purple" + extention;
     }
 
     @NotNull

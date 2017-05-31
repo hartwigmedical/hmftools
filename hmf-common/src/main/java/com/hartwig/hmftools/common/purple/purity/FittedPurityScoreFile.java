@@ -15,14 +15,18 @@ public enum FittedPurityScoreFile {
 
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
+    private static final String EXTENSION = ".purple.score";
 
     @NotNull
-    public static FittedPurityScore read(@NotNull final String filePath) throws IOException {
+    public static FittedPurityScore read(@NotNull final String basePath, @NotNull final String sample)
+            throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filePath, @NotNull final FittedPurityScore score)
-            throws IOException {
+    public static void write(@NotNull final String basePath, @NotNull final String sample,
+            @NotNull final FittedPurityScore score) throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
         Files.write(new File(filePath).toPath(), toLines(score));
     }
 
@@ -39,8 +43,7 @@ public enum FittedPurityScoreFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
-                .add("polyclonalProportion")
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("polyclonalProportion")
                 .add("minPurity")
                 .add("maxPurity")
                 .add("minPloidy")

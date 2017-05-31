@@ -13,8 +13,12 @@ import org.jetbrains.annotations.NotNull;
 public enum FittedRegionWriter {
     ;
 
-    public static void writeCopyNumber(@NotNull final String filePath,
+    private static final String EXTENSION = ".purple.fitted";
+
+
+    public static void writeCopyNumber(@NotNull final String basePath, @NotNull final String sample,
             @NotNull Collection<FittedRegion> copyNumbers) throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         copyNumbers.stream().map(FittedRegionWriter::transform).forEach(lines::add);

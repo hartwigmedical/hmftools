@@ -1,18 +1,5 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.copynumber.freec.FreecCopyNumberFactory;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -20,6 +7,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.copynumber.freec.FreecCopyNumberFactory;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
+import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
+import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class PatientReporterHelper {
 
@@ -32,6 +37,20 @@ final class PatientReporterHelper {
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
 
     private PatientReporterHelper() {
+    }
+
+    @NotNull
+    static List<FittedPurity> loadPurity(@NotNull final String runDirectory,
+            @NotNull final String sample) throws IOException, HartwigException {
+        final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
+        return FittedPurityFile.read(cnvBasePath, sample);
+    }
+
+    @NotNull
+    static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory,
+            @NotNull final String sample) throws IOException, HartwigException {
+        final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
+        return PurpleCopyNumberFile.read(cnvBasePath, sample);
     }
 
     @NotNull

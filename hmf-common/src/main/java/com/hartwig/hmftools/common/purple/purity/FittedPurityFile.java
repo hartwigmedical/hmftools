@@ -18,14 +18,17 @@ public enum FittedPurityFile {
     private static final int MAX_RECORDS = 100;
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
+    private static final String EXTENSION = ".purple.purity";
 
     @NotNull
-    public static List<FittedPurity> read(@NotNull final String filePath) throws IOException {
+    public static List<FittedPurity> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filePath, @NotNull final List<FittedPurity> purity)
+    public static void write(@NotNull final String basePath, @NotNull final String sample,@NotNull final List<FittedPurity> purity)
             throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
         Files.write(new File(filePath).toPath(), toLines(purity));
     }
 

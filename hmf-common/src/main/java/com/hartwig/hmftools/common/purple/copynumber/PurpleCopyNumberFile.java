@@ -17,14 +17,18 @@ public enum PurpleCopyNumberFile {
 
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
+    private static final String EXTENSION = ".purple.cnv";
 
     @NotNull
-    public static List<PurpleCopyNumber> read(@NotNull final String filePath) throws IOException {
+    public static List<PurpleCopyNumber> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filePath, @NotNull List<PurpleCopyNumber> copyNumbers)
+
+    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers)
             throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
         Files.write(new File(filePath).toPath(), toLines(copyNumbers));
     }
 
