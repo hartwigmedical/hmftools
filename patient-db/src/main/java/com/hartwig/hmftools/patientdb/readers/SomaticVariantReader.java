@@ -56,7 +56,7 @@ public class SomaticVariantReader {
     }
 
     @NotNull
-    private List<SomaticVariantData> toVariantData(@NotNull final List<SomaticVariant> variants) {
+    private static List<SomaticVariantData> toVariantData(@NotNull final List<SomaticVariant> variants) {
         final List<SomaticVariantData> somaticVariantDatas = Lists.newArrayList();
         for (final SomaticVariant variant : variants) {
             // MIVO: get the first annotation for now, eventually we will want all
