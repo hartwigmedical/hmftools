@@ -42,16 +42,50 @@ public class PDFWriterTest {
     @Test
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
-        final VariantReport variant1 = ImmutableVariantReport.builder().gene("BRAF").position("7:140453136").ref("A").alt(
-                "T").transcript("ENST00000377970.6").hgvsCoding("c.1799T>A").hgvsProtein("p.Val600Glu").consequence(
-                "missense variant").cosmicID("COSM476").alleleReadCount(34).totalReadCount(99).build();
-        final VariantReport variant2 = ImmutableVariantReport.builder().gene("MYC").position("8:128748854").ref("GG").alt(
-                "CA").transcript("ENST00000377970.2").hgvsCoding("c.15_16delGGinsCA").hgvsProtein(
-                "p.ArgVal5ArgIle").consequence("missense variant").cosmicID("").alleleReadCount(12).totalReadCount(
-                88).build();
-        final VariantReport variant3 = ImmutableVariantReport.builder().gene("TP53").position("17:7577111").ref(
-                "GCACAAA").alt("G").transcript("ENST00000269305.4").hgvsCoding("c.821_826delTTTGTG").hgvsProtein(
-                "p.Val274_Cys275del").consequence("inframe deletion").alleleReadCount(21).totalReadCount(87).build();
+        final VariantReport variant1 = ImmutableVariantReport.builder()
+                .gene("BRAF")
+                .chromosome("7")
+                .position(140453136)
+                .ref("A")
+                .alt("T")
+                .transcript("ENST00000377970.6")
+                .hgvsCoding("c.1799T>A")
+                .hgvsProtein("p.Val600Glu")
+                .consequence("missense variant")
+                .cosmicID("COSM476")
+                .alleleReadCount(34)
+                .totalReadCount(99)
+                .baf("AAAB")
+                .build();
+        final VariantReport variant2 = ImmutableVariantReport.builder()
+                .gene("MYC")
+                .chromosome("8")
+                .position(128748854)
+                .ref("GG")
+                .alt("CA")
+                .transcript("ENST00000377970.2")
+                .hgvsCoding("c.15_16delGGinsCA")
+                .hgvsProtein("p.ArgVal5ArgIle")
+                .consequence("missense variant")
+                .cosmicID("")
+                .alleleReadCount(12)
+                .totalReadCount(88)
+                .baf("AB")
+                .build();
+        final VariantReport variant3 = ImmutableVariantReport.builder()
+                .gene("TP53")
+                .chromosome("17")
+                .position(7577111)
+                .ref("GCACAAA")
+                .alt("G")
+                .transcript("ENST00000269305.4")
+                .hgvsCoding("c.821_826delTTTGTG")
+                .hgvsProtein("p.Val274_Cys275del")
+                .consequence("inframe deletion")
+                .alleleReadCount(21)
+                .totalReadCount(87)
+                .baf("AA")
+                .build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
         final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2").gene("ALK").transcript(

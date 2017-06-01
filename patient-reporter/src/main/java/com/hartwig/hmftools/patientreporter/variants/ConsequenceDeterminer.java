@@ -91,7 +91,8 @@ class ConsequenceDeterminer {
             }
 
             builder.gene(variantAnnotation.gene());
-            builder.position(variant.chromosome() + ":" + variant.position());
+            builder.chromosome(variant.chromosome());
+            builder.position(variant.position());
             builder.ref(variant.ref());
             builder.alt(variant.alt());
             builder.transcript(slicingAnnotation.transcript());

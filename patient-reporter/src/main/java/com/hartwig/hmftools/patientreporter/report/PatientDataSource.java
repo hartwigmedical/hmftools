@@ -49,7 +49,7 @@ class PatientDataSource {
 
         for (final VariantReport variant : variants) {
             final String variantText = drupFilter.test(variant) ? variant.gene() + "*" : variant.gene();
-            variantDataSource.add(variantText, variant.position(), toVariant(variant), variant.transcript(),
+            variantDataSource.add(variantText, variant.chromosomePosition(), toVariant(variant), variant.transcript(),
                     variant.hgvsCoding(), variant.hgvsProtein(), variant.consequence(), variant.cosmicID(),
                     stripCosmicIdentifier(variant.cosmicID()), toAlleleFrequency(variant));
         }
