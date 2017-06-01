@@ -71,7 +71,7 @@ public class FittedRegionFactory {
                         .modelTumorRatio(modelRatio)
                         .bafDeviation(bafDeviation)
                         .cnvDeviation(cnvDeviation)
-                        .purityAdjustedBAF(purityAdjustedBAF(purity, ploidy, observedBAF))
+                        .purityAdjustedBAF(purityAdjustedBAF(purity, tumorCopyNumber, observedBAF))
                         .deviation(deviation);
                 minDeviation = deviation;
             }
@@ -122,12 +122,11 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    static double purityAdjustedBAF(final double purity, final int ploidy, final double observedBAF) {
-        double adjustedObservedBAF = ploidy % 2 == 0 && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF)
+    static double purityAdjustedBAF(final double purity, final double copyNumber, final double observedBAF) {
+        double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF)
                 ? 0.5
                 : observedBAF;
-
-        return PurityAdjustment.purityAdjustedFrequency(purity, ploidy, adjustedObservedBAF, 0.5);
+        return PurityAdjustment.purityAdjustedFrequency(purity, copyNumber, adjustedObservedBAF, 0.5);
     }
 
     @VisibleForTesting
@@ -140,4 +139,15 @@ public class FittedRegionFactory {
 
         return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
     }
+
+    @VisibleForTesting
+    static boolean isEven(double copyNumber) {
+
+        double decimal = copyNumber % 1d;
+        double wholeNumber = copyNumber - decimal;
+
+        return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0
+                && Doubles.greaterOrEqual(decimal, 0.75));
+    }
+
 }
