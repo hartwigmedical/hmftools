@@ -13,19 +13,19 @@ import org.jetbrains.annotations.NotNull;
 
 class SmoothedRegions {
 
-    private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
-
-    private final List<PurpleCopyNumber> highConfidenceRegions;
-    private final List<FittedRegion> fittedRegions;
-
     private static final double DIPLOID_MIN_RATIO = 0.75;
     private static final double DIPLOID_MAX_RATIO = 1.25;
-
     private static final double MIN_COPY_NUMBER_RANGE = 0.3;
     private static final double MAX_COPY_NUMBER_RANGE = 1.3;
 
-    SmoothedRegions(@NotNull final List<PurpleCopyNumber> highConfidenceRegions,
+    private final double purity;
+    private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
+    private final List<PurpleCopyNumber> highConfidenceRegions;
+    private final List<FittedRegion> fittedRegions;
+
+    SmoothedRegions(double purity, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
             @NotNull final List<FittedRegion> fittedRegions) {
+        this.purity = purity;
         this.highConfidenceRegions = highConfidenceRegions;
         this.fittedRegions = fittedRegions;
 
@@ -48,7 +48,7 @@ class SmoothedRegions {
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new PurpleCopyNumberBuilder(fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new PurpleCopyNumberBuilder(purity, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -93,7 +93,7 @@ class SmoothedRegions {
                 current.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(current.build());
-                current = new PurpleCopyNumberBuilder(copyNumber);
+                current = new PurpleCopyNumberBuilder(purity, copyNumber);
             }
         }
 
@@ -114,7 +114,7 @@ class SmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder.build());
                 }
-                reverseBuilder = new PurpleCopyNumberBuilder(copyNumber);
+                reverseBuilder = new PurpleCopyNumberBuilder(purity, copyNumber);
             }
         }
 

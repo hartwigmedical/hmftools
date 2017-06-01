@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedCopyNumber;
 
 import java.util.Collection;
@@ -10,13 +9,12 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purity.PurityAdjustment;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactory {
 
-    static final double NORMAL_BAF = 0.542;
+    public static final double NORMAL_BAF = 0.542;
 
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
@@ -71,7 +69,6 @@ public class FittedRegionFactory {
                         .modelTumorRatio(modelRatio)
                         .bafDeviation(bafDeviation)
                         .cnvDeviation(cnvDeviation)
-                        .purityAdjustedBAF(purityAdjustedBAF(purity, tumorCopyNumber, observedBAF))
                         .deviation(deviation);
                 minDeviation = deviation;
             }
@@ -122,15 +119,7 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    static double purityAdjustedBAF(final double purity, final double copyNumber, final double observedBAF) {
-        double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF)
-                ? 0.5
-                : observedBAF;
-        return PurityAdjustment.purityAdjustedFrequency(purity, copyNumber, adjustedObservedBAF, 0.5);
-    }
-
-    @VisibleForTesting
-    static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
+    public static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
         assert (alleleCount >= ploidy / 2);
 
         if (ploidy / alleleCount == 2) {
@@ -139,15 +128,4 @@ public class FittedRegionFactory {
 
         return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
     }
-
-    @VisibleForTesting
-    static boolean isEven(double copyNumber) {
-
-        double decimal = copyNumber % 1d;
-        double wholeNumber = copyNumber - decimal;
-
-        return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0
-                && Doubles.greaterOrEqual(decimal, 0.75));
-    }
-
 }

@@ -18,12 +18,12 @@ public enum PurpleCopyNumberFactory {
     ;
 
     @NotNull
-    public static List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
-        return new HighConfidenceRegions().highConfidence(fittedRegions);
+    public static List<PurpleCopyNumber> highConfidence(double purity, @NotNull final List<FittedRegion> fittedRegions) {
+        return new HighConfidenceRegions(purity).highConfidence(fittedRegions);
     }
 
     @NotNull
-    public static List<PurpleCopyNumber> smooth(@NotNull final List<FittedRegion> fittedRegions,
+    public static List<PurpleCopyNumber> smooth(double purity, @NotNull final List<FittedRegion> fittedRegions,
             @NotNull final List<PurpleCopyNumber> broadRegions) {
         final List<PurpleCopyNumber> result = Lists.newArrayList();
 
@@ -37,7 +37,7 @@ public enum PurpleCopyNumberFactory {
             final List<PurpleCopyNumber> chromosomeBroadRegions = broadRegions.stream().filter(
                     matchesChromosome(orderedChromosome)).collect(toList());
 
-            final List<PurpleCopyNumber> smoothRegions = new SmoothedRegions(chromosomeBroadRegions,
+            final List<PurpleCopyNumber> smoothRegions = new SmoothedRegions(purity, chromosomeBroadRegions,
                     chromosomeCopyNumbers).getSmoothedRegions();
 
             result.addAll(RegionStepFilter.filter(smoothRegions));

@@ -119,8 +119,8 @@ public class PurityPloidyEstimateApplication {
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(),
                     bestFit.normFactor(), observedRegions);
 
-            final List<PurpleCopyNumber> highConfidence = highConfidence(fittedRegions);
-            final List<PurpleCopyNumber> smoothRegions = smooth(fittedRegions, highConfidence);
+            final List<PurpleCopyNumber> highConfidence = highConfidence(bestFit.purity(), fittedRegions);
+            final List<PurpleCopyNumber> smoothRegions = smooth(bestFit.purity(), fittedRegions, highConfidence);
             final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurities, smoothRegions);
 
             if (cmd.hasOption(DB_ENABLED)) {

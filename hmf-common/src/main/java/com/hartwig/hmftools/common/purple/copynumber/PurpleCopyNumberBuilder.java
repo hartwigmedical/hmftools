@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purity.PurityAdjustment;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
 class PurpleCopyNumberBuilder {
 
+    private final double purity;
     private final String chromosome;
     private long start = 1;
     private long end;
@@ -14,11 +20,11 @@ class PurpleCopyNumberBuilder {
     private boolean weighWithBaf;
     private int totalWeight;
     private double sumWeightedBAF;
-    private double sumWeightedPurityAdjustedBAF;
     private double sumWeightedCopyNumber;
     private double sumWeightedRefNormalisedCopyNumber;
 
-    PurpleCopyNumberBuilder(@NotNull final FittedRegion fittedRegion) {
+    PurpleCopyNumberBuilder(double purity, @NotNull final FittedRegion fittedRegion) {
+        this.purity = purity;
         this.chromosome = fittedRegion.chromosome();
         this.start = fittedRegion.start();
         extendRegion(fittedRegion);
@@ -34,10 +40,6 @@ class PurpleCopyNumberBuilder {
 
     double averageObservedBAF() {
         return totalWeight == 0 ? 0 : sumWeightedBAF / totalWeight;
-    }
-
-    private double averagePurityAdjustedBAF() {
-        return totalWeight == 0 ? 0 : sumWeightedPurityAdjustedBAF / totalWeight;
     }
 
     double averageTumorCopyNumber() {
@@ -67,7 +69,6 @@ class PurpleCopyNumberBuilder {
             long weight = value.bafCount();
             totalWeight += weight;
             sumWeightedBAF += baf * weight;
-            sumWeightedPurityAdjustedBAF += value.purityAdjustedBAF() * weight;
             sumWeightedCopyNumber += ratio * weight;
             sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * weight;
 
@@ -83,7 +84,6 @@ class PurpleCopyNumberBuilder {
     private void resetAverage() {
         totalWeight = 0;
         sumWeightedBAF = 0;
-        sumWeightedPurityAdjustedBAF = 0;
         sumWeightedCopyNumber = 0;
         sumWeightedRefNormalisedCopyNumber = 0;
     }
@@ -96,8 +96,27 @@ class PurpleCopyNumberBuilder {
                 .end(end)
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
-                .averageActualBAF(averagePurityAdjustedBAF())
+                .averageActualBAF(purityAdjustedBAF(purity, averageTumorCopyNumber(), averageObservedBAF()))
                 .averageTumorCopyNumber(averageTumorCopyNumber())
                 .build();
+    }
+
+
+    @VisibleForTesting
+    static double purityAdjustedBAF(final double purity, final double copyNumber, final double observedBAF) {
+        double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF)
+                ? 0.5
+                : observedBAF;
+        return PurityAdjustment.purityAdjustedFrequency(purity, copyNumber, adjustedObservedBAF, 0.5);
+    }
+
+    @VisibleForTesting
+    static boolean isEven(double copyNumber) {
+
+        double decimal = copyNumber % 1d;
+        double wholeNumber = copyNumber - decimal;
+
+        return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0
+                && Doubles.greaterOrEqual(decimal, 0.75));
     }
 }

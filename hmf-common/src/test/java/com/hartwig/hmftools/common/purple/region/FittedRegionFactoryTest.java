@@ -3,15 +3,11 @@ package com.hartwig.hmftools.common.purple.region;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.NORMAL_BAF;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.bafDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.cnvDeviation;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.isEven;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAF;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAFToMinimizeDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelRatio;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.purityAdjustedBAF;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -28,13 +24,19 @@ public class FittedRegionFactoryTest {
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
         assertEquals(0.011058009947947143, result.deviation(), EPSILON);
-        assertEquals(0.6786402753872633, result.purityAdjustedBAF(), EPSILON);
     }
 
     @NotNull
     private static ObservedRegion create(final double baf, final double ratio) {
-        return ImmutableEnrichedRegion.builder().observedBAF(baf).bafCount(1).chromosome("1").start(1).end(
-                2).observedTumorRatio(ratio).observedNormalRatio(1).build();
+        return ImmutableEnrichedRegion.builder()
+                .observedBAF(baf)
+                .bafCount(1)
+                .chromosome("1")
+                .start(1)
+                .end(2)
+                .observedTumorRatio(ratio)
+                .observedNormalRatio(1)
+                .build();
     }
 
     @Test
@@ -106,59 +108,6 @@ public class FittedRegionFactoryTest {
         assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF), EPSILON);
         assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
         assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
-    }
-
-    @Test
-    public void testIsEvenCopyNumber() {
-
-        assertFalse(isEven(0.5));
-        assertFalse(isEven(0.75));
-        assertFalse(isEven(1));
-        assertFalse(isEven(1.74));
-
-        assertTrue(isEven(1.75));
-        assertTrue(isEven(2));
-        assertTrue(isEven(2.25));
-
-        assertFalse(isEven(2.5));
-        assertFalse(isEven(2.75));
-        assertFalse(isEven(3));
-        assertFalse(isEven(3.74));
-
-        assertTrue(isEven(3.75));
-        assertTrue(isEven(4));
-        assertTrue(isEven(4.25));
-    }
-
-    @Test
-    public void testPurityAdjustedBaf() {
-        testPurityAdjustedBaf(0.1);
-        testPurityAdjustedBaf(0.2);
-        testPurityAdjustedBaf(0.3);
-        testPurityAdjustedBaf(0.4);
-        testPurityAdjustedBaf(0.5);
-        testPurityAdjustedBaf(0.6);
-        testPurityAdjustedBaf(0.7);
-        testPurityAdjustedBaf(0.8);
-        testPurityAdjustedBaf(0.9);
-    }
-
-    private void testPurityAdjustedBaf(double purity) {
-        testPurityAdjustedBaf(purity, 2, 1);
-        testPurityAdjustedBaf(purity, 2, 2);
-        testPurityAdjustedBaf(purity, 3, 2);
-        testPurityAdjustedBaf(purity, 3, 3);
-        testPurityAdjustedBaf(purity, 4, 2);
-        testPurityAdjustedBaf(purity, 4, 3);
-        testPurityAdjustedBaf(purity, 4, 4);
-        testPurityAdjustedBaf(purity, 5, 3);
-        testPurityAdjustedBaf(purity, 5, 4);
-    }
-
-    private static void testPurityAdjustedBaf(final double purity, final int ploidy, final int alleleCount) {
-        double expectedPurityAdjustedBAF = 1d * alleleCount / ploidy;
-        double observedBAF = modelBAF(purity, ploidy, alleleCount);
-        assertEquals(expectedPurityAdjustedBAF, purityAdjustedBAF(purity, ploidy, observedBAF), EPSILON);
     }
 
     private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy,
