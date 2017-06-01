@@ -3,24 +3,24 @@ package com.hartwig.hmftools.purple;
 import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedFrequency;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.zipper.GenomeZipper;
-import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
+import com.hartwig.hmftools.common.zipper.SimpleGenomeZipper;
+import com.hartwig.hmftools.common.zipper.SimpleGenomeZipperInRegionPositionsHandler;
 
-class PurityAdjustedSomaticVariantFactory implements GenomeZipperRegionHandler<PurpleCopyNumber>, BiConsumer<PurpleCopyNumber, SomaticVariant> {
+import org.jetbrains.annotations.NotNull;
 
-    static List<SomaticVariant> purpleAdjusted(double purity, List<PurpleCopyNumber> regions, List<SomaticVariant> variants) {
+class PurityAdjustedSomaticVariantFactory
+        implements SimpleGenomeZipperInRegionPositionsHandler<PurpleCopyNumber, SomaticVariant> {
 
-        PurityAdjustedSomaticVariantFactory zipHandler = new PurityAdjustedSomaticVariantFactory(purity);
-        GenomeZipper<PurpleCopyNumber> zipper = new GenomeZipper<>(regions, zipHandler);
-        zipper.addPositions(variants, zipHandler);
-        zipper.run();
-        return zipHandler.results();
+    static List<SomaticVariant> purpleAdjusted(double purity, List<PurpleCopyNumber> regions,
+            List<SomaticVariant> variants) {
+        PurityAdjustedSomaticVariantFactory handler = new PurityAdjustedSomaticVariantFactory(purity);
+        SimpleGenomeZipper.zip(regions, variants, handler);
+        return handler.results();
     }
 
     private final double purity;
@@ -35,17 +35,7 @@ class PurityAdjustedSomaticVariantFactory implements GenomeZipperRegionHandler<P
     }
 
     @Override
-    public void enter(final PurpleCopyNumber region) {
-        // Ignore
-    }
-
-    @Override
-    public void exit(final PurpleCopyNumber region) {
-        // Ignore
-    }
-
-    @Override
-    public void accept(final PurpleCopyNumber consolidatedRegion, final SomaticVariant variant) {
+    public void handle(@NotNull final PurpleCopyNumber consolidatedRegion, @NotNull final SomaticVariant variant) {
         if (variant.type() == VariantType.SNP) {
             results.add(purityAdjusted(consolidatedRegion.averageTumorCopyNumber(), variant));
         }
@@ -54,7 +44,9 @@ class PurityAdjustedSomaticVariantFactory implements GenomeZipperRegionHandler<P
     private SomaticVariant purityAdjusted(double ploidy, SomaticVariant variant) {
         double purityAdjustedFrequency = purityAdjustedSomaticVariants(purity, ploidy, variant.alleleFrequency());
         return SomaticVariant.Builder.fromVariant(variant)
-                .alleleReadCount((int) Math.round(purityAdjustedFrequency * 10000)).totalReadCount(10000).build();
+                .alleleReadCount((int) Math.round(purityAdjustedFrequency * 10000))
+                .totalReadCount(10000)
+                .build();
     }
 
     private static double purityAdjustedSomaticVariants(final double purity, final double ploidy,

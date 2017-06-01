@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.zipper;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
@@ -13,7 +12,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class GenomeZipper<R extends GenomeRegion> {
 
-    public GenomeZipper(@NotNull final List<R> regions, @NotNull final GenomeZipperRegionHandler<R> regionHandler) {
+    private final boolean includePositionsOutsideRegions;
+
+    public GenomeZipper(final boolean includePositionsOutsideRegions, @NotNull final List<R> regions, @NotNull final GenomeZipperRegionHandler<R> regionHandler) {
+        this.includePositionsOutsideRegions = includePositionsOutsideRegions;
         this.regions = regions;
         this.regionHandler = regionHandler;
     }
@@ -26,21 +28,29 @@ public class GenomeZipper<R extends GenomeRegion> {
 
     public <P extends GenomePosition> void addPositions(@NotNull final List<P> positions,
             @NotNull final Consumer<P> handler) {
-        addPositions(positions, (x, y) -> handler.accept(y));
-    }
-
-    public <P extends GenomePosition> void addPositions(@NotNull final List<P> positions,
-            @NotNull final BiConsumer<R, P> handler) {
         innerPositions.add(new InnerPosition<>(positions, handler));
     }
 
-    public void run() {
+    public void zip() {
         for (final R region : regions) {
+
+            if (includePositionsOutsideRegions) {
+                for (final InnerPosition<?> innerPosition : innerPositions) {
+                    innerPosition.preRegion(region);
+                }
+            }
+
             regionHandler.enter(region);
             for (final InnerPosition<?> innerPosition : innerPositions) {
-                innerPosition.apply(region);
+                innerPosition.inRegion(region);
             }
             regionHandler.exit(region);
+        }
+
+        if (includePositionsOutsideRegions) {
+            for (final InnerPosition<?> innerPosition : innerPositions) {
+                innerPosition.remainder();
+            }
         }
     }
 
@@ -49,25 +59,47 @@ public class GenomeZipper<R extends GenomeRegion> {
         @NotNull
         private final List<P> positions;
         @NotNull
-        private final BiConsumer<R, P> handler;
+        private final Consumer<P> handler;
 
         private int index;
 
-        private InnerPosition(@NotNull final List<P> positions, @NotNull final BiConsumer<R, P> handler) {
+        private InnerPosition(@NotNull final List<P> positions, @NotNull final Consumer<P> handler) {
             this.positions = positions;
             this.handler = handler;
         }
 
-        private void apply(@NotNull final R region) {
+        private void preRegion(@NotNull final R region) {
+            while (index < positions.size()) {
+                final P position = positions.get(index);
+                final int compare = compare(position, region);
+                if (compare >= 0) {
+                    break;
+                } else{
+                    handler.accept(position);
+                }
+
+                index++;
+            }
+        }
+
+        private void inRegion(@NotNull final R region) {
             while (index < positions.size()) {
                 final P position = positions.get(index);
                 final int compare = compare(position, region);
                 if (compare > 0) {
                     break;
                 } else if (compare == 0) {
-                    handler.accept(region, position);
+                    handler.accept(position);
                 }
 
+                index++;
+            }
+        }
+
+        private void remainder() {
+            while (index < positions.size()) {
+                final P position = positions.get(index);
+                handler.accept(position);
                 index++;
             }
         }
