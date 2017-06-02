@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.formatPercent;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.apache.logging.log4j.util.Strings;
@@ -47,16 +46,15 @@ public interface VariantReport extends GenomePosition {
         return Strings.EMPTY;
     }
 
-    @NotNull
     @Value.Default
     default double impliedVAF() {
         return 0;
     }
 
-    default String variantAlleleFrequency() {
-        return Doubles.isZero(impliedVAF())
-                ? formatPercent(alleleFrequency())
-                : formatPercent(alleleFrequency()) + " (" + formatPercent(impliedVAF()) + ")";
+    @NotNull
+    default String readDepthInfo() {
+        return Integer.toString(alleleReadCount()) + " / " + Integer.toString(totalReadCount()) + " (" + formatPercent(
+                alleleFrequency()) + ")";
     }
 
     int totalReadCount();

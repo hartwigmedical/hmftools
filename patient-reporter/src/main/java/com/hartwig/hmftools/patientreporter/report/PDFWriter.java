@@ -46,7 +46,7 @@ public class PDFWriter implements ReportWriter {
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
     private static final String VERSION = "2.0";
 
-    // MIVO: change font to monospace to remove text truncation issue (see gene panel tpye column for example)
+    // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
 
@@ -270,11 +270,10 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
+                            col.column("Read Depth", PatientDataSource.READ_DEPTH_FIELD),
                             col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("Depth", PatientDataSource.DEPTH_FIELD),
-                            col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD),
                             col.column("BAF", PatientDataSource.BAF_FIELD)))
                         .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
@@ -351,7 +350,7 @@ public class PDFWriter implements ReportWriter {
         }
         annotations.sort(Comparator.comparing(HMFSlicingAnnotation::gene));
 
-        final ComponentBuilder<?, ?> table = cmp.subreport(
+        return cmp.subreport(
                 baseTable().fields(GenePanelDataSource.genePanelFields())
                     .columns(
                         col.emptyColumn().setFixedWidth(40),
@@ -368,7 +367,6 @@ public class PDFWriter implements ReportWriter {
                         col.column("Type", GenePanelDataSource.GENE2_TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
                     .setDataSource(GenePanelDataSource.fromCosmic(annotations, genePanelModel));
-        return table;
         // @formatter:on
     }
 

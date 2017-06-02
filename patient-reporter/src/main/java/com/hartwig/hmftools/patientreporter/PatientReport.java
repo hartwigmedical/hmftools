@@ -28,7 +28,8 @@ public class PatientReport {
 
     public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
             @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad,
-            @NotNull final String tumorType, @Nullable final Double tumorPercentage, @NotNull final FittedPurity fittedPurity) {
+            @NotNull final String tumorType, @Nullable final Double tumorPercentage,
+            @NotNull final FittedPurity fittedPurity) {
         this.sample = sample;
         this.variants = variants;
         this.copyNumbers = copyNumbers;

@@ -73,10 +73,10 @@ public class PDFWriterTest {
 
         final int mutationalLoad = 361;
         final String tumorType = "Melanoma";
-        final Double tumorPercentage = 0.6;
+        final Double pathologyTumorPercentage = 0.6;
 
         final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
-                tumorPercentage, fittedPurity);
+                pathologyTumorPercentage, fittedPurity);
         final DrupFilter drupFilter = new DrupFilter(DRUP_GENES_CSV);
         final GenePanelModel genePanelModel = new GenePanelModel(GENE_PANEL_CSV);
 
