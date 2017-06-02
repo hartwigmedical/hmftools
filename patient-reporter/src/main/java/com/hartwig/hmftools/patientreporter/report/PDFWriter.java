@@ -273,7 +273,9 @@ public class PDFWriter implements ReportWriter {
                             col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
+                            col.column("Depth", PatientDataSource.DEPTH_FIELD),
+                            col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD),
+                            col.column("BAF", PatientDataSource.BAF_FIELD)))
                         .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -285,6 +287,9 @@ public class PDFWriter implements ReportWriter {
                 cmp.horizontalList(cmp.horizontalGap(10),
                         cmp.text("*").setStyle(fontStyle()).setWidth(2),
                         cmp.text(geneMutationAddition).setStyle(fontStyle())),
+                cmp.verticalGap(15),
+                cmp.text("Implied Tumor Purity: " + report.impliedPurityString())
+                        .setStyle(tableHeaderStyle()),
                 cmp.verticalGap(15),
                 cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " **")
                         .setStyle(tableHeaderStyle()),
@@ -384,10 +389,13 @@ public class PDFWriter implements ReportWriter {
                                 + "additional information on the variant. If the variant could not be found in the "
                                 + "COSMIC database, this field will be left blank. The Cosmic v76 database is used "
                                 + "to look-up these IDs.",
+                        "The 'Depth' fields displays the total number of observations at this position.",
                         "The 'VAF' fields displays the variant allele frequency. The first number is "
-                                + "the number of observations of the variant, and the second number is the total "
-                                + "number of observations on this position. The number within parentheses is the "
-                                + "allele frequency (the two numbers divided by each other).",
+                                + "the percent of observations of the variant. The second number in parentheses is "
+                                + "adjusted for the implied purity.",
+                        "The 'BAF' fields displays the implied purity adjusted beta allele frequency as a proportion "
+                                + "of A's and B's. The copy number is the sum of A's and B's. The absence of any B's "
+                                + "indicates a loss of heterozygosity.",
                         "The tumor mutational load is the total number of somatic missense variants found across "
                                 + " the whole genome of the tumor biopsy."));
     }

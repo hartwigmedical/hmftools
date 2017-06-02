@@ -40,7 +40,7 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static List<FittedPurity> loadPurity(@NotNull final String runDirectory,
+    static FittedPurity loadPurity(@NotNull final String runDirectory,
             @NotNull final String sample) throws IOException, HartwigException {
         final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
         return FittedPurityFile.read(cnvBasePath, sample);

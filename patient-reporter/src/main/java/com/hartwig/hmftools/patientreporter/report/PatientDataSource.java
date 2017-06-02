@@ -31,7 +31,9 @@ class PatientDataSource {
     static final FieldBuilder<?> EFFECT_FIELD = field("effect", String.class);
     static final FieldBuilder<?> COSMIC_FIELD = field("cosmic", String.class);
     static final FieldBuilder<?> COSMIC_NR_FIELD = field("cosmic_nr", String.class);
+    static final FieldBuilder<?> DEPTH_FIELD = field("depth", String.class);
     static final FieldBuilder<?> ALLELE_FREQUENCY_FIELD = field("allele_freq", String.class);
+    static final FieldBuilder<?> BAF_FIELD = field("baf", String.class);
 
     static final FieldBuilder<?> COPY_NUMBER_TYPE_FIELD = field("copynumber_type", String.class);
     static final FieldBuilder<?> COPY_NUMBER_FIELD = field("copynumber", String.class);
@@ -45,13 +47,14 @@ class PatientDataSource {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(), POSITION_FIELD.getName(),
                 VARIANT_FIELD.getName(), TRANSCRIPT_FIELD.getName(), HGVS_CODING_FIELD.getName(),
                 HGVS_PROTEIN_FIELD.getName(), EFFECT_FIELD.getName(), COSMIC_FIELD.getName(),
-                COSMIC_NR_FIELD.getName(), ALLELE_FREQUENCY_FIELD.getName());
+                COSMIC_NR_FIELD.getName(), DEPTH_FIELD.getName(), ALLELE_FREQUENCY_FIELD.getName(), BAF_FIELD.getName());
 
         for (final VariantReport variant : variants) {
             final String variantText = drupFilter.test(variant) ? variant.gene() + "*" : variant.gene();
             variantDataSource.add(variantText, variant.chromosomePosition(), toVariant(variant), variant.transcript(),
                     variant.hgvsCoding(), variant.hgvsProtein(), variant.consequence(), variant.cosmicID(),
-                    stripCosmicIdentifier(variant.cosmicID()), toAlleleFrequency(variant));
+                    stripCosmicIdentifier(variant.cosmicID()), String.valueOf(variant.totalReadCount()),
+                    variant.variantAlleleFrequency(), variant.baf());
         }
 
         return variantDataSource;
@@ -85,7 +88,7 @@ class PatientDataSource {
     @NotNull
     static FieldBuilder<?>[] variantFields() {
         return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, VARIANT_FIELD, TRANSCRIPT_FIELD, HGVS_CODING_FIELD,
-                HGVS_PROTEIN_FIELD, EFFECT_FIELD, COSMIC_FIELD, COSMIC_NR_FIELD, ALLELE_FREQUENCY_FIELD };
+                HGVS_PROTEIN_FIELD, EFFECT_FIELD, COSMIC_FIELD, COSMIC_NR_FIELD, DEPTH_FIELD, ALLELE_FREQUENCY_FIELD, BAF_FIELD };
     }
 
     @NotNull
@@ -97,12 +100,5 @@ class PatientDataSource {
     @NotNull
     private static String toVariant(@NotNull final VariantReport variant) {
         return variant.ref() + " > " + variant.alt();
-    }
-
-    @NotNull
-    private static String toAlleleFrequency(@NotNull final VariantReport variant) {
-        final String alleleFreqPercString = Math.round(variant.alleleFrequency() * 100) + "%";
-        return Integer.toString(variant.alleleReadCount()) + " / " + Integer.toString(variant.totalReadCount()) + " ("
-                + alleleFreqPercString + ")";
     }
 }

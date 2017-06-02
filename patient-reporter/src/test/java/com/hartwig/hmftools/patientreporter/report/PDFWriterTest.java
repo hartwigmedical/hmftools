@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedVAF;
+
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
@@ -12,6 +14,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.PatientReport;
@@ -42,6 +46,14 @@ public class PDFWriterTest {
     @Test
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
+        final FittedPurity fittedPurity = ImmutableFittedPurity.builder()
+                .purity(0.58)
+                .diploidProportion(0)
+                .modelBAFDeviation(0)
+                .normFactor(0)
+                .score(0)
+                .build();
+
         final VariantReport variant1 = ImmutableVariantReport.builder()
                 .gene("BRAF")
                 .chromosome("7")
@@ -55,6 +67,7 @@ public class PDFWriterTest {
                 .cosmicID("COSM476")
                 .alleleReadCount(34)
                 .totalReadCount(99)
+                .impliedVAF(purityAdjustedVAF(fittedPurity.purity(), 4,  0.34/0.99))
                 .baf("AAAB")
                 .build();
         final VariantReport variant2 = ImmutableVariantReport.builder()
@@ -70,6 +83,7 @@ public class PDFWriterTest {
                 .cosmicID("")
                 .alleleReadCount(12)
                 .totalReadCount(88)
+                .impliedVAF(purityAdjustedVAF(fittedPurity.purity(), 2,  0.12/0.88))
                 .baf("AB")
                 .build();
         final VariantReport variant3 = ImmutableVariantReport.builder()
@@ -84,7 +98,8 @@ public class PDFWriterTest {
                 .consequence("inframe deletion")
                 .alleleReadCount(21)
                 .totalReadCount(87)
-                .baf("AA")
+                .impliedVAF(purityAdjustedVAF(fittedPurity.purity(), 3,  0.21/0.87))
+                .baf("AAA")
                 .build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
@@ -99,7 +114,7 @@ public class PDFWriterTest {
         final Double tumorPercentage = 0.6;
 
         final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
-                tumorPercentage);
+                tumorPercentage, fittedPurity);
         final DrupFilter drupFilter = new DrupFilter(DRUP_GENES_CSV);
         final GenePanelModel genePanelModel = new GenePanelModel(GENE_PANEL_CSV);
 

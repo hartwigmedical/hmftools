@@ -21,9 +21,9 @@ public enum FittedPurityFile {
     private static final String EXTENSION = ".purple.purity";
 
     @NotNull
-    public static List<FittedPurity> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+    public static FittedPurity read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
         final String filePath = basePath + File.separator + sample + EXTENSION;
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+        return fromLines(Files.readAllLines(new File(filePath).toPath())).get(0);
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample,@NotNull final List<FittedPurity> purity)

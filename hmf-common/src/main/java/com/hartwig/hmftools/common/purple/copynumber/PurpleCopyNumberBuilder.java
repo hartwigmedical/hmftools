@@ -101,13 +101,11 @@ class PurpleCopyNumberBuilder {
                 .build();
     }
 
-
     @VisibleForTesting
     static double purityAdjustedBAF(final double purity, final double copyNumber, final double observedBAF) {
-        double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF)
-                ? 0.5
-                : observedBAF;
-        return PurityAdjustment.purityAdjustedFrequency(purity, copyNumber, adjustedObservedBAF, 0.5);
+        double adjustedObservedBAF =
+                isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
+        return PurityAdjustment.purityAdjustedBAF(purity, copyNumber, adjustedObservedBAF);
     }
 
     @VisibleForTesting
