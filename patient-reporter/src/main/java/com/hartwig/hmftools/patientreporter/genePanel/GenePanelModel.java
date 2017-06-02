@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.io.reader.LineReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GenePanelModel {
@@ -40,12 +41,21 @@ public class GenePanelModel {
 
     @NotNull
     public String chromosomeBand(@NotNull final String gene) {
-        return dataPerGene.get(gene).chromosomeBand();
+        if (dataPerGene.containsKey(gene)) {
+            return dataPerGene.get(gene).chromosomeBand();
+        }
+
+        return Strings.EMPTY;
     }
 
     @NotNull
     public String type(@NotNull final String gene) {
-        return dataPerGene.get(gene).type();
+        if (dataPerGene.containsKey(gene)) {
+            final String type = dataPerGene.get(gene).type();
+            return type != null ? type : Strings.EMPTY;
+        }
+
+        return Strings.EMPTY;
     }
 
     private void addGene(@NotNull final String gene, @NotNull final GenePanelData genePanelData) {

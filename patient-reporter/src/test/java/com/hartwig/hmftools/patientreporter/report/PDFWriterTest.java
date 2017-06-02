@@ -116,6 +116,6 @@ public class PDFWriterTest {
     @NotNull
     private static Slicer createHMFSlicingRegion() throws IOException, EmptyFileException {
         final String resourcePath = Resources.getResource("bed").getPath();
-        return SlicerFactory.fromBedFile(resourcePath + File.separator + "HMF_Slicing_v1.bed");
+        return SlicerFactory.fromBedFile(resourcePath + File.separator + "HMF_Slicing_v2.bed");
     }
 }

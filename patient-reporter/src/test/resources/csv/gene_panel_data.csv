@@ -1,20 +1,20 @@
-ABL1,25,q34.12,Onco
-AKT1,207,q32.33,Onco
-ALK,238,p23.1-p23.2,Onco / Fusion
+ABL1,25,q34.12,Oncogene
+AKT1,207,q32.33,Oncogene
+ALK,238,p23.1-p23.2,Oncogene / Fusion
 APC,324,q22.2,Suppressor
 ARAF,369,p11.23,
 ATM,472,q22.3,Suppressor
 ATR,545,q23,Suppressor
 AXL,558,q13.2,
 BARD1,580,q35,
-BRAF,673,q34,Onco / Fusion
+BRAF,673,q34,Oncogene / Fusion
 BRCA1,672,q21.31,Suppressor
 BRCA2,675,q13.1,Suppressor
 BRIP1,83990,q23.2,Suppressor
-CCND1,595,q13.3,Onco
+CCND1,595,q13.3,Oncogene
 CDH1,999,q22.1,Suppressor
-CDK4,1019,q14.1,Onco
-CDK6,1021,q21.2,Onco
+CDK4,1019,q14.1,Oncogene
+CDK6,1021,q21.2,Oncogene
 CDKN2A,1029,p21.3,Suppressor
 CHEK1,1111,q24.2,
 CHEK2,11200,q12.1,Suppressor
@@ -23,14 +23,14 @@ CSF1R,1436,q32,
 CTNNA1,1495,q31.2,
 CTNNA2,1496,p12,
 CTNNA3,29119,q21.3,
-CTNNB1,1499,p22.1,Onco
-EGFR,1956,p11.2,Onco
-ERBB2,2064,q12,Onco / Fusion
-ERBB3,2065,q13.2,Onco
-ERBB4,2066,q34,Onco / Suppressor
+CTNNB1,1499,p22.1,Oncogene
+EGFR,1956,p11.2,Oncogene
+ERBB2,2064,q12,Oncogene / Fusion
+ERBB3,2065,q13.2,Oncogene
+ERBB4,2066,q34,Oncogene / Suppressor
 ERCC1,2067,q13.32,
-ESR1,2099,q25.1,Onco / Suppressor / Fusion
-EZH2,2146,q36.1,Onco / Suppressor
+ESR1,2099,q25.1,Oncogene / Suppressor / Fusion
+EZH2,2146,q36.1,Oncogene / Suppressor
 FANCA,2175,q24.3,Suppressor
 FANCB,2187,p22.2,
 FANCC,2176,q22.32,Suppressor
@@ -42,60 +42,60 @@ FANCI,55215,q26.1,
 FANCL,55120,p16.1,
 FANCM,57697,q21.2,
 FBXW7,55294,q31.3,Suppressor
-FGFR1,2260,p11.22-p11.23,Onco / Fusion
-FGFR2,2263,q26.13,Onco / Fusion
-FGFR3,2261,p16.3,Onco / Fusion
-FGFR4,2264,q35.2,Onco
+FGFR1,2260,p11.22-p11.23,Oncogene / Fusion
+FGFR2,2263,q26.13,Oncogene / Fusion
+FGFR3,2261,p16.3,Oncogene / Fusion
+FGFR4,2264,q35.2,Oncogene
 FLT1,2321,q12.2-q12.3,
-FLT3,2322,q12.2,Onco
-FLT4,2324,q35.3,Onco
-GNA11,2767,p13.3,Onco
-GNAQ,2776,q21.2,Onco
-GNAS,2778,q13.32,Onco
+FLT3,2322,q12.2,Oncogene
+FLT4,2324,q35.3,Oncogene
+GNA11,2767,p13.3,Oncogene
+GNAQ,2776,q21.2,Oncogene
+GNAS,2778,q13.32,Oncogene
 HNF1A,6927,q24.31,Suppressor
-HRAS,3265,p15.5,Onco
-IDH1,3417,q34,Onco
-IDH2,3418,q26.1,Onco
-JAK2,3717,p24.1,Onco
-JAK3,3718,p13.11,Onco
-KDR,3791,q12,Onco
-KIT,3815,q12,Onco
-KRAS,3845,p12.1,Onco
-MAP2K1,5604,q22.31,Onco
-MAP2K2,5605,p13.3,Onco
-MAP2K4,6416,p12,Onco / Suppressor
-MAP3K1,4214,q11.2,Onco / Suppressor
-MAPK1,5594,q11.21-q11.22,Onco
+HRAS,3265,p15.5,Oncogene
+IDH1,3417,q34,Oncogene
+IDH2,3418,q26.1,Oncogene
+JAK2,3717,p24.1,Oncogene
+JAK3,3718,p13.11,Oncogene
+KDR,3791,q12,Oncogene
+KIT,3815,q12,Oncogene
+KRAS,3845,p12.1,Oncogene
+MAP2K1,5604,q22.31,Oncogene
+MAP2K2,5605,p13.3,Oncogene
+MAP2K4,6416,p12,Oncogene / Suppressor
+MAP3K1,4214,q11.2,Oncogene / Suppressor
+MAPK1,5594,q11.21-q11.22,Oncogene
 MCPH1,79648,p23.1,
-MDM2,4193,q15,Onco
-MET,4233,q31.2,Onco
+MDM2,4193,q15,Oncogene
+MET,4233,q31.2,Oncogene
 MLH1,4292,p22.2,Suppressor
-MPL,4352,p34.2,Onco
+MPL,4352,p34.2,Oncogene
 MRE11A,4361,q21,
 MSH2,4436,p21,Suppressor
 MSH6,2956,p16.3,Suppressor
 MST1R,4486,p21.31,
-MTOR,2475,p36.22,Onco
-MYC,4609,q24.21,Onco
-MYCN,4613,p24.3,Onco
+MTOR,2475,p36.22,Oncogene
+MYC,4609,q24.21,Oncogene
+MYCN,4613,p24.3,Oncogene
 NBN,4683,q21.3,Suppressor
 NF1,4763,q11.2,Suppressor / Fusion
-NOTCH1,4851,q34.3,Onco / Suppressor
-NPM1,4869,q35.1,Onco / Fusion
-NRAS,4893,p13.2,Onco
+NOTCH1,4851,q34.3,Oncogene / Suppressor
+NPM1,4869,q35.1,Oncogene / Fusion
+NRAS,4893,p13.2,Oncogene
 NRG1,3084,p12,Suppressor / Fusion
 NTRK1,4914,q23.1,
 NTRK2,4915,q21.33,
-NTRK3,4916,q25.3,Onco / Fusion
+NTRK3,4916,q25.3,Oncogene / Fusion
 PALB2,79728,p12.2,Suppressor
-PDGFRA,5156,q12,Onco
+PDGFRA,5156,q12,Oncogene
 PDGFRB,5159,q32,
-PIK3CA,5290,q26.32,Onco
+PIK3CA,5290,q26.32,Oncogene
 PIK3CB,5291,q22.3,
 PMS2,5395,p22.1,
 PTCH1,5727,q22.32,
 PTEN,5728,q23.31,Suppressor
-PTPN11,5781,q24.13,Onco
+PTPN11,5781,q24.13,Oncogene
 RAD50,10111,q31.1,
 RAD51,5888,q15.1,
 RAD51B,5890,q24.1,
@@ -103,17 +103,17 @@ RAD51C,5889,q22,
 RAD51D,5892,q12,
 RAF1,5894,p25.2,
 RB1,5925,q14.2,Suppressor
-RET,5979,q11.21,Onco / Fusion
-ROS1,6098,q22.1,Onco
-RUNX1,861,q22.12,Onco / Suppressor
+RET,5979,q11.21,Oncogene / Fusion
+ROS1,6098,q22.1,Oncogene
+RUNX1,861,q22.12,Oncogene / Suppressor
 SLX4,84464,p13.3,
 SMAD4,4089,q21.2,Suppressor
 SMARCB1,6598,q11.23,
 SMO,6608,q32.1,
-SRC,6714,q11.23,Onco
+SRC,6714,q11.23,Oncogene
 STK11,6794,p13.3,Suppressor
 TOP2A,7153,q21.2,
-TP53,7157,p13.1,Onco / Suppressor
+TP53,7157,p13.1,Oncogene / Suppressor
 TSC1,7248,q34.13,Suppressor
 TSC2,7249,p13.3,Suppressor
 VHL,7428,p25.3,Suppressor
