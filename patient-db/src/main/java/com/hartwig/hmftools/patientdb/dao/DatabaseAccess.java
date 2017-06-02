@@ -57,9 +57,10 @@ public class DatabaseAccess {
         somaticVariantDAO = new ComprehensiveSomaticVariantDAO(context);
     }
 
-    public void writePurity(@NotNull final String sampleId, @NotNull FittedPurity purity,
-            @NotNull FittedPurityScore score) {
-        purityDAO.write(sampleId, purity, score);
+    public void writePurity(@NotNull final String sampleId, @NotNull FittedPurityScore score,
+            @NotNull List<FittedPurity> purities) {
+        purityDAO.write(sampleId, score);
+        purityDAO.write(sampleId, purities);
     }
 
     @Nullable

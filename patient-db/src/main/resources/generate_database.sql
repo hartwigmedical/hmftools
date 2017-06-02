@@ -114,7 +114,7 @@ CREATE TABLE copyNumber
     INDEX(sampleId)
 );
 
-CREATE TABLE purity
+CREATE TABLE purityRange
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(20) NOT NULL,
@@ -123,6 +123,14 @@ CREATE TABLE purity
     score DOUBLE PRECISION not null,
     ploidy DOUBLE PRECISION not null,
     diploidProportion DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+CREATE TABLE purityScore
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
     polyclonalProportion DOUBLE PRECISION not null,
     minPurity DOUBLE PRECISION not null,
     maxPurity DOUBLE PRECISION not null,
@@ -131,3 +139,9 @@ CREATE TABLE purity
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
+
+CREATE VIEW purity AS
+SELECT p.*, s.polyclonalProportion, s.minPurity, s.maxPurity, s.minPloidy, s.maxPloidy
+FROM purityRange p, purityScore s
+WHERE p.sampleId = s.sampleId
+  AND (p.sampleId, p.score) IN (SELECT sampleId, MIN(score) FROM purityRange GROUP BY sampleId);

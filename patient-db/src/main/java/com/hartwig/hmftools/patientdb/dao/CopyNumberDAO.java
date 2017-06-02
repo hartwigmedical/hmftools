@@ -48,7 +48,7 @@ class CopyNumberDAO {
         return copyNumbers;
     }
 
-    public void write(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+    void write(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
