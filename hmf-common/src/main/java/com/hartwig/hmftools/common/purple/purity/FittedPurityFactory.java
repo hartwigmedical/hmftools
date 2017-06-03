@@ -113,9 +113,7 @@ public class FittedPurityFactory {
             }
         }
 
-        final double finalScore = modelDeviation / Math.sqrt(purity);
-
-        return builder.score(finalScore)
+        return builder.score(modelDeviation)
                 .modelBAFDeviation(modelBAFDeviation)
                 .diploidProportion(diploidProportion)
                 .build();
