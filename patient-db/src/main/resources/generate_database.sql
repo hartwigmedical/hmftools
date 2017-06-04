@@ -145,3 +145,28 @@ SELECT p.*, s.polyclonalProportion, s.minPurity, s.maxPurity, s.minPloidy, s.max
 FROM purityRange p, purityScore s
 WHERE p.sampleId = s.sampleId
   AND (p.sampleId, p.score) IN (SELECT sampleId, MIN(score) FROM purityRange GROUP BY sampleId);
+
+CREATE TABLE copyNumberRegion
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    start int not null,
+    end int not null,
+    bafCount int not null,
+    observedBaf DOUBLE PRECISION not null,
+    observedTumorRatio DOUBLE PRECISION not null,
+    observedNormalRatio DOUBLE PRECISION not null,
+    modelPloidy int not null,
+    modelBaf DOUBLE PRECISION not null,
+    modelTumorRatio DOUBLE PRECISION not null,
+    actualTumorCopyNumber DOUBLE PRECISION not null,
+    cnvDeviation DOUBLE PRECISION not null,
+    bafDeviation DOUBLE PRECISION not null,
+    highConfidenceBaf DOUBLE PRECISION not null,
+    highConfidenceCopyNumber DOUBLE PRECISION not null,
+    fittedBaf DOUBLE PRECISION not null,
+    fittedCopyNumber DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);

@@ -87,7 +87,6 @@ public class PurityPloidyEstimateApplication {
         final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(MAX_PLOIDY,
                 defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT));
 
-
         LOGGER.info("Loading germline variant data");
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
@@ -121,13 +120,17 @@ public class PurityPloidyEstimateApplication {
 
             final List<PurpleCopyNumber> highConfidence = highConfidence(bestFit.purity(), fittedRegions);
             final List<PurpleCopyNumber> smoothRegions = smooth(bestFit.purity(), fittedRegions, highConfidence);
-            final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurityFactory.allFits(), smoothRegions);
+            final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurityFactory.allFits(),
+                    smoothRegions);
+            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions,
+                    highConfidence, smoothRegions);
 
             if (cmd.hasOption(DB_ENABLED)) {
                 LOGGER.info("Persisting to database");
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
                 dbAccess.writePurity(tumorSample, score, fittedPurityFactory.bestFitPerPurity());
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
+                dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
             }
 
             final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, freecDirectory);
@@ -136,9 +139,6 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
             FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
-
-            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions,
-                    highConfidence, smoothRegions);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
         }
 

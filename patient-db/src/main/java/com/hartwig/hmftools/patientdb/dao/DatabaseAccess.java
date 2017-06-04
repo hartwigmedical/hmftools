@@ -16,6 +16,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -77,8 +78,12 @@ public class DatabaseAccess {
         return somaticVariantDAO.read(sampleId);
     }
 
-    public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> regions) {
-        copyNumberDAO.write(sample, regions);
+    public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+        copyNumberDAO.writeCopyNumber(sample, copyNumbers);
+    }
+
+    public void writeCopynumberRegions(@NotNull final String sample, @NotNull List<FittedRegion> regions) {
+        copyNumberDAO.writeCopyNumberRegions(sample, regions);
     }
 
     @NotNull

@@ -60,13 +60,13 @@ class ComprehensiveSomaticVariantDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COMPREHENSIVESOMATICVARIANT).where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
-        for (List<SomaticVariant> somaticVariants : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
+        for (List<SomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
             InsertValuesStep8 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
                     COMPREHENSIVESOMATICVARIANT.SAMPLEID, COMPREHENSIVESOMATICVARIANT.CHROMOSOME,
                     COMPREHENSIVESOMATICVARIANT.POSITION, COMPREHENSIVESOMATICVARIANT.REF, COMPREHENSIVESOMATICVARIANT.ALT,
                     COMPREHENSIVESOMATICVARIANT.ALLELEREADCOUNT, COMPREHENSIVESOMATICVARIANT.TOTALREADCOUNT,
                     COMPREHENSIVESOMATICVARIANT.MODIFIED);
-            somaticVariants.forEach(x -> addRecord(timestamp, inserter, sample, x));
+            splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
