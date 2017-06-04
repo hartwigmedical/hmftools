@@ -46,7 +46,7 @@ class VariantCopyNumberZipper implements SimpleGenomeZipperAllPositionsHandler<P
 
     private  VariantReport enrich(@NotNull final PurpleCopyNumber copyNumber,
             @NotNull final VariantReport variant) {
-        double adjustedVAF = purityAdjustedVAF(purity, copyNumber.averageTumorCopyNumber(), variant.alleleFrequency());
+        double adjustedVAF = Math.min(1, purityAdjustedVAF(purity, copyNumber.averageTumorCopyNumber(), variant.alleleFrequency()));
         return ImmutableVariantReport.builder().from(variant).baf(copyNumber.descriptiveBAF()).impliedVAF(adjustedVAF).build();
     }
 }
