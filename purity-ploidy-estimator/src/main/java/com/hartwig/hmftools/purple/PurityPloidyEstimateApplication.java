@@ -4,11 +4,10 @@ import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFact
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory.smooth;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
@@ -16,13 +15,13 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberWriter;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreWriter;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
@@ -49,7 +48,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    static final double MIN_PURITY = 0.1;
+    static final double MIN_PURITY = 0.01;
     static final double MAX_PURITY = 1.0;
     static final double MIN_NORM_FACTOR = 0.33;
     static final double MAX_NORM_FACTOR = 2.0;
@@ -88,9 +87,6 @@ public class PurityPloidyEstimateApplication {
         final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(MAX_PLOIDY,
                 defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT));
 
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, MIN_PURITY, MAX_PURITY,
-                PURITY_INCREMENTS, MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedRegionFactory);
-
         LOGGER.info("Loading germline variant data");
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
@@ -106,55 +102,47 @@ public class PurityPloidyEstimateApplication {
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
-        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(
-                MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants,
-                tumorRatio, normalRatio);
+        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY,
+                MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
+        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants, tumorRatio,
+                normalRatio);
 
         LOGGER.info("Fitting purity");
-        final List<FittedPurity> fittedPurities = fittedPurityFactory.fitPurity(observedRegions);
-        Collections.sort(fittedPurities);
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, MIN_PURITY, MAX_PURITY,
+                PURITY_INCREMENTS, MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedRegionFactory,
+                observedRegions);
 
-        if (!fittedPurities.isEmpty()) {
-            final FittedPurity bestFit = fittedPurities.get(0);
+        Optional<FittedPurity> optionalBestFit = fittedPurityFactory.bestFit();
+        if (optionalBestFit.isPresent()) {
+            final FittedPurity bestFit = optionalBestFit.get();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(),
                     bestFit.normFactor(), observedRegions);
 
-            final List<PurpleCopyNumber> highConfidence = highConfidence(fittedRegions);
-            final List<PurpleCopyNumber> smoothRegions = smooth(fittedRegions, highConfidence);
-            final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurities, smoothRegions);
+            final List<PurpleCopyNumber> highConfidence = highConfidence(bestFit.purity(), fittedRegions);
+            final List<PurpleCopyNumber> smoothRegions = smooth(bestFit.purity(), fittedRegions, highConfidence);
+            final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurityFactory.allFits(),
+                    smoothRegions);
+            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions,
+                    highConfidence, smoothRegions);
 
             if (cmd.hasOption(DB_ENABLED)) {
                 LOGGER.info("Persisting to database");
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
-                dbAccess.writePurity(tumorSample, bestFit, score);
+                dbAccess.writePurity(tumorSample, score, fittedPurityFactory.bestFitPerPurity());
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
+                dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
             }
 
             final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, freecDirectory);
             LOGGER.info("Writing to file location: {}", outputDirectory);
 
-            final String copyNumberFilename = outputFileName(outputDirectory, tumorSample, ".cnv");
-            PurpleCopyNumberWriter.writeRegions(copyNumberFilename, smoothRegions);
-
-            final String purityFilename = outputFileName(outputDirectory, tumorSample, ".purity");
-            FittedPurityFile.writePurity(purityFilename, fittedPurities);
-
-            final String scoreFilename = outputFileName(outputDirectory, tumorSample, ".score");
-            FittedPurityScoreWriter.writeScore(scoreFilename, score);
-
-            final String regionsFilename = outputFileName(outputDirectory, tumorSample, ".fitted");
-            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions,
-                    highConfidence, smoothRegions);
-            FittedRegionWriter.writeCopyNumber(regionsFilename, enrichedFittedRegions);
+            PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
+            FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
+            FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
+            FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
         }
 
         LOGGER.info("Complete");
-    }
-
-    @NotNull
-    private static String outputFileName(String outputDir, String tumorSample, String extention) {
-        return outputDir + File.separator + tumorSample + ".purple" + extention;
     }
 
     @NotNull
@@ -177,9 +165,9 @@ public class PurityPloidyEstimateApplication {
     @NotNull
     private static String freecDirectory(@NotNull final CommandLine cmd, @NotNull final String runDirectory,
             @NotNull final String refSample, @NotNull final String tumorSample) {
-        return cmd.hasOption(FREEC_DIRECTORY) ?
-                cmd.getOptionValue(FREEC_DIRECTORY) :
-                FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
+        return cmd.hasOption(FREEC_DIRECTORY)
+                ? cmd.getOptionValue(FREEC_DIRECTORY)
+                : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
     }
 
     @NotNull

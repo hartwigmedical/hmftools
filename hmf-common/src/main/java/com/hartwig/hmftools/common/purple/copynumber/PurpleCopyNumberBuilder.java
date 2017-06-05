@@ -1,24 +1,33 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purity.PurityAdjustment;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
 class PurpleCopyNumberBuilder {
 
+    private final double purity;
     private final String chromosome;
     private long start = 1;
     private long end;
 
     private boolean weighWithBaf;
-    private int totalWeight;
+
+    private int totalBAFWeight;
+    private int totalCopyNumberWeight;
+
     private double sumWeightedBAF;
-    private double sumWeightedPurityAdjustedBAF;
     private double sumWeightedCopyNumber;
     private double sumWeightedRefNormalisedCopyNumber;
 
-    PurpleCopyNumberBuilder(@NotNull final FittedRegion fittedRegion) {
+    PurpleCopyNumberBuilder(double purity, @NotNull final FittedRegion fittedRegion) {
+        this.purity = purity;
         this.chromosome = fittedRegion.chromosome();
         this.start = fittedRegion.start();
         extendRegion(fittedRegion);
@@ -29,23 +38,19 @@ class PurpleCopyNumberBuilder {
     }
 
     private int bafCount() {
-        return weighWithBaf ? totalWeight : 0;
+        return weighWithBaf ? totalBAFWeight : 0;
     }
 
     double averageObservedBAF() {
-        return totalWeight == 0 ? 0 : sumWeightedBAF / totalWeight;
-    }
-
-    private double averagePurityAdjustedBAF() {
-        return totalWeight == 0 ? 0 : sumWeightedPurityAdjustedBAF / totalWeight;
+        return totalBAFWeight == 0 ? 0 : sumWeightedBAF / totalBAFWeight;
     }
 
     double averageTumorCopyNumber() {
-        return totalWeight == 0 ? 0 : sumWeightedCopyNumber / totalWeight;
+        return totalCopyNumberWeight == 0 ? 0 : sumWeightedCopyNumber / totalCopyNumberWeight;
     }
 
     double averageRefNormalisedCopyNumber() {
-        return totalWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalWeight;
+        return totalCopyNumberWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalCopyNumberWeight;
     }
 
     void extendRegion(@NotNull final FittedRegion value) {
@@ -53,9 +58,6 @@ class PurpleCopyNumberBuilder {
 
         start = Math.min(value.start(), start);
         end = Math.max(value.end(), end);
-
-        double ratio = value.tumorCopyNumber();
-        double baf = value.observedBAF();
 
         if (value.bafCount() > 0) {
 
@@ -65,25 +67,33 @@ class PurpleCopyNumberBuilder {
             }
 
             long weight = value.bafCount();
-            totalWeight += weight;
-            sumWeightedBAF += baf * weight;
-            sumWeightedPurityAdjustedBAF += value.purityAdjustedBAF() * weight;
-            sumWeightedCopyNumber += ratio * weight;
-            sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * weight;
+            averageInBaf(weight, value.observedBAF());
+            averageInCopyNumber(weight, value.tumorCopyNumber(), value.refNormalisedCopyNumber());
 
-        } else if (!weighWithBaf && !Doubles.isZero(ratio)) {
-
+        } else if (!weighWithBaf) {
             long weight = Math.max(1, value.bases() / 1000);
-            totalWeight += weight;
-            sumWeightedCopyNumber += ratio * weight;
-            sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * weight;
+            averageInCopyNumber(weight, value.tumorCopyNumber(), value.refNormalisedCopyNumber());
+        }
+    }
+
+    private void averageInBaf(long weight, double baf) {
+        totalBAFWeight += weight;
+        sumWeightedBAF += baf * weight;
+    }
+
+    private void averageInCopyNumber(long weight, double copyNumber, double refNormalisedCopyNumber) {
+        if (!Doubles.isZero(copyNumber)) {
+            totalCopyNumberWeight += weight;
+            sumWeightedCopyNumber += copyNumber * weight;
+            sumWeightedRefNormalisedCopyNumber += refNormalisedCopyNumber * weight;
         }
     }
 
     private void resetAverage() {
-        totalWeight = 0;
+        totalBAFWeight = 0;
+        totalCopyNumberWeight = 0;
+
         sumWeightedBAF = 0;
-        sumWeightedPurityAdjustedBAF = 0;
         sumWeightedCopyNumber = 0;
         sumWeightedRefNormalisedCopyNumber = 0;
     }
@@ -96,8 +106,29 @@ class PurpleCopyNumberBuilder {
                 .end(end)
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
-                .averageActualBAF(averagePurityAdjustedBAF())
+                .averageActualBAF(purityAdjustedBAF(purity, averageTumorCopyNumber(), averageObservedBAF()))
                 .averageTumorCopyNumber(averageTumorCopyNumber())
                 .build();
+    }
+
+    @VisibleForTesting
+    static double purityAdjustedBAF(final double purity, final double copyNumber, final double observedBAF) {
+        if (Doubles.isZero(copyNumber)) {
+            return observedBAF;
+        }
+
+        double adjustedObservedBAF =
+                isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
+        return PurityAdjustment.purityAdjustedBAF(purity, copyNumber, adjustedObservedBAF);
+    }
+
+    @VisibleForTesting
+    static boolean isEven(double copyNumber) {
+
+        double decimal = copyNumber % 1d;
+        double wholeNumber = copyNumber - decimal;
+
+        return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0
+                && Doubles.greaterOrEqual(decimal, 0.75));
     }
 }

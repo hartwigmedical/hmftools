@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
@@ -10,13 +15,9 @@ import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
+
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
 
 public class ConsequenceDeterminerTest {
 
@@ -75,7 +76,7 @@ public class ConsequenceDeterminerTest {
 
         final VariantReport report = findings.get(0);
         assertEquals(GENE, report.gene());
-        assertEquals(CHROMOSOME + ":" + POSITION, report.position());
+        assertEquals(CHROMOSOME + ":" + POSITION, report.chromosomePosition());
         assertEquals(REF, report.ref());
         assertEquals(ALT, report.alt());
         assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.transcript());

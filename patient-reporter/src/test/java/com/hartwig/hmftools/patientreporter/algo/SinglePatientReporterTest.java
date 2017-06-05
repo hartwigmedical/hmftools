@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import static org.junit.Assert.assertNotNull;
+
+import java.io.File;
+import java.io.IOException;
+
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
@@ -11,14 +16,11 @@ import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
-import net.sf.dynamicreports.report.exception.DRException;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-
-import static org.junit.Assert.assertNotNull;
+import net.sf.dynamicreports.report.exception.DRException;
 
 public class SinglePatientReporterTest {
 
@@ -27,7 +29,7 @@ public class SinglePatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final String hmfSlicingBed = BED_DIRECTORY + File.separator + "HMF_Slicing.bed";
+        final String hmfSlicingBed = BED_DIRECTORY + File.separator + "HMF_Slicing_v1.bed";
         final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
         // KODU: Every region in the HMF slicing bed should be convertable to a slicing annotation!
         for (final GenomeRegion region : hmfSlicingRegion.regions()) {

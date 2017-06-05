@@ -19,7 +19,7 @@ public final class FindingsToCSV {
         final List<String> lines = Lists.newArrayList();
         lines.add("GENE,POSITION,REF,ALT,TRANSCRIPT,CDS,P,CONSEQUENCE,COSMIC_ID,ALLELE_READ_COUNT,TOTAL_READ_COUNT");
         lines.addAll(reports.stream().map(
-                report -> report.gene() + "," + report.position() + "," + report.ref() + "," + report.alt() + ","
+                report -> report.gene() + "," + report.chromosomePosition() + "," + report.ref() + "," + report.alt() + ","
                         + report.transcript() + "," + report.hgvsCoding() + "," + report.hgvsProtein() + ","
                         + report.consequence() + "," + report.cosmicID() + "," + Integer.toString(
                         report.alleleReadCount()) + "," + Integer.toString(report.totalReadCount())).

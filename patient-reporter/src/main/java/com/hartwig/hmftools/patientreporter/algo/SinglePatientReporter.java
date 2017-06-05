@@ -9,12 +9,16 @@ import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.LimsModel;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.util.FindingsToCSV;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -56,6 +60,7 @@ public class SinglePatientReporter {
         final String sample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
         final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
+        final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
 
         final int passedCount = variantAnalysis.passedVariants().size();
         final int consensusPassedCount = variantAnalysis.consensusPassedVariants().size();
@@ -78,8 +83,9 @@ public class SinglePatientReporter {
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
-        return new PatientReport(sample, variantAnalysis.findings(), copyNumberAnalysis.findings(), mutationalLoad,
-                tumorType, tumorPercentage);
+        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
+        return new PatientReport(sample, purpleEnrichedVariants, copyNumberAnalysis.findings(), mutationalLoad,
+                tumorType, tumorPercentage, purpleAnalysis.fittedPurity());
     }
 
     @NotNull
@@ -93,6 +99,12 @@ public class SinglePatientReporter {
         final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
         LOGGER.info("  " + copyNumbers.size() + " copy number regions loaded for sample " + sample);
 
+        LOGGER.info(" Loading purity numbers...");
+        final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
+        final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
+        LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
+        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purpleCopyNumbers);
+
         LOGGER.info(" Analyzing somatic variants...");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
@@ -103,7 +115,7 @@ public class SinglePatientReporter {
             writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);
         }
 
-        return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis);
+        return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis, purpleAnalysis);
     }
 
     private static void writeIntermediateDataToTmpFiles(@NotNull final String basePath,

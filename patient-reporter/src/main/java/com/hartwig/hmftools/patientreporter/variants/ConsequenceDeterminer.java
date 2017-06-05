@@ -73,7 +73,7 @@ class ConsequenceDeterminer {
     private List<VariantReport> toVariantReport(@NotNull final List<SomaticVariant> variants) {
         final List<VariantReport> reports = Lists.newArrayList();
         for (final SomaticVariant variant : variants) {
-            final VariantReport.Builder builder = new VariantReport.Builder();
+            final ImmutableVariantReport.Builder builder = ImmutableVariantReport.builder();
             final VariantAnnotation variantAnnotation = findPrimaryRelevantAnnotation(variant,
                     relevantTranscriptMap.keySet());
             // KODU: Variants with no relevant annotations should be filtered out by now.
@@ -91,7 +91,8 @@ class ConsequenceDeterminer {
             }
 
             builder.gene(variantAnnotation.gene());
-            builder.position(variant.chromosome() + ":" + variant.position());
+            builder.chromosome(variant.chromosome());
+            builder.position(variant.position());
             builder.ref(variant.ref());
             builder.alt(variant.alt());
             builder.transcript(slicingAnnotation.transcript());

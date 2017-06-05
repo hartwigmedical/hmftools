@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GermlineVariant implements Variant {
     public abstract static class Builder implements VariantBuilder<GermlineVariant> {}
 

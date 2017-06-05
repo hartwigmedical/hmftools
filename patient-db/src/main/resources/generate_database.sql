@@ -114,7 +114,7 @@ CREATE TABLE copyNumber
     INDEX(sampleId)
 );
 
-CREATE TABLE purity
+CREATE TABLE purityRange
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(20) NOT NULL,
@@ -123,11 +123,63 @@ CREATE TABLE purity
     score DOUBLE PRECISION not null,
     ploidy DOUBLE PRECISION not null,
     diploidProportion DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+CREATE TABLE purityScore
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
     polyclonalProportion DOUBLE PRECISION not null,
     minPurity DOUBLE PRECISION not null,
     maxPurity DOUBLE PRECISION not null,
     minPloidy DOUBLE PRECISION not null,
     maxPloidy DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+CREATE VIEW purity AS
+SELECT p.*, s.polyclonalProportion, s.minPurity, s.maxPurity, s.minPloidy, s.maxPloidy
+FROM purityRange p, purityScore s
+WHERE p.sampleId = s.sampleId
+  AND (p.sampleId, p.score) IN (SELECT sampleId, MIN(score) FROM purityRange GROUP BY sampleId);
+
+CREATE TABLE copyNumberRegion
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    start int not null,
+    end int not null,
+    bafCount int not null,
+    observedBaf DOUBLE PRECISION not null,
+    observedTumorRatio DOUBLE PRECISION not null,
+    observedNormalRatio DOUBLE PRECISION not null,
+    modelPloidy int not null,
+    modelBaf DOUBLE PRECISION not null,
+    modelTumorRatio DOUBLE PRECISION not null,
+    actualTumorCopyNumber DOUBLE PRECISION not null,
+    cnvDeviation DOUBLE PRECISION not null,
+    bafDeviation DOUBLE PRECISION not null,
+    highConfidenceBaf DOUBLE PRECISION not null,
+    highConfidenceCopyNumber DOUBLE PRECISION not null,
+    fittedBaf DOUBLE PRECISION not null,
+    fittedCopyNumber DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+CREATE TABLE structuralVariant
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    startChromosome varchar(255) NOT NULL,
+    endChromosome varchar(255) NOT NULL,
+    startPosition int not null,
+    endPosition int not null,
+    type varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

@@ -16,7 +16,9 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -47,6 +49,8 @@ public class DatabaseAccess {
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
     private final ComprehensiveSomaticVariantDAO somaticVariantDAO;
+    @NotNull
+    private final StructuralVariantDAO structuralVariantDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
             throws SQLException {
@@ -55,11 +59,13 @@ public class DatabaseAccess {
         purityDAO = new PurityDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         somaticVariantDAO = new ComprehensiveSomaticVariantDAO(context);
+        structuralVariantDAO = new StructuralVariantDAO(context);
     }
 
-    public void writePurity(@NotNull final String sampleId, @NotNull FittedPurity purity,
-            @NotNull FittedPurityScore score) {
-        purityDAO.write(sampleId, purity, score);
+    public void writePurity(@NotNull final String sampleId, @NotNull FittedPurityScore score,
+            @NotNull List<FittedPurity> purities) {
+        purityDAO.write(sampleId, score);
+        purityDAO.write(sampleId, purities);
     }
 
     @Nullable
@@ -71,13 +77,21 @@ public class DatabaseAccess {
         somaticVariantDAO.write(sampleId, variants);
     }
 
+    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull List<StructuralVariant> variants) {
+        structuralVariantDAO.write(sampleId, variants);
+    }
+
     @NotNull
     public List<SomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId) {
         return somaticVariantDAO.read(sampleId);
     }
 
-    public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> regions) {
-        copyNumberDAO.write(sample, regions);
+    public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+        copyNumberDAO.writeCopyNumber(sample, copyNumbers);
+    }
+
+    public void writeCopynumberRegions(@NotNull final String sample, @NotNull List<FittedRegion> regions) {
+        copyNumberDAO.writeCopyNumberRegions(sample, regions);
     }
 
     @NotNull

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedCopyNumber;
 
 import java.util.Collection;
@@ -10,13 +9,12 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purity.PurityAdjustment;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactory {
 
-    static final double NORMAL_BAF = 0.542;
+    public static final double NORMAL_BAF = 0.535;
 
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
@@ -63,7 +61,7 @@ public class FittedRegionFactory {
             double bafDeviation = modelBAFWithDeviation[1];
 
             double deviation =
-                    Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
+                    Math.pow(Math.max(ploidy, 2) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
@@ -71,7 +69,6 @@ public class FittedRegionFactory {
                         .modelTumorRatio(modelRatio)
                         .bafDeviation(bafDeviation)
                         .cnvDeviation(cnvDeviation)
-                        .purityAdjustedBAF(purityAdjustedBAF(purity, ploidy, observedBAF))
                         .deviation(deviation);
                 minDeviation = deviation;
             }
@@ -92,11 +89,7 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    static double bafDeviation(final boolean heterozygous, final double modelBAF, final double actualBAF) {
-        if (heterozygous && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
-            return 0;
-        }
-
+    static double bafDeviation(final double modelBAF, final double actualBAF) {
         return Math.abs(modelBAF - actualBAF);
     }
 
@@ -108,9 +101,8 @@ public class FittedRegionFactory {
         int minBetaAllele = (int) Math.round(ploidy / 2d);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
 
-            boolean isHeterozygous = ploidy / betaAllele == 2;
-            double modelBAF = isHeterozygous ? NORMAL_BAF : modelBAF(purity, ploidy, betaAllele);
-            double modelDeviation = bafDeviation(isHeterozygous, modelBAF, actualBAF);
+            double modelBAF = modelBAF(purity, ploidy, betaAllele);
+            double modelDeviation = bafDeviation(modelBAF, actualBAF);
 
             if (betaAllele == minBetaAllele || modelDeviation < deviation) {
                 result = modelBAF;
@@ -122,22 +114,13 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    static double purityAdjustedBAF(final double purity, final int ploidy, final double observedBAF) {
-        double adjustedObservedBAF = ploidy % 2 == 0 && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF)
-                ? 0.5
-                : observedBAF;
-
-        return PurityAdjustment.purityAdjustedFrequency(purity, ploidy, adjustedObservedBAF, 0.5);
-    }
-
-    @VisibleForTesting
     static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
-        assert (alleleCount >= ploidy / 2);
+        assert (alleleCount >= ploidy / 2d);
 
         if (ploidy / alleleCount == 2) {
             return NORMAL_BAF;
         }
 
-        return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
+        return Math.max(NORMAL_BAF, (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2)));
     }
 }

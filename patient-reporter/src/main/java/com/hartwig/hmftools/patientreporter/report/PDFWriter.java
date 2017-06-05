@@ -33,7 +33,6 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
-import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
@@ -47,6 +46,7 @@ public class PDFWriter implements ReportWriter {
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
     private static final String VERSION = "2.0";
 
+    // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
 
@@ -56,6 +56,7 @@ public class PDFWriter implements ReportWriter {
     private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
     private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 4;
     private static final int SECTION_VERTICAL_GAP = 25;
+    private static final int PADDING = 1;
 
     @NotNull
     private final String reportDirectory;
@@ -174,16 +175,16 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
                         cmp.text(tumorType).setStyle(dataTableStyle())),
                 cmp.verticalList(
-                        cmp.text("Tumor Percentage").setStyle(tableHeaderStyle()),
+                        cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
                         cmp.text(tumorPercentage).setStyle(dataTableStyle()))
         );
 
         return cmp.horizontalList(
                 cmp.image(reportLogoPath),
                 cmp.verticalList(
-                        cmp.text("HMF Sequencing Report - " + sample).
-                                setStyle(fontStyle().bold().setFontSize(14)
-                                        .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                        cmp.text("HMF Sequencing Report - " + sample)
+                                .setStyle(fontStyle().bold().setFontSize(14)
+                                    .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                                 .setHeight(50),
                         mainDiagnosisInfo)
@@ -269,10 +270,11 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
+                            col.column("Read Depth", PatientDataSource.READ_DEPTH_FIELD),
                             col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("VAF", PatientDataSource.ALLELE_FREQUENCY_FIELD)))
+                            col.column("BAF", PatientDataSource.BAF_FIELD)))
                         .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -284,6 +286,9 @@ public class PDFWriter implements ReportWriter {
                 cmp.horizontalList(cmp.horizontalGap(10),
                         cmp.text("*").setStyle(fontStyle()).setWidth(2),
                         cmp.text(geneMutationAddition).setStyle(fontStyle())),
+                cmp.verticalGap(15),
+                cmp.text("Implied Tumor Purity: " + report.impliedPurityString())
+                        .setStyle(tableHeaderStyle()),
                 cmp.verticalGap(15),
                 cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " **")
                         .setStyle(tableHeaderStyle()),
@@ -303,6 +308,7 @@ public class PDFWriter implements ReportWriter {
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
                             col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
+                            col.column("Band", PatientDataSource.BAND_FIELD),
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
@@ -344,7 +350,7 @@ public class PDFWriter implements ReportWriter {
         }
         annotations.sort(Comparator.comparing(HMFSlicingAnnotation::gene));
 
-        final ComponentBuilder<?, ?> table = cmp.subreport(
+        return cmp.subreport(
                 baseTable().fields(GenePanelDataSource.genePanelFields())
                     .columns(
                         col.emptyColumn().setFixedWidth(40),
@@ -352,17 +358,15 @@ public class PDFWriter implements ReportWriter {
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
                                 .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Role in cancer", GenePanelDataSource.ROLE_IN_CANCER_FIELD).setFixedWidth(75),
+                        col.column("Type", GenePanelDataSource.GENE_TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
                                 .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Role in cancer", GenePanelDataSource.ROLE_IN_CANCER2_FIELD).setFixedWidth(75),
+                        col.column("Type", GenePanelDataSource.GENE2_TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
-                    .setStyle(dataTableStyle())
                     .setDataSource(GenePanelDataSource.fromCosmic(annotations, genePanelModel));
-        return table;
         // @formatter:on
     }
 
@@ -383,10 +387,13 @@ public class PDFWriter implements ReportWriter {
                                 + "additional information on the variant. If the variant could not be found in the "
                                 + "COSMIC database, this field will be left blank. The Cosmic v76 database is used "
                                 + "to look-up these IDs.",
+                        "The 'Depth' fields displays the total number of observations at this position.",
                         "The 'VAF' fields displays the variant allele frequency. The first number is "
-                                + "the number of observations of the variant, and the second number is the total "
-                                + "number of observations on this position. The number within parentheses is the "
-                                + "allele frequency (the two numbers divided by each other).",
+                                + "the percent of observations of the variant. The second number in parentheses is "
+                                + "adjusted for the implied purity.",
+                        "The 'BAF' fields displays the implied purity adjusted beta allele frequency as a proportion "
+                                + "of A's and B's. The copy number is the sum of A's and B's. The absence of any B's "
+                                + "indicates a loss of heterozygosity.",
                         "The tumor mutational load is the total number of somatic missense variants found across "
                                 + " the whole genome of the tumor biopsy."));
     }
@@ -440,13 +447,14 @@ public class PDFWriter implements ReportWriter {
     private static StyleBuilder tableHeaderStyle() {
         return fontStyle().bold().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setVerticalTextAlignment(
                 VerticalTextAlignment.MIDDLE).setFontSize(10).setBorder(stl.pen1Point()).setBackgroundColor(
-                BORKIE_COLOR);
+                BORKIE_COLOR).setPadding(PADDING);
     }
 
     @NotNull
     private static StyleBuilder dataStyle() {
         return fontStyle().setFontSize(8).setHorizontalTextAlignment(
-                HorizontalTextAlignment.CENTER).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE);
+                HorizontalTextAlignment.CENTER).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE).setPadding(
+                PADDING);
     }
 
     @NotNull
@@ -462,12 +470,6 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static StyleBuilder fontStyle() {
         return stl.style().setFontName(FONT);
-    }
-
-    @NotNull
-    private static TextColumnBuilder<?> transcriptColumn() {
-        return col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD).setHyperLink(
-                hyperLink(new TranscriptLinkExpression())).setStyle(linkStyle()).setFixedWidth(100);
     }
 
     @NotNull

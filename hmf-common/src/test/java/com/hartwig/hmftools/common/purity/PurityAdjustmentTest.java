@@ -12,7 +12,7 @@ public class PurityAdjustmentTest {
 
     @Test
     public void testPurityAdjustedCopynumber() {
+        assertEquals(0, purityAdjustedCopyNumber(0.85, 1.04, 0), EPSILON);
         assertEquals(1, purityAdjustedCopyNumber(0.85, 1, 0.575), EPSILON);
     }
-
 }

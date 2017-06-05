@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.cnvD
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAF;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAFToMinimizeDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelRatio;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.purityAdjustedBAF;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,8 +28,15 @@ public class FittedRegionFactoryTest {
 
     @NotNull
     private static ObservedRegion create(final double baf, final double ratio) {
-        return ImmutableEnrichedRegion.builder().observedBAF(baf).bafCount(1).chromosome("1").start(1).end(
-                2).observedTumorRatio(ratio).observedNormalRatio(1).build();
+        return ImmutableEnrichedRegion.builder()
+                .observedBAF(baf)
+                .bafCount(1)
+                .chromosome("1")
+                .start(1)
+                .end(2)
+                .observedTumorRatio(ratio)
+                .observedNormalRatio(1)
+                .build();
     }
 
     @Test
@@ -78,11 +84,10 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void testModelBAF() {
-        assertModelBAF(10d / 28d, 0.8, 3, 1);
         assertModelBAF(18d / 28d, 0.8, 3, 2);
         assertModelBAF(26d / 28d, 0.8, 3, 3);
 
-        assertModelBAF(FittedRegionFactory.NORMAL_BAF, 0.8, 4, 2);
+        assertModelBAF(NORMAL_BAF, 0.8, 4, 2);
     }
 
     @Test
@@ -98,41 +103,10 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void testBAFDeviation() {
-        assertEquals(0.01, bafDeviation(true, NORMAL_BAF, NORMAL_BAF + 0.01), EPSILON);
-        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF), EPSILON);
-        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
-        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
-    }
-
-    @Test
-    public void testPurityAdjustedBaf() {
-        testPurityAdjustedBaf(0.1);
-        testPurityAdjustedBaf(0.2);
-        testPurityAdjustedBaf(0.3);
-        testPurityAdjustedBaf(0.4);
-        testPurityAdjustedBaf(0.5);
-        testPurityAdjustedBaf(0.6);
-        testPurityAdjustedBaf(0.7);
-        testPurityAdjustedBaf(0.8);
-        testPurityAdjustedBaf(0.9);
-    }
-
-    private void testPurityAdjustedBaf(double purity) {
-        testPurityAdjustedBaf(purity, 2, 1);
-        testPurityAdjustedBaf(purity, 2, 2);
-        testPurityAdjustedBaf(purity, 3, 2);
-        testPurityAdjustedBaf(purity, 3, 3);
-        testPurityAdjustedBaf(purity, 4, 2);
-        testPurityAdjustedBaf(purity, 4, 3);
-        testPurityAdjustedBaf(purity, 4, 4);
-        testPurityAdjustedBaf(purity, 5, 3);
-        testPurityAdjustedBaf(purity, 5, 4);
-    }
-
-    private static void testPurityAdjustedBaf(final double purity, final int ploidy, final int alleleCount) {
-        double expectedPurityAdjustedBAF = 1d * alleleCount / ploidy;
-        double observedBAF = FittedRegionFactory.modelBAF(purity, ploidy, alleleCount);
-        assertEquals(expectedPurityAdjustedBAF, purityAdjustedBAF(purity, ploidy, observedBAF), EPSILON);
+        assertEquals(0.01, bafDeviation(NORMAL_BAF, NORMAL_BAF + 0.01), EPSILON);
+        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF), EPSILON);
+        assertEquals(0.01, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
+        assertEquals(0.02, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
     }
 
     private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy,

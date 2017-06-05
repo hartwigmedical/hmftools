@@ -11,6 +11,11 @@ public interface GenomePosition extends Comparable<GenomePosition> {
 
     long position();
 
+    @NotNull
+    default String chromosomePosition() {
+        return chromosome() + ":" + position();
+    }
+
     @Override
     default int compareTo(@NotNull final GenomePosition other) {
         if (chromosome().equals(other.chromosome())) {

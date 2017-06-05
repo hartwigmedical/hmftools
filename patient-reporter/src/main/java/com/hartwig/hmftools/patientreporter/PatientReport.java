@@ -2,7 +2,9 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,16 +23,20 @@ public class PatientReport {
     private final String tumorType;
     @Nullable
     private final Double tumorPercentage;
+    @NotNull
+    private final FittedPurity fittedPurity;
 
     public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
             @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad,
-            @NotNull final String tumorType, @Nullable final Double tumorPercentage) {
+            @NotNull final String tumorType, @Nullable final Double tumorPercentage,
+            @NotNull final FittedPurity fittedPurity) {
         this.sample = sample;
         this.variants = variants;
         this.copyNumbers = copyNumbers;
         this.mutationalLoad = mutationalLoad;
         this.tumorType = tumorType;
         this.tumorPercentage = tumorPercentage;
+        this.fittedPurity = fittedPurity;
     }
 
     @NotNull
@@ -58,7 +64,10 @@ public class PatientReport {
     }
 
     public String tumorPercentageString() {
-        double percentage = tumorPercentage == null ? Double.NaN : tumorPercentage;
-        return Long.toString(Math.round(percentage * 100D)) + "%";
+        return PatientReportFormat.formatPercent(tumorPercentage);
+    }
+
+    public String impliedPurityString() {
+        return PatientReportFormat.formatPercent(fittedPurity.purity());
     }
 }
