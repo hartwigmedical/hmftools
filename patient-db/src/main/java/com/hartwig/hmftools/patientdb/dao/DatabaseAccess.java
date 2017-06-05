@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -48,6 +49,8 @@ public class DatabaseAccess {
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
     private final ComprehensiveSomaticVariantDAO somaticVariantDAO;
+    @NotNull
+    private final StructuralVariantDAO structuralVariantDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
             throws SQLException {
@@ -56,6 +59,7 @@ public class DatabaseAccess {
         purityDAO = new PurityDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         somaticVariantDAO = new ComprehensiveSomaticVariantDAO(context);
+        structuralVariantDAO = new StructuralVariantDAO(context);
     }
 
     public void writePurity(@NotNull final String sampleId, @NotNull FittedPurityScore score,
@@ -71,6 +75,10 @@ public class DatabaseAccess {
 
     public void writeComprehensiveSomaticVariants(@NotNull final String sampleId, @NotNull List<SomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
+    }
+
+    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull List<StructuralVariant> variants) {
+        structuralVariantDAO.write(sampleId, variants);
     }
 
     @NotNull

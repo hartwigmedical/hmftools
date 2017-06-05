@@ -170,3 +170,16 @@ CREATE TABLE copyNumberRegion
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
+
+CREATE TABLE structuralVariant
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    startChromosome varchar(255) NOT NULL,
+    endChromosome varchar(255) NOT NULL,
+    startPosition int not null,
+    endPosition int not null,
+    type varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
