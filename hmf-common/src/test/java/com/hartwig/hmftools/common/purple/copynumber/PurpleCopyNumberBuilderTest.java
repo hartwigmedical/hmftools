@@ -94,6 +94,16 @@ public class PurpleCopyNumberBuilderTest {
         assertAverages(builder, 0, 3);
     }
 
+    @Test
+    public void doNotIncludeZeroRatio() {
+        final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
+        PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(1, startRegion);
+        assertAverages(builder, 0.5, 0);
+
+        builder.extendRegion(create(201, 300, 200, 1, 2));
+        assertAverages(builder, 0.75, 2);
+    }
+
     private static void assertAverages(@NotNull PurpleCopyNumberBuilder victim, double expectedBAF,
             double expectedRatio) {
         assertAverages(victim.build(), expectedBAF, expectedRatio);
@@ -104,12 +114,12 @@ public class PurpleCopyNumberBuilderTest {
         assertEquals(expectedRatio, victim.averageTumorCopyNumber(), EPSILON);
     }
 
-    private static FittedRegion create(long start, long end, double ratio) {
-        return create("1", start, end, 0, 0, ratio);
+    private static FittedRegion create(long start, long end, double copyNumber) {
+        return create("1", start, end, 0, 0, copyNumber);
     }
 
-    private static FittedRegion create(long start, long end, int bafCount, double baf, double ratio) {
-        return create("1", start, end, bafCount, baf, ratio);
+    private static FittedRegion create(long start, long end, int bafCount, double baf, double copyNumber) {
+        return create("1", start, end, bafCount, baf, copyNumber);
     }
 
     @NotNull
