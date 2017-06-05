@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +65,7 @@ public class PurpleCopyNumberBuilderTest {
 
     private static void testPurityAdjustedBaf(final double purity, final int ploidy, final int alleleCount) {
         double expectedPurityAdjustedBAF = 1d * alleleCount / ploidy;
-        double observedBAF = FittedRegionFactory.modelBAF(purity, ploidy, alleleCount);
+        double observedBAF = modelBAF(purity, ploidy, alleleCount);
         assertEquals(expectedPurityAdjustedBAF, purityAdjustedBAF(purity, ploidy, observedBAF), EPSILON);
     }
 
@@ -148,5 +147,10 @@ public class PurpleCopyNumberBuilderTest {
                 .refNormalisedCopyNumber(tumorCopyNumber)
                 .bafDeviation(0)
                 .build();
+    }
+
+    private static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
+        assert (alleleCount >= ploidy / 2d);
+        return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
     }
 }

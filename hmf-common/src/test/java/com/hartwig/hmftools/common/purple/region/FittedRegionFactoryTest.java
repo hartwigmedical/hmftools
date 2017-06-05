@@ -84,7 +84,6 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void testModelBAF() {
-        assertModelBAF(10d / 28d, 0.8, 3, 1);
         assertModelBAF(18d / 28d, 0.8, 3, 2);
         assertModelBAF(26d / 28d, 0.8, 3, 3);
 
@@ -104,10 +103,10 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void testBAFDeviation() {
-        assertEquals(0.01, bafDeviation(true, NORMAL_BAF, NORMAL_BAF + 0.01), EPSILON);
-        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF), EPSILON);
-        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
-        assertEquals(0, bafDeviation(true, NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
+        assertEquals(0.01, bafDeviation(NORMAL_BAF, NORMAL_BAF + 0.01), EPSILON);
+        assertEquals(0, bafDeviation(NORMAL_BAF, NORMAL_BAF), EPSILON);
+        assertEquals(0.01, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.01), EPSILON);
+        assertEquals(0.02, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
     }
 
     private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy,

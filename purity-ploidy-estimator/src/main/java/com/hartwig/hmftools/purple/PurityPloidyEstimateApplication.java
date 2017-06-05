@@ -48,7 +48,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    static final double MIN_PURITY = 0.1;
+    static final double MIN_PURITY = 0.01;
     static final double MAX_PURITY = 1.0;
     static final double MIN_NORM_FACTOR = 0.33;
     static final double MAX_NORM_FACTOR = 2.0;

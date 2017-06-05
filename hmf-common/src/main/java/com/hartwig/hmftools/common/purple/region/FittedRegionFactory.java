@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactory {
 
-    public static final double NORMAL_BAF = 0.542;
+    public static final double NORMAL_BAF = 0.535;
 
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
@@ -61,7 +61,7 @@ public class FittedRegionFactory {
             double bafDeviation = modelBAFWithDeviation[1];
 
             double deviation =
-                    Math.pow(Math.max(ploidy, 1.5) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
+                    Math.pow(Math.max(ploidy, 2) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
@@ -89,11 +89,7 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    static double bafDeviation(final boolean heterozygous, final double modelBAF, final double actualBAF) {
-        if (heterozygous && Doubles.lessOrEqual(actualBAF, NORMAL_BAF)) {
-            return 0;
-        }
-
+    static double bafDeviation(final double modelBAF, final double actualBAF) {
         return Math.abs(modelBAF - actualBAF);
     }
 
@@ -105,9 +101,8 @@ public class FittedRegionFactory {
         int minBetaAllele = (int) Math.round(ploidy / 2d);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
 
-            boolean isHeterozygous = ploidy / betaAllele == 2;
-            double modelBAF = isHeterozygous ? NORMAL_BAF : modelBAF(purity, ploidy, betaAllele);
-            double modelDeviation = bafDeviation(isHeterozygous, modelBAF, actualBAF);
+            double modelBAF = modelBAF(purity, ploidy, betaAllele);
+            double modelDeviation = bafDeviation(modelBAF, actualBAF);
 
             if (betaAllele == minBetaAllele || modelDeviation < deviation) {
                 result = modelBAF;
@@ -119,13 +114,13 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    public static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
-        assert (alleleCount >= ploidy / 2);
+    static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
+        assert (alleleCount >= ploidy / 2d);
 
         if (ploidy / alleleCount == 2) {
             return NORMAL_BAF;
         }
 
-        return (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2));
+        return Math.max(NORMAL_BAF, (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2)));
     }
 }
