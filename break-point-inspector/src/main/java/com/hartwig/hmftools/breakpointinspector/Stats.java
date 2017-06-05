@@ -5,10 +5,12 @@ import static com.hartwig.hmftools.breakpointinspector.Util.toStrings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 
 import htsjdk.samtools.SAMRecord;
@@ -35,30 +37,14 @@ class Stats {
         }
     }
 
-    static class Orientation {
-        int InnieCount = 0;
-        int OutieCount = 0;
-        int TandemCount = 0;
-
-        static List<String> GetHeader() {
-            return Arrays.asList("INNIE", "OUTIE", "TANDEM");
-        }
-
-        List<Integer> GetData() {
-            return Arrays.asList(InnieCount, OutieCount, TandemCount);
-        }
-    }
-
     static class Clip {
-        Util.ClipSide Side = Util.ClipSide.NONE;
         String LongestClipSequence = "";
         List<SAMRecord> Reads = new ArrayList<>();
         List<SAMRecord> HardClippedReads = new ArrayList<>();
 
         @Override
         public String toString() {
-            return (Side == Util.ClipSide.RIGHT_CLIP ? "*" : "") + LongestClipSequence + (
-                    Side == Util.ClipSide.LEFT_CLIP ? "*" : "") + "," + Reads.size();
+            return LongestClipSequence + "," + Reads.size();
         }
     }
 
@@ -67,11 +53,14 @@ class Stats {
 
         @Override
         public String toString() {
-            final TreeMultimap<Util.Location, String> sortedClips = TreeMultimap.create();
+
+            final TreeMultimap<Integer, String> sortedClips = TreeMultimap.create(Collections.reverseOrder(), Ordering.natural());
             for (final Map.Entry<Util.Location, Clip> kv : LocationMap.entrySet()) {
                 final Util.Location alignment = kv.getKey();
                 final Clip stats = kv.getValue();
-                sortedClips.put(alignment, alignment + "," + stats);
+                if(stats.Reads.isEmpty())
+                    continue; // skip if we only have hard clips
+                sortedClips.put(stats.Reads.size(), alignment + "," + stats);
             }
 
             return String.join(";", sortedClips.values());
@@ -81,7 +70,6 @@ class Stats {
     static class Sample {
         BreakPoint BP1_Stats = new BreakPoint();
         BreakPoint BP2_Stats = new BreakPoint();
-        Orientation Orientation_Stats = new Orientation();
         ClipStats Clipping_Stats = new ClipStats();
 
         BreakPoint Get(final Util.Region r) {
@@ -99,7 +87,6 @@ class Stats {
             final ArrayList<String> header = new ArrayList<>();
             header.addAll(prefixList(BreakPoint.GetHeader(), "BP1_"));
             header.addAll(prefixList(BreakPoint.GetHeader(), "BP2_"));
-            header.addAll(Orientation.GetHeader());
             return header;
         }
 
@@ -107,7 +94,6 @@ class Stats {
             final ArrayList<String> data = new ArrayList<>();
             data.addAll(toStrings(BP1_Stats.GetData()));
             data.addAll(toStrings(BP2_Stats.GetData()));
-            data.addAll(toStrings(Orientation_Stats.GetData()));
             return data;
         }
     }

@@ -6,6 +6,7 @@ import java.util.List;
 
 import htsjdk.samtools.*;
 
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.*;
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
@@ -13,64 +14,16 @@ import org.jetbrains.annotations.Nullable;
 
 class Analysis {
 
-    private static boolean readIntersectsLocation(final SAMRecord read, final Location location) {
-        assert !read.getReadUnmappedFlag();
-        return read.getReferenceIndex() == location.ReferenceIndex && read.getAlignmentStart() <= location.Position
-                && read.getAlignmentEnd() >= location.Position;
-    }
+    private static class StructuralVariantContext {
+        Location Breakpoint1;
+        Location Breakpoint2;
+        VariantType Type;
 
-    private static boolean pairStraddlesLocation(final SAMRecord read, final Location location) {
-        assert !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag();
-        if (read.getInferredInsertSize() > 0)
-            return read.getAlignmentStart() <= location.Position
-                    && (read.getAlignmentStart() + read.getInferredInsertSize()) >= location.Position;
-        else
-            return read.getMateAlignmentStart() <= location.Position
-                    && (read.getMateAlignmentStart() - read.getInferredInsertSize()) >= location.Position;
-    }
-
-    private static ClipInfo getClipInfo(final SAMRecord read) {
-        final ClipInfo result = new ClipInfo();
-        final Cigar cigar = read.getCigar();
-
-        switch (cigar.getFirstCigarElement().getOperator()) {
-            case H:
-                result.HardClipped = true;
-            case S:
-                result.Side = ClipSide.LEFT_CLIP;
-                result.Length = cigar.getFirstCigarElement().getLength();
-                return result;
+        StructuralVariantContext(final Location bp1, final Location bp2, final VariantType type) {
+            Breakpoint1 = bp1;
+            Breakpoint2 = bp2;
+            Type = type;
         }
-        switch (cigar.getLastCigarElement().getOperator()) {
-            case H:
-                result.HardClipped = true;
-            case S:
-                result.Side = ClipSide.RIGHT_CLIP;
-                result.Length = cigar.getLastCigarElement().getLength();
-                return result;
-        }
-        return result;
-    }
-
-    private static Region determineRegion(final SAMRecord read, final Location location1, final Location location2) {
-        if (location1.ReferenceIndex != location2.ReferenceIndex) {
-            if (read.getReferenceIndex() == location1.ReferenceIndex)
-                return Region.BP1;
-            else if (read.getReferenceIndex() == location2.ReferenceIndex)
-                return Region.BP2;
-        } else if (read.getReferenceIndex() == location1.ReferenceIndex) {
-            if (Math.abs(read.getAlignmentStart() - location1.Position) < Math.abs(
-                    read.getAlignmentStart() - location2.Position))
-                return Region.BP1;
-            else
-                return Region.BP2;
-        }
-        return Region.OTHER;
-    }
-
-    private static boolean isMate(final SAMRecord read, final SAMRecord mate) {
-        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(
-                mate.getReferenceIndex()) && read.getMateAlignmentStart() == mate.getAlignmentStart();
     }
 
     private static Stats.ClipStats calculateClippingStats(final ClassifiedReadResults queryResult) {
@@ -78,33 +31,23 @@ class Analysis {
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
             for (final ReadInfo info : collection.Reads) {
                 final SAMRecord read = info.Read;
-                if (info.Location == Overlap.CLIP) {
-                    // TODO: handle multiple clip sides
-                    final Location alignment = Location.fromSAMRecord(read, info.Clipping.Side == ClipSide.LEFT_CLIP);
-                    final Stats.Clip clip = result.LocationMap.computeIfAbsent(alignment, k -> new Stats.Clip() {{
-                        Side = info.Clipping.Side;
-                    }});
-                    if (info.Clipping.HardClipped) {
-                        clip.HardClippedReads.add(read);
-                    } else {
-                        final String clippedSequence;
-                        if (info.Clipping.Side == ClipSide.LEFT_CLIP) {
-                            clippedSequence = read.getReadString().substring(0, info.Clipping.Length);
-                        } else {
-                            clippedSequence = read.getReadString().substring(
-                                    read.getReadLength() - info.Clipping.Length);
-                        }
+                for (final ClipInfo clip : getClips(read)) {
 
-                        if (clippedSequence.length() > clip.LongestClipSequence.length() && clippedSequence.contains(
-                                clip.LongestClipSequence)) {
+                    final Stats.Clip stats = result.LocationMap.computeIfAbsent(clip.Alignment, k -> new Stats.Clip());
+
+                    if (clip.HardClipped) {
+                        stats.HardClippedReads.add(read);
+                    } else {
+                        if (clip.Sequence.length() > stats.LongestClipSequence.length() && clip.Sequence.contains(
+                                stats.LongestClipSequence)) {
                             // the existing sequence supports the new sequence
-                            clip.LongestClipSequence = clippedSequence;
-                        } else if (!clip.LongestClipSequence.contains(clippedSequence)) {
+                            stats.LongestClipSequence = clip.Sequence;
+                        } else if (!stats.LongestClipSequence.contains(clip.Sequence)) {
                             // this read does not support the existing sequence
                             continue;
                         }
 
-                        clip.Reads.add(read);
+                        stats.Reads.add(read);
                     }
                 }
             }
@@ -112,7 +55,80 @@ class Analysis {
         return result;
     }
 
-    private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult) {
+    private static boolean assessDEL(final StructuralVariantContext ctx, final List<ReadInfo> pair,
+            final Stats.Sample result) {
+
+        boolean pairEvidence;
+        pairEvidence = pair.get(0).Read.getAlignmentStart() <= ctx.Breakpoint1.Position;
+        pairEvidence &= pair.get(1).Read.getAlignmentStart() >= ctx.Breakpoint2.Position;
+        pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.FR;
+
+        for (final ReadInfo r : pair) {
+            final boolean clipped = r.Location == Overlap.CLIP_EXACT;
+            if (clipped && pairEvidence) {
+                result.Get(r.Breakpoint).PR_SR_Support++;
+            } else if (pairEvidence) {
+                result.Get(r.Breakpoint).PR_Only_Support++;
+            } else {
+                result.Get(r.Breakpoint).Diff_Variant++;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean assessDUP(final StructuralVariantContext ctx, final List<ReadInfo> pair,
+            final Stats.Sample result) {
+
+        boolean pairEvidence;
+        pairEvidence = pair.get(0).Read.getAlignmentStart() >= ctx.Breakpoint1.Position;
+        pairEvidence &= pair.get(1).Read.getAlignmentStart() <= ctx.Breakpoint2.Position;
+        pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.RF;
+
+        for (final ReadInfo r : pair) {
+            final boolean clipped = r.Location == Overlap.CLIP_EXACT;
+            if (clipped && pairEvidence) {
+                result.Get(r.Breakpoint).PR_SR_Support++;
+            } else if (pairEvidence) {
+                result.Get(r.Breakpoint).PR_Only_Support++;
+            } else {
+                result.Get(r.Breakpoint).Diff_Variant++;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean assessINV(final StructuralVariantContext ctx, final List<ReadInfo> pair,
+            final Stats.Sample result, boolean inv3) {
+
+        boolean pairEvidence;
+        if (inv3) {
+            pairEvidence = pair.get(0).Read.getAlignmentStart() <= ctx.Breakpoint1.Position
+                    && pair.get(1).Read.getAlignmentStart() <= ctx.Breakpoint2.Position;
+        } else {
+            pairEvidence = pair.get(0).Read.getAlignmentStart() >= ctx.Breakpoint1.Position
+                    && pair.get(1).Read.getAlignmentStart() >= ctx.Breakpoint2.Position;
+        }
+        // TODO: determine tandem direction (L-L or R-R)
+        pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.TANDEM;
+
+        for (final ReadInfo r : pair) {
+            final boolean clipped = r.Location == Overlap.CLIP_EXACT;
+            if (clipped && pairEvidence) {
+                result.Get(r.Breakpoint).PR_SR_Support++;
+            } else if (pairEvidence) {
+                result.Get(r.Breakpoint).PR_Only_Support++;
+            } else {
+                result.Get(r.Breakpoint).Diff_Variant++;
+            }
+        }
+
+        return false;
+    }
+
+    private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult,
+            final StructuralVariantContext ctx) {
         final Stats.Sample result = new Stats.Sample();
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
             // consider the pairings
@@ -147,40 +163,34 @@ class Analysis {
                     continue;
                 }
 
+                // at this stage, we have a legitimate pair
                 final List<ReadInfo> pair = Arrays.asList(p0, p1);
 
+                // supports the break point
                 if (p0.Breakpoint != p1.Breakpoint) {
-                    // supports the break point
-                    for (final ReadInfo r : pair) {
-                        final boolean splitEvidence = r.Location == Overlap.CLIP;
-                        if (splitEvidence) {
-                            result.Get(r.Breakpoint).PR_SR_Support++;
-                        } else {
-                            result.Get(r.Breakpoint).PR_Only_Support++;
-                        }
-                    }
-
-                    switch (SamPairUtil.getPairOrientation(p0.Read)) {
-                        case FR:
-                            result.Orientation_Stats.InnieCount++;
+                    switch (ctx.Type) {
+                        case DEL:
+                            assessDEL(ctx, pair, result);
                             break;
-                        case RF:
-                            result.Orientation_Stats.OutieCount++;
+                        case DUP:
+                            assessDUP(ctx, pair, result);
                             break;
-                        case TANDEM:
-                            result.Orientation_Stats.TandemCount++;
+                        case INV3:
+                            assessINV(ctx, pair, result, true);
+                            break;
+                        case INV5:
+                            assessINV(ctx, pair, result, false);
                             break;
                     }
                 } else {
-                    final Stats.BreakPoint stats = p0.Breakpoint == Region.BP1 ? result.BP1_Stats : result.BP2_Stats;
-                    final boolean splitEvidence = pair.stream().anyMatch(p -> p.Location == Overlap.CLIP);
+                    final Stats.BreakPoint stats = result.Get(p0.Breakpoint);
+                    final boolean splitEvidence = pair.stream().anyMatch(p -> p.Location == Overlap.CLIP_EXACT);
                     if (splitEvidence) {
                         stats.SR_Only_Support++;
                     } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
                         stats.PR_Only_Normal++;
                     } else if (p0.Location == Overlap.INTERSECT || p1.Location == Overlap.INTERSECT) {
                         stats.PR_SR_Normal++;
-                        // TODO: does the intersection have to occur within a certain bound of read?
                     }
                 }
             }
@@ -188,15 +198,16 @@ class Analysis {
         return result;
     }
 
-    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult) {
-        final Stats.Sample result = calculateEvidenceStats(queryResult);
+    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult,
+            final StructuralVariantContext ctx) {
+        final Stats.Sample result = calculateEvidenceStats(queryResult, ctx);
         result.Clipping_Stats = calculateClippingStats(queryResult);
         return result;
     }
 
     private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,
-            @Nullable SAMFileWriter evidenceWriter, final QueryInterval[] intervals, final Location bp1,
-            final Location bp2) {
+            @Nullable SAMFileWriter evidenceWriter, final QueryInterval[] intervals,
+            final StructuralVariantContext ctx) {
 
         final ClassifiedReadResults result = new ClassifiedReadResults();
 
@@ -224,19 +235,19 @@ class Analysis {
                 continue;
             }
 
-            info.Clipping = getClipInfo(read);
-            info.Breakpoint = determineRegion(read, bp1, bp2);
+            info.Breakpoint = determineRegion(read, ctx.Breakpoint1, ctx.Breakpoint2);
             if (info.Breakpoint == Region.OTHER) {
                 throw new RuntimeException("read from unexpected region");
             }
 
-            final Location bp = info.Breakpoint == Region.BP1 ? bp1 : bp2;
+            final Location bp = info.Breakpoint == Region.BP1 ? ctx.Breakpoint1 : ctx.Breakpoint2;
             final boolean normal = read.getProperPairFlag();
+            final boolean clipped = isClipped(info.Read);
 
             if (normal) {
                 info.Category = ReadCategory.NORMAL;
 
-                if (info.Clipping.Side == ClipSide.NONE) {
+                if (!clipped) {
                     if (readIntersectsLocation(read, bp)) {
                         info.Location = Overlap.INTERSECT;
                     } else if (pairStraddlesLocation(read, bp)) {
@@ -260,18 +271,19 @@ class Analysis {
             }
 
             // determine classification
+            final ClipInfo left = getLeftClip(read);
+            final ClipInfo right = getRightClip(read);
+
             // TODO: double check clipping conditions
-            if (info.Clipping.Side == ClipSide.LEFT_CLIP && read.getAlignmentStart() - 1 == bp.Position) {
-                info.Location = Overlap.CLIP;
-            } else if (info.Clipping.Side == ClipSide.RIGHT_CLIP && read.getAlignmentEnd() == bp.Position) {
-                info.Location = Overlap.CLIP;
+            if (left != null && left.Alignment.add(-1).equals(bp)) {
+                info.Location = Overlap.CLIP_EXACT;
+            } else if (right != null && right.Alignment.equals(bp)) {
+                info.Location = Overlap.CLIP_EXACT;
+            } else if (left != null || right != null) {
+                info.Location = Overlap.CLIP_OTHER;
             } else {
                 info.Location = Overlap.PROXIMITY;
             }
-
-            // if normal read and we don't clip, then it's not interesting
-            if (normal && info.Location == Overlap.PROXIMITY)
-                info.Location = Overlap.FILTERED;
         }
         results.close();
 
@@ -280,7 +292,8 @@ class Analysis {
 
     static void processStructuralVariant(final List<String> extraData, final SamReader refReader,
             @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
-            @Nullable final SAMFileWriter tumorWriter, Location location1, final Location location2, final int range) {
+            @Nullable final SAMFileWriter tumorWriter, final Location location1, final Location location2,
+            final int range, VariantType svType) {
         // work out the query intervals
         QueryInterval[] queryIntervals = {
                 new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
@@ -290,14 +303,14 @@ class Analysis {
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
         // begin processing
+        final StructuralVariantContext context = new StructuralVariantContext(location1, location2, svType);
 
-        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals,
-                location1, location2);
-        final Sample refStats = calculateStats(refResult);
+        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals, context);
+        final Sample refStats = calculateStats(refResult, context);
 
         final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, tumorWriter, queryIntervals,
-                location1, location2);
-        final Sample tumorStats = calculateStats(tumorResult);
+                context);
+        final Sample tumorStats = calculateStats(tumorResult, context);
 
         final ArrayList<String> data = new ArrayList<>(extraData);
         data.addAll(refStats.GetData());

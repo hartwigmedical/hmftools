@@ -29,7 +29,8 @@ class Util {
         PROXIMITY,
         INTERSECT,
         STRADDLE,
-        CLIP
+        CLIP_EXACT,
+        CLIP_OTHER
     }
 
     enum Region {
@@ -38,10 +39,11 @@ class Util {
         BP2
     }
 
-    enum ClipSide {
-        NONE,
-        LEFT_CLIP,
-        RIGHT_CLIP,
+    enum VariantType {
+        DEL,
+        INV3,
+        INV5,
+        DUP
     }
 
     static List<String> prefixList(final List<String> list, final String prefix) {
@@ -53,9 +55,10 @@ class Util {
     }
 
     static class ClipInfo {
-        ClipSide Side = ClipSide.NONE;
+        Location Alignment;
         int Length = 0;
         boolean HardClipped = false;
+        String Sequence = "";
     }
 
     static class ReadInfo {
@@ -63,7 +66,6 @@ class Util {
         Region Breakpoint = Region.OTHER;
         ReadCategory Category = ReadCategory.UNSET;
         Overlap Location = Overlap.FILTERED;
-        ClipInfo Clipping = new ClipInfo();
     }
 
     static class NamedReadCollection {

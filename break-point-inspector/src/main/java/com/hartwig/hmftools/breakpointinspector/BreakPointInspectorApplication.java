@@ -7,11 +7,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import htsjdk.samtools.*;
 import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -26,6 +28,7 @@ import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -39,6 +42,7 @@ public class BreakPointInspectorApplication {
     private static final String BREAK_POINT2 = "bp2";
     private static final String PROXIMITY = "proximity";
     private static final String SV_LEN = "svlen";
+    private static final String SV_TYPE = "svtype";
     private static final String VCF = "vcf";
 
     @NotNull
@@ -52,6 +56,7 @@ public class BreakPointInspectorApplication {
         options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format (optional)");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
         options.addOption(SV_LEN, true, "length of the SV to inspect (>0)");
+        options.addOption(SV_TYPE, true, "one of BND, INV, DEL, DUP");
         options.addOption(VCF, true, "VCF file to batch inspect (can be compressed)");
         return options;
     }
@@ -92,7 +97,7 @@ public class BreakPointInspectorApplication {
             final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
             if (refPath == null || tumorPath == null || (vcfPath != null && bp1String != null) || (bp2String != null
-                    && cmd.getOptionValue(SV_LEN) != null))
+                    && cmd.getOptionValue(SV_LEN) != null) || bp1String != null && cmd.getOptionValue(SV_TYPE) != null)
                 printHelpAndExit(options);
 
             // load the files
@@ -151,20 +156,55 @@ public class BreakPointInspectorApplication {
                             tumorReader.getFileHeader().getSequenceDictionary());
                     final Location location2;
 
+                    VariantType svType;
                     switch (variant.getStructuralVariantType()) {
-                        case DEL:
-                        case DUP:
                         case INV:
-                            final int svLen = Math.abs(variant.getAttributeAsInt("SVLEN", 0));
-                            final boolean inv3 = variant.getAttributeAsBoolean("INV3", false);
-                            final boolean inv5 = variant.getAttributeAsBoolean("INV5", false);
-                            location2 = location1.add(svLen);
+                            if (variant.getAttributeAsBoolean("INV3", false)) {
+                                svType = VariantType.INV5;
+                            } else if (variant.getAttributeAsBoolean("INV5", false)) {
+                                svType = VariantType.INV3;
+                            } else {
+                                System.err.println(variant.getID() + " : expected either INV3 or INV5 flag");
+                                continue;
+                            }
+                            location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
+                            break;
+                        case DEL:
+                            svType = VariantType.DUP;
+                            location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
+                            break;
+                        case DUP:
+                            svType = VariantType.DUP;
+                            location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                             break;
                         case BND:
                             final String call = variant.getAlternateAllele(0).getDisplayString();
-                            final String[] split = call.split("[\\]\\[]");
-                            location2 = Location.parseLocationString(split[1],
-                                    tumorReader.getFileHeader().getSequenceDictionary());
+                            final String[] leftSplit = call.split("\\]");
+                            final String[] rightSplit = call.split("\\[");
+                            if (leftSplit.length >= 2) {
+                                location2 = Location.parseLocationString(leftSplit[1],
+                                        tumorReader.getFileHeader().getSequenceDictionary());
+                                if (leftSplit[0].length() > 0) {
+                                    // right - right
+                                    svType = VariantType.INV3;
+                                } else {
+                                    // left - right
+                                    svType = VariantType.DUP;
+                                }
+                            } else if (rightSplit.length >= 2) {
+                                location2 = Location.parseLocationString(rightSplit[1],
+                                        tumorReader.getFileHeader().getSequenceDictionary());
+                                if (rightSplit[0].length() > 0) {
+                                    // right - left
+                                    svType = VariantType.DEL;
+                                } else {
+                                    // left - left
+                                    svType = VariantType.INV5;
+                                }
+                            } else {
+                                System.err.println(variant.getID() + " : could not parse breakpoint");
+                                continue;
+                            }
                             break;
                         default:
                             System.err.println(
@@ -182,10 +222,11 @@ public class BreakPointInspectorApplication {
                     extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
 
                     Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter,
-                            location1, location2, range);
+                            location1, location2, range, svType);
                 }
             } else {
                 final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
+                final VariantType svType = VariantType.valueOf(cmd.getOptionValue(SV_TYPE));
 
                 // parse the location strings
                 final Location location1 = Location.parseLocationString(bp1String,
@@ -206,7 +247,7 @@ public class BreakPointInspectorApplication {
                         svLen > 0 ? Integer.toString(svLen) : ".");
                 extraData.addAll(Collections.nCopies(10, "."));
                 Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, location1,
-                        location2, range);
+                        location2, range, svType);
             }
 
             // close all the files
