@@ -44,6 +44,30 @@ class Analysis {
         return result;
     }
 
+    private static boolean checkSR(final HMFVariantContext ctx, final ReadInfo r) {
+        if (r.Location == Overlap.CLIP_EXACT) {
+            return true;
+        } else if (r.Location == Overlap.CLIP_OTHER) {
+            final Location breakpoint = r.Breakpoint == Region.BP1 ? ctx.Breakpoint1 : ctx.Breakpoint2;
+            final Range uncertainty = r.Breakpoint == Region.BP1 ? ctx.Uncertainty1 : ctx.Uncertainty2;
+            if (uncertainty != null) {
+                final ClipInfo left = getLeftClip(r.Read);
+                // TODO: double check Alignment offset by -1
+                if (left != null && left.Alignment.add(-1).Position >= breakpoint.Position - uncertainty.Min &&
+                        left.Alignment.add(-1).Position <= breakpoint.Position + uncertainty.Max) {
+                    return true;
+                }
+                final ClipInfo right = getRightClip(r.Read);
+                if (right != null && right.Alignment.Position >= breakpoint.Position - uncertainty.Min &&
+                        right.Alignment.Position <= breakpoint.Position + uncertainty.Max) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static boolean assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair,
             final Stats.Sample result) {
 
@@ -53,8 +77,7 @@ class Analysis {
         pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.FR;
 
         for (final ReadInfo r : pair) {
-            final boolean clipped = r.Location == Overlap.CLIP_EXACT;
-            if (clipped && pairEvidence) {
+            if (checkSR(ctx, r) && pairEvidence) {
                 result.Get(r.Breakpoint).PR_SR_Support++;
             } else if (pairEvidence) {
                 result.Get(r.Breakpoint).PR_Only_Support++;
@@ -75,8 +98,7 @@ class Analysis {
         pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.RF;
 
         for (final ReadInfo r : pair) {
-            final boolean clipped = r.Location == Overlap.CLIP_EXACT;
-            if (clipped && pairEvidence) {
+            if (checkSR(ctx, r) && pairEvidence) {
                 result.Get(r.Breakpoint).PR_SR_Support++;
             } else if (pairEvidence) {
                 result.Get(r.Breakpoint).PR_Only_Support++;
@@ -103,8 +125,7 @@ class Analysis {
         pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.TANDEM;
 
         for (final ReadInfo r : pair) {
-            final boolean clipped = r.Location == Overlap.CLIP_EXACT;
-            if (clipped && pairEvidence) {
+            if (checkSR(ctx, r) && pairEvidence) {
                 result.Get(r.Breakpoint).PR_SR_Support++;
             } else if (pairEvidence) {
                 result.Get(r.Breakpoint).PR_Only_Support++;
