@@ -96,6 +96,8 @@ CREATE TABLE comprehensiveSomaticVariant
     alt varchar(255) NOT NULL,
     alleleReadCount int NOT NULL,
     totalReadCount int NOT NULL,
+    adjustedPloidy DOUBLE PRECISION NOT NULL,
+    adjustedVaf DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter)

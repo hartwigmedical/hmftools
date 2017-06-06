@@ -54,7 +54,7 @@ public class GenerateCircosData {
             System.exit(-1);
         }
 
-        final List<SomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample);
+        final List<SomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample, true);
         if (somaticVariants.isEmpty()) {
             LOGGER.error("Somatic Variants not available");
             System.exit(-1);
