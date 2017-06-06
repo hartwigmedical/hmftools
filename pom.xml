@@ -40,6 +40,7 @@
         <dynamicreports.version>4.1.1</dynamicreports.version>
         <jasperreports.font.version>6.0.0</jasperreports.font.version>
         <jooq.version>3.9.1</jooq.version>
+        <jfreechart.version>1.0.14</jfreechart.version>
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
 
         <hmf-common.version>1</hmf-common.version>
@@ -110,6 +111,11 @@
                 <groupId>com.github.samtools</groupId>
                 <artifactId>htsjdk</artifactId>
                 <version>${htsjdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jfree</groupId>
+                <artifactId>jfreechart</artifactId>
+                <version>${jfreechart.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.intellij</groupId>

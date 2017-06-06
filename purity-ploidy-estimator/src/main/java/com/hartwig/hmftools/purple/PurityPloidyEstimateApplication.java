@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.purple.plot.ChartWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -135,6 +136,9 @@ public class PurityPloidyEstimateApplication {
 
             final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, freecDirectory);
             LOGGER.info("Writing to file location: {}", outputDirectory);
+
+            ChartWriter chartWriter = new ChartWriter(tumorSample, outputDirectory);
+            chartWriter.cumulativePloidy(smoothRegions);
 
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());

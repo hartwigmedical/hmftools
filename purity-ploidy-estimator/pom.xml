@@ -32,6 +32,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>patient-db</artifactId>
         </dependency>
