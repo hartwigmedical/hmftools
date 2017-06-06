@@ -89,7 +89,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/test_report.pdf"));
+            report.toPdf(new FileOutputStream("/Users/korneel/hmf/tmp/test_report.pdf"));
         }
     }
 
@@ -109,7 +109,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream("/Users/kduyvesteyn/hmf/tmp/low_tumor_percentage_report.pdf"));
+            report.toPdf(new FileOutputStream("/Users/korneel/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
     }
 

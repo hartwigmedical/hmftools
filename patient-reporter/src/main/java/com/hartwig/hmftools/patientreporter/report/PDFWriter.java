@@ -259,9 +259,8 @@ public class PDFWriter implements ReportWriter {
                         + "within the DRUP. Please contact the DRUP study team (DRUP@nki.nl) for "
                         + "DRUP-related questions.";
 
-        final String geneMutationAddition =
-                "If any gene is annotated, it means that it has variants which might indicate eligibility for trials within the DRUP. "
-                        + "Please contact the DRUP study team (DRUP@nki.nl) for DRUP-related questions.";
+        final String geneMutationAddition = "Variants on marked genes indicate potential eligibility in DRUP. "
+                + "Please contact the DRUP study team (DRUP@nki.nl) for DRUP-related questions.";
 
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
