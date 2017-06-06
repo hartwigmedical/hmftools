@@ -61,7 +61,7 @@ public class GenerateCircosData {
         }
 
         final List<StructuralVariant> structuralVariants = dbAccess.readStructuralVariants(sample);
-        if (somaticVariants.isEmpty()) {
+        if (structuralVariants.isEmpty()) {
             LOGGER.error("Structural Variants not available");
         } else {
             CircosLinkWriter.writeVariants(output + File.separator + sample + ".link.circos", structuralVariants);
