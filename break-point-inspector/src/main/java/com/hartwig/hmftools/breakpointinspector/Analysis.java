@@ -15,18 +15,6 @@ import org.jetbrains.annotations.Nullable;
 
 class Analysis {
 
-    private static class VariantContext {
-        Location Breakpoint1;
-        Location Breakpoint2;
-        VariantType Type;
-
-        VariantContext(final Location bp1, final Location bp2, final VariantType type) {
-            Breakpoint1 = bp1;
-            Breakpoint2 = bp2;
-            Type = type;
-        }
-    }
-
     private static Stats.ClipStats calculateClippingStats(final ClassifiedReadResults queryResult) {
         final Stats.ClipStats result = new Stats.ClipStats();
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
@@ -56,7 +44,7 @@ class Analysis {
         return result;
     }
 
-    private static boolean assessDEL(final VariantContext ctx, final List<ReadInfo> pair,
+    private static boolean assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair,
             final Stats.Sample result) {
 
         boolean pairEvidence;
@@ -78,7 +66,7 @@ class Analysis {
         return false;
     }
 
-    private static boolean assessDUP(final VariantContext ctx, final List<ReadInfo> pair,
+    private static boolean assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair,
             final Stats.Sample result) {
 
         boolean pairEvidence;
@@ -100,8 +88,8 @@ class Analysis {
         return false;
     }
 
-    private static boolean assessINV(final VariantContext ctx, final List<ReadInfo> pair,
-            final Stats.Sample result, boolean inv3) {
+    private static boolean assessINV(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result,
+            boolean inv3) {
 
         boolean pairEvidence;
         if (inv3) {
@@ -129,7 +117,7 @@ class Analysis {
     }
 
     private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult,
-            final VariantContext ctx) {
+            final HMFVariantContext ctx) {
         final Stats.Sample result = new Stats.Sample();
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
             // consider the pairings
@@ -199,16 +187,14 @@ class Analysis {
         return result;
     }
 
-    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult,
-            final VariantContext ctx) {
+    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult, final HMFVariantContext ctx) {
         final Stats.Sample result = calculateEvidenceStats(queryResult, ctx);
         result.Clipping_Stats = calculateClippingStats(queryResult);
         return result;
     }
 
     private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,
-            @Nullable SAMFileWriter evidenceWriter, final QueryInterval[] intervals,
-            final VariantContext ctx) {
+            @Nullable SAMFileWriter evidenceWriter, final QueryInterval[] intervals, final HMFVariantContext ctx) {
 
         final ClassifiedReadResults result = new ClassifiedReadResults();
 
@@ -293,25 +279,23 @@ class Analysis {
 
     static void processStructuralVariant(final List<String> extraData, final SamReader refReader,
             @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
-            @Nullable final SAMFileWriter tumorWriter, final Location location1, final Location location2,
-            final int range, VariantType svType) {
+            @Nullable final SAMFileWriter tumorWriter, final HMFVariantContext ctx, final int range) {
         // work out the query intervals
         QueryInterval[] queryIntervals = {
-                new QueryInterval(location1.ReferenceIndex, Math.max(0, location1.Position - range),
-                        location1.Position + range),
-                new QueryInterval(location2.ReferenceIndex, Math.max(0, location2.Position - range),
-                        location2.Position + range) };
+                new QueryInterval(ctx.Breakpoint1.ReferenceIndex, Math.max(0, ctx.Breakpoint1.Position - range),
+                        ctx.Breakpoint1.Position + range),
+                new QueryInterval(ctx.Breakpoint2.ReferenceIndex, Math.max(0, ctx.Breakpoint2.Position - range),
+                        ctx.Breakpoint2.Position + range) };
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
         // begin processing
-        final VariantContext context = new VariantContext(location1, location2, svType);
 
-        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals, context);
-        final Sample refStats = calculateStats(refResult, context);
+        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals, ctx);
+        final Sample refStats = calculateStats(refResult, ctx);
 
         final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, tumorWriter, queryIntervals,
-                context);
-        final Sample tumorStats = calculateStats(tumorResult, context);
+                ctx);
+        final Sample tumorStats = calculateStats(tumorResult, ctx);
 
         // filtering
 

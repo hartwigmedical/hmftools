@@ -39,11 +39,25 @@ class Util {
         BP2
     }
 
-    enum VariantType {
+    enum HMFVariantType {
         DEL,
         INV3,
         INV5,
         DUP
+    }
+
+    static class HMFVariantContext {
+        Location Breakpoint1;
+        Range Uncertainty1;
+        Location Breakpoint2;
+        Range Uncertainty2;
+        HMFVariantType Type;
+
+        HMFVariantContext(final Location bp1, final Location bp2, final HMFVariantType type) {
+            Breakpoint1 = bp1;
+            Breakpoint2 = bp2;
+            Type = type;
+        }
     }
 
     static List<String> prefixList(final List<String> list, final String prefix) {
@@ -167,6 +181,16 @@ class Util {
         @Override
         public String toString() {
             return ReferenceName + ":" + Position;
+        }
+    }
+
+    static class Range {
+        int Min;
+        int Max;
+
+        Range(int min, int max) {
+            Min = min;
+            Max = max;
         }
     }
 }
