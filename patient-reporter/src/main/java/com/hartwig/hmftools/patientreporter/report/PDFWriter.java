@@ -74,7 +74,7 @@ public class PDFWriter implements ReportWriter {
             @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel)
             throws FileNotFoundException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion,
-                drupFilter, genePanelModel);
+                drupFilter);
 
         return writeReport(report.sample(), reportBuilder);
     }
@@ -128,7 +128,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
             @NotNull final String reportLogoPath, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel) {
+            @NotNull final DrupFilter drupFilter) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
@@ -139,14 +139,14 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantReport(report, drupFilter),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(report, genePanelModel));
+                        copyNumberReport(report));
 
         final ComponentBuilder<?, ?> helpPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         cmp.text("HMF Sequencing Report v" + VERSION + " - Additional Information").setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        filteringSection(hmfSlicingRegion, genePanelModel),
+                        filteringSection(hmfSlicingRegion),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -255,7 +255,8 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report,
             @NotNull final DrupFilter drupFilter) {
-        final String mutationalLoadAddition = "Patients with a mutational load over 140 could be eligible for immunotherapy within DRUP.";
+        final String mutationalLoadAddition =
+                "Patients with a mutational load over 140 could be " + "eligible for immunotherapy within DRUP.";
 
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific variant reported for "
@@ -269,9 +270,9 @@ public class PDFWriter implements ReportWriter {
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
                             col.column("Depth", PatientDataSource.READ_DEPTH_FIELD),
+                            col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("BAF (VAF)", PatientDataSource.BAF_VAF_FIELD)))
                         .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
@@ -299,18 +300,16 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report,
-            @NotNull final GenePanelModel genePanelModel) {
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
                             col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
-                            col.column("Band", PatientDataSource.BAND_FIELD),
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers(), genePanelModel))) :
+                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
@@ -321,8 +320,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> filteringSection(@NotNull final Slicer hmfSlicingRegion,
-            @NotNull final GenePanelModel genePanelModel) {
+    private static ComponentBuilder<?, ?> filteringSection(@NotNull final Slicer hmfSlicingRegion) {
         final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on filtering",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
@@ -332,12 +330,11 @@ public class PDFWriter implements ReportWriter {
                         "The definition of canonical transcripts can be found on http://www.ensembl.org/Help/Glossary?id=346"));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                createGenePanel(hmfSlicingRegion.regions(), genePanelModel));
+                createGenePanel(hmfSlicingRegion.regions()));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> createGenePanel(@NotNull final Collection<GenomeRegion> regions,
-            @NotNull final GenePanelModel genePanelModel) {
+    private static ComponentBuilder<?, ?> createGenePanel(@NotNull final Collection<GenomeRegion> regions) {
         //@formatter:off
         final List<HMFSlicingAnnotation> annotations = Lists.newArrayList();
         for (final GenomeRegion region : regions) {
@@ -356,15 +353,18 @@ public class PDFWriter implements ReportWriter {
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
                                 .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.GENE_TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
                                 .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.GENE2_TYPE_FIELD).setFixedWidth(75),
+                        col.emptyColumn(),
+                        col.column("Gene", GenePanelDataSource.GENE3_FIELD).setFixedWidth(50),
+                        col.column("Transcript", GenePanelDataSource.TRANSCRIPT3_FIELD)
+                                .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT3_FIELD)))
+                                .setStyle(linkStyle()).setFixedWidth(100),
                         col.emptyColumn().setFixedWidth(40)))
-                    .setDataSource(GenePanelDataSource.fromCosmic(annotations, genePanelModel));
+                    .setDataSource(GenePanelDataSource.fromHMFSlicingAnnotations(annotations));
         // @formatter:on
     }
 
