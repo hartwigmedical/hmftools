@@ -198,7 +198,8 @@ public class PDFWriter implements ReportWriter {
                 "This test is performed for research purpose and is not meant to be used for "
                         + "clinical decision making without further validation of findings.",
                 "Additional information on the various fields can be found on the final page of this report.",
-                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
+                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl.",
+                "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl"));
     }
 
     @NotNull
@@ -254,13 +255,11 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report,
             @NotNull final DrupFilter drupFilter) {
-        final String mutationalLoadAddition =
-                "Patients with a mutational load over 140 could be eligible for immunotherapy "
-                        + "within the DRUP. Please contact the DRUP study team (DRUP@nki.nl) for "
-                        + "DRUP-related questions.";
+        final String mutationalLoadAddition = "Patients with a mutational load over 140 could be eligible for immunotherapy within DRUP.";
 
-        final String geneMutationAddition = "Variants on marked genes indicate potential eligibility in DRUP. "
-                + "Please contact the DRUP study team (DRUP@nki.nl) for DRUP-related questions.";
+        final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
+                + "eligibility in DRUP. Please note that the marking is NOT based on the specific variant reported for "
+                + "this sample, but only on a gene-level.";
 
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
@@ -269,11 +268,11 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
-                            col.column("VAF", PatientDataSource.VAF_FIELD),
+                            col.column("Depth", PatientDataSource.READ_DEPTH_FIELD),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.componentColumn("Predicted Effect", predictedEffectColumn()),
-                            col.column("BAF Profile", PatientDataSource.BAF_PROFILE_FIELD)))
+                            col.column("BAF (VAF)", PatientDataSource.BAF_VAF_FIELD)))
                         .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 

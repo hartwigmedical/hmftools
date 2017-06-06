@@ -56,13 +56,13 @@ public class PDFWriterTest {
         final VariantReport variant2 = ImmutableVariantReport.builder().gene("MYC").chromosome("8").position(
                 128748854).ref("GG").alt("CA").transcript("ENST00000377970.2").hgvsCoding(
                 "c.15_16delGGinsCA").hgvsProtein("p.ArgVal5ArgIle").consequence("missense variant").cosmicID(
-                "").alleleReadCount(25).totalReadCount(88).impliedVAF(
-                purityAdjustedVAF(fittedPurity.purity(), 2, 0.25 / 0.88)).baf("AB").build();
+                "").alleleReadCount(20).totalReadCount(88).impliedVAF(
+                purityAdjustedVAF(fittedPurity.purity(), 2, 0.2 / 0.88)).baf("AB").build();
         final VariantReport variant3 = ImmutableVariantReport.builder().gene("TP53").chromosome("17").position(
                 7577111).ref("GCACAAA").alt("G").transcript("ENST00000269305.4").hgvsCoding(
                 "c.821_826delTTTGTG").hgvsProtein("p.Val274_Cys275del").consequence(
-                "inframe deletion").alleleReadCount(58).totalReadCount(87).impliedVAF(
-                purityAdjustedVAF(fittedPurity.purity(), 3, 0.58 / 0.87)).baf("AAA").build();
+                "inframe deletion").alleleReadCount(20).totalReadCount(87).impliedVAF(
+                purityAdjustedVAF(fittedPurity.purity(), 3, 0.20 / 0.87)).baf("AAA").build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
         final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2").gene("ALK").transcript(
