@@ -141,12 +141,20 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberReport(report));
 
-        final ComponentBuilder<?, ?> helpPage =
+        final ComponentBuilder<?, ?> genePanelPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Sequencing Report v" + VERSION + " - Additional Information").setStyle(sectionHeaderStyle()),
+                        cmp.text("HMF Sequencing Report v" + VERSION + " - Gene Panel Information")
+                                .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        filteringSection(hmfSlicingRegion),
+                        genePanelSection(hmfSlicingRegion)
+                );
+
+        final ComponentBuilder<?, ?> additionalInfoPage =
+                cmp.verticalList(
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text("HMF Sequencing Report v" + VERSION + " - Additional Information")
+                                .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -156,7 +164,7 @@ public class PDFWriter implements ReportWriter {
                 );
 
         final ComponentBuilder<?, ?> totalReport =
-                cmp.multiPageList().add(reportMainPage).newPage().add(helpPage);
+                cmp.multiPageList().add(reportMainPage).newPage().add(genePanelPage).newPage().add(additionalInfoPage);
         // @formatter:on
 
         return report().noData(totalReport);
@@ -198,8 +206,8 @@ public class PDFWriter implements ReportWriter {
                 "This test is performed for research purpose and is not meant to be used for "
                         + "clinical decision making without further validation of findings.",
                 "Additional information on the various fields can be found on the final page of this report.",
-                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl.",
-                "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl"));
+                "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl.",
+                "For other questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
 
     @NotNull
@@ -320,11 +328,11 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> filteringSection(@NotNull final Slicer hmfSlicingRegion) {
+    private static ComponentBuilder<?, ?> genePanelSection(@NotNull final Slicer hmfSlicingRegion) {
         final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
-        final VerticalListBuilder section = toList("Details on filtering",
+        final VerticalListBuilder section = toList("Details on gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "The results are filtered on the canonical transcripts for the set of below "
+                        "The results are filtered on the below canonical transcripts for a set of "
                                 + Integer.toString(hmfSlicingRegion.numberOfRegions()) + " genes (covering " + coverage
                                 + " MBases)",
                         "The definition of canonical transcripts can be found on http://www.ensembl.org/Help/Glossary?id=346"));
@@ -376,8 +384,8 @@ public class PDFWriter implements ReportWriter {
                                 + "respect to this reference genome.",
                         "The 'variant' displays what was expected as reference base and what "
                                 + "was found instead ('ref' > 'alt').",
-                        "The 'transcript' provides a link to the ensembl definition of the transcript "
-                                + "used for filtering.",
+                        "The 'read depth' displays the number of observations of the specific variant versus "
+                                + "the number of reference reads in this location in the format 'alt / ref (%)'.",
                         "The 'predicted effect' provides additional information on the variant, including "
                                 + "the change in coding sequence ('c.'), the change in protein ('p.') and "
                                 + "the predicted impact on the final protein on the second line of this field.",
@@ -385,13 +393,12 @@ public class PDFWriter implements ReportWriter {
                                 + "additional information on the variant. If the variant could not be found in the "
                                 + "COSMIC database, this field will be left blank. The Cosmic v76 database is used "
                                 + "to look-up these IDs.",
-                        "The 'Depth' fields displays the total number of observations at this position.",
-                        "The 'VAF' fields displays the variant allele frequency. The first number is "
-                                + "the percent of observations of the variant. The second number in parentheses is "
-                                + "adjusted for the implied purity.",
-                        "The 'BAF' fields displays the implied purity adjusted beta allele frequency as a proportion "
-                                + "of A's and B's. The copy number is the sum of A's and B's. The absence of any B's "
-                                + "indicates a loss of heterozygosity.",
+                        "The 'BAF (VAF)' fields displays the purity-adjusted beta allele frequency of this location "
+                                + "as a proportion of A's and B's. The copy number is the sum of A's and B's. The "
+                                + "VAF in parentheses displays the allele frequency of this variant in the tumor "
+                                + "corrected for purity.",
+                        "The implied tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
+                                + " whole genome data.",
                         "The tumor mutational load is the total number of somatic missense variants found across "
                                 + " the whole genome of the tumor biopsy."));
     }
@@ -400,7 +407,8 @@ public class PDFWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
         return toList("Details on reported copy numbers",
                 Lists.newArrayList("Copy numbers are determined for the genes filtered for in this report.",
-                        "The lowest copy number value along the region of the canonical transcript is determined as a measure for the gene's copy number.",
+                        "The lowest copy number value along the region of the canonical transcript is determined as "
+                                + "a measure for the gene's copy number.",
                         "Any gene with a value of 0 (loss) or >3 (gain) is included in the list of findings."));
     }
 
