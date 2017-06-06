@@ -3,6 +3,7 @@ package com.hartwig.hmftools.breakpointinspector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import htsjdk.samtools.*;
 
@@ -14,12 +15,12 @@ import org.jetbrains.annotations.Nullable;
 
 class Analysis {
 
-    private static class StructuralVariantContext {
+    private static class VariantContext {
         Location Breakpoint1;
         Location Breakpoint2;
         VariantType Type;
 
-        StructuralVariantContext(final Location bp1, final Location bp2, final VariantType type) {
+        VariantContext(final Location bp1, final Location bp2, final VariantType type) {
             Breakpoint1 = bp1;
             Breakpoint2 = bp2;
             Type = type;
@@ -55,7 +56,7 @@ class Analysis {
         return result;
     }
 
-    private static boolean assessDEL(final StructuralVariantContext ctx, final List<ReadInfo> pair,
+    private static boolean assessDEL(final VariantContext ctx, final List<ReadInfo> pair,
             final Stats.Sample result) {
 
         boolean pairEvidence;
@@ -77,7 +78,7 @@ class Analysis {
         return false;
     }
 
-    private static boolean assessDUP(final StructuralVariantContext ctx, final List<ReadInfo> pair,
+    private static boolean assessDUP(final VariantContext ctx, final List<ReadInfo> pair,
             final Stats.Sample result) {
 
         boolean pairEvidence;
@@ -99,7 +100,7 @@ class Analysis {
         return false;
     }
 
-    private static boolean assessINV(final StructuralVariantContext ctx, final List<ReadInfo> pair,
+    private static boolean assessINV(final VariantContext ctx, final List<ReadInfo> pair,
             final Stats.Sample result, boolean inv3) {
 
         boolean pairEvidence;
@@ -128,7 +129,7 @@ class Analysis {
     }
 
     private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult,
-            final StructuralVariantContext ctx) {
+            final VariantContext ctx) {
         final Stats.Sample result = new Stats.Sample();
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
             // consider the pairings
@@ -199,7 +200,7 @@ class Analysis {
     }
 
     private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult,
-            final StructuralVariantContext ctx) {
+            final VariantContext ctx) {
         final Stats.Sample result = calculateEvidenceStats(queryResult, ctx);
         result.Clipping_Stats = calculateClippingStats(queryResult);
         return result;
@@ -207,7 +208,7 @@ class Analysis {
 
     private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,
             @Nullable SAMFileWriter evidenceWriter, final QueryInterval[] intervals,
-            final StructuralVariantContext ctx) {
+            final VariantContext ctx) {
 
         final ClassifiedReadResults result = new ClassifiedReadResults();
 
@@ -303,7 +304,7 @@ class Analysis {
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
         // begin processing
-        final StructuralVariantContext context = new StructuralVariantContext(location1, location2, svType);
+        final VariantContext context = new VariantContext(location1, location2, svType);
 
         final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals, context);
         final Sample refStats = calculateStats(refResult, context);
@@ -312,9 +313,26 @@ class Analysis {
                 context);
         final Sample tumorStats = calculateStats(tumorResult, context);
 
+        // filtering
+
+        String filterReason = "PASS";
+        if (refStats.BP1_Stats.PR_Only_Support > 0 || refStats.BP1_Stats.PR_SR_Support > 0) {
+            filterReason = "NormalSupport";
+        }
+
+        for (final Map.Entry<Location, Clip> entry : refStats.Clipping_Stats.LocationMap.entrySet()) {
+            final Clip tumorClip = tumorStats.Clipping_Stats.LocationMap.get(entry.getKey());
+            if (tumorClip != null) {
+                // TODO: if the clip is a supporting read ??
+            }
+        }
+
+        // output
+
         final ArrayList<String> data = new ArrayList<>(extraData);
         data.addAll(refStats.GetData());
         data.addAll(tumorStats.GetData());
+        data.add(filterReason);
         data.add(tumorStats.Clipping_Stats.toString());
         System.out.println(String.join("\t", data));
     }

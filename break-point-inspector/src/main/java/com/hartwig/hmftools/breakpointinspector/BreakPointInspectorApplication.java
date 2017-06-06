@@ -128,6 +128,7 @@ public class BreakPointInspectorApplication {
                     "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
             header.addAll(prefixList(Sample.GetHeader(), "REF_"));
             header.addAll(prefixList(Sample.GetHeader(), "TUMOR_"));
+            header.add("FILTER");
             header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
