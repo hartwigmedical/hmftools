@@ -51,17 +51,27 @@ public interface VariantReport extends GenomePosition {
         return 0;
     }
 
-    @NotNull
-    default String readDepthInfo() {
-        return Integer.toString(alleleReadCount()) + " / " + Integer.toString(totalReadCount()) + " (" + formatPercent(
-                alleleFrequency()) + ")";
-    }
-
     int totalReadCount();
 
     int alleleReadCount();
 
     default double alleleFrequency() {
         return (double) alleleReadCount() / totalReadCount();
+    }
+
+    @NotNull
+    default String vafField() {
+        return Integer.toString(alleleReadCount()) + " / " + Integer.toString(totalReadCount()) + " (" + formatPercent(
+                alleleFrequency()) + ")";
+    }
+
+    @NotNull
+    default String bafProfileField() {
+        return baf() + " (" + formatPercent(impliedVAF()) + ")";
+    }
+
+    @NotNull
+    default String variantField() {
+        return ref() + " > " + alt();
     }
 }

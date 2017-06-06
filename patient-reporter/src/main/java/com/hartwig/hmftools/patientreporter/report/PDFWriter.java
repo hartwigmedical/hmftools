@@ -269,11 +269,11 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
-                            col.column("Read Depth", PatientDataSource.READ_DEPTH_FIELD),
-                            col.componentColumn("Predicted Effect", predictedEffectColumn()),
+                            col.column("VAF", PatientDataSource.VAF_FIELD),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("BAF", PatientDataSource.BAF_FIELD)))
+                            col.componentColumn("Predicted Effect", predictedEffectColumn()),
+                            col.column("BAF Profile", PatientDataSource.BAF_PROFILE_FIELD)))
                         .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
