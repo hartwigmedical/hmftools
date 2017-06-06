@@ -91,12 +91,14 @@ CREATE TABLE comprehensiveSomaticVariant
     sampleId varchar(20) NOT NULL,
     chromosome varchar(255) NOT NULL,
     position int not null,
+    filter varchar(255) NOT NULL,
     ref varchar(255) NOT NULL,
     alt varchar(255) NOT NULL,
     alleleReadCount int NOT NULL,
     totalReadCount int NOT NULL,
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(filter)
 );
 
 CREATE TABLE copyNumber

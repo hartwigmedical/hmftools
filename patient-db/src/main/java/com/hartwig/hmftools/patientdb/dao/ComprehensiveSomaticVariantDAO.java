@@ -15,11 +15,13 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Result;
 
 class ComprehensiveSomaticVariantDAO {
+    private static final String PASS = "PASS";
+
     @NotNull
     private final DSLContext context;
 
@@ -31,16 +33,19 @@ class ComprehensiveSomaticVariantDAO {
     List<SomaticVariant> read(@NotNull final String sample) {
         List<SomaticVariant> regions = Lists.newArrayList();
 
-        Result<Record> result = context.select().from(COMPREHENSIVESOMATICVARIANT)
-                .where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
+        Result<Record> result = context.select()
+                .from(COMPREHENSIVESOMATICVARIANT)
+                .where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample))
+                .and(COMPREHENSIVESOMATICVARIANT.FILTER.eq(PASS))
+                .fetch();
 
         for (Record record : result) {
 
             final String ref = record.getValue(COMPREHENSIVESOMATICVARIANT.REF);
             final String alt = record.getValue(COMPREHENSIVESOMATICVARIANT.ALT);
 
-            SomaticVariant variant = new SomaticVariant.Builder()
-                    .chromosome(record.getValue(COMPREHENSIVESOMATICVARIANT.CHROMOSOME))
+            SomaticVariant variant = new SomaticVariant.Builder().chromosome(
+                    record.getValue(COMPREHENSIVESOMATICVARIANT.CHROMOSOME))
                     .position(record.getValue(COMPREHENSIVESOMATICVARIANT.POSITION))
                     .ref(ref)
                     .alt(alt)
@@ -61,9 +66,10 @@ class ComprehensiveSomaticVariantDAO {
         context.delete(COMPREHENSIVESOMATICVARIANT).where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<SomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep8 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
+            InsertValuesStep9 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
                     COMPREHENSIVESOMATICVARIANT.SAMPLEID, COMPREHENSIVESOMATICVARIANT.CHROMOSOME,
-                    COMPREHENSIVESOMATICVARIANT.POSITION, COMPREHENSIVESOMATICVARIANT.REF, COMPREHENSIVESOMATICVARIANT.ALT,
+                    COMPREHENSIVESOMATICVARIANT.POSITION, COMPREHENSIVESOMATICVARIANT.FILTER,
+                    COMPREHENSIVESOMATICVARIANT.REF, COMPREHENSIVESOMATICVARIANT.ALT,
                     COMPREHENSIVESOMATICVARIANT.ALLELEREADCOUNT, COMPREHENSIVESOMATICVARIANT.TOTALREADCOUNT,
                     COMPREHENSIVESOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
@@ -71,8 +77,12 @@ class ComprehensiveSomaticVariantDAO {
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep8 inserter, String sample, SomaticVariant region) {
-        inserter.values(sample, region.chromosome(), region.position(), region.ref(), region.alt(),
-                region.alleleReadCount(), region.totalReadCount(), timestamp);
+    private void addRecord(Timestamp timestamp, InsertValuesStep9 inserter, String sample, SomaticVariant region) {
+        inserter.values(sample, region.chromosome(), region.position(), filter(region.filter()), region.ref(),
+                region.alt(), region.alleleReadCount(), region.totalReadCount(), timestamp);
+    }
+
+    private String filter(String filter) {
+        return filter.equals(".") ? PASS : filter;
     }
 }
