@@ -2,10 +2,8 @@ package com.hartwig.hmftools.patientreporter.report;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
-import java.util.Collection;
 import java.util.List;
 
-import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 
 import org.apache.logging.log4j.util.Strings;
@@ -28,18 +26,19 @@ class GenePanelDataSource {
     }
 
     @NotNull
-    static JRDataSource fromHMFSlicingAnnotations(@NotNull final Collection<HMFSlicingAnnotation> genes) {
+    static JRDataSource fromHMFSlicingAnnotations(@NotNull final List<HMFSlicingAnnotation> genes) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
                 TYPE_FIELD.getName(), GENE2_FIELD.getName(), TRANSCRIPT2_FIELD.getName(), TYPE2_FIELD.getName());
 
-        for (final List<HMFSlicingAnnotation> annotationList : Iterables.paddedPartition(genes, 2)) {
-            final HMFSlicingAnnotation annotation1 = annotationList.get(0);
-            final HMFSlicingAnnotation annotation2 = annotationList.get(1);
+        for (int i = 0; i < genes.size() / 2; i++) {
+            final HMFSlicingAnnotation gene1 = genes.get(i);
+            final int secondIndex = genes.size() / 2 + i;
+            final HMFSlicingAnnotation gene2 = secondIndex < genes.size() ? genes.get(secondIndex) : null;
 
-            final String gene2 = annotation2 != null ? annotation2.gene() : Strings.EMPTY;
-            final String transcript2 = annotation2 != null ? annotation2.transcript() : Strings.EMPTY;
+            final String geneName2 = gene2 != null ? gene2.gene() : Strings.EMPTY;
+            final String transcript2 = gene2 != null ? gene2.transcript() : Strings.EMPTY;
 
-            genePanelDataSource.add(annotation1.gene(), annotation1.transcript(), Strings.EMPTY, gene2, transcript2,
+            genePanelDataSource.add(gene1.gene(), gene1.transcript(), Strings.EMPTY, geneName2, transcript2,
                     Strings.EMPTY);
         }
 
