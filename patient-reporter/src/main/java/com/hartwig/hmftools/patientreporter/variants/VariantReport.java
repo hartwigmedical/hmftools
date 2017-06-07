@@ -60,13 +60,13 @@ public interface VariantReport extends GenomePosition {
     }
 
     @NotNull
-    default String readDepthField() {
+    default String depthVafField() {
         return Integer.toString(alleleReadCount()) + " / " + Integer.toString(totalReadCount()) + " (" + formatPercent(
                 alleleFrequency()) + ")";
     }
 
     @NotNull
-    default String bafVafField() {
+    default String ploidyTafField() {
         return baf() + " (" + formatPercent(impliedVAF()) + ")";
     }
 

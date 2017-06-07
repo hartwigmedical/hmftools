@@ -276,11 +276,11 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
-                            col.column("Depth (VAF)", PatientDataSource.READ_DEPTH_FIELD),
+                            col.column("Depth (VAF)", PatientDataSource.DEPTH_VAF_FIELD),
                             col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("Ploidy (TAF)", PatientDataSource.BAF_VAF_FIELD)))
+                            col.column("Ploidy (TAF)", PatientDataSource.PLOIDY_TAF_FIELD)))
                         .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -313,6 +313,7 @@ public class PDFWriter implements ReportWriter {
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
                             col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
+                            col.column("Band", PatientDataSource.BAND_FIELD),
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
@@ -351,24 +352,23 @@ public class PDFWriter implements ReportWriter {
         }
         annotations.sort(Comparator.comparing(HMFSlicingAnnotation::gene));
 
+        // KODU: Overwrite default font size to make the panel fit on one page.
+        final int fontSize = 7;
         return cmp.subreport(
-                baseTable().fields(GenePanelDataSource.genePanelFields())
+                baseTable().setColumnStyle(dataStyle().setFontSize(fontSize)).fields(GenePanelDataSource.genePanelFields())
                     .columns(
                         col.emptyColumn().setFixedWidth(40),
                         col.column("Gene", GenePanelDataSource.GENE_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
-                                .setStyle(linkStyle()).setFixedWidth(100),
+                                .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
+                        col.column("Type", GenePanelDataSource.TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
-                                .setStyle(linkStyle()).setFixedWidth(100),
-                        col.emptyColumn(),
-                        col.column("Gene", GenePanelDataSource.GENE3_FIELD).setFixedWidth(50),
-                        col.column("Transcript", GenePanelDataSource.TRANSCRIPT3_FIELD)
-                                .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT3_FIELD)))
-                                .setStyle(linkStyle()).setFixedWidth(100),
+                                .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
+                        col.column("Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
                     .setDataSource(GenePanelDataSource.fromHMFSlicingAnnotations(annotations));
         // @formatter:on
@@ -493,6 +493,6 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(
                 cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD))).setFixedWidth(170);
+                cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
     }
 }
