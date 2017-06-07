@@ -332,7 +332,7 @@ public class PDFWriter implements ReportWriter {
         final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "Variants are reported for the set of " + Integer.toString(hmfSlicingRegion.numberOfRegions())
+                        "Findings are reported for the set of " + Integer.toString(hmfSlicingRegion.numberOfRegions())
                                 + " genes (canonical transcripts) indicated below (covering " + coverage
                                 + " MBases)"));
 
