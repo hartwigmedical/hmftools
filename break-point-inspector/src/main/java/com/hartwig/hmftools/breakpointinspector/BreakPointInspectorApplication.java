@@ -88,13 +88,10 @@ public class BreakPointInspectorApplication {
             final String refEvidencePath = cmd.getOptionValue(REF_EVIDENCE_PATH);
             final String tumorPath = cmd.getOptionValue(TUMOR_PATH);
             final String tumorEvidencePath = cmd.getOptionValue(TUMOR_EVIDENCE_PATH);
-            final String bp1String = cmd.getOptionValue(BREAK_POINT1);
-            final String bp2String = cmd.getOptionValue(BREAK_POINT2);
             final String vcfPath = cmd.getOptionValue(VCF);
             final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
-            if (refPath == null || tumorPath == null || (vcfPath != null && bp1String != null) || (bp2String != null
-                    && cmd.getOptionValue(SV_LEN) != null) || bp1String != null && cmd.getOptionValue(SV_TYPE) != null)
+            if (refPath == null || tumorPath == null || (vcfPath == null))
                 printHelpAndExit(options);
 
             // load the files
@@ -118,10 +115,25 @@ public class BreakPointInspectorApplication {
                 refWriter = new SAMFileWriterFactory().makeBAMWriter(refReader.getFileHeader(), false, refEvidenceBAM);
             }
 
+            final File vcfFile = new File(vcfPath);
+            final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+
+            // work out the reference sample
+            final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
+            final Predicate<String> isRef = s -> s.endsWith("R") || s.endsWith("BL");
+            final String refSampleName = samples.stream().filter(isRef).findFirst().orElse(null);
+            final String tumorSampleName = samples.stream().filter(
+                    s -> s.endsWith("T") || !isRef.test(s)).findFirst().orElse(null);
+            if (refSampleName == null || tumorSampleName == null) {
+                System.err.println("could not determine tumor and sample from VCF");
+                System.exit(1);
+                return;
+            }
+
             // output the header
-            final ArrayList<String> header = Lists.newArrayList("ID", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN",
-                    "MANTA_REF_PR_NORMAL", "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL", "MANTA_REF_SR_SUPPORT",
-                    "MANTA_TUMOR_PR_NORMAL", "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL",
+            final ArrayList<String> header = Lists.newArrayList("ID", "SVTYPE", "ORIENTATION", "MANTA_BP1",
+                    "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL", "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL",
+                    "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL", "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL",
                     "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
             header.addAll(prefixList(Sample.GetHeader(), "REF_"));
             header.addAll(prefixList(Sample.GetHeader(), "TUMOR_"));
@@ -129,148 +141,106 @@ public class BreakPointInspectorApplication {
             header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
-            if (vcfPath != null) {
-                final File vcfFile = new File(vcfPath);
-                final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+            for (final VariantContext variant : vcfReader) {
+                if (variant.isFiltered())
+                    continue;
 
-                // work out the reference sample
-                final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
-                final Predicate<String> isRef = s -> s.endsWith("R") || s.endsWith("BL");
-                final String refSampleName = samples.stream().filter(isRef).findFirst().orElse(null);
-                final String tumorSampleName = samples.stream().filter(
-                        s -> s.endsWith("T") || !isRef.test(s)).findFirst().orElse(null);
-                if (refSampleName == null || tumorSampleName == null) {
-                    System.err.println("could not determine tumor and sample from VCF");
-                    System.exit(1);
-                    return;
-                }
-
-                for (final VariantContext variant : vcfReader) {
-                    if (variant.isFiltered())
-                        continue;
-
-                    final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
-                    Location location1 = Location.parseLocationString(location,
-                            tumorReader.getFileHeader().getSequenceDictionary());
-                    Location location2;
-
-                    boolean forward;
-                    HMFVariantType svType;
-                    switch (variant.getStructuralVariantType()) {
-                        case INV:
-                            forward = true;
-                            if (variant.hasAttribute("INV3")) {
-                                svType = HMFVariantType.INV3;
-                            } else if (variant.hasAttribute("INV5")) {
-                                svType = HMFVariantType.INV5;
-                            } else {
-                                System.err.println(variant.getID() + " : expected either INV3 or INV5 flag");
-                                continue;
-                            }
-                            location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
-                            break;
-                        case DEL:
-                            forward = true;
-                            svType = HMFVariantType.DEL;
-                            location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
-                            break;
-                        case DUP:
-                            forward = true;
-                            svType = HMFVariantType.DUP;
-                            location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
-                            break;
-                        case BND:
-                            final String call = variant.getAlternateAllele(0).getDisplayString();
-                            final String[] leftSplit = call.split("\\]");
-                            final String[] rightSplit = call.split("\\[");
-                            if (leftSplit.length >= 2) {
-                                location2 = Location.parseLocationString(leftSplit[1],
-                                        tumorReader.getFileHeader().getSequenceDictionary());
-                                if (leftSplit[0].length() > 0) {
-                                    forward = true;
-                                    svType = HMFVariantType.INV3;
-                                } else {
-                                    forward = false;
-                                    svType = HMFVariantType.DEL;
-                                }
-                            } else if (rightSplit.length >= 2) {
-                                location2 = Location.parseLocationString(rightSplit[1],
-                                        tumorReader.getFileHeader().getSequenceDictionary());
-                                if (rightSplit[0].length() > 0) {
-                                    forward = true;
-                                    svType = HMFVariantType.DEL;
-                                } else {
-                                    forward = true;
-                                    svType = HMFVariantType.INV5;
-                                }
-                            } else {
-                                System.err.println(variant.getID() + " : could not parse breakpoint");
-                                continue;
-                            }
-                            break;
-                        default:
-                            System.err.println(
-                                    variant.getID() + " : UNEXPECTED SVTYPE=" + variant.getStructuralVariantType());
-                            continue;
-                    }
-
-                    final List<Integer> ciPos = variant.getAttributeAsIntList("CIPOS", 0);
-                    Range uncertainty1 = ciPos.size() == 2 ? new Range(ciPos.get(0), ciPos.get(1)) : null;
-                    final List<Integer> ciEnd = variant.getAttributeAsIntList("CIEND", 0);
-                    Range uncertainty2 = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
-
-                    // handle HOMSEQ
-                    if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND"))
-                        uncertainty2 = new Range(-ciPos.get(1), ciPos.get(0));
-                    // TODO: anything for SVINSSEQ?
-
-                    final List<String> extraData = Lists.newArrayList(variant.getID(), location1.toString(),
-                            location2.toString(), variant.getAttributeAsString("SVLEN", "."));
-
-                    extraData.addAll(parseMantaPRSR(variant.getGenotype(refSampleName)));
-                    extraData.addAll(parseMantaPRSR(variant.getGenotype(tumorSampleName)));
-
-                    extraData.add(variant.getAttributeAsString("HOMSEQ", "."));
-                    extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
-
-                    final HMFVariantContext ctx;
-                    if (forward) {
-                        ctx = new HMFVariantContext(location1, location2, svType);
-                        ctx.Uncertainty1 = uncertainty1;
-                        ctx.Uncertainty2 = uncertainty2;
-                    } else {
-                        ctx = new HMFVariantContext(location2, location1, svType);
-                        ctx.Uncertainty2 = uncertainty1;
-                        ctx.Uncertainty1 = uncertainty2;
-                    }
-
-                    Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, ctx,
-                            range);
-                }
-            } else {
-                final int svLen = Integer.parseInt(cmd.getOptionValue(SV_LEN, "0"));
-                final HMFVariantType svType = HMFVariantType.valueOf(cmd.getOptionValue(SV_TYPE));
-
-                // parse the location strings
-                final Location location1 = Location.parseLocationString(bp1String,
+                final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
+                Location location1 = Location.parseLocationString(location,
                         tumorReader.getFileHeader().getSequenceDictionary());
-                final Location location2;
-                if (bp2String != null) {
-                    location2 = Location.parseLocationString(bp2String,
-                            tumorReader.getFileHeader().getSequenceDictionary());
-                } else if (svLen > 0) {
-                    location2 = location1.add(svLen);
-                } else {
-                    printHelpAndExit(options);
-                    System.exit(1);
-                    return;
+                Location location2;
+
+                boolean forward;
+                HMFVariantType svType;
+                switch (variant.getStructuralVariantType()) {
+                    case INV:
+                        forward = true;
+                        if (variant.hasAttribute("INV3")) {
+                            svType = HMFVariantType.INV3;
+                        } else if (variant.hasAttribute("INV5")) {
+                            svType = HMFVariantType.INV5;
+                        } else {
+                            System.err.println(variant.getID() + " : expected either INV3 or INV5 flag");
+                            continue;
+                        }
+                        location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
+                        break;
+                    case DEL:
+                        forward = true;
+                        svType = HMFVariantType.DEL;
+                        location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
+                        break;
+                    case DUP:
+                        forward = true;
+                        svType = HMFVariantType.DUP;
+                        location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
+                        break;
+                    case BND:
+                        final String call = variant.getAlternateAllele(0).getDisplayString();
+                        final String[] leftSplit = call.split("\\]");
+                        final String[] rightSplit = call.split("\\[");
+                        if (leftSplit.length >= 2) {
+                            location2 = Location.parseLocationString(leftSplit[1],
+                                    tumorReader.getFileHeader().getSequenceDictionary());
+                            if (leftSplit[0].length() > 0) {
+                                forward = true;
+                                svType = HMFVariantType.INV3;
+                            } else {
+                                forward = false;
+                                svType = HMFVariantType.DEL;
+                            }
+                        } else if (rightSplit.length >= 2) {
+                            location2 = Location.parseLocationString(rightSplit[1],
+                                    tumorReader.getFileHeader().getSequenceDictionary());
+                            if (rightSplit[0].length() > 0) {
+                                forward = true;
+                                svType = HMFVariantType.DEL;
+                            } else {
+                                forward = true;
+                                svType = HMFVariantType.INV5;
+                            }
+                        } else {
+                            System.err.println(variant.getID() + " : could not parse breakpoint");
+                            continue;
+                        }
+                        break;
+                    default:
+                        System.err.println(
+                                variant.getID() + " : UNEXPECTED SVTYPE=" + variant.getStructuralVariantType());
+                        continue;
                 }
 
-                final List<String> extraData = Lists.newArrayList("manual", location1.toString(), location2.toString(),
-                        svLen > 0 ? Integer.toString(svLen) : ".");
-                extraData.addAll(Collections.nCopies(10, "."));
+                final List<Integer> ciPos = variant.getAttributeAsIntList("CIPOS", 0);
+                Range uncertainty1 = ciPos.size() == 2 ? new Range(ciPos.get(0), ciPos.get(1)) : null;
+                final List<Integer> ciEnd = variant.getAttributeAsIntList("CIEND", 0);
+                Range uncertainty2 = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
 
-                final HMFVariantContext ctx = new HMFVariantContext(location1, location2, svType);
+                // handle HOMSEQ
+                if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND"))
+                    uncertainty2 = new Range(-ciPos.get(1), ciPos.get(0));
+                // TODO: anything for SVINSSEQ?
+
+                final List<String> extraData = Lists.newArrayList(variant.getID(),
+                        variant.getStructuralVariantType().toString(), HMFVariantType.getOrientation(svType),
+                        location1.toString(), location2.toString(), variant.getAttributeAsString("SVLEN", "."));
+
+                extraData.addAll(parseMantaPRSR(variant.getGenotype(refSampleName)));
+                extraData.addAll(parseMantaPRSR(variant.getGenotype(tumorSampleName)));
+
+                extraData.add(variant.getAttributeAsString("HOMSEQ", "."));
+                extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
+
+                final HMFVariantContext ctx;
+                if (forward) {
+                    ctx = new HMFVariantContext(location1, location2, svType);
+                    ctx.Uncertainty1 = uncertainty1;
+                    ctx.Uncertainty2 = uncertainty2;
+                } else {
+                    ctx = new HMFVariantContext(location2, location1, svType);
+                    ctx.Uncertainty2 = uncertainty1;
+                    ctx.Uncertainty1 = uncertainty2;
+                }
+
                 Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, ctx,
                         range);
             }

@@ -43,7 +43,22 @@ class Util {
         DEL,
         INV3,
         INV5,
-        DUP
+        DUP;
+
+        static String getOrientation(final HMFVariantType type) {
+            switch (type) {
+                case DEL:
+                    return "INNIE";
+                case INV3:
+                    return "TANDEM_RIGHT";
+                case INV5:
+                    return "TANDEM_LEFT";
+                case DUP:
+                    return "OUTIE";
+                default:
+                    return "ERROR";
+            }
+        }
     }
 
     static class HMFVariantContext {
