@@ -83,8 +83,11 @@ class ReadHelpers {
             else if (read.getReferenceIndex() == location2.ReferenceIndex)
                 return Util.Region.BP2;
         } else if (read.getReferenceIndex() == location1.ReferenceIndex) {
-            if (Math.abs(read.getAlignmentStart() - location1.Position) < Math.abs(
-                    read.getAlignmentStart() - location2.Position))
+            final int distance1 = Math.min(Math.abs(read.getAlignmentStart() - location1.Position),
+                    Math.abs(read.getAlignmentEnd() - location1.Position));
+            final int distance2 = Math.min(Math.abs(read.getAlignmentStart() - location2.Position),
+                    Math.abs(read.getAlignmentEnd() - location2.Position));
+            if (distance1 < distance2)
                 return Util.Region.BP1;
             else
                 return Util.Region.BP2;
