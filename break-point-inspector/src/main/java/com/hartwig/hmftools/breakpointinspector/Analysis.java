@@ -53,13 +53,13 @@ class Analysis {
             if (uncertainty != null) {
                 final ClipInfo left = getLeftClip(r.Read);
                 // TODO: double check Alignment offset by -1
-                if (left != null && left.Alignment.add(-1).Position >= breakpoint.Position - uncertainty.Min &&
-                        left.Alignment.add(-1).Position <= breakpoint.Position + uncertainty.Max) {
+                if (left != null && left.Alignment.add(-1).Position >= breakpoint.Position - uncertainty.Min
+                        && left.Alignment.add(-1).Position <= breakpoint.Position + uncertainty.Max) {
                     return true;
                 }
                 final ClipInfo right = getRightClip(r.Read);
-                if (right != null && right.Alignment.Position >= breakpoint.Position - uncertainty.Min &&
-                        right.Alignment.Position <= breakpoint.Position + uncertainty.Max) {
+                if (right != null && right.Alignment.Position >= breakpoint.Position - uncertainty.Min
+                        && right.Alignment.Position <= breakpoint.Position + uncertainty.Max) {
                     return true;
                 }
             }
@@ -68,13 +68,18 @@ class Analysis {
         return false;
     }
 
-    private static boolean assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair,
-            final Stats.Sample result) {
+    private static void assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result) {
 
         boolean pairEvidence;
         pairEvidence = pair.get(0).Read.getAlignmentStart() <= ctx.Breakpoint1.Position;
         pairEvidence &= pair.get(1).Read.getAlignmentStart() >= ctx.Breakpoint2.Position;
-        pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.FR;
+
+        if (pair.get(0).Read.getReferenceIndex().equals(pair.get(1).Read.getReferenceIndex())) {
+            pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.FR;
+        } else { // handle BND case
+            pairEvidence &=
+                    pair.get(0).Read.getReadNegativeStrandFlag() != pair.get(1).Read.getReadNegativeStrandFlag();
+        }
 
         for (final ReadInfo r : pair) {
             if (checkSR(ctx, r) && pairEvidence) {
@@ -85,12 +90,9 @@ class Analysis {
                 result.Get(r.Breakpoint).Diff_Variant++;
             }
         }
-
-        return false;
     }
 
-    private static boolean assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair,
-            final Stats.Sample result) {
+    private static void assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result) {
 
         boolean pairEvidence;
         pairEvidence = pair.get(0).Read.getAlignmentStart() >= ctx.Breakpoint1.Position;
@@ -106,23 +108,23 @@ class Analysis {
                 result.Get(r.Breakpoint).Diff_Variant++;
             }
         }
-
-        return false;
     }
 
-    private static boolean assessINV(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result,
+    private static void assessINV(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result,
             boolean inv3) {
 
         boolean pairEvidence;
         if (inv3) {
             pairEvidence = pair.get(0).Read.getAlignmentStart() <= ctx.Breakpoint1.Position
                     && pair.get(1).Read.getAlignmentStart() <= ctx.Breakpoint2.Position;
+            pairEvidence &= !pair.get(0).Read.getReadNegativeStrandFlag(); // forward strand x ---->
+            pairEvidence &= !pair.get(1).Read.getReadNegativeStrandFlag(); // forward strand x ---->
         } else {
             pairEvidence = pair.get(0).Read.getAlignmentStart() >= ctx.Breakpoint1.Position
                     && pair.get(1).Read.getAlignmentStart() >= ctx.Breakpoint2.Position;
+            pairEvidence &= pair.get(0).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
+            pairEvidence &= pair.get(1).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
         }
-        // TODO: determine tandem direction (L-L or R-R)
-        pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.TANDEM;
 
         for (final ReadInfo r : pair) {
             if (checkSR(ctx, r) && pairEvidence) {
@@ -133,8 +135,6 @@ class Analysis {
                 result.Get(r.Breakpoint).Diff_Variant++;
             }
         }
-
-        return false;
     }
 
     private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult,

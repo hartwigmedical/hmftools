@@ -154,13 +154,15 @@ public class BreakPointInspectorApplication {
                             tumorReader.getFileHeader().getSequenceDictionary());
                     final Location location2;
 
+                    boolean forwardStrand;
                     HMFVariantType svType;
                     switch (variant.getStructuralVariantType()) {
                         case INV:
-                            if (variant.getAttributeAsBoolean("INV3", false)) {
-                                svType = HMFVariantType.INV5;
-                            } else if (variant.getAttributeAsBoolean("INV5", false)) {
+                            forwardStrand = true;
+                            if (variant.hasAttribute("INV3")) {
                                 svType = HMFVariantType.INV3;
+                            } else if (variant.hasAttribute("INV5")) {
+                                svType = HMFVariantType.INV5;
                             } else {
                                 System.err.println(variant.getID() + " : expected either INV3 or INV5 flag");
                                 continue;
@@ -168,10 +170,12 @@ public class BreakPointInspectorApplication {
                             location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                             break;
                         case DEL:
+                            forwardStrand = true;
                             svType = HMFVariantType.DUP;
                             location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                             break;
                         case DUP:
+                            forwardStrand = true;
                             svType = HMFVariantType.DUP;
                             location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                             break;
@@ -183,20 +187,20 @@ public class BreakPointInspectorApplication {
                                 location2 = Location.parseLocationString(leftSplit[1],
                                         tumorReader.getFileHeader().getSequenceDictionary());
                                 if (leftSplit[0].length() > 0) {
-                                    // right - right
+                                    forwardStrand = true;
                                     svType = HMFVariantType.INV3;
                                 } else {
-                                    // left - right
-                                    svType = HMFVariantType.DUP;
+                                    forwardStrand = false;
+                                    svType = HMFVariantType.DEL;
                                 }
                             } else if (rightSplit.length >= 2) {
                                 location2 = Location.parseLocationString(rightSplit[1],
                                         tumorReader.getFileHeader().getSequenceDictionary());
                                 if (rightSplit[0].length() > 0) {
-                                    // right - left
+                                    forwardStrand = true;
                                     svType = HMFVariantType.DEL;
                                 } else {
-                                    // left - left
+                                    forwardStrand = true;
                                     svType = HMFVariantType.INV5;
                                 }
                             } else {
@@ -222,11 +226,18 @@ public class BreakPointInspectorApplication {
                     final List<Integer> ciPos = variant.getAttributeAsIntList("CIPOS", 0);
                     final Range location1interval = ciPos.size() == 2 ? new Range(ciPos.get(0), ciPos.get(1)) : null;
                     final List<Integer> ciEnd = variant.getAttributeAsIntList("CIEND", 0);
-                    final Range location2interval = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
+                    Range location2interval = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
 
-                    final HMFVariantContext ctx = new HMFVariantContext(location1, location2, svType);
-                    ctx.Uncertainty1 = location1interval;
-                    ctx.Uncertainty2 = location2interval;
+                    final HMFVariantContext ctx;
+                    if (forwardStrand) {
+                        ctx = new HMFVariantContext(location1, location2, svType);
+                        ctx.Uncertainty1 = location1interval;
+                        ctx.Uncertainty2 = location2interval;
+                    } else {
+                        ctx = new HMFVariantContext(location2, location1, svType);
+                        ctx.Uncertainty1 = location2interval;
+                        ctx.Uncertainty2 = location1interval;
+                    }
 
                     Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, ctx,
                             range);
