@@ -150,6 +150,10 @@ class Util {
             return result;
         }
 
+        boolean closeTo(final Location other) {
+            return ReferenceIndex == other.ReferenceIndex && Math.abs(other.Position - Position) <= 1;
+        }
+
         @Override
         public int hashCode() {
             return Objects.hash(ReferenceIndex, Position);
@@ -163,11 +167,7 @@ class Util {
                 return false;
 
             Location other = (Location) obj;
-            if (ReferenceIndex != other.ReferenceIndex)
-                return false;
-            if (Position != other.Position)
-                return false;
-            return true;
+            return ReferenceIndex == other.ReferenceIndex && Position == other.Position;
         }
 
         @Override
