@@ -331,8 +331,8 @@ public class PDFWriter implements ReportWriter {
         final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "The results are filtered on the canonical transcripts shown below for a set of "
-                                + Integer.toString(hmfSlicingRegion.numberOfRegions()) + " genes (covering " + coverage
+                        "Variants are reported for the set of " + Integer.toString(hmfSlicingRegion.numberOfRegions())
+                                + " genes (canonical transcripts) indicated below (covering " + coverage
                                 + " MBases)"));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
@@ -392,7 +392,13 @@ public class PDFWriter implements ReportWriter {
                                 + "COSMIC database, this field will be left blank. The Cosmic v76 database is used "
                                 + "to look-up these IDs.",
                         "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
-                                + "whole genome data.", "The 'Ploidy (TAF)' field display",
+                                + "whole genome data.",
+                        "The ”Ploidy (TAF)” field displays the tumor ploidy for the observed variant. The ploidy "
+                                + "has been adjusted for the implied tumor purity (see above) and is shown as a "
+                                + "proportion of A’s and B’s (e.g. AAABB for 3 copies A, and 2 copies B). "
+                                + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "
+                                + "Frequency) value refers to the alternative allele frequency after correction "
+                                + "for tumor purity.",
                         "The tumor mutational load is the total number of somatic missense variants found across"
                                 + " the whole genome of the tumor biopsy."));
     }
