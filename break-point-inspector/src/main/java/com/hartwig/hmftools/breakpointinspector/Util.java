@@ -175,7 +175,7 @@ class Util {
             final int comp1 = Integer.compare(ReferenceIndex, o.ReferenceIndex);
             if (comp1 == 0)
                 return Integer.compare(Position, o.Position);
-            return 0;
+            return comp1;
         }
 
         @Override
