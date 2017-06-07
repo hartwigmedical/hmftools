@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import htsjdk.samtools.*;
 
@@ -45,23 +46,21 @@ class Analysis {
     }
 
     private static boolean checkSR(final HMFVariantContext ctx, final ReadInfo r) {
+        final Location breakpoint = r.Breakpoint == Region.BP1 ? ctx.Breakpoint1 : ctx.Breakpoint2;
+        final Range uncertainty = r.Breakpoint == Region.BP1 ? ctx.Uncertainty1 : ctx.Uncertainty2;
+
         if (r.Location == Overlap.CLIP_EXACT) {
             return true;
-        } else if (r.Location == Overlap.CLIP_OTHER) {
-            final Location breakpoint = r.Breakpoint == Region.BP1 ? ctx.Breakpoint1 : ctx.Breakpoint2;
-            final Range uncertainty = r.Breakpoint == Region.BP1 ? ctx.Uncertainty1 : ctx.Uncertainty2;
-            if (uncertainty != null) {
-                final ClipInfo left = getLeftClip(r.Read);
-                // TODO: double check Alignment offset by -1
-                if (left != null && left.Alignment.add(-1).Position >= breakpoint.Position - uncertainty.Min
-                        && left.Alignment.add(-1).Position <= breakpoint.Position + uncertainty.Max) {
-                    return true;
-                }
-                final ClipInfo right = getRightClip(r.Read);
-                if (right != null && right.Alignment.Position >= breakpoint.Position - uncertainty.Min
-                        && right.Alignment.Position <= breakpoint.Position + uncertainty.Max) {
-                    return true;
-                }
+        } else if (r.Location == Overlap.CLIP_OTHER && uncertainty != null) {
+            final ClipInfo left = getLeftClip(r.Read);
+            if (left != null && left.Alignment.Position >= (breakpoint.Position + uncertainty.Min)
+                    && left.Alignment.Position <= (breakpoint.Position + uncertainty.Max)) {
+                return true;
+            }
+            final ClipInfo right = getRightClip(r.Read);
+            if (right != null && right.Alignment.Position >= (breakpoint.Position + uncertainty.Min)
+                    && right.Alignment.Position <= (breakpoint.Position + uncertainty.Max)) {
+                return true;
             }
         }
 
@@ -72,11 +71,13 @@ class Analysis {
 
         boolean pairEvidence;
         pairEvidence = pair.get(0).Read.getAlignmentStart() <= ctx.Breakpoint1.Position;
-        pairEvidence &= pair.get(1).Read.getAlignmentStart() >= ctx.Breakpoint2.Position;
+        pairEvidence &= pair.get(1).Read.getAlignmentEnd() >= ctx.Breakpoint2.Position;
 
-        if (pair.get(0).Read.getReferenceIndex().equals(pair.get(1).Read.getReferenceIndex())) {
+        if (Objects.equals(pair.get(0).Read.getReferenceIndex(), pair.get(1).Read.getReferenceIndex())) {
+            // same chromosome
             pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.FR;
-        } else { // handle BND case
+        } else {
+            // handle BND case
             pairEvidence &=
                     pair.get(0).Read.getReadNegativeStrandFlag() != pair.get(1).Read.getReadNegativeStrandFlag();
         }
@@ -95,7 +96,7 @@ class Analysis {
     private static void assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result) {
 
         boolean pairEvidence;
-        pairEvidence = pair.get(0).Read.getAlignmentStart() >= ctx.Breakpoint1.Position;
+        pairEvidence = pair.get(0).Read.getAlignmentEnd() >= ctx.Breakpoint1.Position;
         pairEvidence &= pair.get(1).Read.getAlignmentStart() <= ctx.Breakpoint2.Position;
         pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.RF;
 
@@ -120,8 +121,8 @@ class Analysis {
             pairEvidence &= !pair.get(0).Read.getReadNegativeStrandFlag(); // forward strand x ---->
             pairEvidence &= !pair.get(1).Read.getReadNegativeStrandFlag(); // forward strand x ---->
         } else {
-            pairEvidence = pair.get(0).Read.getAlignmentStart() >= ctx.Breakpoint1.Position
-                    && pair.get(1).Read.getAlignmentStart() >= ctx.Breakpoint2.Position;
+            pairEvidence = pair.get(0).Read.getAlignmentEnd() >= ctx.Breakpoint1.Position
+                    && pair.get(1).Read.getAlignmentEnd() >= ctx.Breakpoint2.Position;
             pairEvidence &= pair.get(0).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
             pairEvidence &= pair.get(1).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
         }
@@ -194,7 +195,7 @@ class Analysis {
                     }
                 } else {
                     final Stats.BreakPoint stats = result.Get(p0.Breakpoint);
-                    final boolean splitEvidence = pair.stream().anyMatch(p -> p.Location == Overlap.CLIP_EXACT);
+                    final boolean splitEvidence = pair.stream().anyMatch(p -> checkSR(ctx, p));
                     if (splitEvidence) {
                         stats.SR_Only_Support++;
                     } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
@@ -283,9 +284,9 @@ class Analysis {
             final ClipInfo right = getRightClip(read);
 
             // TODO: double check clipping conditions
-            if (left != null && left.Alignment.add(-1).equals(bp)) {
+            if (left != null && left.Alignment.closeTo(bp)) {
                 info.Location = Overlap.CLIP_EXACT;
-            } else if (right != null && right.Alignment.equals(bp)) {
+            } else if (right != null && right.Alignment.closeTo(bp)) {
                 info.Location = Overlap.CLIP_EXACT;
             } else if (left != null || right != null) {
                 info.Location = Overlap.CLIP_OTHER;

@@ -150,15 +150,15 @@ public class BreakPointInspectorApplication {
                         continue;
 
                     final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
-                    final Location location1 = Location.parseLocationString(location,
+                    Location location1 = Location.parseLocationString(location,
                             tumorReader.getFileHeader().getSequenceDictionary());
-                    final Location location2;
+                    Location location2;
 
-                    boolean forwardStrand;
+                    boolean forward;
                     HMFVariantType svType;
                     switch (variant.getStructuralVariantType()) {
                         case INV:
-                            forwardStrand = true;
+                            forward = true;
                             if (variant.hasAttribute("INV3")) {
                                 svType = HMFVariantType.INV3;
                             } else if (variant.hasAttribute("INV5")) {
@@ -170,12 +170,12 @@ public class BreakPointInspectorApplication {
                             location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                             break;
                         case DEL:
-                            forwardStrand = true;
-                            svType = HMFVariantType.DUP;
+                            forward = true;
+                            svType = HMFVariantType.DEL;
                             location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                             break;
                         case DUP:
-                            forwardStrand = true;
+                            forward = true;
                             svType = HMFVariantType.DUP;
                             location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                             break;
@@ -187,20 +187,20 @@ public class BreakPointInspectorApplication {
                                 location2 = Location.parseLocationString(leftSplit[1],
                                         tumorReader.getFileHeader().getSequenceDictionary());
                                 if (leftSplit[0].length() > 0) {
-                                    forwardStrand = true;
+                                    forward = true;
                                     svType = HMFVariantType.INV3;
                                 } else {
-                                    forwardStrand = false;
+                                    forward = false;
                                     svType = HMFVariantType.DEL;
                                 }
                             } else if (rightSplit.length >= 2) {
                                 location2 = Location.parseLocationString(rightSplit[1],
                                         tumorReader.getFileHeader().getSequenceDictionary());
                                 if (rightSplit[0].length() > 0) {
-                                    forwardStrand = true;
+                                    forward = true;
                                     svType = HMFVariantType.DEL;
                                 } else {
-                                    forwardStrand = true;
+                                    forward = true;
                                     svType = HMFVariantType.INV5;
                                 }
                             } else {
@@ -214,6 +214,16 @@ public class BreakPointInspectorApplication {
                             continue;
                     }
 
+                    final List<Integer> ciPos = variant.getAttributeAsIntList("CIPOS", 0);
+                    Range uncertainty1 = ciPos.size() == 2 ? new Range(ciPos.get(0), ciPos.get(1)) : null;
+                    final List<Integer> ciEnd = variant.getAttributeAsIntList("CIEND", 0);
+                    Range uncertainty2 = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
+
+                    // handle HOMSEQ
+                    if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND"))
+                        uncertainty2 = new Range(-ciPos.get(1), ciPos.get(0));
+                    // TODO: anything for SVINSSEQ?
+
                     final List<String> extraData = Lists.newArrayList(variant.getID(), location1.toString(),
                             location2.toString(), variant.getAttributeAsString("SVLEN", "."));
 
@@ -223,20 +233,15 @@ public class BreakPointInspectorApplication {
                     extraData.add(variant.getAttributeAsString("HOMSEQ", "."));
                     extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
 
-                    final List<Integer> ciPos = variant.getAttributeAsIntList("CIPOS", 0);
-                    final Range location1interval = ciPos.size() == 2 ? new Range(ciPos.get(0), ciPos.get(1)) : null;
-                    final List<Integer> ciEnd = variant.getAttributeAsIntList("CIEND", 0);
-                    Range location2interval = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
-
                     final HMFVariantContext ctx;
-                    if (forwardStrand) {
+                    if (forward) {
                         ctx = new HMFVariantContext(location1, location2, svType);
-                        ctx.Uncertainty1 = location1interval;
-                        ctx.Uncertainty2 = location2interval;
+                        ctx.Uncertainty1 = uncertainty1;
+                        ctx.Uncertainty2 = uncertainty2;
                     } else {
                         ctx = new HMFVariantContext(location2, location1, svType);
-                        ctx.Uncertainty1 = location2interval;
-                        ctx.Uncertainty2 = location1interval;
+                        ctx.Uncertainty2 = uncertainty1;
+                        ctx.Uncertainty1 = uncertainty2;
                     }
 
                     Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, ctx,
