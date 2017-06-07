@@ -47,7 +47,7 @@ class PatientDataSource {
                 BAF_VAF_FIELD.getName());
 
         for (final VariantReport variant : variants) {
-            final String displayGene = drupFilter.test(variant) ? variant.gene() + "*" : variant.gene();
+            final String displayGene = drupFilter.test(variant) ? variant.gene() + " *" : variant.gene();
             variantDataSource.add(displayGene, variant.chromosomePosition(), variant.variantField(),
                     variant.readDepthField(), variant.cosmicID(), stripCosmicIdentifier(variant.cosmicID()),
                     variant.hgvsCoding(), variant.hgvsProtein(), variant.consequence(), variant.bafVafField());

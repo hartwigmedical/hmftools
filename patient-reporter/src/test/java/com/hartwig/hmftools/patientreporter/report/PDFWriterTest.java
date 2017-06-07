@@ -52,7 +52,7 @@ public class PDFWriterTest {
                 99).baf("AAAB").impliedVAF(purityAdjustedVAF(fittedPurity.purity(), 4, 0.18 / 0.99)).build();
         final VariantReport variant2 = ImmutableVariantReport.builder().gene("MYC").chromosome("8").position(
                 128748854).ref("GG").alt("CA").transcript("ENST00000377970.2").hgvsCoding(
-                "c.15_16delGGinsCA").hgvsProtein("p.ArgVal5ArgIle").consequence("missense variant").cosmicID(
+                "c.15_16delinsCA").hgvsProtein("p.Val6Ile").consequence("missense variant").cosmicID(
                 "").alleleReadCount(20).totalReadCount(88).impliedVAF(
                 purityAdjustedVAF(fittedPurity.purity(), 2, 0.2 / 0.88)).baf("AB").build();
         final VariantReport variant3 = ImmutableVariantReport.builder().gene("TP53").chromosome("17").position(
