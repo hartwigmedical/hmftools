@@ -2,6 +2,7 @@ package com.hartwig.hmftools.breakpointinspector;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,6 +53,7 @@ class Analysis {
         if (r.Location == Overlap.CLIP_EXACT) {
             return true;
         } else if (r.Location == Overlap.CLIP_OTHER && uncertainty != null) {
+            // TODO: check location against ctx and type?
             final ClipInfo left = getLeftClip(r.Read);
             if (left != null && left.Alignment.Position >= (breakpoint.Position + uncertainty.Min)
                     && left.Alignment.Position <= (breakpoint.Position + uncertainty.Max)) {
@@ -67,7 +69,7 @@ class Analysis {
         return false;
     }
 
-    private static void assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result) {
+    private static boolean assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair) {
 
         boolean pairEvidence;
         pairEvidence = pair.get(0).Read.getAlignmentStart() <= ctx.Breakpoint1.Position;
@@ -82,37 +84,20 @@ class Analysis {
                     pair.get(0).Read.getReadNegativeStrandFlag() != pair.get(1).Read.getReadNegativeStrandFlag();
         }
 
-        for (final ReadInfo r : pair) {
-            if (checkSR(ctx, r) && pairEvidence) {
-                result.Get(r.Breakpoint).PR_SR_Support++;
-            } else if (pairEvidence) {
-                result.Get(r.Breakpoint).PR_Only_Support++;
-            } else {
-                result.Get(r.Breakpoint).Diff_Variant++;
-            }
-        }
+        return pairEvidence;
     }
 
-    private static void assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result) {
+    private static boolean assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair) {
 
         boolean pairEvidence;
         pairEvidence = pair.get(0).Read.getAlignmentEnd() >= ctx.Breakpoint1.Position;
         pairEvidence &= pair.get(1).Read.getAlignmentStart() <= ctx.Breakpoint2.Position;
         pairEvidence &= SamPairUtil.getPairOrientation(pair.get(0).Read) == SamPairUtil.PairOrientation.RF;
 
-        for (final ReadInfo r : pair) {
-            if (checkSR(ctx, r) && pairEvidence) {
-                result.Get(r.Breakpoint).PR_SR_Support++;
-            } else if (pairEvidence) {
-                result.Get(r.Breakpoint).PR_Only_Support++;
-            } else {
-                result.Get(r.Breakpoint).Diff_Variant++;
-            }
-        }
+        return pairEvidence;
     }
 
-    private static void assessINV(final HMFVariantContext ctx, final List<ReadInfo> pair, final Stats.Sample result,
-            boolean inv3) {
+    private static boolean assessINV(final HMFVariantContext ctx, final List<ReadInfo> pair, boolean inv3) {
 
         boolean pairEvidence;
         if (inv3) {
@@ -127,20 +112,15 @@ class Analysis {
             pairEvidence &= pair.get(1).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
         }
 
-        for (final ReadInfo r : pair) {
-            if (checkSR(ctx, r) && pairEvidence) {
-                result.Get(r.Breakpoint).PR_SR_Support++;
-            } else if (pairEvidence) {
-                result.Get(r.Breakpoint).PR_Only_Support++;
-            } else {
-                result.Get(r.Breakpoint).Diff_Variant++;
-            }
-        }
+        return pairEvidence;
     }
 
     private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult,
             final HMFVariantContext ctx) {
+
         final Stats.Sample result = new Stats.Sample();
+        final Map<Location, Integer> locationEvidence = new HashMap<>();
+
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
             // consider the pairings
             for (final ReadInfo p0 : collection.Reads) {
@@ -179,19 +159,30 @@ class Analysis {
 
                 // supports the break point
                 if (p0.Breakpoint != p1.Breakpoint) {
+                    boolean pairEvidence = false;
                     switch (ctx.Type) {
                         case DEL:
-                            assessDEL(ctx, pair, result);
+                            pairEvidence = assessDEL(ctx, pair);
                             break;
                         case DUP:
-                            assessDUP(ctx, pair, result);
+                            pairEvidence = assessDUP(ctx, pair);
                             break;
                         case INV3:
-                            assessINV(ctx, pair, result, true);
+                            pairEvidence = assessINV(ctx, pair, true);
                             break;
                         case INV5:
-                            assessINV(ctx, pair, result, false);
+                            pairEvidence = assessINV(ctx, pair, false);
                             break;
+                    }
+
+                    for (final ReadInfo r : pair) {
+                        if (checkSR(ctx, r) && pairEvidence) {
+                            result.Get(r.Breakpoint).PR_SR_Support++;
+                        } else if (pairEvidence) {
+                            result.Get(r.Breakpoint).PR_Only_Support++;
+                        } else {
+                            result.Get(r.Breakpoint).Diff_Variant++;
+                        }
                     }
                 } else {
                     final Stats.BreakPoint stats = result.Get(p0.Breakpoint);
@@ -326,12 +317,30 @@ class Analysis {
             filterReason = "NormalSupport";
         }
 
+        boolean concordance = false;
         for (final Map.Entry<Location, Clip> entry : refStats.Clipping_Stats.LocationMap.entrySet()) {
             final Clip tumorClip = tumorStats.Clipping_Stats.LocationMap.get(entry.getKey());
-            if (tumorClip != null) {
-                // TODO: if the clip is a supporting read ??
+            if (tumorClip == null)
+                continue;
+
+            // TODO: pick the location closest to the break points
+
+            final Clip refClip = entry.getValue();
+            if (tumorClip.LongestClipSequence.length() > refClip.LongestClipSequence.length()) {
+                if (tumorClip.LongestClipSequence.contains(refClip.LongestClipSequence)) {
+                    concordance = true;
+                    break;
+                }
+            } else {
+                if (refClip.LongestClipSequence.contains(tumorClip.LongestClipSequence)) {
+                    concordance = true;
+                    break;
+                }
             }
         }
+
+        if (concordance)
+            filterReason = "ClippingConcordance";
 
         // output
 

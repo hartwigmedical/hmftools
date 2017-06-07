@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.breakpointinspector.Util.toStrings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +49,7 @@ class Stats {
     }
 
     static class ClipStats {
-        Map<Util.Location, Clip> LocationMap = new Hashtable<>();
+        Map<Util.Location, Clip> LocationMap = new HashMap<>();
 
         @Override
         public String toString() {
