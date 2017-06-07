@@ -29,8 +29,7 @@ class Util {
         PROXIMITY,
         INTERSECT,
         STRADDLE,
-        CLIP_EXACT,
-        CLIP_OTHER
+        CLIP
     }
 
     enum Region {

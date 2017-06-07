@@ -50,20 +50,13 @@ class Analysis {
         final Location breakpoint = r.Breakpoint == Region.BP1 ? ctx.Breakpoint1 : ctx.Breakpoint2;
         final Range uncertainty = r.Breakpoint == Region.BP1 ? ctx.Uncertainty1 : ctx.Uncertainty2;
 
-        if (r.Location == Overlap.CLIP_EXACT) {
-            return true;
-        } else if (r.Location == Overlap.CLIP_OTHER && uncertainty != null) {
+        if (uncertainty == null) {
+            return getClips(r.Read).stream().anyMatch(c -> c.Alignment.closeTo(breakpoint));
+        } else if (r.Location == Overlap.CLIP) {
             // TODO: check location against ctx and type?
-            final ClipInfo left = getLeftClip(r.Read);
-            if (left != null && left.Alignment.Position >= (breakpoint.Position + uncertainty.Min)
-                    && left.Alignment.Position <= (breakpoint.Position + uncertainty.Max)) {
-                return true;
-            }
-            final ClipInfo right = getRightClip(r.Read);
-            if (right != null && right.Alignment.Position >= (breakpoint.Position + uncertainty.Min)
-                    && right.Alignment.Position <= (breakpoint.Position + uncertainty.Max)) {
-                return true;
-            }
+            return getClips(r.Read).stream().anyMatch(
+                    c -> c.Alignment.Position >= breakpoint.Position + uncertainty.Min
+                            && c.Alignment.Position <= breakpoint.Position + uncertainty.Max);
         }
 
         return false;
@@ -119,7 +112,7 @@ class Analysis {
             final HMFVariantContext ctx) {
 
         final Stats.Sample result = new Stats.Sample();
-        final Map<Location, Integer> locationEvidence = new HashMap<>();
+        final Map<Location, Integer> clippedPairs = new HashMap<>();
 
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
             // consider the pairings
@@ -271,16 +264,8 @@ class Analysis {
             }
 
             // determine classification
-            final ClipInfo left = getLeftClip(read);
-            final ClipInfo right = getRightClip(read);
-
-            // TODO: double check clipping conditions
-            if (left != null && left.Alignment.closeTo(bp)) {
-                info.Location = Overlap.CLIP_EXACT;
-            } else if (right != null && right.Alignment.closeTo(bp)) {
-                info.Location = Overlap.CLIP_EXACT;
-            } else if (left != null || right != null) {
-                info.Location = Overlap.CLIP_OTHER;
+            if (!getClips(read).isEmpty()) {
+                info.Location = Overlap.CLIP;
             } else {
                 info.Location = Overlap.PROXIMITY;
             }
