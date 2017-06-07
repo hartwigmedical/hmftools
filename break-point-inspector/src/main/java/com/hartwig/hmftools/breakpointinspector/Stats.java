@@ -58,7 +58,7 @@ class Stats {
             for (final Map.Entry<Util.Location, Clip> kv : LocationMap.entrySet()) {
                 final Util.Location alignment = kv.getKey();
                 final Clip stats = kv.getValue();
-                if(stats.Reads.isEmpty())
+                if(stats.Reads.size() < 2)
                     continue; // skip if we only have hard clips
                 sortedClips.put(stats.Reads.size(), alignment + "," + stats);
             }
