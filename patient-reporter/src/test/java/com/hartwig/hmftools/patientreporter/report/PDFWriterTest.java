@@ -46,7 +46,6 @@ public class PDFWriterTest {
         final String sample = "CPCT11111111T";
         final FittedPurity fittedPurity = ImmutableFittedPurity.builder().purity(0.58).diploidProportion(
                 0).modelBAFDeviation(0).normFactor(0).score(0).build();
-        System.out.println(System.getProperty("user.home"));
 
         final VariantReport variant1 = ImmutableVariantReport.builder().gene("BRAF").chromosome("7").position(
                 140453136).ref("A").alt("T").transcript("ENST00000377970.6").hgvsCoding("c.1799T>A").hgvsProtein(
