@@ -36,6 +36,7 @@ public class PDFWriterTest {
     private static final boolean SHOW_AND_PRINT = false;
     private static final boolean WRITE_TO_PDF = false;
 
+    private static final String REPORT_BASE_DIR = System.getProperty("user.home");
     private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
     private static final String REPORT_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
     private static final String DRUP_GENES_CSV = RESOURCE_PATH + File.separator + "drup_genes.csv";
@@ -45,6 +46,7 @@ public class PDFWriterTest {
         final String sample = "CPCT11111111T";
         final FittedPurity fittedPurity = ImmutableFittedPurity.builder().purity(0.58).diploidProportion(
                 0).modelBAFDeviation(0).normFactor(0).score(0).build();
+        System.out.println(System.getProperty("user.home"));
 
         final VariantReport variant1 = ImmutableVariantReport.builder().gene("BRAF").chromosome("7").position(
                 140453136).ref("A").alt("T").transcript("ENST00000377970.6").hgvsCoding("c.1799T>A").hgvsProtein(
@@ -85,7 +87,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream("/Users/korneel/hmf/tmp/test_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
         }
     }
 
@@ -105,7 +107,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream("/Users/korneel/hmf/tmp/low_tumor_percentage_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
     }
 
