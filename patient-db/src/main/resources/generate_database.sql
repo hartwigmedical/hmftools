@@ -110,6 +110,7 @@ CREATE TABLE comprehensiveSomaticVariant
     totalReadCount int NOT NULL,
     adjustedPloidy DOUBLE PRECISION NOT NULL,
     adjustedVaf DOUBLE PRECISION NOT NULL,
+    adjustedCopyNumber DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter)
