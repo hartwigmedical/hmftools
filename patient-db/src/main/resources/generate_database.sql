@@ -1,3 +1,6 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
     cpctId varchar(255) DEFAULT NULL,
@@ -11,6 +14,7 @@ CREATE TABLE patient
     PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS sample;
 CREATE TABLE sample
 (   sampleId varchar(20) NOT NULL,
     patientId int NOT NULL,
@@ -19,6 +23,7 @@ CREATE TABLE sample
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
+DROP TABLE IF EXISTS biopsy;
 CREATE TABLE biopsy
 (   id int NOT NULL,
     sampleId varchar(20),
@@ -30,6 +35,7 @@ CREATE TABLE biopsy
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
+DROP TABLE IF EXISTS treatment;
 CREATE TABLE treatment
  (  id int NOT NULL,
     biopsyId int,
@@ -44,6 +50,9 @@ CREATE TABLE treatment
     FOREIGN KEY (patientId) REFERENCES patient(id)
  );
 
+SET FOREIGN_KEY_CHECKS = 1;
+
+DROP TABLE IF EXISTS drug;
 CREATE TABLE drug
  (  id int NOT NULL AUTO_INCREMENT,
     treatmentId int,
@@ -57,6 +66,7 @@ CREATE TABLE drug
     FOREIGN KEY (patientId) REFERENCES patient(id)
  );
 
+DROP TABLE IF EXISTS treatmentResponse;
  CREATE TABLE treatmentResponse
   (  id int NOT NULL AUTO_INCREMENT,
      treatmentId int,
@@ -69,6 +79,7 @@ CREATE TABLE drug
      FOREIGN KEY (patientId) REFERENCES patient(id)
   );
 
+DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id int NOT NULL AUTO_INCREMENT,
     sampleId varchar(20) NOT NULL,
@@ -85,6 +96,7 @@ CREATE TABLE somaticVariant
     FOREIGN KEY (patientId) references patient(id)
 );
 
+DROP TABLE IF EXISTS comprehensiveSomaticVariant;
 CREATE TABLE comprehensiveSomaticVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
@@ -103,6 +115,7 @@ CREATE TABLE comprehensiveSomaticVariant
     INDEX(filter)
 );
 
+DROP TABLE IF EXISTS copyNumber;
 CREATE TABLE copyNumber
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
@@ -118,6 +131,7 @@ CREATE TABLE copyNumber
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS purityRange;
 CREATE TABLE purityRange
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
@@ -131,6 +145,7 @@ CREATE TABLE purityRange
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS purityScore;
 CREATE TABLE purityScore
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
@@ -144,12 +159,13 @@ CREATE TABLE purityScore
     INDEX(sampleId)
 );
 
-CREATE VIEW purity AS
+CREATE OR REPLACE VIEW purity AS
 SELECT p.*, s.polyclonalProportion, s.minPurity, s.maxPurity, s.minPloidy, s.maxPloidy
 FROM purityRange p, purityScore s
 WHERE p.sampleId = s.sampleId
   AND (p.sampleId, p.score) IN (SELECT sampleId, MIN(score) FROM purityRange GROUP BY sampleId);
 
+DROP TABLE IF EXISTS copyNumberRegion;
 CREATE TABLE copyNumberRegion
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
@@ -175,6 +191,7 @@ CREATE TABLE copyNumberRegion
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS structuralVariant;
 CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
