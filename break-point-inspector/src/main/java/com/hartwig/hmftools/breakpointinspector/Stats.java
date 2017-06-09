@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.breakpointinspector;
 
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.getClips;
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 import static com.hartwig.hmftools.breakpointinspector.Util.toStrings;
 
@@ -54,21 +55,45 @@ class Stats {
         @Override
         public String toString() {
 
-            final TreeMultimap<Integer, String> sortedClips = TreeMultimap.create(Collections.reverseOrder(), Ordering.natural());
+            final TreeMultimap<Integer, String> sortedClips = TreeMultimap.create(Collections.reverseOrder(),
+                    Ordering.natural());
             for (final Map.Entry<Util.Location, Clip> kv : LocationMap.entrySet()) {
                 final Util.Location alignment = kv.getKey();
                 final Clip stats = kv.getValue();
-                if(stats.Reads.size() < 2)
+                if (stats.Reads.size() < 2)
                     continue; // skip if we only have hard clips
                 sortedClips.put(stats.Reads.size(), alignment + "," + stats);
             }
 
             return String.join(";", sortedClips.values());
         }
+
+        void addToClippingStats(final SAMRecord read) {
+            for (final Util.ClipInfo clip : getClips(read)) {
+                final Stats.Clip stats = LocationMap.computeIfAbsent(clip.Alignment, k -> new Stats.Clip());
+                if (clip.HardClipped) {
+                    stats.HardClippedReads.add(read);
+                } else {
+                    if (clip.Sequence.length() > stats.LongestClipSequence.length() && (
+                            clip.Sequence.startsWith(stats.LongestClipSequence) || clip.Sequence.endsWith(
+                                    stats.LongestClipSequence))) {
+                        // the existing sequence supports the new sequence
+                        stats.LongestClipSequence = clip.Sequence;
+                    } else if (!(stats.LongestClipSequence.startsWith(clip.Sequence)
+                            || stats.LongestClipSequence.endsWith(clip.Sequence))) {
+                        // this read does not support the existing sequence
+                        continue;
+                    }
+                    stats.Reads.add(read);
+                }
+            }
+        }
     }
 
     static class Sample {
+        Util.Location BP1;
         BreakPoint BP1_Stats = new BreakPoint();
+        Util.Location BP2;
         BreakPoint BP2_Stats = new BreakPoint();
         ClipStats Clipping_Stats = new ClipStats();
 

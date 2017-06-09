@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.breakpointinspector;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,7 @@ class Util {
         Location Breakpoint2;
         Range Uncertainty2;
         HMFVariantType Type;
+        HashSet<String> Filter = new HashSet<>();
 
         HMFVariantContext(final Location bp1, final Location bp2, final HMFVariantType type) {
             Breakpoint1 = bp1;
@@ -165,7 +167,7 @@ class Util {
         }
 
         boolean closeTo(final Location other) {
-            return ReferenceIndex == other.ReferenceIndex && Math.abs(other.Position - Position) <= 1;
+            return other != null && ReferenceIndex == other.ReferenceIndex && Math.abs(other.Position - Position) <= 1;
         }
 
         @Override
@@ -199,12 +201,12 @@ class Util {
     }
 
     static class Range {
-        int Min;
-        int Max;
+        int Start;
+        int End;
 
-        Range(int min, int max) {
-            Min = min;
-            Max = max;
+        Range(int start, int end) {
+            Start = start;
+            End = end;
         }
     }
 }

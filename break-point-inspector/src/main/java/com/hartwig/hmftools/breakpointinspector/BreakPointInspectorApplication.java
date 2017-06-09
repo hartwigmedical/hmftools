@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -137,24 +139,22 @@ public class BreakPointInspectorApplication {
                     "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
             header.addAll(prefixList(Sample.GetHeader(), "REF_"));
             header.addAll(prefixList(Sample.GetHeader(), "TUMOR_"));
+            header.add("BPI_BP1");
+            header.add("BPI_BP2");
             header.add("FILTER");
             header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
             for (final VariantContext variant : vcfReader) {
-                if (variant.isFiltered())
-                    continue;
 
                 final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
                 Location location1 = Location.parseLocationString(location,
                         tumorReader.getFileHeader().getSequenceDictionary());
                 Location location2;
 
-                boolean forward;
                 HMFVariantType svType;
                 switch (variant.getStructuralVariantType()) {
                     case INV:
-                        forward = true;
                         if (variant.hasAttribute("INV3")) {
                             svType = HMFVariantType.INV3;
                         } else if (variant.hasAttribute("INV5")) {
@@ -166,12 +166,10 @@ public class BreakPointInspectorApplication {
                         location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                         break;
                     case DEL:
-                        forward = true;
                         svType = HMFVariantType.DEL;
                         location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                         break;
                     case DUP:
-                        forward = true;
                         svType = HMFVariantType.DUP;
                         location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                         break;
@@ -183,20 +181,16 @@ public class BreakPointInspectorApplication {
                             location2 = Location.parseLocationString(leftSplit[1],
                                     tumorReader.getFileHeader().getSequenceDictionary());
                             if (leftSplit[0].length() > 0) {
-                                forward = true;
                                 svType = HMFVariantType.INV3;
                             } else {
-                                forward = false;
-                                svType = HMFVariantType.DEL;
+                                svType = HMFVariantType.DUP;
                             }
                         } else if (rightSplit.length >= 2) {
                             location2 = Location.parseLocationString(rightSplit[1],
                                     tumorReader.getFileHeader().getSequenceDictionary());
                             if (rightSplit[0].length() > 0) {
-                                forward = true;
                                 svType = HMFVariantType.DEL;
                             } else {
-                                forward = true;
                                 svType = HMFVariantType.INV5;
                             }
                         } else {
@@ -210,12 +204,13 @@ public class BreakPointInspectorApplication {
                         continue;
                 }
 
+                // uncertainty
                 final List<Integer> ciPos = variant.getAttributeAsIntList("CIPOS", 0);
                 Range uncertainty1 = ciPos.size() == 2 ? new Range(ciPos.get(0), ciPos.get(1)) : null;
                 final List<Integer> ciEnd = variant.getAttributeAsIntList("CIEND", 0);
                 Range uncertainty2 = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
 
-                // handle HOMSEQ
+                // handle HOMSEQ in BND
                 if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND"))
                     uncertainty2 = new Range(-ciPos.get(1), ciPos.get(0));
                 // TODO: anything for SVINSSEQ?
@@ -230,17 +225,12 @@ public class BreakPointInspectorApplication {
                 extraData.add(variant.getAttributeAsString("HOMSEQ", "."));
                 extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
 
-                final HMFVariantContext ctx;
-                if (forward) {
-                    ctx = new HMFVariantContext(location1, location2, svType);
-                    ctx.Uncertainty1 = uncertainty1;
-                    ctx.Uncertainty2 = uncertainty2;
-                } else {
-                    ctx = new HMFVariantContext(location2, location1, svType);
-                    ctx.Uncertainty2 = uncertainty1;
-                    ctx.Uncertainty1 = uncertainty2;
-                }
+                final HMFVariantContext ctx = new HMFVariantContext(location1, location2, svType);
+                ctx.Filter.addAll(variant.getFilters());
+                ctx.Uncertainty1 = uncertainty1;
+                ctx.Uncertainty2 = uncertainty2;
 
+                // TODO: pass filter
                 Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, ctx,
                         range);
             }
