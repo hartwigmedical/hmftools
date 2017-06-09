@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class FittedPurityScoreFactory {
 
     private static final double PERCENT_RANGE = 0.1;
-    private static final double ABS_RANGE = 0.0005;
+    private static final double ABS_RANGE = 0.00025;
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
     @NotNull
