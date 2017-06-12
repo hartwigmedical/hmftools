@@ -9,10 +9,25 @@ Query OK, 1 row affected (0.00 sec)
 mysql> GRANT ALL on hmfpatients.* TO 'build'@'localhost';
 Query OK, 0 rows affected (0.00 sec)
 
-Then make sure hmfpatients is filled by running 'generate_database.sql'
+Maven automatically rebuilds the hmfpatient database based on DDL statements provided 
+in file generate_database.sql via this additional Maven build step we are automatically 
+sure the jOOQ generated Java entity code always matches the DDL statements.
 
-CREATE USER 'build'@'localhost' IDENTIFIED BY 'build';
-DROP DATABASE IF EXISTS hmfpatients;
-CREATE DATABASE hmfpatients;
-GRANT ALL on hmfpatients.* TO 'build'@'localhost';
-USE hmfpatients;
+MySQL database setup is triggered via setup_database.sh script that is assuming MySQL
+login credentials to be provided via mysql.login located in your home directory.
+
+Create mysql.login file:
+
+cat ~/mysql.login << HERE
+[client]
+database=hmfpatients
+user=build
+password=build
+HERE
+
+For MySQL to accept the login file, make sure that the login file is only readable by you:
+
+chmod 600 ~/mysql.login
+
+From new any change made to the database definition in generate_database.sql is 
+automatically taken into account by the generated Java code.
