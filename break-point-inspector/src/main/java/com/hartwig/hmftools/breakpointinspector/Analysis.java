@@ -117,6 +117,11 @@ class Analysis {
                     continue;
                 }
 
+                // special case for BND pairings, we want them in same order as manta breakpoint
+                if (p0.Read.getInferredInsertSize() == 0 && !p0.Read.getReferenceIndex().equals(ctx.Breakpoint1.ReferenceIndex)) {
+                    continue;
+                }
+
                 // don't consider pairs twice from the reverse pairing
                 if (p0.Read.getInferredInsertSize() < 0) {
                     continue;
@@ -169,7 +174,7 @@ class Analysis {
             }
         }
 
-        // if we don't have an accurate breakpoint, look at clipped pairs first
+        // 1: look at clipped pairs first
         if (result.BP1 == null) {
             result.BP1 = pairedClipsAtBP1.LocationMap.entrySet().stream().max(
                     Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
@@ -178,6 +183,9 @@ class Analysis {
             result.BP2 = pairedClipsAtBP2.LocationMap.entrySet().stream().max(
                     Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
         }
+
+        // TODO: 2: then we should look at unpaired clips to determine breakpoint
+        // TODO: 3: then we should just use the Manta breakpoint
 
         for (final List<ReadInfo> pair : spanningPairs) {
             for (final ReadInfo r : pair) {
@@ -216,7 +224,7 @@ class Analysis {
         return calculateEvidenceStats(queryResult, ctx);
     }
 
-    // TODO: static? heavy?
+    // TODO: this should really be per sample
     private static Set<Integer> sWrittenReads = new HashSet<>();
 
     private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,

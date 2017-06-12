@@ -146,10 +146,6 @@ class Util {
             return result;
         }
 
-        static Location fromSAMRecord(final SAMRecord record) {
-            return fromSAMRecord(record, true);
-        }
-
         static Location fromSAMRecord(final SAMRecord record, boolean alignmentStart) {
             final Location result = new Location();
             result.ReferenceName = record.getReferenceName();

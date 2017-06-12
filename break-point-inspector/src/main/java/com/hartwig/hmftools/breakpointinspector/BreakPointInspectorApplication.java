@@ -213,6 +213,7 @@ public class BreakPointInspectorApplication {
                 // handle HOMSEQ in BND
                 if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND"))
                     uncertainty2 = new Range(-ciPos.get(1), ciPos.get(0));
+                // TODO: double check this
                 // TODO: anything for SVINSSEQ?
 
                 final List<String> extraData = Lists.newArrayList(variant.getID(),
