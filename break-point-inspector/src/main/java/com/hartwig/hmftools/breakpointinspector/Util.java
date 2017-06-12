@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -164,6 +165,13 @@ class Util {
 
         boolean closeTo(final Location other) {
             return other != null && ReferenceIndex == other.ReferenceIndex && Math.abs(other.Position - Position) <= 1;
+        }
+
+        boolean closeTo(final Location other, @Nullable final Range range) {
+            if (range == null)
+                return closeTo(other);
+            return other != null && ReferenceIndex == other.ReferenceIndex && Position >= (other.Position
+                    + range.Start) && Position <= (other.Position + range.End);
         }
 
         @Override

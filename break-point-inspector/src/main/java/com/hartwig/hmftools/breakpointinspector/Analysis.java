@@ -91,16 +91,11 @@ class Analysis {
         final List<List<ReadInfo>> spanningPairs = new ArrayList<>();
         final List<List<ReadInfo>> localPairs = new ArrayList<>();
 
-        // update clipping stats
-        for (final NamedReadCollection readCollection : queryResult.ReadMap.values()) {
-            for (final ReadInfo read : readCollection.Reads) {
-                result.Clipping_Stats.addToClippingStats(read.Read);
-            }
-        }
-
         for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
-            // consider the pairings
             for (final ReadInfo p0 : collection.Reads) {
+
+                // update clipping stats
+                result.Clipping_Stats.addToClippingStats(p0.Read);
 
                 // find the mate
                 final ReadInfo p1 = collection.Reads.stream().filter(i -> isMate(p0.Read, i.Read)).findFirst().orElse(
@@ -118,7 +113,8 @@ class Analysis {
                 }
 
                 // special case for BND pairings, we want them in same order as manta breakpoint
-                if (p0.Read.getInferredInsertSize() == 0 && !p0.Read.getReferenceIndex().equals(ctx.Breakpoint1.ReferenceIndex)) {
+                if (p0.Read.getInferredInsertSize() == 0 && !p0.Read.getReferenceIndex().equals(
+                        ctx.Breakpoint1.ReferenceIndex)) {
                     continue;
                 }
 
@@ -184,13 +180,24 @@ class Analysis {
                     Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
         }
 
-        // TODO: 2: then we should look at unpaired clips to determine breakpoint
+        // 2: then we should look at unpaired clips to determine breakpoint
+        if (result.BP1 == null) {
+            result.BP1 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
+                    e -> e.getKey().closeTo(ctx.Breakpoint1, ctx.Uncertainty1)).max(
+                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+        }
+        if (result.BP2 == null) {
+            result.BP2 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
+                    e -> e.getKey().closeTo(ctx.Breakpoint2, ctx.Uncertainty1)).max(
+                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+        }
         // TODO: 3: then we should just use the Manta breakpoint
 
         for (final List<ReadInfo> pair : spanningPairs) {
             for (final ReadInfo r : pair) {
                 final boolean sr = getClips(r.Read).stream().anyMatch(
                         c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2));
+                // TODO: or exact equals?
                 // TODO: also check side of clip
                 if (sr) {
                     result.Get(r.Breakpoint).PR_SR_Support++;
