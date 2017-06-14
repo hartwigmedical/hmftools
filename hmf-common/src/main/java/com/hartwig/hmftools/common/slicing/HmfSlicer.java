@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
