@@ -31,12 +31,11 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriterTest {
 
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = true;
+    private static final boolean WRITE_TO_PDF = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
     private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
     private static final String REPORT_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
-    private static final String DRUP_GENES_CSV = RESOURCE_PATH + File.separator + "drup_genes.csv";
 
     @Test
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
@@ -77,8 +76,8 @@ public class PDFWriterTest {
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic.csv";
 
-        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(slicerPath, cosmicPath,
-                drupFilterPath);
+        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(slicerPath, drupFilterPath,
+                cosmicPath);
 
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, REPORT_LOGO, reporterData);
         assertNotNull(report);
