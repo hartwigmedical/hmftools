@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.copynumber.freec.ImmutableFreecCopyNumber;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfSlicerGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class CopyNumberAnalyzerTest {
     @NotNull
     private static HmfGenomeRegion region(final long start, final long end, @NotNull final String transcriptId,
             @NotNull final String gene, @NotNull final String chromosomeBand) {
-        return new ImmutableHmfSlicerGenomeRegion(CHROMOSOME, start, end, transcriptId, TRANSCRIPT_VERSION, gene,
+        return new ImmutableHmfGenomeRegion(CHROMOSOME, start, end, transcriptId, TRANSCRIPT_VERSION, gene,
                 chromosomeBand, ENTREZ_ID);
     }
 

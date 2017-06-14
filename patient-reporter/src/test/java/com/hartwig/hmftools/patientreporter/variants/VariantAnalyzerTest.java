@@ -1,21 +1,25 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
+import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class VariantAnalyzerTest {
 
@@ -26,11 +30,14 @@ public class VariantAnalyzerTest {
     private static final String WRONG_FEATURE_TYPE = "sequence_feature";
     private static final String RIGHT_TRANSCRIPT = "TR";
     private static final String WRONG_TRANSCRIPT = "RT";
-    private static final String REGION_ANNOTATION = RIGHT_TRANSCRIPT + ".1 (KODU)";
+    private static final int TRANSCRIPT_VERSION = 1;
+    private static final String GENE = "(KODU)";
+    private static final String CHROMOSOME_BAND = "p1";
+    private static final String ENTREZ_ID = "11";
 
     @Test
     public void realCaseWorks() {
-        final Slicer hmfSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(350, 450, REGION_ANNOTATION));
+        final HmfSlicer hmfSlicingRegion = SlicerFactory.hmfSlicerFromSingleGenomeRegion(hmfRegion());
         final Slicer giabHighConfidenceRegion = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
         final Slicer cpctSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(400, 500));
 
@@ -86,5 +93,11 @@ public class VariantAnalyzerTest {
     @NotNull
     private static GenomeRegion region(final long start, final long end, @Nullable String annotation) {
         return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end, annotation);
+    }
+
+    @NotNull
+    private static HmfGenomeRegion hmfRegion() {
+        return new ImmutableHmfGenomeRegion(CHROMOSOME, 350, 450, RIGHT_TRANSCRIPT, TRANSCRIPT_VERSION, GENE,
+                CHROMOSOME_BAND, ENTREZ_ID);
     }
 }

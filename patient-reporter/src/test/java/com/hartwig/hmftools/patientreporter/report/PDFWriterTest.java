@@ -63,10 +63,10 @@ public class PDFWriterTest {
                 purityAdjustedVAF(fittedPurity.purity(), 3, 0.20 / 0.87)).baf("AAA").build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2").gene("ALK").transcript(
-                "ENST00000389048.3").copyNumber(0).build();
-        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().chromosome("3").gene("PIK3CA").transcript(
-                "ENST00000263967.3").copyNumber(6).build();
+        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2").chromosomeBand("p1").gene(
+                "ALK").transcript("ENST00000389048.3").copyNumber(0).build();
+        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().chromosome("3").chromosomeBand("p2").gene(
+                "PIK3CA").transcript("ENST00000263967.3").copyNumber(6).build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 
         final int mutationalLoad = 361;
