@@ -17,7 +17,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,7 +126,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(report, reporterData.drupFilter()),
+                        variantReport(report, reporterData),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberReport(report));
 
@@ -251,7 +250,7 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report,
-            @NotNull final DrupFilter drupFilter) {
+            @NotNull final HmfReporterData reporterData) {
         final String mutationalLoadAddition =
                 "Patients with a mutational load over 140 could be " + "eligible for immunotherapy within DRUP.";
 
@@ -271,7 +270,7 @@ public class PDFWriter implements ReportWriter {
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.column("Ploidy (TAF)", PatientDataSource.PLOIDY_TAF_FIELD)))
-                        .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
+                        .setDataSource(PatientDataSource.fromVariants(report.variants(), reporterData)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
