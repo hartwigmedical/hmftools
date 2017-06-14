@@ -14,7 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
 
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +49,6 @@ public final class CopyNumberAnalyzer {
         final List<CopyNumberReport> reports = Lists.newArrayList();
         for (final Map.Entry<HmfGenomeRegion, CopyNumberStats> stat : stats.entrySet()) {
             final int relevantCNV = stat.getValue().min();
-
             if (relevantCNV >= MIN_CNV_FOR_GAIN || relevantCNV <= MAX_CNV_FOR_LOSS) {
                 final HmfGenomeRegion region = stat.getKey();
                 reports.add(new CopyNumberReport.Builder().chromosome(stat.getKey().chromosome()).chromosomeBand(
