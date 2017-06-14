@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.copynumber;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.region.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
