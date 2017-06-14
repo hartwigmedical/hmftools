@@ -20,17 +20,17 @@ class Analysis {
 
     private static boolean assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair) {
 
-        final Location adjustedBP1 =
-                ctx.Uncertainty1 == null ? ctx.Breakpoint1 : ctx.Breakpoint1.add(ctx.Uncertainty1.End);
+        final Location adjustedBP1 = ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.End);
         final Location adjustedBP2 =
-                ctx.Uncertainty2 == null ? ctx.Breakpoint2 : ctx.Breakpoint2.add(ctx.Uncertainty2.Start);
+                ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.Start);
 
         boolean pairEvidence;
         // side
         pairEvidence = pair.get(0).Read.getAlignmentStart() <= adjustedBP1.Position;
-        pairEvidence &= pair.get(1).Read.getAlignmentEnd() >= adjustedBP2.Position;
+        pairEvidence &= adjustedBP2.Position <= pair.get(1).Read.getAlignmentEnd();
         // orientation
-        pairEvidence &= !pair.get(0).Read.getReadNegativeStrandFlag() && pair.get(1).Read.getReadNegativeStrandFlag();
+        pairEvidence &= !pair.get(0).Read.getReadNegativeStrandFlag();
+        pairEvidence &= pair.get(1).Read.getReadNegativeStrandFlag();
 
         return pairEvidence;
     }
@@ -38,16 +38,16 @@ class Analysis {
     private static boolean assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair) {
 
         final Location adjustedBP1 =
-                ctx.Uncertainty1 == null ? ctx.Breakpoint1 : ctx.Breakpoint1.add(ctx.Uncertainty1.Start);
-        final Location adjustedBP2 =
-                ctx.Uncertainty2 == null ? ctx.Breakpoint2 : ctx.Breakpoint2.add(ctx.Uncertainty2.End);
+                ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
+        final Location adjustedBP2 = ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.End);
 
         boolean pairEvidence;
         // side
-        pairEvidence = pair.get(0).Read.getAlignmentEnd() >= adjustedBP1.Position;
+        pairEvidence = adjustedBP1.Position <= pair.get(0).Read.getAlignmentEnd();
         pairEvidence &= pair.get(1).Read.getAlignmentStart() <= adjustedBP2.Position;
         // orientation
-        pairEvidence &= pair.get(0).Read.getReadNegativeStrandFlag() && !pair.get(1).Read.getReadNegativeStrandFlag();
+        pairEvidence &= pair.get(0).Read.getReadNegativeStrandFlag();
+        pairEvidence &= !pair.get(1).Read.getReadNegativeStrandFlag();
 
         return pairEvidence;
     }
@@ -57,22 +57,22 @@ class Analysis {
         boolean pairEvidence;
         if (inv3) {
             final Location adjustedBP1 =
-                    ctx.Uncertainty1 == null ? ctx.Breakpoint1 : ctx.Breakpoint1.add(ctx.Uncertainty1.End);
+                    ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.End);
             final Location adjustedBP2 =
-                    ctx.Uncertainty2 == null ? ctx.Breakpoint2 : ctx.Breakpoint2.add(ctx.Uncertainty2.End);
+                    ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.End);
 
-            pairEvidence = pair.get(0).Read.getAlignmentStart() <= adjustedBP1.Position
-                    && pair.get(1).Read.getAlignmentStart() <= adjustedBP2.Position;
+            pairEvidence = pair.get(0).Read.getAlignmentStart() <= adjustedBP1.Position;
+            pairEvidence &= pair.get(1).Read.getAlignmentStart() <= adjustedBP2.Position;
             pairEvidence &= !pair.get(0).Read.getReadNegativeStrandFlag(); // forward strand x ---->
             pairEvidence &= !pair.get(1).Read.getReadNegativeStrandFlag(); // forward strand x ---->
         } else {
             final Location adjustedBP1 =
-                    ctx.Uncertainty1 == null ? ctx.Breakpoint1 : ctx.Breakpoint1.add(ctx.Uncertainty1.Start);
+                    ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
             final Location adjustedBP2 =
-                    ctx.Uncertainty2 == null ? ctx.Breakpoint2 : ctx.Breakpoint2.add(ctx.Uncertainty2.Start);
+                    ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.Start);
 
-            pairEvidence = pair.get(0).Read.getAlignmentEnd() >= adjustedBP1.Position
-                    && pair.get(1).Read.getAlignmentEnd() >= adjustedBP2.Position;
+            pairEvidence = adjustedBP1.Position <= pair.get(0).Read.getAlignmentEnd();
+            pairEvidence &= adjustedBP2.Position <= pair.get(1).Read.getAlignmentEnd();
             pairEvidence &= pair.get(0).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
             pairEvidence &= pair.get(1).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
         }
@@ -80,13 +80,58 @@ class Analysis {
         return pairEvidence;
     }
 
-    private static Stats.Sample calculateEvidenceStats(final ClassifiedReadResults queryResult,
-            final HMFVariantContext ctx) {
+    private static boolean assessPR(final HMFVariantContext ctx, final List<ReadInfo> pair) {
+        switch (ctx.Type) {
+            case DEL:
+                return assessDEL(ctx, pair);
+            case DUP:
+                return assessDUP(ctx, pair);
+            case INV3:
+                return assessINV(ctx, pair, true);
+            case INV5:
+                return assessINV(ctx, pair, false);
+        }
+        return false;
+    }
+
+    private static void determineBreakpoints(final HMFVariantContext ctx, final Sample result,
+            final ClipStats bpClips1, final ClipStats bpClips2) {
+
+        // 1: look at clipped pairs first
+        if (result.BP1 == null) {
+            result.BP1 = bpClips1.LocationMap.entrySet().stream().filter(
+                    e -> e.getKey().closeTo(ctx.MantaBP1, ctx.Uncertainty1)).max(
+                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+        }
+        if (result.BP2 == null) {
+            result.BP2 = bpClips2.LocationMap.entrySet().stream().filter(
+                    e -> e.getKey().closeTo(ctx.MantaBP2, ctx.Uncertainty2)).max(
+                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+        }
+
+        // 2: then we should look at unpaired clips to determine breakpoint
+        if (result.BP1 == null) {
+            result.BP1 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
+                    e -> e.getKey().closeTo(ctx.MantaBP1, ctx.Uncertainty1)).max(
+                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+        }
+        if (result.BP2 == null) {
+            result.BP2 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
+                    e -> e.getKey().closeTo(ctx.MantaBP2, ctx.Uncertainty2)).max(
+                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+        }
+
+        // TODO: should we display Manta BP?
+    }
+
+    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult, final HMFVariantContext ctx) {
 
         final Stats.Sample result = new Stats.Sample();
+        result.BP1 = ctx.BP1;
+        result.BP2 = ctx.BP2;
 
-        final Stats.ClipStats pairedClipsAtBP1 = new Stats.ClipStats();
-        final Stats.ClipStats pairedClipsAtBP2 = new Stats.ClipStats();
+        final Stats.ClipStats clipPRSR1 = new Stats.ClipStats();
+        final Stats.ClipStats clipPRSR2 = new Stats.ClipStats();
 
         final List<List<ReadInfo>> spanningPairs = new ArrayList<>();
         final List<List<ReadInfo>> localPairs = new ArrayList<>();
@@ -98,7 +143,7 @@ class Analysis {
                 result.Clipping_Stats.addToClippingStats(p0.Read);
 
                 // find the mate
-                final ReadInfo p1 = collection.Reads.stream().filter(i -> isMate(p0.Read, i.Read)).findFirst().orElse(
+                final ReadInfo p1 = collection.Reads.stream().filter(r -> isMate(p0.Read, r.Read)).findFirst().orElse(
                         null);
 
                 // single read
@@ -114,7 +159,7 @@ class Analysis {
 
                 // special case for BND pairings, we want them in same order as manta breakpoint
                 if (p0.Read.getInferredInsertSize() == 0 && !p0.Read.getReferenceIndex().equals(
-                        ctx.Breakpoint1.ReferenceIndex)) {
+                        ctx.MantaBP1.ReferenceIndex)) {
                     continue;
                 }
 
@@ -139,26 +184,10 @@ class Analysis {
 
                 // supports the break point
                 if (p0.Breakpoint != p1.Breakpoint) {
-                    boolean pairEvidence = false;
-                    switch (ctx.Type) {
-                        case DEL:
-                            pairEvidence = assessDEL(ctx, pair);
-                            break;
-                        case DUP:
-                            pairEvidence = assessDUP(ctx, pair);
-                            break;
-                        case INV3:
-                            pairEvidence = assessINV(ctx, pair, true);
-                            break;
-                        case INV5:
-                            pairEvidence = assessINV(ctx, pair, false);
-                            break;
-                    }
-
-                    if (pairEvidence) {
+                    if (assessPR(ctx, pair)) {
                         spanningPairs.add(pair);
-                        pairedClipsAtBP1.addToClippingStats(p0.Read);
-                        pairedClipsAtBP2.addToClippingStats(p1.Read);
+                        clipPRSR1.addToClippingStats(p0.Read);
+                        clipPRSR2.addToClippingStats(p1.Read);
                     } else {
                         result.BP1_Stats.Diff_Variant++;
                         result.BP2_Stats.Diff_Variant++;
@@ -170,34 +199,13 @@ class Analysis {
             }
         }
 
-        // 1: look at clipped pairs first
-        if (result.BP1 == null) {
-            result.BP1 = pairedClipsAtBP1.LocationMap.entrySet().stream().max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
-        }
-        if (result.BP2 == null) {
-            result.BP2 = pairedClipsAtBP2.LocationMap.entrySet().stream().max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
-        }
+        determineBreakpoints(ctx, result, clipPRSR1, clipPRSR2);
 
-        // 2: then we should look at unpaired clips to determine breakpoint
-        if (result.BP1 == null) {
-            result.BP1 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
-                    e -> e.getKey().closeTo(ctx.Breakpoint1, ctx.Uncertainty1)).max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
-        }
-        if (result.BP2 == null) {
-            result.BP2 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
-                    e -> e.getKey().closeTo(ctx.Breakpoint2, ctx.Uncertainty1)).max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
-        }
-        // TODO: 3: then we should just use the Manta breakpoint
-
+        // look at PR evidence
         for (final List<ReadInfo> pair : spanningPairs) {
             for (final ReadInfo r : pair) {
                 final boolean sr = getClips(r.Read).stream().anyMatch(
                         c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2));
-                // TODO: or exact equals?
                 // TODO: also check side of clip
                 if (sr) {
                     result.Get(r.Breakpoint).PR_SR_Support++;
@@ -207,6 +215,7 @@ class Analysis {
             }
         }
 
+        // look at normal or SR evidence
         for (final List<ReadInfo> pair : localPairs) {
             final ReadInfo p0 = pair.get(0);
             final ReadInfo p1 = pair.get(1);
@@ -225,10 +234,6 @@ class Analysis {
         }
 
         return result;
-    }
-
-    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult, final HMFVariantContext ctx) {
-        return calculateEvidenceStats(queryResult, ctx);
     }
 
     // TODO: this should really be per sample
@@ -269,12 +274,12 @@ class Analysis {
                 continue;
             }
 
-            info.Breakpoint = determineRegion(read, ctx.Breakpoint1, ctx.Breakpoint2);
+            info.Breakpoint = determineRegion(read, ctx.MantaBP1, ctx.MantaBP2);
             if (info.Breakpoint == Region.OTHER) {
                 throw new RuntimeException("read from unexpected region");
             }
 
-            final Location bp = info.Breakpoint == Region.BP1 ? ctx.Breakpoint1 : ctx.Breakpoint2;
+            final Location bp = info.Breakpoint == Region.BP1 ? ctx.MantaBP1 : ctx.MantaBP2;
             final boolean normal = read.getProperPairFlag();
             final boolean clipped = isClipped(info.Read);
 
@@ -316,11 +321,13 @@ class Analysis {
         return result;
     }
 
-    private static boolean compareString(final String a, final String b) {
+    private static boolean concordantStrings(final String a, final String b) {
+        if (a == null || b == null)
+            return false;
         if (a.length() < b.length())
-            return b.startsWith(a) || b.endsWith(a);
+            return !a.isEmpty() && b.startsWith(a) || b.endsWith(a);
         else
-            return a.startsWith(b) || a.endsWith(b);
+            return !b.isEmpty() && a.startsWith(b) || a.endsWith(b);
     }
 
     static void processStructuralVariant(final List<String> extraData, final SamReader refReader,
@@ -330,20 +337,22 @@ class Analysis {
         // work out the query intervals
 
         QueryInterval[] queryIntervals = {
-                new QueryInterval(ctx.Breakpoint1.ReferenceIndex, Math.max(0, ctx.Breakpoint1.Position - range),
-                        ctx.Breakpoint1.Position + range),
-                new QueryInterval(ctx.Breakpoint2.ReferenceIndex, Math.max(0, ctx.Breakpoint2.Position - range),
-                        ctx.Breakpoint2.Position + range) };
+                new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position - range),
+                        ctx.MantaBP1.Position + range),
+                new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position - range),
+                        ctx.MantaBP2.Position + range) };
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
         // begin processing
 
-        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals, ctx);
-        final Sample refStats = calculateStats(refResult, ctx);
-
         final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, tumorWriter, queryIntervals,
                 ctx);
         final Sample tumorStats = calculateStats(tumorResult, ctx);
+        ctx.BP1 = tumorStats.BP1;
+        ctx.BP2 = tumorStats.BP2;
+
+        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals, ctx);
+        final Sample refStats = calculateStats(refResult, ctx);
 
         // filtering
 
@@ -352,12 +361,13 @@ class Analysis {
             filters.add("HMF_PRNormalSupport");
         }
 
-        // TODO: check the sequences match too (not just location)
-        boolean concordance;
-        concordance = refStats.Clipping_Stats.LocationMap.entrySet().stream().anyMatch(
-                l -> l.getKey().closeTo(tumorStats.BP1));
-        concordance |= refStats.Clipping_Stats.LocationMap.entrySet().stream().anyMatch(
-                l -> l.getKey().closeTo(tumorStats.BP2));
+        boolean concordance = false;
+        for (final Location bp : Arrays.asList(tumorStats.BP1, tumorStats.BP2)) {
+            final Stats.Clip tumor_clip = tumorStats.Clipping_Stats.LocationMap.get(bp);
+            final Stats.Clip ref_clip = refStats.Clipping_Stats.LocationMap.get(bp);
+            concordance |= tumor_clip != null && ref_clip != null && concordantStrings(tumor_clip.LongestClipSequence,
+                    ref_clip.LongestClipSequence);
+        }
         if (concordance)
             filters.add("HMF_ClippingConcordance");
 
@@ -366,8 +376,8 @@ class Analysis {
         final ArrayList<String> data = new ArrayList<>(extraData);
         data.addAll(refStats.GetData());
         data.addAll(tumorStats.GetData());
-        data.add(tumorStats.BP1 != null ? tumorStats.BP1.toString() : "err");
-        data.add(tumorStats.BP2 != null ? tumorStats.BP2.toString() : "err");
+        data.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
+        data.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
         data.add(filters.isEmpty() ? "PASS" : String.join(";", filters));
         data.add(tumorStats.Clipping_Stats.toString());
         System.out.println(String.join("\t", data));

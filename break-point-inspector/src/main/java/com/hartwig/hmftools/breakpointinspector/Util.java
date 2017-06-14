@@ -63,16 +63,18 @@ class Util {
     }
 
     static class HMFVariantContext {
-        Location Breakpoint1;
+        Location MantaBP1;
         Range Uncertainty1;
-        Location Breakpoint2;
+        Location MantaBP2;
         Range Uncertainty2;
         HMFVariantType Type;
         HashSet<String> Filter = new HashSet<>();
+        Location BP1;
+        Location BP2;
 
         HMFVariantContext(final Location bp1, final Location bp2, final HMFVariantType type) {
-            Breakpoint1 = bp1;
-            Breakpoint2 = bp2;
+            MantaBP1 = bp1;
+            MantaBP2 = bp2;
             Type = type;
         }
     }
@@ -90,6 +92,8 @@ class Util {
         int Length = 0;
         boolean HardClipped = false;
         String Sequence = "";
+        boolean Left = false;
+        boolean Right = false;
     }
 
     static class ReadInfo {
@@ -171,7 +175,7 @@ class Util {
             if (range == null)
                 return closeTo(other);
             return other != null && ReferenceIndex == other.ReferenceIndex && Position >= (other.Position
-                    + range.Start) && Position <= (other.Position + range.End);
+                    + range.Start - 1) && Position <= (other.Position + range.End + 1);
         }
 
         @Override

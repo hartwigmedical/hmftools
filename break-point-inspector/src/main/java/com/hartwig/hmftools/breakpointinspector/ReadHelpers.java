@@ -31,8 +31,9 @@ class ReadHelpers {
         return read.getCigar().isClipped();
     }
 
-    static Util.ClipInfo getLeftClip(final SAMRecord read) {
+    private static Util.ClipInfo getLeftClip(final SAMRecord read) {
         final Util.ClipInfo result = new Util.ClipInfo();
+        result.Left = true;
         final Cigar cigar = read.getCigar();
         if (cigar.isEmpty())
             return null;
@@ -51,8 +52,9 @@ class ReadHelpers {
         return null;
     }
 
-    static Util.ClipInfo getRightClip(final SAMRecord read) {
+    private static Util.ClipInfo getRightClip(final SAMRecord read) {
         final Util.ClipInfo result = new Util.ClipInfo();
+        result.Right = true;
         final Cigar cigar = read.getCigar();
         if (cigar.isEmpty())
             return null;
@@ -97,6 +99,6 @@ class ReadHelpers {
 
     static boolean isMate(final SAMRecord read, final SAMRecord mate) {
         return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(
-                mate.getReferenceIndex()) && read.getMateAlignmentStart() == mate.getAlignmentStart();
+                mate.getReferenceIndex()) && Math.abs(read.getMateAlignmentStart() - mate.getAlignmentStart()) <= 1;
     }
 }
