@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,10 +34,10 @@ class ConsequenceDeterminer {
     @NotNull
     private final Slicer hmfSlicingRegion;
     @NotNull
-    private final Map<String, HMFSlicingAnnotation> relevantTranscriptMap;
+    private final Map<String, HmfGenomeRegion> relevantTranscriptMap;
 
     ConsequenceDeterminer(@NotNull final Slicer hmfSlicingRegion,
-            @NotNull final Map<String, HMFSlicingAnnotation> relevantTranscriptMap) {
+            @NotNull final Map<String, HmfGenomeRegion> relevantTranscriptMap) {
         this.hmfSlicingRegion = hmfSlicingRegion;
         this.relevantTranscriptMap = relevantTranscriptMap;
     }
@@ -72,10 +72,10 @@ class ConsequenceDeterminer {
             // KODU: Variants with no relevant annotations should be filtered out by now.
             assert variantAnnotation != null;
 
-            final HMFSlicingAnnotation slicingAnnotation = relevantTranscriptMap.get(variantAnnotation.featureID());
-            assert slicingAnnotation != null;
+            final HmfGenomeRegion hmfGenomeRegion = relevantTranscriptMap.get(variantAnnotation.featureID());
+            assert hmfGenomeRegion != null;
 
-            if (!variantAnnotation.gene().equals(slicingAnnotation.gene())) {
+            if (!variantAnnotation.gene().equals(hmfGenomeRegion.gene())) {
                 LOGGER.warn("Annotated gene does not match gene expected from slicing annotation for " + variant);
             }
 
@@ -88,7 +88,7 @@ class ConsequenceDeterminer {
             builder.position(variant.position());
             builder.ref(variant.ref());
             builder.alt(variant.alt());
-            builder.transcript(slicingAnnotation.transcript());
+            builder.transcript(hmfGenomeRegion.transcript());
             builder.hgvsCoding(variantAnnotation.hgvsCoding());
             builder.hgvsProtein(variantAnnotation.hgvsProtein());
             builder.consequence(variantAnnotation.consequenceString());
