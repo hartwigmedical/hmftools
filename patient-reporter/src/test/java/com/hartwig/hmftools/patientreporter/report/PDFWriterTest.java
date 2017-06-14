@@ -12,20 +12,17 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
-import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -34,7 +31,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriterTest {
 
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
     private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
@@ -75,10 +72,15 @@ public class PDFWriterTest {
 
         final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
                 pathologyTumorPercentage, fittedPurity);
-        final DrupFilter drupFilter = new DrupFilter(DRUP_GENES_CSV);
 
-        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, REPORT_LOGO,
-                createHMFSlicingRegion(), drupFilter);
+        final String slicerPath = Resources.getResource("bed").getPath() + File.separator + "HMF_Slicing_v2.tsv";
+        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
+        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic.csv";
+
+        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(slicerPath, cosmicPath,
+                drupFilterPath);
+
+        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, REPORT_LOGO, reporterData);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -108,11 +110,5 @@ public class PDFWriterTest {
         if (WRITE_TO_PDF) {
             report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
-    }
-
-    @NotNull
-    private static Slicer createHMFSlicingRegion() throws IOException, EmptyFileException {
-        final String resourcePath = Resources.getResource("bed").getPath();
-        return SlicerFactory.fromBedFile(resourcePath + File.separator + "HMF_Slicing_v2.bed");
     }
 }

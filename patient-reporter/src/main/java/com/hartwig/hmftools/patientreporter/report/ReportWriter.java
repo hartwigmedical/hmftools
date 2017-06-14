@@ -2,11 +2,9 @@ package com.hartwig.hmftools.patientreporter.report;
 
 import java.io.FileNotFoundException;
 
-import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,8 +13,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public interface ReportWriter {
 
     @NotNull
-    String writeSequenceReport(@NotNull final PatientReport report, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel)
+    String writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws FileNotFoundException, DRException;
 
     @NotNull
