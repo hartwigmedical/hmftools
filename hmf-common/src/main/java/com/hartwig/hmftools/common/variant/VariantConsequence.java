@@ -58,4 +58,11 @@ public enum VariantConsequence {
     public String readableSequenceOntologyTerm() {
         return parentSequenceOntologyTerm.replace("_", " ");
     }
+
+    public static final List<VariantConsequence> ACTIONABLE_CONSEQUENCES = Lists.newArrayList(
+            VariantConsequence.TRANSCRIPT_ABLATION, VariantConsequence.TRANSCRIPT_AMPLIFICATION,
+            VariantConsequence.SPLICE_ACCEPTOR_VARIANT, VariantConsequence.SPLICE_DONOR_VARIANT,
+            VariantConsequence.SPLICE_REGION_VARIANT, VariantConsequence.STOP_GAINED, VariantConsequence.STOP_LOST,
+            VariantConsequence.START_LOST, VariantConsequence.FRAMESHIFT_VARIANT, VariantConsequence.INFRAME_INSERTION,
+            VariantConsequence.INFRAME_DELETION, VariantConsequence.MISSENSE_VARIANT);
 }

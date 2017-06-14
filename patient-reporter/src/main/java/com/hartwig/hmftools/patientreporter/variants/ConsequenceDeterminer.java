@@ -31,13 +31,6 @@ class ConsequenceDeterminer {
     // KODU: This boolean exists to evaluate the impact of annotation-filtering on actual patients.
     private static final boolean INCLUDE_ALL_ANNOTATIONS_FOR_IMPACT = false;
 
-    private static final List<VariantConsequence> ACTIONABLE_CONSEQUENCES = Lists.newArrayList(
-            VariantConsequence.TRANSCRIPT_ABLATION, VariantConsequence.TRANSCRIPT_AMPLIFICATION,
-            VariantConsequence.SPLICE_ACCEPTOR_VARIANT, VariantConsequence.SPLICE_DONOR_VARIANT,
-            VariantConsequence.SPLICE_REGION_VARIANT, VariantConsequence.STOP_GAINED, VariantConsequence.STOP_LOST,
-            VariantConsequence.START_LOST, VariantConsequence.FRAMESHIFT_VARIANT, VariantConsequence.INFRAME_INSERTION,
-            VariantConsequence.INFRAME_DELETION, VariantConsequence.MISSENSE_VARIANT);
-
     @NotNull
     private final Slicer hmfSlicingRegion;
     @NotNull
@@ -118,7 +111,7 @@ class ConsequenceDeterminer {
                 relevantTranscripts);
         for (final VariantAnnotation annotation : relevantAnnotations) {
             for (final VariantConsequence consequence : annotation.consequences())
-                if (ACTIONABLE_CONSEQUENCES.contains(consequence)) {
+                if (VariantConsequence.ACTIONABLE_CONSEQUENCES.contains(consequence)) {
                     return annotation;
                 }
         }
