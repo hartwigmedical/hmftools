@@ -31,7 +31,7 @@ class GenePanelDataSource {
     }
 
     @NotNull
-    static JRDataSource fromHmfPatientReporter(@NotNull final HmfReporterData reporterData) {
+    static JRDataSource fromHmfReporterData(@NotNull final HmfReporterData reporterData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
                 TYPE_FIELD.getName(), GENE2_FIELD.getName(), TRANSCRIPT2_FIELD.getName(), TYPE2_FIELD.getName());
         final List<HmfGenomeRegion> regions = reporterData.slicer().hmfRegions().stream().collect(Collectors.toList());
@@ -39,17 +39,17 @@ class GenePanelDataSource {
 
         for (int i = 0; i < regions.size() / 2; i++) {
             final HmfGenomeRegion region1 = regions.get(i);
-            final String role1 = reporterData.cosmicModel().data().get(region1.gene()).role();
+            final String role1 = reporterData.cosmicModel().getRoleForGene(region1.gene());
             final int secondIndex = regions.size() / 2 + i;
             final HmfGenomeRegion region2 = secondIndex < regions.size() ? regions.get(secondIndex) : null;
 
             final String geneName2 = region2 != null ? region2.gene() : Strings.EMPTY;
             final String transcript2 = region2 != null ? region2.transcript() : Strings.EMPTY;
             final String role2 =
-                    region2 != null ? reporterData.cosmicModel().data().get(region2.gene()).role() : Strings.EMPTY;
+                    region2 != null ? reporterData.cosmicModel().getRoleForGene(region2.gene()) : Strings.EMPTY;
 
-            genePanelDataSource.add(region1.gene(), region1.transcript(), nullToEmpty(role1), geneName2, transcript2,
-                    nullToEmpty(role2));
+            genePanelDataSource.add(region1.gene(), region1.transcript(), role1, geneName2, transcript2,
+                    role2);
         }
 
         return genePanelDataSource;
