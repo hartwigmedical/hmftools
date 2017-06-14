@@ -1,4 +1,3 @@
-use homo_sapiens_core_75_37;
 select
 	seq_region.name as chromosome,
     transcript.seq_region_start as transcript_start,
@@ -6,7 +5,6 @@ select
     transcript.stable_id as transcript_id,
     transcript.version as transcript_version,
 	xref.display_label as gene_name,
-    gene.stable_id as gene_id,
     GROUP_CONCAT(karyotype.band SEPARATOR '-') as chromosome_band,
 	dbprimary_acc as entrezId
 from gene
