@@ -4,10 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -145,12 +144,19 @@ public class BreakPointInspectorApplication {
             header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
+            final Map<String, VariantContext> mateMap = new HashMap<>();
             for (final VariantContext variant : vcfReader) {
 
                 final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
                 Location location1 = Location.parseLocationString(location,
                         tumorReader.getFileHeader().getSequenceDictionary());
                 Location location2;
+
+                // uncertainty
+                final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
+                Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : null;
+                final List<Integer> CIEND = variant.getAttributeAsIntList("CIEND", 0);
+                Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : null;
 
                 HMFVariantType svType;
                 switch (variant.getStructuralVariantType()) {
@@ -174,6 +180,19 @@ public class BreakPointInspectorApplication {
                         location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                         break;
                     case BND:
+                        // only assess BND in one direction
+                        mateMap.put(variant.getID(), variant);
+                        final VariantContext mateVariant = mateMap.get(variant.getAttributeAsString("MATEID", ""));
+                        if (mateVariant == null) {
+                            // TODO: what do we put as filter for skipped BND
+                            continue;
+                        }
+
+                        // get the CIPOS from the mate
+                        final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
+                        uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : null;
+
+                        // process the breakend string
                         final String call = variant.getAlternateAllele(0).getDisplayString();
                         final String[] leftSplit = call.split("\\]");
                         final String[] rightSplit = call.split("\\[");
@@ -204,15 +223,9 @@ public class BreakPointInspectorApplication {
                         continue;
                 }
 
-                // uncertainty
-                final List<Integer> ciPos = variant.getAttributeAsIntList("CIPOS", 0);
-                Range uncertainty1 = ciPos.size() == 2 ? new Range(ciPos.get(0), ciPos.get(1)) : null;
-                final List<Integer> ciEnd = variant.getAttributeAsIntList("CIEND", 0);
-                Range uncertainty2 = ciEnd.size() == 2 ? new Range(ciEnd.get(0), ciEnd.get(1)) : null;
-
                 // handle HOMSEQ in BND
                 if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND"))
-                    uncertainty2 = new Range(-ciPos.get(1), ciPos.get(0));
+                    uncertainty2 = new Range(-CIPOS.get(1), CIPOS.get(0));
                 // TODO: double check this
                 // TODO: anything for SVINSSEQ?
 
@@ -231,7 +244,6 @@ public class BreakPointInspectorApplication {
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
 
-                // TODO: pass filter
                 Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, ctx,
                         range);
             }
