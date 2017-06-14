@@ -8,12 +8,14 @@ import java.time.format.DateTimeFormatter;
 
 import javax.xml.stream.XMLStreamException;
 
+import com.hartwig.hmftools.common.cosmic.Cosmic;
+import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsModel;
-import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
@@ -82,10 +84,8 @@ public class PatientReporterApplication {
             reporter.run(notSequenceableSample, notSequenceableReason);
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Running patient reporter");
-            final Slicer hmfSlicingRegion = buildHmfSlicingRegion(cmd);
-            final SinglePatientReporter reporter = buildReporter(hmfSlicingRegion, cmd);
-            final DrupFilter drupFilter = buildDrupFilter(cmd);
-            final GenePanelModel genePanelModel = buildGenePanel(cmd);
+            final HmfReporterData reporterData = buildReporterData(cmd);
+            final SinglePatientReporter reporter = buildReporter(reporterData.slicer(), cmd);
 
             if (cmd.hasOption(BATCH_MODE) && validInputForBatchMode(cmd)) {
                 LOGGER.info("Switching to running patient reporter in batch-mode.");
@@ -94,7 +94,7 @@ public class PatientReporterApplication {
                 analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
             } else if (validInputForSinglePatientReport(cmd)) {
                 final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
-                buildReportWriter(cmd).writeSequenceReport(report, hmfSlicingRegion, drupFilter, genePanelModel);
+                buildReportWriter(cmd).writeSequenceReport(report, reporterData);
             } else {
                 printUsageAndExit(options);
             }
@@ -104,9 +104,9 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static Slicer buildHmfSlicingRegion(@NotNull final CommandLine cmd)
+    private static HmfSlicer buildHmfSlicingRegion(@NotNull final CommandLine cmd)
             throws IOException, EmptyFileException {
-        return SlicerFactory.fromBedFile(cmd.getOptionValue(HMF_SLICING_BED));
+        return SlicerFactory.fromHmfSlicerFile(cmd.getOptionValue(HMF_SLICING_BED));
     }
 
     @NotNull
@@ -120,12 +120,23 @@ public class PatientReporterApplication {
     }
 
     @NotNull
+    private static CosmicModel buildCosmicModel(@NotNull final CommandLine cmd) throws IOException, HartwigException {
+        return Cosmic.buildModelFromCsv(cmd.getOptionValue(GENE_PANEL_CSV));
+    }
+
+    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd)
+            throws IOException, HartwigException {
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_SLICING_BED),
+                cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(GENE_PANEL_CSV));
+    }
+
+    @NotNull
     private static LimsModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
         return Lims.buildModelFromCsv(cmd.getOptionValue(LIMS_CSV), DATE_FORMATTER);
     }
 
     @NotNull
-    private static SinglePatientReporter buildReporter(@NotNull final Slicer hmfSlicingRegion,
+    private static SinglePatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion,
             @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),

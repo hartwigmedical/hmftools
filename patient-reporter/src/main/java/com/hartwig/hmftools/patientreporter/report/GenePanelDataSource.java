@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -26,20 +31,25 @@ class GenePanelDataSource {
     }
 
     @NotNull
-    static JRDataSource fromHMFSlicingAnnotations(@NotNull final List<HMFSlicingAnnotation> genes) {
+    static JRDataSource fromHmfPatientReporter(@NotNull final HmfReporterData reporterData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
                 TYPE_FIELD.getName(), GENE2_FIELD.getName(), TRANSCRIPT2_FIELD.getName(), TYPE2_FIELD.getName());
+        final List<HmfGenomeRegion> regions = reporterData.slicer().hmfRegions().stream().collect(Collectors.toList());
+        regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
 
-        for (int i = 0; i < genes.size() / 2; i++) {
-            final HMFSlicingAnnotation gene1 = genes.get(i);
-            final int secondIndex = genes.size() / 2 + i;
-            final HMFSlicingAnnotation gene2 = secondIndex < genes.size() ? genes.get(secondIndex) : null;
+        for (int i = 0; i < regions.size() / 2; i++) {
+            final HmfGenomeRegion region1 = regions.get(i);
+            final String role1 = reporterData.cosmicModel().data().get(region1.gene()).role();
+            final int secondIndex = regions.size() / 2 + i;
+            final HmfGenomeRegion region2 = secondIndex < regions.size() ? regions.get(secondIndex) : null;
 
-            final String geneName2 = gene2 != null ? gene2.gene() : Strings.EMPTY;
-            final String transcript2 = gene2 != null ? gene2.transcript() : Strings.EMPTY;
+            final String geneName2 = region2 != null ? region2.gene() : Strings.EMPTY;
+            final String transcript2 = region2 != null ? region2.transcript() : Strings.EMPTY;
+            final String role2 =
+                    region2 != null ? reporterData.cosmicModel().data().get(region2.gene()).role() : Strings.EMPTY;
 
-            genePanelDataSource.add(gene1.gene(), gene1.transcript(), Strings.EMPTY, geneName2, transcript2,
-                    Strings.EMPTY);
+            genePanelDataSource.add(region1.gene(), region1.transcript(), nullToEmpty(role1), geneName2, transcript2,
+                    nullToEmpty(role2));
         }
 
         return genePanelDataSource;

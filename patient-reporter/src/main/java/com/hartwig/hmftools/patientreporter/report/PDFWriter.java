@@ -11,20 +11,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,11 +63,9 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     @Override
-    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel)
+    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws FileNotFoundException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion,
-                drupFilter);
+        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, reporterData);
 
         return writeReport(report.sample(), reportBuilder);
     }
@@ -127,8 +118,7 @@ public class PDFWriter implements ReportWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final String reportLogoPath, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter) {
+            @NotNull final String reportLogoPath, @NotNull final HmfReporterData reporterData) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
@@ -137,7 +127,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(report, drupFilter),
+                        variantReport(report, reporterData.drupFilter()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberReport(report));
 
@@ -147,7 +137,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("HMF Sequencing Report v" + VERSION + " - Gene Panel Information")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        genePanelSection(hmfSlicingRegion)
+                        genePanelSection(reporterData)
                 );
 
         final ComponentBuilder<?, ?> additionalInfoPage =
@@ -328,30 +318,21 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> genePanelSection(@NotNull final Slicer hmfSlicingRegion) {
-        final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
+    private static ComponentBuilder<?, ?> genePanelSection(@NotNull final HmfReporterData reporterData) {
+        final long coverage = Math.round(reporterData.slicer().numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "Findings are reported for the set of " + Integer.toString(hmfSlicingRegion.numberOfRegions())
+                        "Findings are reported for the set of " + Integer.toString(
+                                reporterData.slicer().numberOfRegions())
                                 + " genes (canonical transcripts) indicated below (covering " + coverage
                                 + " MBases)"));
 
-        return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                createGenePanel(hmfSlicingRegion.regions()));
+        return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), createGenePanel(reporterData));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> createGenePanel(@NotNull final Collection<GenomeRegion> regions) {
+    private static ComponentBuilder<?, ?> createGenePanel(@NotNull final HmfReporterData reporterData) {
         //@formatter:off
-        final List<HMFSlicingAnnotation> annotations = Lists.newArrayList();
-        for (final GenomeRegion region : regions) {
-            final HMFSlicingAnnotation annotation = HMFSlicingAnnotationFactory.fromGenomeRegion(region);
-            // KODU: The annotation should always be present on the HMF slicing regions!
-            assert annotation != null;
-            annotations.add(annotation);
-        }
-        annotations.sort(Comparator.comparing(HMFSlicingAnnotation::gene));
-
         // KODU: Overwrite default font size to make the panel fit on one page.
         final int fontSize = 7;
         return cmp.subreport(
@@ -370,7 +351,7 @@ public class PDFWriter implements ReportWriter {
                                 .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
                         col.column("Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
-                    .setDataSource(GenePanelDataSource.fromHMFSlicingAnnotations(annotations));
+                    .setDataSource(GenePanelDataSource.fromHmfPatientReporter(reporterData));
         // @formatter:on
     }
 
