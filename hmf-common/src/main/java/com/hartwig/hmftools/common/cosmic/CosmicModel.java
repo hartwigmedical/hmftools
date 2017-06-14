@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.cosmic;
 
 import java.util.Map;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class CosmicModel {
@@ -17,4 +18,9 @@ public class CosmicModel {
         return geneData;
     }
 
+    @NotNull
+    public String getRoleForGene(@NotNull final String gene) {
+        final CosmicData geneCosmicData = geneData.get(gene);
+        return geneCosmicData != null ? geneCosmicData.role() : Strings.EMPTY;
+    }
 }
