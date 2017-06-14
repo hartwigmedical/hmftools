@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.formatPercent;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.apache.logging.log4j.util.Strings;
@@ -67,7 +68,7 @@ public interface VariantReport extends GenomePosition {
 
     @NotNull
     default String ploidyTafField() {
-        return baf() + " (" + formatPercent(impliedVAF()) + ")";
+        return Doubles.isZero(impliedVAF()) ? Strings.EMPTY : baf() + " (" + formatPercent(impliedVAF()) + ")";
     }
 
     @NotNull
