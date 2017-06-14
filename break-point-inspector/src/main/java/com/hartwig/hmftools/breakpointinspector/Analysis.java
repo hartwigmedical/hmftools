@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import htsjdk.samtools.*;
 
@@ -259,11 +260,11 @@ class Analysis {
                 }
             }
 
+            final ReadInfo info = new ReadInfo();
+            info.Read = read;
+
             final NamedReadCollection collection = result.ReadMap.computeIfAbsent(read.getReadName(),
                     k -> new NamedReadCollection());
-            final ReadInfo info = new ReadInfo();
-
-            info.Read = read;
             collection.Reads.add(info);
 
             // if unmapped there's nothing to do
@@ -355,10 +356,20 @@ class Analysis {
         final Sample refStats = calculateStats(refResult, ctx);
 
         // filtering
-
         final List<String> filters = new ArrayList<>(ctx.Filter);
-        if (refStats.BP1_Stats.PR_Only_Support > 0 || refStats.BP1_Stats.PR_SR_Support > 0) {
-            filters.add("HMF_PRNormalSupport");
+
+        if (ctx.Type == HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
+                && (ctx.MantaBP2.Position - ctx.MantaBP1.Position) < 2000) {
+            // short delete logic, must have SR support
+            final int SR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(
+                    s -> s.PR_SR_Support + s.SR_Only_Support).sum();
+            if (SR == 0) {
+                filters.add("HMF_SRSupportZero");
+            }
+        } else {
+            if (refStats.BP1_Stats.PR_Only_Support > 0 || refStats.BP1_Stats.PR_SR_Support > 0) {
+                filters.add("HMF_PRNormalSupport");
+            }
         }
 
         boolean concordance = false;
