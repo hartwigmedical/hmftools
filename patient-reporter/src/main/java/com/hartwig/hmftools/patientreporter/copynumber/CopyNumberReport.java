@@ -21,11 +21,14 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
     private final String gene;
     @NotNull
     private final String transcript;
+    @NotNull
+    private final String chromosomeBand;
     private final int copyNumber;
 
-    private CopyNumberReport(@NotNull final String chromosome, @NotNull final String gene,
-            @NotNull final String transcript, final int copyNumber) {
+    private CopyNumberReport(@NotNull final String chromosome, @NotNull final String chromosomeBand,
+            @NotNull final String gene, @NotNull final String transcript, final int copyNumber) {
         this.chromosome = chromosome;
+        this.chromosomeBand = chromosomeBand;
         this.gene = gene;
         this.transcript = transcript;
         this.copyNumber = copyNumber;
@@ -34,6 +37,11 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
     @NotNull
     public String chromosome() {
         return chromosome;
+    }
+
+    @NotNull
+    public String chromosomeBand() {
+        return chromosomeBand;
     }
 
     @NotNull
@@ -89,6 +97,8 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
         @NotNull
         private String chromosome = Strings.EMPTY;
         @NotNull
+        private String chromosomeBand = Strings.EMPTY;
+        @NotNull
         private String gene = Strings.EMPTY;
         @NotNull
         private String transcript = Strings.EMPTY;
@@ -100,6 +110,12 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
         @NotNull
         public Builder chromosome(@NotNull final String chromosome) {
             this.chromosome = chromosome;
+            return this;
+        }
+
+        @NotNull
+        public Builder chromosomeBand(@NotNull final String chromosomeBand) {
+            this.chromosomeBand = chromosomeBand;
             return this;
         }
 
@@ -122,7 +138,7 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
 
         @NotNull
         public CopyNumberReport build() {
-            return new CopyNumberReport(chromosome, gene, transcript, copyNumber);
+            return new CopyNumberReport(chromosome, chromosomeBand, gene, transcript, copyNumber);
         }
     }
 }
