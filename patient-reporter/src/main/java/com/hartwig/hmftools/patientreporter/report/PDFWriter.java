@@ -351,7 +351,7 @@ public class PDFWriter implements ReportWriter {
                                 .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
                         col.column("Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
-                    .setDataSource(GenePanelDataSource.fromHmfPatientReporter(reporterData));
+                    .setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
         // @formatter:on
     }
 

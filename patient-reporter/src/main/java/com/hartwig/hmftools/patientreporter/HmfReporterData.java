@@ -22,5 +22,4 @@ public abstract class HmfReporterData {
 
     @NotNull
     public abstract DrupFilter drupFilter();
-
 }
