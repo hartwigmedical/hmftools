@@ -32,19 +32,16 @@ public abstract class HmfSlicerFileLoader {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromHmfSlicerFile(@NotNull String bedFile)
+    public static SortedSetMultimap<String, HmfGenomeRegion> fromHmfGenePanelFile(@NotNull String genePanelFile)
             throws IOException, EmptyFileException {
-        final List<String> lines = FileReader.build().readLines(new File(bedFile).toPath());
+        final List<String> lines = FileReader.build().readLines(new File(genePanelFile).toPath());
         final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
 
-        String prevChromosome = null;
-        HmfGenomeRegion prevRegion = null;
-        long numberOfBases = 0;
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
             final String chromosome = values[CHROMOSOME_COLUMN].trim();
 
-            // KODU: BED Files are 0-based start and 1-based end, to make length simply "end - start".
+            // KODU: Positions from BED files are 0-based start and 1-based end, to make length simply "end - start".
             final long start = Long.valueOf(values[START_COLUMN].trim()) + 1;
             final long end = Long.valueOf(values[END_COLUMN].trim());
 
@@ -59,19 +56,11 @@ public abstract class HmfSlicerFileLoader {
                 final String entrezId = values[ENTREZ_ID_COLUMN];
                 final HmfGenomeRegion region = new ImmutableHmfGenomeRegion(chromosome, start, end, transcriptId,
                         transcriptVersion, gene, chromosomeBand, entrezId);
-                if (prevRegion != null && chromosome.equals(prevChromosome) && prevRegion.end() >= start) {
-                    LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + prevRegion);
-                } else {
-                    regionMap.put(chromosome, region);
-                    prevChromosome = chromosome;
-                    prevRegion = region;
-                    numberOfBases += region.bases();
-                }
+
+                regionMap.put(chromosome, region);
             }
         }
 
-        LOGGER.debug("Created slicer from " + bedFile + ": " + regionMap.size() + " regions covering " + numberOfBases
-                + " bases");
         return regionMap;
     }
 }

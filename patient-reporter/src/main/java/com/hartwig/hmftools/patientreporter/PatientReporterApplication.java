@@ -42,7 +42,7 @@ public class PatientReporterApplication {
 
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String HMF_SLICING_BED = "hmf_slicing_bed";
+    private static final String HMF_GENE_PANEL = "hmf_gene_panel";
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_CSV = "lims_csv";
     private static final String REPORT_LOGO = "report_logo";
@@ -101,7 +101,7 @@ public class PatientReporterApplication {
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd)
             throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_SLICING_BED),
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL),
                 cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV));
     }
 
@@ -177,7 +177,7 @@ public class PatientReporterApplication {
         if (validInputForEcrfAndTumorPercentages(cmd)) {
             final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
             final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-            final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
+            final String hmfGenePanel = cmd.getOptionValue(HMF_GENE_PANEL);
             final String tmpDirectory = cmd.getOptionValue(TMP_DIRECTORY);
             final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
@@ -186,8 +186,8 @@ public class PatientReporterApplication {
                 LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
             } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
                 LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
-            } else if (hmfSlicingBed == null || !exists(hmfSlicingBed)) {
-                LOGGER.warn(HMF_SLICING_BED + " has to be an existing file: " + hmfSlicingBed);
+            } else if (hmfGenePanel == null || !exists(hmfGenePanel)) {
+                LOGGER.warn(HMF_GENE_PANEL + " has to be an existing file: " + hmfGenePanel);
             } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
                 LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
             } else if (cosmicCsv == null || !exists(cosmicCsv)) {
@@ -236,12 +236,12 @@ public class PatientReporterApplication {
 
     private static boolean validInputForEcrfAndTumorPercentages(@NotNull final CommandLine cmd) {
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
-        final String tumorPercentageCsv = cmd.getOptionValue(LIMS_CSV);
+        final String limsCsv = cmd.getOptionValue(LIMS_CSV);
 
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
-        } else if (tumorPercentageCsv == null || !exists(tumorPercentageCsv)) {
-            LOGGER.warn(LIMS_CSV + " has to be an existing file: " + tumorPercentageCsv);
+        } else if (limsCsv == null || !exists(limsCsv)) {
+            LOGGER.warn(LIMS_CSV + " has to be an existing file: " + limsCsv);
         } else {
             return true;
         }
@@ -263,7 +263,7 @@ public class PatientReporterApplication {
 
         options.addOption(CPCT_SLICING_BED, true, "Complete path towards the CPCT slicing bed.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
-        options.addOption(HMF_SLICING_BED, true, "Complete path towards the HMF slicing bed.");
+        options.addOption(HMF_GENE_PANEL, true, "Complete path towards the HMF gene panel csv.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
         options.addOption(LIMS_CSV, true, "Complete path towards a CSV containing the LIMS data dump.");
         options.addOption(REPORT_LOGO, true, "Complete path to the logo used in the PDF report.");

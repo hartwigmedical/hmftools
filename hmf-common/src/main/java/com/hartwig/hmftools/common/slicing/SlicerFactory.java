@@ -21,13 +21,9 @@ public enum SlicerFactory {
     }
 
     @NotNull
-    public static HmfSlicer fromHmfSlicerFile(@NotNull String hmfSlicer) throws IOException, EmptyFileException {
-        return new HmfSlicer(HmfSlicerFileLoader.fromHmfSlicerFile(hmfSlicer));
-    }
-
-    @NotNull
-    public static Slicer forwardSlicer(@NotNull String bedFile) throws IOException, EmptyFileException {
-        return new ForwardSlicer(BEDFileLoader.fromBedFile(bedFile));
+    public static HmfSlicer fromHmfGenePanelFile(@NotNull String hmfGenePanelFile)
+            throws IOException, EmptyFileException {
+        return new HmfSlicer(HmfSlicerFileLoader.fromHmfGenePanelFile(hmfGenePanelFile));
     }
 
     @NotNull

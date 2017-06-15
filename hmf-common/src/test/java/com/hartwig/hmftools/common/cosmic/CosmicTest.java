@@ -39,6 +39,7 @@ public class CosmicTest {
         assertEquals("KMT2A", gene1Data.translocationPartner());
         assertEquals("", gene1Data.otherGermlineMut());
         assertEquals("", gene1Data.otherSyndrome());
+
         final CosmicData gene2Data = cosmicModel.data().get("ACKR3");
         assertEquals("atypical chemokine receptor 3", gene2Data.description());
         assertEquals("57007", gene2Data.entrezId());
