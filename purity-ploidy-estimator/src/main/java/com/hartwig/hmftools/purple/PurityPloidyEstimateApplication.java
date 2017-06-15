@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFact
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory.smooth;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -68,6 +69,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_URL = "db_url";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
+    private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
     private static final String FREEC_DIRECTORY = "freec_dir";
     private static final String VCF_EXTENSION = "vcf_extension";
     private static final String VCF_EXTENSION_DEFAULT = ".annotated.vcf";
@@ -134,7 +136,7 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
             }
 
-            final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, freecDirectory);
+            final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
             LOGGER.info("Writing to file location: {}", outputDirectory);
 
             ChartWriter chartWriter = new ChartWriter(tumorSample, outputDirectory);

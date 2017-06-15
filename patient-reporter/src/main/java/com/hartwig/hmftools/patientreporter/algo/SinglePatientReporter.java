@@ -9,8 +9,10 @@ import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.LimsModel;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
@@ -101,9 +103,14 @@ public class SinglePatientReporter {
 
         LOGGER.info(" Loading purity numbers...");
         final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
+        final FittedPurityScore purityScore = PatientReporterHelper.loadPurityScore(runDirectory, sample);
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
-        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purpleCopyNumbers);
+        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers);
+        if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.02)) {
+            LOGGER.warn("Purity uncertainty range exceeds 2%. Proceed with caution.");
+        }
+
 
         LOGGER.info(" Analyzing somatic variants...");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());

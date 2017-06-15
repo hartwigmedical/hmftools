@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.immutables.value.Value;
@@ -23,6 +24,9 @@ public abstract class PurpleAnalysis {
     public abstract FittedPurity fittedPurity();
 
     @NotNull
+    public abstract FittedPurityScore fittedScorePurity();
+
+    @NotNull
     public abstract List<PurpleCopyNumber> copyNumbers();
 
     @NotNull
@@ -33,6 +37,10 @@ public abstract class PurpleAnalysis {
     @NotNull
     public List<VariantReport> enrich(@NotNull List<VariantReport> variants) {
         return VariantCopyNumberZipper.zip(fittedPurity(), variants, copyNumbers());
+    }
+
+    public double purityUncertainty() {
+        return fittedScorePurity().maxPurity() - fittedScorePurity().minPurity();
     }
 
     @NotNull
