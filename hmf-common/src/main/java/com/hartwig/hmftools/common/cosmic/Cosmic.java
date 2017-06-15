@@ -41,6 +41,16 @@ public final class Cosmic {
         final Map<String, CosmicData> cosmicDataPerGene = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines) {
+            String current = line;
+            String field;
+            int fieldIndex = 0;
+
+            if (current.startsWith("\"")) {
+                current = current.substring(1);
+                int endingQuote = current.indexOf("\"");
+                field = current.substring(0, endingQuote);
+                current = current.substring(endingQuote);
+            }
             final String[] parts = line.split(",", 18);
             if (parts.length > 0) {
                 final String gene = parts[NAME_COLUMN].trim();
