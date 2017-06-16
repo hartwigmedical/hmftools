@@ -141,56 +141,56 @@ class Analysis {
         final List<Pair<ReadInfo, ReadInfo>> localPairs = new ArrayList<>();
 
         for (final NamedReadCollection collection : queryResult.values()) {
-            for (final ReadInfo p0 : collection) {
+            for (final ReadInfo r0 : collection) {
 
                 // update clipping stats
-                result.Clipping_Stats.addToClippingStats(p0.Read);
+                result.Clipping_Stats.addToClippingStats(r0.Read);
 
                 // find the mate
-                final ReadInfo p1 = collection.stream().filter(r -> isMate(p0.Read, r.Read)).findFirst().orElse(null);
+                final ReadInfo r1 = collection.stream().filter(r -> isMate(r0.Read, r.Read)).findFirst().orElse(null);
 
                 // single read
-                if (p1 == null) {
-                    if (p0.Category == ReadCategory.MATE_UNMAPPED) {
-                        result.Get(p0.Breakpoint).Unmapped_Mate++;
-                    } else if (p0.Category != ReadCategory.NORMAL
-                            && p0.Location != Overlap.FILTERED) { // TODO: check condition
-                        result.Get(p0.Breakpoint).Diff_Variant++;
+                if (r1 == null) {
+                    if (r0.Category == ReadCategory.MATE_UNMAPPED) {
+                        result.Get(r0.Breakpoint).Unmapped_Mate++;
+                    } else if (r0.Category != ReadCategory.NORMAL
+                            && r0.Location != Overlap.FILTERED) { // TODO: check condition
+                        result.Get(r0.Breakpoint).Diff_Variant++;
                     }
                     continue;
                 }
 
                 // special case for BND pairings, we want them in same order as manta breakpoint
-                if (p0.Read.getInferredInsertSize() == 0 && !p0.Read.getReferenceIndex().equals(
+                if (r0.Read.getInferredInsertSize() == 0 && !r0.Read.getReferenceIndex().equals(
                         ctx.MantaBP1.ReferenceIndex)) {
                     continue;
                 }
 
                 // don't consider pairs twice from the reverse pairing
-                if (p0.Read.getInferredInsertSize() < 0) {
+                if (r0.Read.getInferredInsertSize() < 0) {
                     continue;
                 }
 
                 // possible two paired but unmapped reads?
-                if (p0.Breakpoint == Region.OTHER && p1.Breakpoint == Region.OTHER) {
+                if (r0.Breakpoint == Region.OTHER && r1.Breakpoint == Region.OTHER) {
                     continue;
-                } else if (p1.Breakpoint == Region.OTHER) { // must be unmapped mate
-                    result.Get(p0.Breakpoint).Unmapped_Mate++;
+                } else if (r1.Breakpoint == Region.OTHER) { // must be unmapped mate
+                    result.Get(r0.Breakpoint).Unmapped_Mate++;
                     continue;
-                } else if (p0.Breakpoint == Region.OTHER) { // must be unmapped mate
-                    result.Get(p1.Breakpoint).Unmapped_Mate++;
+                } else if (r0.Breakpoint == Region.OTHER) { // must be unmapped mate
+                    result.Get(r1.Breakpoint).Unmapped_Mate++;
                     continue;
                 }
 
                 // at this stage, we have a legitimate pair
-                final Pair<ReadInfo, ReadInfo> pair = Pair.of(p0, p1);
+                final Pair<ReadInfo, ReadInfo> pair = Pair.of(r0, r1);
 
                 // supports the break point
-                if (p0.Breakpoint != p1.Breakpoint) {
+                if (r0.Breakpoint != r1.Breakpoint) {
                     if (assessPR(ctx, pair)) {
                         spanningPairs.add(pair);
-                        clipPRSR1.addToClippingStats(p0.Read);
-                        clipPRSR2.addToClippingStats(p1.Read);
+                        clipPRSR1.addToClippingStats(r0.Read);
+                        clipPRSR2.addToClippingStats(r1.Read);
                     } else {
                         result.BP1_Stats.Diff_Variant++;
                         result.BP2_Stats.Diff_Variant++;
@@ -244,7 +244,8 @@ class Analysis {
         for (final SAMRecord read : reads) {
 
             final ReadInfo info = new ReadInfo(read);
-            result.computeIfAbsent(read.getReadName(), k -> new NamedReadCollection(info));
+            final NamedReadCollection collection = result.computeIfAbsent(read.getReadName(), k -> new NamedReadCollection());
+            collection.add(info);
 
             // if unmapped there's nothing to do
             if (read.getReadUnmappedFlag()) {

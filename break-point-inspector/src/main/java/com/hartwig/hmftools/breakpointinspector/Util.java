@@ -107,9 +107,6 @@ class Util {
     }
 
     static class NamedReadCollection extends ArrayList<ReadInfo> {
-        NamedReadCollection(final ReadInfo first) {
-            add(first);
-        }
     }
 
     static class ClassifiedReadResults extends HashMap<String, NamedReadCollection> {
