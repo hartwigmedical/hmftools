@@ -59,10 +59,10 @@ public class PDFWriterTest {
                 purityAdjustedVAF(fittedPurity.purity(), 3, 0.20 / 0.87)).baf("AAA").build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2").chromosomeBand("p1").gene(
-                "ALK").transcript("ENST00000389048.3").copyNumber(0).build();
-        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().chromosome("3").chromosomeBand("p2").gene(
-                "PIK3CA").transcript("ENST00000263967.3").copyNumber(6).build();
+        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2").chromosomeBand(
+                "p23.1-p23.2").gene("ALK").transcript("ENST00000389048.3").copyNumber(0).build();
+        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().chromosome("3").chromosomeBand(
+                "q26.32").gene("PIK3CA").transcript("ENST00000263967.3").copyNumber(6).build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 
         final int mutationalLoad = 361;
@@ -72,11 +72,13 @@ public class PDFWriterTest {
         final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
                 pathologyTumorPercentage, fittedPurity);
 
-        final String slicerPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
+        final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
 
-        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(slicerPath, drupFilterPath,
+        // KODU: Refers to the actual cosmic path on datastore:
+        // final String cosmicPath = REPORT_BASE_DIR + "/hmf/tmp/170529_grch37_cosmic_census.csv";
+        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath,
                 cosmicPath);
 
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, REPORT_LOGO, reporterData);
