@@ -32,6 +32,10 @@ public final class Cosmic {
     private static final int OTHER_SYNDROME_COLUMN = 16;
     private static final int SYNONYMS_COLUMN = 17;
 
+    private static final String FIELD_SEPARATOR = ",";
+    private static final String FIELD_CONCATENATOR = ";";
+    private static final String QUOTE = "\"";
+
     private Cosmic() {
     }
 
@@ -40,18 +44,18 @@ public final class Cosmic {
             throws IOException, EmptyFileException {
         final Map<String, CosmicData> cosmicDataPerGene = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        for (final String line : lines) {
-            String current = line;
-            String field;
-            int fieldIndex = 0;
-
-            if (current.startsWith("\"")) {
-                current = current.substring(1);
-                int endingQuote = current.indexOf("\"");
-                field = current.substring(0, endingQuote);
-                current = current.substring(endingQuote);
+        for (String line : lines) {
+            // KODU: Some fields are quoted as they hold the field separator char.
+            while (line.contains(QUOTE)) {
+                final int startIndex = line.indexOf(QUOTE);
+                final int endIndex = line.indexOf(QUOTE, startIndex + 1);
+                assert endIndex > startIndex;
+                final String field = line.substring(startIndex + 1, endIndex).replace(FIELD_SEPARATOR,
+                        FIELD_CONCATENATOR);
+                line = line.substring(0, startIndex) + field + line.substring(endIndex + 1);
             }
-            final String[] parts = line.split(",", 18);
+
+            final String[] parts = line.split(FIELD_SEPARATOR, 18);
             if (parts.length > 0) {
                 final String gene = parts[NAME_COLUMN].trim();
                 final CosmicData data = new CosmicData(parts[DESCRIPTION_COLUMN].trim(),
@@ -63,17 +67,14 @@ public final class Cosmic {
                         parts[ROLE_COLUMN].trim(), parts[MUTATION_TYPES_COLUMN].trim(),
                         parts[TRANSLOCATION_PARTNER_COLUMN].trim(), parts[OTHER_GERMLINE_MUTATIONS_COLUMN].trim(),
                         parts[OTHER_SYNDROME_COLUMN].trim());
-                for (final String synonym : removeQuotes(parts[SYNONYMS_COLUMN].trim()).split(",")) {
+
+                cosmicDataPerGene.put(gene, data);
+
+                for (final String synonym : parts[SYNONYMS_COLUMN].trim().split(FIELD_CONCATENATOR)) {
                     cosmicDataPerGene.put(synonym, data);
                 }
-                cosmicDataPerGene.put(gene, data);
             }
         }
         return new CosmicModel(cosmicDataPerGene);
-    }
-
-    @NotNull
-    private static String removeQuotes(@NotNull final String input) {
-        return input.replaceAll("^\"|\"$", "");
     }
 }
