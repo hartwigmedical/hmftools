@@ -304,47 +304,6 @@ class Analysis {
         return result;
     }
 
-    private static boolean concordantStrings(final String a, final String b) {
-        if (a == null || b == null)
-            return false;
-        if (a.length() < b.length())
-            return !a.isEmpty() && b.startsWith(a) || b.endsWith(a);
-        else
-            return !b.isEmpty() && a.startsWith(b) || a.endsWith(b);
-    }
-
-    private static String getFilterString(final HMFVariantContext ctx, final Sample tumorStats,
-            final Sample refStats) {
-
-        final List<String> filters = new ArrayList<>(ctx.Filter);
-
-        if (ctx.Type == HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
-                && (ctx.MantaBP2.Position - ctx.MantaBP1.Position) < 2000) {
-            // short delete logic, must have SR support
-            final int SR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(
-                    s -> s.PR_SR_Support + s.SR_Only_Support).sum();
-            if (SR == 0) {
-                filters.add("HMF_SRSupportZero");
-            }
-        } else {
-            if (refStats.BP1_Stats.PR_Only_Support > 0 || refStats.BP1_Stats.PR_SR_Support > 0) {
-                filters.add("HMF_PRNormalSupport");
-            }
-        }
-
-        boolean concordance = false;
-        for (final Location bp : Arrays.asList(tumorStats.BP1, tumorStats.BP2)) {
-            final Clip tumor_clip = tumorStats.Clipping_Stats.LocationMap.get(bp);
-            final Clip ref_clip = refStats.Clipping_Stats.LocationMap.get(bp);
-            concordance |= tumor_clip != null && ref_clip != null && concordantStrings(tumor_clip.LongestClipSequence,
-                    ref_clip.LongestClipSequence);
-        }
-        if (concordance)
-            filters.add("HMF_ClippingConcordance");
-
-        return filters.isEmpty() ? "PASS" : String.join(";", filters);
-    }
-
     private static List<SAMRecord> performQuery(final SamReader reader, final QueryInterval[] intervals) {
         final List<SAMRecord> output = new ArrayList<>();
 
@@ -410,7 +369,7 @@ class Analysis {
 
         // filtering
 
-        final String filter = getFilterString(ctx, tumorStats, refStats);
+        final String filter = Filter.getFilterString(ctx, tumorStats, refStats);
 
         // output
 
