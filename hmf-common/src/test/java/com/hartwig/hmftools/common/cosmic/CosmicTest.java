@@ -24,7 +24,7 @@ public class CosmicTest {
 
         final CosmicData gene1Data = cosmicModel.data().get("ABI1");
         assertEquals(gene1Data, cosmicModel.data().get("ABI-1"));
-        assertEquals("abl-interactor 1", gene1Data.description());
+        assertEquals("abl-interactor 1; and 2", gene1Data.description());
         assertEquals("10006", gene1Data.entrezId());
         assertEquals("10:27037499-27149792", gene1Data.genomeLocation());
         assertEquals("10p11.2", gene1Data.chromosomeBand());

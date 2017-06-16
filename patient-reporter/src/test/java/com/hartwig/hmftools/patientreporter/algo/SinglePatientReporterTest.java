@@ -27,7 +27,7 @@ public class SinglePatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final String hmfSlicingBed = BED_DIRECTORY + File.separator + "HMF_Slicing_v2.tsv";
+        final String hmfSlicingBed = BED_DIRECTORY + File.separator + "hmf_gene_panel.tsv";
         final HmfSlicer hmfSlicingRegion = SlicerFactory.fromHmfGenePanelFile(hmfSlicingBed);
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion,

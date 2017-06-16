@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class VariantAnalyzerTest {
@@ -87,12 +86,7 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static GenomeRegion region(final long start, final long end) {
-        return region(start, end, null);
-    }
-
-    @NotNull
-    private static GenomeRegion region(final long start, final long end, @Nullable String annotation) {
-        return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end, annotation);
+        return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end, null);
     }
 
     @NotNull

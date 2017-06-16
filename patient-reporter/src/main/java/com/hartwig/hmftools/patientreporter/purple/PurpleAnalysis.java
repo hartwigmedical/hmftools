@@ -45,7 +45,7 @@ public abstract class PurpleAnalysis {
 
     @NotNull
     @VisibleForTesting
-    static CopyNumber ploidyAdjusted(double ploidy, @NotNull PurpleCopyNumber copyNumber) {
+    static CopyNumber ploidyAdjusted(final double ploidy, final @NotNull PurpleCopyNumber copyNumber) {
         double adjustedCopyNumber = copyNumber.value() <= 1
                 ? copyNumber.averageTumorCopyNumber()
                 : copyNumber.averageTumorCopyNumber() / ploidy * 2;
@@ -53,5 +53,4 @@ public abstract class PurpleAnalysis {
         return ImmutablePurpleCopyNumber
                 .builder().from(copyNumber).averageTumorCopyNumber(adjustedCopyNumber).build();
     }
-
 }

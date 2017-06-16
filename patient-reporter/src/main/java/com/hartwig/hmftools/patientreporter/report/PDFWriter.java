@@ -60,28 +60,25 @@ public class PDFWriter implements ReportWriter {
         this.reportLogo = reportLogo;
     }
 
-    @NotNull
     @Override
-    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+    public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws FileNotFoundException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, reporterData);
 
-        return writeReport(report.sample(), reportBuilder);
+        writeReport(report.sample(), reportBuilder);
     }
 
-    @NotNull
     @Override
-    public String writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
+    public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
             throws FileNotFoundException, DRException {
         final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage,
                 reason, reportLogo);
 
-        return writeReport(sample, reportBuilder);
+        writeReport(sample, reportBuilder);
     }
 
-    @NotNull
-    private String writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
+    private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
             throws FileNotFoundException, DRException {
         final String fileName = fileName(sample);
         if (Files.exists(new File(fileName).toPath())) {
@@ -90,7 +87,6 @@ public class PDFWriter implements ReportWriter {
             report.toPdf(new FileOutputStream(fileName));
             LOGGER.info(" Created patient report at " + fileName);
         }
-        return fileName;
     }
 
     @NotNull
@@ -342,13 +338,13 @@ public class PDFWriter implements ReportWriter {
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
                                 .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.TYPE_FIELD).setFixedWidth(75),
+                        col.column("Cosmic Type", GenePanelDataSource.TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
                                 .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
+                        col.column("Cosmic Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
                     .setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
         // @formatter:on
@@ -373,7 +369,7 @@ public class PDFWriter implements ReportWriter {
                                 + "to look-up these IDs.",
                         "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
                                 + "whole genome data.",
-                        "The ”Ploidy (TAF)” field displays the tumor ploidy for the observed variant. The ploidy "
+                        "The 'Ploidy (TAF)' field displays the tumor ploidy for the observed variant. The ploidy "
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
                                 + "proportion of A’s and B’s (e.g. AAABB for 3 copies A, and 2 copies B). "
                                 + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "

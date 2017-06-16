@@ -12,13 +12,10 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public interface ReportWriter {
 
-    @NotNull
-    String writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+    void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws FileNotFoundException, DRException;
 
-    @NotNull
-    String writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
+    void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
             throws FileNotFoundException, DRException;
-
 }
