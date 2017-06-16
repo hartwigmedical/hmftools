@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.breakpointinspector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -108,7 +108,7 @@ class Util {
     }
 
     static class ClassifiedReadResults {
-        Map<String, NamedReadCollection> ReadMap = new Hashtable<>();
+        Map<String, NamedReadCollection> ReadMap = new HashMap<>();
     }
 
     static class Location implements Comparable<Location> {
