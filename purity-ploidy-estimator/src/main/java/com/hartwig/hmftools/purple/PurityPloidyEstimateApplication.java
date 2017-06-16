@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFact
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory.smooth;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -33,6 +34,7 @@ import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.purple.plot.ChartWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -48,7 +50,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    static final double MIN_PURITY = 0.01;
+    static final double MIN_PURITY = 0.05;
     static final double MAX_PURITY = 1.0;
     static final double MIN_NORM_FACTOR = 0.33;
     static final double MAX_NORM_FACTOR = 2.0;
@@ -67,6 +69,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_URL = "db_url";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
+    private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
     private static final String FREEC_DIRECTORY = "freec_dir";
     private static final String VCF_EXTENSION = "vcf_extension";
     private static final String VCF_EXTENSION_DEFAULT = ".annotated.vcf";
@@ -133,8 +136,11 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
             }
 
-            final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, freecDirectory);
+            final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
             LOGGER.info("Writing to file location: {}", outputDirectory);
+
+            ChartWriter chartWriter = new ChartWriter(tumorSample, outputDirectory);
+            chartWriter.cumulativePloidy(smoothRegions);
 
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());

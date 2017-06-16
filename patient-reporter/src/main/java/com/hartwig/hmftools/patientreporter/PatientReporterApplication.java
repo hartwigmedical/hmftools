@@ -13,15 +13,13 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsModel;
-import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.SinglePatientReporter;
 import com.hartwig.hmftools.patientreporter.batch.BatchReportAnalyser;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -44,7 +42,7 @@ public class PatientReporterApplication {
 
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String HMF_SLICING_BED = "hmf_slicing_bed";
+    private static final String HMF_GENE_PANEL = "hmf_gene_panel";
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_CSV = "lims_csv";
     private static final String REPORT_LOGO = "report_logo";
@@ -60,7 +58,7 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
-    private static final String GENE_PANEL_CSV = "gene_panel_csv";
+    private static final String COSMIC_CSV = "cosmic_csv";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -82,10 +80,8 @@ public class PatientReporterApplication {
             reporter.run(notSequenceableSample, notSequenceableReason);
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Running patient reporter");
-            final Slicer hmfSlicingRegion = buildHmfSlicingRegion(cmd);
-            final SinglePatientReporter reporter = buildReporter(hmfSlicingRegion, cmd);
-            final DrupFilter drupFilter = buildDrupFilter(cmd);
-            final GenePanelModel genePanelModel = buildGenePanel(cmd);
+            final HmfReporterData reporterData = buildReporterData(cmd);
+            final SinglePatientReporter reporter = buildReporter(reporterData.slicer(), cmd);
 
             if (cmd.hasOption(BATCH_MODE) && validInputForBatchMode(cmd)) {
                 LOGGER.info("Switching to running patient reporter in batch-mode.");
@@ -94,7 +90,7 @@ public class PatientReporterApplication {
                 analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
             } else if (validInputForSinglePatientReport(cmd)) {
                 final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
-                buildReportWriter(cmd).writeSequenceReport(report, hmfSlicingRegion, drupFilter, genePanelModel);
+                buildReportWriter(cmd).writeSequenceReport(report, reporterData);
             } else {
                 printUsageAndExit(options);
             }
@@ -103,20 +99,10 @@ public class PatientReporterApplication {
         }
     }
 
-    @NotNull
-    private static Slicer buildHmfSlicingRegion(@NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException {
-        return SlicerFactory.fromBedFile(cmd.getOptionValue(HMF_SLICING_BED));
-    }
-
-    @NotNull
-    private static DrupFilter buildDrupFilter(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return new DrupFilter(cmd.getOptionValue(DRUP_GENES_CSV));
-    }
-
-    @NotNull
-    private static GenePanelModel buildGenePanel(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return new GenePanelModel(cmd.getOptionValue(GENE_PANEL_CSV));
+    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd)
+            throws IOException, HartwigException {
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL),
+                cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV));
     }
 
     @NotNull
@@ -125,7 +111,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static SinglePatientReporter buildReporter(@NotNull final Slicer hmfSlicingRegion,
+    private static SinglePatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion,
             @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
                 SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
@@ -191,15 +177,21 @@ public class PatientReporterApplication {
         if (validInputForEcrfAndTumorPercentages(cmd)) {
             final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
             final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-            final String hmfSlicingBed = cmd.getOptionValue(HMF_SLICING_BED);
+            final String hmfGenePanel = cmd.getOptionValue(HMF_GENE_PANEL);
             final String tmpDirectory = cmd.getOptionValue(TMP_DIRECTORY);
+            final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
+            final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
 
             if (cpctSlicingBed == null || !exists(cpctSlicingBed)) {
                 LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
             } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
                 LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
-            } else if (hmfSlicingBed == null || !exists(hmfSlicingBed)) {
-                LOGGER.warn(HMF_SLICING_BED + " has to be an existing file: " + hmfSlicingBed);
+            } else if (hmfGenePanel == null || !exists(hmfGenePanel)) {
+                LOGGER.warn(HMF_GENE_PANEL + " has to be an existing file: " + hmfGenePanel);
+            } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
+                LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
+            } else if (cosmicCsv == null || !exists(cosmicCsv)) {
+                LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
             } else if (tmpDirectory != null && (!exists(tmpDirectory) || !isDirectory(tmpDirectory))) {
                 LOGGER.warn(TMP_DIRECTORY + " has to be an existing directory: " + highConfidenceBed);
             } else {
@@ -244,12 +236,12 @@ public class PatientReporterApplication {
 
     private static boolean validInputForEcrfAndTumorPercentages(@NotNull final CommandLine cmd) {
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
-        final String tumorPercentageCsv = cmd.getOptionValue(LIMS_CSV);
+        final String limsCsv = cmd.getOptionValue(LIMS_CSV);
 
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
-        } else if (tumorPercentageCsv == null || !exists(tumorPercentageCsv)) {
-            LOGGER.warn(LIMS_CSV + " has to be an existing file: " + tumorPercentageCsv);
+        } else if (limsCsv == null || !exists(limsCsv)) {
+            LOGGER.warn(LIMS_CSV + " has to be an existing file: " + limsCsv);
         } else {
             return true;
         }
@@ -271,7 +263,7 @@ public class PatientReporterApplication {
 
         options.addOption(CPCT_SLICING_BED, true, "Complete path towards the CPCT slicing bed.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
-        options.addOption(HMF_SLICING_BED, true, "Complete path towards the HMF slicing bed.");
+        options.addOption(HMF_GENE_PANEL, true, "Complete path towards the HMF gene panel csv.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
         options.addOption(LIMS_CSV, true, "Complete path towards a CSV containing the LIMS data dump.");
         options.addOption(REPORT_LOGO, true, "Complete path to the logo used in the PDF report.");
@@ -295,7 +287,7 @@ public class PatientReporterApplication {
                 "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DRUP_GENES_CSV, true,
                 "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(GENE_PANEL_CSV, true, "Path towards a CSV containing gene panel data.");
+        options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
         return options;
     }
 

@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.Utils;
@@ -73,18 +74,24 @@ public class DatabaseAccess {
         return purityDAO.readFittedPurity(sampleId);
     }
 
-    public void writeComprehensiveSomaticVariants(@NotNull final String sampleId, @NotNull List<SomaticVariant> variants) {
+    @NotNull
+    public List<SomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId, boolean passOnly) {
+        return somaticVariantDAO.read(sampleId, passOnly);
+    }
+
+    public void writeComprehensiveSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
+    }
+
+    @NotNull
+    public List<StructuralVariant> readStructuralVariants(@NotNull final String sampleId) {
+        return structuralVariantDAO.read(sampleId);
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull List<StructuralVariant> variants) {
         structuralVariantDAO.write(sampleId, variants);
     }
 
-    @NotNull
-    public List<SomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId) {
-        return somaticVariantDAO.read(sampleId);
-    }
 
     public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);

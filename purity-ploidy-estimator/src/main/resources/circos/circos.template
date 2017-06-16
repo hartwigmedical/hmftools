@@ -9,7 +9,6 @@
 karyotype = data/karyotype/karyotype.human.txt
 
 chromosomes_units           = 1000000
-chromosomes                 = -hsX;-hsY
 chromosomes_display_default = yes
 
 # Default is to clip the data to range min/max.

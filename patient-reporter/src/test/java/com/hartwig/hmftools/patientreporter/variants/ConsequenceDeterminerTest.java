@@ -8,15 +8,14 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ConsequenceDeterminerTest {
@@ -38,13 +37,17 @@ public class ConsequenceDeterminerTest {
     private static final String HGVS_CODING = "c.RtoA";
     private static final String HGVS_PROTEIN = "p.RtoA";
 
+    private static final String CHROMOSOME_BAND = "p1";
+    private static final String ENTREZ_ID = "11";
+
     @Test
     public void worksAsExpected() {
         final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(
                 ImmutableBEDGenomeRegion.of(CHROMOSOME, POSITION - 10, POSITION + 10, null));
-        final Map<String, HMFSlicingAnnotation> transcriptMap = Maps.newHashMap();
+        final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT,
-                HMFSlicingAnnotationFactory.create(TRANSCRIPT, TRANSCRIPT_VERSION, Strings.EMPTY));
+                new ImmutableHmfGenomeRegion(CHROMOSOME, POSITION - 10, POSITION + 10, TRANSCRIPT, TRANSCRIPT_VERSION,
+                        GENE, CHROMOSOME_BAND, ENTREZ_ID));
 
         final ConsequenceDeterminer determiner = new ConsequenceDeterminer(slicer, transcriptMap);
 

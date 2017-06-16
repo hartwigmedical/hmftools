@@ -4,9 +4,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,56 +18,53 @@ class PatientDataSource {
 
     private static final String COSMIC_IDENTIFIER = "COSM";
 
-    static final FieldBuilder<?> CHROMOSOME_FIELD = field("chromosome", String.class);
-    static final FieldBuilder<?> BAND_FIELD = field("band", String.class);
     static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
-    static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
 
     static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
     static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
     static final FieldBuilder<?> HGVS_CODING_FIELD = field("hgvs_coding", String.class);
     static final FieldBuilder<?> HGVS_PROTEIN_FIELD = field("hgvs_protein", String.class);
-    static final FieldBuilder<?> EFFECT_FIELD = field("effect", String.class);
+    static final FieldBuilder<?> CONSEQUENCE_FIELD = field("consequence", String.class);
     static final FieldBuilder<?> COSMIC_FIELD = field("cosmic", String.class);
     static final FieldBuilder<?> COSMIC_NR_FIELD = field("cosmic_nr", String.class);
-    static final FieldBuilder<?> READ_DEPTH_FIELD = field("read_depth", String.class);
-    static final FieldBuilder<?> BAF_FIELD = field("baf", String.class);
+    static final FieldBuilder<?> DEPTH_VAF_FIELD = field("depth_vaf", String.class);
+    static final FieldBuilder<?> PLOIDY_TAF_FIELD = field("ploidy_taf", String.class);
 
+    static final FieldBuilder<?> CHROMOSOME_FIELD = field("chromosome", String.class);
+    static final FieldBuilder<?> BAND_FIELD = field("band", String.class);
     static final FieldBuilder<?> COPY_NUMBER_TYPE_FIELD = field("copynumber_type", String.class);
     static final FieldBuilder<?> COPY_NUMBER_FIELD = field("copynumber", String.class);
 
     private PatientDataSource() {
     }
 
+
     @NotNull
     static JRDataSource fromVariants(@NotNull final List<VariantReport> variants,
-            @NotNull final DrupFilter drupFilter) {
+            @NotNull final HmfReporterData reporterData) {
         final DRDataSource variantDataSource = new DRDataSource(GENE_FIELD.getName(), POSITION_FIELD.getName(),
-                VARIANT_FIELD.getName(), READ_DEPTH_FIELD.getName(), HGVS_CODING_FIELD.getName(),
-                HGVS_PROTEIN_FIELD.getName(), EFFECT_FIELD.getName(), COSMIC_FIELD.getName(),
-                COSMIC_NR_FIELD.getName(), BAF_FIELD.getName());
+                VARIANT_FIELD.getName(), DEPTH_VAF_FIELD.getName(), COSMIC_FIELD.getName(), COSMIC_NR_FIELD.getName(),
+                HGVS_CODING_FIELD.getName(), HGVS_PROTEIN_FIELD.getName(), CONSEQUENCE_FIELD.getName(),
+                PLOIDY_TAF_FIELD.getName());
 
         for (final VariantReport variant : variants) {
-            final String displayGene = drupFilter.test(variant) ? variant.gene() + "*" : variant.gene();
-            variantDataSource.add(displayGene, variant.chromosomePosition(), toVariant(variant),
-                    variant.readDepthInfo(), variant.hgvsCoding(), variant.hgvsProtein(), variant.consequence(),
-                    variant.cosmicID(), stripCosmicIdentifier(variant.cosmicID()), variant.baf());
+            final String displayGene = reporterData.drupFilter().test(variant) ? variant.gene() + " *" : variant.gene();
+            variantDataSource.add(displayGene, variant.chromosomePosition(), variant.variantField(),
+                    variant.depthVafField(), variant.cosmicID(), stripCosmicIdentifier(variant.cosmicID()),
+                    variant.hgvsCoding(), variant.hgvsProtein(), variant.consequence(), variant.ploidyTafField());
         }
 
         return variantDataSource;
     }
 
     @NotNull
-    static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers,
-            @NotNull final GenePanelModel genePanelModel) {
+    static JRDataSource fromCopyNumbers(@NotNull final List<CopyNumberReport> copyNumbers) {
         final DRDataSource copyNumberDatasource = new DRDataSource(CHROMOSOME_FIELD.getName(), BAND_FIELD.getName(),
-                GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), COPY_NUMBER_TYPE_FIELD.getName(),
-                COPY_NUMBER_FIELD.getName());
+                GENE_FIELD.getName(), COPY_NUMBER_TYPE_FIELD.getName(), COPY_NUMBER_FIELD.getName());
 
         for (final CopyNumberReport copyNumber : copyNumbers) {
-            copyNumberDatasource.add(copyNumber.chromosome(), genePanelModel.chromosomeBand(copyNumber.gene()),
-                    copyNumber.gene(), copyNumber.transcript(), copyNumber.resolveType(),
-                    Integer.toString(copyNumber.copyNumber()));
+            copyNumberDatasource.add(copyNumber.chromosome(), copyNumber.chromosomeBand(), copyNumber.gene(),
+                    copyNumber.resolveType(), Integer.toString(copyNumber.copyNumber()));
         }
         return copyNumberDatasource;
     }
@@ -85,18 +81,14 @@ class PatientDataSource {
 
     @NotNull
     static FieldBuilder<?>[] variantFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, VARIANT_FIELD, TRANSCRIPT_FIELD, HGVS_CODING_FIELD,
-                HGVS_PROTEIN_FIELD, EFFECT_FIELD, COSMIC_FIELD, COSMIC_NR_FIELD, READ_DEPTH_FIELD, BAF_FIELD };
+        return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, VARIANT_FIELD, HGVS_CODING_FIELD,
+                HGVS_PROTEIN_FIELD, CONSEQUENCE_FIELD, COSMIC_FIELD, COSMIC_NR_FIELD, DEPTH_VAF_FIELD,
+                PLOIDY_TAF_FIELD };
     }
 
     @NotNull
     static FieldBuilder<?>[] copyNumberFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, BAND_FIELD, TRANSCRIPT_FIELD, COPY_NUMBER_TYPE_FIELD,
+        return new FieldBuilder<?>[] { CHROMOSOME_FIELD, BAND_FIELD, GENE_FIELD, COPY_NUMBER_TYPE_FIELD,
                 COPY_NUMBER_FIELD };
-    }
-
-    @NotNull
-    private static String toVariant(@NotNull final VariantReport variant) {
-        return variant.ref() + " > " + variant.alt();
     }
 }

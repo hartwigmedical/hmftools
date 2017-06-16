@@ -27,13 +27,6 @@ public class SomaticVariantReader {
     @NotNull
     private final ConsensusRule consensusRule;
 
-    private static final List<VariantConsequence> ACTIONABLE_CONSEQUENCES = Lists.newArrayList(
-            VariantConsequence.TRANSCRIPT_ABLATION, VariantConsequence.TRANSCRIPT_AMPLIFICATION,
-            VariantConsequence.SPLICE_ACCEPTOR_VARIANT, VariantConsequence.SPLICE_DONOR_VARIANT,
-            VariantConsequence.SPLICE_REGION_VARIANT, VariantConsequence.STOP_GAINED, VariantConsequence.STOP_LOST,
-            VariantConsequence.START_LOST, VariantConsequence.FRAMESHIFT_VARIANT, VariantConsequence.INFRAME_INSERTION,
-            VariantConsequence.INFRAME_DELETION, VariantConsequence.MISSENSE_VARIANT);
-
     public SomaticVariantReader(@NotNull final ConsensusRule consensusRule) throws IOException, HartwigException {
         this.consensusRule = consensusRule;
     }
@@ -46,7 +39,7 @@ public class SomaticVariantReader {
         final List<SomaticVariant> actionableVariants = Lists.newArrayList();
         consensusPassedVariants.forEach(consensusPassedVariant -> consensusPassedVariant.annotations().forEach(
                 annotation -> annotation.consequences().forEach(consequence -> {
-                    if (ACTIONABLE_CONSEQUENCES.contains(consequence)) {
+                    if (VariantConsequence.ACTIONABLE_CONSEQUENCES.contains(consequence)) {
                         if (!actionableVariants.contains(consensusPassedVariant)) {
                             actionableVariants.add(consensusPassedVariant);
                         }

@@ -10,16 +10,20 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep11;
 import org.jooq.Record;
 import org.jooq.Result;
 
 class ComprehensiveSomaticVariantDAO {
+    private static final String PASS = "PASS";
+
     @NotNull
     private final DSLContext context;
 
@@ -28,19 +32,26 @@ class ComprehensiveSomaticVariantDAO {
     }
 
     @NotNull
-    List<SomaticVariant> read(@NotNull final String sample) {
+    List<SomaticVariant> read(@NotNull final String sample, boolean passOnly) {
         List<SomaticVariant> regions = Lists.newArrayList();
 
-        Result<Record> result = context.select().from(COMPREHENSIVESOMATICVARIANT)
-                .where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
+        Condition passCondition = passOnly
+                ? COMPREHENSIVESOMATICVARIANT.FILTER.eq(PASS)
+                : COMPREHENSIVESOMATICVARIANT.FILTER.isNotNull();
+
+        Result<Record> result = context.select()
+                .from(COMPREHENSIVESOMATICVARIANT)
+                .where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample))
+                .and(passCondition)
+                .fetch();
 
         for (Record record : result) {
 
             final String ref = record.getValue(COMPREHENSIVESOMATICVARIANT.REF);
             final String alt = record.getValue(COMPREHENSIVESOMATICVARIANT.ALT);
 
-            SomaticVariant variant = new SomaticVariant.Builder()
-                    .chromosome(record.getValue(COMPREHENSIVESOMATICVARIANT.CHROMOSOME))
+            SomaticVariant variant = new SomaticVariant.Builder().chromosome(
+                    record.getValue(COMPREHENSIVESOMATICVARIANT.CHROMOSOME))
                     .position(record.getValue(COMPREHENSIVESOMATICVARIANT.POSITION))
                     .ref(ref)
                     .alt(alt)
@@ -56,23 +67,31 @@ class ComprehensiveSomaticVariantDAO {
         return regions;
     }
 
-    void write(@NotNull final String sample, @NotNull List<SomaticVariant> regions) {
+    void write(@NotNull final String sample, @NotNull List<EnrichedSomaticVariant> regions) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COMPREHENSIVESOMATICVARIANT).where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
-        for (List<SomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep8 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
+        for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
+            InsertValuesStep11 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
                     COMPREHENSIVESOMATICVARIANT.SAMPLEID, COMPREHENSIVESOMATICVARIANT.CHROMOSOME,
-                    COMPREHENSIVESOMATICVARIANT.POSITION, COMPREHENSIVESOMATICVARIANT.REF, COMPREHENSIVESOMATICVARIANT.ALT,
+                    COMPREHENSIVESOMATICVARIANT.POSITION, COMPREHENSIVESOMATICVARIANT.FILTER,
+                    COMPREHENSIVESOMATICVARIANT.REF, COMPREHENSIVESOMATICVARIANT.ALT,
                     COMPREHENSIVESOMATICVARIANT.ALLELEREADCOUNT, COMPREHENSIVESOMATICVARIANT.TOTALREADCOUNT,
+                    COMPREHENSIVESOMATICVARIANT.ADJUSTEDCOPYNUMBER, COMPREHENSIVESOMATICVARIANT.ADJUSTEDVAF,
                     COMPREHENSIVESOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep8 inserter, String sample, SomaticVariant region) {
-        inserter.values(sample, region.chromosome(), region.position(), region.ref(), region.alt(),
-                region.alleleReadCount(), region.totalReadCount(), timestamp);
+    private void addRecord(Timestamp timestamp, InsertValuesStep11 inserter, String sample,
+            EnrichedSomaticVariant region) {
+        inserter.values(sample, region.chromosome(), region.position(), filter(region.filter()), region.ref(),
+                region.alt(), region.alleleReadCount(), region.totalReadCount(), region.adjustedCopyNumber(),
+                region.adjustedVAF(), timestamp);
+    }
+
+    private String filter(String filter) {
+        return filter.equals(".") ? PASS : filter;
     }
 }

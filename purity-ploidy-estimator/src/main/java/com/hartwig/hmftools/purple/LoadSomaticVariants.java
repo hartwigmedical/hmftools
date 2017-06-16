@@ -2,11 +2,16 @@ package com.hartwig.hmftools.purple;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.purple.somatic.EnrichedSomaticVariantFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -37,8 +42,14 @@ public class LoadSomaticVariants {
         LOGGER.info("Reading VCF File");
         final VCFSomaticFile vcfFile = VCFFileLoader.loadSomaticVCF(vcfFileLocation);
 
+        LOGGER.info("Enriching variants");
+        final FittedPurity fittedPurity = dbAccess.readFittedPurity(vcfFile.sample());
+        final List<PurpleCopyNumber> copyNumbers = dbAccess.readCopynumbers(vcfFile.sample());
+        final List<EnrichedSomaticVariant> variants = EnrichedSomaticVariantFactory.create(fittedPurity,
+                vcfFile.variants(), copyNumbers);
+
         LOGGER.info("Persisting variants to database");
-        dbAccess.writeComprehensiveSomaticVariants(vcfFile.sample(), vcfFile.variants());
+        dbAccess.writeComprehensiveSomaticVariants(vcfFile.sample(), variants);
 
         LOGGER.info("Complete");
     }

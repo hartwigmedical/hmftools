@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -7,65 +14,46 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.slicing.HmfSlicer;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 public final class CopyNumberAnalyzer {
-
-    private static final Logger LOGGER = LogManager.getLogger(CopyNumberAnalyzer.class);
 
     private static final int NORMAL_COPYNUMBER = 2;
     private static final int MIN_CNV_FOR_GAIN = 4;
     private static final int MAX_CNV_FOR_LOSS = 0;
 
     @NotNull
-    private final Map<GenomeRegion, HMFSlicingAnnotation> annotations;
+    private final Set<HmfGenomeRegion> regions;
 
-    public static CopyNumberAnalyzer fromHmfSlicingRegion(@NotNull final Slicer hmfSlicingRegion) {
-        final Map<GenomeRegion, HMFSlicingAnnotation> annotations = Maps.newHashMap();
-        for (final GenomeRegion region : hmfSlicingRegion.regions()) {
-            final HMFSlicingAnnotation annotation = HMFSlicingAnnotationFactory.fromGenomeRegion(region);
-            if (annotation == null) {
-                LOGGER.warn("Could not extract annotation from hmf slicing region: " + region);
-            } else {
-                annotations.put(region, annotation);
-            }
-        }
-        return new CopyNumberAnalyzer(annotations);
+    public static CopyNumberAnalyzer fromHmfSlicingRegion(@NotNull final HmfSlicer hmfSlicingRegion) {
+        return new CopyNumberAnalyzer(hmfSlicingRegion.hmfRegions().stream().collect(Collectors.toSet()));
     }
 
     @VisibleForTesting
-    CopyNumberAnalyzer(@NotNull final Map<GenomeRegion, HMFSlicingAnnotation> annotations) {
-        this.annotations = annotations;
+    CopyNumberAnalyzer(@NotNull final Set<HmfGenomeRegion> regions) {
+        this.regions = regions;
     }
 
     @NotNull
     public CopyNumberAnalysis run(@NotNull final List<CopyNumber> copyNumbers) {
-        final Map<GenomeRegion, CopyNumberStats> stats = Maps.newHashMap();
+        final Map<HmfGenomeRegion, CopyNumberStats> stats = Maps.newHashMap();
 
         final Multimap<String, CopyNumber> copyNumberPerChromosome = toChromosomeMultiMap(copyNumbers);
-        for (final GenomeRegion region : annotations.keySet()) {
+        for (final HmfGenomeRegion region : regions) {
             stats.put(region,
                     analyzeRegion(region, Lists.newArrayList(copyNumberPerChromosome.get(region.chromosome()))));
         }
         final List<CopyNumberReport> reports = Lists.newArrayList();
-        for (final Map.Entry<GenomeRegion, CopyNumberStats> stat : stats.entrySet()) {
+        for (final Map.Entry<HmfGenomeRegion, CopyNumberStats> stat : stats.entrySet()) {
             final int relevantCNV = stat.getValue().min();
-
             if (relevantCNV >= MIN_CNV_FOR_GAIN || relevantCNV <= MAX_CNV_FOR_LOSS) {
-                final HMFSlicingAnnotation annotation = annotations.get(stat.getKey());
-                reports.add(
-                        new CopyNumberReport.Builder().chromosome(stat.getKey().chromosome()).gene(annotation.gene()).
-                                transcript(annotation.transcript()).copyNumber(relevantCNV).build());
+                final HmfGenomeRegion region = stat.getKey();
+                reports.add(new CopyNumberReport.Builder().chromosome(stat.getKey().chromosome()).chromosomeBand(
+                        region.chromosomeBand()).gene(region.gene()).
+                        transcript(region.transcript()).copyNumber(relevantCNV).build());
             }
         }
         Collections.sort(reports);

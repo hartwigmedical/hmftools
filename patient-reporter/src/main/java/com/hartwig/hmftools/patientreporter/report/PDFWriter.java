@@ -11,20 +11,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.genePanel.GenePanelModel;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotation;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,11 +62,9 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     @Override
-    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel)
+    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws FileNotFoundException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, hmfSlicingRegion,
-                drupFilter, genePanelModel);
+        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, reporterData);
 
         return writeReport(report.sample(), reportBuilder);
     }
@@ -127,8 +117,7 @@ public class PDFWriter implements ReportWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final String reportLogoPath, @NotNull final Slicer hmfSlicingRegion,
-            @NotNull final DrupFilter drupFilter, @NotNull final GenePanelModel genePanelModel) {
+            @NotNull final String reportLogoPath, @NotNull final HmfReporterData reporterData) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
@@ -137,16 +126,24 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(report, drupFilter),
+                        variantReport(report, reporterData),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(report, genePanelModel));
+                        copyNumberReport(report));
 
-        final ComponentBuilder<?, ?> helpPage =
+        final ComponentBuilder<?, ?> genePanelPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Sequencing Report v" + VERSION + " - Additional Information").setStyle(sectionHeaderStyle()),
+                        cmp.text("HMF Sequencing Report v" + VERSION + " - Gene Panel Information")
+                                .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        filteringSection(hmfSlicingRegion, genePanelModel),
+                        genePanelSection(reporterData)
+                );
+
+        final ComponentBuilder<?, ?> additionalInfoPage =
+                cmp.verticalList(
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text("HMF Sequencing Report v" + VERSION + " - Additional Information")
+                                .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -156,7 +153,7 @@ public class PDFWriter implements ReportWriter {
                 );
 
         final ComponentBuilder<?, ?> totalReport =
-                cmp.multiPageList().add(reportMainPage).newPage().add(helpPage);
+                cmp.multiPageList().add(reportMainPage).newPage().add(genePanelPage).newPage().add(additionalInfoPage);
         // @formatter:on
 
         return report().noData(totalReport);
@@ -195,10 +192,10 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> mainPageAboutSection() {
         return toList("About this report", Lists.newArrayList(
-                "This test is performed for research purpose and is not meant to be used for "
-                        + "clinical decision making without further validation of findings.",
+                "This test is performed for research purpose and is not meant to be used for clinical decision making.",
                 "Additional information on the various fields can be found on the final page of this report.",
-                "For additional questions, please contact us via info@hartwigmedicalfoundation.nl."));
+                "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl.",
+                "For other questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
 
     @NotNull
@@ -253,15 +250,13 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report,
-            @NotNull final DrupFilter drupFilter) {
+            @NotNull final HmfReporterData reporterData) {
         final String mutationalLoadAddition =
-                "Patients with a mutational load over 140 could be eligible for immunotherapy "
-                        + "within the DRUP. Please contact the DRUP study team (DRUP@nki.nl) for "
-                        + "DRUP-related questions.";
+                "Patients with a mutational load over 140 could be " + "eligible for immunotherapy within DRUP.";
 
-        final String geneMutationAddition =
-                "If any gene is annotated, it means that it has variants which might indicate eligibility for trials within the DRUP. "
-                        + "Please contact the DRUP study team (DRUP@nki.nl) for DRUP-related questions.";
+        final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
+                + "eligibility in DRUP. Please note that the marking is NOT based on the specific variant reported for "
+                + "this sample, but only on a gene-level.";
 
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
@@ -270,12 +265,12 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
                             col.column("Variant", PatientDataSource.VARIANT_FIELD),
-                            col.column("Read Depth", PatientDataSource.READ_DEPTH_FIELD),
+                            col.column("Depth (VAF)", PatientDataSource.DEPTH_VAF_FIELD),
                             col.componentColumn("Predicted Effect", predictedEffectColumn()),
                             col.column("Cosmic", PatientDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("BAF", PatientDataSource.BAF_FIELD)))
-                        .setDataSource(PatientDataSource.fromVariants(report.variants(), drupFilter)) :
+                            col.column("Ploidy (TAF)", PatientDataSource.PLOIDY_TAF_FIELD)))
+                        .setDataSource(PatientDataSource.fromVariants(report.variants(), reporterData)) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
@@ -301,8 +296,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report,
-            @NotNull final GenePanelModel genePanelModel) {
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
@@ -312,7 +306,7 @@ public class PDFWriter implements ReportWriter {
                             col.column("Gene", PatientDataSource.GENE_FIELD),
                             col.column("Type", PatientDataSource.COPY_NUMBER_TYPE_FIELD),
                             col.column("Copies", PatientDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers(), genePanelModel))) :
+                        .setDataSource(PatientDataSource.fromCopyNumbers(report.copyNumbers()))) :
                 cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(
@@ -323,50 +317,40 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> filteringSection(@NotNull final Slicer hmfSlicingRegion,
-            @NotNull final GenePanelModel genePanelModel) {
-        final long coverage = Math.round(hmfSlicingRegion.numberOfBases() / 1E6);
-        final VerticalListBuilder section = toList("Details on filtering",
+    private static ComponentBuilder<?, ?> genePanelSection(@NotNull final HmfReporterData reporterData) {
+        final long coverage = Math.round(reporterData.slicer().numberOfBases() / 1E6);
+        final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "The results are filtered on the canonical transcripts for the set of below "
-                                + Integer.toString(hmfSlicingRegion.numberOfRegions()) + " genes (covering " + coverage
-                                + " MBases)",
-                        "The definition of canonical transcripts can be found on http://www.ensembl.org/Help/Glossary?id=346"));
+                        "Findings are reported for the set of " + Integer.toString(
+                                reporterData.slicer().numberOfRegions())
+                                + " genes (canonical transcripts) indicated below (covering " + coverage
+                                + " MBases)"));
 
-        return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP),
-                createGenePanel(hmfSlicingRegion.regions(), genePanelModel));
+        return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), createGenePanel(reporterData));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> createGenePanel(@NotNull final Collection<GenomeRegion> regions,
-            @NotNull final GenePanelModel genePanelModel) {
+    private static ComponentBuilder<?, ?> createGenePanel(@NotNull final HmfReporterData reporterData) {
         //@formatter:off
-        final List<HMFSlicingAnnotation> annotations = Lists.newArrayList();
-        for (final GenomeRegion region : regions) {
-            final HMFSlicingAnnotation annotation = HMFSlicingAnnotationFactory.fromGenomeRegion(region);
-            // KODU: The annotation should always be present on the HMF slicing regions!
-            assert annotation != null;
-            annotations.add(annotation);
-        }
-        annotations.sort(Comparator.comparing(HMFSlicingAnnotation::gene));
-
+        // KODU: Overwrite default font size to make the panel fit on one page.
+        final int fontSize = 7;
         return cmp.subreport(
-                baseTable().fields(GenePanelDataSource.genePanelFields())
+                baseTable().setColumnStyle(dataStyle().setFontSize(fontSize)).fields(GenePanelDataSource.genePanelFields())
                     .columns(
                         col.emptyColumn().setFixedWidth(40),
                         col.column("Gene", GenePanelDataSource.GENE_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
-                                .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.GENE_TYPE_FIELD).setFixedWidth(75),
+                                .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
+                        col.column("Type", GenePanelDataSource.TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
-                                .setStyle(linkStyle()).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.GENE2_TYPE_FIELD).setFixedWidth(75),
+                                .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
+                        col.column("Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
-                    .setDataSource(GenePanelDataSource.fromCosmic(annotations, genePanelModel));
+                    .setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
         // @formatter:on
     }
 
@@ -378,8 +362,8 @@ public class PDFWriter implements ReportWriter {
                                 + "respect to this reference genome.",
                         "The 'variant' displays what was expected as reference base and what "
                                 + "was found instead ('ref' > 'alt').",
-                        "The 'transcript' provides a link to the ensembl definition of the transcript "
-                                + "used for filtering.",
+                        "The 'depth (VAF)' displays the number of observations of the specific variant versus "
+                                + "the total number of reads in this location in the format 'alt / total (%)'.",
                         "The 'predicted effect' provides additional information on the variant, including "
                                 + "the change in coding sequence ('c.'), the change in protein ('p.') and "
                                 + "the predicted impact on the final protein on the second line of this field.",
@@ -387,23 +371,24 @@ public class PDFWriter implements ReportWriter {
                                 + "additional information on the variant. If the variant could not be found in the "
                                 + "COSMIC database, this field will be left blank. The Cosmic v76 database is used "
                                 + "to look-up these IDs.",
-                        "The 'Depth' fields displays the total number of observations at this position.",
-                        "The 'VAF' fields displays the variant allele frequency. The first number is "
-                                + "the percent of observations of the variant. The second number in parentheses is "
-                                + "adjusted for the implied purity.",
-                        "The 'BAF' fields displays the implied purity adjusted beta allele frequency as a proportion "
-                                + "of A's and B's. The copy number is the sum of A's and B's. The absence of any B's "
-                                + "indicates a loss of heterozygosity.",
-                        "The tumor mutational load is the total number of somatic missense variants found across "
+                        "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
+                                + "whole genome data.",
+                        "The ”Ploidy (TAF)” field displays the tumor ploidy for the observed variant. The ploidy "
+                                + "has been adjusted for the implied tumor purity (see above) and is shown as a "
+                                + "proportion of A’s and B’s (e.g. AAABB for 3 copies A, and 2 copies B). "
+                                + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "
+                                + "Frequency) value refers to the alternative allele frequency after correction "
+                                + "for tumor purity.",
+                        "The tumor mutational load is the total number of somatic missense variants found across"
                                 + " the whole genome of the tumor biopsy."));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
-        return toList("Details on reported copy numbers",
-                Lists.newArrayList("Copy numbers are determined for the genes filtered for in this report.",
-                        "The lowest copy number value along the region of the canonical transcript is determined as a measure for the gene's copy number.",
-                        "Any gene with a value of 0 (loss) or >3 (gain) is included in the list of findings."));
+        return toList("Details on reported copy numbers", Lists.newArrayList(
+                "The lowest copy number value along the region of the canonical transcript is determined as "
+                        + "a measure for the gene's copy number.",
+                "Any gene with a value of 0 (loss) or >3 (gain) is included in the list of findings."));
     }
 
     @NotNull
@@ -488,6 +473,6 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(
                 cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(PatientDataSource.EFFECT_FIELD))).setFixedWidth(170);
+                cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
     }
 }

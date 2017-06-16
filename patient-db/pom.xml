@@ -52,6 +52,24 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <executions>
+                    <execution>
+                        <id>Create development patient DB</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/src/main/resources/</workingDirectory>
+                            <executable>${basedir}/src/main/resources/setup_database.sh</executable>
+                            <commandlineArgs>${basedir}/src/main/resources/generate_database.sql</commandlineArgs>
+                        </configuration> 
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>${maven.assembly.plugin.version}</version>
 

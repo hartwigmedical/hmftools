@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFile;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 
@@ -33,6 +35,7 @@ final class PatientReporterHelper {
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
     private static final String COPYNUMBER_DIRECTORY = "copyNumber";
     private static final String FREEC_DIRECTORY = "freec";
+    private static final String PURPLE_DIRECTORY = "purple";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
 
@@ -42,14 +45,21 @@ final class PatientReporterHelper {
     @NotNull
     static FittedPurity loadPurity(@NotNull final String runDirectory,
             @NotNull final String sample) throws IOException, HartwigException {
-        final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
+        final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return FittedPurityFile.read(cnvBasePath, sample);
+    }
+
+    @NotNull
+    static FittedPurityScore loadPurityScore(@NotNull final String runDirectory,
+            @NotNull final String sample) throws IOException, HartwigException {
+        final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
+        return FittedPurityScoreFile.read(cnvBasePath, sample);
     }
 
     @NotNull
     static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory,
             @NotNull final String sample) throws IOException, HartwigException {
-        final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
+        final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return PurpleCopyNumberFile.read(cnvBasePath, sample);
     }
 

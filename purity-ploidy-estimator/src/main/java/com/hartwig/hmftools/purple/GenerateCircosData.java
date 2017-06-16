@@ -6,10 +6,12 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
+import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -52,17 +54,24 @@ public class GenerateCircosData {
             System.exit(-1);
         }
 
-        final List<SomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample);
+        final List<SomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample, true);
         if (somaticVariants.isEmpty()) {
             LOGGER.error("Somatic Variants not available");
             System.exit(-1);
         }
 
-        final List<SomaticVariant> adjustedVaiants
+        final List<StructuralVariant> structuralVariants = dbAccess.readStructuralVariants(sample);
+        if (structuralVariants.isEmpty()) {
+            LOGGER.error("Structural Variants not available");
+        } else {
+            CircosLinkWriter.writeVariants(output + File.separator + sample + ".link.circos", structuralVariants);
+        }
+
+        final List<SomaticVariant> adjustedVariants
                 = PurityAdjustedSomaticVariantFactory.purpleAdjusted(purity.purity(), copyNumber, somaticVariants);
 
         LOGGER.info("Writing data files");
-        CircosFileWriter.writePositions(output + File.separator + sample + ".snp.circos", adjustedVaiants,
+        CircosFileWriter.writePositions(output + File.separator + sample + ".snp.circos", adjustedVariants,
                 SomaticVariant::alleleFrequency);
 
         CircosFileWriter.writeRegions(output + File.separator + sample + ".cnv.circos", copyNumber,

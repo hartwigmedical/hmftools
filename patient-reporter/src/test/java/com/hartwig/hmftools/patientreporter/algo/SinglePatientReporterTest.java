@@ -10,11 +10,9 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.slicing.HMFSlicingAnnotationFactory;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,12 +27,8 @@ public class SinglePatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final String hmfSlicingBed = BED_DIRECTORY + File.separator + "HMF_Slicing_v1.bed";
-        final Slicer hmfSlicingRegion = SlicerFactory.fromBedFile(hmfSlicingBed);
-        // KODU: Every region in the HMF slicing bed should be convertable to a slicing annotation!
-        for (final GenomeRegion region : hmfSlicingRegion.regions()) {
-            assertNotNull(HMFSlicingAnnotationFactory.fromGenomeRegion(region));
-        }
+        final String hmfSlicingBed = BED_DIRECTORY + File.separator + "HMF_Slicing_v2.tsv";
+        final HmfSlicer hmfSlicingRegion = SlicerFactory.fromHmfGenePanelFile(hmfSlicingBed);
 
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion,
                 hmfSlicingRegion);
