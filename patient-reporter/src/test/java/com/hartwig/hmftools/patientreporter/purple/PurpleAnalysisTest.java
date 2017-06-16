@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleAnalysisTest {
@@ -19,7 +20,7 @@ public class PurpleAnalysisTest {
     }
 
     @Test
-    public void testAnuploidy() {
+    public void testAneuploidy() {
         testAdjustedCopyNumber(0.7, 0.1, 0);
         testAdjustedCopyNumber(0.7, 0.9, 1);
         testAdjustedCopyNumber(0.7, 2.1, 6);
@@ -31,18 +32,17 @@ public class PurpleAnalysisTest {
         testAdjustedCopyNumber(1.5, 2.9, 4);
     }
 
-    private void testAdjustedCopyNumber(double ploidy, double copyNumber, int expectedCopyNumber) {
+    private static void testAdjustedCopyNumber(double ploidy, double copyNumber, int expectedCopyNumber) {
         final CopyNumber adjustedCopyNumber = PurpleAnalysis.ploidyAdjusted(ploidy, create(copyNumber));
         assertCopyNumber(expectedCopyNumber, adjustedCopyNumber);
     }
 
-    private void assertCopyNumber(int expected, CopyNumber copyNumber) {
+    private static void assertCopyNumber(int expected, @NotNull CopyNumber copyNumber) {
         assertEquals(expected, copyNumber.value());
     }
 
-
-
-    private static PurpleCopyNumber create(double averageTumorCopyNumber) {
+    @NotNull
+    private static PurpleCopyNumber create(final double averageTumorCopyNumber) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome("1")
                 .start(1)
@@ -53,5 +53,4 @@ public class PurpleAnalysisTest {
                 .bafCount(20)
                 .build();
     }
-
 }

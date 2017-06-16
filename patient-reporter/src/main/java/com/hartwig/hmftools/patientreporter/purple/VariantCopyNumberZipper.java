@@ -18,8 +18,9 @@ import org.jetbrains.annotations.Nullable;
 class VariantCopyNumberZipper implements SimpleGenomeZipperAllPositionsHandler<PurpleCopyNumber, VariantReport> {
 
     @NotNull
-    static List<VariantReport> zip(@NotNull FittedPurity purity, @NotNull final List<VariantReport> variants, @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        VariantCopyNumberZipper handler = new VariantCopyNumberZipper(purity.purity());
+    static List<VariantReport> zip(@NotNull FittedPurity purity, @NotNull final List<VariantReport> variants,
+            @NotNull final List<PurpleCopyNumber> copyNumbers) {
+        final VariantCopyNumberZipper handler = new VariantCopyNumberZipper(purity.purity());
         SimpleGenomeZipper.zip(copyNumbers, variants, handler);
         return handler.reports();
     }
@@ -44,9 +45,10 @@ class VariantCopyNumberZipper implements SimpleGenomeZipperAllPositionsHandler<P
         }
     }
 
-    private  VariantReport enrich(@NotNull final PurpleCopyNumber copyNumber,
-            @NotNull final VariantReport variant) {
-        double adjustedVAF = Math.min(1, purityAdjustedVAF(purity, copyNumber.averageTumorCopyNumber(), variant.alleleFrequency()));
-        return ImmutableVariantReport.builder().from(variant).baf(copyNumber.descriptiveBAF()).impliedVAF(adjustedVAF).build();
+    private VariantReport enrich(@NotNull final PurpleCopyNumber copyNumber, @NotNull final VariantReport variant) {
+        double adjustedVAF = Math.min(1,
+                purityAdjustedVAF(purity, copyNumber.averageTumorCopyNumber(), variant.alleleFrequency()));
+        return ImmutableVariantReport.builder().from(variant).baf(copyNumber.descriptiveBAF()).impliedVAF(
+                adjustedVAF).build();
     }
 }

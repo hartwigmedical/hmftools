@@ -60,28 +60,25 @@ public class PDFWriter implements ReportWriter {
         this.reportLogo = reportLogo;
     }
 
-    @NotNull
     @Override
-    public String writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+    public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws FileNotFoundException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, reporterData);
 
-        return writeReport(report.sample(), reportBuilder);
+        writeReport(report.sample(), reportBuilder);
     }
 
-    @NotNull
     @Override
-    public String writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
+    public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
             throws FileNotFoundException, DRException {
         final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage,
                 reason, reportLogo);
 
-        return writeReport(sample, reportBuilder);
+        writeReport(sample, reportBuilder);
     }
 
-    @NotNull
-    private String writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
+    private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
             throws FileNotFoundException, DRException {
         final String fileName = fileName(sample);
         if (Files.exists(new File(fileName).toPath())) {
@@ -90,7 +87,6 @@ public class PDFWriter implements ReportWriter {
             report.toPdf(new FileOutputStream(fileName));
             LOGGER.info(" Created patient report at " + fileName);
         }
-        return fileName;
     }
 
     @NotNull
