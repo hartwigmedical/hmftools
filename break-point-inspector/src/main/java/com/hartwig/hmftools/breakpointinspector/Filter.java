@@ -30,7 +30,8 @@ class Filter {
                 filters.add("HMF_SRSupportZero");
             }
         } else {
-            if (refStats.BP1_Stats.PR_Only_Support > 0 || refStats.BP1_Stats.PR_SR_Support > 0) {
+            // we only need to check BP1 as BP1 PR+PRSR == BP2 PR+PRSR
+            if (refStats.BP1_Stats.PR_Only_Support + refStats.BP1_Stats.PR_SR_Support > 0) {
                 filters.add("HMF_PRNormalSupport");
             }
         }

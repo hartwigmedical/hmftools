@@ -207,7 +207,7 @@ class Analysis {
         // look at PR evidence
         for (final Pair<ReadInfo, ReadInfo> pair : spanningPairs) {
             for (final ReadInfo r : Arrays.asList(pair.getLeft(), pair.getRight())) {
-                final boolean sr = getClips(r.Read).stream().anyMatch(
+                final boolean sr = getClips(r.Read).anyMatch(
                         c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2));
                 // TODO: also check side of clip
                 if (sr) {
@@ -222,7 +222,7 @@ class Analysis {
         for (final Pair<ReadInfo, ReadInfo> pair : localPairs) {
             final BreakpointStats stats = result.Get(pair.getLeft().Breakpoint);
             final boolean sr = Stream.of(pair.getLeft(), pair.getRight()).anyMatch(
-                    r -> getClips(r.Read).stream().anyMatch(
+                    r -> getClips(r.Read).anyMatch(
                             c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
             // TODO: also check side of clip
             if (sr) {
@@ -244,7 +244,6 @@ class Analysis {
         for (final SAMRecord read : reads) {
 
             final ReadInfo info = new ReadInfo(read);
-
             result.computeIfAbsent(read.getReadName(), k -> new NamedReadCollection(info));
 
             // if unmapped there's nothing to do
@@ -291,7 +290,7 @@ class Analysis {
             }
 
             // determine classification
-            if (!getClips(read).isEmpty()) {
+            if (clipped) {
                 info.Location = Overlap.CLIP;
             } else {
                 info.Location = Overlap.PROXIMITY;

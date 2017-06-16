@@ -74,8 +74,8 @@ class ReadHelpers {
         return null;
     }
 
-    static List<ClipInfo> getClips(final SAMRecord read) {
-        return Stream.of(getLeftClip(read), getRightClip(read)).filter(Objects::nonNull).collect(Collectors.toList());
+    static Stream<ClipInfo> getClips(final SAMRecord read) {
+        return Stream.of(getLeftClip(read), getRightClip(read)).filter(Objects::nonNull);
     }
 
     static Region determineRegion(final SAMRecord read, final Location location1,

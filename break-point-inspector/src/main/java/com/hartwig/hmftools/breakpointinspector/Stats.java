@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
@@ -69,7 +70,7 @@ class Stats {
         }
 
         void addToClippingStats(final SAMRecord read) {
-            for (final Util.ClipInfo clip : getClips(read)) {
+            for (final Util.ClipInfo clip : getClips(read).collect(Collectors.toList())) {
                 final Stats.Clip stats = LocationMap.computeIfAbsent(clip.Alignment, k -> new Stats.Clip());
                 if (clip.HardClipped) {
                     stats.HardClippedReads.add(read);
