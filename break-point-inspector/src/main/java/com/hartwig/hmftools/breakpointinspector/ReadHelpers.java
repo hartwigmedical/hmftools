@@ -91,9 +91,12 @@ class ReadHelpers {
             final int distance2 = Math.min(Math.abs(read.getAlignmentStart() - location2.Position),
                     Math.abs(read.getAlignmentEnd() - location2.Position));
 
+            /*
             if (distance1 < 500 && distance2 < 500) {
                 // TODO: handle uncertainty
-            } else if (distance1 < distance2)
+            }
+            */
+            if (distance1 < distance2)
                 return Region.BP1;
             else
                 return Region.BP2;

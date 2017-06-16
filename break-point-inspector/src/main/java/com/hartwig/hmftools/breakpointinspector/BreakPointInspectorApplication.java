@@ -33,33 +33,23 @@ import org.jetbrains.annotations.NotNull;
 public class BreakPointInspectorApplication {
 
     private static final String REF_PATH = "ref";
-    private static final String REF_EVIDENCE_PATH = "ref_evidence";
+    private static final String REF_SLICE = "ref_slice";
     private static final String TUMOR_PATH = "tumor";
-    private static final String TUMOR_EVIDENCE_PATH = "tumor_evidence";
-    private static final String BREAK_POINT1 = "bp1";
-    private static final String BREAK_POINT2 = "bp2";
+    private static final String TUMOR_SLICE = "tumor_slice";
     private static final String PROXIMITY = "proximity";
-    private static final String SV_LEN = "svlen";
-    private static final String SV_TYPE = "svtype";
     private static final String VCF = "vcf";
 
-    @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(REF_PATH, true, "the Reference BAM (indexed)");
-        options.addOption(REF_EVIDENCE_PATH, true, "the Reference evidence BAM to output");
+        options.addOption(REF_SLICE, true, "the Reference evidence BAM to output");
         options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
-        options.addOption(TUMOR_EVIDENCE_PATH, true, "the Tumor evidence BAM to output");
-        options.addOption(BREAK_POINT1, true, "position of first break point in chrX:123456 format");
-        options.addOption(BREAK_POINT2, true, "position of second break point in chrX:123456 format (optional)");
+        options.addOption(TUMOR_SLICE, true, "the Tumor evidence BAM to output");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
-        options.addOption(SV_LEN, true, "length of the SV to inspect (>0)");
-        options.addOption(SV_TYPE, true, "one of BND, INV, DEL, DUP");
         options.addOption(VCF, true, "VCF file to batch inspect (can be compressed)");
         return options;
     }
 
-    @NotNull
     private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
             throws ParseException {
         final CommandLineParser parser = new DefaultParser();
@@ -86,9 +76,9 @@ public class BreakPointInspectorApplication {
 
             // grab arguments
             final String refPath = cmd.getOptionValue(REF_PATH);
-            final String refEvidencePath = cmd.getOptionValue(REF_EVIDENCE_PATH);
+            final String refSlicePath = cmd.getOptionValue(REF_SLICE);
             final String tumorPath = cmd.getOptionValue(TUMOR_PATH);
-            final String tumorEvidencePath = cmd.getOptionValue(TUMOR_EVIDENCE_PATH);
+            final String tumorSlicePath = cmd.getOptionValue(TUMOR_SLICE);
             final String vcfPath = cmd.getOptionValue(VCF);
             final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
@@ -101,19 +91,19 @@ public class BreakPointInspectorApplication {
             final File refBAM = new File(refPath);
             final SamReader refReader = SamReaderFactory.makeDefault().open(refBAM);
 
-            final File tumorEvidenceBAM;
+            final File tumorSliceBAM;
             SAMFileWriter tumorWriter = null;
-            if (tumorEvidencePath != null) {
-                tumorEvidenceBAM = new File(tumorEvidencePath);
+            if (tumorSlicePath != null) {
+                tumorSliceBAM = new File(tumorSlicePath);
                 tumorWriter = new SAMFileWriterFactory().makeBAMWriter(tumorReader.getFileHeader(), false,
-                        tumorEvidenceBAM);
+                        tumorSliceBAM);
             }
 
-            final File refEvidenceBAM;
+            final File refSliceBAM;
             SAMFileWriter refWriter = null;
-            if (refEvidencePath != null) {
-                refEvidenceBAM = new File(refEvidencePath);
-                refWriter = new SAMFileWriterFactory().makeBAMWriter(refReader.getFileHeader(), false, refEvidenceBAM);
+            if (refSlicePath != null) {
+                refSliceBAM = new File(refSlicePath);
+                refWriter = new SAMFileWriterFactory().makeBAMWriter(refReader.getFileHeader(), false, refSliceBAM);
             }
 
             final File vcfFile = new File(vcfPath);
