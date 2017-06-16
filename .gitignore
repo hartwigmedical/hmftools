@@ -1,6 +1,9 @@
 # Ignore intellij project files
 *.iml
 .idea
+.project
+.classpath
+.settings/
 
 # Ignore target directies
 target
