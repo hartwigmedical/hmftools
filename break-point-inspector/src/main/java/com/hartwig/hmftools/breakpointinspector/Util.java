@@ -101,14 +101,19 @@ class Util {
         Region Breakpoint = Region.OTHER;
         ReadCategory Category = ReadCategory.UNSET;
         Overlap Location = Overlap.FILTERED;
+
+        ReadInfo(final SAMRecord read) {
+            Read = read;
+        }
     }
 
-    static class NamedReadCollection {
-        ArrayList<ReadInfo> Reads = new ArrayList<>();
+    static class NamedReadCollection extends ArrayList<ReadInfo> {
+        NamedReadCollection(final ReadInfo first) {
+            add(first);
+        }
     }
 
-    static class ClassifiedReadResults {
-        Map<String, NamedReadCollection> ReadMap = new HashMap<>();
+    static class ClassifiedReadResults extends HashMap<String, NamedReadCollection> {
     }
 
     static class Location implements Comparable<Location> {

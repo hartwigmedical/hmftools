@@ -18,7 +18,7 @@ import htsjdk.samtools.SAMRecord;
 
 class Stats {
 
-    static class BreakPoint {
+    static class BreakpointStats {
         int PR_Only_Normal = 0;
         int PR_SR_Normal = 0;
         int PR_Only_Support = 0;
@@ -90,14 +90,14 @@ class Stats {
         }
     }
 
-    static class Sample {
+    static class SampleStats {
         Util.Location BP1;
-        BreakPoint BP1_Stats = new BreakPoint();
         Util.Location BP2;
-        BreakPoint BP2_Stats = new BreakPoint();
+        BreakpointStats BP1_Stats = new BreakpointStats();
+        BreakpointStats BP2_Stats = new BreakpointStats();
         ClipStats Clipping_Stats = new ClipStats();
 
-        BreakPoint Get(final Util.Region r) {
+        BreakpointStats Get(final Util.Region r) {
             switch (r) {
                 case BP1:
                     return BP1_Stats;
@@ -110,8 +110,8 @@ class Stats {
 
         static List<String> GetHeader() {
             final ArrayList<String> header = new ArrayList<>();
-            header.addAll(prefixList(BreakPoint.GetHeader(), "BP1_"));
-            header.addAll(prefixList(BreakPoint.GetHeader(), "BP2_"));
+            header.addAll(prefixList(BreakpointStats.GetHeader(), "BP1_"));
+            header.addAll(prefixList(BreakpointStats.GetHeader(), "BP2_"));
             return header;
         }
 

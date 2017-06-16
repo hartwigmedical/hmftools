@@ -16,8 +16,8 @@ class Filter {
             return !b.isEmpty() && a.startsWith(b) || a.endsWith(b);
     }
 
-    static String getFilterString(final Util.HMFVariantContext ctx, final Stats.Sample tumorStats,
-            final Stats.Sample refStats) {
+    static String getFilterString(final Util.HMFVariantContext ctx, final Stats.SampleStats tumorStats,
+            final Stats.SampleStats refStats) {
 
         final List<String> filters = new ArrayList<>(ctx.Filter);
 

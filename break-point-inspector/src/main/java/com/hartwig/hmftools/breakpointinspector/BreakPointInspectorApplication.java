@@ -41,10 +41,10 @@ public class BreakPointInspectorApplication {
 
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(REF_PATH, true, "the Reference BAM (indexed)");
-        options.addOption(REF_SLICE, true, "the Reference evidence BAM to output");
-        options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
-        options.addOption(TUMOR_SLICE, true, "the Tumor evidence BAM to output");
+        options.addOption(REF_PATH, true, "the RefClassifiedReads BAM (indexed)");
+        options.addOption(REF_SLICE, true, "the RefClassifiedReads evidence BAM to output");
+        options.addOption(TUMOR_PATH, true, "the TumorClassifiedReads BAM (indexed)");
+        options.addOption(TUMOR_SLICE, true, "the TumorClassifiedReads evidence BAM to output");
         options.addOption(PROXIMITY, true, "base distance around breakpoint");
         options.addOption(VCF, true, "VCF file to batch inspect (can be compressed)");
         return options;
@@ -126,8 +126,8 @@ public class BreakPointInspectorApplication {
                     "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL", "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL",
                     "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL", "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL",
                     "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
-            header.addAll(prefixList(Sample.GetHeader(), "REF_"));
-            header.addAll(prefixList(Sample.GetHeader(), "TUMOR_"));
+            header.addAll(prefixList(SampleStats.GetHeader(), "REF_"));
+            header.addAll(prefixList(SampleStats.GetHeader(), "TUMOR_"));
             header.add("BPI_BP1");
             header.add("BPI_BP2");
             header.add("FILTER");
@@ -219,23 +219,32 @@ public class BreakPointInspectorApplication {
                 // TODO: double check this
                 // TODO: anything for SVINSSEQ?
 
-                final List<String> extraData = Lists.newArrayList(variant.getID(),
+                final List<String> fields = Lists.newArrayList(variant.getID(),
                         variant.getStructuralVariantType().toString(), HMFVariantType.getOrientation(svType),
                         location1.toString(), location2.toString(), variant.getAttributeAsString("SVLEN", "."));
 
-                extraData.addAll(parseMantaPRSR(variant.getGenotype(refSampleName)));
-                extraData.addAll(parseMantaPRSR(variant.getGenotype(tumorSampleName)));
+                fields.addAll(parseMantaPRSR(variant.getGenotype(refSampleName)));
+                fields.addAll(parseMantaPRSR(variant.getGenotype(tumorSampleName)));
 
-                extraData.add(variant.getAttributeAsString("HOMSEQ", "."));
-                extraData.add(variant.getAttributeAsString("SVINSSEQ", "."));
+                fields.add(variant.getAttributeAsString("HOMSEQ", "."));
+                fields.add(variant.getAttributeAsString("SVINSSEQ", "."));
 
                 final HMFVariantContext ctx = new HMFVariantContext(location1, location2, svType);
                 ctx.Filter.addAll(variant.getFilters());
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
 
-                Analysis.processStructuralVariant(extraData, refReader, refWriter, tumorReader, tumorWriter, ctx,
-                        range);
+                final Analysis.StructuralVariantResult result = Analysis.processStructuralVariant(refReader, refWriter,
+                        tumorReader, tumorWriter, ctx, range);
+
+                fields.addAll(result.RefStats.GetData());
+                fields.addAll(result.TumorStats.GetData());
+                fields.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
+                fields.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
+                fields.add(result.Filter);
+                fields.add(result.TumorStats.Clipping_Stats.toString());
+
+                System.out.println(String.join("\t", fields));
             }
 
             // close all the files

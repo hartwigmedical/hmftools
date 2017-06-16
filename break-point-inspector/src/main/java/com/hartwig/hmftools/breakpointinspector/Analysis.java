@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import htsjdk.samtools.*;
 
@@ -95,7 +94,7 @@ class Analysis {
         return false;
     }
 
-    private static void determineBreakpoints(final HMFVariantContext ctx, final Sample result,
+    private static void determineBreakpoints(final HMFVariantContext ctx, final SampleStats result,
             final ClipStats bpClips1, final ClipStats bpClips2) {
 
         // 1: look at clipped pairs first
@@ -125,9 +124,9 @@ class Analysis {
         // TODO: should we display Manta BP?
     }
 
-    private static Stats.Sample calculateStats(final ClassifiedReadResults queryResult, final HMFVariantContext ctx) {
+    private static SampleStats calculateStats(final ClassifiedReadResults queryResult, final HMFVariantContext ctx) {
 
-        final Stats.Sample result = new Stats.Sample();
+        final SampleStats result = new SampleStats();
         result.BP1 = ctx.BP1;
         result.BP2 = ctx.BP2;
 
@@ -137,14 +136,14 @@ class Analysis {
         final List<List<ReadInfo>> spanningPairs = new ArrayList<>();
         final List<List<ReadInfo>> localPairs = new ArrayList<>();
 
-        for (final NamedReadCollection collection : queryResult.ReadMap.values()) {
-            for (final ReadInfo p0 : collection.Reads) {
+        for (final NamedReadCollection collection : queryResult.values()) {
+            for (final ReadInfo p0 : collection) {
 
                 // update clipping stats
                 result.Clipping_Stats.addToClippingStats(p0.Read);
 
                 // find the mate
-                final ReadInfo p1 = collection.Reads.stream().filter(r -> isMate(p0.Read, r.Read)).findFirst().orElse(
+                final ReadInfo p1 = collection.stream().filter(r -> isMate(p0.Read, r.Read)).findFirst().orElse(
                         null);
 
                 // single read
@@ -220,7 +219,7 @@ class Analysis {
         for (final List<ReadInfo> pair : localPairs) {
             final ReadInfo p0 = pair.get(0);
             final ReadInfo p1 = pair.get(1);
-            final Stats.BreakPoint stats = result.Get(p0.Breakpoint);
+            final BreakpointStats stats = result.Get(p0.Breakpoint);
 
             final boolean sr = pair.stream().anyMatch(r -> getClips(r.Read).stream().anyMatch(
                     c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
@@ -243,12 +242,9 @@ class Analysis {
 
         for (final SAMRecord read : reads) {
 
-            final ReadInfo info = new ReadInfo();
-            info.Read = read;
+            final ReadInfo info = new ReadInfo(read);
 
-            final NamedReadCollection collection = result.ReadMap.computeIfAbsent(read.getReadName(),
-                    k -> new NamedReadCollection());
-            collection.Reads.add(info);
+            result.computeIfAbsent(read.getReadName(), k -> new NamedReadCollection(info));
 
             // if unmapped there's nothing to do
             if (read.getReadUnmappedFlag()) {
@@ -320,7 +316,15 @@ class Analysis {
     private static Set<Integer> tumorWrittenReads = new HashSet<>();
     private static Set<Integer> refWrittenReads = new HashSet<>();
 
-    static void processStructuralVariant(final List<String> extraData, final SamReader refReader,
+    static class StructuralVariantResult {
+        ClassifiedReadResults TumorClassifiedReads;
+        ClassifiedReadResults RefClassifiedReads;
+        SampleStats TumorStats;
+        SampleStats RefStats;
+        String Filter;
+    }
+
+    static StructuralVariantResult processStructuralVariant(final SamReader refReader,
             @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
             @Nullable final SAMFileWriter tumorWriter, final HMFVariantContext ctx, final int range) {
 
@@ -333,6 +337,7 @@ class Analysis {
                         ctx.MantaBP2.Position + range) };
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
+        final StructuralVariantResult result = new StructuralVariantResult();
         final List<SAMRecord> tumorReads = performQuery(tumorReader, queryIntervals);
         final List<SAMRecord> refReads = performQuery(refReader, queryIntervals);
 
@@ -359,27 +364,22 @@ class Analysis {
 
         // processing
 
-        final ClassifiedReadResults tumorResult = performClassify(ctx, tumorReads);
-        final Sample tumorStats = calculateStats(tumorResult, ctx);
-        ctx.BP1 = tumorStats.BP1;
-        ctx.BP2 = tumorStats.BP2;
+        result.TumorClassifiedReads = performClassify(ctx, tumorReads);
+        result.TumorStats = calculateStats(result.TumorClassifiedReads, ctx);
 
-        final ClassifiedReadResults refResult = performClassify(ctx, refReads);
-        final Sample refStats = calculateStats(refResult, ctx);
+        // TODO: better way to propogate this?
+        ctx.BP1 = result.TumorStats.BP1;
+        ctx.BP2 = result.TumorStats.BP2;
+
+        result.RefClassifiedReads = performClassify(ctx, refReads);
+        result.RefStats = calculateStats(result.RefClassifiedReads, ctx);
 
         // filtering
 
-        final String filter = Filter.getFilterString(ctx, tumorStats, refStats);
+        result.Filter = Filter.getFilterString(ctx, result.TumorStats, result.RefStats);
 
         // output
 
-        final ArrayList<String> data = new ArrayList<>(extraData);
-        data.addAll(refStats.GetData());
-        data.addAll(tumorStats.GetData());
-        data.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
-        data.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
-        data.add(filter);
-        data.add(tumorStats.Clipping_Stats.toString());
-        System.out.println(String.join("\t", data));
+        return result;
     }
 }
