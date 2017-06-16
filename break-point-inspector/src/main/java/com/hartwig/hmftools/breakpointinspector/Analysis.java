@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.*;
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class Analysis {
@@ -238,28 +237,11 @@ class Analysis {
         return result;
     }
 
-    // TODO: this should really be per sample
-    private static Set<Integer> sWrittenReads = new HashSet<>();
-
-    private static ClassifiedReadResults performQueryAndClassify(final SamReader reader,
-            @Nullable SAMFileWriter evidenceWriter, final QueryInterval[] intervals, final HMFVariantContext ctx) {
+    private static ClassifiedReadResults performClassify(final HMFVariantContext ctx, final List<SAMRecord> reads) {
 
         final ClassifiedReadResults result = new ClassifiedReadResults();
 
-        // execute query and parse the results
-        final SAMRecordIterator results = reader.query(intervals, false);
-        while (results.hasNext()) {
-
-            final SAMRecord read = results.next();
-
-            // write to evidence bam
-            if (evidenceWriter != null) {
-                final int hash = read.getSAMString().hashCode();
-                if (!sWrittenReads.contains(hash)) {
-                    sWrittenReads.add(hash);
-                    evidenceWriter.addAlignment(read);
-                }
-            }
+        for (final SAMRecord read : reads) {
 
             final ReadInfo info = new ReadInfo();
             info.Read = read;
@@ -318,7 +300,6 @@ class Analysis {
                 info.Location = Overlap.PROXIMITY;
             }
         }
-        results.close();
 
         return result;
     }
@@ -332,48 +313,8 @@ class Analysis {
             return !b.isEmpty() && a.startsWith(b) || a.endsWith(b);
     }
 
-    static void processStructuralVariant(final List<String> extraData, final SamReader refReader,
-            @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
-            @Nullable final SAMFileWriter tumorWriter, final HMFVariantContext ctx, final int range) {
-
-        // work out the query intervals
-
-        QueryInterval[] queryIntervals = {
-                new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position - range),
-                        ctx.MantaBP1.Position + range),
-                new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position - range),
-                        ctx.MantaBP2.Position + range) };
-        queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
-
-        // begin processing
-
-        final ClassifiedReadResults tumorResult = performQueryAndClassify(tumorReader, tumorWriter, queryIntervals,
-                ctx);
-        final Sample tumorStats = calculateStats(tumorResult, ctx);
-        ctx.BP1 = tumorStats.BP1;
-        ctx.BP2 = tumorStats.BP2;
-
-        final ClassifiedReadResults refResult = performQueryAndClassify(refReader, refWriter, queryIntervals, ctx);
-        final Sample refStats = calculateStats(refResult, ctx);
-
-        // filtering
-
-        final String filter = getFilter(ctx, tumorStats, refStats);
-
-        // output
-
-        final ArrayList<String> data = new ArrayList<>(extraData);
-        data.addAll(refStats.GetData());
-        data.addAll(tumorStats.GetData());
-        data.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
-        data.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
-        data.add(filter);
-        data.add(tumorStats.Clipping_Stats.toString());
-        System.out.println(String.join("\t", data));
-    }
-
-    @NotNull
-    private static String getFilter(final HMFVariantContext ctx, final Sample tumorStats, final Sample refStats) {
+    private static String getFilterString(final HMFVariantContext ctx, final Sample tumorStats,
+            final Sample refStats) {
 
         final List<String> filters = new ArrayList<>(ctx.Filter);
 
@@ -402,5 +343,84 @@ class Analysis {
             filters.add("HMF_ClippingConcordance");
 
         return filters.isEmpty() ? "PASS" : String.join(";", filters);
+    }
+
+    private static List<SAMRecord> performQuery(final SamReader reader, final QueryInterval[] intervals) {
+        final List<SAMRecord> output = new ArrayList<>();
+
+        final SAMRecordIterator results = reader.query(intervals, false);
+        while (results.hasNext()) {
+            final SAMRecord read = results.next();
+            output.add(read);
+        }
+        results.close();
+
+        return output;
+    }
+
+    private static Set<Integer> tumorWrittenReads = new HashSet<>();
+    private static Set<Integer> refWrittenReads = new HashSet<>();
+
+    static void processStructuralVariant(final List<String> extraData, final SamReader refReader,
+            @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
+            @Nullable final SAMFileWriter tumorWriter, final HMFVariantContext ctx, final int range) {
+
+        // perform query for reads
+
+        QueryInterval[] queryIntervals = {
+                new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position - range),
+                        ctx.MantaBP1.Position + range),
+                new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position - range),
+                        ctx.MantaBP2.Position + range) };
+        queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
+
+        final List<SAMRecord> tumorReads = performQuery(tumorReader, queryIntervals);
+        final List<SAMRecord> refReads = performQuery(refReader, queryIntervals);
+
+        // write evidence
+
+        if (tumorWriter != null) {
+            for (final SAMRecord read : tumorReads) {
+                final int hash = read.getSAMString().hashCode();
+                if (!tumorWrittenReads.contains(hash)) {
+                    tumorWriter.addAlignment(read);
+                    tumorWrittenReads.add(hash);
+                }
+            }
+        }
+        if (refWriter != null) {
+            for (final SAMRecord read : refReads) {
+                final int hash = read.getSAMString().hashCode();
+                if (!refWrittenReads.contains(hash)) {
+                    refWriter.addAlignment(read);
+                    refWrittenReads.add(hash);
+                }
+            }
+        }
+
+        // processing
+
+        final ClassifiedReadResults tumorResult = performClassify(ctx, tumorReads);
+        final Sample tumorStats = calculateStats(tumorResult, ctx);
+        ctx.BP1 = tumorStats.BP1;
+        ctx.BP2 = tumorStats.BP2;
+
+        final ClassifiedReadResults refResult = performClassify(ctx, refReads);
+        final Sample refStats = calculateStats(refResult, ctx);
+
+        // filtering
+
+        final String filter = getFilterString(ctx, tumorStats, refStats);
+
+        // output
+
+        final ArrayList<String> data = new ArrayList<>(extraData);
+        data.addAll(refStats.GetData());
+        data.addAll(tumorStats.GetData());
+        data.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
+        data.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
+        data.add(filter);
+        data.add(tumorStats.Clipping_Stats.toString());
+        System.out.println(String.join("\t", data));
     }
 }
