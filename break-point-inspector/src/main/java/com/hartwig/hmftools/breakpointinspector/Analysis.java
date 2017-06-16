@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import htsjdk.samtools.*;
 
@@ -14,11 +15,12 @@ import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.*;
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 class Analysis {
 
-    private static boolean assessDEL(final HMFVariantContext ctx, final List<ReadInfo> pair) {
+    private static boolean assessDEL(final HMFVariantContext ctx, Pair<ReadInfo, ReadInfo> pair) {
 
         final Location adjustedBP1 = ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.End);
         final Location adjustedBP2 =
@@ -26,16 +28,16 @@ class Analysis {
 
         boolean pairEvidence;
         // side
-        pairEvidence = pair.get(0).Read.getAlignmentStart() <= adjustedBP1.Position;
-        pairEvidence &= adjustedBP2.Position <= pair.get(1).Read.getAlignmentEnd();
+        pairEvidence = pair.getLeft().Read.getAlignmentStart() <= adjustedBP1.Position;
+        pairEvidence &= adjustedBP2.Position <= pair.getRight().Read.getAlignmentEnd();
         // orientation
-        pairEvidence &= !pair.get(0).Read.getReadNegativeStrandFlag();
-        pairEvidence &= pair.get(1).Read.getReadNegativeStrandFlag();
+        pairEvidence &= !pair.getLeft().Read.getReadNegativeStrandFlag();
+        pairEvidence &= pair.getRight().Read.getReadNegativeStrandFlag();
 
         return pairEvidence;
     }
 
-    private static boolean assessDUP(final HMFVariantContext ctx, final List<ReadInfo> pair) {
+    private static boolean assessDUP(final HMFVariantContext ctx, final Pair<ReadInfo, ReadInfo> pair) {
 
         final Location adjustedBP1 =
                 ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
@@ -43,16 +45,16 @@ class Analysis {
 
         boolean pairEvidence;
         // side
-        pairEvidence = adjustedBP1.Position <= pair.get(0).Read.getAlignmentEnd();
-        pairEvidence &= pair.get(1).Read.getAlignmentStart() <= adjustedBP2.Position;
+        pairEvidence = adjustedBP1.Position <= pair.getLeft().Read.getAlignmentEnd();
+        pairEvidence &= pair.getRight().Read.getAlignmentStart() <= adjustedBP2.Position;
         // orientation
-        pairEvidence &= pair.get(0).Read.getReadNegativeStrandFlag();
-        pairEvidence &= !pair.get(1).Read.getReadNegativeStrandFlag();
+        pairEvidence &= pair.getLeft().Read.getReadNegativeStrandFlag();
+        pairEvidence &= !pair.getRight().Read.getReadNegativeStrandFlag();
 
         return pairEvidence;
     }
 
-    private static boolean assessINV(final HMFVariantContext ctx, final List<ReadInfo> pair, boolean inv3) {
+    private static boolean assessINV(final HMFVariantContext ctx, final Pair<ReadInfo, ReadInfo> pair, boolean inv3) {
 
         boolean pairEvidence;
         if (inv3) {
@@ -61,26 +63,26 @@ class Analysis {
             final Location adjustedBP2 =
                     ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.End);
 
-            pairEvidence = pair.get(0).Read.getAlignmentStart() <= adjustedBP1.Position;
-            pairEvidence &= pair.get(1).Read.getAlignmentStart() <= adjustedBP2.Position;
-            pairEvidence &= !pair.get(0).Read.getReadNegativeStrandFlag(); // forward strand x ---->
-            pairEvidence &= !pair.get(1).Read.getReadNegativeStrandFlag(); // forward strand x ---->
+            pairEvidence = pair.getLeft().Read.getAlignmentStart() <= adjustedBP1.Position;
+            pairEvidence &= pair.getRight().Read.getAlignmentStart() <= adjustedBP2.Position;
+            pairEvidence &= !pair.getLeft().Read.getReadNegativeStrandFlag(); // forward strand x ---->
+            pairEvidence &= !pair.getRight().Read.getReadNegativeStrandFlag(); // forward strand x ---->
         } else {
             final Location adjustedBP1 =
                     ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
             final Location adjustedBP2 =
                     ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.Start);
 
-            pairEvidence = adjustedBP1.Position <= pair.get(0).Read.getAlignmentEnd();
-            pairEvidence &= adjustedBP2.Position <= pair.get(1).Read.getAlignmentEnd();
-            pairEvidence &= pair.get(0).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
-            pairEvidence &= pair.get(1).Read.getReadNegativeStrandFlag(); // reverse strand <---- x
+            pairEvidence = adjustedBP1.Position <= pair.getLeft().Read.getAlignmentEnd();
+            pairEvidence &= adjustedBP2.Position <= pair.getRight().Read.getAlignmentEnd();
+            pairEvidence &= pair.getLeft().Read.getReadNegativeStrandFlag(); // reverse strand <---- x
+            pairEvidence &= pair.getRight().Read.getReadNegativeStrandFlag(); // reverse strand <---- x
         }
 
         return pairEvidence;
     }
 
-    private static boolean assessPR(final HMFVariantContext ctx, final List<ReadInfo> pair) {
+    private static boolean assessPR(final HMFVariantContext ctx, final Pair<ReadInfo, ReadInfo> pair) {
         switch (ctx.Type) {
             case DEL:
                 return assessDEL(ctx, pair);
@@ -96,6 +98,8 @@ class Analysis {
 
     private static void determineBreakpoints(final HMFVariantContext ctx, final SampleStats result,
             final ClipStats bpClips1, final ClipStats bpClips2) {
+
+        // TODO: needs finesse
 
         // 1: look at clipped pairs first
         if (result.BP1 == null) {
@@ -133,8 +137,8 @@ class Analysis {
         final Stats.ClipStats clipPRSR1 = new Stats.ClipStats();
         final Stats.ClipStats clipPRSR2 = new Stats.ClipStats();
 
-        final List<List<ReadInfo>> spanningPairs = new ArrayList<>();
-        final List<List<ReadInfo>> localPairs = new ArrayList<>();
+        final List<Pair<ReadInfo, ReadInfo>> spanningPairs = new ArrayList<>();
+        final List<Pair<ReadInfo, ReadInfo>> localPairs = new ArrayList<>();
 
         for (final NamedReadCollection collection : queryResult.values()) {
             for (final ReadInfo p0 : collection) {
@@ -143,8 +147,7 @@ class Analysis {
                 result.Clipping_Stats.addToClippingStats(p0.Read);
 
                 // find the mate
-                final ReadInfo p1 = collection.stream().filter(r -> isMate(p0.Read, r.Read)).findFirst().orElse(
-                        null);
+                final ReadInfo p1 = collection.stream().filter(r -> isMate(p0.Read, r.Read)).findFirst().orElse(null);
 
                 // single read
                 if (p1 == null) {
@@ -180,7 +183,7 @@ class Analysis {
                 }
 
                 // at this stage, we have a legitimate pair
-                final List<ReadInfo> pair = Arrays.asList(p0, p1);
+                final Pair<ReadInfo, ReadInfo> pair = Pair.of(p0, p1);
 
                 // supports the break point
                 if (p0.Breakpoint != p1.Breakpoint) {
@@ -202,8 +205,8 @@ class Analysis {
         determineBreakpoints(ctx, result, clipPRSR1, clipPRSR2);
 
         // look at PR evidence
-        for (final List<ReadInfo> pair : spanningPairs) {
-            for (final ReadInfo r : pair) {
+        for (final Pair<ReadInfo, ReadInfo> pair : spanningPairs) {
+            for (final ReadInfo r : Arrays.asList(pair.getLeft(), pair.getRight())) {
                 final boolean sr = getClips(r.Read).stream().anyMatch(
                         c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2));
                 // TODO: also check side of clip
@@ -216,19 +219,16 @@ class Analysis {
         }
 
         // look at normal or SR evidence
-        for (final List<ReadInfo> pair : localPairs) {
-            final ReadInfo p0 = pair.get(0);
-            final ReadInfo p1 = pair.get(1);
-            final BreakpointStats stats = result.Get(p0.Breakpoint);
-
-            final boolean sr = pair.stream().anyMatch(r -> getClips(r.Read).stream().anyMatch(
+        for (final Pair<ReadInfo, ReadInfo> pair : localPairs) {
+            final BreakpointStats stats = result.Get(pair.getLeft().Breakpoint);
+            final boolean sr = Stream.of(pair.getLeft(), pair.getRight()).anyMatch(r -> getClips(r.Read).stream().anyMatch(
                     c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
             // TODO: also check side of clip
             if (sr) {
                 stats.SR_Only_Support++;
-            } else if (p0.Location == Overlap.STRADDLE && p1.Location == Overlap.STRADDLE) {
+            } else if (pair.getLeft().Location == Overlap.STRADDLE && pair.getRight().Location == Overlap.STRADDLE) {
                 stats.PR_Only_Normal++;
-            } else if (p0.Location == Overlap.INTERSECT || p1.Location == Overlap.INTERSECT) {
+            } else if (pair.getLeft().Location == Overlap.INTERSECT || pair.getRight().Location == Overlap.INTERSECT) {
                 stats.PR_SR_Normal++;
             }
         }
