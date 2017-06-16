@@ -29,7 +29,7 @@
             <artifactId>commons-cli</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-lang3</groupId>
+            <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
