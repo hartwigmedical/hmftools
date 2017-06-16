@@ -128,7 +128,7 @@ class Analysis {
         // TODO: should we display Manta BP?
     }
 
-    private static SampleStats calculateStats(final ClassifiedReadResults queryResult, final HMFVariantContext ctx) {
+    private static SampleStats calculateStats(final HMFVariantContext ctx, final ClassifiedReadResults queryResult) {
 
         final SampleStats result = new SampleStats();
         result.BP1 = ctx.BP1;
@@ -221,8 +221,9 @@ class Analysis {
         // look at normal or SR evidence
         for (final Pair<ReadInfo, ReadInfo> pair : localPairs) {
             final BreakpointStats stats = result.Get(pair.getLeft().Breakpoint);
-            final boolean sr = Stream.of(pair.getLeft(), pair.getRight()).anyMatch(r -> getClips(r.Read).stream().anyMatch(
-                    c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
+            final boolean sr = Stream.of(pair.getLeft(), pair.getRight()).anyMatch(
+                    r -> getClips(r.Read).stream().anyMatch(
+                            c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
             // TODO: also check side of clip
             if (sr) {
                 stats.SR_Only_Support++;
@@ -236,7 +237,7 @@ class Analysis {
         return result;
     }
 
-    private static ClassifiedReadResults performClassify(final HMFVariantContext ctx, final List<SAMRecord> reads) {
+    private static ClassifiedReadResults classifyReads(final HMFVariantContext ctx, final List<SAMRecord> reads) {
 
         final ClassifiedReadResults result = new ClassifiedReadResults();
 
@@ -317,8 +318,6 @@ class Analysis {
     private static Set<Integer> refWrittenReads = new HashSet<>();
 
     static class StructuralVariantResult {
-        ClassifiedReadResults TumorClassifiedReads;
-        ClassifiedReadResults RefClassifiedReads;
         SampleStats TumorStats;
         SampleStats RefStats;
         String Filter;
@@ -364,15 +363,13 @@ class Analysis {
 
         // processing
 
-        result.TumorClassifiedReads = performClassify(ctx, tumorReads);
-        result.TumorStats = calculateStats(result.TumorClassifiedReads, ctx);
+        result.TumorStats = calculateStats(ctx, classifyReads(ctx, tumorReads));
 
         // TODO: better way to propogate this?
         ctx.BP1 = result.TumorStats.BP1;
         ctx.BP2 = result.TumorStats.BP2;
 
-        result.RefClassifiedReads = performClassify(ctx, refReads);
-        result.RefStats = calculateStats(result.RefClassifiedReads, ctx);
+        result.RefStats = calculateStats(ctx, classifyReads(ctx, refReads));
 
         // filtering
 
