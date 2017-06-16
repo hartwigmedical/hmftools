@@ -72,9 +72,9 @@ public class PDFWriterTest {
         final PatientReport patientReport = new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType,
                 pathologyTumorPercentage, fittedPurity);
 
-        final String slicerPath = Resources.getResource("bed").getPath() + File.separator + "HMF_Slicing_v2.tsv";
+        final String slicerPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic.csv";
+        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
 
         final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(slicerPath, drupFilterPath,
                 cosmicPath);

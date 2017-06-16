@@ -342,13 +342,13 @@ public class PDFWriter implements ReportWriter {
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
                                 .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.TYPE_FIELD).setFixedWidth(75),
+                        col.column("Cosmic Type", GenePanelDataSource.TYPE_FIELD).setFixedWidth(75),
                         col.emptyColumn(),
                         col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
                                 .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
                                 .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
-                        col.column("Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
+                        col.column("Cosmic Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
                         col.emptyColumn().setFixedWidth(40)))
                     .setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
         // @formatter:on
