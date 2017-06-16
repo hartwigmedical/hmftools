@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.*;
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class Analysis {
@@ -356,6 +357,24 @@ class Analysis {
         final Sample refStats = calculateStats(refResult, ctx);
 
         // filtering
+
+        final String filter = getFilter(ctx, tumorStats, refStats);
+
+        // output
+
+        final ArrayList<String> data = new ArrayList<>(extraData);
+        data.addAll(refStats.GetData());
+        data.addAll(tumorStats.GetData());
+        data.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
+        data.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
+        data.add(filter);
+        data.add(tumorStats.Clipping_Stats.toString());
+        System.out.println(String.join("\t", data));
+    }
+
+    @NotNull
+    private static String getFilter(final HMFVariantContext ctx, final Sample tumorStats, final Sample refStats) {
+
         final List<String> filters = new ArrayList<>(ctx.Filter);
 
         if (ctx.Type == HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
@@ -374,23 +393,14 @@ class Analysis {
 
         boolean concordance = false;
         for (final Location bp : Arrays.asList(tumorStats.BP1, tumorStats.BP2)) {
-            final Stats.Clip tumor_clip = tumorStats.Clipping_Stats.LocationMap.get(bp);
-            final Stats.Clip ref_clip = refStats.Clipping_Stats.LocationMap.get(bp);
+            final Clip tumor_clip = tumorStats.Clipping_Stats.LocationMap.get(bp);
+            final Clip ref_clip = refStats.Clipping_Stats.LocationMap.get(bp);
             concordance |= tumor_clip != null && ref_clip != null && concordantStrings(tumor_clip.LongestClipSequence,
                     ref_clip.LongestClipSequence);
         }
         if (concordance)
             filters.add("HMF_ClippingConcordance");
 
-        // output
-
-        final ArrayList<String> data = new ArrayList<>(extraData);
-        data.addAll(refStats.GetData());
-        data.addAll(tumorStats.GetData());
-        data.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
-        data.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
-        data.add(filters.isEmpty() ? "PASS" : String.join(";", filters));
-        data.add(tumorStats.Clipping_Stats.toString());
-        System.out.println(String.join("\t", data));
+        return filters.isEmpty() ? "PASS" : String.join(";", filters);
     }
 }
