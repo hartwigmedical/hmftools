@@ -369,7 +369,7 @@ public class PDFWriter implements ReportWriter {
                                 + "to look-up these IDs.",
                         "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
                                 + "whole genome data.",
-                        "The ”Ploidy (TAF)” field displays the tumor ploidy for the observed variant. The ploidy "
+                        "The 'Ploidy (TAF)' field displays the tumor ploidy for the observed variant. The ploidy "
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
                                 + "proportion of A’s and B’s (e.g. AAABB for 3 copies A, and 2 copies B). "
                                 + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "
