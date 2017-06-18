@@ -22,6 +22,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.util.FindingsToCSV;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -97,25 +98,26 @@ public class SinglePatientReporter {
         final String sample = variantFile.sample();
         LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for sample " + sample);
 
-        LOGGER.info(" Loading somatic copy numbers...");
+        LOGGER.info(" Loading freec somatic copy numbers...");
         final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
         LOGGER.info("  " + copyNumbers.size() + " copy number regions loaded for sample " + sample);
 
         LOGGER.info(" Loading purity numbers...");
         final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
         final FittedPurityScore purityScore = PatientReporterHelper.loadPurityScore(runDirectory, sample);
-        final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
+        final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory,
+                sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers);
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.02)) {
-            LOGGER.warn("Purity uncertainty range exceeds 2%. Proceed with caution.");
+            LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
+                    + ") range exceeds 2%. Proceed with caution.");
         }
 
-
-        LOGGER.info(" Analyzing somatic variants...");
+        LOGGER.info(" Analyzing somatics....");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
-        LOGGER.info(" Analyzing somatic copy numbers...");
+        LOGGER.info(" Analyzing freec somatic copy numbers...");
         final CopyNumberAnalysis copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
 
         if (tmpDirectory != null) {
