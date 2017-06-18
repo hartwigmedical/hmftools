@@ -74,13 +74,21 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
         final Integer intChrom1 = toInteger(chromosome);
         final Integer intChrom2 = toInteger(other.chromosome);
         if (intChrom1 == null && intChrom2 == null) {
-            return chromosome.compareTo(other.chromosome);
+            if (chromosome.equals(other.chromosome)) {
+                return chromosomeBand.compareTo(other.chromosomeBand);
+            } else {
+                return chromosome.compareTo(other.chromosome);
+            }
         } else if (intChrom1 == null) {
             return 1;
         } else if (intChrom2 == null) {
             return -1;
         } else {
-            return intChrom1.compareTo(intChrom2);
+            if (intChrom1.compareTo(intChrom2) == 0) {
+                return chromosomeBand.compareTo(other.chromosomeBand);
+            } else {
+                return intChrom1.compareTo(intChrom2);
+            }
         }
     }
 
