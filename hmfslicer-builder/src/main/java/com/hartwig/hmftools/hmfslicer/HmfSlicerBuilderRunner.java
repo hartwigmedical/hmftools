@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -13,7 +14,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -74,16 +74,15 @@ public final class HmfSlicerBuilderRunner {
 
     @NotNull
     private static String readGeneList() throws IOException, EmptyFileException {
-        final List<String> lines = FileReader.build().readLines(
-                new File(Resources.getResource("gene_panel").getPath()).toPath()).stream().map(
-                gene -> "\"" + gene + "\"").collect(Collectors.toList());
+        final List<String> lines = Resources.readLines(Resources.getResource("gene_panel"),
+                Charset.defaultCharset()).stream().map(gene -> "\"" + gene + "\"").collect(Collectors.toList());
         return StringUtils.join(lines.toArray(), ",");
     }
 
     @NotNull
     private static String readEnsemblQuery() throws IOException, EmptyFileException {
-        final List<String> lines = FileReader.build().readLines(
-                new File(Resources.getResource("ensembl_query.sql").getPath()).toPath());
+        final List<String> lines = Resources.readLines(Resources.getResource("ensembl_query.sql"),
+                Charset.defaultCharset());
         return StringUtils.join(lines.toArray(), "\n");
     }
 
