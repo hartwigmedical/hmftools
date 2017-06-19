@@ -64,7 +64,7 @@ public class PatientReport {
     }
 
     public String tumorPercentageString() {
-        return PatientReportFormat.formatPercent(tumorPercentage);
+        return PatientReportFormat.formatNullablePercent(tumorPercentage);
     }
 
     public String impliedPurityString() {
