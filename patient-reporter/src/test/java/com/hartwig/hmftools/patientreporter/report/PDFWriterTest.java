@@ -5,9 +5,9 @@ import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjusted
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -31,11 +31,9 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriterTest {
 
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
-    private static final String RESOURCE_PATH = Resources.getResource("pdf").getPath();
-    private static final String REPORT_LOGO = RESOURCE_PATH + File.separator + "hartwig_logo.jpg";
 
     @Test
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
@@ -81,7 +79,9 @@ public class PDFWriterTest {
         final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath,
                 cosmicPath);
 
-        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, REPORT_LOGO, reporterData);
+        final InputStream logoStream = Resources.asByteSource(
+                Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
+        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -91,17 +91,19 @@ public class PDFWriterTest {
         if (WRITE_TO_PDF) {
             report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
         }
+        logoStream.close();
     }
 
     @Test
-    public void canGenerateNotSequenceableReport() throws DRException, FileNotFoundException {
+    public void canGenerateNotSequenceableReport() throws DRException, IOException {
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
         final String tumorPercentageString = "10%";
-
+        final InputStream logoStream = Resources.asByteSource(
+                Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder report = PDFWriter.generateNotSequenceableReport(sample, tumorType,
-                tumorPercentageString, reason, REPORT_LOGO);
+                tumorPercentageString, reason, logoStream);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -111,5 +113,6 @@ public class PDFWriterTest {
         if (WRITE_TO_PDF) {
             report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
+        logoStream.close();
     }
 }

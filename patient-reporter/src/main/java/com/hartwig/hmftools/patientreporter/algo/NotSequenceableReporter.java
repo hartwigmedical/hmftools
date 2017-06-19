@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.lims.LimsModel;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
-
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.exception.DRException;
@@ -28,10 +28,10 @@ public class NotSequenceableReporter {
     }
 
     public void run(@NotNull final String sample, @NotNull final NotSequenceableReason reason)
-            throws FileNotFoundException, DRException {
+            throws IOException, DRException {
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
-        final String tumorPercentageString =
-                PatientReportFormat.formatPercent(limsModel.findTumorPercentageForSample(sample));
+        final String tumorPercentageString = PatientReportFormat.formatPercent(
+                limsModel.findTumorPercentageForSample(sample));
         reportWriter.writeNonSequenceableReport(sample, tumorType, tumorPercentageString, reason);
     }
 }

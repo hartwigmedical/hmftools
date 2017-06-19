@@ -45,7 +45,6 @@ public class PatientReporterApplication {
     private static final String HMF_GENE_PANEL = "hmf_gene_panel";
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_CSV = "lims_csv";
-    private static final String REPORT_LOGO = "report_logo";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String TMP_DIRECTORY = "tmp_dir";
     private static final String RUN_DIRECTORY = "run_dir";
@@ -133,7 +132,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static ReportWriter buildReportWriter(@NotNull final CommandLine cmd) {
-        return new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY), cmd.getOptionValue(REPORT_LOGO));
+        return new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
     }
 
     private static void printUsageAndExit(@NotNull final Options options) {
@@ -220,12 +219,9 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForReportWriter(@NotNull final CommandLine cmd) {
-        final String reportLogo = cmd.getOptionValue(REPORT_LOGO);
         final String reportDirectory = cmd.getOptionValue(REPORT_DIRECTORY);
 
-        if (reportLogo == null || !exists(reportLogo)) {
-            LOGGER.warn(REPORT_LOGO + " has to be an existing file: " + reportLogo);
-        } else if (reportDirectory == null || !exists(reportDirectory) || !isDirectory(reportDirectory)) {
+        if (reportDirectory == null || !exists(reportDirectory) || !isDirectory(reportDirectory)) {
             LOGGER.warn(REPORT_DIRECTORY + " has to be an existing directory: " + reportDirectory);
         } else {
             return true;
@@ -266,7 +262,6 @@ public class PatientReporterApplication {
         options.addOption(HMF_GENE_PANEL, true, "Complete path towards the HMF gene panel csv.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
         options.addOption(LIMS_CSV, true, "Complete path towards a CSV containing the LIMS data dump.");
-        options.addOption(REPORT_LOGO, true, "Complete path to the logo used in the PDF report.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(TMP_DIRECTORY, true,
                 "Complete path where, if provided, temporary output files will be written to.");

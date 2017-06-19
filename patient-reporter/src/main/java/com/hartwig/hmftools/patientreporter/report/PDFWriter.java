@@ -10,10 +10,13 @@ import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
@@ -53,29 +56,31 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private final String reportDirectory;
     @NotNull
-    private final String reportLogo;
+    @VisibleForTesting
+    static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
-    public PDFWriter(@NotNull final String reportDirectory, @NotNull final String reportLogo) {
+    public PDFWriter(@NotNull final String reportDirectory) {
         this.reportDirectory = reportDirectory;
-        this.reportLogo = reportLogo;
     }
 
     @Override
     public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
-            throws FileNotFoundException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, reportLogo, reporterData);
-
+            throws IOException, DRException {
+        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
+        final JasperReportBuilder reportBuilder = generatePatientReport(report, logoStream, reporterData);
         writeReport(report.sample(), reportBuilder);
+        logoStream.close();
     }
 
     @Override
     public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
-            throws FileNotFoundException, DRException {
+            throws IOException, DRException {
+        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage,
-                reason, reportLogo);
-
+                reason, logoStream);
         writeReport(sample, reportBuilder);
+        logoStream.close();
     }
 
     private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
@@ -98,11 +103,11 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample,
             @NotNull final String tumorType, @NotNull final String tumorPercentageString,
-            @NotNull final NotSequenceableReason reason, @NotNull final String reportLogoPath) {
+            @NotNull final NotSequenceableReason reason, @NotNull final InputStream logoStream) {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, tumorPercentageString, reportLogoPath),
+                        mainPageTopSection(sample, tumorType, tumorPercentageString, logoStream),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason));
         // @formatter:on
@@ -113,12 +118,12 @@ public class PDFWriter implements ReportWriter {
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final String reportLogoPath, @NotNull final HmfReporterData reporterData) {
+            @NotNull final InputStream logoStream, @NotNull final HmfReporterData reporterData) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
                         mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(),
-                                reportLogoPath),
+                                logoStream),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -158,7 +163,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample,
             @NotNull final String tumorType, @NotNull final String tumorPercentage,
-            @NotNull final String reportLogoPath) {
+            @NotNull final InputStream logoStream) {
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
@@ -171,9 +176,8 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
                         cmp.text(tumorPercentage).setStyle(dataTableStyle()))
         );
-
         return cmp.horizontalList(
-                cmp.image(reportLogoPath),
+                cmp.image(logoStream),
                 cmp.verticalList(
                         cmp.text("HMF Sequencing Report - " + sample)
                                 .setStyle(fontStyle().bold().setFontSize(14)
