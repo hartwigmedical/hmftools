@@ -34,7 +34,7 @@ public class SinglePatientReporterTest {
                 hmfSlicingRegion);
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        final SinglePatientReporter algo = new SinglePatientReporter(buildTestCpctEcrfModel(), Lims.buildEmptyModel(),
+        final SinglePatientReporter algo = new SinglePatientReporter(false, buildTestCpctEcrfModel(), Lims.buildEmptyModel(),
                 variantAnalyzer, copyNumberAnalyzer, null);
 
         assertNotNull(algo.run(RUN_DIRECTORY));
