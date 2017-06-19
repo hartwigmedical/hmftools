@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
@@ -95,7 +96,8 @@ public final class HmfSlicerBuilderRunner {
     }
 
     @NotNull
-    private static Result<Record> queryEnsembldb() throws SQLException, IOException, EmptyFileException {
+    @VisibleForTesting
+    static Result<Record> queryEnsembldb() throws SQLException, IOException, EmptyFileException {
         // MIVO: disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(ENSEMBLDB_URL, DB_USER, "");

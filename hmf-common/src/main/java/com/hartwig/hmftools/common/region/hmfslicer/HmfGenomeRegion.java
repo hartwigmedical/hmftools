@@ -42,6 +42,16 @@ public abstract class HmfGenomeRegion implements GenomeRegion {
 
     @NotNull
     @Value.Parameter
+    public abstract String geneID();
+
+    @Value.Parameter
+    public abstract long geneStart();
+
+    @Value.Parameter
+    public abstract long geneEnd();
+
+    @NotNull
+    @Value.Parameter
     public abstract String chromosomeBand();
 
     @NotNull

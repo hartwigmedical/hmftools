@@ -4,7 +4,10 @@ select
     transcript.seq_region_end as transcript_end,
     transcript.stable_id as transcript_id,
     transcript.version as transcript_version,
-	xref.display_label as gene_name,
+    xref.display_label as gene_name,
+    gene.stable_id as gene_id,
+    gene.seq_region_start as gene_start,
+    gene.seq_region_end as gene_end,
     GROUP_CONCAT(karyotype.band SEPARATOR '-') as chromosome_band,
 	dbprimary_acc as entrezId
 from gene

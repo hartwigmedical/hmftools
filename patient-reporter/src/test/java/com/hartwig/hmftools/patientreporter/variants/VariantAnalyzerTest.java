@@ -31,6 +31,9 @@ public class VariantAnalyzerTest {
     private static final String WRONG_TRANSCRIPT = "RT";
     private static final int TRANSCRIPT_VERSION = 1;
     private static final String GENE = "(KODU)";
+    private static final String GENE_ID = "ENSG0000";
+    private static final long GENE_START = 1;
+    private static final long GENE_END = 42;
     private static final String CHROMOSOME_BAND = "p1";
     private static final String ENTREZ_ID = "11";
 
@@ -91,7 +94,7 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static HmfGenomeRegion hmfRegion() {
-        return new ImmutableHmfGenomeRegion(CHROMOSOME, 350, 450, RIGHT_TRANSCRIPT, TRANSCRIPT_VERSION, GENE,
-                CHROMOSOME_BAND, ENTREZ_ID);
+        return new ImmutableHmfGenomeRegion(CHROMOSOME, 350, 450, RIGHT_TRANSCRIPT, TRANSCRIPT_VERSION, GENE, GENE_ID,
+                GENE_START, GENE_END, CHROMOSOME_BAND, ENTREZ_ID);
     }
 }

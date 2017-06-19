@@ -25,8 +25,11 @@ public abstract class HmfSlicerFileLoader {
     private static final int TRANSCRIPT_ID_COLUMN = 3;
     private static final int TRANSCRIPT_VERSION_COLUMN = 4;
     private static final int GENE_COLUMN = 5;
-    private static final int CHROMOSOME_BAND_COLUMN = 6;
-    private static final int ENTREZ_ID_COLUMN = 7;
+    private static final int GENE_ID_COLUMN = 6;
+    private static final int GENE_START_COLUMN = 7;
+    private static final int GENE_END_COLUMN = 8;
+    private static final int CHROMOSOME_BAND_COLUMN = 9;
+    private static final int ENTREZ_ID_COLUMN = 10;
 
     private HmfSlicerFileLoader() {
     }
@@ -54,8 +57,12 @@ public abstract class HmfSlicerFileLoader {
                 final String gene = values[GENE_COLUMN];
                 final String chromosomeBand = values[CHROMOSOME_BAND_COLUMN];
                 final String entrezId = values[ENTREZ_ID_COLUMN];
+                final String geneId = values[GENE_ID_COLUMN];
+                final long geneStart = Long.valueOf(values[GENE_START_COLUMN]);
+                final long geneEnd = Long.valueOf(values[GENE_END_COLUMN]);
+
                 final HmfGenomeRegion region = new ImmutableHmfGenomeRegion(chromosome, start, end, transcriptId,
-                        transcriptVersion, gene, chromosomeBand, entrezId);
+                        transcriptVersion, gene, geneId, geneStart, geneEnd, chromosomeBand, entrezId);
 
                 regionMap.put(chromosome, region);
             }
