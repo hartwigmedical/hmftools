@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory.highConfidence;
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory.smooth;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
 import java.io.File;
@@ -16,7 +14,9 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -88,9 +88,6 @@ public class PurityPloidyEstimateApplication {
             System.exit(1);
         }
 
-        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(MAX_PLOIDY,
-                defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT));
-
         LOGGER.info("Loading germline variant data");
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
@@ -110,6 +107,11 @@ public class PurityPloidyEstimateApplication {
                 MAX_COMBINED_DEPTH);
         final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants, tumorRatio, normalRatio);
 
+        final Gender gender = Gender.fromHetrozygousRegionsOnX(observedRegions);
+        LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
+        final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
+        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight);
+
         LOGGER.info("Fitting purity");
         final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
         final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
@@ -121,8 +123,10 @@ public class PurityPloidyEstimateApplication {
             final FittedPurity bestFit = optionalBestFit.get();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
-            final List<PurpleCopyNumber> highConfidence = highConfidence(bestFit.purity(), fittedRegions);
-            final List<PurpleCopyNumber> smoothRegions = smooth(bestFit.purity(), fittedRegions, highConfidence);
+            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(bestFit.purity(), fittedRegions);
+            final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
+            final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
+
             final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurityFactory.allFits(), smoothRegions);
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, smoothRegions);
 

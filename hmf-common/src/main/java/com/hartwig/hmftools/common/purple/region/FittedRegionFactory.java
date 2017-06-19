@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,27 +17,27 @@ public class FittedRegionFactory {
 
     public static final double NORMAL_BAF = 0.535;
 
+    private final Gender gender;
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
 
-    public FittedRegionFactory(final int maxPloidy, final double cnvRatioWeightFactor) {
+    public FittedRegionFactory(final Gender gender, final int maxPloidy, final double cnvRatioWeightFactor) {
+        this.gender = gender;
         this.maxPloidy = maxPloidy;
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
     }
 
     @NotNull
-    public List<FittedRegion> fitRegion(final double purity, final double normFactor,
-            @NotNull final Collection<ObservedRegion> observedRegions) {
+    public List<FittedRegion> fitRegion(final double purity, final double normFactor, @NotNull final Collection<ObservedRegion> observedRegions) {
         return observedRegions.stream().map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
     @NotNull
-    public FittedRegion fitRegion(final double purity, final double normFactor,
-            final @NotNull ObservedRegion observedRegion) {
+    public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion) {
         double minDeviation = 0;
         double observedBAF = observedRegion.observedBAF();
         double observedTumorRatio = observedRegion.observedTumorRatio();
-        double tumorCopyNumber = purityAdjustedCopyNumber(purity, normFactor, observedTumorRatio);
+        double tumorCopyNumber = purityAdjustedCopyNumber(gender, observedRegion.chromosome(), purity, normFactor, observedTumorRatio);
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
@@ -46,22 +47,18 @@ public class FittedRegionFactory {
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
                 .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(
-                        observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
+                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
-            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0
-                    ? new double[] { 0, 0 }
-                    : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0 ? new double[] { 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
 
-            double deviation =
-                    Math.pow(Math.max(ploidy, 2) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
+            double deviation = Math.pow(Math.max(ploidy, 2) / 2.0, 0.85) * (bafDeviation + cnvDeviation) * observedBAF;
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
@@ -83,8 +80,7 @@ public class FittedRegionFactory {
     }
 
     @VisibleForTesting
-    static double cnvDeviation(final double cnvRatioWeighFactor, final double modelCNVRatio,
-            final double actualRatio) {
+    static double cnvDeviation(final double cnvRatioWeighFactor, final double modelCNVRatio, final double actualRatio) {
         return cnvRatioWeighFactor * Math.abs(modelCNVRatio - actualRatio);
     }
 

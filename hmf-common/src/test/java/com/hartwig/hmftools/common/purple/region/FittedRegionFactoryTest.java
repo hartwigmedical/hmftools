@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.mode
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.purple.gender.Gender;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -18,7 +20,7 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void expectedFit() {
-        final FittedRegionFactory victim = new FittedRegionFactory(12, 0.2);
+        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
