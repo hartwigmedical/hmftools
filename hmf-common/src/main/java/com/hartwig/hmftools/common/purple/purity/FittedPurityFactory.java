@@ -77,7 +77,7 @@ public class FittedPurityFactory {
 
             for (double normFactor = minNormFactor; lessOrEqual(normFactor,
                     maxNormFactor); normFactor += normFactorIncrements) {
-                double impliedPloidy = PurityAdjustment.purityAdjustedCopyNumber(purity, normFactor, 1);
+                double impliedPloidy = PurityAdjustment.purityAdjustedCopyNumber(purity, normFactor, 1, 2);
 
                 if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
                     fittedPurities.add(fitPurity(purity, normFactor, totalBAFCount, filteredRegions));

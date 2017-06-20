@@ -42,7 +42,7 @@ public class CircosFileWriter<T extends GenomeRegion> {
     private static <T extends GenomePosition> String transformPosition(ToDoubleFunction<T> valueExtractor,
             T position) {
         return new StringBuilder().append("hs")
-                .append(position.chromosome().toLowerCase())
+                .append(position.chromosome())
                 .append('\t')
                 .append(position.position())
                 .append('\t')
@@ -54,7 +54,7 @@ public class CircosFileWriter<T extends GenomeRegion> {
 
     private static <T extends GenomeRegion> String transformRegion(ToDoubleFunction<T> valueExtractor, T region) {
         return new StringBuilder().append("hs")
-                .append(region.chromosome().toLowerCase())
+                .append(region.chromosome())
                 .append('\t')
                 .append(region.start())
                 .append('\t')

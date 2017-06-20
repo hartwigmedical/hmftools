@@ -67,6 +67,11 @@ class SmoothedRegions {
                     smoothedRegions.add(currentBuilder.build());
                 }
             }
+        } else {
+            for (FittedRegion fittedRegion : fittedRegions) {
+                PurpleCopyNumberBuilder currentBuilder = new PurpleCopyNumberBuilder(purity, fittedRegion);
+                smoothedRegions.add(currentBuilder.build());
+            }
         }
     }
 

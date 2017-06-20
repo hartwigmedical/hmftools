@@ -107,7 +107,7 @@ public class PurityPloidyEstimateApplication {
                 MAX_COMBINED_DEPTH);
         final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants, tumorRatio, normalRatio);
 
-        final Gender gender = Gender.fromHetrozygousRegionsOnX(observedRegions);
+        final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
         final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight);

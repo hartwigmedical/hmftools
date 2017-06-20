@@ -26,8 +26,8 @@ class CopyNumberCharts {
 
     static JFreeChart copyNumberCDF(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         final XYDataset dataset = CopyNumberCharts.createDataset(copyNumbers);
-        JFreeChart chart = ChartFactory.createScatterPlot("Copy Number CDF", "BAF Weighting (CDF)", "Ploidy", dataset, PlotOrientation.VERTICAL,
-                false, false, false);
+        JFreeChart chart = ChartFactory.createScatterPlot("Copy Number CDF", "BAF Weighting (CDF)", "Ploidy", dataset, PlotOrientation.VERTICAL, false, false,
+                false);
         XYPlot xyPlot = (XYPlot) chart.getPlot();
         XYItemRenderer renderer = ((XYPlot) chart.getPlot()).getRenderer();
         Shape shape = new Ellipse2D.Double(0, 0, 4, 4);
@@ -39,17 +39,15 @@ class CopyNumberCharts {
 
     static JFreeChart copyNumberPDF(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         final XYDataset dataset = ploidyPDF(100, copyNumbers, PurpleCopyNumber::averageTumorCopyNumber, PurpleCopyNumber::bafCount);
-        JFreeChart chart = ChartFactory.createScatterPlot("Copy Number PDF", "Ploidy", "BAF Count", dataset, PlotOrientation.VERTICAL, false, false,
-                false);
+        JFreeChart chart = ChartFactory.createScatterPlot("Copy Number PDF", "Ploidy", "BAF Count", dataset, PlotOrientation.VERTICAL, false, false, false);
         XYPlot xyPlot = (XYPlot) chart.getPlot();
         XYItemRenderer renderer = new XYLineAndShapeRenderer();
         Shape shape = new Ellipse2D.Double(-0.5, -0.5, 0, 0);
         renderer.setSeriesShape(0, shape);
         xyPlot.setRenderer(renderer);
-        renderer.setSeriesPaint(0,Color.blue);
+        renderer.setSeriesPaint(0, Color.blue);
         return chart;
     }
-
 
     static JFreeChart somaticPloidyPDF(@NotNull final List<EnrichedSomaticVariant> variants) {
         final XYDataset dataset = createVariantsPDF(variants);
@@ -90,10 +88,8 @@ class CopyNumberCharts {
         double[] buckets = new double[bucketCount];
         for (T event : events) {
             double value = function.applyAsDouble(event);
-            int index = (int) Math.round(value / 0.1);
-            if (index < bucketCount) {
-                buckets[index] = buckets[index] + increment.applyAsDouble(event);
-            }
+            int index = Math.min(bucketCount - 1, Math.max(0, (int) Math.round(value / 0.1)));
+            buckets[index] = buckets[index] + increment.applyAsDouble(event);
         }
 
         XYSeries series = new XYSeries("PDF");
