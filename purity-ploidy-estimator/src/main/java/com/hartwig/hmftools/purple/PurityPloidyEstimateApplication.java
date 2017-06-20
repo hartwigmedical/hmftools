@@ -77,6 +77,9 @@ public class PurityPloidyEstimateApplication {
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
+    private static final String PLOIDY_PENALTY_EXPONENT = "ploidy_penalty_exponent";
+    private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 0.85;
+
     public static void main(final String... args) throws ParseException, IOException, HartwigException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
@@ -110,7 +113,8 @@ public class PurityPloidyEstimateApplication {
         final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
-        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight);
+        final double ploidyPenaltyExponent = defaultValue(cmd, PLOIDY_PENALTY_EXPONENT, PLOIDY_PENALTY_EXPONENT_DEFAULT);
+        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExponent);
 
         LOGGER.info("Fitting purity");
         final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
@@ -175,6 +179,7 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(PLOIDY_PENALTY_EXPONENT, true, "Ploidy penality exponent. Default 0.85");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
