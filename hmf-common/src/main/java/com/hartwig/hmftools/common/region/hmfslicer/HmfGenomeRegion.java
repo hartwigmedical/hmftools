@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.region.hmfslicer;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.gene.GeneRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(of = "new",
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HmfGenomeRegion implements GenomeRegion {
+public abstract class HmfGenomeRegion implements GeneRegion {
     @Override
     @NotNull
     @Value.Parameter
@@ -57,9 +57,4 @@ public abstract class HmfGenomeRegion implements GenomeRegion {
     @NotNull
     @Value.Parameter
     public abstract String entrezId();
-
-    @NotNull
-    public String transcript() {
-        return transcriptID() + "." + transcriptVersion();
-    }
 }

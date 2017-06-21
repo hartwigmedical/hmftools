@@ -38,5 +38,16 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
 
     default boolean overlaps(@NotNull final GenomeRegion other) {
         return other.chromosome().equals(chromosome()) && other.end() > start() && other.start() < end();
+        // TODO: Double check this could be replaced with "return overlappingBases(other) > 0;"
+    }
+
+    default long overlappingBases(@NotNull final GenomeRegion other) {
+        if (!chromosome().equals(other.chromosome())) {
+            return 0;
+        }
+
+        long minEnd = Math.min(end(), other.end());
+        long maxStart = Math.max(start(), other.start());
+        return Math.max(0, 1 + minEnd - maxStart);
     }
 }

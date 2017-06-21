@@ -7,20 +7,31 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 public class RegionZipper {
 
-    public static <S extends GenomeRegion, T extends GenomeRegion> void zip(List<S> left, List<T> right,
+    public static <S extends GenomeRegion, T extends GenomeRegion> void zip(List<S> primary, List<T> secondary,
             RegionZipperHandler<S, T> handler) {
 
+        String chromosome = "";
+
         int i = 0, j = 0;
-        while (i < left.size() || j < right.size()) {
+        while (i < primary.size() || j < secondary.size()) {
 
-            S myLeft = i < left.size() ? left.get(i) : null;
-            T myRight = j < right.size() ? right.get(j) : null;
+            S leftRegion = i < primary.size() ? primary.get(i) : null;
+            T rightRegion = j < secondary.size() ? secondary.get(j) : null;
 
-            if (myLeft == null || compare(myLeft, myRight) > 0) {
-                handler.right(myRight);
+            if (leftRegion == null || compare(leftRegion, rightRegion) > 0) {
+                assert rightRegion != null;
+                if (!rightRegion.chromosome().equals(chromosome)) {
+                    chromosome = rightRegion.chromosome();
+                    handler.chromosome(chromosome);
+                }
+                handler.secondary(rightRegion);
                 j++;
             } else {
-                handler.left(myLeft);
+                if (!leftRegion.chromosome().equals(chromosome)) {
+                    chromosome = leftRegion.chromosome();
+                    handler.chromosome(chromosome);
+                }
+                handler.primary(leftRegion);
                 i++;
             }
         }
@@ -46,5 +57,4 @@ public class RegionZipper {
 
         return 0;
     }
-
 }

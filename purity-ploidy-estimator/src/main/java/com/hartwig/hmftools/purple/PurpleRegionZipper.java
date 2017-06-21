@@ -32,12 +32,17 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
     }
 
     @Override
-    public void left(final PurpleCopyNumber region) {
+    public void chromosome(@NotNull final String chromosome) {
+        // Empty
+    }
+
+    @Override
+    public void primary(@NotNull final PurpleCopyNumber region) {
         consolidatedRegion = region;
     }
 
     @Override
-    public void right(final FittedRegion copyNumber) {
+    public void secondary(@NotNull final FittedRegion copyNumber) {
         if (consolidatedRegion != null && consolidatedRegion.overlaps(copyNumber)) {
             result.add(transform.apply(consolidatedRegion, copyNumber));
         } else {
