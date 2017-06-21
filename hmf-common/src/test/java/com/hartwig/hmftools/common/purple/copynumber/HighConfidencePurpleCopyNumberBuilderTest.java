@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberBuilder.isEven;
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberBuilder.purityAdjustedBAF;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.isEven;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.purityAdjustedBAF;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PurpleCopyNumberBuilderTest {
+public class HighConfidencePurpleCopyNumberBuilderTest {
     private static final double EPSILON = 1e-10;
 
     @Test
@@ -71,7 +71,7 @@ public class PurpleCopyNumberBuilderTest {
 
     @Test
     public void averageOnLengthUntilNonZeroBafCount() {
-        final PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(1, create(1, 100_000_000, 3));
+        final HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, create(1, 100_000_000, 3));
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(100_000_001, 200_000_000, 4));
@@ -86,7 +86,7 @@ public class PurpleCopyNumberBuilderTest {
 
     @Test
     public void averageOnLengthForNonZeroRatio() {
-        PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(1, create(1, 100, 3));
+        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, create(1, 100, 3));
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(101, 200, 0));
@@ -96,14 +96,14 @@ public class PurpleCopyNumberBuilderTest {
     @Test
     public void doNotIncludeZeroRatio() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(1, startRegion);
+        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.extendRegion(create(201, 300, 200, 1, 2));
         assertAverages(builder, 0.75, 2);
     }
 
-    private static void assertAverages(@NotNull PurpleCopyNumberBuilder victim, double expectedBAF,
+    private static void assertAverages(@NotNull HighConfidenceCopyNumberBuilder victim, double expectedBAF,
             double expectedRatio) {
         assertAverages(victim.build(), expectedBAF, expectedRatio);
     }

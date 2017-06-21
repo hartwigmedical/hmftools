@@ -25,7 +25,7 @@ class HighestConfidenceRegion {
 
     @NotNull
     private PurpleCopyNumber best(@NotNull FittedRegion region) {
-        return new PurpleCopyNumberBuilder(purity, region).build();
+        return new HighConfidenceCopyNumberBuilder(purity, region).build();
     }
 
 }

@@ -114,7 +114,7 @@ public class SmoothedRegionTest {
     }
 
     private FittedRegion createFittedCopyNumber(long start, long end, double copyNumber) {
-        return PurpleCopyNumberBuilderTest.create("1", start, end, 10, 0.5, copyNumber);
+        return HighConfidencePurpleCopyNumberBuilderTest.create("1", start, end, 10, 0.5, copyNumber);
     }
 
     private PurpleCopyNumber createRegion(long start, long end, double copyNumber) {

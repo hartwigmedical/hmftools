@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-class PurpleCopyNumberBuilder {
+class HighConfidenceCopyNumberBuilder {
 
     private final double purity;
     private final String chromosome;
@@ -26,7 +26,7 @@ class PurpleCopyNumberBuilder {
     private double sumWeightedCopyNumber;
     private double sumWeightedRefNormalisedCopyNumber;
 
-    PurpleCopyNumberBuilder(double purity, @NotNull final FittedRegion fittedRegion) {
+    HighConfidenceCopyNumberBuilder(double purity, @NotNull final FittedRegion fittedRegion) {
         this.purity = purity;
         this.chromosome = fittedRegion.chromosome();
         this.start = fittedRegion.start();

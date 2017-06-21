@@ -40,7 +40,7 @@ class SmoothedRegions {
     private void run() {
         if (!highConfidenceRegions.isEmpty()) {
             int largestIncludedIndex = -1;
-            PurpleCopyNumberBuilder currentBuilder;
+            HighConfidenceCopyNumberBuilder currentBuilder;
 
             for (int i = 0; i < highConfidenceRegions.size(); i++) {
                 final PurpleCopyNumber currentRegion = highConfidenceRegions.get(i);
@@ -48,7 +48,7 @@ class SmoothedRegions {
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new PurpleCopyNumberBuilder(purity, fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new HighConfidenceCopyNumberBuilder(purity, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -69,13 +69,13 @@ class SmoothedRegions {
             }
         } else {
             for (FittedRegion fittedRegion : fittedRegions) {
-                PurpleCopyNumberBuilder currentBuilder = new PurpleCopyNumberBuilder(purity, fittedRegion);
+                HighConfidenceCopyNumberBuilder currentBuilder = new HighConfidenceCopyNumberBuilder(purity, fittedRegion);
                 smoothedRegions.add(currentBuilder.build());
             }
         }
     }
 
-    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull PurpleCopyNumberBuilder builder) {
+    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull HighConfidenceCopyNumberBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, builder)) {
@@ -89,16 +89,16 @@ class SmoothedRegions {
     }
 
     @NotNull
-    private PurpleCopyNumberBuilder forwards(int startIndex, int endIndex,
-            final @NotNull PurpleCopyNumberBuilder builder) {
-        PurpleCopyNumberBuilder current = builder;
+    private HighConfidenceCopyNumberBuilder forwards(int startIndex, int endIndex,
+            final @NotNull HighConfidenceCopyNumberBuilder builder) {
+        HighConfidenceCopyNumberBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, current)) {
                 current.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(current.build());
-                current = new PurpleCopyNumberBuilder(purity, copyNumber);
+                current = new HighConfidenceCopyNumberBuilder(purity, copyNumber);
             }
         }
 
@@ -106,10 +106,10 @@ class SmoothedRegions {
     }
 
     @NotNull
-    private PurpleCopyNumberBuilder backwards(int startIndex, int endIndex,
-            @NotNull final PurpleCopyNumberBuilder forwardBuilder) {
+    private HighConfidenceCopyNumberBuilder backwards(int startIndex, int endIndex,
+            @NotNull final HighConfidenceCopyNumberBuilder forwardBuilder) {
         final Deque<PurpleCopyNumber> preRegions = new ArrayDeque<>();
-        PurpleCopyNumberBuilder reverseBuilder = forwardBuilder;
+        HighConfidenceCopyNumberBuilder reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
             final FittedRegion copyNumber = fittedRegions.get(i);
@@ -119,7 +119,7 @@ class SmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder.build());
                 }
-                reverseBuilder = new PurpleCopyNumberBuilder(purity, copyNumber);
+                reverseBuilder = new HighConfidenceCopyNumberBuilder(purity, copyNumber);
             }
         }
 
@@ -132,7 +132,7 @@ class SmoothedRegions {
     }
 
     private static boolean isSimilar(@NotNull final FittedRegion copyNumber,
-            @NotNull final PurpleCopyNumberBuilder builder) {
+            @NotNull final HighConfidenceCopyNumberBuilder builder) {
         int bafCount = copyNumber.bafCount();
         if (!isDiploid(copyNumber)) {
             return true;
