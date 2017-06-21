@@ -18,8 +18,7 @@ public class RegionZipper {
             S leftRegion = i < primary.size() ? primary.get(i) : null;
             T rightRegion = j < secondary.size() ? secondary.get(j) : null;
 
-            if (leftRegion == null || compare(leftRegion, rightRegion) > 0) {
-                assert rightRegion != null;
+            if (leftRegion == null || (rightRegion != null && compare(leftRegion, rightRegion) > 0)) {
                 if (!rightRegion.chromosome().equals(chromosome)) {
                     chromosome = rightRegion.chromosome();
                     handler.chromosome(chromosome);

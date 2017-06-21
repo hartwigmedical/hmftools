@@ -22,7 +22,8 @@ public class RegionZipperTest {
         final List<GenomeRegion> primary = Lists.newArrayList(
                 createRegion("1", 1, 100),
                 createRegion("1", 500, 1000),
-                createRegion("2", 500, 1000));
+                createRegion("2", 500, 1000),
+                createRegion("4", 500, 1000));
 
         final List<GenomeRegion> secondary = Lists.newArrayList(
                 createRegion("1", 500, 1000),
@@ -39,6 +40,8 @@ public class RegionZipperTest {
             handler.secondary(secondary.get(1));
             handler.chromosome("3");
             handler.secondary(secondary.get(2));
+            handler.chromosome("4");
+            handler.primary(primary.get(3));
         }};
 
         RegionZipper.zip(primary, secondary, handler);
