@@ -62,8 +62,7 @@ class SmoothedRegions {
                     smoothedRegions.add(currentBuilder.build());
                 } else {
                     int nextStartIndex = indexOfStart(endOfRegionIndex + 1, highConfidenceRegions.get(i + 1));
-                    largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1,
-                            currentBuilder);
+                    largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1, currentBuilder);
                     smoothedRegions.add(currentBuilder.build());
                 }
             }
@@ -89,8 +88,7 @@ class SmoothedRegions {
     }
 
     @NotNull
-    private HighConfidenceCopyNumberBuilder forwards(int startIndex, int endIndex,
-            final @NotNull HighConfidenceCopyNumberBuilder builder) {
+    private HighConfidenceCopyNumberBuilder forwards(int startIndex, int endIndex, final @NotNull HighConfidenceCopyNumberBuilder builder) {
         HighConfidenceCopyNumberBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
@@ -131,16 +129,14 @@ class SmoothedRegions {
         return forwardBuilder;
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion copyNumber,
-            @NotNull final HighConfidenceCopyNumberBuilder builder) {
+    private static boolean isSimilar(@NotNull final FittedRegion copyNumber, @NotNull final HighConfidenceCopyNumberBuilder builder) {
         int bafCount = copyNumber.bafCount();
         if (!isDiploid(copyNumber)) {
             return true;
         }
 
         double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        double refNormalisedCopyNumberDeviation = Math.abs(
-                copyNumber.refNormalisedCopyNumber() - builder.averageRefNormalisedCopyNumber());
+        double refNormalisedCopyNumberDeviation = Math.abs(copyNumber.refNormalisedCopyNumber() - builder.averageRefNormalisedCopyNumber());
         double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
         if (Doubles.greaterThan(copyNumberDeviation, allowedCopyNumberDeviation(bafCount))) {
             return false;
