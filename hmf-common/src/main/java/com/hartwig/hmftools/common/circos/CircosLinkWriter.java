@@ -42,11 +42,11 @@ public class CircosLinkWriter {
             case BND:
                 return "orange";
             case INS:
-                return "green";
-            case INV:
                 return "yellow";
+            case INV:
+                return "green";
             case DEL:
-                return "red";
+                return "blue";
             default:
                 return "black";
         }

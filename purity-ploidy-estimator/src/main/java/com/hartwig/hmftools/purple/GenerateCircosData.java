@@ -86,11 +86,11 @@ public class GenerateCircosData {
         }
 
         final List<StructuralVariant> structuralVariants = dbAccess.readStructuralVariants(sample);
+        CircosLinkWriter.writeVariants(dataOutput + File.separator + sample + ".link.circos", structuralVariants);
         if (structuralVariants.isEmpty()) {
             LOGGER.error("Structural Variants not available");
-        } else {
-            CircosLinkWriter.writeVariants(dataOutput + File.separator + sample + ".link.circos", structuralVariants);
         }
+
 
         final List<EnrichedSomaticVariant> enrichedSomaticVariants = EnrichedSomaticVariantFactory.create(purity, somaticVariants, copyNumber);
 
