@@ -204,3 +204,23 @@ CREATE TABLE structuralVariant
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
+
+DROP TABLE IF EXISTS geneCopyNumber;
+CREATE TABLE geneCopyNumber
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    start int not null,
+    end int not null,
+    gene varchar(255) NOT NULL,
+    chromosomeBand varchar(255) NOT NULL,
+    transcriptId varchar(255) NOT NULL,
+    transcriptVersion int not null,
+    minCopyNumber DOUBLE PRECISION not null,
+    maxCopyNumber DOUBLE PRECISION not null,
+    meanCopyNumber DOUBLE PRECISION not null,
+    regions int not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);

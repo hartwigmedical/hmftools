@@ -24,7 +24,7 @@ class GeneCopyNumberBuilder {
         count++;
         minCopyNumber = Math.min(minCopyNumber, copyNumber.averageTumorCopyNumber());
         maxCopyNumber = Math.max(maxCopyNumber, copyNumber.averageTumorCopyNumber());
-        cumulativeCopyNumber = gene.overlappingBases(copyNumber) * copyNumber.averageTumorCopyNumber();
+        cumulativeCopyNumber += gene.overlappingBases(copyNumber) * copyNumber.averageTumorCopyNumber();
     }
 
     @NotNull
