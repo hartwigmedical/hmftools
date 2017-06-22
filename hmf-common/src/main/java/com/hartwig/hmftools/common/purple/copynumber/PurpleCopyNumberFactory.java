@@ -34,7 +34,7 @@ public class PurpleCopyNumberFactory {
             final List<PurpleCopyNumber> highConfidence = highConfidence(chromosome, chromosomeFittedRegions);
             highConfidenceRegions.addAll(highConfidence);
 
-            final List<PurpleCopyNumber> smooth = new SmoothedRegions(purity, highConfidence, chromosomeFittedRegions).getSmoothedRegions();
+            final List<PurpleCopyNumber> smooth = new HighConfidenceSmoothedRegions(purity, highConfidence, chromosomeFittedRegions).getSmoothedRegions();
             smoothedRegions.addAll(RegionStepFilter.filter(smooth));
         }
     }

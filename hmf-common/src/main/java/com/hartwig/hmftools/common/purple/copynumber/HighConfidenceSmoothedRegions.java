@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class SmoothedRegions {
+class HighConfidenceSmoothedRegions {
 
     private static final double DIPLOID_MIN_RATIO = 0.75;
     private static final double DIPLOID_MAX_RATIO = 1.25;
@@ -23,7 +23,7 @@ class SmoothedRegions {
     private final List<PurpleCopyNumber> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
 
-    SmoothedRegions(double purity, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
+    HighConfidenceSmoothedRegions(double purity, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
             @NotNull final List<FittedRegion> fittedRegions) {
         this.purity = purity;
         this.highConfidenceRegions = highConfidenceRegions;
