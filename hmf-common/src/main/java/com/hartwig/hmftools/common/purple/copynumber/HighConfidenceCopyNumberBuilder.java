@@ -35,7 +35,8 @@ class HighConfidenceCopyNumberBuilder extends BaseCopyNumberBuilder {
         return totalCopyNumberWeight == 0 ? 0 : sumWeightedCopyNumber / totalCopyNumberWeight;
     }
 
-    double averageRefNormalisedCopyNumber() {
+    @Override
+    public double averageRefNormalisedCopyNumber() {
         return totalCopyNumberWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalCopyNumberWeight;
     }
 

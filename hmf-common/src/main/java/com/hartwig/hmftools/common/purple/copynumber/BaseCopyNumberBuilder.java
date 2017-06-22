@@ -34,9 +34,7 @@ abstract class BaseCopyNumberBuilder {
 
     public abstract double averageTumorCopyNumber();
 
-    public long bases() {
-        return 1 + end - start;
-    }
+    public abstract double  averageRefNormalisedCopyNumber();
 
     void extendRegion(@NotNull final FittedRegion value) {
         assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";

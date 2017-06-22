@@ -11,12 +11,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class HighConfidenceSmoothedRegions {
-
-    private static final double DIPLOID_MIN_RATIO = 0.75;
-    private static final double DIPLOID_MAX_RATIO = 1.25;
-    private static final double MIN_COPY_NUMBER_RANGE = 0.3;
-    private static final double MAX_COPY_NUMBER_RANGE = 1.3;
+class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
 
     private final double purity;
     private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
@@ -33,7 +28,7 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    List<PurpleCopyNumber> getSmoothedRegions() {
+    List<PurpleCopyNumber> smoothedRegions() {
         return smoothedRegions;
     }
 
@@ -65,11 +60,6 @@ class HighConfidenceSmoothedRegions {
                     largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1, currentBuilder);
                     smoothedRegions.add(currentBuilder.build());
                 }
-            }
-        } else {
-            for (FittedRegion fittedRegion : fittedRegions) {
-                HighConfidenceCopyNumberBuilder currentBuilder = new HighConfidenceCopyNumberBuilder(purity, fittedRegion);
-                smoothedRegions.add(currentBuilder.build());
             }
         }
     }
@@ -154,18 +144,6 @@ class HighConfidenceSmoothedRegions {
 
     static double allowedBAFDeviation(int bafCount) {
         return 1d / Math.pow(Math.max(1, bafCount), 0.95) * 0.38 + 0.022;
-    }
-
-    static double allowedCopyNumberDeviation(int bafCount) {
-        if (bafCount >= 10) {
-            return MIN_COPY_NUMBER_RANGE;
-        }
-        return (MIN_COPY_NUMBER_RANGE - MAX_COPY_NUMBER_RANGE) / 10 * bafCount + MAX_COPY_NUMBER_RANGE;
-    }
-
-    private static boolean isDiploid(@NotNull final FittedRegion copyNumber) {
-        return Doubles.greaterOrEqual(copyNumber.observedNormalRatio(), DIPLOID_MIN_RATIO) && Doubles.lessOrEqual(
-                copyNumber.observedNormalRatio(), DIPLOID_MAX_RATIO);
     }
 
     private int indexOfEnd(int minIndex, @NotNull PurpleCopyNumber region) {

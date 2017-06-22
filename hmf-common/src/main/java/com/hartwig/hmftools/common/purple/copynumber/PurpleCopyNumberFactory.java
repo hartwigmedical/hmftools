@@ -26,15 +26,22 @@ public class PurpleCopyNumberFactory {
         smoothedRegions = Lists.newArrayList();
         highConfidenceRegions = Lists.newArrayList();
 
-        final Set<String> orderedChromosomes = fittedRegions.stream().map(GenomeRegion::chromosome).collect(Collectors.toCollection(LinkedHashSet::new));
+        final Set<String> orderedChromosomes = fittedRegions.stream()
+                .map(GenomeRegion::chromosome)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         for (String chromosome : orderedChromosomes) {
-            final List<FittedRegion> chromosomeFittedRegions = fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
+            final List<FittedRegion> chromosomeFittedRegions = fittedRegions.stream()
+                    .filter(matchesChromosome(chromosome))
+                    .collect(toList());
 
             final List<PurpleCopyNumber> highConfidence = highConfidence(chromosome, chromosomeFittedRegions);
             highConfidenceRegions.addAll(highConfidence);
 
-            final List<PurpleCopyNumber> smooth = new HighConfidenceSmoothedRegions(purity, highConfidence, chromosomeFittedRegions).getSmoothedRegions();
+            final List<PurpleCopyNumber> smooth = highConfidence.isEmpty()
+                    ? new LowConfidenceSmoothedRegions(purity, chromosomeFittedRegions).smoothedRegions()
+                    : new HighConfidenceSmoothedRegions(purity, highConfidence, chromosomeFittedRegions).smoothedRegions();
+
             smoothedRegions.addAll(RegionStepFilter.filter(smooth));
         }
     }
@@ -50,7 +57,6 @@ public class PurpleCopyNumberFactory {
     private List<PurpleCopyNumber> highConfidence(final String chromosome, @NotNull final List<FittedRegion> fittedRegions) {
         return new HighConfidenceRegions(purity).highConfidence(fittedRegions);
     }
-
 
     @NotNull
     private static <T extends GenomeRegion> Predicate<T> matchesChromosome(@NotNull final String chromosome) {

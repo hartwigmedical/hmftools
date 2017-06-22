@@ -43,7 +43,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(301, 1000, 2),
                 createFittedCopyNumber(1001, 2000, 2));
 
-        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).getSmoothedRegions();
+        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(2, results.size());
 
         assertRegion(results.get(0), 1, 300, 1);
@@ -62,7 +62,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(2501, 3000, 3),
                 createFittedCopyNumber(3001, 4000, 3));
 
-        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).getSmoothedRegions();
+        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(3, results.size());
 
         assertRegion(results.get(0), 1001, 2200, 2);
@@ -82,7 +82,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(1331, 1440, 3),
                 createFittedCopyNumber(1441, 2000, 2));
 
-        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).getSmoothedRegions();
+        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(4, results.size());
 
         assertRegion(results.get(0), 1001, 1110, 2);
@@ -99,7 +99,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(2001, 3000, 2),
                 createFittedCopyNumber(3001, 5000, 5));
 
-        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).getSmoothedRegions();
+        final List<PurpleCopyNumber> results = new HighConfidenceSmoothedRegions(1, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(2, results.size());
 
         assertRegion(results.get(0), 1001, 3000, 2);
