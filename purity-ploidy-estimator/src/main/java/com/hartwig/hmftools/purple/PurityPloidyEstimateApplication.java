@@ -78,7 +78,7 @@ public class PurityPloidyEstimateApplication {
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
     private static final String PLOIDY_PENALTY_EXPONENT = "ploidy_penalty_exponent";
-    private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 0.85;
+    private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException, SQLException {
         final Options options = createOptions();
@@ -179,7 +179,7 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(PLOIDY_PENALTY_EXPONENT, true, "Ploidy penality exponent. Default 0.85");
+        options.addOption(PLOIDY_PENALTY_EXPONENT, true, "Ploidy penality exponent. Default 1");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
