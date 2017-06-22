@@ -79,7 +79,7 @@ public final class CopyNumberAnalyzer {
 
         long totalOverlap = 0L;
         for (final CopyNumber copyNumber : copyNumbers) {
-            final long overlap = overlappingBases(region, copyNumber);
+            final long overlap = region.overlappingBases(copyNumber);
             if (overlap > 0) {
                 minCopyNumber = Math.min(copyNumber.value(), minCopyNumber);
                 maxCopyNumber = Math.max(copyNumber.value(), maxCopyNumber);
@@ -97,11 +97,5 @@ public final class CopyNumberAnalyzer {
         }
 
         return new CopyNumberStats(minCopyNumber, maxCopyNumber, ((double) totalCopyNumber) / region.bases());
-    }
-
-    private static long overlappingBases(@NotNull final GenomeRegion region, @NotNull final CopyNumber copyNumber) {
-        long minEnd = Math.min(copyNumber.end(), region.end());
-        long maxStart = Math.max(copyNumber.start(), region.start());
-        return Math.max(0, 1 + minEnd - maxStart);
     }
 }
