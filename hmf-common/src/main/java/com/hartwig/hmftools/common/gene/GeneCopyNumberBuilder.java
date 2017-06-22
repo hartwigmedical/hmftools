@@ -21,10 +21,13 @@ class GeneCopyNumberBuilder {
     }
 
     void addCopyNumber(@NotNull final PurpleCopyNumber copyNumber) {
-        count++;
-        minCopyNumber = Math.min(minCopyNumber, copyNumber.averageTumorCopyNumber());
-        maxCopyNumber = Math.max(maxCopyNumber, copyNumber.averageTumorCopyNumber());
-        cumulativeCopyNumber += gene.overlappingBases(copyNumber) * copyNumber.averageTumorCopyNumber();
+        long overlap = gene.overlappingBases(copyNumber);
+        if (overlap > 0) {
+            count++;
+            minCopyNumber = Math.min(minCopyNumber, copyNumber.averageTumorCopyNumber());
+            maxCopyNumber = Math.max(maxCopyNumber, copyNumber.averageTumorCopyNumber());
+            cumulativeCopyNumber += overlap * copyNumber.averageTumorCopyNumber();
+        }
     }
 
     @NotNull
