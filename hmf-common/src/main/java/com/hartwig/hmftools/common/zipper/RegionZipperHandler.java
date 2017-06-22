@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public interface RegionZipperHandler<S extends GenomeRegion, T extends GenomeRegion> {
 
-    void chromosome(@NotNull String chromosome);
+    void enterChromosome(@NotNull String chromosome);
 
     void primary(@NotNull S region);
 

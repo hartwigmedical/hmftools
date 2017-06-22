@@ -31,16 +31,16 @@ public class RegionZipperTest {
                 createRegion("3", 500, 1000));
 
         new Expectations() {{
-            handler.chromosome("1");
+            handler.enterChromosome("1");
             handler.primary(primary.get(0));
             handler.primary(primary.get(1));
             handler.secondary(secondary.get(0));
-            handler.chromosome("2");
+            handler.enterChromosome("2");
             handler.primary(primary.get(2));
             handler.secondary(secondary.get(1));
-            handler.chromosome("3");
+            handler.enterChromosome("3");
             handler.secondary(secondary.get(2));
-            handler.chromosome("4");
+            handler.enterChromosome("4");
             handler.primary(primary.get(3));
         }};
 

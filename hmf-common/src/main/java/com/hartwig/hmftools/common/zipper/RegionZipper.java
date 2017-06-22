@@ -21,14 +21,14 @@ public class RegionZipper {
             if (leftRegion == null || (rightRegion != null && compare(leftRegion, rightRegion) > 0)) {
                 if (!rightRegion.chromosome().equals(chromosome)) {
                     chromosome = rightRegion.chromosome();
-                    handler.chromosome(chromosome);
+                    handler.enterChromosome(chromosome);
                 }
                 handler.secondary(rightRegion);
                 j++;
             } else {
                 if (!leftRegion.chromosome().equals(chromosome)) {
                     chromosome = leftRegion.chromosome();
-                    handler.chromosome(chromosome);
+                    handler.enterChromosome(chromosome);
                 }
                 handler.primary(leftRegion);
                 i++;

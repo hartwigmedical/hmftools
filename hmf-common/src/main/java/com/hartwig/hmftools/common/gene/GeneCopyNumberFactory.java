@@ -38,7 +38,7 @@ public class GeneCopyNumberFactory implements RegionZipperHandler<PurpleCopyNumb
     }
 
     @Override
-    public void chromosome(@NotNull final String chromosome) {
+    public void enterChromosome(@NotNull final String chromosome) {
         finialiseBuilder();
         current = null;
     }

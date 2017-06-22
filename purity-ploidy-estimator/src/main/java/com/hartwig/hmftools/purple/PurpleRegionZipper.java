@@ -32,7 +32,7 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
     }
 
     @Override
-    public void chromosome(@NotNull final String chromosome) {
+    public void enterChromosome(@NotNull final String chromosome) {
         // Empty
     }
 
