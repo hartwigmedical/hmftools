@@ -20,7 +20,7 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void expectedFit() {
-        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, 0.85);
+        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, 1, 1);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
@@ -111,8 +111,7 @@ public class FittedRegionFactoryTest {
         assertEquals(0.02, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
     }
 
-    private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy,
-            double actualBAF) {
+    private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy, double actualBAF) {
         assertEquals(expectedBAF, modelBAFToMinimizeDeviation(purity, ploidy, actualBAF)[0], EPSILON);
     }
 
@@ -120,8 +119,7 @@ public class FittedRegionFactoryTest {
         assertEquals(expectedBAF, modelBAF(purity, ploidy, betaAllele), EPSILON);
     }
 
-    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio,
-            double tumorRatio) {
+    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio, double tumorRatio) {
         assertEquals(expectedDeviation, cnvDeviation(cnvRatioWeighFactor, modelCNVRatio, tumorRatio), EPSILON);
     }
 

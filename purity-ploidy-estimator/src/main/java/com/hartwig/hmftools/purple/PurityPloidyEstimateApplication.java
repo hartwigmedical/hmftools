@@ -86,6 +86,9 @@ public class PurityPloidyEstimateApplication {
     private static final String PLOIDY_PENALTY_EXPONENT = "ploidy_penalty_exponent";
     private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 1;
 
+    private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
+    private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
+
     public static void main(final String... args) throws ParseException, IOException, HartwigException, SQLException {
         new PurityPloidyEstimateApplication(args);
     }
@@ -124,7 +127,8 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
         final double ploidyPenaltyExponent = defaultValue(cmd, PLOIDY_PENALTY_EXPONENT, PLOIDY_PENALTY_EXPONENT_DEFAULT);
-        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExponent);
+        final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
+        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExponent, observedBafExponent);
 
         LOGGER.info("Fitting purity");
         final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
@@ -198,6 +202,7 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPONENT, true, "Ploidy penality exponent. Default 1");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
