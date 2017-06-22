@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCo
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +13,10 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -29,6 +33,8 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
@@ -81,6 +87,10 @@ public class PurityPloidyEstimateApplication {
     private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException, SQLException {
+        new PurityPloidyEstimateApplication(args);
+    }
+
+    private PurityPloidyEstimateApplication(final String... args) throws ParseException, IOException, HartwigException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -106,8 +116,8 @@ public class PurityPloidyEstimateApplication {
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
-        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH,
-                MAX_COMBINED_DEPTH);
+        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY,
+                MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
         final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants, tumorRatio, normalRatio);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
@@ -119,8 +129,8 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Fitting purity");
         final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
         final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, minPurity, maxPurity, PURITY_INCREMENTS, MIN_NORM_FACTOR,
-                MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedRegionFactory, observedRegions);
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, minPurity, maxPurity, PURITY_INCREMENTS,
+                MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedRegionFactory, observedRegions);
 
         Optional<FittedPurity> optionalBestFit = fittedPurityFactory.bestFit();
         if (optionalBestFit.isPresent()) {
@@ -140,6 +150,7 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writePurity(tumorSample, score, fittedPurityFactory.bestFitPerPurity());
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
+                dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers(smoothRegions));
             }
 
             final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
@@ -152,6 +163,12 @@ public class PurityPloidyEstimateApplication {
         }
 
         LOGGER.info("Complete");
+    }
+
+    private List<GeneCopyNumber> geneCopyNumbers(List<PurpleCopyNumber> copyNumbers) throws IOException, EmptyFileException {
+        final InputStream inputStream = getClass().getResourceAsStream("/bed/hmf_gene_panel.tsv");
+        final List<HmfGenomeRegion> hmgGenomeRegions = HmfSlicerFileLoader.fromInputStream(inputStream);
+        return GeneCopyNumberFactory.geneCopyNumbers(hmgGenomeRegions, copyNumbers);
     }
 
     @NotNull
@@ -170,9 +187,11 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static String freecDirectory(@NotNull final CommandLine cmd, @NotNull final String runDirectory, @NotNull final String refSample,
-            @NotNull final String tumorSample) {
-        return cmd.hasOption(FREEC_DIRECTORY) ? cmd.getOptionValue(FREEC_DIRECTORY) : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
+    private static String freecDirectory(@NotNull final CommandLine cmd, @NotNull final String runDirectory,
+            @NotNull final String refSample, @NotNull final String tumorSample) {
+        return cmd.hasOption(FREEC_DIRECTORY)
+                ? cmd.getOptionValue(FREEC_DIRECTORY)
+                : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
     }
 
     @NotNull
