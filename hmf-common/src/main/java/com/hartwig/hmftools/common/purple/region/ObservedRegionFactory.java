@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegmentSource;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
@@ -31,8 +32,8 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     private final RatioAccumulator tumorRatio = new RatioAccumulator();
     private final RatioAccumulator normalRatio = new RatioAccumulator();
 
-    public ObservedRegionFactory(final double minRefAlleleFrequency, final double maxRefAlleleFrequency,
-            final long minCombinedDepth, final long maxCombinedDepth) {
+    public ObservedRegionFactory(final double minRefAlleleFrequency, final double maxRefAlleleFrequency, final long minCombinedDepth,
+            final long maxCombinedDepth) {
         this.minRefAlleleFrequency = minRefAlleleFrequency;
         this.maxRefAlleleFrequency = maxRefAlleleFrequency;
         this.minCombinedDepth = minCombinedDepth;
@@ -40,9 +41,8 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     }
 
     @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<GenomeRegion> regions,
-            @NotNull final List<GermlineVariant> variants, @NotNull final List<FreecRatio> tumorRatios,
-            @NotNull final List<FreecRatio> normalRatios) {
+    public List<ObservedRegion> combine(@NotNull final List<GenomeRegion> regions, @NotNull final List<GermlineVariant> variants,
+            @NotNull final List<FreecRatio> tumorRatios, @NotNull final List<FreecRatio> normalRatios) {
         baf.reset();
         tumorRatio.reset();
         normalRatio.reset();
@@ -68,19 +68,23 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     public void exit(@NotNull final GenomeRegion region) {
         double myTumorRatio = tumorRatio.meanRatio();
         double myNormalRatio = normalRatio.meanRatio();
-        final EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder().from(region).bafCount(
-                baf.count()).observedBAF(baf.medianBaf()).observedTumorRatio(myTumorRatio).observedNormalRatio(
-                myNormalRatio).build();
+        final EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder()
+                .from(region)
+                .bafCount(baf.count())
+                .observedBAF(baf.medianBaf())
+                .observedTumorRatio(myTumorRatio)
+                .observedNormalRatio(myNormalRatio)
+                .source(PurpleSegmentSource.FREEC)
+                .build();
 
         result.add(copyNumber);
     }
 
     private void variant(@NotNull final GermlineVariant variant) {
         final GermlineSampleData tumorData = variant.tumorData();
-        if (tumorData == null || !HETEROZYGOUS_GENO_TYPES.contains(variant.refData().genoType())
-                || variant.type() != VariantType.SNP || variant.refData().alleleFrequency() <= minRefAlleleFrequency
-                || variant.refData().alleleFrequency() >= maxRefAlleleFrequency
-                || variant.refData().combinedDepth() <= minCombinedDepth
+        if (tumorData == null || !HETEROZYGOUS_GENO_TYPES.contains(variant.refData().genoType()) || variant.type() != VariantType.SNP
+                || variant.refData().alleleFrequency() <= minRefAlleleFrequency
+                || variant.refData().alleleFrequency() >= maxRefAlleleFrequency || variant.refData().combinedDepth() <= minCombinedDepth
                 || variant.refData().combinedDepth() >= maxCombinedDepth) {
             return;
         }
@@ -111,9 +115,7 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
         private double medianBaf() {
             if (count > 0) {
                 Collections.sort(bafs);
-                return bafs.size() % 2 == 0 ?
-                        (bafs.get(count / 2) + bafs.get(count / 2 - 1)) / 2 :
-                        bafs.get(count / 2);
+                return bafs.size() % 2 == 0 ? (bafs.get(count / 2) + bafs.get(count / 2 - 1)) / 2 : bafs.get(count / 2);
             }
             return 0;
         }

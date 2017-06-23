@@ -173,6 +173,7 @@ CREATE TABLE copyNumberRegion
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
+    source varchar(255) NOT NULL,
     bafCount int not null,
     observedBaf DOUBLE PRECISION not null,
     observedTumorRatio DOUBLE PRECISION not null,

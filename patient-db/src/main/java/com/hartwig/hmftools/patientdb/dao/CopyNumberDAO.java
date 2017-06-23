@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStep20;
 import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -58,19 +58,32 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(COPYNUMBER, COPYNUMBER.SAMPLEID, COPYNUMBER.CHROMOSOME,
-                    COPYNUMBER.START, COPYNUMBER.END, COPYNUMBER.BAFCOUNT, COPYNUMBER.OBSERVEDBAF,
-                    COPYNUMBER.ACTUALBAF, COPYNUMBER.COPYNUMBER_, COPYNUMBER.MODIFIED);
+            InsertValuesStep9 inserter = context.insertInto(COPYNUMBER,
+                    COPYNUMBER.SAMPLEID,
+                    COPYNUMBER.CHROMOSOME,
+                    COPYNUMBER.START,
+                    COPYNUMBER.END,
+                    COPYNUMBER.BAFCOUNT,
+                    COPYNUMBER.OBSERVEDBAF,
+                    COPYNUMBER.ACTUALBAF,
+                    COPYNUMBER.COPYNUMBER_,
+                    COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
 
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep9 inserter, String sample,
-            PurpleCopyNumber region) {
-        inserter.values(sample, region.chromosome(), region.start(), region.end(), region.bafCount(),
-                region.averageObservedBAF(), region.averageActualBAF(), region.averageTumorCopyNumber(), timestamp);
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep9 inserter, String sample, PurpleCopyNumber region) {
+        inserter.values(sample,
+                region.chromosome(),
+                region.start(),
+                region.end(),
+                region.bafCount(),
+                region.averageObservedBAF(),
+                region.averageActualBAF(),
+                region.averageTumorCopyNumber(),
+                timestamp);
     }
 
     void writeCopyNumberRegions(@NotNull final String sample, @NotNull List<FittedRegion> regions) {
@@ -78,25 +91,52 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();
 
         for (List<FittedRegion> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep19 inserter = context.insertInto(COPYNUMBERREGION, COPYNUMBERREGION.SAMPLEID,
-                    COPYNUMBERREGION.CHROMOSOME, COPYNUMBERREGION.START, COPYNUMBERREGION.END,
-                    COPYNUMBERREGION.BAFCOUNT, COPYNUMBERREGION.OBSERVEDBAF, COPYNUMBERREGION.OBSERVEDTUMORRATIO,
-                    COPYNUMBERREGION.OBSERVEDNORMALRATIO, COPYNUMBERREGION.MODELPLOIDY, COPYNUMBERREGION.MODELBAF,
-                    COPYNUMBERREGION.MODELTUMORRATIO, COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER,
-                    COPYNUMBERREGION.CNVDEVIATION, COPYNUMBERREGION.BAFDEVIATION, COPYNUMBERREGION.HIGHCONFIDENCEBAF,
-                    COPYNUMBERREGION.HIGHCONFIDENCECOPYNUMBER, COPYNUMBERREGION.FITTEDBAF,
-                    COPYNUMBERREGION.FITTEDCOPYNUMBER, COPYNUMBERREGION.MODIFIED);
+            InsertValuesStep20 inserter = context.insertInto(COPYNUMBERREGION,
+                    COPYNUMBERREGION.SAMPLEID,
+                    COPYNUMBERREGION.CHROMOSOME,
+                    COPYNUMBERREGION.START,
+                    COPYNUMBERREGION.END,
+                    COPYNUMBERREGION.SOURCE,
+                    COPYNUMBERREGION.BAFCOUNT,
+                    COPYNUMBERREGION.OBSERVEDBAF,
+                    COPYNUMBERREGION.OBSERVEDTUMORRATIO,
+                    COPYNUMBERREGION.OBSERVEDNORMALRATIO,
+                    COPYNUMBERREGION.MODELPLOIDY,
+                    COPYNUMBERREGION.MODELBAF,
+                    COPYNUMBERREGION.MODELTUMORRATIO,
+                    COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER,
+                    COPYNUMBERREGION.CNVDEVIATION,
+                    COPYNUMBERREGION.BAFDEVIATION,
+                    COPYNUMBERREGION.HIGHCONFIDENCEBAF,
+                    COPYNUMBERREGION.HIGHCONFIDENCECOPYNUMBER,
+                    COPYNUMBERREGION.FITTEDBAF,
+                    COPYNUMBERREGION.FITTEDCOPYNUMBER,
+                    COPYNUMBERREGION.MODIFIED);
             splitRegions.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep19 inserter, String sample,
-            FittedRegion region) {
-        inserter.values(sample, region.chromosome(), region.start(), region.end(), region.bafCount(),
-                region.observedBAF(), region.observedTumorRatio(), region.observedNormalRatio(), region.fittedPloidy(),
-                region.modelBAF(), region.modelTumorRatio(), region.tumorCopyNumber(), region.cnvDeviation(),
-                region.bafDeviation(), region.broadBAF(), region.broadTumorCopyNumber(), region.segmentBAF(),
-                region.segmentTumorCopyNumber(), timestamp);
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep20 inserter, String sample, FittedRegion region) {
+        inserter.values(sample,
+                region.chromosome(),
+                region.start(),
+                region.end(),
+                region.source(),
+                region.bafCount(),
+                region.observedBAF(),
+                region.observedTumorRatio(),
+                region.observedNormalRatio(),
+                region.fittedPloidy(),
+                region.modelBAF(),
+                region.modelTumorRatio(),
+                region.tumorCopyNumber(),
+                region.cnvDeviation(),
+                region.bafDeviation(),
+                region.broadBAF(),
+                region.broadTumorCopyNumber(),
+                region.segmentBAF(),
+                region.segmentTumorCopyNumber(),
+                timestamp);
     }
 }

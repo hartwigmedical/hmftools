@@ -1,26 +1,27 @@
-package com.hartwig.hmftools.common.variant.structural;
+package com.hartwig.hmftools.common.purple.segment;
 
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
-public class StructuralVariantPositionFactory {
+class StructuralVariantSegments {
 
     private static final long MIN_BASES = 2000;
 
-    public static List<StructuralVariantPosition> create(List<StructuralVariant> variants) {
-        final List<StructuralVariantPosition> positions = Lists.newArrayList();
+    public static List<StructuralVariantSegment> create(List<StructuralVariant> variants) {
+        final List<StructuralVariantSegment> positions = Lists.newArrayList();
         for (StructuralVariant variant : variants) {
             if (include(variant)) {
 
-                positions.add(ImmutableStructuralVariantPosition.builder()
+                positions.add(ImmutableStructuralVariantSegment.builder()
                         .chromosome(variant.startChromosome())
                         .position(variant.startPosition())
                         .type(variant.type())
                         .build());
 
-                positions.add(ImmutableStructuralVariantPosition.builder()
+                positions.add(ImmutableStructuralVariantSegment.builder()
                         .chromosome(variant.endChromosome())
                         .position(variant.endPosition())
                         .type(variant.type())

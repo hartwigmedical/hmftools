@@ -39,8 +39,6 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantPosition;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantPositionFactory;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -88,8 +86,8 @@ public class PurityPloidyEstimateApplication {
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
-    private static final String STRUCTURAL_VCF_EXTENTION =  "structural_variant_extension";
-    private static final String STRUCTURAL_VCF_EXTENTION_DEFAULT =  "somaticSV.vcf.gz";
+    private static final String STRUCTURAL_VCF_EXTENTION = "structural_variant_extension";
+    private static final String STRUCTURAL_VCF_EXTENTION_DEFAULT = "somaticSV.vcf.gz";
 
     private static final String PLOIDY_PENALTY_EXPONENT = "ploidy_penalty_exponent";
     private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 1;
@@ -130,11 +128,10 @@ public class PurityPloidyEstimateApplication {
         final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
         LOGGER.info("Loading structural variants from {}", structuralVariantFile);
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantFile);
-        final List<StructuralVariantPosition> structuralVariantPositions = StructuralVariantPositionFactory.create(structuralVariants);
 
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
-        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY,
-                MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
+        final ObservedRegionFactory observedRegionFactory =
+                new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
         final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants, tumorRatio, normalRatio);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
@@ -142,13 +139,21 @@ public class PurityPloidyEstimateApplication {
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
         final double ploidyPenaltyExponent = defaultValue(cmd, PLOIDY_PENALTY_EXPONENT, PLOIDY_PENALTY_EXPONENT_DEFAULT);
         final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-        final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExponent, observedBafExponent);
+        final FittedRegionFactory fittedRegionFactory =
+                new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExponent, observedBafExponent);
 
         LOGGER.info("Fitting purity");
         final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
         final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY, minPurity, maxPurity, PURITY_INCREMENTS,
-                MIN_NORM_FACTOR, MAX_NORM_FACTOR, NORM_FACTOR_INCREMENTS, fittedRegionFactory, observedRegions);
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY,
+                minPurity,
+                maxPurity,
+                PURITY_INCREMENTS,
+                MIN_NORM_FACTOR,
+                MAX_NORM_FACTOR,
+                NORM_FACTOR_INCREMENTS,
+                fittedRegionFactory,
+                observedRegions);
 
         Optional<FittedPurity> optionalBestFit = fittedPurityFactory.bestFit();
         if (optionalBestFit.isPresent()) {
