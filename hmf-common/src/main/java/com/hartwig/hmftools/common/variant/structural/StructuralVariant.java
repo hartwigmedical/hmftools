@@ -16,5 +16,5 @@ public abstract class StructuralVariant {
 
     public abstract long endPosition();
 
-    public abstract StructualVariantType type();
+    public abstract StructuralVariantType type();
 }

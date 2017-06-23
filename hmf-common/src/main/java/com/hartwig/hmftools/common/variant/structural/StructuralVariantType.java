@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-public enum StructualVariantType {
+public enum StructuralVariantType {
 
     BND, INV, DEL, INS, DUP;
 
-    public static StructualVariantType fromAttribute(String svType) {
+    public static StructuralVariantType fromAttribute(String svType) {
         if (svType.startsWith("DUP")) {
             return DUP;
         }
-        return StructualVariantType.valueOf(svType);
+        return StructuralVariantType.valueOf(svType);
     }
 }
