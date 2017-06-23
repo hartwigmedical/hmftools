@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.sv;
+package com.hartwig.hmftools.purple.structural;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-class StructualVariantFactory {
+class StructuralVariantFactory {
 
     private static String TYPE = "SVTYPE";
     private static String MATE_ID = "MATEID";

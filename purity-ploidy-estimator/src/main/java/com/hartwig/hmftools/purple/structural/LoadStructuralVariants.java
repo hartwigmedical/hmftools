@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.sv;
+package com.hartwig.hmftools.purple.structural;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -37,7 +37,7 @@ public class LoadStructuralVariants {
         final CommandLine cmd = createCommandLine(args, options);
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
-        final StructualVariantFactory factory = new StructualVariantFactory();
+        final StructuralVariantFactory factory = new StructuralVariantFactory();
 
         LOGGER.info("Reading VCF File");
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(

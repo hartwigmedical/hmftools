@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
+import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -37,9 +38,11 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.purple.structural.StructuralVariantFileLoader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -83,6 +86,9 @@ public class PurityPloidyEstimateApplication {
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
+    private static final String STRUCTURAL_VCF_EXTENTION =  "structural_variant_extension";
+    private static final String STRUCTURAL_VCF_EXTENTION_DEFAULT =  "somaticSV.vcf.gz";
+
     private static final String PLOIDY_PENALTY_EXPONENT = "ploidy_penalty_exponent";
     private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 1;
 
@@ -117,6 +123,11 @@ public class PurityPloidyEstimateApplication {
         // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
+
+        final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
+        final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
+        LOGGER.info("Loading structural variants from {}", structuralVariantFile);
+        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantFile);
 
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY,
@@ -155,6 +166,7 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
                 dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers(smoothRegions));
+                dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
             }
 
             final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
