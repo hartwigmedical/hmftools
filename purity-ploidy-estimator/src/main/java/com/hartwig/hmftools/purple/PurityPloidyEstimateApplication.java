@@ -39,6 +39,8 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantPosition;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantPositionFactory;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -128,6 +130,7 @@ public class PurityPloidyEstimateApplication {
         final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
         LOGGER.info("Loading structural variants from {}", structuralVariantFile);
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantFile);
+        final List<StructuralVariantPosition> structuralVariantPositions = StructuralVariantPositionFactory.create(structuralVariants);
 
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY,
