@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.mode
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -25,7 +26,7 @@ public class FittedRegionFactoryTest {
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
-        assertEquals(0.011058009947947143, result.deviation(), EPSILON);
+        assertEquals(0.011751428571428583, result.deviation(), EPSILON);
     }
 
     @NotNull
@@ -38,6 +39,8 @@ public class FittedRegionFactoryTest {
                 .end(2)
                 .observedTumorRatio(ratio)
                 .observedNormalRatio(1)
+                .ratioSupport(true)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .build();
     }
 

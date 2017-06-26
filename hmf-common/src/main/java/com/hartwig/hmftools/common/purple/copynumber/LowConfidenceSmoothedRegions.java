@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -47,19 +46,7 @@ class LowConfidenceSmoothedRegions extends BaseSmoothedRegions {
     }
 
     private static boolean isSimilar(@NotNull final FittedRegion copyNumber, @NotNull final LowConfidenceCopyNumberBuilder builder) {
-        int bafCount = copyNumber.bafCount();
-        if (!isDiploid(copyNumber)) {
-            return true;
-        }
-
-        double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        double refNormalisedCopyNumberDeviation = Math.abs(copyNumber.refNormalisedCopyNumber() - builder.averageRefNormalisedCopyNumber());
-        double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
-        if (Doubles.greaterThan(copyNumberDeviation, allowedCopyNumberDeviation(bafCount))) {
-            return false;
-        }
-
-        return true;
+        return !isDiploid(copyNumber) || builder.withinCopyNumberTolerance(copyNumber);
     }
 
 }

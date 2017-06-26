@@ -12,6 +12,9 @@ import org.jetbrains.annotations.NotNull;
 
 abstract class BaseCopyNumberBuilder {
 
+    private static final double MIN_COPY_NUMBER_TOLERANCE = 0.3;
+    private static final double MAX_COPY_NUMBER_TOLERANCE = 1.3;
+
     private final double purity;
     private final String chromosome;
     private long start = 1;
@@ -34,7 +37,16 @@ abstract class BaseCopyNumberBuilder {
 
     public abstract double averageTumorCopyNumber();
 
-    public abstract double  averageRefNormalisedCopyNumber();
+    abstract double averageRefNormalisedCopyNumber();
+
+    boolean withinCopyNumberTolerance(@NotNull final FittedRegion copyNumber) {
+        int bafCount = copyNumber.bafCount();
+
+        double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - averageTumorCopyNumber());
+        double refNormalisedCopyNumberDeviation = Math.abs(copyNumber.refNormalisedCopyNumber() - averageRefNormalisedCopyNumber());
+        double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
+        return Doubles.lessOrEqual(copyNumberDeviation, allowedCopyNumberDeviation(bafCount));
+    }
 
     void extendRegion(@NotNull final FittedRegion value) {
         assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
@@ -62,8 +74,7 @@ abstract class BaseCopyNumberBuilder {
             return observedBAF;
         }
 
-        double adjustedObservedBAF =
-                isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
+        double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
         return PurityAdjustment.purityAdjustedBAF(purity, copyNumber, adjustedObservedBAF);
     }
 
@@ -73,7 +84,14 @@ abstract class BaseCopyNumberBuilder {
         double decimal = copyNumber % 1d;
         double wholeNumber = copyNumber - decimal;
 
-        return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0
-                && Doubles.greaterOrEqual(decimal, 0.75));
+        return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0 && Doubles.greaterOrEqual(decimal,
+                0.75));
+    }
+
+    static double allowedCopyNumberDeviation(int bafCount) {
+        if (bafCount >= 10) {
+            return MIN_COPY_NUMBER_TOLERANCE;
+        }
+        return (MIN_COPY_NUMBER_TOLERANCE - MAX_COPY_NUMBER_TOLERANCE) / 10 * bafCount + MAX_COPY_NUMBER_TOLERANCE;
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.copynumber.BaseCopyNumberBuilder.allowedCopyNumberDeviation;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.isEven;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.purityAdjustedBAF;
 
@@ -10,12 +11,22 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class HighConfidencePurpleCopyNumberBuilderTest {
     private static final double EPSILON = 1e-10;
+
+    @Test
+    public void copyNumberAllowances() {
+        assertEquals(1.3, allowedCopyNumberDeviation(0), EPSILON);
+        assertEquals(0.8, allowedCopyNumberDeviation(5), EPSILON);
+        assertEquals(0.3, allowedCopyNumberDeviation(10), EPSILON);
+        assertEquals(0.3, allowedCopyNumberDeviation(50), EPSILON);
+    }
+
 
     @Test
     public void testIsEvenCopyNumber() {
@@ -145,6 +156,8 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
                 .modelTumorRatio(0)
                 .status(FreecStatus.UNKNOWN)
                 .refNormalisedCopyNumber(tumorCopyNumber)
+                .ratioSupport(true)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .bafDeviation(0)
                 .build();
     }

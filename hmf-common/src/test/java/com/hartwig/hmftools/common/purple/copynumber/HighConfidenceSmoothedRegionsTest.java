@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 import static com.hartwig.hmftools.common.numeric.Doubles.lessThan;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceSmoothedRegions.allowedBAFDeviation;
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceSmoothedRegions.allowedCopyNumberDeviation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -18,14 +17,6 @@ import org.junit.Test;
 public class HighConfidenceSmoothedRegionsTest {
 
     private static final double EPSILON = 1e-10;
-
-    @Test
-    public void copyNumberAllowances() {
-        assertEquals(1.3, allowedCopyNumberDeviation(0), EPSILON);
-        assertEquals(0.8, allowedCopyNumberDeviation(5), EPSILON);
-        assertEquals(0.3, allowedCopyNumberDeviation(10), EPSILON);
-        assertEquals(0.3, allowedCopyNumberDeviation(50), EPSILON);
-    }
 
     @Test
     public void bafAllowances() {

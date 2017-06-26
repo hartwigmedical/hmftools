@@ -125,10 +125,7 @@ class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
             return true;
         }
 
-        double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        double refNormalisedCopyNumberDeviation = Math.abs(copyNumber.refNormalisedCopyNumber() - builder.averageRefNormalisedCopyNumber());
-        double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
-        if (Doubles.greaterThan(copyNumberDeviation, allowedCopyNumberDeviation(bafCount))) {
+        if (!builder.withinCopyNumberTolerance(copyNumber)) {
             return false;
         }
 
