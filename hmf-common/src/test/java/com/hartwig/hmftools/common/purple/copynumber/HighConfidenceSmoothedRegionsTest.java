@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.junit.Test;
@@ -105,7 +106,12 @@ public class HighConfidenceSmoothedRegionsTest {
     }
 
     private FittedRegion createFittedCopyNumber(long start, long end, double copyNumber) {
-        return HighConfidencePurpleCopyNumberBuilderTest.create("1", start, end, 10, 0.5, copyNumber);
+        return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
+                .bafCount(10)
+                .observedBAF(0.5)
+                .tumorCopyNumber(copyNumber)
+                .refNormalisedCopyNumber(copyNumber)
+                .build();
     }
 
     private PurpleCopyNumber createRegion(long start, long end, double copyNumber) {

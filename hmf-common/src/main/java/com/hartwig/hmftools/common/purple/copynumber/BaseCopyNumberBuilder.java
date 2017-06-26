@@ -14,8 +14,10 @@ import org.jetbrains.annotations.NotNull;
 abstract class BaseCopyNumberBuilder {
 
     private static final double MIN_COPY_NUMBER_TOLERANCE = 0.3;
-    private static final double MAX_COPY_NUMBER_TOLERANCE = 1.3;
-    private static final double STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE = 0.7;
+    @VisibleForTesting
+    static final double MAX_COPY_NUMBER_TOLERANCE = 1.3;
+    @VisibleForTesting
+    static final double STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE = 0.7;
 
     private final double purity;
     private final String chromosome;
@@ -90,19 +92,6 @@ abstract class BaseCopyNumberBuilder {
 
         return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0 && Doubles.greaterOrEqual(decimal,
                 0.75));
-    }
-
-    @VisibleForTesting
-    @Deprecated
-    static double allowedCopyNumberDeviation(int bafCount) {
-        return allowedCopyNumberDeviation(bafCount, MAX_COPY_NUMBER_TOLERANCE);
-    }
-
-    static double allowedCopyNumberDeviation(int bafCount, double maxTolerance) {
-        if (bafCount >= 10) {
-            return MIN_COPY_NUMBER_TOLERANCE;
-        }
-        return (MIN_COPY_NUMBER_TOLERANCE - maxTolerance) / 10 * bafCount + maxTolerance;
     }
 
     boolean withinCopyNumberTolerance(@NotNull final FittedRegion copyNumber) {
