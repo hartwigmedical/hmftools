@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 class StructuralVariantPositions {
 
-    private static final long MIN_BASES = 2000;
+    private static final long MIN_BASES = 1000;
 
     public static List<StructuralVariantPosition> create(List<StructuralVariant> variants) {
         final List<StructuralVariantPosition> positions = Lists.newArrayList();

@@ -37,7 +37,7 @@ public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeReg
     }
 
     @VisibleForTesting
-    static final long MIN_BASES = 2001;
+    static final long MIN_BASES = 1001;
     private final List<PurpleSegment> segments;
 
     private String chromosome = null;
