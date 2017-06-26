@@ -41,7 +41,7 @@ class LowConfidenceCopyNumberBuilder extends BaseCopyNumberBuilder {
     }
 
     @Override
-    void extendRegion(@NotNull final FittedRegion value) {
+    public void extendRegion(@NotNull final FittedRegion value) {
         super.extendRegion(value);
 
         bafCount += value.bafCount();

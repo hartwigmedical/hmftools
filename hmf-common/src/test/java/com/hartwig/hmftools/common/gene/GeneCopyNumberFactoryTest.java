@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 
@@ -69,6 +70,8 @@ public class GeneCopyNumberFactoryTest {
                 .bafCount(0)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5)
+                .ratioSupport(true)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .build();
     }
 

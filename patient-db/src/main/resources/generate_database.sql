@@ -123,6 +123,8 @@ CREATE TABLE copyNumber
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
+    ratioSupport BOOLEAN NOT NULL,
+    structuralVariantSupport varchar(255) NOT NULL,
     bafCount int not null,
     observedBaf DOUBLE PRECISION not null,
     actualBaf DOUBLE PRECISION not null,

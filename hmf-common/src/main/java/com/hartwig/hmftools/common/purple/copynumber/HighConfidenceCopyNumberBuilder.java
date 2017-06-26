@@ -40,7 +40,7 @@ class HighConfidenceCopyNumberBuilder extends BaseCopyNumberBuilder {
         return totalCopyNumberWeight == 0 ? 0 : sumWeightedRefNormalisedCopyNumber / totalCopyNumberWeight;
     }
 
-    void extendRegion(@NotNull final FittedRegion value) {
+    public void extendRegion(@NotNull final FittedRegion value) {
         super.extendRegion(value);
 
         if (value.bafCount() > 0) {

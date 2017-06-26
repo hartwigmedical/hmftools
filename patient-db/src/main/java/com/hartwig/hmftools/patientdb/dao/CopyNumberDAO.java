@@ -14,11 +14,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep11;
 import org.jooq.InsertValuesStep21;
-import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -43,6 +44,8 @@ class CopyNumberDAO {
                     .start(record.getValue(COPYNUMBER.START))
                     .end(record.getValue(COPYNUMBER.END))
                     .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
+                    .ratioSupport(true)
+                    .structuralVariantSupport(StructuralVariantSupport.NONE)
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
@@ -58,11 +61,13 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(COPYNUMBER,
+            InsertValuesStep11 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
                     COPYNUMBER.END,
+                    COPYNUMBER.RATIOSUPPORT,
+                    COPYNUMBER.STRUCTURALVARIANTSUPPORT,
                     COPYNUMBER.BAFCOUNT,
                     COPYNUMBER.OBSERVEDBAF,
                     COPYNUMBER.ACTUALBAF,
@@ -74,11 +79,13 @@ class CopyNumberDAO {
 
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep9 inserter, String sample, PurpleCopyNumber region) {
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep11 inserter, String sample, PurpleCopyNumber region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.start(),
                 region.end(),
+                region.ratioSupport(),
+                region.structuralVariantSupport(),
                 region.bafCount(),
                 region.averageObservedBAF(),
                 region.averageActualBAF(),
