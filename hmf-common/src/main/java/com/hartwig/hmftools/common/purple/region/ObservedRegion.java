@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentSource;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 public interface ObservedRegion extends GenomeRegion {
 
-    PurpleSegmentSource source();
+    boolean ratioSupport();
+
+    StructuralVariantSupport structuralVariantSupport();
 
     int bafCount();
 

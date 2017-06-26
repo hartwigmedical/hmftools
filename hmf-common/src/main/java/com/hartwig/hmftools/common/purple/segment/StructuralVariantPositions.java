@@ -6,22 +6,22 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
-class StructuralVariantSegments {
+class StructuralVariantPositions {
 
     private static final long MIN_BASES = 2000;
 
-    public static List<StructuralVariantSegment> create(List<StructuralVariant> variants) {
-        final List<StructuralVariantSegment> positions = Lists.newArrayList();
+    public static List<StructuralVariantPosition> create(List<StructuralVariant> variants) {
+        final List<StructuralVariantPosition> positions = Lists.newArrayList();
         for (StructuralVariant variant : variants) {
             if (include(variant)) {
 
-                positions.add(ImmutableStructuralVariantSegment.builder()
+                positions.add(ImmutableStructuralVariantPosition.builder()
                         .chromosome(variant.startChromosome())
                         .position(variant.startPosition())
                         .type(variant.type())
                         .build());
 
-                positions.add(ImmutableStructuralVariantSegment.builder()
+                positions.add(ImmutableStructuralVariantPosition.builder()
                         .chromosome(variant.endChromosome())
                         .position(variant.endPosition())
                         .type(variant.type())

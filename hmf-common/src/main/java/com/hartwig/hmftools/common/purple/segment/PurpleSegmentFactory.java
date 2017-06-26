@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.common.purple.segment;
 
+import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.MULTIPLE;
+import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.NONE;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -13,12 +17,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeRegion> {
 
-    public static List<PurpleSegment> createSegmentsOuter(List<GenomeRegion> regions, List<StructuralVariant> variants) {
-        return createSegments(regions, StructuralVariantSegments.create(variants));
+    public static List<PurpleSegment> createSegments(List<GenomeRegion> regions, List<StructuralVariant> variants) {
+        return createSegmentsInner(regions, StructuralVariantPositions.create(variants));
+    }
+
+    public static List<PurpleSegment> createSegments(List<GenomeRegion> regions) {
+        return regions.stream()
+                .map(x -> ImmutablePurpleSegment.builder().from(x).ratioSupport(true).structuralVariantSupport(NONE).build())
+                .collect(Collectors.toList());
     }
 
     @VisibleForTesting
-    static List<PurpleSegment> createSegments(List<GenomeRegion> regions, List<StructuralVariantSegment> variants) {
+    static List<PurpleSegment> createSegmentsInner(List<GenomeRegion> regions, List<StructuralVariantPosition> variants) {
         final PurpleSegmentFactory factory = new PurpleSegmentFactory();
         final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(false, regions, factory);
         zipper.addPositions(variants, factory::variant);
@@ -39,7 +49,10 @@ public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeReg
     }
 
     @NotNull
-    private PurpleSegmentSource source = PurpleSegmentSource.FREEC;
+    private StructuralVariantSupport svStart = NONE;
+    @NotNull
+    private StructuralVariantSupport svEnd = NONE;
+    private boolean ratioSupport;
 
     @NotNull
     private List<PurpleSegment> segments() {
@@ -47,32 +60,55 @@ public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeReg
     }
 
     @Override
-    public void enter(final GenomeRegion region) {
-        chromosome = region.chromosome();
-        start = region.start();
-        end = region.end();
-        source = PurpleSegmentSource.FREEC;
+    public void chromosome(@NotNull final String chromosome) {
+        this.chromosome = chromosome;
+        svStart = NONE;
+        svEnd = NONE;
     }
 
     @Override
-    public void exit(final GenomeRegion region) {
-        insert(region.end());
+    public void enter(@NotNull final GenomeRegion region) {
+        start = region.start();
+        end = region.end();
+        ratioSupport = true;
     }
 
-    public void variant(final StructuralVariantSegment variant) {
+    @Override
+    public void exit(@NotNull final GenomeRegion region) {
+        insert(region.end());
+        if (!svEnd.equals(NONE)) {
+            svStart = svEnd;
+        } else {
+            svStart = NONE;
+        }
+        svEnd = NONE;
+    }
+
+    public void variant(final StructuralVariantPosition variant) {
 
         if (variant.position() - start < MIN_BASES) {
-            // do nothing
+            svStart = svSupport(svStart, variant);
         } else if (end - variant.position() < MIN_BASES) {
-            // do nothing
+            svEnd = svSupport(svEnd, variant);
         } else {
             insert(variant.position() - 1);
+            ratioSupport = false;
             start = variant.position();
-            source = PurpleSegmentSource.fromVariant(variant.type());
+            svStart = StructuralVariantSupport.fromVariant(variant.type());
         }
     }
 
+    private StructuralVariantSupport svSupport(StructuralVariantSupport current, StructuralVariantPosition variant) {
+        return current.equals(NONE) ? StructuralVariantSupport.fromVariant(variant.type()) : MULTIPLE;
+    }
+
     private void insert(long end) {
-        segments.add(ImmutablePurpleSegment.builder().chromosome(chromosome).start(start).end(end).source(source).build());
+        segments.add(ImmutablePurpleSegment.builder()
+                .chromosome(chromosome)
+                .start(start)
+                .end(end)
+                .ratioSupport(ratioSupport)
+                .structuralVariantSupport(svStart)
+                .build());
     }
 }

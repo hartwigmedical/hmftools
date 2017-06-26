@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleSegment implements GenomeRegion {
-    public abstract PurpleSegmentSource source();
+
+    public abstract boolean ratioSupport();
+
+    public abstract StructuralVariantSupport structuralVariantSupport();
 
 }

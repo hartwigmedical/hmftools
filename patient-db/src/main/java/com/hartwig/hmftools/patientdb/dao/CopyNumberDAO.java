@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep20;
+import org.jooq.InsertValuesStep21;
 import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -91,12 +91,13 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();
 
         for (List<FittedRegion> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep20 inserter = context.insertInto(COPYNUMBERREGION,
+            InsertValuesStep21 inserter = context.insertInto(COPYNUMBERREGION,
                     COPYNUMBERREGION.SAMPLEID,
                     COPYNUMBERREGION.CHROMOSOME,
                     COPYNUMBERREGION.START,
                     COPYNUMBERREGION.END,
-                    COPYNUMBERREGION.SOURCE,
+                    COPYNUMBERREGION.RATIOSUPPORT,
+                    COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT,
                     COPYNUMBERREGION.BAFCOUNT,
                     COPYNUMBERREGION.OBSERVEDBAF,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIO,
@@ -117,12 +118,13 @@ class CopyNumberDAO {
         }
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep20 inserter, String sample, FittedRegion region) {
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep21 inserter, String sample, FittedRegion region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.start(),
                 region.end(),
-                region.source(),
+                region.ratioSupport(),
+                region.structuralVariantSupport(),
                 region.bafCount(),
                 region.observedBAF(),
                 region.observedTumorRatio(),

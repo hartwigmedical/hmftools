@@ -8,8 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentSource;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -18,7 +17,7 @@ import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRegion> {
+public class ObservedRegionFactory implements GenomeZipperRegionHandler<PurpleSegment> {
 
     private static final Set<String> HETEROZYGOUS_GENO_TYPES = Sets.newHashSet("0/1", "0|1");
 
@@ -41,14 +40,14 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     }
 
     @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<GenomeRegion> regions, @NotNull final List<GermlineVariant> variants,
+    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final List<GermlineVariant> variants,
             @NotNull final List<FreecRatio> tumorRatios, @NotNull final List<FreecRatio> normalRatios) {
         baf.reset();
         tumorRatio.reset();
         normalRatio.reset();
         result.clear();
 
-        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(false, regions, this);
+        final GenomeZipper<PurpleSegment> zipper = new GenomeZipper<>(false, regions, this);
         zipper.addPositions(variants, this::variant);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
         zipper.addPositions(normalRatios, normalRatio::accumulate);
@@ -58,14 +57,19 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
     }
 
     @Override
-    public void enter(@NotNull final GenomeRegion region) {
+    public void chromosome(@NotNull final String chromosome) {
+
+    }
+
+    @Override
+    public void enter(@NotNull final PurpleSegment region) {
         baf.reset();
         tumorRatio.reset();
         normalRatio.reset();
     }
 
     @Override
-    public void exit(@NotNull final GenomeRegion region) {
+    public void exit(@NotNull final PurpleSegment region) {
         double myTumorRatio = tumorRatio.meanRatio();
         double myNormalRatio = normalRatio.meanRatio();
         final EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder()
@@ -74,7 +78,8 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<GenomeRe
                 .observedBAF(baf.medianBaf())
                 .observedTumorRatio(myTumorRatio)
                 .observedNormalRatio(myNormalRatio)
-                .source(PurpleSegmentSource.FREEC)
+                .ratioSupport(region.ratioSupport())
+                .structuralVariantSupport(region.structuralVariantSupport())
                 .build();
 
         result.add(copyNumber);

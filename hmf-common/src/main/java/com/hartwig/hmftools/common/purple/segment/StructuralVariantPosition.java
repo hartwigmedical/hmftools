@@ -9,6 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class StructuralVariantSegment implements GenomePosition {
+abstract class StructuralVariantPosition implements GenomePosition {
     public abstract StructuralVariantType type();
 }

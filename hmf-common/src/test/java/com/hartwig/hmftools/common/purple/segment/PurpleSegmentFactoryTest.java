@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.common.purple.segment;
 
-import static com.hartwig.hmftools.common.purple.segment.PurpleSegmentSource.BND;
-import static com.hartwig.hmftools.common.purple.segment.PurpleSegmentSource.FREEC;
+import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.BND;
+import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.DEL;
+import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.INS;
+import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.NONE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,85 +34,87 @@ public class PurpleSegmentFactoryTest {
 
     @Test
     public void testTooCloseToStartAndEnd() {
-        final StructuralVariantSegment variant1 = createVariant(1000, StructuralVariantType.BND);
-        final StructuralVariantSegment variant2 = createVariant(9000, StructuralVariantType.BND);
-        final List<StructuralVariantSegment> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, positions);
+        final StructuralVariantPosition variant1 = createVariant(1000, StructuralVariantType.BND);
+        final StructuralVariantPosition variant2 = createVariant(9000, StructuralVariantType.DEL);
+        final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
+        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
         assertEquals(3, segments.size());
-        assertPurpleSegment(segments.get(0), region1);
-        assertPurpleSegment(segments.get(1), region2);
-        assertPurpleSegment(segments.get(2), region3);
+        assertPurpleSegment(segments.get(0), region1, BND);
+        assertPurpleSegment(segments.get(1), region2, DEL);
+        assertPurpleSegment(segments.get(2), region3, NONE);
     }
 
     @Test
     public void testTooCloseToStart() {
-        final StructuralVariantSegment variant1 = createVariant(1000, StructuralVariantType.BND);
-        final StructuralVariantSegment variant2 = createVariant(7000, StructuralVariantType.BND);
-        final List<StructuralVariantSegment> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, positions);
+        final StructuralVariantPosition variant1 = createVariant(1000, StructuralVariantType.BND);
+        final StructuralVariantPosition variant2 = createVariant(7000, StructuralVariantType.INS);
+        final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
+        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
         assertEquals(4, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 6999, FREEC);
-        assertPurpleSegment(segments.get(1), 7000, 10000, BND);
-        assertPurpleSegment(segments.get(2), region2);
-        assertPurpleSegment(segments.get(3), region3);
+        assertPurpleSegment(segments.get(0), 1, 6999, true, BND);
+        assertPurpleSegment(segments.get(1), 7000, 10000, false, INS);
+        assertPurpleSegment(segments.get(2), region2, NONE);
+        assertPurpleSegment(segments.get(3), region3, NONE);
     }
 
     @Test
     public void testTooCloseToEnd() {
-        final StructuralVariantSegment variant1 = createVariant(4000, StructuralVariantType.BND);
-        final StructuralVariantSegment variant2 = createVariant(9000, StructuralVariantType.BND);
-        final List<StructuralVariantSegment> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, positions);
+        final StructuralVariantPosition variant1 = createVariant(4000, StructuralVariantType.BND);
+        final StructuralVariantPosition variant2 = createVariant(9000, StructuralVariantType.BND);
+        final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
+        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
         assertEquals(4, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 3999, FREEC);
-        assertPurpleSegment(segments.get(1), 4000, 10000, BND);
-        assertPurpleSegment(segments.get(2), region2);
-        assertPurpleSegment(segments.get(3), region3);
+        assertPurpleSegment(segments.get(0), 1, 3999, true, NONE);
+        assertPurpleSegment(segments.get(1), 4000, 10000, false, BND);
+        assertPurpleSegment(segments.get(2), region2, BND);
+        assertPurpleSegment(segments.get(3), region3, NONE);
     }
 
     @Test
     public void testVariantInRegion() {
-        final StructuralVariantSegment variant1 = createVariant(4000, StructuralVariantType.BND);
-        final StructuralVariantSegment variant2 = createVariant(7000, StructuralVariantType.BND);
-        final List<StructuralVariantSegment> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, positions);
+        final StructuralVariantPosition variant1 = createVariant(4000, StructuralVariantType.BND);
+        final StructuralVariantPosition variant2 = createVariant(7000, StructuralVariantType.BND);
+        final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
+        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
         assertEquals(5, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 3999, FREEC);
-        assertPurpleSegment(segments.get(1), 4000, 6999, BND);
-        assertPurpleSegment(segments.get(2), 7000, 10000, BND);
-        assertPurpleSegment(segments.get(3), region2);
-        assertPurpleSegment(segments.get(4), region3);
+        assertPurpleSegment(segments.get(0), 1, 3999, true, NONE);
+        assertPurpleSegment(segments.get(1), 4000, 6999, false, BND);
+        assertPurpleSegment(segments.get(2), 7000, 10000, false, BND);
+        assertPurpleSegment(segments.get(3), region2, NONE);
+        assertPurpleSegment(segments.get(4), region3, NONE);
     }
 
     @Test
     public void testVariantSpansRegions() {
-        final StructuralVariantSegment variant1 = createVariant(3000, StructuralVariantType.BND);
-        final StructuralVariantSegment variant2 = createVariant(25000, StructuralVariantType.BND);
-        final List<StructuralVariantSegment> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, positions);
+        final StructuralVariantPosition variant1 = createVariant(3000, StructuralVariantType.BND);
+        final StructuralVariantPosition variant2 = createVariant(25000, StructuralVariantType.BND);
+        final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
+        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
         assertEquals(5, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 2999, FREEC);
-        assertPurpleSegment(segments.get(1), 3000, 10000, BND);
-        assertPurpleSegment(segments.get(2), region2);
-        assertPurpleSegment(segments.get(3), 20001, 24999, FREEC);
-        assertPurpleSegment(segments.get(4), 25000, 30000, BND);
+        assertPurpleSegment(segments.get(0), 1, 2999, true, NONE);
+        assertPurpleSegment(segments.get(1), 3000, 10000, false, BND);
+        assertPurpleSegment(segments.get(2), region2, NONE);
+        assertPurpleSegment(segments.get(3), 20001, 24999, true, NONE);
+        assertPurpleSegment(segments.get(4), 25000, 30000, false, BND);
     }
 
-    private void assertPurpleSegment(final PurpleSegment victim, GenomeRegion region) {
+    private void assertPurpleSegment(final PurpleSegment victim, GenomeRegion region, StructuralVariantSupport variantSupport) {
         assertEquals(region.chromosome(), victim.chromosome());
         assertEquals(region.start(), victim.start());
         assertEquals(region.end(), victim.end());
-        assertEquals(FREEC, victim.source());
+        assertEquals(true, victim.ratioSupport());
+        assertEquals(variantSupport, victim.structuralVariantSupport());
     }
 
-    private void assertPurpleSegment(final PurpleSegment victim, long start, long end, PurpleSegmentSource type) {
+    private void assertPurpleSegment(final PurpleSegment victim, long start, long end, boolean ratioSupport, StructuralVariantSupport variantSupport) {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
-        assertEquals(type, victim.source());
+        assertEquals(ratioSupport, victim.ratioSupport());
+        assertEquals(variantSupport, victim.structuralVariantSupport());
     }
 
-    private static StructuralVariantSegment createVariant(long position, StructuralVariantType type) {
-        return ImmutableStructuralVariantSegment.builder().chromosome("1").position(position).type(type).build();
+    private static StructuralVariantPosition createVariant(long position, StructuralVariantType type) {
+        return ImmutableStructuralVariantPosition.builder().chromosome("1").position(position).type(type).build();
     }
 
     private static GenomeRegion createRegion(long start, long end) {

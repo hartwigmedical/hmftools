@@ -33,6 +33,8 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
@@ -71,6 +73,7 @@ public class PurityPloidyEstimateApplication {
     private static final double PURITY_INCREMENTS = 0.01;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
 
+    private static final String STRUCTURAL_VARIANTS = "sv";
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
     private static final String DB_ENABLED = "db_enabled";
@@ -129,10 +132,18 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Loading structural variants from {}", structuralVariantFile);
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantFile);
 
+        final List<PurpleSegment> segments;
+        if (cmd.hasOption(STRUCTURAL_VARIANTS)) {
+            LOGGER.info("Merging structual variants into freec segmentation");
+            segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
+        } else {
+            segments = PurpleSegmentFactory.createSegments(regions);
+        }
+
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
         final ObservedRegionFactory observedRegionFactory =
                 new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(regions, variants, tumorRatio, normalRatio);
+        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, variants, tumorRatio, normalRatio);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
@@ -222,6 +233,7 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(STRUCTURAL_VARIANTS, false, "Include structural variant supported segments");
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPONENT, true, "Ploidy penality exponent. Default 1");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");
