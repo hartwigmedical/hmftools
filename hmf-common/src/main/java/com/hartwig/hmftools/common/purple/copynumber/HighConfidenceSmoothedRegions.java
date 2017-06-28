@@ -11,19 +11,14 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class SmoothedRegions {
-
-    private static final double DIPLOID_MIN_RATIO = 0.75;
-    private static final double DIPLOID_MAX_RATIO = 1.25;
-    private static final double MIN_COPY_NUMBER_RANGE = 0.3;
-    private static final double MAX_COPY_NUMBER_RANGE = 1.3;
+class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
 
     private final double purity;
     private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
     private final List<PurpleCopyNumber> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
 
-    SmoothedRegions(double purity, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
+    HighConfidenceSmoothedRegions(double purity, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
             @NotNull final List<FittedRegion> fittedRegions) {
         this.purity = purity;
         this.highConfidenceRegions = highConfidenceRegions;
@@ -33,14 +28,14 @@ class SmoothedRegions {
     }
 
     @NotNull
-    List<PurpleCopyNumber> getSmoothedRegions() {
+    List<PurpleCopyNumber> smoothedRegions() {
         return smoothedRegions;
     }
 
     private void run() {
         if (!highConfidenceRegions.isEmpty()) {
             int largestIncludedIndex = -1;
-            PurpleCopyNumberBuilder currentBuilder;
+            HighConfidenceCopyNumberBuilder currentBuilder;
 
             for (int i = 0; i < highConfidenceRegions.size(); i++) {
                 final PurpleCopyNumber currentRegion = highConfidenceRegions.get(i);
@@ -48,7 +43,7 @@ class SmoothedRegions {
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new PurpleCopyNumberBuilder(purity, fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new HighConfidenceCopyNumberBuilder(purity, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -62,15 +57,14 @@ class SmoothedRegions {
                     smoothedRegions.add(currentBuilder.build());
                 } else {
                     int nextStartIndex = indexOfStart(endOfRegionIndex + 1, highConfidenceRegions.get(i + 1));
-                    largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1,
-                            currentBuilder);
+                    largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1, currentBuilder);
                     smoothedRegions.add(currentBuilder.build());
                 }
             }
         }
     }
 
-    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull PurpleCopyNumberBuilder builder) {
+    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull HighConfidenceCopyNumberBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, builder)) {
@@ -84,16 +78,15 @@ class SmoothedRegions {
     }
 
     @NotNull
-    private PurpleCopyNumberBuilder forwards(int startIndex, int endIndex,
-            final @NotNull PurpleCopyNumberBuilder builder) {
-        PurpleCopyNumberBuilder current = builder;
+    private HighConfidenceCopyNumberBuilder forwards(int startIndex, int endIndex, final @NotNull HighConfidenceCopyNumberBuilder builder) {
+        HighConfidenceCopyNumberBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, current)) {
                 current.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(current.build());
-                current = new PurpleCopyNumberBuilder(purity, copyNumber);
+                current = new HighConfidenceCopyNumberBuilder(purity, copyNumber);
             }
         }
 
@@ -101,10 +94,10 @@ class SmoothedRegions {
     }
 
     @NotNull
-    private PurpleCopyNumberBuilder backwards(int startIndex, int endIndex,
-            @NotNull final PurpleCopyNumberBuilder forwardBuilder) {
+    private HighConfidenceCopyNumberBuilder backwards(int startIndex, int endIndex,
+            @NotNull final HighConfidenceCopyNumberBuilder forwardBuilder) {
         final Deque<PurpleCopyNumber> preRegions = new ArrayDeque<>();
-        PurpleCopyNumberBuilder reverseBuilder = forwardBuilder;
+        HighConfidenceCopyNumberBuilder reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
             final FittedRegion copyNumber = fittedRegions.get(i);
@@ -114,7 +107,7 @@ class SmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder.build());
                 }
-                reverseBuilder = new PurpleCopyNumberBuilder(purity, copyNumber);
+                reverseBuilder = new HighConfidenceCopyNumberBuilder(purity, copyNumber);
             }
         }
 
@@ -126,18 +119,13 @@ class SmoothedRegions {
         return forwardBuilder;
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion copyNumber,
-            @NotNull final PurpleCopyNumberBuilder builder) {
+    private static boolean isSimilar(@NotNull final FittedRegion copyNumber, @NotNull final HighConfidenceCopyNumberBuilder builder) {
         int bafCount = copyNumber.bafCount();
         if (!isDiploid(copyNumber)) {
             return true;
         }
 
-        double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        double refNormalisedCopyNumberDeviation = Math.abs(
-                copyNumber.refNormalisedCopyNumber() - builder.averageRefNormalisedCopyNumber());
-        double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
-        if (Doubles.greaterThan(copyNumberDeviation, allowedCopyNumberDeviation(bafCount))) {
+        if (!builder.withinCopyNumberTolerance(copyNumber)) {
             return false;
         }
 
@@ -153,18 +141,6 @@ class SmoothedRegions {
 
     static double allowedBAFDeviation(int bafCount) {
         return 1d / Math.pow(Math.max(1, bafCount), 0.95) * 0.38 + 0.022;
-    }
-
-    static double allowedCopyNumberDeviation(int bafCount) {
-        if (bafCount >= 10) {
-            return MIN_COPY_NUMBER_RANGE;
-        }
-        return (MIN_COPY_NUMBER_RANGE - MAX_COPY_NUMBER_RANGE) / 10 * bafCount + MAX_COPY_NUMBER_RANGE;
-    }
-
-    private static boolean isDiploid(@NotNull final FittedRegion copyNumber) {
-        return Doubles.greaterOrEqual(copyNumber.observedNormalRatio(), DIPLOID_MIN_RATIO) && Doubles.lessOrEqual(
-                copyNumber.observedNormalRatio(), DIPLOID_MAX_RATIO);
     }
 
     private int indexOfEnd(int minIndex, @NotNull PurpleCopyNumber region) {

@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.mode
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -18,12 +21,12 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void expectedFit() {
-        final FittedRegionFactory victim = new FittedRegionFactory(12, 0.2);
+        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, 1, 1);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
-        assertEquals(0.011058009947947143, result.deviation(), EPSILON);
+        assertEquals(0.011751428571428583, result.deviation(), EPSILON);
     }
 
     @NotNull
@@ -36,6 +39,8 @@ public class FittedRegionFactoryTest {
                 .end(2)
                 .observedTumorRatio(ratio)
                 .observedNormalRatio(1)
+                .ratioSupport(true)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .build();
     }
 
@@ -109,8 +114,7 @@ public class FittedRegionFactoryTest {
         assertEquals(0.02, bafDeviation(NORMAL_BAF, NORMAL_BAF - 0.02), EPSILON);
     }
 
-    private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy,
-            double actualBAF) {
+    private static void assertModelBAFToMinimizeDeviation(double expectedBAF, double purity, int ploidy, double actualBAF) {
         assertEquals(expectedBAF, modelBAFToMinimizeDeviation(purity, ploidy, actualBAF)[0], EPSILON);
     }
 
@@ -118,8 +122,7 @@ public class FittedRegionFactoryTest {
         assertEquals(expectedBAF, modelBAF(purity, ploidy, betaAllele), EPSILON);
     }
 
-    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio,
-            double tumorRatio) {
+    private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio, double tumorRatio) {
         assertEquals(expectedDeviation, cnvDeviation(cnvRatioWeighFactor, modelCNVRatio, tumorRatio), EPSILON);
     }
 

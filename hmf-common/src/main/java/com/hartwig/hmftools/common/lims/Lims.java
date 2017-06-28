@@ -23,6 +23,9 @@ public final class Lims {
 
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
+    private static final String SAMPLE_BASE_REGEX = "[A-Z]+[0-9]+[A-Z]?";
+    private static final String SAMPLE_NUMBER_REGEX = "[0-9IVX]*";
+
     private Lims() {
     }
 
@@ -33,12 +36,11 @@ public final class Lims {
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines) {
             final String[] parts = line.split(",");
-            if (parts.length > 0) {
+            // MIVO: skip empty lines and invalid samples
+            if (parts.length > 0 && !parts[0].trim().equals("INVALID")) {
                 final String sample = parts[0].trim();
                 readLimsLine(sample, line, dateFormatter).ifPresent(
                         limsBiopsyData -> limsDataPerSample.put(sample, limsBiopsyData));
-            } else {
-                LOGGER.warn("SampleID missing from line: " + line + ". Skipping.");
             }
         }
         return new LimsModel(limsDataPerSample);
@@ -69,7 +71,6 @@ public final class Lims {
             LOGGER.warn("Invalid row found in lims csv: " + line);
             return Optional.empty();
         }
-
     }
 
     @Nullable
@@ -88,11 +89,11 @@ public final class Lims {
     }
 
     private static boolean isTumor(@NotNull final String sampleName) {
-        return sampleName.length() >= 13 && sampleName.toLowerCase().charAt(12) == 't';
+        return sampleName.matches(SAMPLE_BASE_REGEX + "T" + SAMPLE_NUMBER_REGEX);
     }
 
     private static boolean isReference(@NotNull final String sampleName) {
-        return sampleName.length() >= 13 && sampleName.toLowerCase().charAt(12) == 'r';
+        return sampleName.matches(SAMPLE_BASE_REGEX + "R" + SAMPLE_NUMBER_REGEX);
     }
 
     @Nullable

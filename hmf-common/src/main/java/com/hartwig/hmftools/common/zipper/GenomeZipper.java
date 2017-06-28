@@ -32,7 +32,14 @@ public class GenomeZipper<R extends GenomeRegion> {
     }
 
     public void zip() {
+        String chromosome = "";
+
         for (final R region : regions) {
+
+            if (!region.chromosome().equals(chromosome)) {
+                chromosome = region.chromosome();
+                regionHandler.chromosome(chromosome);
+            }
 
             if (includePositionsOutsideRegions) {
                 for (final InnerPosition<?> innerPosition : innerPositions) {

@@ -10,6 +10,18 @@ karyotype = data/karyotype/karyotype.human.txt
 
 chromosomes_units           = 1000000
 chromosomes_display_default = yes
+chromosomes                 = -EXCLUDE
+
+<links>
+    <link>
+        file          = SAMPLE.link.circos
+        color         = black_a5
+        radius        = 0.4r
+        bezier_radius = 0.1r
+        thickness     = 2
+        ribbon        = yes
+    </link>
+</links>
 
 # Default is to clip the data to range min/max.
 <plots>

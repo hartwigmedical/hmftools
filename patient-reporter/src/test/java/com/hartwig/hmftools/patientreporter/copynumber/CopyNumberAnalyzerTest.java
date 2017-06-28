@@ -21,6 +21,9 @@ public class CopyNumberAnalyzerTest {
     private static final String ENTREZ_ID = "11";
     private static final int TRANSCRIPT_VERSION = 1;
     private static final double EPSILON = 1.0e-10;
+    private static final String GENE_ID = "ENSG0000";
+    private static final long GENE_START = 1;
+    private static final long GENE_END = 42;
 
     @Test
     public void worksAsExpected() {
@@ -66,8 +69,8 @@ public class CopyNumberAnalyzerTest {
     @NotNull
     private static HmfGenomeRegion region(final long start, final long end, @NotNull final String transcriptId,
             @NotNull final String gene, @NotNull final String chromosomeBand) {
-        return new ImmutableHmfGenomeRegion(CHROMOSOME, start, end, transcriptId, TRANSCRIPT_VERSION, gene,
-                chromosomeBand, ENTREZ_ID);
+        return new ImmutableHmfGenomeRegion(CHROMOSOME, start, end, transcriptId, TRANSCRIPT_VERSION, gene, GENE_ID,
+                GENE_START, GENE_END, chromosomeBand, ENTREZ_ID);
     }
 
     @NotNull

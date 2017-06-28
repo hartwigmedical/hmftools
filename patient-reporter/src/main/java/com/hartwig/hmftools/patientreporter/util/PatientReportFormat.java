@@ -5,8 +5,8 @@ import org.jetbrains.annotations.Nullable;
 public enum PatientReportFormat {
     ;
 
-    public static String formatPercent(final @Nullable Double percentage) {
-        return formatPercent(percentage == null ? Double.NaN : percentage);
+    public static String formatNullablePercent(final @Nullable Double percentage) {
+        return percentage == null ? "Na" : formatPercent(percentage);
     }
 
     public static String formatPercent(final double percentage) {

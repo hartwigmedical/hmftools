@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.common.region.hmfslicer;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -25,8 +31,11 @@ public abstract class HmfSlicerFileLoader {
     private static final int TRANSCRIPT_ID_COLUMN = 3;
     private static final int TRANSCRIPT_VERSION_COLUMN = 4;
     private static final int GENE_COLUMN = 5;
-    private static final int CHROMOSOME_BAND_COLUMN = 6;
-    private static final int ENTREZ_ID_COLUMN = 7;
+    private static final int GENE_ID_COLUMN = 6;
+    private static final int GENE_START_COLUMN = 7;
+    private static final int GENE_END_COLUMN = 8;
+    private static final int CHROMOSOME_BAND_COLUMN = 9;
+    private static final int ENTREZ_ID_COLUMN = 10;
 
     private HmfSlicerFileLoader() {
     }
@@ -35,6 +44,20 @@ public abstract class HmfSlicerFileLoader {
     public static SortedSetMultimap<String, HmfGenomeRegion> fromHmfGenePanelFile(@NotNull String genePanelFile)
             throws IOException, EmptyFileException {
         final List<String> lines = FileReader.build().readLines(new File(genePanelFile).toPath());
+        return fromLines(lines);
+    }
+
+    @NotNull
+    public static List<HmfGenomeRegion> fromInputStream(@NotNull InputStream inputStream) throws IOException, EmptyFileException {
+        final SortedSetMultimap<String, HmfGenomeRegion> map = fromLines(
+                new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
+        final List<HmfGenomeRegion> result = Lists.newArrayList(map.values());
+        Collections.sort(result);
+        return result;
+    }
+
+    private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull List<String> lines)
+            throws IOException, EmptyFileException {
         final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
 
         for (final String line : lines) {
@@ -46,16 +69,19 @@ public abstract class HmfSlicerFileLoader {
             final long end = Long.valueOf(values[END_COLUMN].trim());
 
             if (end < start) {
-                LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end="
-                        + end);
+                LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
             } else {
                 final String transcriptId = values[TRANSCRIPT_ID_COLUMN];
                 final int transcriptVersion = Integer.valueOf(values[TRANSCRIPT_VERSION_COLUMN]);
                 final String gene = values[GENE_COLUMN];
                 final String chromosomeBand = values[CHROMOSOME_BAND_COLUMN];
                 final String entrezId = values[ENTREZ_ID_COLUMN];
-                final HmfGenomeRegion region = new ImmutableHmfGenomeRegion(chromosome, start, end, transcriptId,
-                        transcriptVersion, gene, chromosomeBand, entrezId);
+                final String geneId = values[GENE_ID_COLUMN];
+                final long geneStart = Long.valueOf(values[GENE_START_COLUMN]);
+                final long geneEnd = Long.valueOf(values[GENE_END_COLUMN]);
+
+                final HmfGenomeRegion region = new ImmutableHmfGenomeRegion(chromosome, start, end, transcriptId, transcriptVersion, gene,
+                        geneId, geneStart, geneEnd, chromosomeBand, entrezId);
 
                 regionMap.put(chromosome, region);
             }

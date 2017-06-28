@@ -1,21 +1,46 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberBuilder.isEven;
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberBuilder.purityAdjustedBAF;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.isEven;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.purityAdjustedBAF;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PurpleCopyNumberBuilderTest {
+public class HighConfidencePurpleCopyNumberBuilderTest {
     private static final double EPSILON = 1e-10;
+
+    @Test
+    public void testMaxCopyNumberDeviation() {
+        final FittedRegion firstWithSV = create(1, 1000, StructuralVariantSupport.MULTIPLE);
+        final FittedRegion firstWithoutSV = create(1, 1000, StructuralVariantSupport.NONE);
+        final FittedRegion secondWithSV = create(1001, 2000, StructuralVariantSupport.MULTIPLE);
+        final FittedRegion secondWithoutSV = create(1001, 2000, StructuralVariantSupport.NONE);
+        final FittedRegion thirdWithSV = create(2001, 3000, StructuralVariantSupport.MULTIPLE);
+        final FittedRegion thirdWithoutSV = create(2001, 3000, StructuralVariantSupport.NONE);
+
+        final HighConfidenceCopyNumberBuilder builderWithSVSupport = new HighConfidenceCopyNumberBuilder(1, secondWithSV);
+        final HighConfidenceCopyNumberBuilder builderWithoutSVSupport = new HighConfidenceCopyNumberBuilder(1, secondWithoutSV);
+
+        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
+        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
+        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(thirdWithSV), EPSILON);
+        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(thirdWithoutSV), EPSILON);
+
+        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
+        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
+        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithSV), EPSILON);
+        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithoutSV), EPSILON);
+    }
 
     @Test
     public void testIsEvenCopyNumber() {
@@ -71,7 +96,7 @@ public class PurpleCopyNumberBuilderTest {
 
     @Test
     public void averageOnLengthUntilNonZeroBafCount() {
-        final PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(1, create(1, 100_000_000, 3));
+        final HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, create(1, 100_000_000, 3));
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(100_000_001, 200_000_000, 4));
@@ -86,7 +111,7 @@ public class PurpleCopyNumberBuilderTest {
 
     @Test
     public void averageOnLengthForNonZeroRatio() {
-        PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(1, create(1, 100, 3));
+        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, create(1, 100, 3));
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(101, 200, 0));
@@ -96,15 +121,14 @@ public class PurpleCopyNumberBuilderTest {
     @Test
     public void doNotIncludeZeroRatio() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        PurpleCopyNumberBuilder builder = new PurpleCopyNumberBuilder(1, startRegion);
+        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.extendRegion(create(201, 300, 200, 1, 2));
         assertAverages(builder, 0.75, 2);
     }
 
-    private static void assertAverages(@NotNull PurpleCopyNumberBuilder victim, double expectedBAF,
-            double expectedRatio) {
+    private static void assertAverages(@NotNull HighConfidenceCopyNumberBuilder victim, double expectedBAF, double expectedRatio) {
         assertAverages(victim.build(), expectedBAF, expectedRatio);
     }
 
@@ -121,31 +145,17 @@ public class PurpleCopyNumberBuilderTest {
         return create("1", start, end, bafCount, baf, copyNumber);
     }
 
+    private static FittedRegion create(long start, long end, StructuralVariantSupport support) {
+        return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end).bafCount(0).structuralVariantSupport(support).build();
+    }
+
     @NotNull
-    public static FittedRegion create(@NotNull String chromosome, long start, long end, int bafCount, double baf,
-            double tumorCopyNumber) {
-        return ImmutableFittedRegion.builder()
-                .chromosome(chromosome)
-                .start(start)
-                .end(end)
+    private static FittedRegion create(@NotNull String chromosome, long start, long end, int bafCount, double baf, double tumorCopyNumber) {
+        return PurpleDatamodelTest.createDefaultFittedRegion(chromosome, start, end)
                 .bafCount(bafCount)
                 .observedBAF(baf)
                 .tumorCopyNumber(tumorCopyNumber)
-                .broadBAF(0)
-                .broadTumorCopyNumber(0)
-                .segmentBAF(0)
-                .segmentTumorCopyNumber(0)
-                .observedNormalRatio(1.0)
-                .observedNormalRatio(1.0)
-                .cnvDeviation(0)
-                .deviation(0)
-                .fittedPloidy(0)
-                .modelBAF(0)
-                .observedTumorRatio(0)
-                .modelTumorRatio(0)
-                .status(FreecStatus.UNKNOWN)
                 .refNormalisedCopyNumber(tumorCopyNumber)
-                .bafDeviation(0)
                 .build();
     }
 

@@ -10,8 +10,8 @@ import java.util.List;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructualVariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -43,7 +43,7 @@ class StructuralVariantDAO {
                     .endChromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
                     .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
-                    .type(StructualVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .build();
 
             regions.add(variant);

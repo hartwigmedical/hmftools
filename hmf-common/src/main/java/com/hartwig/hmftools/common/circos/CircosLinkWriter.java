@@ -39,16 +39,18 @@ public class CircosLinkWriter {
 
     private static String color(StructuralVariant variant) {
         switch (variant.type()) {
-            case BND:
-                return "orange";
-            case INS:
+            case DUP:
                 return "green";
-            case INV:
-                return "yellow";
             case DEL:
                 return "red";
-            default:
+            case BND:
+                return "blue";
+            case INS:
+                return "vdyellow";
+            case INV:
                 return "black";
+            default:
+                return "purple";
         }
     }
 }

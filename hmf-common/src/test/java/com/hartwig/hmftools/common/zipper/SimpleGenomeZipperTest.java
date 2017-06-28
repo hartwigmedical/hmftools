@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.common.zipper;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -12,11 +8,19 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
+import mockit.Expectations;
+import mockit.Injectable;
+
 public class SimpleGenomeZipperTest {
+
+    @Injectable
+    private SimpleGenomeZipperAllPositionsHandler<GenomeRegion, GenomePosition> allPositionsHandler;
+
+    @Injectable
+    private SimpleGenomeZipperInRegionPositionsHandler<GenomeRegion, GenomePosition> inRegionPositionsHandler;
 
     private List<GenomeRegion> regions;
     private List<GenomePosition> positions;
@@ -48,18 +52,34 @@ public class SimpleGenomeZipperTest {
         afterRegion2 = createPosition("1", 550);
         inRegion3 = createPosition("2", 50);
         afterRegion3 = createPosition("2", 150);
-        positions = Lists.newArrayList(beforeRegion1, inRegion1, betweenRegion1And2, inRegion2, afterRegion2,
-                inRegion3, afterRegion3);
+        positions = Lists.newArrayList(beforeRegion1, inRegion1, betweenRegion1And2, inRegion2, afterRegion2, inRegion3,
+                afterRegion3);
     }
 
     @Test
     public void testInRegionsOnly() {
-        SimpleGenomeZipper.zip(regions, positions, new InRegionHandler());
+        new Expectations() {{
+            inRegionPositionsHandler.handle(region1, inRegion1);
+            inRegionPositionsHandler.handle(region2, inRegion2);
+            inRegionPositionsHandler.handle(region3, inRegion3);
+        }};
+
+        SimpleGenomeZipper.zip(regions, positions, inRegionPositionsHandler);
     }
 
     @Test
     public void testAllPositions() {
-        SimpleGenomeZipper.zip(regions, positions, new AllPositionsHandler());
+        new Expectations() {{
+            allPositionsHandler.handle(null, beforeRegion1);
+            allPositionsHandler.handle(region1, inRegion1);
+            allPositionsHandler.handle(null, betweenRegion1And2);
+            allPositionsHandler.handle(region2, inRegion2);
+            allPositionsHandler.handle(null, afterRegion2);
+            allPositionsHandler.handle(region3, inRegion3);
+            allPositionsHandler.handle(null, afterRegion3);
+        }};
+
+        SimpleGenomeZipper.zip(regions, positions, allPositionsHandler);
     }
 
     private GenomeRegion createRegion(final String chromosome, final long start, final long end) {
@@ -79,74 +99,6 @@ public class SimpleGenomeZipperTest {
                 return position;
             }
         };
-    }
-
-    class AllPositionsHandler implements SimpleGenomeZipperAllPositionsHandler<GenomeRegion, GenomePosition> {
-
-        private int count;
-
-        @Override
-        public void handle(@Nullable final GenomeRegion region, @NotNull final GenomePosition position) {
-            switch (count) {
-                case 0:
-                    assertNull(region);
-                    assertEquals(beforeRegion1, position);
-                    break;
-                case 1:
-                    assertEquals(region1, region);
-                    assertEquals(inRegion1, position);
-                    break;
-                case 2:
-                    assertNull(region);
-                    assertEquals(betweenRegion1And2, position);
-                    break;
-                case 3:
-                    assertEquals(region2, region);
-                    assertEquals(inRegion2, position);
-                    break;
-                case 4:
-                    assertNull(region);
-                    assertEquals(afterRegion2, position);
-                    break;
-                case 5:
-                    assertEquals(region3, region);
-                    assertEquals(inRegion3, position);
-                    break;
-                case 6:
-                    assertNull(region);
-                    assertEquals(afterRegion3, position);
-                    break;
-                default:
-                    assertTrue(false);
-            }
-            count++;
-        }
-    }
-
-    class InRegionHandler implements SimpleGenomeZipperInRegionPositionsHandler<GenomeRegion, GenomePosition> {
-
-        private int count;
-
-        @Override
-        public void handle(@NotNull final GenomeRegion region, @NotNull final GenomePosition position) {
-            switch (count) {
-                case 0:
-                    assertEquals(region1, region);
-                    assertEquals(inRegion1, position);
-                    break;
-                case 1:
-                    assertEquals(region2, region);
-                    assertEquals(inRegion2, position);
-                    break;
-                case 2:
-                    assertEquals(region3, region);
-                    assertEquals(inRegion3, position);
-                    break;
-                default:
-                    assertTrue(false);
-            }
-            count++;
-        }
     }
 }
 

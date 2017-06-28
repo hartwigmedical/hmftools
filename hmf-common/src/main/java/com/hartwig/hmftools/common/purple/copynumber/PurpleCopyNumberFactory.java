@@ -14,36 +14,48 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum PurpleCopyNumberFactory {
-    ;
+public class PurpleCopyNumberFactory {
 
-    @NotNull
-    public static List<PurpleCopyNumber> highConfidence(double purity, @NotNull final List<FittedRegion> fittedRegions) {
-        return new HighConfidenceRegions(purity).highConfidence(fittedRegions);
+    private final double purity;
+
+    private final List<PurpleCopyNumber> highConfidenceRegions;
+    private final List<PurpleCopyNumber> smoothedRegions;
+
+    public PurpleCopyNumberFactory(final double purity, final List<FittedRegion> fittedRegions) {
+        this.purity = purity;
+        smoothedRegions = Lists.newArrayList();
+        highConfidenceRegions = Lists.newArrayList();
+
+        final Set<String> orderedChromosomes = fittedRegions.stream()
+                .map(GenomeRegion::chromosome)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        for (String chromosome : orderedChromosomes) {
+            final List<FittedRegion> chromosomeFittedRegions = fittedRegions.stream()
+                    .filter(matchesChromosome(chromosome))
+                    .collect(toList());
+
+            final List<PurpleCopyNumber> highConfidence = highConfidence(chromosome, chromosomeFittedRegions);
+            highConfidenceRegions.addAll(highConfidence);
+
+            final List<PurpleCopyNumber> smooth = highConfidence.isEmpty()
+                    ? new LowConfidenceSmoothedRegions(purity, chromosomeFittedRegions).smoothedRegions()
+                    : new HighConfidenceSmoothedRegions(purity, highConfidence, chromosomeFittedRegions).smoothedRegions();
+
+            smoothedRegions.addAll(RegionStepFilter.filter(smooth));
+        }
     }
 
-    @NotNull
-    public static List<PurpleCopyNumber> smooth(double purity, @NotNull final List<FittedRegion> fittedRegions,
-            @NotNull final List<PurpleCopyNumber> broadRegions) {
-        final List<PurpleCopyNumber> result = Lists.newArrayList();
+    public List<PurpleCopyNumber> highConfidenceRegions() {
+        return highConfidenceRegions;
+    }
 
-        final Set<String> orderedChromosomes = broadRegions.stream().map(GenomeRegion::chromosome).collect(
-                Collectors.toCollection(LinkedHashSet::new));
+    public List<PurpleCopyNumber> smoothedRegions() {
+        return smoothedRegions;
+    }
 
-        for (final String orderedChromosome : orderedChromosomes) {
-            final List<FittedRegion> chromosomeCopyNumbers = fittedRegions.stream().filter(
-                    matchesChromosome(orderedChromosome)).collect(toList());
-
-            final List<PurpleCopyNumber> chromosomeBroadRegions = broadRegions.stream().filter(
-                    matchesChromosome(orderedChromosome)).collect(toList());
-
-            final List<PurpleCopyNumber> smoothRegions = new SmoothedRegions(purity, chromosomeBroadRegions,
-                    chromosomeCopyNumbers).getSmoothedRegions();
-
-            result.addAll(RegionStepFilter.filter(smoothRegions));
-        }
-
-        return result;
+    private List<PurpleCopyNumber> highConfidence(final String chromosome, @NotNull final List<FittedRegion> fittedRegions) {
+        return new HighConfidenceRegions(purity).highConfidence(fittedRegions);
     }
 
     @NotNull

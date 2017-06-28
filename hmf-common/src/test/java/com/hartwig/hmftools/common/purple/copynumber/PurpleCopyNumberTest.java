@@ -8,6 +8,12 @@ import org.junit.Test;
 public class PurpleCopyNumberTest {
 
     @Test
+    public void testNegativeBaf() {
+        assertEquals("AAAAAAA", createBAFString(-0.094, 7));
+    }
+
+
+    @Test
     public void testDescriptiveBAF() {
         assertEquals("AA", createBAFString(0, 2));
         assertEquals("AB", createBAFString(0.5, 2));

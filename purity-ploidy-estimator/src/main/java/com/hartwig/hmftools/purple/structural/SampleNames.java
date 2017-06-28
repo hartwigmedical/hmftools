@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.sv;
+package com.hartwig.hmftools.purple.structural;
 
 import java.util.List;
 import java.util.Set;

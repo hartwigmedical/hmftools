@@ -40,12 +40,17 @@ public class SimpleGenomeZipper<R extends GenomeRegion, P extends GenomePosition
     }
 
     @Override
-    public void enter(final R region) {
+    public void chromosome(@NotNull final String chromosome) {
+
+    }
+
+    @Override
+    public void enter(@NotNull final R region) {
         this.region = region;
     }
 
     @Override
-    public void exit(final R region) {
+    public void exit(@NotNull final R region) {
         this.region = null;
     }
 

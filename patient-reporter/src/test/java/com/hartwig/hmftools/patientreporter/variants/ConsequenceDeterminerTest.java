@@ -39,6 +39,9 @@ public class ConsequenceDeterminerTest {
 
     private static final String CHROMOSOME_BAND = "p1";
     private static final String ENTREZ_ID = "11";
+    private static final String GENE_ID = "ENSG0000";
+    private static final long GENE_START = 1;
+    private static final long GENE_END = 42;
 
     @Test
     public void worksAsExpected() {
@@ -47,7 +50,7 @@ public class ConsequenceDeterminerTest {
         final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT,
                 new ImmutableHmfGenomeRegion(CHROMOSOME, POSITION - 10, POSITION + 10, TRANSCRIPT, TRANSCRIPT_VERSION,
-                        GENE, CHROMOSOME_BAND, ENTREZ_ID));
+                        GENE, GENE_ID, GENE_START, GENE_END, CHROMOSOME_BAND, ENTREZ_ID));
 
         final ConsequenceDeterminer determiner = new ConsequenceDeterminer(slicer, transcriptMap);
 

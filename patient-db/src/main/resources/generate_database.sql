@@ -108,7 +108,6 @@ CREATE TABLE comprehensiveSomaticVariant
     alt varchar(255) NOT NULL,
     alleleReadCount int NOT NULL,
     totalReadCount int NOT NULL,
-    adjustedPloidy DOUBLE PRECISION NOT NULL,
     adjustedVaf DOUBLE PRECISION NOT NULL,
     adjustedCopyNumber DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
@@ -124,6 +123,8 @@ CREATE TABLE copyNumber
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
+    ratioSupport BOOLEAN NOT NULL,
+    structuralVariantSupport varchar(255) NOT NULL,
     bafCount int not null,
     observedBaf DOUBLE PRECISION not null,
     actualBaf DOUBLE PRECISION not null,
@@ -174,6 +175,8 @@ CREATE TABLE copyNumberRegion
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
+    ratioSupport BOOLEAN NOT NULL,
+    structuralVariantSupport varchar(255) NOT NULL,
     bafCount int not null,
     observedBaf DOUBLE PRECISION not null,
     observedTumorRatio DOUBLE PRECISION not null,
@@ -202,6 +205,26 @@ CREATE TABLE structuralVariant
     startPosition int not null,
     endPosition int not null,
     type varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS geneCopyNumber;
+CREATE TABLE geneCopyNumber
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    start int not null,
+    end int not null,
+    gene varchar(255) NOT NULL,
+    chromosomeBand varchar(255) NOT NULL,
+    transcriptId varchar(255) NOT NULL,
+    transcriptVersion int not null,
+    minCopyNumber DOUBLE PRECISION not null,
+    maxCopyNumber DOUBLE PRECISION not null,
+    meanCopyNumber DOUBLE PRECISION not null,
+    regions int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
