@@ -41,11 +41,11 @@ public class BreakPointInspectorApplication {
 
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(REF_PATH, true, "the RefClassifiedReads BAM (indexed)");
-        options.addOption(REF_SLICE, true, "the RefClassifiedReads evidence BAM to output");
-        options.addOption(TUMOR_PATH, true, "the TumorClassifiedReads BAM (indexed)");
-        options.addOption(TUMOR_SLICE, true, "the TumorClassifiedReads evidence BAM to output");
-        options.addOption(PROXIMITY, true, "base distance around breakpoint");
+        options.addOption(REF_PATH, true, "the Reference BAM (indexed)");
+        options.addOption(REF_SLICE, true, "the sliced Reference BAM to output");
+        options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
+        options.addOption(TUMOR_SLICE, true, "the sliced Tumor BAM to output");
+        options.addOption(PROXIMITY, true, "distance to scan around breakpoint");
         options.addOption(VCF, true, "VCF file to batch inspect (can be compressed)");
         return options;
     }
@@ -82,7 +82,7 @@ public class BreakPointInspectorApplication {
             final String vcfPath = cmd.getOptionValue(VCF);
             final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
-            if (refPath == null || tumorPath == null || (vcfPath == null))
+            if (refPath == null || tumorPath == null || vcfPath == null)
                 printHelpAndExit(options);
 
             // load the files

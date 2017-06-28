@@ -69,6 +69,7 @@ class Stats {
             return String.join(";", sortedClips.values());
         }
 
+        // TODO: we should track clip direction at each location
         void addToClippingStats(final SAMRecord read) {
             for (final Util.ClipInfo clip : getClips(read).collect(Collectors.toList())) {
                 final Stats.Clip stats = LocationMap.computeIfAbsent(clip.Alignment, k -> new Stats.Clip());
@@ -76,12 +77,12 @@ class Stats {
                     stats.HardClippedReads.add(read);
                 } else {
                     if (clip.Sequence.length() > stats.LongestClipSequence.length() && (
-                            clip.Sequence.startsWith(stats.LongestClipSequence) || clip.Sequence.endsWith(
-                                    stats.LongestClipSequence))) {
+                            clip.Right && clip.Sequence.startsWith(stats.LongestClipSequence)
+                                    || clip.Left && clip.Sequence.endsWith(stats.LongestClipSequence))) {
                         // the existing sequence supports the new sequence
                         stats.LongestClipSequence = clip.Sequence;
-                    } else if (!(stats.LongestClipSequence.startsWith(clip.Sequence)
-                            || stats.LongestClipSequence.endsWith(clip.Sequence))) {
+                    } else if (!(clip.Right && stats.LongestClipSequence.startsWith(clip.Sequence)
+                            || clip.Left && stats.LongestClipSequence.endsWith(clip.Sequence))) {
                         // this read does not support the existing sequence
                         continue;
                     }

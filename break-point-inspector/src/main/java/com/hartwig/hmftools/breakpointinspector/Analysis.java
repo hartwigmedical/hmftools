@@ -221,9 +221,8 @@ class Analysis {
         // look at normal or SR evidence
         for (final Pair<ReadInfo, ReadInfo> pair : localPairs) {
             final BreakpointStats stats = result.Get(pair.getLeft().Breakpoint);
-            final boolean sr = Stream.of(pair.getLeft(), pair.getRight()).anyMatch(
-                    r -> getClips(r.Read).anyMatch(
-                            c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
+            final boolean sr = Stream.of(pair.getLeft(), pair.getRight()).anyMatch(r -> getClips(r.Read).anyMatch(
+                    c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
             // TODO: also check side of clip
             if (sr) {
                 stats.SR_Only_Support++;
@@ -244,7 +243,8 @@ class Analysis {
         for (final SAMRecord read : reads) {
 
             final ReadInfo info = new ReadInfo(read);
-            final NamedReadCollection collection = result.computeIfAbsent(read.getReadName(), k -> new NamedReadCollection());
+            final NamedReadCollection collection = result.computeIfAbsent(read.getReadName(),
+                    k -> new NamedReadCollection());
             collection.add(info);
 
             // if unmapped there's nothing to do
