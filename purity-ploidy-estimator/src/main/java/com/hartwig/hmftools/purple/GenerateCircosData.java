@@ -58,7 +58,7 @@ public class GenerateCircosData {
         final CommandLine cmd = createCommandLine(args, options);
         final String sample = cmd.getOptionValue(SAMPLE);
         final String dataOutput = cmd.getOptionValue(OUTPUT_DIR) + File.separator + "data";
-        final String plotOutput = cmd.getOptionValue(OUTPUT_DIR) + File.separator + "plot";
+        final String plotOutput = cmd.getOptionValue(OUTPUT_DIR);
         final String etcOutput = cmd.getOptionValue(OUTPUT_DIR) + File.separator + "etc";
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
