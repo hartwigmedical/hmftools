@@ -13,13 +13,16 @@ public enum Gender {
 
     public static Gender fromObservedRegions(Collection<ObservedRegion> regions) {
         return regions.stream().filter(x -> x.chromosome().equals("X"))
+                .filter(x -> x.end() > 2_699_520 && x.start() < 155_260_560)
                 .mapToInt(ObservedRegion::bafCount).sum() > MIN_BAF_COUNT
                 ? FEMALE
                 : MALE;
     }
 
     public static Gender fromCopyNumbers(Collection<PurpleCopyNumber> regions) {
-        return regions.stream().filter(x -> x.chromosome().equals("X")).mapToInt(PurpleCopyNumber::bafCount).sum() > MIN_BAF_COUNT
+        return regions.stream().filter(x -> x.chromosome().equals("X"))
+                .filter(x -> x.end() > 2_699_520 && x.start() < 155_260_560)
+                .mapToInt(PurpleCopyNumber::bafCount).sum() > MIN_BAF_COUNT
                 ? FEMALE
                 : MALE;
     }
