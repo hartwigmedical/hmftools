@@ -91,11 +91,15 @@ class CopyNumberCharts {
                 true,
                 false,
                 false);
-        XYPlot xyPlot = (XYPlot) chart.getPlot();
+
+
         StackedXYBarRenderer renderer = new StackedXYBarRenderer();
         renderer.setBarPainter(new StandardXYBarPainter());
         renderer.setShadowVisible(false);
+
+        XYPlot xyPlot = (XYPlot) chart.getPlot();
         xyPlot.setRenderer(renderer);
+        xyPlot.getDomainAxis().setRange(-1, 5);
 
         for (int i = 0; i < dataset.getSeriesCount(); i++) {
             renderer.setSeriesPaint(i, copyNumberColor(String.valueOf(dataset.getSeriesKey(i))));
@@ -114,11 +118,11 @@ class CopyNumberCharts {
                 true,
                 false,
                 false);
-        XYPlot xyPlot = (XYPlot) chart.getPlot();
 
         StackedXYBarRenderer renderer = new StackedXYBarRenderer();
         renderer.setBarPainter(new StandardXYBarPainter());
         renderer.setShadowVisible(false);
+        XYPlot xyPlot = (XYPlot) chart.getPlot();
         xyPlot.setRenderer(renderer);
 
         for (int i = 0; i < dataset.getSeriesCount(); i++) {
