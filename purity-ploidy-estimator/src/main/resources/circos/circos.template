@@ -11,7 +11,7 @@ karyotype = data/karyotype/karyotype.human.txt
 chromosomes_units           = 1000000
 chromosomes_display_default = yes
 chromosomes                 = -EXCLUDE
-chromosomes_breaks          = -hs13:0-19;-hs14:0-10;-hs15:0-20;-hs21:0-9;-hs22:0-16;-hsY:29-)
+chromosomes_breaks          = -hs13:0-19;-hs14:0-19;-hs15:0-20;-hs21:0-9;-hs22:0-16;-hsY:29-)
 
 <links>
     <link>
