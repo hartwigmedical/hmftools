@@ -16,11 +16,9 @@ import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -111,26 +109,13 @@ public class GenerateCircosData {
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.MALE) ? "hsZ" : "hsY");
         Files.write(new File(circosConfigOutput).toPath(), content.getBytes(charset));
 
-        LOGGER.info("Writing plots");
-        final ChartWriter chartWriter = new ChartWriter(sample, plotOutput);
-        final List<PurpleCopyNumber> filteredCopyNumber = copyNumber.stream().filter(x -> !isSexChromosome(x)).collect(Collectors.toList());
-        chartWriter.copyNumberCDF(filteredCopyNumber);
-        chartWriter.copyNumberPDF(filteredCopyNumber);
-        final List<EnrichedSomaticVariant> filteredSomaticVariants = enrichedSomaticVariants.stream()
-                .filter(x -> !isSexChromosome(x))
-                .collect(Collectors.toList());
-        chartWriter.somaticPloidy(filteredSomaticVariants);
+        LOGGER.info("Writing QC plots");
+        new ChartWriter(sample, plotOutput).write(copyNumber, enrichedSomaticVariants);
 
         LOGGER.info("Complete Successfully");
     }
 
-    private static boolean isSexChromosome(GenomeRegion region) {
-        return region.chromosome().equals("X") || region.chromosome().equals("Y");
-    }
 
-    private static boolean isSexChromosome(GenomePosition region) {
-        return region.chromosome().equals("X") || region.chromosome().equals("Y");
-    }
 
     @NotNull
     private static Options createBasicOptions() {
