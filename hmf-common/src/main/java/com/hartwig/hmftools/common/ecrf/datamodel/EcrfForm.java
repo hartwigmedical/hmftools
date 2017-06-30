@@ -37,8 +37,10 @@ public class EcrfForm {
     }
 
     public boolean isEmpty() {
-        return itemGroupsPerOID.values().stream().filter(
-                itemGroups -> itemGroups.stream().filter(group -> !group.isEmpty()).count() > 0).count() == 0;
+        return itemGroupsPerOID.values()
+                .stream()
+                .filter(itemGroups -> itemGroups.stream().filter(group -> !group.isEmpty()).count() > 0)
+                .count() == 0;
     }
 
     @NotNull
