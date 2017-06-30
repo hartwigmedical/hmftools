@@ -47,6 +47,15 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-dbcp2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>value</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -65,14 +74,14 @@
                             <workingDirectory>${basedir}/src/main/resources/</workingDirectory>
                             <executable>${basedir}/src/main/resources/setup_database.sh</executable>
                             <commandlineArgs>${basedir}/src/main/resources/generate_database.sql</commandlineArgs>
-                        </configuration> 
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>${maven.assembly.plugin.version}</version>
-
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -82,18 +91,15 @@
                     </execution>
                 </executions>
                 <configuration>
-
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>com.hartwig.hmftools.patientdb.PatientDbRunner</mainClass>
                         </manifest>
                     </archive>
-
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-
                 </configuration>
             </plugin>
 
@@ -101,7 +107,6 @@
                 <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
                 <version>${jooq.version}</version>
-
                 <executions>
                     <execution>
                         <goals>
@@ -109,7 +114,6 @@
                         </goals>
                     </execution>
                 </executions>
-
                 <configuration>
                     <jdbc>
                         <driver>com.mysql.cj.jdbc.Driver</driver>
@@ -117,7 +121,6 @@
                         <user>build</user>
                         <password>build</password>
                     </jdbc>
-
                     <generator>
                         <database>
                             <name>org.jooq.util.mysql.MySQLDatabase</name>
