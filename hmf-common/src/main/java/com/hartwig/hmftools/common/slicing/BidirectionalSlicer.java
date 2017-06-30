@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.slicing;
 
 import java.util.Collection;
 
-import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
@@ -11,9 +11,9 @@ import org.jetbrains.annotations.NotNull;
 class BidirectionalSlicer implements Slicer {
 
     @NotNull
-    private final SortedSetMultimap<String, GenomeRegion> regions;
+    private final Multimap<String, GenomeRegion> regions;
 
-    BidirectionalSlicer(@NotNull final SortedSetMultimap<String, GenomeRegion> regions) {
+    BidirectionalSlicer(@NotNull final Multimap<String, GenomeRegion> regions) {
         this.regions = regions;
     }
 
