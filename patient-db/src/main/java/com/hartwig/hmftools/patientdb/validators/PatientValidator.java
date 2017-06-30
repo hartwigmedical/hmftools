@@ -32,8 +32,6 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_SEX
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -106,20 +104,6 @@ public class PatientValidator {
         biopsies.forEach(biopsy -> findings.addAll(validateBiopsyData(patientId, biopsy)));
         if (biopsies.isEmpty()) {
             findings.add(new ImmutableValidationFinding(patientId, FORM_BIOPS, "no biopsies found"));
-        }
-        final Map<LocalDate, List<BiopsyData>> dateBiopsyMap =
-                biopsies.stream().filter(biopsy -> biopsy.date() != null).collect(Collectors.groupingBy(BiopsyData::date));
-        for (final LocalDate biopsyDate : dateBiopsyMap.keySet()) {
-            final List<BiopsyData> biopsiesPerDate = dateBiopsyMap.get(biopsyDate);
-            if (biopsiesPerDate.size() > 1) {
-                final Map<String, List<BiopsyData>> locationBiopsyMap = biopsiesPerDate.stream()
-                        .filter(biopsy -> biopsy.location() != null)
-                        .collect(Collectors.groupingBy(BiopsyData::location));
-                if (locationBiopsyMap.keySet().size() > 1) {
-                    findings.add(new ImmutableValidationFinding(patientId, FORM_BIOPS,
-                            patientId + ": multiple biopsies with same date and different locations"));
-                }
-            }
         }
         return findings;
     }

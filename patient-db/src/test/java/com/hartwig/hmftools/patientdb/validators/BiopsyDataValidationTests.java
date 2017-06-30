@@ -49,24 +49,14 @@ public class BiopsyDataValidationTests {
     }
 
     @Test
-    public void reportsBiopsiesSameDateDifferentLocations() {
-        final List<ValidationFinding> findings = PatientValidator.validateBiopsies(CPCT_ID, Lists.newArrayList(BIOPSY_FEB1, BIOPSY_FEB2));
-        assertEquals(1, findings.size());
-        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FORM_BIOPS));
-    }
-
-    @Test
     public void reportsAllFindings() {
         final List<ValidationFinding> findings =
                 PatientValidator.validateBiopsies(CPCT_ID, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2));
-        assertEquals(3, findings.size());
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_BIOPSY_DATE));
         assertTrue(findingsFields.contains(fields(FIELD_LOCATION, FIELD_LOCATION_OTHER)));
-        assertTrue(findingsFields.contains(FORM_BIOPS));
     }
 
     @Test
@@ -78,5 +68,4 @@ public class BiopsyDataValidationTests {
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE, FIELD_BIOPSY_DATE)));
     }
-
 }
