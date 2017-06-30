@@ -228,3 +228,14 @@ CREATE TABLE geneCopyNumber
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
+
+DROP TABLE IF EXISTS clinicalLogs;
+CREATE TABLE clinicalLogs
+(   id int NOT NULL AUTO_INCREMENT,
+    eventDate TIMESTAMP,
+    level varchar(100),
+    patientId varchar(20),
+    ecrfItem varchar(100),
+    message varchar(1000),
+    PRIMARY KEY (id)
+);
