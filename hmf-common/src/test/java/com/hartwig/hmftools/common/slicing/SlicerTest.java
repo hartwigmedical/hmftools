@@ -21,9 +21,9 @@ public class SlicerTest {
     @Before
     public void setup() {
         final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
-        regionMap.put("X", ImmutableBEDGenomeRegion.of("X", 100, 200, null));
-        regionMap.put("X", ImmutableBEDGenomeRegion.of("X", 300, 400, null));
-        regionMap.put("Y", ImmutableBEDGenomeRegion.of("Y", 500, 600, null));
+        regionMap.put("X", ImmutableBEDGenomeRegion.of("X", 100, 200));
+        regionMap.put("X", ImmutableBEDGenomeRegion.of("X", 300, 400));
+        regionMap.put("Y", ImmutableBEDGenomeRegion.of("Y", 500, 600));
 
         bidirectionalSlicer = new BidirectionalSlicer(regionMap);
         forwardSlicer = new ForwardSlicer(regionMap);

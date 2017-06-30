@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.region;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface GenomeRegion extends Comparable<GenomeRegion> {
 
@@ -13,9 +12,6 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
     long start();
 
     long end();
-
-    @Nullable
-    String annotation();
 
     default long bases() {
         return 1 + end() - start();

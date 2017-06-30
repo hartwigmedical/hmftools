@@ -23,12 +23,6 @@ public abstract class HmfGenomeRegion implements GeneRegion {
     @Value.Parameter
     public abstract long end();
 
-    @Override
-    @Value.Default
-    public String annotation() {
-        return "";
-    }
-
     @NotNull
     @Value.Parameter
     public abstract String transcriptID();

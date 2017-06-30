@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.common.region.bed;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 public enum BEDFileLoader {
 
@@ -45,7 +46,7 @@ public enum BEDFileLoader {
             if (end < start) {
                 LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
             } else {
-                final GenomeRegion region = ImmutableBEDGenomeRegion.of(chromosome, start, end, annotation);
+                final GenomeRegion region = ImmutableBEDGenomeRegion.of(chromosome, start, end);
                 if (prevRegion != null && chromosome.equals(prevChromosome) && prevRegion.end() >= start) {
                     LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + prevRegion);
                 } else {
