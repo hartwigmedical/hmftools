@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedVAF;
+import static com.hartwig.hmftools.common.purity.PurityAdjuster.purityAdjustedVAF;
 
 import java.util.List;
 import java.util.stream.Collectors;

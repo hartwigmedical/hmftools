@@ -11,7 +11,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
-import com.hartwig.hmftools.common.purity.PurityAdjustment;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
@@ -74,7 +74,7 @@ public class FittedPurityFactory {
             final List<FittedPurity> fittedPurities = Lists.newArrayList();
 
             for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
-                double impliedPloidy = PurityAdjustment.impliedSamplePloidy(purity, normFactor);
+                double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);
 
                 if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
                     fittedPurities.add(fitPurity(purity, normFactor, totalBAFCount, filteredRegions));

@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.junit.Test;
 
-public class PurityAdjustmentTest {
+public class PurityAdjusterTest {
 
     private static final double EPSILON = 1e-10;
 
@@ -17,12 +17,12 @@ public class PurityAdjustmentTest {
     }
 
     private void assertPurityAdjustment(final double expectedAdjustedCopyNumber, final double purity, final double normFactor, final double ratio) {
-        final PurityAdjustment purityAdjustment = new PurityAdjustment(Gender.MALE, purity, normFactor);
-        assertEquals(expectedAdjustedCopyNumber, purityAdjustment.purityAdjustedCopyNumber("1", ratio), EPSILON);
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
+        assertEquals(expectedAdjustedCopyNumber, purityAdjuster.purityAdjustedCopyNumber("1", ratio), EPSILON);
     }
 
-    private PurityAdjustment adjuster(final double purity, final double normFactor) {
-        return new PurityAdjustment(Gender.MALE, purity, normFactor);
+    private PurityAdjuster adjuster(final double purity, final double normFactor) {
+        return new PurityAdjuster(Gender.MALE, purity, normFactor);
     }
 
 }

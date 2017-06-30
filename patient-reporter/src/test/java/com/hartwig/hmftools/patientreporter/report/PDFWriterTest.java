@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report;
 
-import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedVAF;
+import static com.hartwig.hmftools.common.purity.PurityAdjuster.purityAdjustedVAF;
 
 import static org.junit.Assert.assertNotNull;
 

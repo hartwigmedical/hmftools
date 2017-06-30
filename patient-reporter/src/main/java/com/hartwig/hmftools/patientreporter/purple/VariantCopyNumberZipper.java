@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.purple;
 
-import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedVAF;
+import static com.hartwig.hmftools.common.purity.PurityAdjuster.purityAdjustedVAF;
 
 import java.util.List;
 

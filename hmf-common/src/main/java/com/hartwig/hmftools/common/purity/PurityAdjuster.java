@@ -7,10 +7,10 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurityAdjustment {
+public class PurityAdjuster {
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
-        return new PurityAdjustment(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
+        return new PurityAdjuster(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
     }
 
     @NotNull
@@ -18,7 +18,7 @@ public class PurityAdjustment {
     private final double purity;
     private final double normFactor;
 
-    public PurityAdjustment(@NotNull final Gender gender, final double purity, final double normFactor) {
+    public PurityAdjuster(@NotNull final Gender gender, final double purity, final double normFactor) {
         this.gender = gender;
         this.purity = purity;
         this.normFactor = normFactor;

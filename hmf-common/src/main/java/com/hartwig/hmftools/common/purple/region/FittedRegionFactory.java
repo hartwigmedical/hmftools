@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purity.PurityAdjustment;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,12 +38,12 @@ public class FittedRegionFactory {
 
     @NotNull
     public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion) {
-        final PurityAdjustment purityAdjustment = new PurityAdjustment(gender, purity, normFactor);
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
 
         double minDeviation = 0;
         double observedBAF = observedRegion.observedBAF();
         double observedTumorRatio = observedRegion.observedTumorRatio();
-        double tumorCopyNumber = purityAdjustment.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
+        double tumorCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)

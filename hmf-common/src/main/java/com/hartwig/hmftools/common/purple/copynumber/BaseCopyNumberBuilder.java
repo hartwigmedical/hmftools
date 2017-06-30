@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purity.PurityAdjustment;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
@@ -81,7 +81,7 @@ abstract class BaseCopyNumberBuilder {
         }
 
         double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
-        return PurityAdjustment.purityAdjustedBAF(purity, copyNumber, adjustedObservedBAF);
+        return PurityAdjuster.purityAdjustedBAF(purity, copyNumber, adjustedObservedBAF);
     }
 
     @VisibleForTesting
