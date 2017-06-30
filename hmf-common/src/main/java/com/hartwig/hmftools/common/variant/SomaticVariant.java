@@ -34,12 +34,15 @@ public class SomaticVariant implements Variant {
     private final List<String> callers;
     private final int totalReadCount;
     private final int alleleReadCount;
+    @NotNull
+    private final String genoType;
 
     private SomaticVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type,
             @NotNull final String chromosome, final long position, @NotNull final String ref,
             @NotNull final String alt, @NotNull final String filter, @Nullable final String dbsnpID,
             @Nullable final String cosmicID, @NotNull final List<VariantAnnotation> annotations,
-            @NotNull final List<String> callers, final int totalReadCount, final int alleleReadCount) {
+            @NotNull final List<String> callers, final int totalReadCount, final int alleleReadCount,
+            @NotNull String genoType) {
         this.originalVCFLine = originalVCFLine;
         this.type = type;
         this.chromosome = chromosome;
@@ -53,6 +56,7 @@ public class SomaticVariant implements Variant {
         this.callers = callers;
         this.totalReadCount = totalReadCount;
         this.alleleReadCount = alleleReadCount;
+        this.genoType = genoType;
     }
 
     @NotNull
@@ -112,6 +116,11 @@ public class SomaticVariant implements Variant {
         return annotations;
     }
 
+    @NotNull
+    public String genoType() {
+        return genoType;
+    }
+    
     public boolean hasConsequence(@NotNull final VariantConsequence consequence) {
         for (final VariantAnnotation annotation : annotations) {
             if (annotation.consequences().contains(consequence)) {
@@ -172,6 +181,8 @@ public class SomaticVariant implements Variant {
         private List<String> callers = Lists.newArrayList();
         private int totalReadCount = 0;
         private int alleleReadCount = 0;
+        @NotNull
+        private String genoType = Strings.EMPTY;
 
         @NotNull
         static Builder fromVCF(@NotNull final String vcfLine) {
@@ -195,6 +206,7 @@ public class SomaticVariant implements Variant {
             builder.callers(variant.callers());
             builder.alleleReadCount(variant.alleleReadCount());
             builder.totalReadCount(variant.totalReadCount());
+            builder.genoType(variant.genoType());
             return builder;
         }
 
@@ -276,11 +288,17 @@ public class SomaticVariant implements Variant {
             this.alleleReadCount = alleleReadCount;
             return this;
         }
+        
+        public Builder genoType(@NotNull final String genoType) {
+            this.genoType = genoType;
+            return this;
+        }
 
         @NotNull
+        @Override
         public SomaticVariant build() {
             return new SomaticVariant(originalVCFLine, type, chromosome, position, ref, alt, filter, dbsnpID, cosmicID,
-                    annotations, callers, totalReadCount, alleleReadCount);
+                    annotations, callers, totalReadCount, alleleReadCount, genoType);
         }
     }
 }

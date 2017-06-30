@@ -14,9 +14,11 @@ import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
+import com.hartwig.hmftools.common.variant.SomaticTruthSetVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
+import java.util.ArrayList;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,6 +37,11 @@ public final class VCFFileLoader {
     public static VCFSomaticFile loadSomaticVCF(@NotNull final String file) throws IOException, HartwigException {
         return toVCFSomaticFile(loadAllLinesFromVCF(file));
     }
+    
+    @NotNull
+    public static VCFSomaticTruthSetFile loadSomaticTruthSetVCF(@NotNull final String file) throws IOException, HartwigException {
+        return toVCFSomaticTruthSet(loadAllLinesFromVCF(file));
+    }
 
     @NotNull
     public static VCFGermlineFile loadGermlineVCF(@NotNull final String basePath, @NotNull final String fileExtension)
@@ -43,12 +50,27 @@ public final class VCFFileLoader {
     }
 
     @NotNull
+    public static VCFGermlineFile loadGermlineVCF(@NotNull final String file) throws IOException, HartwigException {
+        return toVCFGermlineFile(loadAllLinesFromVCF(file));
+    }
+    
+    @NotNull
     private static VCFSomaticFile toVCFSomaticFile(@NotNull final List<String> lines) {
         final List<String> metaInformationLines = extractMetaInformation(lines);
         final String header = extractHeader(lines);
         final String sample = SomaticVariantFactory.sampleFromHeaderLine(header);
         final List<SomaticVariant> variants = variants(lines, SomaticVariantFactory::fromVCFLine);
         return ImmutableVCFSomaticFile.builder().sample(sample).originalMetaInformationLines(
+                metaInformationLines).originalHeaderLine(header).variants(variants).build();
+    }
+    
+    @NotNull
+    private static VCFSomaticTruthSetFile toVCFSomaticTruthSet(@NotNull final List<String> lines) {
+        final List<String> metaInformationLines = extractMetaInformation(lines);
+        final String header = extractHeader(lines);
+        final String sample = SomaticVariantFactory.sampleFromHeaderLine(header);
+        final List<SomaticTruthSetVariant> variants = variants(lines, SomaticVariantFactory::fromTruthSetVCFLine);
+        return ImmutableVCFSomaticTruthSetFile.builder().sample(sample).originalMetaInformationLines(
                 metaInformationLines).originalHeaderLine(header).variants(variants).build();
     }
 
