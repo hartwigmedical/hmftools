@@ -11,7 +11,29 @@ public class PurityAdjusterTest {
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testPurityAdjustedCopynumber() {
+    public void testBaf() {
+        assertBaf( 0.375, 0.8, 2, 0.4 );
+        assertBafMaleSex( 0.5, 0.8, 2, 0.4 );
+    }
+
+    private void assertBaf(final double expectedBaf, final double purity, final double copyNumber, final double observedFrequency) {
+        assertBaf(expectedBaf, Gender.FEMALE, "X", purity, copyNumber, observedFrequency);
+        assertBaf(expectedBaf, Gender.FEMALE, "1", purity, copyNumber, observedFrequency);
+        assertBaf(expectedBaf, Gender.MALE, "1", purity, copyNumber, observedFrequency);
+    }
+
+    private void assertBafMaleSex(final double expectedBaf, final double purity, final double copyNumber, final double observedFrequency) {
+        assertBaf(expectedBaf, Gender.MALE, "X", purity, copyNumber, observedFrequency);
+        assertBaf(expectedBaf, Gender.MALE, "Y", purity, copyNumber, observedFrequency);
+    }
+
+    private void assertBaf(final double expectedBaf, final Gender gender, final String chromsome, final double purity, final double copyNumber, final double observedFrequency) {
+        PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, 1);
+        assertEquals(expectedBaf, purityAdjuster.purityAdjustedBAF(chromsome, copyNumber, observedFrequency), EPSILON);
+    }
+
+    @Test
+    public void testPurityAdjustedCopyNumber() {
         assertPurityAdjustment(0, 0.85, 1.04, 0);
         assertPurityAdjustment(1, 0.85, 1.0, 0.575);
     }

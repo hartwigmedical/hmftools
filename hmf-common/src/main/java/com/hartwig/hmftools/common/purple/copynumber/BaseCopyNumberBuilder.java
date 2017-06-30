@@ -85,7 +85,7 @@ abstract class BaseCopyNumberBuilder {
         }
 
         double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
-        return purityAdjuster.purityAdjustedBAF(copyNumber, adjustedObservedBAF);
+        return purityAdjuster.purityAdjustedBAF(chromosome, copyNumber, adjustedObservedBAF);
     }
 
     @VisibleForTesting

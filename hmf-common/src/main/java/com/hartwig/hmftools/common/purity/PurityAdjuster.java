@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,6 +18,10 @@ public class PurityAdjuster {
     private final Gender gender;
     private final double purity;
     private final double normFactor;
+
+    public PurityAdjuster(@NotNull final Gender gender, @NotNull final FittedPurity fittedPurity) {
+        this(gender, fittedPurity.purity(), fittedPurity.normFactor());
+    }
 
     public PurityAdjuster(@NotNull final Gender gender, final double purity, final double normFactor) {
         this.gender = gender;
@@ -33,22 +38,22 @@ public class PurityAdjuster {
         return Doubles.isZero(ratio) ? 0 : typicalCopyNumber + (2 * ratio - typicalCopyNumber * normFactor) / purity / normFactor;
     }
 
-    public static double purityAdjustedVAF(final double purity, final double copyNumber, final double observedFrequency) {
-        return purityAdjustedFrequency(purity, copyNumber, observedFrequency, 0);
+    public double purityAdjustedVAF(final double copyNumber, final double observedFrequency) {
+        return purityAdjustedFrequency(copyNumber, observedFrequency, 0);
     }
 
-    public double purityAdjustedBAF(final double copyNumber, final double observedFrequency) {
-        return purityAdjustedFrequency(purity, copyNumber, observedFrequency, 0.5);
+    public double purityAdjustedBAF(final String chromosome, final double copyNumber, final double observedFrequency) {
+        double typicalFrequency = isMaleSexChromosome(chromosome) ? 0 : 0.5;
+        return purityAdjustedFrequency(copyNumber, observedFrequency, typicalFrequency);
     }
 
-    private static double purityAdjustedFrequency(final double purity, final double copyNumber, final double observedFrequency,
-            final double normalFrequency) {
+    private double purityAdjustedFrequency(final double copyNumber, final double observedFrequency, final double typicalFrequency) {
         assert (greaterThan(copyNumber, 0));
         assert (greaterThan(purity, 0));
 
         double normalPloidy = 2 * (1 - purity);
         double tumorPloidy = copyNumber * purity;
-        double normalAmount = 2 * (1 - purity) * normalFrequency;
+        double normalAmount = 2 * (1 - purity) * typicalFrequency;
 
         return (observedFrequency * (normalPloidy + tumorPloidy) - normalAmount) / copyNumber / purity;
     }
