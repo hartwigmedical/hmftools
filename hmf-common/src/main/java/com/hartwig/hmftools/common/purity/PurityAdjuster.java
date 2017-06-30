@@ -37,7 +37,7 @@ public class PurityAdjuster {
         return purityAdjustedFrequency(purity, copyNumber, observedFrequency, 0);
     }
 
-    public static double purityAdjustedBAF(final double purity, final double copyNumber, final double observedFrequency) {
+    public double purityAdjustedBAF(final double copyNumber, final double observedFrequency) {
         return purityAdjustedFrequency(purity, copyNumber, observedFrequency, 0.5);
     }
 

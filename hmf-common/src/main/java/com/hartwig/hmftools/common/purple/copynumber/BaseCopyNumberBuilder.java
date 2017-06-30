@@ -19,15 +19,16 @@ abstract class BaseCopyNumberBuilder {
     @VisibleForTesting
     static final double STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE = 0.7;
 
-    private final double purity;
+    @NotNull
+    private final PurityAdjuster purityAdjuster;
     private final String chromosome;
     private long start = 1;
     private long end;
     private boolean ratioSupport;
     private StructuralVariantSupport structuralVariantSupport;
 
-    BaseCopyNumberBuilder(double purity, @NotNull final FittedRegion fittedRegion) {
-        this.purity = purity;
+    BaseCopyNumberBuilder(@NotNull final PurityAdjuster purityAdjuster, @NotNull final FittedRegion fittedRegion) {
+        this.purityAdjuster = purityAdjuster;
         this.chromosome = fittedRegion.chromosome();
         this.start = fittedRegion.start();
         this.structuralVariantSupport = fittedRegion.structuralVariantSupport();
@@ -67,7 +68,7 @@ abstract class BaseCopyNumberBuilder {
                 .end(end)
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
-                .averageActualBAF(purityAdjustedBAF(purity, averageTumorCopyNumber(), averageObservedBAF()))
+                .averageActualBAF(purityAdjustedBAF(averageObservedBAF()))
                 .averageTumorCopyNumber(averageTumorCopyNumber())
                 .ratioSupport(ratioSupport)
                 .structuralVariantSupport(structuralVariantSupport)
@@ -75,13 +76,16 @@ abstract class BaseCopyNumberBuilder {
     }
 
     @VisibleForTesting
-    static double purityAdjustedBAF(final double purity, final double copyNumber, final double observedBAF) {
+    double purityAdjustedBAF(final double observedBAF) {
+
+        double copyNumber = averageTumorCopyNumber();
+
         if (Doubles.isZero(copyNumber)) {
             return observedBAF;
         }
 
         double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
-        return PurityAdjuster.purityAdjustedBAF(purity, copyNumber, adjustedObservedBAF);
+        return purityAdjuster.purityAdjustedBAF(copyNumber, adjustedObservedBAF);
     }
 
     @VisibleForTesting

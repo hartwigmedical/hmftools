@@ -7,20 +7,21 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
 
-    private final double purity;
+    private final PurityAdjuster purityAdjuster;
     private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
     private final List<PurpleCopyNumber> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
 
-    HighConfidenceSmoothedRegions(double purity, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
+    HighConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
             @NotNull final List<FittedRegion> fittedRegions) {
-        this.purity = purity;
+        this.purityAdjuster = purityAdjuster;
         this.highConfidenceRegions = highConfidenceRegions;
         this.fittedRegions = fittedRegions;
 
@@ -43,7 +44,7 @@ class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new HighConfidenceCopyNumberBuilder(purity, fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new HighConfidenceCopyNumberBuilder(purityAdjuster, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -86,7 +87,7 @@ class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
                 current.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(current.build());
-                current = new HighConfidenceCopyNumberBuilder(purity, copyNumber);
+                current = new HighConfidenceCopyNumberBuilder(purityAdjuster, copyNumber);
             }
         }
 
@@ -107,7 +108,7 @@ class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder.build());
                 }
-                reverseBuilder = new HighConfidenceCopyNumberBuilder(purity, copyNumber);
+                reverseBuilder = new HighConfidenceCopyNumberBuilder(purityAdjuster, copyNumber);
             }
         }
 

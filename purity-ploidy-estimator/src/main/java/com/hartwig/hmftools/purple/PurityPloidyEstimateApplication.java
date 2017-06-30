@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -165,7 +166,8 @@ public class PurityPloidyEstimateApplication {
             final FittedPurity bestFit = optionalBestFit.get();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
-            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(bestFit.purity(), fittedRegions);
+            final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, bestFit.purity(), bestFit.normFactor());
+            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
             final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
             final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
 

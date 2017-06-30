@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
@@ -16,13 +17,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurpleCopyNumberFactory {
 
-    private final double purity;
+    @NotNull private final PurityAdjuster purityAdjuster;
 
     private final List<PurpleCopyNumber> highConfidenceRegions;
     private final List<PurpleCopyNumber> smoothedRegions;
 
-    public PurpleCopyNumberFactory(final double purity, final List<FittedRegion> fittedRegions) {
-        this.purity = purity;
+    public PurpleCopyNumberFactory(@NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions) {
+        this.purityAdjuster = purityAdjuster;
         smoothedRegions = Lists.newArrayList();
         highConfidenceRegions = Lists.newArrayList();
 
@@ -39,8 +40,8 @@ public class PurpleCopyNumberFactory {
             highConfidenceRegions.addAll(highConfidence);
 
             final List<PurpleCopyNumber> smooth = highConfidence.isEmpty()
-                    ? new LowConfidenceSmoothedRegions(purity, chromosomeFittedRegions).smoothedRegions()
-                    : new HighConfidenceSmoothedRegions(purity, highConfidence, chromosomeFittedRegions).smoothedRegions();
+                    ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
+                    : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
             smoothedRegions.addAll(RegionStepFilter.filter(smooth));
         }
@@ -55,7 +56,7 @@ public class PurpleCopyNumberFactory {
     }
 
     private List<PurpleCopyNumber> highConfidence(final String chromosome, @NotNull final List<FittedRegion> fittedRegions) {
-        return new HighConfidenceRegions(purity).highConfidence(fittedRegions);
+        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions);
     }
 
     @NotNull

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +17,8 @@ class HighConfidenceCopyNumberBuilder extends BaseCopyNumberBuilder {
     private double sumWeightedCopyNumber;
     private double sumWeightedRefNormalisedCopyNumber;
 
-    HighConfidenceCopyNumberBuilder(double purity, @NotNull final FittedRegion fittedRegion) {
-        super(purity, fittedRegion);
+    HighConfidenceCopyNumberBuilder(@NotNull final PurityAdjuster purityAdjuster, @NotNull final FittedRegion fittedRegion) {
+        super(purityAdjuster, fittedRegion);
     }
 
     @Override

@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,18 +17,17 @@ class HighConfidenceRegions {
     private static final double MAX_BAF_DEVIATION = 0.03;
     private static final double MAX_COPY_NUMBER_DEVIATION = 0.30;
 
-    private final double purity;
-
+    @NotNull
+    private final PurityAdjuster purityAdjuster;
     @NotNull
     private final List<PurpleCopyNumber> result = Lists.newArrayList();
-
     @Nullable
     private HighConfidenceCopyNumberBuilder builder;
     @Nullable
     private FittedRegion last;
 
-    HighConfidenceRegions(final double purity) {
-        this.purity = purity;
+    HighConfidenceRegions(@NotNull final PurityAdjuster purityAdjuster) {
+        this.purityAdjuster = purityAdjuster;
     }
 
     @NotNull
@@ -43,7 +43,7 @@ class HighConfidenceRegions {
     private void process(@NotNull final FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
-            builder = new HighConfidenceCopyNumberBuilder(purity, current);
+            builder = new HighConfidenceCopyNumberBuilder(purityAdjuster, current);
         } else {
             assert builder != null;
             builder.extendRegion(current);

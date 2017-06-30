@@ -3,13 +3,14 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.MAX_COPY_NUMBER_TOLERANCE;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.isEven;
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.purityAdjustedBAF;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
@@ -28,8 +29,10 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
         final FittedRegion thirdWithSV = create(2001, 3000, StructuralVariantSupport.MULTIPLE);
         final FittedRegion thirdWithoutSV = create(2001, 3000, StructuralVariantSupport.NONE);
 
-        final HighConfidenceCopyNumberBuilder builderWithSVSupport = new HighConfidenceCopyNumberBuilder(1, secondWithSV);
-        final HighConfidenceCopyNumberBuilder builderWithoutSVSupport = new HighConfidenceCopyNumberBuilder(1, secondWithoutSV);
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
+        final HighConfidenceCopyNumberBuilder builderWithSVSupport = new HighConfidenceCopyNumberBuilder(purityAdjuster, secondWithSV);
+        final HighConfidenceCopyNumberBuilder builderWithoutSVSupport =
+                new HighConfidenceCopyNumberBuilder(purityAdjuster, secondWithoutSV);
 
         assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
         assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
@@ -88,15 +91,21 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
         testPurityAdjustedBaf(purity, 5, 4);
     }
 
-    private static void testPurityAdjustedBaf(final double purity, final int ploidy, final int alleleCount) {
+    private void testPurityAdjustedBaf(final double purity, final int ploidy, final int alleleCount) {
+        final HighConfidenceCopyNumberBuilder builder = createBuilder(purity, 1, 100, ploidy);
+
         double expectedPurityAdjustedBAF = 1d * alleleCount / ploidy;
         double observedBAF = modelBAF(purity, ploidy, alleleCount);
-        assertEquals(expectedPurityAdjustedBAF, purityAdjustedBAF(purity, ploidy, observedBAF), EPSILON);
+        assertEquals(expectedPurityAdjustedBAF, builder.purityAdjustedBAF(observedBAF), EPSILON);
+    }
+
+    private HighConfidenceCopyNumberBuilder createBuilder(double purity, long start, long end, double copyNumber) {
+        return new HighConfidenceCopyNumberBuilder(new PurityAdjuster(Gender.MALE, purity, 1), create(start, end, copyNumber));
     }
 
     @Test
     public void averageOnLengthUntilNonZeroBafCount() {
-        final HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, create(1, 100_000_000, 3));
+        final HighConfidenceCopyNumberBuilder builder = createBuilder(1, 1, 100_000_000, 3);
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(100_000_001, 200_000_000, 4));
@@ -111,7 +120,7 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
 
     @Test
     public void averageOnLengthForNonZeroRatio() {
-        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, create(1, 100, 3));
+        HighConfidenceCopyNumberBuilder builder = createBuilder(1, 1, 100, 3);
         assertAverages(builder, 0, 3);
 
         builder.extendRegion(create(101, 200, 0));
@@ -121,7 +130,8 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
     @Test
     public void doNotIncludeZeroRatio() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(1, startRegion);
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
+        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(purityAdjuster, startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.extendRegion(create(201, 300, 200, 1, 2));
