@@ -92,7 +92,6 @@ class CopyNumberCharts {
                 false,
                 false);
 
-
         StackedXYBarRenderer renderer = new StackedXYBarRenderer();
         renderer.setBarPainter(new StandardXYBarPainter());
         renderer.setShadowVisible(false);
@@ -174,7 +173,7 @@ class CopyNumberCharts {
         for (final EnrichedSomaticVariant variant : variants) {
             double value = variant.adjustedVAF() * variant.adjustedCopyNumber();
 
-            int series = (int) Math.min(MAX_COPY_NUMBER_SERIES, Math.round(variant.adjustedCopyNumber()));
+            int series = (int) Math.max(0, Math.min(MAX_COPY_NUMBER_SERIES, Math.round(variant.adjustedCopyNumber())));
             int column = Math.min(maxBuckets - 1, Math.max(0, (int) Math.round(value / 0.1)));
             buckets[series][column] += 1;
         }
@@ -202,7 +201,7 @@ class CopyNumberCharts {
         for (final PurpleCopyNumber copyNumber : copyNumbers) {
             double value = (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber();
 
-            int series = (int) Math.min(MAX_COPY_NUMBER_SERIES, Math.round(copyNumber.averageTumorCopyNumber()));
+            int series = (int) Math.max(0, Math.min(MAX_COPY_NUMBER_SERIES, Math.round(copyNumber.averageTumorCopyNumber())));
             int column = Math.min(maxBuckets - 1, Math.max(-1, (int) Math.round(value / 0.1))) + 1;
             buckets[series][column] += copyNumber.bafCount();
         }
