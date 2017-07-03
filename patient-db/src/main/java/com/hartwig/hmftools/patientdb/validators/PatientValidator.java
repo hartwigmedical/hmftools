@@ -60,7 +60,7 @@ public class PatientValidator {
         findings.addAll(validatePatientData(patient.patientInfo()));
         final String patientId = patient.patientInfo().cpctId();
         if (patientId != null) {
-            findings.addAll(validateBiopsies(patientId, patient.clinicalBiopsies()));
+            findings.addAll(validateBiopsies(patientId, patient.clinicalBiopsies(), patient.treatments()));
             findings.addAll(validateTreatments(patientId, patient.treatments()));
             findings.addAll(validateTreatmentResponses(patientId, patient.treatments(), patient.treatmentResponses()));
             findings.addAll(validateDeathDate(patientId, patient.patientInfo().deathDate(), patient.treatments()));
@@ -99,11 +99,22 @@ public class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateBiopsies(@NotNull final String patientId, @NotNull final List<BiopsyData> biopsies) {
+    static List<ValidationFinding> validateBiopsies(@NotNull final String patientId, @NotNull final List<BiopsyData> biopsies,
+            @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         biopsies.forEach(biopsy -> findings.addAll(validateBiopsyData(patientId, biopsy)));
         if (biopsies.isEmpty()) {
             findings.add(new ImmutableValidationFinding(patientId, FORM_BIOPS, "no biopsies found"));
+        }
+        if (biopsies.size() > 0 && treatments.size() > 0) {
+            biopsies.sort(comparing(BiopsyData::date, nullsLast(naturalOrder())));
+            treatments.sort(comparing(BiopsyTreatmentData::startDate, nullsLast(naturalOrder())));
+            final LocalDate firstBiopsyDate = biopsies.get(0).date();
+            final LocalDate firstTreatmentStart = treatments.get(0).startDate();
+            if (firstBiopsyDate != null && firstTreatmentStart != null && firstTreatmentStart.isBefore(firstBiopsyDate)) {
+                findings.add(new ImmutableValidationFinding(patientId, fields(FORM_BIOPS, FORM_TREATMENT),
+                        "first treatment start is before first biopsy date"));
+            }
         }
         return findings;
     }
@@ -269,9 +280,13 @@ public class PatientValidator {
                 findings.add(new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN,
                         "measurement done is no, but response date filled in"));
             }
-            if (assessmentDate == null) {
+            if (assessmentDate != null) {
                 findings.add(new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN,
                         "measurement done is no, but assessment date filled in"));
+            }
+            if (treatmentResponse.response() != null) {
+                findings.add(
+                        new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN, "measurement done is no, but response filled in"));
             }
         } else {
             findings.add(new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN, "measurement done is not yes/no"));
