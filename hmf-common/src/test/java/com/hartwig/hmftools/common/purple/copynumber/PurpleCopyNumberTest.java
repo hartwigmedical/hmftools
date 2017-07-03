@@ -2,19 +2,28 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleCopyNumberTest {
 
     @Test
+    public void testNegativeCopyNumber() {
+        PurpleCopyNumber copyNumber = PurpleDatamodelTest.createCopyNumber("1", 1, 100, -12).build();
+        assertEquals(0, copyNumber.value());
+    }
+
+    @Test
     public void testNegativeBaf() {
         assertEquals("AAAAAAA", createBAFString(-0.094, 7));
     }
 
-
     @Test
     public void testDescriptiveBAF() {
+        assertEquals("", createBAFString(0, -12));
+
         assertEquals("AA", createBAFString(0, 2));
         assertEquals("AB", createBAFString(0.5, 2));
         assertEquals("AB", createBAFString(0.7, 2));
@@ -38,14 +47,10 @@ public class PurpleCopyNumberTest {
 
     @NotNull
     private String createBAFString(double actualBaf, double copyNumber) {
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome("1")
-                .start(1)
-                .end(100)
-                .averageTumorCopyNumber(copyNumber)
-                .bafCount(0)
+        return PurpleDatamodelTest.createCopyNumber("1", 1, 100, copyNumber)
                 .averageObservedBAF(actualBaf)
                 .averageActualBAF(actualBaf)
-                .build().descriptiveBAF();
+                .build()
+                .descriptiveBAF();
     }
 }
