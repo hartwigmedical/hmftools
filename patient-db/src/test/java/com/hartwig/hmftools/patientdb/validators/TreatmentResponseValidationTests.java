@@ -27,18 +27,12 @@ public class TreatmentResponseValidationTests {
     private final static LocalDate JAN2015 = LocalDate.parse("2015-01-01");
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
-    private final static LocalDate JUL2015 = LocalDate.parse("2015-07-01");
-    private final static LocalDate AUG2015 = LocalDate.parse("2015-08-01");
 
     private final static BiopsyTreatmentData TREATMENT_JAN_MAR = new BiopsyTreatmentData("Yes", JAN2015, MAR2015, Lists.newArrayList());
     private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING = new BiopsyTreatmentData("Yes", JAN2015, null, Lists.newArrayList());
     private final static BiopsyTreatmentData TREATMENT_JAN_JAN = new BiopsyTreatmentData("Yes", JAN2015, JAN2015, Lists.newArrayList());
-    private final static BiopsyTreatmentData TREATMENT_FEB_NULL = new BiopsyTreatmentData("Yes", FEB2015, null, Lists.newArrayList());
     private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 = new BiopsyTreatmentResponseData(JAN2015, JAN2015, "NE", "Yes");
     private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 = new BiopsyTreatmentResponseData(FEB2015, FEB2015, "NE", "Yes");
-    private final static BiopsyTreatmentResponseData RESPONSE_MAR2015 = new BiopsyTreatmentResponseData(MAR2015, MAR2015, "NE", "Yes");
-    private final static BiopsyTreatmentResponseData RESPONSE_JUL2015 = new BiopsyTreatmentResponseData(JUL2015, JUL2015, "NE", "Yes");
-    private final static BiopsyTreatmentResponseData RESPONSE_AUG2015 = new BiopsyTreatmentResponseData(AUG2015, AUG2015, "NE", "Yes");
     private final static BiopsyTreatmentResponseData RESPONSE_NULL = new BiopsyTreatmentResponseData(null, null, "NE", null);
     private final static BiopsyTreatmentResponseData RESPONSE_MISSING_DATA = new BiopsyTreatmentResponseData(null, null, null, "yes");
     private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
@@ -67,7 +61,7 @@ public class TreatmentResponseValidationTests {
     @Test
     public void reportsMeasurementDoneNoWithData() {
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_DATA);
-        assertEquals(1, findings.size());
+        assertEquals(3, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_MEASUREMENT_YN));
