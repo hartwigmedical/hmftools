@@ -35,7 +35,7 @@ public final class BiopsyReader {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, true)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, true);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
-                    if (location != null && location.trim().toLowerCase().startsWith("other")) {
+                    if (location == null || location.trim().toLowerCase().startsWith("other")) {
                         final String location_other = itemGroup.readItemString(FIELD_LOCATION_OTHER, 0, true);
                         biopsies.add(new BiopsyData(date, location_other));
                     } else {

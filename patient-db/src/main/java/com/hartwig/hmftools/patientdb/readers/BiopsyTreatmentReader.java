@@ -25,7 +25,8 @@ public class BiopsyTreatmentReader {
     public static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
     public static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
     public static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
-    public static final String FIELD_DRUG = "FLD.TRTAFTER.SYSREGPOST";
+    public static final String FIELD_DRUG = "FLD.TRTAFTER.PLANNEDTRT";
+    public static final String FIELD_DRUG_OTHER = "FLD.TRTAFTER.SYSREGPOST";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -57,7 +58,10 @@ public class BiopsyTreatmentReader {
         for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, true)) {
             final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, true);
             final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, true);
-            final String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
+            String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
+            if (drugName == null || drugName.trim().toLowerCase().startsWith("other")) {
+                drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, true);
+            }
             final String drugType = drugName == null ? null : treatmentToTypeMapping.get(drugName.toLowerCase().trim());
             drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));
         }

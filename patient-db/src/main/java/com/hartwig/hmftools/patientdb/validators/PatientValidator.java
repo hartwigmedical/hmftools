@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_END;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_START;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_TREATMENT_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
@@ -199,7 +200,7 @@ public class PatientValidator {
             }
         }
         if (drugData.name() == null) {
-            findings.add(new ImmutableValidationFinding(patientId, FIELD_DRUG, "drug name empty"));
+            findings.add(new ImmutableValidationFinding(patientId, fields(FIELD_DRUG, FIELD_DRUG_OTHER), "drug name empty"));
         }
         return findings;
     }
