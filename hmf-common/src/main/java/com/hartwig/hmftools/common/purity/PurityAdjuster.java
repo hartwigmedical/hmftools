@@ -30,12 +30,12 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedCopyNumber(final String chromosome, final double ratio) {
-        final double typicalCopyNumber = isMaleSexChromosome(chromosome) ? 1 : 2;
+        final double typicalCopyNumber = isMaleSexChromosome(chromosome) ? 0.5 : 1;
         return purityAdjustedCopyNumber(ratio, typicalCopyNumber);
     }
 
-    private double purityAdjustedCopyNumber(final double ratio, final double typicalCopyNumber) {
-        return Doubles.isZero(ratio) ? 0 : typicalCopyNumber + (2 * ratio - typicalCopyNumber * normFactor) / purity / normFactor;
+    private double purityAdjustedCopyNumber(final double tumorRatio, final double normalRatio) {
+        return Doubles.isZero(tumorRatio) ? 0 : 2 * normalRatio + 2 * (tumorRatio - normalRatio * normFactor) / purity / normFactor;
     }
 
     public double purityAdjustedVAF(final double copyNumber, final double observedFrequency) {
