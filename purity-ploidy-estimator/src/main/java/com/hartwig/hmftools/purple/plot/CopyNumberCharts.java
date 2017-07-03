@@ -98,7 +98,7 @@ class CopyNumberCharts {
 
         XYPlot xyPlot = (XYPlot) chart.getPlot();
         xyPlot.setRenderer(renderer);
-        xyPlot.getDomainAxis().setRange(-1, 5);
+        xyPlot.getDomainAxis().setRange(-1.1, 5.1);
 
         for (int i = 0; i < dataset.getSeriesCount(); i++) {
             renderer.setSeriesPaint(i, copyNumberColor(String.valueOf(dataset.getSeriesKey(i))));
@@ -194,15 +194,20 @@ class CopyNumberCharts {
 
     private static CategoryTableXYDataset minorAllele(@NotNull final List<PurpleCopyNumber> copyNumbers) {
 
-        int maxPloidy = 5;
-        int maxBuckets = maxPloidy * 10;
+        int positivePloidy = 5;
+        int positiveBuckets = positivePloidy * 10;
+        int negativePloidy = 1;
+        int negativeBuckets = negativePloidy * 10;
+        int totalBuckets = negativeBuckets + positiveBuckets;
 
-        double[][] buckets = new double[MAX_COPY_NUMBER_SERIES + 1][maxBuckets + 1];
+        double[][] buckets = new double[MAX_COPY_NUMBER_SERIES + 1][totalBuckets];
         for (final PurpleCopyNumber copyNumber : copyNumbers) {
-            double value = (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber();
 
-            int series = (int) Math.max(0, Math.min(MAX_COPY_NUMBER_SERIES, Math.round(copyNumber.averageTumorCopyNumber())));
-            int column = Math.min(maxBuckets - 1, Math.max(-1, (int) Math.round(value / 0.1))) + 1;
+            double minorAllele = (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber();
+
+            int series = limit(copyNumber.averageTumorCopyNumber(), 0, MAX_COPY_NUMBER_SERIES);
+            int column = limit(minorAllele / 0.1, -negativeBuckets, positiveBuckets) + negativeBuckets;
+
             buckets[series][column] += copyNumber.bafCount();
         }
 
@@ -210,18 +215,18 @@ class CopyNumberCharts {
         for (int i = 0; i <= MAX_COPY_NUMBER_SERIES; i++) {
             String seriesName = "CN" + i + (i == MAX_COPY_NUMBER_SERIES ? "+" : "");
 
-            if (!Doubles.isZero(buckets[i][0])) {
-                result.add(-0.5, buckets[i][0], seriesName);
-            }
-
-            for (int j = 1; j <= maxBuckets; j++) {
+            for (int j = 0; j < totalBuckets; j++) {
                 if (!Doubles.isZero(buckets[i][j])) {
-                    result.add((j - 1) * 0.1, buckets[i][j], seriesName);
+                    result.add(-1 + (j * 0.1), buckets[i][j], seriesName);
                 }
             }
         }
 
         return result;
+    }
+
+    private static int limit(double value, int min, int max) {
+        return Math.max(min, Math.min(max, (int) Math.round(value)));
     }
 
     @NotNull

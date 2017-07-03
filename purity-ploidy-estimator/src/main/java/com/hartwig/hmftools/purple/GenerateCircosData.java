@@ -105,7 +105,7 @@ public class GenerateCircosData {
         Files.write(new File(circosConfigOutput).toPath(), content.getBytes(charset));
 
         LOGGER.info("Writing QC plots");
-        new ChartWriter(sample, plotOutput).write(copyNumber, somaticVariants);
+        new ChartWriter(sample, plotOutput).write(purity, copyNumber, somaticVariants);
 
         LOGGER.info("Complete Successfully");
     }

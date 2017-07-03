@@ -32,7 +32,8 @@ public class FittedRegionFactory {
     }
 
     @NotNull
-    public List<FittedRegion> fitRegion(final double purity, final double normFactor, @NotNull final Collection<ObservedRegion> observedRegions) {
+    public List<FittedRegion> fitRegion(final double purity, final double normFactor,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
         return observedRegions.stream().map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
@@ -53,18 +54,22 @@ public class FittedRegionFactory {
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
                 .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
+                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(
+                        observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
 
         for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
-            double[] modelBAFWithDeviation = observedRegion.bafCount() == 0 ? new double[] { 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+            double[] modelBAFWithDeviation =
+                    observedRegion.bafCount() == 0 ? new double[] { 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
 
-            double deviation = Math.pow(Math.max(ploidy, 2) / 2.0, ploidyPenaltyExponent) * (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
+            double deviation = Math.pow(Math.max(ploidy, 2) / 2.0, ploidyPenaltyExponent) * (bafDeviation + cnvDeviation) * Math.pow(
+                    observedBAF,
+                    observedBafExponent);
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
