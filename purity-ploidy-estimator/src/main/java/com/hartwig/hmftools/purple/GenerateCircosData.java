@@ -20,12 +20,10 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
-import com.hartwig.hmftools.purple.somatic.EnrichedSomaticVariantFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -73,7 +71,7 @@ public class GenerateCircosData {
             System.exit(-1);
         }
 
-        final List<SomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample, true)
+        final List<EnrichedSomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample)
                 .stream()
                 .filter(x -> x.type() == VariantType.SNP)
                 .filter(x -> Chromosomes.asInt(x.chromosome()) <= 25)
@@ -89,12 +87,9 @@ public class GenerateCircosData {
             LOGGER.error("Structural Variants not available");
         }
 
-
-        final List<EnrichedSomaticVariant> enrichedSomaticVariants = EnrichedSomaticVariantFactory.create(purity, somaticVariants, copyNumber);
-
         LOGGER.info("Writing data files");
         final String baseDataOutput = dataOutput + File.separator + sample;
-        CircosFileWriter.writePositions(baseDataOutput + ".snp.circos", enrichedSomaticVariants, EnrichedSomaticVariant::adjustedVAF);
+        CircosFileWriter.writePositions(baseDataOutput + ".snp.circos", somaticVariants, EnrichedSomaticVariant::adjustedVAF);
         CircosFileWriter.writeRegions(baseDataOutput + ".cnv.circos", copyNumber, x -> x.averageTumorCopyNumber() - 2);
         CircosFileWriter.writeRegions(baseDataOutput + ".baf.circos", copyNumber, PurpleCopyNumber::averageActualBAF);
 
@@ -110,7 +105,7 @@ public class GenerateCircosData {
         Files.write(new File(circosConfigOutput).toPath(), content.getBytes(charset));
 
         LOGGER.info("Writing QC plots");
-        new ChartWriter(sample, plotOutput).write(copyNumber, enrichedSomaticVariants);
+        new ChartWriter(sample, plotOutput).write(copyNumber, somaticVariants);
 
         LOGGER.info("Complete Successfully");
     }

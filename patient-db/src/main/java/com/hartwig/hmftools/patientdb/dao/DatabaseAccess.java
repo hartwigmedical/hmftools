@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -79,8 +78,8 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<SomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId, boolean passOnly) {
-        return somaticVariantDAO.read(sampleId, passOnly);
+    public List<EnrichedSomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId) {
+        return somaticVariantDAO.read(sampleId, true);
     }
 
     public void writeComprehensiveSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
