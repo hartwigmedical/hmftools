@@ -31,8 +31,12 @@ public abstract class PurpleCopyNumber implements CopyNumber {
     public abstract double averageTumorCopyNumber();
 
     public String descriptiveBAF() {
-        int betaAlleleCount = (int) Math.round(Math.max(0, averageActualBAF()) * value());
-        int alphaAlleleCount = value() - betaAlleleCount;
+
+        int copyNumber = value();
+        double constrainedBaf = Math.max(0, Math.min(1, averageActualBAF()));
+
+        int betaAlleleCount = (int) Math.round(constrainedBaf * copyNumber);
+        int alphaAlleleCount = copyNumber - betaAlleleCount;
         return Strings.repeat("A", Math.max(alphaAlleleCount, betaAlleleCount)) + Strings.repeat("B",
                 Math.min(alphaAlleleCount, betaAlleleCount));
     }

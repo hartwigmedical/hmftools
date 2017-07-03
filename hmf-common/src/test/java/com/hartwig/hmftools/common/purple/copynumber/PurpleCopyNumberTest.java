@@ -21,9 +21,13 @@ public class PurpleCopyNumberTest {
     }
 
     @Test
-    public void testDescriptiveBAF() {
+    public void testDescriptiveBAFBoundary() {
+        assertEquals("AA", createBAFString(1.3, 2));
         assertEquals("", createBAFString(0, -12));
+    }
 
+    @Test
+    public void testDescriptiveBAF() {
         assertEquals("AA", createBAFString(0, 2));
         assertEquals("AB", createBAFString(0.5, 2));
         assertEquals("AB", createBAFString(0.7, 2));
