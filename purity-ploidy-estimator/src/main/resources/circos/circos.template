@@ -11,7 +11,6 @@ karyotype = data/karyotype/karyotype.human.txt
 chromosomes_units           = 1000000
 chromosomes_display_default = yes
 chromosomes                 = -EXCLUDE
-chromosomes_breaks          = -hs13:0-19;-hs14:0-19;-hs15:0-20;-hs21:0-9;-hs22:0-16;-hsY:29-)
 
 <links>
     <link>
@@ -29,7 +28,7 @@ chromosomes_breaks          = -hs13:0-19;-hs14:0-19;-hs15:0-20;-hs21:0-9;-hs22:0
 	<highlight>
 		file       = gaps.txt
 		ideogram   = yes
-		fill_color = black_a5
+		fill_color = black_a3
 		z = 5
 	</highlight>
 
