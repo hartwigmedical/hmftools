@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.ToDoubleFunction;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -192,7 +193,8 @@ class CopyNumberCharts {
         return result;
     }
 
-    private static CategoryTableXYDataset minorAllele(@NotNull final List<PurpleCopyNumber> copyNumbers) {
+    @VisibleForTesting
+    static CategoryTableXYDataset minorAllele(@NotNull final List<PurpleCopyNumber> copyNumbers) {
 
         int positivePloidy = 5;
         int positiveBuckets = positivePloidy * 10;
@@ -200,7 +202,7 @@ class CopyNumberCharts {
         int negativeBuckets = negativePloidy * 10;
         int totalBuckets = negativeBuckets + positiveBuckets;
 
-        double[][] buckets = new double[MAX_COPY_NUMBER_SERIES + 1][totalBuckets];
+        double[][] buckets = new double[MAX_COPY_NUMBER_SERIES + 1][totalBuckets + 1];
         for (final PurpleCopyNumber copyNumber : copyNumbers) {
 
             double minorAllele = (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber();
@@ -215,7 +217,7 @@ class CopyNumberCharts {
         for (int i = 0; i <= MAX_COPY_NUMBER_SERIES; i++) {
             String seriesName = "CN" + i + (i == MAX_COPY_NUMBER_SERIES ? "+" : "");
 
-            for (int j = 0; j < totalBuckets; j++) {
+            for (int j = 0; j <= totalBuckets; j++) {
                 if (!Doubles.isZero(buckets[i][j])) {
                     result.add(-1 + (j * 0.1), buckets[i][j], seriesName);
                 }
