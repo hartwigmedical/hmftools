@@ -17,6 +17,17 @@ public class CopyNumberChartsTest {
     private static final double EPSILON = 1e-10;
 
     @Test
+    public void testNegativeMinorBafs() {
+        CategoryTableXYDataset dataset = minorAllele(newArrayList(createCopyNumber(1.1, 1)));
+        assertEquals(-0.1, dataset.getX(0, 0).doubleValue(), EPSILON);
+        assertEquals(10, dataset.getY(0, 0).doubleValue(), EPSILON);
+
+        dataset = minorAllele(newArrayList(createCopyNumber(1.7, 1)));
+        assertEquals(-0.7, dataset.getX(0, 0).doubleValue(), EPSILON);
+        assertEquals(10, dataset.getY(0, 0).doubleValue(), EPSILON);
+    }
+
+    @Test
     public void testLowerBoundary() {
         CategoryTableXYDataset dataset = minorAllele(newArrayList(createCopyNumber(2, 1)));
         assertEquals(-1, dataset.getX(0, 0).doubleValue(), EPSILON);
@@ -38,10 +49,8 @@ public class CopyNumberChartsTest {
         assertEquals(10, dataset.getY(0, 0).doubleValue(), EPSILON);
     }
 
-
-
     @NotNull
-    public static PurpleCopyNumber createCopyNumber(double baf, double copyNumber) {
+    private static PurpleCopyNumber createCopyNumber(double baf, double copyNumber) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome("1")
                 .start(1)
