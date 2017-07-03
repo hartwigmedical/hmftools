@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_YN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
@@ -33,7 +32,8 @@ public class TreatmentResponseValidationTest {
     private final static BiopsyTreatmentData TREATMENT_JAN_JAN = new BiopsyTreatmentData("Yes", JAN2015, JAN2015, Lists.newArrayList());
     private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 = new BiopsyTreatmentResponseData(JAN2015, JAN2015, "NE", "Yes");
     private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 = new BiopsyTreatmentResponseData(FEB2015, FEB2015, "NE", "Yes");
-    private final static BiopsyTreatmentResponseData RESPONSE_NULL = new BiopsyTreatmentResponseData(null, null, "NE", null);
+    private final static BiopsyTreatmentResponseData RESPONSE_NULL = new BiopsyTreatmentResponseData(null, null, null, null);
+    private final static BiopsyTreatmentResponseData RESPONSE_ONLY = new BiopsyTreatmentResponseData(null, null, "NE", null);
     private final static BiopsyTreatmentResponseData RESPONSE_MISSING_DATA = new BiopsyTreatmentResponseData(null, null, null, "yes");
     private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
             new BiopsyTreatmentResponseData(JAN2015, JAN2015, "NE", "no");
@@ -48,20 +48,29 @@ public class TreatmentResponseValidationTest {
     }
 
     @Test
+    public void reportsOnlyResponseFilledIn() {
+        final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_ONLY);
+        assertEquals(2, findings.size());
+        findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
+        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
+        assertTrue(findingsFields.contains(FIELD_MEASUREMENT_YN));
+        assertTrue(findingsFields.contains(FIELD_ASSESSMENT_DATE));
+    }
+
+    @Test
     public void reportsMeasurementDoneMissingData() {
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MISSING_DATA);
-        assertEquals(3, findings.size());
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_RESPONSE));
         assertTrue(findingsFields.contains(FIELD_ASSESSMENT_DATE));
-        assertTrue(findingsFields.contains(FIELD_RESPONSE_DATE));
     }
 
     @Test
     public void reportsMeasurementDoneNoWithData() {
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(CPCT_ID, RESPONSE_MEASUREMENT_NO_WITH_DATA);
-        assertEquals(3, findings.size());
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_MEASUREMENT_YN));

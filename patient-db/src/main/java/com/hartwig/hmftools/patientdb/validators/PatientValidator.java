@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_YN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR1;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR2;
@@ -195,7 +194,7 @@ public class PatientValidator {
             if (drugEnd != null) {
                 if (drugStart.isAfter(drugEnd)) {
                     findings.add(new ImmutableValidationFinding(patientId, fields(FIELD_DRUG_START, FIELD_DRUG_END),
-                            patientId + ": drug startDate (" + drugStart + ") is after drug endDate (" + drugEnd + ")"));
+                            "drug startDate is after drug endDate"));
                 }
             }
         }
@@ -262,25 +261,15 @@ public class PatientValidator {
         final LocalDate assessmentDate = treatmentResponse.assessmentDate();
         if (measurementDone == null) {
             findings.add(new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN, "measurement done field empty"));
+
         } else if (measurementDone.trim().toLowerCase().equals("yes")) {
-            if (responseDate == null) {
-                findings.add(new ImmutableValidationFinding(patientId, FIELD_RESPONSE_DATE, "response date empty or in wrong format"));
-            }
             if (assessmentDate == null) {
                 findings.add(new ImmutableValidationFinding(patientId, FIELD_ASSESSMENT_DATE, "assessment date empty or in wrong format"));
-            }
-            if (responseDate != null && assessmentDate != null && !assessmentDate.isEqual(responseDate)) {
-                findings.add(new ImmutableValidationFinding(patientId, fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE),
-                        patientId + ": assessment date(" + assessmentDate + ") differs from response date(" + responseDate + ")"));
             }
             if (treatmentResponse.response() == null) {
                 findings.add(new ImmutableValidationFinding(patientId, FIELD_RESPONSE, "measurement done is yes, but response is empty"));
             }
         } else if (measurementDone.trim().toLowerCase().equals("no")) {
-            if (responseDate != null) {
-                findings.add(new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN,
-                        "measurement done is no, but response date filled in"));
-            }
             if (assessmentDate != null) {
                 findings.add(new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN,
                         "measurement done is no, but assessment date filled in"));
@@ -291,6 +280,10 @@ public class PatientValidator {
             }
         } else {
             findings.add(new ImmutableValidationFinding(patientId, FIELD_MEASUREMENT_YN, "measurement done is not yes/no"));
+        }
+        if (treatmentResponse.response() != null && treatmentResponse.assessmentDate() == null) {
+            findings.add(
+                    new ImmutableValidationFinding(patientId, FIELD_ASSESSMENT_DATE, "response filled in, but no assessment date found"));
         }
         return findings;
     }
