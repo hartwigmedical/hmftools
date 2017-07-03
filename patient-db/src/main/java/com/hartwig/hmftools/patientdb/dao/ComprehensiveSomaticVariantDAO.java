@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep13;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -59,6 +59,7 @@ class ComprehensiveSomaticVariantDAO {
                     .highConfidenceRegion(record.getValue(COMPREHENSIVESOMATICVARIANT.HIGHCONFIDENCE, Boolean.class))
                     .adjustedVAF(record.getValue(COMPREHENSIVESOMATICVARIANT.ADJUSTEDVAF))
                     .adjustedCopyNumber(record.getValue(COMPREHENSIVESOMATICVARIANT.ADJUSTEDCOPYNUMBER))
+                    .trinucleotideContext(record.getValue(COMPREHENSIVESOMATICVARIANT.TRINUCLEOTIDECONTEXT))
                     .type(VariantType.fromRefAlt(ref, alt))
                     .build();
 
@@ -74,7 +75,7 @@ class ComprehensiveSomaticVariantDAO {
         context.delete(COMPREHENSIVESOMATICVARIANT).where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
+            InsertValuesStep13 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
                     COMPREHENSIVESOMATICVARIANT.SAMPLEID,
                     COMPREHENSIVESOMATICVARIANT.CHROMOSOME,
                     COMPREHENSIVESOMATICVARIANT.POSITION,
@@ -86,13 +87,14 @@ class ComprehensiveSomaticVariantDAO {
                     COMPREHENSIVESOMATICVARIANT.ADJUSTEDCOPYNUMBER,
                     COMPREHENSIVESOMATICVARIANT.ADJUSTEDVAF,
                     COMPREHENSIVESOMATICVARIANT.HIGHCONFIDENCE,
+                    COMPREHENSIVESOMATICVARIANT.TRINUCLEOTIDECONTEXT,
                     COMPREHENSIVESOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep12 inserter, String sample, EnrichedSomaticVariant region) {
+    private void addRecord(Timestamp timestamp, InsertValuesStep13 inserter, String sample, EnrichedSomaticVariant region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.position(),
@@ -104,6 +106,7 @@ class ComprehensiveSomaticVariantDAO {
                 region.adjustedCopyNumber(),
                 region.adjustedVAF(),
                 region.highConfidenceRegion(),
+                region.trinucleotideContext(),
                 timestamp);
     }
 

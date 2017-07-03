@@ -17,6 +17,9 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequence;
+
 public class EnrichedSomaticVariantFactory {
 
     @NotNull
@@ -25,13 +28,16 @@ public class EnrichedSomaticVariantFactory {
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
     @NotNull
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
+    @NotNull
+    private final IndexedFastaSequenceFile reference;
 
     public EnrichedSomaticVariantFactory(double purity, double normFactor,
             @NotNull  final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull  final Multimap<String, PurpleCopyNumber> copyNumbers) {
+            @NotNull  final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
         purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
         highConfidenceSelector = new GenomeRegionSelector<>(highConfidenceRegions);
         copyNumberSelector = new GenomeRegionSelector<>(copyNumbers);
+        this.reference = reference;
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<SomaticVariant> variants) {
@@ -43,12 +49,14 @@ public class EnrichedSomaticVariantFactory {
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> addCopyNumber(builder, x, variant.alleleFrequency()));
+        addTrinucleotideContext(builder, variant);
 
         return builder.build();
     }
 
     private Builder createBuilder(@NotNull final SomaticVariant variant) {
         return builder().from(variant)
+                .trinucleotideContext("")
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .highConfidenceRegion(false)
@@ -59,6 +67,12 @@ public class EnrichedSomaticVariantFactory {
     private Builder addCopyNumber(@NotNull final Builder builder, @NotNull final PurpleCopyNumber copyNumber, double alleleFrequency) {
         double adjustedVAF = purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), alleleFrequency);
         return builder.adjustedCopyNumber(copyNumber.averageTumorCopyNumber()).adjustedVAF(adjustedVAF);
+    }
+
+    private Builder addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        final ReferenceSequence sequence =
+                reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
+        return builder.trinucleotideContext(sequence.getBaseString());
     }
 
     private Builder inHighConfidenceRegion(@NotNull final Builder builder) {

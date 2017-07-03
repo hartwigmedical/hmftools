@@ -111,6 +111,7 @@ CREATE TABLE comprehensiveSomaticVariant
     adjustedVaf DOUBLE PRECISION NOT NULL,
     adjustedCopyNumber DOUBLE PRECISION NOT NULL,
     highConfidence BOOLEAN NOT NULL,
+    trinucleotideContext varchar(3) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter)
