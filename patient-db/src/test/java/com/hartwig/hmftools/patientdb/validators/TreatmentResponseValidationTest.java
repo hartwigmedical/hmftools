@@ -22,7 +22,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 
 import org.junit.Test;
 
-public class TreatmentResponseValidationTests {
+public class TreatmentResponseValidationTest {
     private final String CPCT_ID = "CPCT01020000";
     private final static LocalDate JAN2015 = LocalDate.parse("2015-01-01");
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");

@@ -21,7 +21,7 @@ import com.hartwig.hmftools.patientdb.data.PatientData;
 
 import org.junit.Test;
 
-public class PatientDataValidationTests {
+public class PatientDataValidationTest {
     private final String CPCT_ID = "CPCT01020000";
     private final String HOSPITAL = "Test Hospital";
     private final PatientData PATIENT_DATA = new PatientData(CPCT_ID, null, null, null, HOSPITAL, null, null, null);
