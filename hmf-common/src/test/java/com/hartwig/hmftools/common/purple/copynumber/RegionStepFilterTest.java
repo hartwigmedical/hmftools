@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -34,8 +35,7 @@ public class RegionStepFilterTest {
         PurpleCopyNumber region2 = create(CHROM1, 10001, 11000, 0.31, 4.3);
         PurpleCopyNumber region3 = create(CHROM1, 11001, 20000, 0.32, 5);
 
-        List<PurpleCopyNumber> regions = RegionStepFilter.filter(
-                Lists.newArrayList(region0, region1, region2, region3));
+        List<PurpleCopyNumber> regions = RegionStepFilter.filter(Lists.newArrayList(region0, region1, region2, region3));
         assertEquals(3, regions.size());
         assertRegion(region0, regions.get(0));
         assertRegion(create(CHROM1, 5001, 11000, 0.3, 4), regions.get(1));
@@ -49,8 +49,7 @@ public class RegionStepFilterTest {
         PurpleCopyNumber region3 = create(CHROM1, 11001, 20000, 0.32, 4);
         PurpleCopyNumber region4 = create(CHROM1, 20001, 30000, 0.32, 4.1);
 
-        List<PurpleCopyNumber> regions = RegionStepFilter.filter(
-                Lists.newArrayList(region1, region2, region3, region4));
+        List<PurpleCopyNumber> regions = RegionStepFilter.filter(Lists.newArrayList(region1, region2, region3, region4));
         assertEquals(3, regions.size());
         assertRegion(region1, regions.get(0));
         assertRegion(create(CHROM1, 10001, 20000, 0.32, 4), regions.get(1));
@@ -90,9 +89,8 @@ public class RegionStepFilterTest {
     }
 
     @NotNull
-    private static PurpleCopyNumber create(@NotNull String chromosome, long start, long end, double baf,
-            double ratio) {
-        return ImmutablePurpleCopyNumber.builder().chromosome(chromosome).start(start).end(end).bafCount(
-                0).averageObservedBAF(baf).averageTumorCopyNumber(ratio).averageActualBAF(0).build();
+    private static PurpleCopyNumber create(@NotNull String chromosome, long start, long end, double baf, double copyNumber) {
+        return PurpleDatamodelTest.createCopyNumber(chromosome, start, end, copyNumber).averageObservedBAF(baf).build();
+
     }
 }

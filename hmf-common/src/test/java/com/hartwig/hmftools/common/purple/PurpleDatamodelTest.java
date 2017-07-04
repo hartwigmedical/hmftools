@@ -29,6 +29,8 @@ public class PurpleDatamodelTest {
                 .start(start)
                 .end(end)
                 .averageTumorCopyNumber(copyNumber)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
+                .ratioSupport(true)
                 .bafCount(0)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);

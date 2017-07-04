@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jfree.data.xy.CategoryTableXYDataset;
@@ -58,6 +59,8 @@ public class CopyNumberChartsTest {
                 .averageTumorCopyNumber(copyNumber)
                 .bafCount(10)
                 .averageObservedBAF(baf)
+                .ratioSupport(true)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .averageActualBAF(baf).build();
     }
 }

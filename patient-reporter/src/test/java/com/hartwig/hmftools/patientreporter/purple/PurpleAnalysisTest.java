@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -51,6 +52,8 @@ public class PurpleAnalysisTest {
                 .averageActualBAF(0.5)
                 .averageObservedBAF(0.5)
                 .bafCount(20)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
+                .ratioSupport(true)
                 .build();
     }
 }
