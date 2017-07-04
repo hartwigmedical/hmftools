@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.common.purity;
+package com.hartwig.hmftools.common.purple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
@@ -12,8 +14,27 @@ public class PurityAdjusterTest {
 
     @Test
     public void testBaf() {
-        assertBaf( 0.375, 0.8, 2, 0.4 );
-        assertBafMaleSex( 0.5, 0.8, 2, 0.4 );
+        assertBaf( 0.625, 0.8, 2, 0.6 );
+        assertBafMaleSex( 0.75, 0.8, 2, 0.6 );
+    }
+
+    @Test
+    public void testBafAdjustment() {
+        assertBaf( 0.60, 0.08, 5.1, 0.5);
+        assertBaf( 0.60, 0.08, 5.2, 0.5);
+        assertBaf( 0.60, 0.08, 5.25, 0.5);
+        assertBaf( 0.50, 0.08, 5.5, 0.5);
+    }
+
+    @Test
+    public void testIsClonal() {
+        assertTrue(PurityAdjuster.isClonal(0.75));
+        assertTrue(PurityAdjuster.isClonal(0.9));
+        assertTrue(PurityAdjuster.isClonal(1.0));
+        assertTrue(PurityAdjuster.isClonal(1.1));
+        assertTrue(PurityAdjuster.isClonal(1.25));
+
+        assertFalse(PurityAdjuster.isClonal(1.26));
     }
 
     private void assertBaf(final double expectedBaf, final double purity, final double copyNumber, final double observedFrequency) {

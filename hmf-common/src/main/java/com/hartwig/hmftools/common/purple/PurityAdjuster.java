@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.common.purity;
+package com.hartwig.hmftools.common.purple;
 
 import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -9,6 +10,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import org.jetbrains.annotations.NotNull;
 
 public class PurityAdjuster {
+
+    static final double AMBIGUOUS_BAF = 0.542;
+    private static final double CLONAL_DISTANCE = 0.25;
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
         return new PurityAdjuster(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
@@ -44,7 +48,23 @@ public class PurityAdjuster {
 
     public double purityAdjustedBAF(final String chromosome, final double copyNumber, final double observedFrequency) {
         double typicalFrequency = isMaleSexChromosome(chromosome) ? 0 : 0.5;
-        return purityAdjustedFrequency(copyNumber, observedFrequency, typicalFrequency);
+        double rawAdjustedBaf = purityAdjustedFrequency(copyNumber, observedFrequency, typicalFrequency);
+
+        int ploidy = (int) Math.round(copyNumber);
+        if (Doubles.lessOrEqual(observedFrequency, AMBIGUOUS_BAF) && isClonal(copyNumber) && ploidy > 0) {
+            int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
+            double modelBAF = BAFUtils.modelBAF(purity, ploidy, minBetaAllele);
+            if (Doubles.lessThan(modelBAF, AMBIGUOUS_BAF)) {
+                return (double) minBetaAllele / ploidy;
+            }
+        }
+
+        return rawAdjustedBaf;
+    }
+
+    @VisibleForTesting
+    static boolean isClonal(final double copyNumber) {
+        return Doubles.lessOrEqual(Doubles.distanceFromInteger(copyNumber), CLONAL_DISTANCE);
     }
 
     private double purityAdjustedFrequency(final double copyNumber, final double observedFrequency, final double typicalFrequency) {

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.NORMAL_BAF;
+import static com.hartwig.hmftools.common.purple.BAFUtils.NORMAL_BAF;
+import static com.hartwig.hmftools.common.purple.BAFUtils.modelBAF;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.bafDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.cnvDeviation;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAF;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAFToMinimizeDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelRatio;
 

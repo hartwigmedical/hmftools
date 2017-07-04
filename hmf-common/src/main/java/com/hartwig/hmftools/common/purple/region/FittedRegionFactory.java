@@ -7,14 +7,13 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purity.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.BAFUtils;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactory {
-
-    public static final double NORMAL_BAF = 0.535;
 
     private final Gender gender;
     private final int maxPloidy;
@@ -105,10 +104,10 @@ public class FittedRegionFactory {
         double result = 0;
         double deviation = 0;
 
-        int minBetaAllele = (int) Math.round(ploidy / 2d);
+        int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
 
-            double modelBAF = modelBAF(purity, ploidy, betaAllele);
+            double modelBAF = BAFUtils.modelBAF(purity, ploidy, betaAllele);
             double modelDeviation = bafDeviation(modelBAF, actualBAF);
 
             if (betaAllele == minBetaAllele || modelDeviation < deviation) {
@@ -118,16 +117,5 @@ public class FittedRegionFactory {
         }
 
         return new double[] { result, deviation };
-    }
-
-    @VisibleForTesting
-    static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
-        assert (alleleCount >= ploidy / 2d);
-
-        if (ploidy / alleleCount == 2) {
-            return NORMAL_BAF;
-        }
-
-        return Math.max(NORMAL_BAF, (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2)));
     }
 }

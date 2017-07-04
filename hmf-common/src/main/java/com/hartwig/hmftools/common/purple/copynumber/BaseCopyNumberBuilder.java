@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purity.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -84,8 +81,7 @@ abstract class BaseCopyNumberBuilder {
             return observedBAF;
         }
 
-        double adjustedObservedBAF = isEven(copyNumber) && lessOrEqual(observedBAF, FittedRegionFactory.NORMAL_BAF) ? 0.5 : observedBAF;
-        return purityAdjuster.purityAdjustedBAF(chromosome, copyNumber, adjustedObservedBAF);
+        return purityAdjuster.purityAdjustedBAF(chromosome, copyNumber, observedBAF);
     }
 
     @VisibleForTesting

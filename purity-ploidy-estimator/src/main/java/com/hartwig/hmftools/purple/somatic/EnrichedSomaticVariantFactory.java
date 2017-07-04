@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.purity.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -46,6 +46,13 @@ public class EnrichedSomaticVariantFactory {
 
     private EnrichedSomaticVariant enrich(@NotNull final SomaticVariant variant) {
         final Builder builder = createBuilder(variant);
+
+        if (variant.ref().equals("TCTTC")) {
+
+            final ReferenceSequence sequence =
+                    reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 20), variant.position() + 20);
+            System.out.println(sequence.getBaseString());
+        }
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> addCopyNumber(builder, x, variant.alleleFrequency()));

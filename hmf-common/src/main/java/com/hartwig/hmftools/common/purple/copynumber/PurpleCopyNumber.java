@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.google.common.base.Strings;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.immutables.value.Value;
@@ -12,8 +11,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleCopyNumber implements CopyNumber {
-
-    public static final double CLONAL_DISTANCE = 0.25;
 
     public abstract int bafCount();
 
@@ -36,10 +33,6 @@ public abstract class PurpleCopyNumber implements CopyNumber {
         int alphaAlleleCount = copyNumber - betaAlleleCount;
         return Strings.repeat("A", Math.max(alphaAlleleCount, betaAlleleCount)) + Strings.repeat("B",
                 Math.min(alphaAlleleCount, betaAlleleCount));
-    }
-
-    public boolean isClonal() {
-        return Doubles.lessOrEqual(Doubles.distanceFromInteger(averageTumorCopyNumber()), CLONAL_DISTANCE);
     }
 
     @Override
