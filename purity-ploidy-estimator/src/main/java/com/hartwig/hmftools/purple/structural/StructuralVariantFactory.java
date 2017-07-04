@@ -19,6 +19,8 @@ class StructuralVariantFactory {
 
     private static String TYPE = "SVTYPE";
     private static String MATE_ID = "MATEID";
+    private static String INS_SEQ = "SVINSSEQ";
+    private static String HOM_SEQ = "HOMSEQ";
 
     private final Map<String, VariantContext> unmatched = new HashMap<>();
     private final List<StructuralVariant> results = Lists.newArrayList();
@@ -59,11 +61,38 @@ class StructuralVariantFactory {
         final StructuralVariantType type = type(context);
         Preconditions.checkArgument(!StructuralVariantType.BND.equals(type));
 
+        byte startOrientation = 0, endOrientation = 0;
+        switch (type) {
+            case INV:
+                if (context.hasAttribute("INV3")) {
+                    startOrientation = 1;
+                    endOrientation = -1;
+                } else if (context.hasAttribute("INV5")) {
+                    startOrientation = -1;
+                    endOrientation = 1;
+                }
+                break;
+            case DEL:
+                startOrientation = endOrientation = 1;
+                break;
+            case INS:
+                startOrientation = endOrientation = 1;
+                break;
+            case DUP:
+                startOrientation = endOrientation = -1;
+                break;
+        }
+
         return ImmutableStructuralVariant.builder()
                 .startChromosome(context.getContig())
                 .startPosition(context.getStart())
+                .startOrientation(startOrientation)
+                .startHomology(context.getAttributeAsString(HOM_SEQ, ""))
                 .endChromosome(context.getContig())
                 .endPosition(context.getEnd())
+                .endOrientation(endOrientation)
+                .endHomology("")
+                .insertSequence(context.getAttributeAsString(INS_SEQ, ""))
                 .type(type)
                 .build();
     }
@@ -72,11 +101,36 @@ class StructuralVariantFactory {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(first)));
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(second)));
 
+        byte startOrientation = 0, endOrientation = 0;
+        final String alt = first.getAlternateAllele(0).getDisplayString();
+        final String[] leftSplit = alt.split("\\]");
+        final String[] rightSplit = alt.split("\\[");
+        if (leftSplit.length >= 2) {
+            if (leftSplit[0].length() > 0) {
+                startOrientation = 1;
+                endOrientation = -1;
+            } else {
+                startOrientation = endOrientation = -1;
+            }
+        } else if (rightSplit.length >= 2) {
+            if (rightSplit[0].length() > 0) {
+                startOrientation = endOrientation = 1;
+            } else {
+                startOrientation = -1;
+                endOrientation = 1;
+            }
+        }
+
         return ImmutableStructuralVariant.builder()
                 .startChromosome(first.getContig())
                 .startPosition(first.getStart())
+                .startOrientation(startOrientation)
+                .startHomology(first.getAttributeAsString(HOM_SEQ, ""))
                 .endChromosome(second.getContig())
                 .endPosition(second.getEnd())
+                .endOrientation(endOrientation)
+                .endHomology(second.getAttributeAsString(HOM_SEQ, ""))
+                .insertSequence(first.getAttributeAsString(INS_SEQ, ""))
                 .type(StructuralVariantType.BND)
                 .build();
     }

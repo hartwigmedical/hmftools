@@ -11,7 +11,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
-import com.hartwig.hmftools.common.purity.PurityAdjustment;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
@@ -33,10 +33,9 @@ public class FittedPurityFactory {
     private final List<FittedPurity> allPurities = Lists.newArrayList();
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
 
-    public FittedPurityFactory(final int maxPloidy, final double minPurity, final double maxPurity,
-            final double purityIncrements, final double minNormFactor, final double maxNormFactor,
-            final double normFactorIncrements, @NotNull final FittedRegionFactory fittedRegionFactory,
-            @NotNull final Collection<ObservedRegion> observedRegions) {
+    public FittedPurityFactory(final int maxPloidy, final double minPurity, final double maxPurity, final double purityIncrements,
+            final double minNormFactor, final double maxNormFactor, final double normFactorIncrements,
+            @NotNull final FittedRegionFactory fittedRegionFactory, @NotNull final Collection<ObservedRegion> observedRegions) {
         this.maxPloidy = maxPloidy;
         this.minPurity = minPurity;
         this.maxPurity = maxPurity;
@@ -65,8 +64,7 @@ public class FittedPurityFactory {
         int totalBAFCount = 0;
         final List<ObservedRegion> filteredRegions = Lists.newArrayList();
         for (final ObservedRegion region : observedRegions) {
-            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio())
-                    && Chromosomes.asInt(region.chromosome()) <= 22) {
+            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && Chromosomes.asInt(region.chromosome()) <= 22) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
             }
@@ -75,9 +73,8 @@ public class FittedPurityFactory {
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
             final List<FittedPurity> fittedPurities = Lists.newArrayList();
 
-            for (double normFactor = minNormFactor; lessOrEqual(normFactor,
-                    maxNormFactor); normFactor += normFactorIncrements) {
-                double impliedPloidy = PurityAdjustment.purityAdjustedCopyNumber(purity, normFactor, 1, 2);
+            for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
+                double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);
 
                 if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
                     fittedPurities.add(fitPurity(purity, normFactor, totalBAFCount, filteredRegions));
@@ -113,9 +110,6 @@ public class FittedPurityFactory {
             }
         }
 
-        return builder.score(modelDeviation)
-                .modelBAFDeviation(modelBAFDeviation)
-                .diploidProportion(diploidProportion)
-                .build();
+        return builder.score(modelDeviation).modelBAFDeviation(modelBAFDeviation).diploidProportion(diploidProportion).build();
     }
 }

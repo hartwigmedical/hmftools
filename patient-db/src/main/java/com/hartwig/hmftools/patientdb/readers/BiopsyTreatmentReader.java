@@ -13,22 +13,20 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class BiopsyTreatmentReader {
-    private static final Logger LOGGER = LogManager.getLogger(BiopsyTreatmentResponseReader.class);
+public class BiopsyTreatmentReader {
 
     private static final String STUDY_AFTERBIOPT = "SE.AFTERBIOPT";
-    private static final String FORM_TREATMENT = "FRM.TRTAFTER";
+    public static final String FORM_TREATMENT = "FRM.TRTAFTER";
     private static final String ITEMGROUP_TREATMENT_AFTER = "GRP.TRTAFTER.TRTAFTER";
     private static final String ITEMGROUP_SYSPOSTBIO = "GRP.TRTAFTER.SYSPOSTBIO";
-    private static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
-    private static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
-    private static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
-    private static final String FIELD_DRUG = "FLD.TRTAFTER.SYSREGPOST";
+    public static final String FIELD_TREATMENT_GIVEN = "FLD.TRTAFTER.SYSTEMICST";
+    public static final String FIELD_DRUG_START = "FLD.TRTAFTER.SYSSTDT";
+    public static final String FIELD_DRUG_END = "FLD.TRTAFTER.SYSENDT";
+    public static final String FIELD_DRUG = "FLD.TRTAFTER.PLANNEDTRT";
+    public static final String FIELD_DRUG_OTHER = "FLD.TRTAFTER.SYSREGPOST";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -45,7 +43,7 @@ class BiopsyTreatmentReader {
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, true)) {
                 final String treatmentGiven = readTreatmentGiven(form);
-                final List<BiopsyTreatmentDrugData> drugs = readDrugs(patient.patientId(), form);
+                final List<BiopsyTreatmentDrugData> drugs = readDrugs(form);
                 final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
                 final LocalDate treatmentEnd = determineTreatmentEndDate(drugs);
                 treatmentDatas.add(new BiopsyTreatmentData(treatmentGiven, treatmentStart, treatmentEnd, drugs));
@@ -55,23 +53,15 @@ class BiopsyTreatmentReader {
     }
 
     @NotNull
-    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final String patientId, @NotNull final EcrfForm form) {
+    private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final EcrfForm form) {
         final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
         for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, true)) {
             final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, true);
             final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, true);
-            if (drugStart != null && drugEnd != null) {
-                if (drugStart.isEqual(drugEnd)) {
-                    LOGGER.warn(
-                            patientId + ": drug startDate (" + drugStart + ") is equal with drug endDate (" + drugEnd
-                                    + ")");
-                }
-                if (drugStart.isAfter(drugEnd)) {
-                    LOGGER.warn(patientId + ": drug startDate (" + drugStart + ") is after drug endDate (" + drugEnd
-                            + ")");
-                }
+            String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
+            if (drugName == null || drugName.trim().toLowerCase().startsWith("other")) {
+                drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, true);
             }
-            final String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
             final String drugType = drugName == null ? null : treatmentToTypeMapping.get(drugName.toLowerCase().trim());
             drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));
         }

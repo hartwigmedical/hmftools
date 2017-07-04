@@ -48,33 +48,37 @@ public class EcrfItemGroup {
     }
 
     public boolean isEmpty() {
-        return itemsPerOID.values().stream().filter(
-                listOfValues -> listOfValues.stream().filter(value -> value != null && !value.trim().isEmpty()).count()
-                        > 0).count() == 0;
+        return itemsPerOID.values()
+                .stream()
+                .filter(listOfValues -> listOfValues.stream().filter(value -> value != null && !value.trim().isEmpty()).count() > 0)
+                .count() == 0;
     }
 
     @Nullable
     private String readItemString(@NotNull final String itemOID, int index) {
         if (index < itemsPerOID(itemOID).size()) {
             final String ecrfValue = itemsPerOID(itemOID).get(index);
-            if (ecrfValue != null && ecrfValue.replaceAll("\\s", "").length() == 0) {
-                return null;
+            if (ecrfValue != null) {
+                if (ecrfValue.replaceAll("\\s", "").length() == 0) {
+                    return null;
+                } else {
+                    //MIVO: remove whitespace + non-breakable spaces
+                    return ecrfValue.trim().replaceAll("\\u00A0", "");
+                }
             }
-            return ecrfValue;
         }
         return null;
     }
 
     @Nullable
-    private LocalDate readItemDate(@NotNull final String itemOID, int index,
-            @NotNull final DateTimeFormatter dateFormatter) {
+    private LocalDate readItemDate(@NotNull final String itemOID, int index, @NotNull final DateTimeFormatter dateFormatter) {
         if (index < itemsPerOID(itemOID).size()) {
             final String ecrfValue = itemsPerOID(itemOID).get(index);
             if (ecrfValue == null) {
                 return null;
             }
             try {
-                return LocalDate.parse(ecrfValue, dateFormatter);
+                return LocalDate.parse(ecrfValue.trim(), dateFormatter);
             } catch (DateTimeParseException e) {
                 return null;
             }
@@ -83,8 +87,8 @@ public class EcrfItemGroup {
     }
 
     @Nullable
-    public LocalDate readItemDate(@NotNull final String itemOID, int index,
-            @NotNull final DateTimeFormatter dateFormatter, boolean verbose) {
+    public LocalDate readItemDate(@NotNull final String itemOID, int index, @NotNull final DateTimeFormatter dateFormatter,
+            boolean verbose) {
         final LocalDate itemDate = readItemDate(itemOID, index, dateFormatter);
         if (itemDate == null && verbose) {
             LOGGER.warn(patientId + ": empty field: " + itemOID);

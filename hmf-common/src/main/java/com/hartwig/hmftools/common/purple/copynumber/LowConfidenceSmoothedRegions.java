@@ -3,18 +3,22 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 class LowConfidenceSmoothedRegions extends BaseSmoothedRegions {
 
-    private final double purity;
+    @NotNull
+    private final PurityAdjuster purityAdjuster;
+    @NotNull
     private final List<FittedRegion> fittedRegions;
+    @NotNull
     private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
 
-    LowConfidenceSmoothedRegions(final double purity, final List<FittedRegion> fittedRegions) {
-        this.purity = purity;
+    LowConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<FittedRegion> fittedRegions) {
+        this.purityAdjuster = purityAdjuster;
         this.fittedRegions = fittedRegions;
         run();
     }
@@ -29,13 +33,13 @@ class LowConfidenceSmoothedRegions extends BaseSmoothedRegions {
         for (FittedRegion fittedRegion : fittedRegions) {
 
             if (builder == null) {
-                builder = new LowConfidenceCopyNumberBuilder(purity, fittedRegion);
+                builder = new LowConfidenceCopyNumberBuilder(purityAdjuster, fittedRegion);
             } else {
                 if (isSimilar(fittedRegion, builder)) {
                     builder.extendRegion(fittedRegion);
                 } else {
                     smoothedRegions.add(builder.build());
-                    builder = new LowConfidenceCopyNumberBuilder(purity, fittedRegion);
+                    builder = new LowConfidenceCopyNumberBuilder(purityAdjuster, fittedRegion);
                 }
             }
         }

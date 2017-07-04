@@ -27,6 +27,7 @@ import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.readers.SomaticVariantReader;
+import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -36,7 +37,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.ThreadContext;
 import org.jetbrains.annotations.NotNull;
 
 public final class PatientDbRunner {
@@ -57,8 +57,8 @@ public final class PatientDbRunner {
     private static final String CLINICAL = "clinical";
 
     public static void main(@NotNull final String[] args)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
-            SQLException, HartwigException {
+            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
+            HartwigException {
         final Options basicOptions = createBasicOptions();
         final Options somaticOptions = createSomaticOptions();
         final Options clinicalOptions = createClinicalOptions();
@@ -72,8 +72,6 @@ public final class PatientDbRunner {
         final boolean somatic = cmd.hasOption(SOMATIC);
         final boolean clinical = cmd.hasOption(CLINICAL);
 
-        // KODU: ThreadContext is used throughout patient-db to generate log file per hospital. See also log4j2.xml
-        ThreadContext.put("cpctHospitalCode", "default");
         if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", basicOptions);
@@ -100,8 +98,8 @@ public final class PatientDbRunner {
 
     private static void writeClinicalData(@NotNull final Options clinicalOptions, @NotNull final CommandLine cmd,
             @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
-            SQLException, HartwigException {
+            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
+            HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String treatmentToTypeMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
         final String limsCsv = cmd.getOptionValue(LIMS_CSV);
@@ -113,13 +111,14 @@ public final class PatientDbRunner {
             formatter.printHelp("patient-db -clinical", clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
-            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
-            final PatientReader patientReader = new PatientReader(model,
-                    readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
-            final Set<String> cpctPatientIds = runContexts.stream().map(
-                    runContext -> getPatientId(runContext.setName())).filter(
-                    setName -> setName.startsWith("CPCT")).collect(Collectors.toSet());
             dbWriter.clearClinicalTables();
+            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
+            final PatientReader patientReader =
+                    new PatientReader(model, readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
+            final Set<String> cpctPatientIds = runContexts.stream()
+                    .map(runContext -> getPatientId(runContext.setName()))
+                    .filter(setName -> setName.startsWith("CPCT"))
+                    .collect(Collectors.toSet());
             LOGGER.info("Reading CPCT clinical data for " + cpctPatientIds.size() + " patients.");
             for (final String patientId : cpctPatientIds) {
                 final EcrfPatient patient = model.findPatientById(patientId);
@@ -129,16 +128,18 @@ public final class PatientDbRunner {
                     final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
                     LOGGER.info(patient.patientId() + ": Samples: " + tumorSamplesForPatient);
                     final Patient cpctPatient = patientReader.read(patient, tumorSamplesForPatient);
+                    PatientValidator.validatePatient(cpctPatient);
                     dbWriter.writeClinicalData(cpctPatient);
                 }
             }
+            LOGGER.info("Done!");
         }
     }
 
     private static void writeSomaticData(@NotNull final Options somaticOptions, @NotNull final CommandLine cmd,
             @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException,
-            SQLException, HartwigException {
+            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
+            HartwigException {
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String extremeConfidenceBed = cmd.getOptionValue(EXTREME_CONFIDENCE_BED);
         if (Utils.anyNull(highConfidenceBed, extremeConfidenceBed)) {
@@ -147,8 +148,7 @@ public final class PatientDbRunner {
         } else {
             final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
             final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
-            final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer,
-                    extremeConfidenceSlicer);
+            final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
             final SomaticVariantReader somaticVariantReader = new SomaticVariantReader(consensusRule);
             for (final RunContext runContext : runContexts) {
                 LOGGER.info("Reading somatic data form run: " + runContext.runDirectory());
@@ -159,13 +159,13 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static List<String> getTumorSamplesForPatient(@NotNull final String patientId,
-            @NotNull final List<RunContext> runContexts) {
+    private static List<String> getTumorSamplesForPatient(@NotNull final String patientId, @NotNull final List<RunContext> runContexts) {
         final List<String> sampleIdsForPatient = Lists.newArrayList();
         runContexts.forEach(runContext -> {
             final String sampleId = runContext.tumorSample();
-            if (sampleId.startsWith(patientId) && !sampleIdsForPatient.contains(sampleId))
+            if (sampleId.startsWith(patientId) && !sampleIdsForPatient.contains(sampleId)) {
                 sampleIdsForPatient.add(sampleId);
+            }
         });
         return sampleIdsForPatient;
     }
@@ -217,8 +217,7 @@ public final class PatientDbRunner {
     private static Options createClinicalOptions() {
         final Options options = new Options();
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
-        options.addOption(TREATMENT_TYPES_CSV, true,
-                "Path towards the .csv file that maps treatment names to treatment types.");
+        options.addOption(TREATMENT_TYPES_CSV, true, "Path towards the .csv file that maps treatment names to treatment types.");
         options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file.");
         options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file.");
         options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file.");
@@ -234,8 +233,7 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }

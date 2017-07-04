@@ -19,37 +19,36 @@ public final class TreatmentResponseMatcher {
     private TreatmentResponseMatcher() {
     }
 
-    public static List<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(
-            @NotNull final String patientId, @NotNull final List<BiopsyTreatmentData> treatments,
-            @NotNull final List<BiopsyTreatmentResponseData> responses) {
+    public static List<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull final String patientId,
+            @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> responses) {
         final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
         for (final BiopsyTreatmentResponseData response : responses) {
-            final Map<Boolean, List<BiopsyTreatmentData>> partitions = treatments.stream().collect(
-                    Collectors.partitioningBy(treatment -> responseMatchesTreatment(response, treatment)));
+            final Map<Boolean, List<BiopsyTreatmentData>> partitions =
+                    treatments.stream().collect(Collectors.partitioningBy(treatment -> responseMatchesTreatment(response, treatment)));
             final List<BiopsyTreatmentData> matchedTreatments = partitions.get(true);
             if (matchedTreatments.size() == 0) {
                 matchedResponses.add(response);
             } else if (matchedTreatments.size() > 1) {
                 LOGGER.warn(patientId + ": treatment response(" + response.date() + ") matches multiple treatments:"
-                        + matchedTreatments.stream().map(
-                        treatment -> "[" + treatment.startDate() + " - " + treatment.endDate() + "]").collect(
-                        Collectors.toList()));
+                        + matchedTreatments.stream()
+                        .map(treatment -> "[" + treatment.startDate() + " - " + treatment.endDate() + "]")
+                        .collect(Collectors.toList()));
                 matchedResponses.add(response);
             } else {
                 matchedResponses.add(
-                        new BiopsyTreatmentResponseData(matchedTreatments.get(0).id(), response.assessmentDate(),
-                                response.responseDate(), response.response(), response.measurementDone()));
+                        new BiopsyTreatmentResponseData(matchedTreatments.get(0).id(), response.assessmentDate(), response.responseDate(),
+                                response.response(), response.measurementDone()));
             }
         }
         return matchedResponses;
     }
 
-    private static boolean responseMatchesTreatment(@NotNull final BiopsyTreatmentResponseData response,
+    public static boolean responseMatchesTreatment(@NotNull final BiopsyTreatmentResponseData response,
             @NotNull final BiopsyTreatmentData treatment) {
         final LocalDate treatmentStart = treatment.startDate();
         final LocalDate treatmentEnd = treatment.endDate();
         final LocalDate responseDate = response.date();
-        return !(treatmentStart == null || responseDate == null) && (responseDate.isAfter(treatmentStart) && (
-                treatmentEnd == null || responseDate.isBefore(treatmentEnd) || responseDate.isEqual(treatmentEnd)));
+        return !(treatmentStart == null || responseDate == null) && (responseDate.isAfter(treatmentStart) && (treatmentEnd == null
+                || responseDate.isBefore(treatmentEnd) || responseDate.isEqual(treatmentEnd)));
     }
 }

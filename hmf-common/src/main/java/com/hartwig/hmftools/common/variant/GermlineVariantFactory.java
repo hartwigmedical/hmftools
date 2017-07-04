@@ -15,7 +15,6 @@ public final class GermlineVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineVariantFactory.class);
 
-
     private static final int REF_SAMPLE_COLUMN = 9;
     private static final int TUMOR_SAMPLE_COLUMN = 10;
     private static final int SAMPLE_DATA_GENOTYPE_COLUMN = 0;

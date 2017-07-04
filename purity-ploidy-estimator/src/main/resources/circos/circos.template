@@ -23,6 +23,17 @@ chromosomes                 = -EXCLUDE
     </link>
 </links>
 
+<highlights>
+
+	<highlight>
+		file       = gaps.txt
+		ideogram   = yes
+		fill_color = black_a3
+		z = 5
+	</highlight>
+
+</highlights>
+
 # Default is to clip the data to range min/max.
 <plots>
 
@@ -72,7 +83,7 @@ chromosomes                 = -EXCLUDE
 
 		<rules>
 			<rule>
-				condition = var(value) < 2
+				condition = var(value) < 4
 				show = no
 				flow = continue
 			</rule>
@@ -153,33 +164,6 @@ chromosomes                 = -EXCLUDE
 			<rule>
 				condition = var(value) > 0.001
 				#show = no
-			</rule>
-		</rules>
-	</plot>
-
-
-	# -----------------------------------------------------------
-	# CopyNumber - <2 interesting data points
-	<plot>
-		type = scatter
-		file = SAMPLE.cnv.circos
-		r0   = 0.55r
-		r1   = 0.55r
-		min  = -2
-		max  = 0
-		glyph = circle
-		glyph_size = 8
-		color = red
-
-		<rules>
-			<rule>
-				condition  = 1
-				#fill_color = eval( "red_a" . remap_int(var(value),-3,3,1,5) )
-				flow       = continue
-			</rule>
-			<rule>
-				condition = var(value) > -0.5
-				show = no
 			</rule>
 		</rules>
 	</plot>

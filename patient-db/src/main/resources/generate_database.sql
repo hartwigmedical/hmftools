@@ -110,6 +110,8 @@ CREATE TABLE comprehensiveSomaticVariant
     totalReadCount int NOT NULL,
     adjustedVaf DOUBLE PRECISION NOT NULL,
     adjustedCopyNumber DOUBLE PRECISION NOT NULL,
+    highConfidence BOOLEAN NOT NULL,
+    trinucleotideContext varchar(3) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter)
@@ -206,6 +208,9 @@ CREATE TABLE structuralVariant
     endPosition int not null,
     startOrientation tinyint not null,
     endOrientation tinyint not null,
+    startHomologySequence varchar(255) not null,
+    endHomologySequence varchar(255) not null,
+    insertSequence varchar(255) not null,
     type varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
@@ -229,4 +234,15 @@ CREATE TABLE geneCopyNumber
     regions int not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS clinicalLogs;
+CREATE TABLE clinicalLogs
+(   id int NOT NULL AUTO_INCREMENT,
+    eventDate TIMESTAMP,
+    level varchar(100),
+    patientId varchar(20),
+    ecrfItem varchar(100),
+    message varchar(1000),
+    PRIMARY KEY (id)
 );

@@ -16,5 +16,15 @@ public abstract class StructuralVariant {
 
     public abstract long endPosition();
 
+    public abstract byte startOrientation();
+
+    public abstract byte endOrientation();
+
+    public abstract String startHomology();
+
+    public abstract String endHomology();
+
+    public abstract String insertSequence();
+
     public abstract StructuralVariantType type();
 }

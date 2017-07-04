@@ -8,6 +8,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class EnrichedSomaticVariant implements Variant {
 
+    public abstract String trinucleotideContext();
+
+    public abstract boolean highConfidenceRegion();
+
     public abstract int totalReadCount();
 
     public abstract int alleleReadCount();

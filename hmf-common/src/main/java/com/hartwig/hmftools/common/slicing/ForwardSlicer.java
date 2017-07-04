@@ -1,64 +1,35 @@
 package com.hartwig.hmftools.common.slicing;
 
-import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Deque;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 
 import org.jetbrains.annotations.NotNull;
 
 class ForwardSlicer implements Slicer {
 
-    private final Map<String, SingleChromosomeSlicer> regions = Maps.newHashMap();
+    @NotNull
+    final Multimap<String, GenomeRegion> regions;
 
-    ForwardSlicer(@NotNull final SortedSetMultimap<String, GenomeRegion> regions) {
-        for (final String chromosome : regions.keySet()) {
-            SortedSet<GenomeRegion> region = regions.get(chromosome);
-            this.regions.put(chromosome, new SingleChromosomeSlicer(region));
-        }
-    }
+    @NotNull
+    private final GenomeRegionSelector<GenomeRegion> selector;
 
-    @Override
-    public boolean test(@NotNull final GenomePosition variant) {
-        final SingleChromosomeSlicer slicer = regions.get(variant.chromosome());
-        return slicer != null && slicer.includes(variant);
+    ForwardSlicer(@NotNull final Multimap<String, GenomeRegion> regions) {
+        this.regions = regions;
+        this.selector = new GenomeRegionSelector<>(regions);
     }
 
     @NotNull
     @Override
     public Collection<GenomeRegion> regions() {
-        return regions.values().stream().flatMap(x -> x.deque.stream()).collect(Collectors.toList());
+        return regions.values();
     }
 
-    private static class SingleChromosomeSlicer {
-
-        @NotNull
-        private final Deque<GenomeRegion> deque;
-        private long currentPosition;
-
-        SingleChromosomeSlicer(@NotNull SortedSet<GenomeRegion> region) {
-            this.deque = new ArrayDeque<>(region);
-        }
-
-        boolean includes(@NotNull final GenomePosition variant) {
-            if (variant.position() < currentPosition) {
-                throw new IllegalArgumentException("Forward slicer only goes forward, never backwards!");
-            }
-            currentPosition = variant.position();
-
-            GenomeRegion region = deque.peek();
-            while (region != null && region.end() < variant.position()) {
-                deque.pop();
-                region = deque.peek();
-            }
-            return region != null && variant.position() >= region.start();
-        }
+    @Override
+    public boolean test(final GenomePosition genomePosition) {
+        return selector.select(genomePosition).isPresent();
     }
 }

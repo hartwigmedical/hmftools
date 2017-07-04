@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.patientreporter.purple;
 
-import static com.hartwig.hmftools.common.purity.PurityAdjustment.purityAdjustedVAF;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.zipper.SimpleGenomeZipper;
 import com.hartwig.hmftools.common.zipper.SimpleGenomeZipperAllPositionsHandler;
@@ -20,16 +20,16 @@ class VariantCopyNumberZipper implements SimpleGenomeZipperAllPositionsHandler<P
     @NotNull
     static List<VariantReport> zip(@NotNull FittedPurity purity, @NotNull final List<VariantReport> variants,
             @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        final VariantCopyNumberZipper handler = new VariantCopyNumberZipper(purity.purity());
+        final VariantCopyNumberZipper handler = new VariantCopyNumberZipper(purity);
         SimpleGenomeZipper.zip(copyNumbers, variants, handler);
         return handler.reports();
     }
 
     private final List<VariantReport> reports = Lists.newArrayList();
-    private final double purity;
+    private final PurityAdjuster purityAdjuster;
 
-    private VariantCopyNumberZipper(final double purity) {
-        this.purity = purity;
+    private VariantCopyNumberZipper(final FittedPurity purity) {
+        this.purityAdjuster = new PurityAdjuster(Gender.MALE, purity);
     }
 
     private List<VariantReport> reports() {
@@ -46,9 +46,7 @@ class VariantCopyNumberZipper implements SimpleGenomeZipperAllPositionsHandler<P
     }
 
     private VariantReport enrich(@NotNull final PurpleCopyNumber copyNumber, @NotNull final VariantReport variant) {
-        double adjustedVAF = Math.min(1,
-                purityAdjustedVAF(purity, copyNumber.averageTumorCopyNumber(), variant.alleleFrequency()));
-        return ImmutableVariantReport.builder().from(variant).baf(copyNumber.descriptiveBAF()).impliedVAF(
-                adjustedVAF).build();
+        double adjustedVAF = Math.min(1, purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), variant.alleleFrequency()));
+        return ImmutableVariantReport.builder().from(variant).baf(copyNumber.descriptiveBAF()).impliedVAF(adjustedVAF).build();
     }
 }

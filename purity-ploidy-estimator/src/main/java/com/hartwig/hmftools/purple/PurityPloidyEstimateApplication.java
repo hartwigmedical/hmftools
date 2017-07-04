@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
+import com.hartwig.hmftools.common.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -73,7 +74,6 @@ public class PurityPloidyEstimateApplication {
     private static final double PURITY_INCREMENTS = 0.01;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
 
-    private static final String STRUCTURAL_VARIANTS = "sv";
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
     private static final String DB_ENABLED = "db_enabled";
@@ -132,13 +132,8 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Loading structural variants from {}", structuralVariantFile);
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantFile);
 
-        final List<PurpleSegment> segments;
-        if (cmd.hasOption(STRUCTURAL_VARIANTS)) {
-            LOGGER.info("Merging structual variants into freec segmentation");
-            segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
-        } else {
-            segments = PurpleSegmentFactory.createSegments(regions);
-        }
+        LOGGER.info("Merging structural variants into freec segmentation");
+        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
         final ObservedRegionFactory observedRegionFactory =
@@ -171,7 +166,8 @@ public class PurityPloidyEstimateApplication {
             final FittedPurity bestFit = optionalBestFit.get();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
-            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(bestFit.purity(), fittedRegions);
+            final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, bestFit.purity(), bestFit.normFactor());
+            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
             final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
             final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
 
@@ -233,7 +229,6 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(STRUCTURAL_VARIANTS, false, "Include structural variant supported segments");
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPONENT, true, "Ploidy penality exponent. Default 1");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");

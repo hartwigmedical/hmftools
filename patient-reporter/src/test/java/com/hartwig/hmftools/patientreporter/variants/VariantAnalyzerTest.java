@@ -89,7 +89,7 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static GenomeRegion region(final long start, final long end) {
-        return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end, null);
+        return ImmutableBEDGenomeRegion.of(CHROMOSOME, start, end);
     }
 
     @NotNull

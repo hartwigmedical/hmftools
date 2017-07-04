@@ -37,4 +37,13 @@ public class VCFFileLoaderTest {
         assertEquals("sampleT", variantFile.tumorSample());
         assertEquals(3, variantFile.variants().size());
     }
+    
+    @Test
+    public void canLoadGermlineVCFFromFile() throws IOException, HartwigException {
+        final String file = VARIANT_PATH + File.separator + GERMLINE_EXTENSION;
+        final VCFGermlineFile variantFile = VCFFileLoader.loadGermlineVCF(file);
+        assertEquals("sampleR", variantFile.refSample());
+        assertEquals("sampleT", variantFile.tumorSample());
+        assertEquals(3, variantFile.variants().size());
+    }
 }

@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="WARN" packages="com.hartwig.hmftools.patientdb.log4j2plugins">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss} - %msg%n"/>
         </Console>
-        <Routing name="RoutingAppender">
-            <Routes pattern="$${ctx:cpctHospitalCode}">
-                <Route>
-                    <File name="${ctx:cpctHospitalCode}" fileName="patient-db-logs/${ctx:cpctHospitalCode}.log">
-                        <PatternLayout pattern="%d{HH:mm:ss} - %msg%n"/>
-                    </File>
-                </Route>
-            </Routes>
-        </Routing>
+        <JDBC name="DatabaseAppender" tableName="clinicalLogs">
+            <ConnectionFactory class="com.hartwig.hmftools.patientdb.log4j2plugins.LoggerConnectionPool"
+                               method="getDatabaseConnection"/>
+            <Column name="eventDate" isEventTimestamp="true"/>
+            <Column name="level" pattern="%level"/>
+            <Column name="patientId" pattern="%PatientId"/>
+            <Column name="ecrfItem" pattern="%EcrfItem"/>
+            <Column name="message" pattern="%message"/>
+        </JDBC>
     </Appenders>
     <Loggers>
+        <Logger name="com.hartwig.hmftools.patientdb.validators.PatientValidator" level="info">
+            <AppenderRef ref="DatabaseAppender"/>
+        </Logger>
         <Root level="info">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="RoutingAppender"/>
         </Root>
     </Loggers>
 </Configuration>

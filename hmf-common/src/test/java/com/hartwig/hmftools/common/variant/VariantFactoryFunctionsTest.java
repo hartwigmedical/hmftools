@@ -12,9 +12,11 @@ public class VariantFactoryFunctionsTest {
     public void canSplitSampleDataField() {
         final String typicalGermlineSampleData = "0/1:32,61:93:99:2156,0,1092";
         final String typicalSomaticSampleData = "0/1:48,15:64";
+        final String truthSetSomaticSampleData = "0/1:.:567:415";
 
         assertEquals(5, VariantFactoryFunctions.splitSampleDataFields(typicalGermlineSampleData).length);
         assertEquals(3, VariantFactoryFunctions.splitSampleDataFields(typicalSomaticSampleData).length);
+        assertEquals(4, VariantFactoryFunctions.splitSampleDataFields(truthSetSomaticSampleData).length);
     }
 
     @Test

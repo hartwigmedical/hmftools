@@ -77,7 +77,8 @@ public final class SomaticVariantFactory {
 
         final String sampleData = values[SAMPLE_DATA_COLUMN].trim();
         final AlleleFrequencyData alleleFrequencyData = extractAlleleFrequencyData(sampleData);
-        if (alleleFrequencyData == null) {
+        
+        if (null == alleleFrequencyData) {
             LOGGER.warn("Could not parse allele frequencies from " + sampleData);
         } else {
             builder.totalReadCount(alleleFrequencyData.totalReadCount());
@@ -86,7 +87,15 @@ public final class SomaticVariantFactory {
 
         return builder.build();
     }
-
+    
+    @NotNull
+    public static SomaticTruthSetVariant fromTruthSetVCFLine(@NotNull final String line) {
+        final SomaticTruthSetVariant.Builder builder = SomaticTruthSetVariant.Builder.fromVCF(line);
+        final String[] values = line.split(VCF_COLUMN_SEPARATOR);
+        VariantFactory.withLine(builder, values);
+        return builder.build();
+    }
+    
     @NotNull
     private static List<String> extractCallers(@NotNull final String info) {
         final Optional<String> setValue = Arrays.stream(info.split(INFO_FIELD_SEPARATOR)).filter(
@@ -94,7 +103,7 @@ public final class SomaticVariantFactory {
                 infoLine -> infoLine.substring(infoLine.indexOf(CALLER_ALGO_START) + 1,
                         infoLine.length())).findFirst();
         if (!setValue.isPresent()) {
-            LOGGER.warn("No caller info found in info field: " + info);
+                LOGGER.warn("No caller info found in info field: " + info);
             return Lists.newArrayList();
         }
 

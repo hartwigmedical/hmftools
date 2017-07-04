@@ -15,7 +15,7 @@ public final class VariantFilter {
     }
 
     public static <T extends Variant> boolean isPass(@NotNull final T variant) {
-        return new PassFilterPredicate<T>().test(variant);
+        return new PassFilterPredicate<>().test(variant);
     }
 
     @NotNull

@@ -16,18 +16,14 @@ import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
-import com.hartwig.hmftools.purple.somatic.EnrichedSomaticVariantFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -58,7 +54,7 @@ public class GenerateCircosData {
         final CommandLine cmd = createCommandLine(args, options);
         final String sample = cmd.getOptionValue(SAMPLE);
         final String dataOutput = cmd.getOptionValue(OUTPUT_DIR) + File.separator + "data";
-        final String plotOutput = cmd.getOptionValue(OUTPUT_DIR) + File.separator + "plot";
+        final String plotOutput = cmd.getOptionValue(OUTPUT_DIR);
         final String etcOutput = cmd.getOptionValue(OUTPUT_DIR) + File.separator + "etc";
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
@@ -75,7 +71,7 @@ public class GenerateCircosData {
             System.exit(-1);
         }
 
-        final List<SomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample, true)
+        final List<EnrichedSomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample)
                 .stream()
                 .filter(x -> x.type() == VariantType.SNP)
                 .filter(x -> Chromosomes.asInt(x.chromosome()) <= 25)
@@ -91,12 +87,9 @@ public class GenerateCircosData {
             LOGGER.error("Structural Variants not available");
         }
 
-
-        final List<EnrichedSomaticVariant> enrichedSomaticVariants = EnrichedSomaticVariantFactory.create(purity, somaticVariants, copyNumber);
-
         LOGGER.info("Writing data files");
         final String baseDataOutput = dataOutput + File.separator + sample;
-        CircosFileWriter.writePositions(baseDataOutput + ".snp.circos", enrichedSomaticVariants, EnrichedSomaticVariant::adjustedVAF);
+        CircosFileWriter.writePositions(baseDataOutput + ".snp.circos", somaticVariants, EnrichedSomaticVariant::adjustedVAF);
         CircosFileWriter.writeRegions(baseDataOutput + ".cnv.circos", copyNumber, x -> x.averageTumorCopyNumber() - 2);
         CircosFileWriter.writeRegions(baseDataOutput + ".baf.circos", copyNumber, PurpleCopyNumber::averageActualBAF);
 
@@ -111,26 +104,13 @@ public class GenerateCircosData {
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.MALE) ? "hsZ" : "hsY");
         Files.write(new File(circosConfigOutput).toPath(), content.getBytes(charset));
 
-        LOGGER.info("Writing plots");
-        final ChartWriter chartWriter = new ChartWriter(sample, plotOutput);
-        final List<PurpleCopyNumber> filteredCopyNumber = copyNumber.stream().filter(x -> !isSexChromosome(x)).collect(Collectors.toList());
-        chartWriter.copyNumberCDF(filteredCopyNumber);
-        chartWriter.copyNumberPDF(filteredCopyNumber);
-        final List<EnrichedSomaticVariant> filteredSomaticVariants = enrichedSomaticVariants.stream()
-                .filter(x -> !isSexChromosome(x))
-                .collect(Collectors.toList());
-        chartWriter.somaticPloidy(filteredSomaticVariants);
+        LOGGER.info("Writing QC plots");
+        new ChartWriter(sample, plotOutput).write(purity, copyNumber, somaticVariants);
 
         LOGGER.info("Complete Successfully");
     }
 
-    private static boolean isSexChromosome(GenomeRegion region) {
-        return region.chromosome().equals("X") || region.chromosome().equals("Y");
-    }
 
-    private static boolean isSexChromosome(GenomePosition region) {
-        return region.chromosome().equals("X") || region.chromosome().equals("Y");
-    }
 
     @NotNull
     private static Options createBasicOptions() {
