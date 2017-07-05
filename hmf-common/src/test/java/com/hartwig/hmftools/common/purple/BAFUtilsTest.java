@@ -26,10 +26,17 @@ public class BAFUtilsTest {
     }
 
     @Test
-    public void testModelBaf() {
-        assertEquals(NORMAL_BAF, modelBAF(100, 2, 1), EPSILON);
-        assertEquals(NORMAL_BAF, modelBAF(100, 4, 2), EPSILON);
-        assertEquals(NORMAL_BAF, modelBAF(100, 6, 3), EPSILON);
-
+    public void testDiploidModelBaf() {
+        assertEquals(NORMAL_BAF, modelBAF(1, 2, 1), EPSILON);
+        assertEquals(NORMAL_BAF, modelBAF(0.5, 4, 2), EPSILON);
+        assertEquals(NORMAL_BAF, modelBAF(0, 6, 3), EPSILON);
     }
+
+    @Test
+    public void testZeroPloidyModelBaf() {
+        assertEquals(NORMAL_BAF, modelBAF(0, 0, 0), EPSILON);
+        assertEquals(NORMAL_BAF, modelBAF(0.5, 0, 0), EPSILON);
+        assertEquals(NORMAL_BAF, modelBAF(1, 0, 0), EPSILON);
+    }
+
 }

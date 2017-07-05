@@ -56,12 +56,12 @@ public class FittedRegionFactory {
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(
                         observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
 
-        for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
+        for (int ploidy = 0; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
             double[] modelBAFWithDeviation =
-                    observedRegion.bafCount() == 0 ? new double[] { 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+                    observedRegion.bafCount() == 0 ? new double[] { 0, 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
@@ -101,8 +101,9 @@ public class FittedRegionFactory {
 
     @VisibleForTesting
     static double[] modelBAFToMinimizeDeviation(final double purity, final int ploidy, final double actualBAF) {
-        double result = 0;
-        double deviation = 0;
+        double finalBAF = 0;
+        double finalDeviation = 0;
+        int finalMajorAllele = 0;
 
         int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
@@ -110,12 +111,13 @@ public class FittedRegionFactory {
             double modelBAF = BAFUtils.modelBAF(purity, ploidy, betaAllele);
             double modelDeviation = bafDeviation(modelBAF, actualBAF);
 
-            if (betaAllele == minBetaAllele || modelDeviation < deviation) {
-                result = modelBAF;
-                deviation = modelDeviation;
+            if (betaAllele == minBetaAllele || modelDeviation < finalDeviation) {
+                finalBAF = modelBAF;
+                finalDeviation = modelDeviation;
+                finalMajorAllele = betaAllele;
             }
         }
 
-        return new double[] { result, deviation };
+        return new double[] { finalBAF, finalDeviation, finalMajorAllele };
     }
 }

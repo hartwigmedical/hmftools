@@ -10,11 +10,18 @@ public class BAFUtils {
         return (int) Math.max(0, Math.round(ploidy / 2d));
     }
 
-    public static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
-        assert (alleleCount >= ploidy / 2d);
+    public static double modelBAF(final double tumorPurity, final int ploidy, final int betaAlleleCount) {
+        assert (betaAlleleCount >= ploidy / 2d);
+        double normalPurity = 1 - tumorPurity;
 
-        double divisor =  (2 + purity * (ploidy - 2));
-        return Doubles.isZero(divisor) ? NORMAL_BAF : Math.max(NORMAL_BAF, (1 + purity * (alleleCount - 1)) / divisor);
+        double betaObservations = 1 * normalPurity + betaAlleleCount * tumorPurity;
+        double totalObservations = 2 * normalPurity + ploidy * tumorPurity;
+
+        if (Doubles.isZero(totalObservations)) {
+            return NORMAL_BAF;
+        }
+
+        return Math.max(NORMAL_BAF, betaObservations / totalObservations);
     }
 
 }
