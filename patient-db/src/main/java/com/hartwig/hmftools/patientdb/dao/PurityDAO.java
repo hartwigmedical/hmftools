@@ -11,6 +11,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +40,21 @@ class PurityDAO {
                         .modelBAFDeviation(0)
                         .score(result.getValue(PURITY.SCORE))
                         .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
+                        .build();
+    }
+
+    @Nullable
+    FittedPurityScore readFittedPurityScore(@NotNull final String sample) {
+        @Nullable
+        Record result = context.select().from(PURITYSCORE).where(PURITYSCORE.SAMPLEID.eq(sample)).fetchOne();
+        return result == null
+                ? null
+                : ImmutableFittedPurityScore.builder()
+                        .minPurity(result.getValue(PURITYSCORE.MINPURITY))
+                        .maxPurity(result.getValue(PURITYSCORE.MAXPURITY))
+                        .minPloidy(result.getValue(PURITYSCORE.MINPLOIDY))
+                        .maxPloidy(result.getValue(PURITYSCORE.MAXPLOIDY))
+                        .polyclonalProportion(result.getValue(PURITYSCORE.POLYCLONALPROPORTION))
                         .build();
     }
 
