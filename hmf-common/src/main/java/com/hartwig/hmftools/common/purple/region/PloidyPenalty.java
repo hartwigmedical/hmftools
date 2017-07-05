@@ -12,7 +12,7 @@ class PloidyPenalty {
         int wholeGenomeDoublingDistance = 1 + Math.abs(majorAllele - 2) + Math.abs(minorAllele - 2);
         int singleEventDistance = Math.abs(majorAllele - 1) + Math.abs(minorAllele - 1);
 
-        return 1 + 0.5 * Math.min(singleEventDistance, wholeGenomeDoublingDistance);
+        return 1 + Math.min(singleEventDistance, wholeGenomeDoublingDistance);
     }
 
 }

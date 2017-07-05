@@ -24,15 +24,15 @@ public class PloidyPenaltyTest {
 
     @Test
     public void testNew() {
-        assertNew(1.5, "A");
+        assertNew(2.0, "A");
         assertNew(1.0, "AB");
-        assertNew(2.0, "AA");
-        assertNew(1.5, "AAB");
-        assertNew(1.5, "AABB");
-        assertNew(2.5, "AAA");
-        assertNew(2.0, "AAAB");
-        assertNew(2.0, "AAABB");
-        assertNew(2.5, "AAABBB");
+        assertNew(3.0, "AA");
+        assertNew(2.0, "AAB");
+        assertNew(2.0, "AABB");
+        assertNew(4.0, "AAA");
+        assertNew(3.0, "AAAB");
+        assertNew(3.0, "AAABB");
+        assertNew(4.0, "AAABBB");
     }
 
     private void assertOld(double expectedResult, @NotNull final String descriptiveBAF) {
