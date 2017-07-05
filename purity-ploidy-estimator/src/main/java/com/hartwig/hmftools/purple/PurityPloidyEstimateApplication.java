@@ -63,8 +63,8 @@ public class PurityPloidyEstimateApplication {
 
     static final double MIN_PURITY_DEFAULT = 0.05;
     static final double MAX_PURITY_DEFAULT = 1.0;
-    static final double MIN_NORM_FACTOR = 0.33;
-    static final double MAX_NORM_FACTOR = 2.0;
+    static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
+    static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
 
     private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;
     private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
@@ -76,6 +76,8 @@ public class PurityPloidyEstimateApplication {
 
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
+    private static final String MIN_NORM_FACTOR = "min_norm_factor";
+    private static final String MAX_NORM_FACTOR = "max_norm_factor";
     private static final String DB_ENABLED = "db_enabled";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -150,12 +152,14 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Fitting purity");
         final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
         final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
+        final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
+        final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY,
                 minPurity,
                 maxPurity,
                 PURITY_INCREMENTS,
-                MIN_NORM_FACTOR,
-                MAX_NORM_FACTOR,
+                minNormFactor,
+                maxNormFactor,
                 NORM_FACTOR_INCREMENTS,
                 fittedRegionFactory,
                 observedRegions);
@@ -238,6 +242,9 @@ public class PurityPloidyEstimateApplication {
 
         options.addOption(MIN_PURITY, true, "Minimum purity (default 0.05)");
         options.addOption(MAX_PURITY, true, "Maximum purity (default 1.0)");
+
+        options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
+        options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
 
         options.addOption(DB_ENABLED, false, "Persist data to DB.");
         options.addOption(DB_USER, true, "Database user name.");

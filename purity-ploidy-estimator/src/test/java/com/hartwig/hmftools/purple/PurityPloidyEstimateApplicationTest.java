@@ -12,7 +12,7 @@ public class PurityPloidyEstimateApplicationTest {
     public void testDefaultValues() {
         assertEquals(0.05, PurityPloidyEstimateApplication.MIN_PURITY_DEFAULT, EPSILON);
         assertEquals(1.0, PurityPloidyEstimateApplication.MAX_PURITY_DEFAULT, EPSILON);
-        assertEquals(0.33, PurityPloidyEstimateApplication.MIN_NORM_FACTOR, EPSILON);
-        assertEquals(2.0, PurityPloidyEstimateApplication.MAX_NORM_FACTOR, EPSILON);
+        assertEquals(0.33, PurityPloidyEstimateApplication.MIN_NORM_FACTOR_DEFAULT, EPSILON);
+        assertEquals(2.0, PurityPloidyEstimateApplication.MAX_NORM_FACTOR_DEFAULT, EPSILON);
     }
 }
