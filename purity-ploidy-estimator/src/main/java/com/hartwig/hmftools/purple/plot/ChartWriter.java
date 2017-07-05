@@ -37,15 +37,15 @@ public class ChartWriter {
         final List<EnrichedSomaticVariant> filteredSomaticVariants =
                 variants.stream().filter(x -> !isSexChromosome(x)).collect(Collectors.toList());
 
-        final String subtitle = subtitle(sample, purity.purity(), purity.normFactor());
+        final String subtitle = subtitle(sample, purity.purity(), purity.ploidy());
 
         copyNumberPDF(subtitle, filteredCopyNumber);
         minorAllelePloidyPDF(subtitle, filteredCopyNumber);
         somaticPloidyPDF(subtitle, filteredSomaticVariants);
     }
 
-    static String subtitle(@NotNull final String sample, final double purity, final double normFactor) {
-        return String.format("%s P:%.0f%% NF:%.2f", sample, purity * 100, normFactor);
+    static String subtitle(@NotNull final String sample, final double purity, final double ploidy) {
+        return String.format("%s PUR:%.0f%% PLE:%.2f", sample, purity * 100, ploidy);
     }
 
     private void copyNumberCDF(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
