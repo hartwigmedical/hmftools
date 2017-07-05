@@ -18,15 +18,15 @@ public class FittedRegionFactory {
     private final Gender gender;
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
-    private final double ploidyPenaltyExponent;
+    private final boolean ploidyPenaltyExperiment;
     private final double observedBafExponent;
 
     public FittedRegionFactory(final Gender gender, final int maxPloidy, final double cnvRatioWeightFactor,
-            final double ploidyPenaltyExponent, final double observedBafExponent) {
+            final boolean ploidyPenaltyExperiment, final double observedBafExponent) {
         this.gender = gender;
         this.maxPloidy = maxPloidy;
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
-        this.ploidyPenaltyExponent = ploidyPenaltyExponent;
+        this.ploidyPenaltyExperiment = ploidyPenaltyExperiment;
         this.observedBafExponent = observedBafExponent;
     }
 
@@ -66,9 +66,11 @@ public class FittedRegionFactory {
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
 
-            double deviation = Math.pow(Math.max(ploidy, 2) / 2.0, ploidyPenaltyExponent) * (bafDeviation + cnvDeviation) * Math.pow(
-                    observedBAF,
-                    observedBafExponent);
+            double ploidyPenalty = ploidyPenaltyExperiment
+                    ? PloidyPenalty.newPenalty(ploidy, (int) modelBAFWithDeviation[2])
+                    : PloidyPenalty.penalty(ploidy);
+
+            double deviation = ploidyPenalty * (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
