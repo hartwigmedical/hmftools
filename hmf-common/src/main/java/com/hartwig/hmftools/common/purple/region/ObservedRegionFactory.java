@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
@@ -40,7 +41,7 @@ public class ObservedRegionFactory {
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final List<GermlineVariant> variants,
             @NotNull final List<FreecRatio> tumorRatios, @NotNull final List<FreecRatio> normalRatios,
-            @NotNull final List<FreecGCContent> gcContents) {
+            @NotNull final Multimap<String, FreecGCContent> gcContents) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<FreecRatio> tumorRatioSelector = GenomePositionSelectorFactory.create(tumorRatios);
@@ -69,6 +70,9 @@ public class ObservedRegionFactory {
                     .observedNormalRatio(myNormalRatio)
                     .ratioSupport(region.ratioSupport())
                     .structuralVariantSupport(region.structuralVariantSupport())
+                    .observedGCContent(gcContent.getAverageGCContent())
+                    .observedNonNPercentage(gcContent.getAverageNonNPercentage())
+                    .observedMappablePercentage(gcContent.getAverageMappablePercentage())
                     .build();
 
             result.add(copyNumber);
@@ -154,7 +158,7 @@ public class ObservedRegionFactory {
             return count == 0 ? 0 : sumNonNPercentage / count;
         }
 
-        double getSumMappablePercentage() {
+        double getAverageMappablePercentage() {
             return count == 0 ? 0 : sumMappablePercentage / count;
         }
     }

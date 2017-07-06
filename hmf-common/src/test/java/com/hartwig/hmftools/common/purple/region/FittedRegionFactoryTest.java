@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.mode
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -31,16 +31,11 @@ public class FittedRegionFactoryTest {
 
     @NotNull
     private static ObservedRegion create(final double baf, final double ratio) {
-        return ImmutableEnrichedRegion.builder()
+        return PurpleDatamodelTest.createObservedRegion("1", 1, 2)
                 .observedBAF(baf)
                 .bafCount(1)
-                .chromosome("1")
-                .start(1)
-                .end(2)
                 .observedTumorRatio(ratio)
                 .observedNormalRatio(1)
-                .ratioSupport(true)
-                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .build();
     }
 

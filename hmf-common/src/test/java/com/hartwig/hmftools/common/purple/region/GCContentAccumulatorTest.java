@@ -41,7 +41,7 @@ public class GCContentAccumulatorTest {
     private void assertGCContent(double gcContent, double nonNPercentage, double mappablePercentage) {
         assertEquals(gcContent, victim.getAverageGCContent(), EPSILON);
         assertEquals(nonNPercentage, victim.getAverageNonNPercentage(), EPSILON);
-        assertEquals(mappablePercentage, victim.getSumMappablePercentage(), EPSILON);
+        assertEquals(mappablePercentage, victim.getAverageMappablePercentage(), EPSILON);
     }
 
     private static FreecGCContent create(double gcContent, double nonNPercentage, double mappablePercentage) {

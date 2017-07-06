@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
+import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;
 
@@ -17,7 +17,7 @@ public class FreecGCContentFactoryTest {
 
     @Test
     public void canLoadNormalFile() throws IOException, HartwigException {
-        final List<FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(BASE_PATH);
-        assertEquals(90, gcContent.size());
+        final Multimap<String, FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(BASE_PATH);
+        assertEquals(100, gcContent.size());
     }
 }
