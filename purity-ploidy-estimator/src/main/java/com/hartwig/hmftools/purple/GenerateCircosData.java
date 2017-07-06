@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -65,6 +66,12 @@ public class GenerateCircosData {
             System.exit(-1);
         }
 
+        final FittedPurityScore purityscore = dbAccess.readFittedPurityScore(sample);
+        if (purityscore == null) {
+            LOGGER.error("Purity score not available");
+            System.exit(-1);
+        }
+
         final List<PurpleCopyNumber> copyNumber = dbAccess.readCopynumbers(sample);
         if (copyNumber.isEmpty()) {
             LOGGER.error("Copynumber not available");
@@ -105,7 +112,7 @@ public class GenerateCircosData {
         Files.write(new File(circosConfigOutput).toPath(), content.getBytes(charset));
 
         LOGGER.info("Writing QC plots");
-        new ChartWriter(sample, plotOutput).write(purity, copyNumber, somaticVariants);
+        new ChartWriter(sample, plotOutput).write(purity, purityscore, copyNumber, somaticVariants);
 
         LOGGER.info("Complete Successfully");
     }

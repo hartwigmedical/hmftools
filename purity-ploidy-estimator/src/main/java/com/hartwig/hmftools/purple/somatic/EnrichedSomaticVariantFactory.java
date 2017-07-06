@@ -65,7 +65,7 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private Builder addCopyNumber(@NotNull final Builder builder, @NotNull final PurpleCopyNumber copyNumber, double alleleFrequency) {
-        double adjustedVAF = purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), alleleFrequency);
+        double adjustedVAF = purityAdjuster.purityAdjustedVAF(Math.max(0.001, copyNumber.averageTumorCopyNumber()), alleleFrequency);
         return builder.adjustedCopyNumber(copyNumber.averageTumorCopyNumber()).adjustedVAF(adjustedVAF);
     }
 

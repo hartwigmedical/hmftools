@@ -24,15 +24,15 @@ public class PloidyPenaltyTest {
 
     @Test
     public void testNew() {
-        assertNew(2.0, "A");
-        assertNew(1.0, "AB");
-        assertNew(3.0, "AA");
-        assertNew(2.0, "AAB");
-        assertNew(2.0, "AABB");
-        assertNew(4.0, "AAA");
-        assertNew(3.0, "AAAB");
-        assertNew(3.0, "AAABB");
-        assertNew(4.0, "AAABBB");
+        assertNew(1.75, "A");
+        assertNew(1.00, "AB");
+        assertNew(2.50, "AA");
+        assertNew(1.75, "AAB");
+        assertNew(1.75, "AABB");
+        assertNew(3.25, "AAA");
+        assertNew(2.50, "AAAB");
+        assertNew(2.50, "AAABB");
+        assertNew(3.25, "AAABBB");
     }
 
     private void assertOld(double expectedResult, @NotNull final String descriptiveBAF) {
@@ -44,7 +44,7 @@ public class PloidyPenaltyTest {
     private void assertNew(double expectedResult, @NotNull final String descriptiveBAF) {
         int ploidy = descriptiveBAF.length();
         int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
-        assertEquals(expectedResult, PloidyPenalty.newPenalty(ploidy, major), EPSILON);
+        assertEquals(expectedResult, PloidyPenalty.penalty(ploidy, major), EPSILON);
     }
 
 }

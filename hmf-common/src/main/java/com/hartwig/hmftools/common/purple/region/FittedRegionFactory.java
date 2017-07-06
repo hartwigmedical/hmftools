@@ -66,10 +66,7 @@ public class FittedRegionFactory {
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
 
-            double ploidyPenalty = ploidyPenaltyExperiment
-                    ? PloidyPenalty.newPenalty(ploidy, (int) modelBAFWithDeviation[2])
-                    : PloidyPenalty.penalty(ploidy);
-
+            double ploidyPenalty = PloidyPenalty.penalty(ploidy, (int) modelBAFWithDeviation[2]);
             double deviation = ploidyPenalty * (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
 
             if (ploidy == 1 || deviation < minDeviation) {
