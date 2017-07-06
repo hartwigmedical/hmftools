@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.common.ecrf.datamodel;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
 import org.jetbrains.annotations.NotNull;
 
 public final class EcrfFieldFunctions {
@@ -11,24 +7,7 @@ public final class EcrfFieldFunctions {
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
     private static final String OID_SEPARATOR = ".";
 
-    private static final List<String> IRRELEVANT_ITEM_GROUP_OIDS = Lists.newArrayList("AUDITTRAILENTRIES", "METADATA",
-            "AUDITDATA", "QUERY", "VALIDATIONENTRIES");
-    private static final List<String> IRRELEVANT_ITEM_OIDS = Lists.newArrayList("AUDIT_ENTRIES", "FORMSTATUS");
-    private static final String IRRELEVANT_ITEM_OID_PATTERN = "GROUP";
-
     private EcrfFieldFunctions() {
-    }
-
-    public static boolean isRelevant(@NotNull EcrfField field) {
-        return isRelevant(field.name());
-    }
-
-    public static boolean isRelevant(@NotNull String name) {
-        String parts[] = name.split("\\" + OID_SEPARATOR);
-        String itemGroup = parts[2];
-        String item = parts[3];
-        return !(IRRELEVANT_ITEM_GROUP_OIDS.contains(itemGroup) || IRRELEVANT_ITEM_OIDS.contains(item)
-                || item.contains(IRRELEVANT_ITEM_OID_PATTERN));
     }
 
     @NotNull
@@ -49,19 +28,16 @@ public final class EcrfFieldFunctions {
     }
 
     @NotNull
-    public static String resolveValue(@NotNull EcrfField field, @NotNull String ecrfValue)
-            throws EcrfResolveException {
+    public static String resolveValue(@NotNull EcrfField field, @NotNull String ecrfValue) throws EcrfResolveException {
         String value;
         if (field.codeList().size() > 0 && ecrfValue.length() > 0) {
             if (isInteger(ecrfValue)) {
                 value = field.codeList().get(Integer.valueOf(ecrfValue));
                 if (value == null) {
-                    throw new EcrfResolveException(
-                            "Could not find value in dropdown for " + field.name() + ": " + ecrfValue);
+                    throw new EcrfResolveException("Could not find value in dropdown for " + field.name() + ": " + ecrfValue);
                 }
             } else {
-                throw new EcrfResolveException(
-                        "Could not convert value from list to integer for " + field.name() + ": " + ecrfValue);
+                throw new EcrfResolveException("Could not convert value from list to integer for " + field.name() + ": " + ecrfValue);
             }
         } else {
             value = ecrfValue;

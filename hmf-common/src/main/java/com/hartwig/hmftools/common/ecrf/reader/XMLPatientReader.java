@@ -99,20 +99,20 @@ public final class XMLPatientReader extends EcrfReader {
             } else if (isFieldStart(reader)) {
                 String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
                 String name = EcrfFieldFunctions.name(currentStudyEventOID, currentFormOID, currentItemGroupOID, OID);
-                if (EcrfFieldFunctions.isRelevant(name)) {
-                    final EcrfField field = nameToEcrfFieldMap.get(name);
-                    if (field != null) {
-                        String value = Strings.EMPTY;
-                        try {
-                            value = EcrfFieldFunctions.resolveValue(field, reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
-                        } catch (EcrfResolveException exception) {
-                            LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
-                        }
-                        currentItemGroup.addItem(OID, value);
-                        fieldValues.get(field).add(value);
-                    } else {
-                        LOGGER.warn("Could not resolve field with name " + name);
+                final EcrfField field = nameToEcrfFieldMap.get(name);
+                if (field != null) {
+                    String value = Strings.EMPTY;
+                    try {
+                        value = EcrfFieldFunctions.resolveValue(field, reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
+                    } catch (EcrfResolveException exception) {
+                        LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
                     }
+                    currentItemGroup.addItem(OID, value);
+                    fieldValues.get(field).add(value);
+                } else {
+                    final String value = reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE);
+                    LOGGER.warn("Could not resolve field with name " + name + " value(" + value + ")");
+                    currentItemGroup.addItem(OID, value);
                 }
             }
             reader.next();

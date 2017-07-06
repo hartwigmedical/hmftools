@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfFieldFunctions;
+import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableEcrfField;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,11 +31,9 @@ public final class XMLEcrfDatamodelToEcrfFields {
                             final CodeList codeListObj = findByOID(datamodel.codeLists(), codeListOID);
                             codeList = codeListObj.values();
                         }
-                        final EcrfField field = new EcrfField(studyEvent.OID(), form.OID(), itemGroup.OID(),
-                                item.OID(), item.name(), codeList);
-                        if (EcrfFieldFunctions.isRelevant(field)) {
-                            fields.add(field);
-                        }
+                        final EcrfField field =
+                                new ImmutableEcrfField(studyEvent.OID(), form.OID(), itemGroup.OID(), item.OID(), item.name(), codeList);
+                        fields.add(field);
                     }
                 }
             }

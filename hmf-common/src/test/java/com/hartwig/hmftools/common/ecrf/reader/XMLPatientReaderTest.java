@@ -17,6 +17,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableEcrfField;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,9 +44,9 @@ public class XMLPatientReaderTest {
         field1Values.put(1, "one");
         field1Values.put(2, "two");
         field1Values.put(3, "three");
-        final EcrfField field1 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field1", "", field1Values);
-        final EcrfField field2 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field2", "", Maps.newHashMap());
-        final EcrfField birthDate = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.BIRTHDTC", "",
+        final EcrfField field1 = new ImmutableEcrfField(study, form, itemGroup, "GRP.ItemGroup.field1", "", field1Values);
+        final EcrfField field2 = new ImmutableEcrfField(study, form, itemGroup, "GRP.ItemGroup.field2", "", Maps.newHashMap());
+        final EcrfField birthDate = new ImmutableEcrfField(study, form, itemGroup, "GRP.ItemGroup.BIRTHDTC", "",
                 Maps.newHashMap());
 
         final List<EcrfPatient> patients = XMLPatientReader.readPatients(reader,
@@ -63,7 +64,7 @@ public class XMLPatientReaderTest {
         assertEquals(1, patients.get(0).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).size());
         assertEquals(1, patients.get(0).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
                 0).itemGroupsPerOID().get(itemGroup).size());
-        assertEquals(3, patients.get(0).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+        assertEquals(4, patients.get(0).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
                 0).itemGroupsPerOID().get(itemGroup).get(0).itemsPerOID().size());
 
         assertEquals(3, patients.get(1).fields().size());
@@ -76,7 +77,7 @@ public class XMLPatientReaderTest {
         assertEquals(1, patients.get(1).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).size());
         assertEquals(1, patients.get(1).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
                 0).itemGroupsPerOID().get(itemGroup).size());
-        assertEquals(3, patients.get(1).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
+        assertEquals(4, patients.get(1).studyEventsPerOID().get(study).get(0).formsPerOID().get(form).get(
                 0).itemGroupsPerOID().get(itemGroup).get(0).itemsPerOID().size());
     }
 
@@ -92,9 +93,9 @@ public class XMLPatientReaderTest {
         field1Values.put(1, "one");
         field1Values.put(2, "two");
         field1Values.put(3, "three");
-        final EcrfField field1 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field1", "", field1Values);
-        final EcrfField field2 = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.field2", "", Maps.newHashMap());
-        final EcrfField birthDate = new EcrfField(study, form, itemGroup, "GRP.ItemGroup.BIRTHDTC", "",
+        final EcrfField field1 = new ImmutableEcrfField(study, form, itemGroup, "GRP.ItemGroup.field1", "", field1Values);
+        final EcrfField field2 = new ImmutableEcrfField(study, form, itemGroup, "GRP.ItemGroup.field2", "", Maps.newHashMap());
+        final EcrfField birthDate = new ImmutableEcrfField(study, form, itemGroup, "GRP.ItemGroup.BIRTHDTC", "",
                 Maps.newHashMap());
 
         final List<EcrfPatient> patients = XMLPatientReader.readPatients(reader,
