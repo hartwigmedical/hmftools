@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
@@ -35,8 +36,8 @@ public class EnrichedSomaticVariantFactory {
             @NotNull  final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull  final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
         purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
-        highConfidenceSelector = new GenomeRegionSelector<>(highConfidenceRegions);
-        copyNumberSelector = new GenomeRegionSelector<>(copyNumbers);
+        highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
+        copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
         this.reference = reference;
     }
 

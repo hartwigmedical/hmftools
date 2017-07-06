@@ -6,6 +6,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +20,7 @@ class ForwardSlicer implements Slicer {
 
     ForwardSlicer(@NotNull final Multimap<String, GenomeRegion> regions) {
         this.regions = regions;
-        this.selector = new GenomeRegionSelector<>(regions);
+        this.selector = GenomeRegionSelectorFactory.create(regions);
     }
 
     @NotNull
