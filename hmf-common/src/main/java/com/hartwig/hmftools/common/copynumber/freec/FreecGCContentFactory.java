@@ -9,13 +9,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.LineReader;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
 public enum FreecGCContentFactory {
     ;
     private static final String GC_FILE = "GC_profile.1000bp.cnp";
-
 
     private static final String RATIO_COLUMN_SEPARATOR = "\t";
     private static final int CHROMOSOME_COLUMN = 0;
@@ -32,7 +32,10 @@ public enum FreecGCContentFactory {
 
     @NotNull
     private static List<FreecGCContent> loadGCContent(@NotNull final List<String> lines) {
-        return lines.stream().map(FreecGCContentFactory::fromLine).collect(Collectors.toList());
+        return lines.stream()
+                .map(FreecGCContentFactory::fromLine)
+                .filter(x -> Doubles.positiveOrZero(x.gcContent()))
+                .collect(Collectors.toList());
     }
 
     @NotNull

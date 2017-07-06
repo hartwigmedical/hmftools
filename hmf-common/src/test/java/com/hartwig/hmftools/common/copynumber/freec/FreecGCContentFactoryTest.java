@@ -18,6 +18,6 @@ public class FreecGCContentFactoryTest {
     @Test
     public void canLoadNormalFile() throws IOException, HartwigException {
         final List<FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(BASE_PATH);
-        assertEquals(100, gcContent.size());
+        assertEquals(90, gcContent.size());
     }
 }

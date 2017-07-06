@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
+import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
+import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
@@ -123,9 +125,10 @@ public class PurityPloidyEstimateApplication {
 
         LOGGER.info("Loading {} Freec data", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
         // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
+        final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
+        final List<FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
         final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
@@ -139,7 +142,7 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
         final ObservedRegionFactory observedRegionFactory =
                 new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, variants, tumorRatio, normalRatio);
+        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, variants, tumorRatio, normalRatio, gcContent);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
