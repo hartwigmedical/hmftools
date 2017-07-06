@@ -68,7 +68,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
             next(reader);
         }
 
-        return new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
+        return new ImmutableXMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
     }
 
     @NotNull
