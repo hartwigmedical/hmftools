@@ -17,9 +17,6 @@ import mockit.Injectable;
 public class SimpleGenomeZipperTest {
 
     @Injectable
-    private SimpleGenomeZipperAllPositionsHandler<GenomeRegion, GenomePosition> allPositionsHandler;
-
-    @Injectable
     private SimpleGenomeZipperInRegionPositionsHandler<GenomeRegion, GenomePosition> inRegionPositionsHandler;
 
     private List<GenomeRegion> regions;
@@ -52,8 +49,7 @@ public class SimpleGenomeZipperTest {
         afterRegion2 = createPosition("1", 550);
         inRegion3 = createPosition("2", 50);
         afterRegion3 = createPosition("2", 150);
-        positions = Lists.newArrayList(beforeRegion1, inRegion1, betweenRegion1And2, inRegion2, afterRegion2, inRegion3,
-                afterRegion3);
+        positions = Lists.newArrayList(beforeRegion1, inRegion1, betweenRegion1And2, inRegion2, afterRegion2, inRegion3, afterRegion3);
     }
 
     @Test
@@ -65,21 +61,6 @@ public class SimpleGenomeZipperTest {
         }};
 
         SimpleGenomeZipper.zip(regions, positions, inRegionPositionsHandler);
-    }
-
-    @Test
-    public void testAllPositions() {
-        new Expectations() {{
-            allPositionsHandler.handle(null, beforeRegion1);
-            allPositionsHandler.handle(region1, inRegion1);
-            allPositionsHandler.handle(null, betweenRegion1And2);
-            allPositionsHandler.handle(region2, inRegion2);
-            allPositionsHandler.handle(null, afterRegion2);
-            allPositionsHandler.handle(region3, inRegion3);
-            allPositionsHandler.handle(null, afterRegion3);
-        }};
-
-        SimpleGenomeZipper.zip(regions, positions, allPositionsHandler);
     }
 
     private GenomeRegion createRegion(final String chromosome, final long start, final long end) {

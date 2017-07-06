@@ -4,18 +4,17 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositionSelector;
+import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class GenomeZipper<R extends GenomeRegion> {
 
-    private final boolean includePositionsOutsideRegions;
-
-    public GenomeZipper(final boolean includePositionsOutsideRegions, @NotNull final List<R> regions, @NotNull final GenomeZipperRegionHandler<R> regionHandler) {
-        this.includePositionsOutsideRegions = includePositionsOutsideRegions;
+    public GenomeZipper(@NotNull final List<R> regions, @NotNull final GenomeZipperRegionHandler<R> regionHandler) {
         this.regions = regions;
         this.regionHandler = regionHandler;
     }
@@ -24,11 +23,10 @@ public class GenomeZipper<R extends GenomeRegion> {
     private final List<R> regions;
     @NotNull
     private final GenomeZipperRegionHandler<R> regionHandler;
-    private final List<InnerPosition<?>> innerPositions = Lists.newArrayList();
+    private final List<Consumer<GenomeRegion>> regionConsumers = Lists.newArrayList();
 
-    public <P extends GenomePosition> void addPositions(@NotNull final List<P> positions,
-            @NotNull final Consumer<P> handler) {
-        innerPositions.add(new InnerPosition<>(positions, handler));
+    public <P extends GenomePosition> void addPositions(@NotNull final List<P> positions, @NotNull final Consumer<P> handler) {
+        regionConsumers.add(new PositionConsumer<>(GenomePositionSelectorFactory.create(positions), handler));
     }
 
     public void zip() {
@@ -41,95 +39,26 @@ public class GenomeZipper<R extends GenomeRegion> {
                 regionHandler.chromosome(chromosome);
             }
 
-            if (includePositionsOutsideRegions) {
-                for (final InnerPosition<?> innerPosition : innerPositions) {
-                    innerPosition.preRegion(region);
-                }
-            }
-
             regionHandler.enter(region);
-            for (final InnerPosition<?> innerPosition : innerPositions) {
-                innerPosition.inRegion(region);
+            for (Consumer<GenomeRegion> regionConsumer : regionConsumers) {
+                regionConsumer.accept(region);
             }
             regionHandler.exit(region);
         }
-
-        if (includePositionsOutsideRegions) {
-            for (final InnerPosition<?> innerPosition : innerPositions) {
-                innerPosition.remainder();
-            }
-        }
     }
 
-    private class InnerPosition<P extends GenomePosition> {
-
-        @NotNull
-        private final List<P> positions;
-        @NotNull
+    class PositionConsumer<P extends GenomePosition> implements Consumer<GenomeRegion> {
+        private final GenomePositionSelector<P> selector;
         private final Consumer<P> handler;
 
-        private int index;
-
-        private InnerPosition(@NotNull final List<P> positions, @NotNull final Consumer<P> handler) {
-            this.positions = positions;
+        PositionConsumer(final GenomePositionSelector<P> selector, final Consumer<P> handler) {
+            this.selector = selector;
             this.handler = handler;
         }
 
-        private void preRegion(@NotNull final R region) {
-            while (index < positions.size()) {
-                final P position = positions.get(index);
-                final int compare = compare(position, region);
-                if (compare >= 0) {
-                    break;
-                } else{
-                    handler.accept(position);
-                }
-
-                index++;
-            }
+        @Override
+        public void accept(final GenomeRegion genomeRegion) {
+            selector.select(genomeRegion, handler);
         }
-
-        private void inRegion(@NotNull final R region) {
-            while (index < positions.size()) {
-                final P position = positions.get(index);
-                final int compare = compare(position, region);
-                if (compare > 0) {
-                    break;
-                } else if (compare == 0) {
-                    handler.accept(position);
-                }
-
-                index++;
-            }
-        }
-
-        private void remainder() {
-            while (index < positions.size()) {
-                final P position = positions.get(index);
-                handler.accept(position);
-                index++;
-            }
-        }
-    }
-
-    private static int compare(@NotNull final GenomePosition position, @NotNull final GenomeRegion region) {
-        int positionChromosome = Chromosomes.asInt(position.chromosome());
-        int regionChromosome = Chromosomes.asInt(region.chromosome());
-        if (positionChromosome < regionChromosome) {
-            return -1;
-        }
-        if (positionChromosome > regionChromosome) {
-            return 1;
-        }
-
-        if (position.position() < region.start()) {
-            return -1;
-        }
-
-        if (position.position() > region.end()) {
-            return 1;
-        }
-
-        return 0;
     }
 }

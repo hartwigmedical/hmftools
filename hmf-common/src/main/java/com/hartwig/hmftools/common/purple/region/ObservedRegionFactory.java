@@ -47,7 +47,7 @@ public class ObservedRegionFactory implements GenomeZipperRegionHandler<PurpleSe
         normalRatio.reset();
         result.clear();
 
-        final GenomeZipper<PurpleSegment> zipper = new GenomeZipper<>(false, regions, this);
+        final GenomeZipper<PurpleSegment> zipper = new GenomeZipper<>(regions, this);
         zipper.addPositions(variants, this::variant);
         zipper.addPositions(tumorRatios, tumorRatio::accumulate);
         zipper.addPositions(normalRatios, normalRatio::accumulate);

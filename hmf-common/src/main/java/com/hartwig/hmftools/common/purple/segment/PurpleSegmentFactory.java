@@ -30,7 +30,7 @@ public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeReg
     @VisibleForTesting
     static List<PurpleSegment> createSegmentsInner(List<GenomeRegion> regions, List<StructuralVariantPosition> variants) {
         final PurpleSegmentFactory factory = new PurpleSegmentFactory();
-        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(false, regions, factory);
+        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(regions, factory);
         zipper.addPositions(variants, factory::variant);
         zipper.zip();
         return factory.segments();

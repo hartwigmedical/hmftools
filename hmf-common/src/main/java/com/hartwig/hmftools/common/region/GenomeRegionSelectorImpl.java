@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeRegionSelector<R> {
+public class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeRegionSelector<R> {
 
     @NotNull
     private final Iterator<R> regions;
@@ -38,7 +38,7 @@ class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeRegionSe
         return next != null && compare(variant, next) == 0 ? Optional.of(next) : Optional.empty();
     }
 
-    private static int compare(@NotNull final GenomePosition position, @NotNull final GenomeRegion region) {
+    public static int compare(@NotNull final GenomePosition position, @NotNull final GenomeRegion region) {
         int positionChromosome = Chromosomes.asInt(position.chromosome());
         int regionChromosome = Chromosomes.asInt(region.chromosome());
         if (positionChromosome < regionChromosome) {

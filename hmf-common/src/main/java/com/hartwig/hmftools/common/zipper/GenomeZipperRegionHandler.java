@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public interface GenomeZipperRegionHandler<R extends GenomeRegion> {
 
     void chromosome(@NotNull String chromosome);
