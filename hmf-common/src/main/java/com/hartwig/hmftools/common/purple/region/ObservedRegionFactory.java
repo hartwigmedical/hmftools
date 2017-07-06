@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
@@ -127,11 +128,34 @@ public class ObservedRegionFactory {
         }
     }
 
-    private class GCContentAccumulator implements Consumer<FreecGCContent> {
+    @VisibleForTesting
+    static class GCContentAccumulator implements Consumer<FreecGCContent> {
+
+        private int count;
+        private double sumGCContent;
+        private double sumNonNPercentage;
+        private double sumMappablePercentage;
 
         @Override
         public void accept(final FreecGCContent freecGCContent) {
+            count++;
+            if (Doubles.positiveOrZero(freecGCContent.gcContent())) {
+                sumGCContent += freecGCContent.gcContent() * freecGCContent.nonNPercentage();
+                sumNonNPercentage += freecGCContent.nonNPercentage();
+                sumMappablePercentage += freecGCContent.mappablePercentage();
+            }
+        }
 
+        double getAverageGCContent() {
+            return Doubles.isZero(sumNonNPercentage) ? 0 : sumGCContent / sumNonNPercentage;
+        }
+
+        double getAverageNonNPercentage() {
+            return count == 0 ? 0 : sumNonNPercentage / count;
+        }
+
+        double getSumMappablePercentage() {
+            return count == 0 ? 0 : sumMappablePercentage / count;
         }
     }
 }
