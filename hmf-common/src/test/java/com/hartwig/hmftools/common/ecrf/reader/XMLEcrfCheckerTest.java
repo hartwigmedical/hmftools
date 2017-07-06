@@ -24,16 +24,17 @@ public class XMLEcrfCheckerTest {
     public void findsMissingCodeList() {
         final String codeListOIDRef = "CodeListOIDRef";
 
-        final List<StudyEvent> studyEvents = Lists.newArrayList(new StudyEvent(studyOID, Lists.newArrayList(formOID)));
-        final List<Form> forms = Lists.newArrayList(new Form(formOID, Lists.newArrayList(itemGroupOID)));
-        final List<ItemGroup> itemGroups = Lists.newArrayList(
-                new ItemGroup(itemGroupOID, Lists.newArrayList(itemOID)));
-        final List<Item> items = Lists.newArrayList(new Item(itemOID, description, codeListOIDRef));
+        final List<StudyEvent> studyEvents =
+                Lists.newArrayList(new ImmutableStudyEvent(studyOID, description, Lists.newArrayList(formOID)));
+        final List<Form> forms = Lists.newArrayList(new ImmutableForm(formOID, description, Lists.newArrayList(itemGroupOID)));
+        final List<ItemGroup> itemGroups =
+                Lists.newArrayList(new ImmutableItemGroup(itemGroupOID, description, Lists.newArrayList(itemOID)));
+        final List<Item> items = Lists.newArrayList(new ImmutableItem(itemOID, description, codeListOIDRef));
         final Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
 
-        final List<CodeList> codeLists = Lists.newArrayList(new CodeList(codeListOID, codeListItems));
+        final List<CodeList> codeLists = Lists.newArrayList(new ImmutableCodeList(codeListOID, description, codeListItems));
         final XMLEcrfDatamodel datamodel = new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
         final List<String> fields = XMLEcrfChecker.checkReferences(datamodel);
 
@@ -46,16 +47,17 @@ public class XMLEcrfCheckerTest {
     public void findsMissingItem() {
         final String itemOIDRef = "ItemOIDRef";
 
-        final List<StudyEvent> studyEvents = Lists.newArrayList(new StudyEvent(studyOID, Lists.newArrayList(formOID)));
-        final List<Form> forms = Lists.newArrayList(new Form(formOID, Lists.newArrayList(itemGroupOID)));
-        final List<ItemGroup> itemGroups = Lists.newArrayList(
-                new ItemGroup(itemGroupOID, Lists.newArrayList(itemOIDRef)));
-        final List<Item> items = Lists.newArrayList(new Item(itemOID, description, codeListOID));
+        final List<StudyEvent> studyEvents =
+                Lists.newArrayList(new ImmutableStudyEvent(studyOID, description, Lists.newArrayList(formOID)));
+        final List<Form> forms = Lists.newArrayList(new ImmutableForm(formOID, description, Lists.newArrayList(itemGroupOID)));
+        final List<ItemGroup> itemGroups =
+                Lists.newArrayList(new ImmutableItemGroup(itemGroupOID, description, Lists.newArrayList(itemOIDRef)));
+        final List<Item> items = Lists.newArrayList(new ImmutableItem(itemOID, description, codeListOID));
         final Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
 
-        final List<CodeList> codeLists = Lists.newArrayList(new CodeList(codeListOID, codeListItems));
+        final List<CodeList> codeLists = Lists.newArrayList(new ImmutableCodeList(codeListOID, description, codeListItems));
         final XMLEcrfDatamodel datamodel = new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
         final List<String> fields = XMLEcrfChecker.checkReferences(datamodel);
 
@@ -68,16 +70,17 @@ public class XMLEcrfCheckerTest {
     public void findsMissingItemGroup() {
         final String itemGroupRef = "ItemGroupRef";
 
-        final List<StudyEvent> studyEvents = Lists.newArrayList(new StudyEvent(studyOID, Lists.newArrayList(formOID)));
-        final List<Form> forms = Lists.newArrayList(new Form(formOID, Lists.newArrayList(itemGroupRef)));
-        final List<ItemGroup> itemGroups = Lists.newArrayList(
-                new ItemGroup(itemGroupOID, Lists.newArrayList(itemOID)));
-        final List<Item> items = Lists.newArrayList(new Item(itemOID, description, codeListOID));
+        final List<StudyEvent> studyEvents =
+                Lists.newArrayList(new ImmutableStudyEvent(studyOID, description, Lists.newArrayList(formOID)));
+        final List<Form> forms = Lists.newArrayList(new ImmutableForm(formOID, description, Lists.newArrayList(itemGroupRef)));
+        final List<ItemGroup> itemGroups =
+                Lists.newArrayList(new ImmutableItemGroup(itemGroupOID, description, Lists.newArrayList(itemOID)));
+        final List<Item> items = Lists.newArrayList(new ImmutableItem(itemOID, description, codeListOID));
         final Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
 
-        final List<CodeList> codeLists = Lists.newArrayList(new CodeList(codeListOID, codeListItems));
+        final List<CodeList> codeLists = Lists.newArrayList(new ImmutableCodeList(codeListOID, description, codeListItems));
         final XMLEcrfDatamodel datamodel = new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
         final List<String> fields = XMLEcrfChecker.checkReferences(datamodel);
 
@@ -90,16 +93,17 @@ public class XMLEcrfCheckerTest {
     public void findsMissingForm() {
         final String formRef = "formRef";
 
-        final List<StudyEvent> studyEvents = Lists.newArrayList(new StudyEvent(studyOID, Lists.newArrayList(formRef)));
-        final List<Form> forms = Lists.newArrayList(new Form(formOID, Lists.newArrayList(itemGroupOID)));
-        final List<ItemGroup> itemGroups = Lists.newArrayList(
-                new ItemGroup(itemGroupOID, Lists.newArrayList(itemOID)));
-        final List<Item> items = Lists.newArrayList(new Item(itemOID, description, codeListOID));
+        final List<StudyEvent> studyEvents =
+                Lists.newArrayList(new ImmutableStudyEvent(studyOID, description, Lists.newArrayList(formRef)));
+        final List<Form> forms = Lists.newArrayList(new ImmutableForm(formOID, description, Lists.newArrayList(itemGroupOID)));
+        final List<ItemGroup> itemGroups =
+                Lists.newArrayList(new ImmutableItemGroup(itemGroupOID, description, Lists.newArrayList(itemOID)));
+        final List<Item> items = Lists.newArrayList(new ImmutableItem(itemOID, description, codeListOID));
         final Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
 
-        final List<CodeList> codeLists = Lists.newArrayList(new CodeList(codeListOID, codeListItems));
+        final List<CodeList> codeLists = Lists.newArrayList(new ImmutableCodeList(codeListOID, description, codeListItems));
         final XMLEcrfDatamodel datamodel = new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
         final List<String> fields = XMLEcrfChecker.checkReferences(datamodel);
 

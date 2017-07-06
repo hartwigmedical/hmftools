@@ -1,36 +1,25 @@
 package com.hartwig.hmftools.common.ecrf.reader;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class Item implements OIDObject {
+@Value.Immutable
+@Value.Style(of = "new",
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class Item implements OIDObject {
 
+    @Override
+    @Value.Parameter
     @NotNull
-    private final String OID;
+    public abstract String OID();
+
+    @Override
+    @Value.Parameter
     @NotNull
-    private final String name;
+    public abstract String name();
+
+    @Value.Parameter
     @Nullable
-    private final String codeListOID;
-
-    Item(@NotNull final String OID, @NotNull final String name, @Nullable final String codeListOID) {
-        this.OID = OID;
-        this.name = name;
-        this.codeListOID = codeListOID;
-    }
-
-    @NotNull
-    public String OID() {
-        return OID;
-    }
-
-    @NotNull
-    String name() {
-        return name;
-    }
-
-    @Nullable
-    String codeListOID() {
-        return codeListOID;
-    }
-
+    public abstract String codeListOID();
 }

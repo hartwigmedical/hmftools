@@ -25,16 +25,17 @@ public class XMLEcrfDatamodelToEcrfFieldsTest {
         final String option1 = "x";
         final String option2 = "y";
 
-        final List<StudyEvent> studyEvents = Lists.newArrayList(new StudyEvent(studyOID, Lists.newArrayList(formOID)));
-        final List<Form> forms = Lists.newArrayList(new Form(formOID, Lists.newArrayList(itemGroupOID)));
-        final List<ItemGroup> itemGroups = Lists.newArrayList(
-                new ItemGroup(itemGroupOID, Lists.newArrayList(itemOID)));
-        final List<Item> items = Lists.newArrayList(new Item(itemOID, description, codeListOID));
+        final List<StudyEvent> studyEvents =
+                Lists.newArrayList(new ImmutableStudyEvent(studyOID, description, Lists.newArrayList(formOID)));
+        final List<Form> forms = Lists.newArrayList(new ImmutableForm(formOID, description, Lists.newArrayList(itemGroupOID)));
+        final List<ItemGroup> itemGroups =
+                Lists.newArrayList(new ImmutableItemGroup(itemGroupOID, description, Lists.newArrayList(itemOID)));
+        final List<Item> items = Lists.newArrayList(new ImmutableItem(itemOID, description, codeListOID));
         final Map<Integer, String> codeListItems = Maps.newHashMap();
         codeListItems.put(1, option1);
         codeListItems.put(2, option2);
 
-        final List<CodeList> codeLists = Lists.newArrayList(new CodeList(codeListOID, codeListItems));
+        final List<CodeList> codeLists = Lists.newArrayList(new ImmutableCodeList(codeListOID, description, codeListItems));
         final XMLEcrfDatamodel datamodel = new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
 
         final List<EcrfField> fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);

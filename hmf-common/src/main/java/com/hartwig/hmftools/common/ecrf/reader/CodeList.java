@@ -2,32 +2,31 @@ package com.hartwig.hmftools.common.ecrf.reader;
 
 import java.util.Map;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-class CodeList implements OIDObject {
+@Value.Immutable
+@Value.Style(of = "new",
+             passAnnotations = { NotNull.class, Nullable.class })
+abstract class CodeList implements OIDObject {
 
+    @Override
+    @Value.Parameter
     @NotNull
-    private final String OID;
-    @NotNull
-    private final Map<Integer, String> values;
+    public abstract String OID();
 
-    CodeList(@NotNull final String OID, @NotNull final Map<Integer, String> values) {
-        this.OID = OID;
-        this.values = values;
-    }
-
+    @Override
+    @Value.Parameter
     @NotNull
-    public String OID() {
-        return OID;
-    }
+    public abstract String name();
 
+    @Value.Parameter
     @NotNull
-    Map<Integer, String> values() {
-        return values;
-    }
+    public abstract Map<Integer, String> values();
 
     @Override
     public String toString() {
-        return "CodeList{" + "OID='" + OID + '\'' + ", codeList=" + values + '}';
+        return "CodeList{" + "OID='" + OID() + '\'' + ", codeList=" + values() + '}';
     }
 }
