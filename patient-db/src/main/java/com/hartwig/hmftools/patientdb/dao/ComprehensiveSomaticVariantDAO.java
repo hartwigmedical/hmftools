@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep13;
+import org.jooq.InsertValuesStep14;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -75,7 +75,7 @@ class ComprehensiveSomaticVariantDAO {
         context.delete(COMPREHENSIVESOMATICVARIANT).where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep13 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
+            InsertValuesStep14 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
                     COMPREHENSIVESOMATICVARIANT.SAMPLEID,
                     COMPREHENSIVESOMATICVARIANT.CHROMOSOME,
                     COMPREHENSIVESOMATICVARIANT.POSITION,
@@ -88,13 +88,14 @@ class ComprehensiveSomaticVariantDAO {
                     COMPREHENSIVESOMATICVARIANT.ADJUSTEDVAF,
                     COMPREHENSIVESOMATICVARIANT.HIGHCONFIDENCE,
                     COMPREHENSIVESOMATICVARIANT.TRINUCLEOTIDECONTEXT,
+                    COMPREHENSIVESOMATICVARIANT.MICROHOMOLOGY,
                     COMPREHENSIVESOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep13 inserter, String sample, EnrichedSomaticVariant region) {
+    private void addRecord(Timestamp timestamp, InsertValuesStep14 inserter, String sample, EnrichedSomaticVariant region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.position(),
@@ -107,6 +108,7 @@ class ComprehensiveSomaticVariantDAO {
                 region.adjustedVAF(),
                 region.highConfidenceRegion(),
                 region.trinucleotideContext(),
+                region.microhomology(),
                 timestamp);
     }
 

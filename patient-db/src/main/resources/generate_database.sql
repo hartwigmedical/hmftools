@@ -106,6 +106,7 @@ CREATE TABLE comprehensiveSomaticVariant
     filter varchar(255) NOT NULL,
     ref varchar(255) NOT NULL,
     alt varchar(255) NOT NULL,
+    microhomology varchar(255) NOT NULL,
     alleleReadCount int NOT NULL,
     totalReadCount int NOT NULL,
     adjustedVaf DOUBLE PRECISION NOT NULL,

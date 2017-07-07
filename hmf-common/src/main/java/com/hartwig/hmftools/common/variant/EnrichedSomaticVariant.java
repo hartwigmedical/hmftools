@@ -16,6 +16,8 @@ public abstract class EnrichedSomaticVariant implements Variant {
 
     public abstract int alleleReadCount();
 
+    public abstract String microhomology();
+
     public double alleleFrequency() {
         return (double) alleleReadCount() / totalReadCount();
     }

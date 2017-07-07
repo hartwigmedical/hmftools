@@ -51,6 +51,7 @@ public class EnrichedSomaticVariantFactory {
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> addCopyNumber(builder, x, variant.alleleFrequency()));
         addTrinucleotideContext(builder, variant);
+        addMicrohomology(builder, variant);
 
         return builder.build();
     }
@@ -58,11 +59,28 @@ public class EnrichedSomaticVariantFactory {
     private Builder createBuilder(@NotNull final SomaticVariant variant) {
         return builder().from(variant)
                 .trinucleotideContext("")
+                .microhomology("")
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .highConfidenceRegion(false)
                 .adjustedCopyNumber(0)
                 .adjustedVAF(0);
+    }
+
+    private Builder addMicrohomology(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+
+        int refLength = variant.ref().length();
+        int altLength = variant.alt().length();
+        if (refLength > altLength) {
+            // Deletions only atm
+            long start = variant.position();
+            long end = refLength > altLength ? start + 2 * refLength : start + altLength;
+            final ReferenceSequence sequence = reference.getSubsequenceAt(variant.chromosome(), start, end);
+            final String microhomology = Microhomology.microhomology(variant.ref(), variant.alt(), sequence.getBaseString());
+            return builder.microhomology(microhomology);
+        }
+
+        return builder;
     }
 
     private Builder addCopyNumber(@NotNull final Builder builder, @NotNull final PurpleCopyNumber copyNumber, double alleleFrequency) {
