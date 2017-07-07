@@ -47,16 +47,14 @@ class FastqStats {
      * @throws InterruptedException
      */
     @NotNull
-    static FastqTracker processDir(@NotNull final File dir, final int threadCount)
-            throws IOException, InterruptedException {
+    static FastqTracker processDir(@NotNull final File dir, final int threadCount) throws IOException, InterruptedException {
         final File[] files = dir.listFiles();
         if (files == null) {
             throw new IOException("List files in " + dir.getName() + " returned null.");
         }
         final FastqTrackerWrapper tracker = new FastqTrackerWrapper();
         LOGGER.info("Using " + threadCount + " threads.");
-        final ListeningExecutorService threadPool = MoreExecutors.listeningDecorator(
-                Executors.newFixedThreadPool(threadCount));
+        final ListeningExecutorService threadPool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
 
         for (final File file : files) {
             if (file.isDirectory() && file.getName().startsWith("HMFreg")) {
@@ -67,21 +65,20 @@ class FastqStats {
                 }
                 for (final File sampleFolder : sampleFolders) {
                     LOGGER.info("Found sample folder: " + sampleFolder.getName());
-                    final File[] fastqFiles = sampleFolder.listFiles(
-                            (parentDir, fileName) -> fileName.endsWith(".fastq.gz") || fileName.endsWith(".fastq"));
+                    final File[] fastqFiles =
+                            sampleFolder.listFiles((parentDir, fileName) -> fileName.endsWith(".fastq.gz") || fileName.endsWith(".fastq"));
                     if (fastqFiles == null) {
                         throw new IOException("List fastq files in " + sampleFolder.getName() + " returned null.");
                     }
                     for (final File fastq : fastqFiles) {
                         final String lane = getLaneName(fastq);
                         final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(fastq));
-                        addCallback(futureResult,
-                                (data) -> tracker.addDataFromSampleFile(sampleFolder.getName(), lane, data),
+                        addCallback(futureResult, (data) -> tracker.addDataFromSampleFile(sampleFolder.getName(), lane, data),
                                 (error) -> LOGGER.error("Failed to process file: " + fastq.getName(), error));
                     }
                 }
-            } else if (!file.isDirectory() && file.getName().startsWith("Undetermined") && (
-                    file.getName().endsWith(".fastq.gz") || file.getName().endsWith(".fastq"))) {
+            } else if (!file.isDirectory() && file.getName().startsWith("Undetermined") && (file.getName().endsWith(".fastq.gz")
+                    || file.getName().endsWith(".fastq"))) {
                 LOGGER.info("Found undetermined file: " + file.getName());
                 final String lane = getLaneName(file);
                 final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(file));
@@ -116,8 +113,8 @@ class FastqStats {
         return data;
     }
 
-    private static <T> void addCallback(@NotNull final ListenableFuture<T> future,
-            @NotNull final Consumer<T> onSuccess, @NotNull final Consumer<Throwable> onFailure) {
+    private static <T> void addCallback(@NotNull final ListenableFuture<T> future, @NotNull final Consumer<T> onSuccess,
+            @NotNull final Consumer<Throwable> onFailure) {
         Futures.addCallback(future, new FutureCallback<T>() {
             @Override
             public void onSuccess(@Nullable final T t) {
@@ -146,7 +143,7 @@ class FastqStats {
         if (fileNameArray.length >= 4) {
             return fileNameArray[3];
         } else {
-            LOGGER.warn("Could not get flowcell name from " + file.getName());
+            LOGGER.warn("Could not get lane name from " + file.getName());
             return "Unknown";
         }
     }
