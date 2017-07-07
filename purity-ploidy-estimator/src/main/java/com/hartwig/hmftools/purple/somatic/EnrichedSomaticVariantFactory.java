@@ -69,6 +69,10 @@ public class EnrichedSomaticVariantFactory {
 
     private Builder addMicrohomology(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
 
+        if (variant.position() == 17655818) {
+            System.out.println("sdfsd");
+        }
+
         int refLength = variant.ref().length();
         int altLength = variant.alt().length();
         if (refLength > altLength) {
