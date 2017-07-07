@@ -60,6 +60,7 @@ class ComprehensiveSomaticVariantDAO {
                     .adjustedVAF(record.getValue(COMPREHENSIVESOMATICVARIANT.ADJUSTEDVAF))
                     .adjustedCopyNumber(record.getValue(COMPREHENSIVESOMATICVARIANT.ADJUSTEDCOPYNUMBER))
                     .trinucleotideContext(record.getValue(COMPREHENSIVESOMATICVARIANT.TRINUCLEOTIDECONTEXT))
+                    .microhomology(record.getValue(COMPREHENSIVESOMATICVARIANT.MICROHOMOLOGY))
                     .type(VariantType.fromRefAlt(ref, alt))
                     .build();
 
