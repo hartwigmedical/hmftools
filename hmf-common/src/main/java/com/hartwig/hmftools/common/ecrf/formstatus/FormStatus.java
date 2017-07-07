@@ -30,7 +30,8 @@ public class FormStatus {
     private static final int LAST_SAVED_COLUMN = 15;
     private static final int LOCKED_COLUMN = 16;
 
-    private static final String FIELD_SEPARATOR = "\t";
+    private static final String FIELD_SEPARATOR = ",";
+    private static final char QUOTE = '"';
 
     private FormStatus() {
     }
@@ -41,10 +42,11 @@ public class FormStatus {
         for (String line : lines) {
             final String[] parts = splitCsvLine(line, FIELD_SEPARATOR, 17);
             if (parts.length > 0) {
-                final FormStatusKey formKey = new ImmutableFormStatusKey(parts[PATIENT_ID_COLUMN].trim(), parts[FORM_NAME_COLUMN].trim(),
-                        parts[FORM_SEQ_NUM_COLUMN].trim(), parts[STUDY_EVENT_NAME_COLUMN].trim(), parts[STUDY_EVENT_SEQ_NUM_COLUMN]);
+                final FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
+                        removeQuotes(parts[FORM_NAME_COLUMN]), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
+                        removeQuotes(parts[STUDY_EVENT_NAME_COLUMN]), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
                 final FormStatusData formStatus =
-                        new ImmutableFormStatusData(parts[DATA_STATUS_COLUMN].trim(), parts[LOCKED_COLUMN].trim());
+                        new ImmutableFormStatusData(removeQuotes(parts[DATA_STATUS_COLUMN]), removeQuotes(parts[LOCKED_COLUMN]));
                 formStatuses.put(formKey, formStatus);
             }
         }
@@ -56,4 +58,14 @@ public class FormStatus {
     private static String[] splitCsvLine(@NotNull final String line, @NotNull final String separator, final int limit) {
         return line.split(separator + "(?=([^\"]*\"[^\"]*\")*[^\"]*$)", limit);
     }
+
+    @NotNull
+    private static String removeQuotes(@NotNull final String text) {
+        final String trimmedText = text.trim();
+        if (trimmedText.length() > 0 && trimmedText.charAt(0) == QUOTE && trimmedText.charAt(trimmedText.length() - 1) == QUOTE) {
+            return trimmedText.substring(1, trimmedText.length() - 1);
+        }
+        return trimmedText;
+    }
+
 }
