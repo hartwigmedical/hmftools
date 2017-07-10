@@ -2,11 +2,8 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.MAX_COPY_NUMBER_TOLERANCE;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE;
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.isEven;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
@@ -43,27 +40,6 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
         assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
         assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithSV), EPSILON);
         assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithoutSV), EPSILON);
-    }
-
-    @Test
-    public void testIsEvenCopyNumber() {
-        assertFalse(isEven(0.5));
-        assertFalse(isEven(0.75));
-        assertFalse(isEven(1));
-        assertFalse(isEven(1.74));
-
-        assertTrue(isEven(1.75));
-        assertTrue(isEven(2));
-        assertTrue(isEven(2.25));
-
-        assertFalse(isEven(2.5));
-        assertFalse(isEven(2.75));
-        assertFalse(isEven(3));
-        assertFalse(isEven(3.74));
-
-        assertTrue(isEven(3.75));
-        assertTrue(isEven(4));
-        assertTrue(isEven(4.25));
     }
 
     @Test
