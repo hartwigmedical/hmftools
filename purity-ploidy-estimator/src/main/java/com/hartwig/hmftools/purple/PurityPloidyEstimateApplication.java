@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -99,6 +100,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final String PLOIDY_PENALTY_EXPERIMENT = "ploidy_penalty_experiment";
 
+    private static final String NO_STRUCTURAL_VARIANTS = "no_sv";
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
@@ -131,11 +133,7 @@ public class PurityPloidyEstimateApplication {
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
         final Multimap<String, FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
-
-        final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
-        final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
-        LOGGER.info("Loading structural variants from {}", structuralVariantFile);
-        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantFile);
+        final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
 
         LOGGER.info("Merging structural variants into freec segmentation");
         final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
@@ -203,6 +201,19 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Complete");
     }
 
+    @NotNull
+    private List<StructuralVariant> structuralVariants(final CommandLine cmd, final String runDirectory) throws IOException {
+        if (cmd.hasOption(NO_STRUCTURAL_VARIANTS)) {
+            LOGGER.info("Structural variants support disabled.");
+            return Collections.emptyList();
+        } else {
+            final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
+            final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
+            LOGGER.info("Loading structural variants from {}", structuralVariantFile);
+            return StructuralVariantFileLoader.fromFile(structuralVariantFile);
+        }
+    }
+
     private List<GeneCopyNumber> geneCopyNumbers(List<PurpleCopyNumber> copyNumbers) throws IOException, EmptyFileException {
         final InputStream inputStream = getClass().getResourceAsStream("/bed/hmf_gene_panel.tsv");
         final List<HmfGenomeRegion> hmgGenomeRegions = HmfSlicerFileLoader.fromInputStream(inputStream);
@@ -236,6 +247,7 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(NO_STRUCTURAL_VARIANTS, false, "Disable structural variant support.");
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");
