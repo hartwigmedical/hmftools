@@ -15,6 +15,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -55,6 +57,7 @@ public final class PatientDbRunner {
     private static final String LIMS_UMCU_CSV = "lims_umcu_csv";
     private static final String SOMATIC = "somatic";
     private static final String CLINICAL = "clinical";
+    private static final String FORM_STATUS_FILE = "form_status";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
@@ -105,14 +108,16 @@ public final class PatientDbRunner {
         final String limsCsv = cmd.getOptionValue(LIMS_CSV);
         final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
         final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
+        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_FILE);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv, formStatusPath)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -clinical", clinicalOptions);
+            formatter.printHelp("patient-db -" + CLINICAL, clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
             dbWriter.clearClinicalTables();
-            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
+            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
+            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final PatientReader patientReader =
                     new PatientReader(model, readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream()
@@ -144,7 +149,7 @@ public final class PatientDbRunner {
         final String extremeConfidenceBed = cmd.getOptionValue(EXTREME_CONFIDENCE_BED);
         if (Utils.anyNull(highConfidenceBed, extremeConfidenceBed)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -somatic", somaticOptions);
+            formatter.printHelp("patient-db -" + SOMATIC, somaticOptions);
         } else {
             final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
             final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
@@ -192,12 +197,10 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static Options mergeOptions(@NotNull final Options basicOptions, @NotNull final Options clinicalOptions,
-            @NotNull final Options somaticOptions) {
+    private static Options mergeOptions(@NotNull final Options... optionsArray) {
         final Options options = new Options();
-        basicOptions.getOptions().forEach(options::addOption);
-        clinicalOptions.getOptions().forEach(options::addOption);
-        somaticOptions.getOptions().forEach(options::addOption);
+        final List<Options> optionsList = Lists.newArrayList(optionsArray);
+        optionsList.forEach(opt -> opt.getOptions().forEach(options::addOption));
         return options;
     }
 
@@ -208,8 +211,8 @@ public final class PatientDbRunner {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(SOMATIC, false, "Read somatic data.");
-        options.addOption(CLINICAL, false, "Read clinical data.");
+        options.addOption(SOMATIC, false, "Read/write somatic data.");
+        options.addOption(CLINICAL, false, "Read/write clinical data.");
         return options;
     }
 
