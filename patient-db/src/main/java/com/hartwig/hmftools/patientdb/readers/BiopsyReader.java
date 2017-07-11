@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,9 +38,9 @@ public final class BiopsyReader {
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
                     if (location == null || location.trim().toLowerCase().startsWith("other")) {
                         final String location_other = itemGroup.readItemString(FIELD_LOCATION_OTHER, 0, true);
-                        biopsies.add(new BiopsyData(date, location_other));
+                        biopsies.add(ImmutableBiopsyData.of(date, location_other, form.status(), form.locked()));
                     } else {
-                        biopsies.add(new BiopsyData(date, location));
+                        biopsies.add(ImmutableBiopsyData.of(date, location, form.status(), form.locked()));
                     }
                 }
             }

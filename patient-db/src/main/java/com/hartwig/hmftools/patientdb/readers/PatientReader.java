@@ -17,9 +17,13 @@ import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReader {
+    private static final Logger LOGGER = LogManager.getLogger(PatientReader.class);
+
     @NotNull
     private final CpctPatientReader cpctPatientReader;
     @NotNull
@@ -38,6 +42,7 @@ public class PatientReader {
     @NotNull
     public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<String> tumorSamplesForPatient)
             throws IOException, HartwigException {
+        LOGGER.info("Reading patient " + ecrfPatient.patientId());
         final List<SampleData> sequencedBiopsies = sampleReader.read(tumorSamplesForPatient);
         final PatientData patientData = cpctPatientReader.read(ecrfPatient);
         final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(ecrfPatient);
@@ -49,7 +54,6 @@ public class PatientReader {
                 TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), clinicalBiopsies, treatments);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(ecrfPatient.patientId(), treatments, treatmentResponses);
-        final Patient patient = new Patient(patientData, sequencedBiopsies, matchedBiopsies, matchedTreatments, matchedResponses);
-        return patient;
+        return new Patient(patientData, sequencedBiopsies, matchedBiopsies, matchedTreatments, matchedResponses);
     }
 }
