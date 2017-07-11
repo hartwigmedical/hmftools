@@ -2,77 +2,65 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PatientData {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class PatientData {
     @Nullable
-    private final String cpctId;
-    @Nullable
-    private final LocalDate registrationDate;
-    @Nullable
-    private final String gender;
-    @Nullable
-    private final String ethnicity;
-    @Nullable
-    private final String hospital;
-    @Nullable
-    private final Integer birthYear;
-    @Nullable
-    private final String primaryTumorLocation;
-    @Nullable
-    private final LocalDate deathDate;
-
-    public PatientData(@Nullable final String cpctId, @Nullable final LocalDate registrationDate,
-            @Nullable final String gender, @Nullable final String ethnicity, @Nullable final String hospital,
-            @Nullable final Integer birthYear, @Nullable final String primaryTumorLocation,
-            @Nullable final LocalDate deathDate) {
-        this.cpctId = cpctId;
-        this.registrationDate = registrationDate;
-        this.gender = gender;
-        this.ethnicity = ethnicity;
-        this.hospital = hospital;
-        this.birthYear = birthYear;
-        this.primaryTumorLocation = primaryTumorLocation;
-        this.deathDate = deathDate;
-    }
+    public abstract String cpctId();
 
     @Nullable
-    public String cpctId() {
-        return cpctId;
-    }
+    public abstract LocalDate registrationDate();
 
     @Nullable
-    public LocalDate registrationDate() {
-        return registrationDate;
-    }
+    public abstract String gender();
 
     @Nullable
-    public String gender() {
-        return gender;
-    }
+    public abstract String ethnicity();
 
     @Nullable
-    public String ethnicity() {
-        return ethnicity;
-    }
+    public abstract String hospital();
 
     @Nullable
-    public String hospital() {
-        return hospital;
-    }
+    public abstract Integer birthYear();
 
     @Nullable
-    public Integer birthYear() {
-        return birthYear;
-    }
+    public abstract String primaryTumorLocation();
 
     @Nullable
-    public LocalDate deathDate() {
-        return deathDate;
-    }
+    public abstract LocalDate deathDate();
 
     @Nullable
-    public String primaryTumorLocation() {
-        return primaryTumorLocation;
-    }
+    public abstract String demographyStatus();
+
+    @Nullable
+    public abstract String demographyLocked();
+
+    @Nullable
+    public abstract String primaryTumorStatus();
+
+    @Nullable
+    public abstract String primaryTumorLocked();
+
+    @Nullable
+    public abstract String eligibilityStatus();
+
+    @Nullable
+    public abstract String eligibilityLocked();
+
+    @Nullable
+    public abstract String selectionCriteriaStatus();
+
+    @Nullable
+    public abstract String selectionCriteriaLocked();
+
+    @Nullable
+    public abstract String deathStatus();
+
+    @Nullable
+    public abstract String deathLocked();
 }
