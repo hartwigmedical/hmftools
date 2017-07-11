@@ -249,3 +249,28 @@ CREATE TABLE clinicalLogs
     message varchar(1000),
     PRIMARY KEY (id)
 );
+
+DROP TABLE IF EXISTS ecrf;
+CREATE TABLE ecrf
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId varchar(20),
+    studyEvent varchar(100),
+    studyEventIdx int not null,
+    form varchar(100),
+    formIdx int not null,
+    itemGroup varchar(100),
+    itemGroupIdx int not null,
+    item varchar(100),
+    itemValue varchar(1500),
+    formStatus varchar(5),
+    locked varchar(5),
+    sequenced varchar(5),
+    PRIMARY KEY (id),
+    INDEX(patientId),
+    INDEX(studyEvent),
+    INDEX(form),
+    INDEX(itemGroup),
+    INDEX(item),
+    INDEX(itemValue)
+);
+
