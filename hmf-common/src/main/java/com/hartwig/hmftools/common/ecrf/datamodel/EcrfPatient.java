@@ -73,7 +73,8 @@ public class EcrfPatient {
                         for (final String itemGroupOID : form.itemGroupsPerOID().keySet()) {
                             for (final EcrfItemGroup itemGroup : form.itemGroupsPerOID().get(itemGroupOID)) {
                                 for (final String itemOID : itemGroup.itemsPerOID().keySet()) {
-                                    final EcrfField field = new ImmutableEcrfField(studyEventOID, formOID, itemGroupOID, itemOID);
+                                    final EcrfField field =
+                                            new ImmutableEcrfField(studyEventOID, formOID, itemGroupOID, itemOID, "", Maps.newHashMap());
                                     fields.put(field, itemGroup.itemsPerOID().get(itemOID));
                                 }
                             }

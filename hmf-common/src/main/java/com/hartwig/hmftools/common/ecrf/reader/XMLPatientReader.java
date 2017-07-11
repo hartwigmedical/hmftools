@@ -9,13 +9,15 @@ import javax.xml.stream.events.XMLEvent;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfFieldFunctions;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfResolveException;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusData;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusKey;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
+import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusKey;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +33,10 @@ public final class XMLPatientReader extends EcrfReader {
 
     private static final String STUDY_EVENT_TAG = "StudyEventData";
     private static final String STUDY_EVENT_OID_ATTRIBUTE = "StudyEventOID";
+    private static final String STUDY_EVENT_REPEAT_KEY_ATTRIBUTE = "StudyEventRepeatKey";
     private static final String FORM_TAG = "FormData";
     private static final String FORM_OID_ATTRIBUTE = "FormOID";
+    private static final String FORM_REPEAT_KEY_ATTRIBUTE = "FormRepeatKey";
     private static final String ITEM_GROUP_TAG = "ItemGroupData";
     private static final String ITEM_GROUP_OID_ATTRIBUTE = "ItemGroupOID";
     private static final String ITEM_TAG = "ItemData";
@@ -43,14 +47,13 @@ public final class XMLPatientReader extends EcrfReader {
     }
 
     @NotNull
-    public static List<EcrfPatient> readPatients(@NotNull XMLStreamReader reader, @NotNull Iterable<EcrfField> fields)
-            throws XMLStreamException {
+    public static List<EcrfPatient> readPatients(@NotNull XMLStreamReader reader, @NotNull final XMLEcrfDatamodel datamodel,
+            @NotNull final FormStatusModel formStatusModel) throws XMLStreamException {
         final List<EcrfPatient> patients = Lists.newArrayList();
-        final Map<String, EcrfField> nameToEcrfFields = mapNameToEcrfFields(fields);
 
         while (reader.hasNext() && !isClinicalDataEnd(reader)) {
             if (isPatientStart(reader)) {
-                patients.add(readPatient(reader, nameToEcrfFields));
+                patients.add(readPatient(reader, datamodel, formStatusModel));
             }
             reader.next();
         }
@@ -59,30 +62,23 @@ public final class XMLPatientReader extends EcrfReader {
     }
 
     @NotNull
-    private static Map<String, EcrfField> mapNameToEcrfFields(@NotNull Iterable<EcrfField> fields) {
-        final Map<String, EcrfField> mapping = Maps.newHashMap();
-        for (final EcrfField field : fields) {
-            mapping.put(field.name(), field);
-        }
-        return mapping;
-    }
-
-    @NotNull
-    private static EcrfPatient readPatient(@NotNull XMLStreamReader reader, @NotNull Map<String, EcrfField> nameToEcrfFieldMap)
-            throws XMLStreamException {
+    private static EcrfPatient readPatient(@NotNull final XMLStreamReader reader, @NotNull final XMLEcrfDatamodel datamodel,
+            @NotNull final FormStatusModel formStatusModel) throws XMLStreamException {
         final String patientId = toCPCTPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
-        final Map<EcrfField, List<String>> fieldValues = initializeFieldValues(nameToEcrfFieldMap.values());
         final Map<String, List<EcrfStudyEvent>> studyEventsPerOID = Maps.newHashMap();
 
         String currentStudyEventOID = Strings.EMPTY;
-        String currentFormOID = Strings.EMPTY;
-        String currentItemGroupOID = Strings.EMPTY;
+        String currentStudyEventIdx = Strings.EMPTY;
+        String currentFormOID;
+        String currentFormIdx;
+        String currentItemGroupOID;
         EcrfStudyEvent currentStudy = new EcrfStudyEvent(patientId);
-        EcrfForm currentForm = new EcrfForm(patientId);
+        EcrfForm currentForm = new EcrfForm(patientId, "", "");
         EcrfItemGroup currentItemGroup = new EcrfItemGroup(patientId);
         while (reader.hasNext() && !isPatientEnd(reader)) {
             if (isStudyEventStart(reader)) {
                 currentStudyEventOID = reader.getAttributeValue("", STUDY_EVENT_OID_ATTRIBUTE);
+                currentStudyEventIdx = reader.getAttributeValue("", STUDY_EVENT_REPEAT_KEY_ATTRIBUTE);
                 currentStudy = new EcrfStudyEvent(patientId);
                 if (!studyEventsPerOID.containsKey(currentStudyEventOID)) {
                     studyEventsPerOID.put(currentStudyEventOID, Lists.newArrayList());
@@ -90,7 +86,17 @@ public final class XMLPatientReader extends EcrfReader {
                 studyEventsPerOID.get(currentStudyEventOID).add(currentStudy);
             } else if (isFormStart(reader)) {
                 currentFormOID = reader.getAttributeValue("", FORM_OID_ATTRIBUTE);
-                currentForm = new EcrfForm(patientId);
+                currentFormIdx = reader.getAttributeValue("", FORM_REPEAT_KEY_ATTRIBUTE);
+                final String formName = datamodel.forms().get(currentFormOID).name();
+                final String studyEventName = datamodel.studyEvents().get(currentStudyEventOID).name();
+                final FormStatusKey formKey =
+                        new ImmutableFormStatusKey(patientId, formName, currentFormIdx, studyEventName, currentStudyEventIdx);
+                final FormStatusData formStatus = formStatusModel.formStatuses().get(formKey);
+                if (formStatus != null) {
+                    currentForm = new EcrfForm(patientId, formStatus.dataStatus(), formStatus.locked());
+                } else {
+                    currentForm = new EcrfForm(patientId, "", "");
+                }
                 currentStudy.addForm(currentFormOID, currentForm);
             } else if (isItemGroupStart(reader)) {
                 currentItemGroupOID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
@@ -98,35 +104,17 @@ public final class XMLPatientReader extends EcrfReader {
                 currentForm.addItemGroup(currentItemGroupOID, currentItemGroup);
             } else if (isFieldStart(reader)) {
                 String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
-                String name = EcrfFieldFunctions.name(currentStudyEventOID, currentFormOID, currentItemGroupOID, OID);
-                final EcrfField field = nameToEcrfFieldMap.get(name);
-                if (field != null) {
-                    String value = Strings.EMPTY;
-                    try {
-                        value = EcrfFieldFunctions.resolveValue(field, reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
-                    } catch (EcrfResolveException exception) {
-                        LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
-                    }
-                    currentItemGroup.addItem(OID, value);
-                    fieldValues.get(field).add(value);
-                } else {
-                    final String value = reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE);
-                    LOGGER.warn("Could not resolve field with name " + name + " value(" + value + ")");
-                    currentItemGroup.addItem(OID, value);
+                String value = Strings.EMPTY;
+                try {
+                    value = datamodel.resolveValue(OID, reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
+                } catch (EcrfResolveException exception) {
+                    LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
                 }
+                currentItemGroup.addItem(OID, value);
             }
             reader.next();
         }
-        return new EcrfPatient(patientId, fieldValues, studyEventsPerOID);
-    }
-
-    @NotNull
-    private static Map<EcrfField, List<String>> initializeFieldValues(@NotNull Iterable<EcrfField> fields) {
-        final Map<EcrfField, List<String>> fieldValues = Maps.newHashMap();
-        for (final EcrfField field : fields) {
-            fieldValues.put(field, Lists.newArrayList());
-        }
-        return fieldValues;
+        return new EcrfPatient(patientId, studyEventsPerOID);
     }
 
     @NotNull
