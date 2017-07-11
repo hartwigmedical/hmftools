@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,22 +29,21 @@ public class BiopsyMatcherTest {
     private final static SampleData LIMS_BIOPSY_SEP = new SampleData("sep", SEP2015, null);
     private final static SampleData LIMS_BIOPSY_NOV = new SampleData("nov", NOV2015, null);
 
-    private final static BiopsyData BIOPSY_JAN = new BiopsyData(JAN2015, "");
-    private final static BiopsyData BIOPSY_FEB = new BiopsyData(FEB2015, "");
-    private final static BiopsyData BIOPSY_MAR = new BiopsyData(MAR2015, "");
-    private final static BiopsyData BIOPSY_JUL = new BiopsyData(JUL2015, "");
+    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "");
+    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "");
+    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "");
+    private final static BiopsyData BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", "");
 
-    private final static BiopsyData BIOPSY_SEP = new BiopsyData(SEP2015, "");
+    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "");
 
-    private final static BiopsyData BIOPSY_NULL = new BiopsyData(null, "");
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "");
 
     // MIVO:    ---biopsy(jul)/sample(jul)---
     @Test
     public void testBiopsyAndSampleSameDate() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JUL);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals("jul", matchedBiopsies.get(0).sampleId());
     }
@@ -53,8 +53,7 @@ public class BiopsyMatcherTest {
     public void test1BiopsyBefore1SampleWithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals("jul", matchedBiopsies.get(0).sampleId());
     }
@@ -64,8 +63,7 @@ public class BiopsyMatcherTest {
     public void test1BiopsyBefore1SampleOutsideThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
     }
@@ -75,8 +73,7 @@ public class BiopsyMatcherTest {
     public void test1BiopsiesAfter1Sample() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_SEP);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
     }
@@ -86,8 +83,7 @@ public class BiopsyMatcherTest {
     public void test2BiopsiesBefore1Sample2WithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_MAR);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -99,8 +95,7 @@ public class BiopsyMatcherTest {
     public void test1Biopsy1NullBefore1SampleWithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_NULL);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -112,8 +107,7 @@ public class BiopsyMatcherTest {
     public void test1Null1BiopsyBefore1SampleWithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -125,8 +119,7 @@ public class BiopsyMatcherTest {
     public void test2BiopsiesBefore1Sample1WithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_MAR);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -138,8 +131,7 @@ public class BiopsyMatcherTest {
     public void test2BiopsiesBefore1Sample1WithinThresholdOutOfOrder() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_JAN);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -151,8 +143,7 @@ public class BiopsyMatcherTest {
     public void test2BiopsiesBefore1Sample2OutsideThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_SEP);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_FEB);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -164,8 +155,7 @@ public class BiopsyMatcherTest {
     public void test1BiopsyBefore2SamplesWithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL, LIMS_BIOPSY_AUG);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
     }
@@ -175,8 +165,7 @@ public class BiopsyMatcherTest {
     public void test1SampleBetween2BiopsiesWithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_SEP);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals("jul", matchedBiopsies.get(0).sampleId());
@@ -188,8 +177,7 @@ public class BiopsyMatcherTest {
     public void test2SamplesAfter2Biopsies() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG, LIMS_BIOPSY_SEP);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_MAR);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());
@@ -201,8 +189,7 @@ public class BiopsyMatcherTest {
     public void test2SamplesBetween2BiopsiesWithinThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG, LIMS_BIOPSY_NOV);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_SEP);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals("aug", matchedBiopsies.get(0).sampleId());
@@ -214,8 +201,7 @@ public class BiopsyMatcherTest {
     public void test2SamplesBetween2Biopsies1OutsideThreshold() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG, LIMS_BIOPSY_NOV);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
-        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies,
-                clinicalBiopsies);
+        final List<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies);
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
         assertEquals(null, matchedBiopsies.get(0).sampleId());

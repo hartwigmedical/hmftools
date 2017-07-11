@@ -20,6 +20,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
 
 import org.junit.Test;
 
@@ -29,28 +31,33 @@ public class TreatmentValidationTest {
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
 
-    private final static BiopsyTreatmentDrugData DRUG_NULL = new BiopsyTreatmentDrugData(null, null, null, null);
-    private final static BiopsyTreatmentDrugData DRUG_WRONG = new BiopsyTreatmentDrugData(null, null, FEB2015, JAN2015);
-    private final static BiopsyTreatmentDrugData DRUG_JAN_FEB = new BiopsyTreatmentDrugData("Drug1", "Type1", JAN2015, FEB2015);
-    private final static BiopsyTreatmentDrugData DRUG_JAN_MAR = new BiopsyTreatmentDrugData("Drug1", "Type1", JAN2015, MAR2015);
-    private final static BiopsyTreatmentDrugData DRUG_JAN_JAN = new BiopsyTreatmentDrugData("Drug1", "Type1", JAN2015, JAN2015);
+    private final static BiopsyTreatmentDrugData DRUG_NULL = ImmutableBiopsyTreatmentDrugData.of(null, null, null, null);
+    private final static BiopsyTreatmentDrugData DRUG_WRONG = ImmutableBiopsyTreatmentDrugData.of(null, null, FEB2015, JAN2015);
+    private final static BiopsyTreatmentDrugData DRUG_JAN_FEB = ImmutableBiopsyTreatmentDrugData.of("Drug1", "Type1", JAN2015, FEB2015);
+    private final static BiopsyTreatmentDrugData DRUG_JAN_MAR = ImmutableBiopsyTreatmentDrugData.of("Drug1", "Type1", JAN2015, MAR2015);
+    private final static BiopsyTreatmentDrugData DRUG_JAN_JAN = ImmutableBiopsyTreatmentDrugData.of("Drug1", "Type1", JAN2015, JAN2015);
 
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL = new BiopsyTreatmentData(null, null, null, Lists.newArrayList());
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY = new BiopsyTreatmentData("Yes", null, null, Lists.newArrayList());
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL =
+            ImmutableBiopsyTreatmentData.of(null, null, null, Lists.newArrayList(), "", "");
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY =
+            ImmutableBiopsyTreatmentData.of("Yes", null, null, Lists.newArrayList(), "", "");
     private final static BiopsyTreatmentData TREATMENT_NOTGIVEN_DATA =
-            new BiopsyTreatmentData("No", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB));
-    private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH = new BiopsyTreatmentData("mmm", null, null, Lists.newArrayList());
+            ImmutableBiopsyTreatmentData.of("No", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB), "", "");
+    private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH =
+            ImmutableBiopsyTreatmentData.of("mmm", null, null, Lists.newArrayList(), "", "");
     private final static BiopsyTreatmentData TREATMENT_WRONG_DRUG_DATA =
-            new BiopsyTreatmentData("Yes", null, null, Lists.newArrayList(DRUG_NULL, DRUG_WRONG));
+            ImmutableBiopsyTreatmentData.of("Yes", null, null, Lists.newArrayList(DRUG_NULL, DRUG_WRONG), "", "");
 
     private final static BiopsyTreatmentData TREATMENT_JAN_JAN =
-            new BiopsyTreatmentData("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_JAN_JAN));
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_JAN_JAN), "", "");
     private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
-            new BiopsyTreatmentData("Yes", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB));
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB), "", "");
     private final static BiopsyTreatmentData TREATMENT_JAN_MAR =
-            new BiopsyTreatmentData("Yes", JAN2015, MAR2015, Lists.newArrayList(DRUG_JAN_MAR));
-    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING = new BiopsyTreatmentData("Yes", JAN2015, null, Lists.newArrayList());
-    private final static BiopsyTreatmentData TREATMENT_FEB_ONGOING = new BiopsyTreatmentData("Yes", FEB2015, null, Lists.newArrayList());
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, MAR2015, Lists.newArrayList(DRUG_JAN_MAR), "", "");
+    private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING =
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, null, Lists.newArrayList(), "", "");
+    private final static BiopsyTreatmentData TREATMENT_FEB_ONGOING =
+            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, null, Lists.newArrayList(), "", "");
 
     @Test
     public void reportsMissingDrugData() {

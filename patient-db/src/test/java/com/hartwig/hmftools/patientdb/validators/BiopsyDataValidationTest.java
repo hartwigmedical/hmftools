@@ -20,6 +20,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 
 import org.junit.Test;
 
@@ -29,10 +31,11 @@ public class BiopsyDataValidationTest {
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2016 = LocalDate.parse("2016-03-01");
 
-    private final static BiopsyData BIOPSY_NULL = new BiopsyData(null, null);
-    private final static BiopsyData BIOPSY_FEB1 = new BiopsyData(FEB2015, "1");
-    private final static BiopsyData BIOPSY_FEB2 = new BiopsyData(FEB2015, "2");
-    private final static BiopsyTreatmentData TREATMENT_JAN_FEB = new BiopsyTreatmentData("Yes", JAN2015, FEB2015, Lists.newArrayList());
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, "", "");
+    private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, "1", "", "");
+    private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, "2", "", "");
+    private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(), "", "");
 
     @Test
     public void reportsMissingFields() {
