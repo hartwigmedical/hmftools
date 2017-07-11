@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(of = "new",
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class CodeList implements OIDObject {
+public abstract class CodeList implements OIDObject {
 
     @Override
     @Value.Parameter
