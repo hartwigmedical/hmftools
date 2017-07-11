@@ -28,10 +28,12 @@ public abstract class EcrfField implements Comparable<EcrfField> {
     public abstract String itemOID();
 
     @Value.Parameter
+    @Value.Auxiliary
     @NotNull
     public abstract String description();
 
     @Value.Parameter
+    @Value.Auxiliary
     @NotNull
     public abstract Map<Integer, String> codeList();
 
