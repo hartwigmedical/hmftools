@@ -13,7 +13,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -51,11 +53,12 @@ public class DatabaseAccess {
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
     private final GeneCopyNumberDAO geneCopyNumberDAO;
-
     @NotNull
     private final ComprehensiveSomaticVariantDAO somaticVariantDAO;
     @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
+    @NotNull
+    private final EcrfDAO ecrfDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         final Connection conn = DriverManager.getConnection(url, userName, password);
@@ -65,6 +68,7 @@ public class DatabaseAccess {
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new ComprehensiveSomaticVariantDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
+        ecrfDAO = new EcrfDAO(context);
     }
 
     public void writePurity(@NotNull final String sampleId, @NotNull FittedPurityScore score, @NotNull List<FittedPurity> purities) {
@@ -127,6 +131,10 @@ public class DatabaseAccess {
         context.truncate(DRUG).execute();
         context.truncate(TREATMENTRESPONSE).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
+    }
+
+    public void clearEcrf() {
+        ecrfDAO.clear();
     }
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull final List<SomaticVariantData> somaticVariants) {
@@ -208,5 +216,9 @@ public class DatabaseAccess {
                 .values(sampleId, patientId, somaticVariant.gene(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
                         somaticVariant.cosmicID(), somaticVariant.totalReadCount(), somaticVariant.alleleReadCount())
                 .execute();
+    }
+
+    public void writeEcrfPatients(@NotNull final Iterable<EcrfPatient> patients, @NotNull final Set<String> sequencedPatients) {
+        patients.forEach(patient -> ecrfDAO.writePatient(patient, sequencedPatients.contains(patient.patientId())));
     }
 }

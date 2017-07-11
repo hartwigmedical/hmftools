@@ -57,6 +57,7 @@ public final class PatientDbRunner {
     private static final String LIMS_UMCU_CSV = "lims_umcu_csv";
     private static final String SOMATIC = "somatic";
     private static final String CLINICAL = "clinical";
+    private static final String RAW_ECRF = "raw_ecrf";
     private static final String FORM_STATUS_FILE = "form_status";
 
     public static void main(@NotNull final String[] args)
@@ -65,7 +66,8 @@ public final class PatientDbRunner {
         final Options basicOptions = createBasicOptions();
         final Options somaticOptions = createSomaticOptions();
         final Options clinicalOptions = createClinicalOptions();
-        final Options options = mergeOptions(basicOptions, somaticOptions, clinicalOptions);
+        final Options ecrfOptions = createEcrfOptions();
+        final Options options = mergeOptions(basicOptions, somaticOptions, clinicalOptions, ecrfOptions);
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
         final String userName = cmd.getOptionValue(DB_USER);
@@ -74,8 +76,9 @@ public final class PatientDbRunner {
         final String jdbcUrl = "jdbc:" + databaseUrl;
         final boolean somatic = cmd.hasOption(SOMATIC);
         final boolean clinical = cmd.hasOption(CLINICAL);
+        final boolean raw_ecrf = cmd.hasOption(RAW_ECRF);
 
-        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical)) {
+        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical && !raw_ecrf)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", basicOptions);
         } else {
@@ -83,6 +86,9 @@ public final class PatientDbRunner {
             if (runDirectory.isDirectory()) {
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+                if (raw_ecrf) {
+                    writeEcrf(ecrfOptions, cmd, runContexts, dbWriter);
+                }
                 if (clinical) {
                     writeClinicalData(clinicalOptions, cmd, runContexts, dbWriter);
                 }
@@ -137,6 +143,30 @@ public final class PatientDbRunner {
                     dbWriter.writeClinicalData(cpctPatient);
                 }
             }
+            LOGGER.info("Done!");
+        }
+    }
+
+    private static void writeEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
+            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
+            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
+            HartwigException {
+        final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
+        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_FILE);
+        if (Utils.anyNull(ecrfFilePath, formStatusPath)) {
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("patient-db -" + RAW_ECRF, ecrfOptions);
+        } else {
+            LOGGER.info("Loading ecrf model...");
+            dbWriter.clearEcrf();
+            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
+            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
+            final Set<String> cpctPatientIds = runContexts.stream()
+                    .map(runContext -> getPatientId(runContext.setName()))
+                    .filter(setName -> setName.startsWith("CPCT"))
+                    .collect(Collectors.toSet());
+            LOGGER.info("Writing patients...");
+            dbWriter.writeEcrfPatients(model.patients(), cpctPatientIds);
             LOGGER.info("Done!");
         }
     }
@@ -213,6 +243,7 @@ public final class PatientDbRunner {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(SOMATIC, false, "Read/write somatic data.");
         options.addOption(CLINICAL, false, "Read/write clinical data.");
+        options.addOption(RAW_ECRF, false, "Read/write ecrf data.");
         return options;
     }
 
@@ -224,6 +255,14 @@ public final class PatientDbRunner {
         options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file.");
         options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file.");
         options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file.");
+        return options;
+    }
+
+    @NotNull
+    private static Options createEcrfOptions() {
+        final Options options = new Options();
+        options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
+        options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
         return options;
     }
 
