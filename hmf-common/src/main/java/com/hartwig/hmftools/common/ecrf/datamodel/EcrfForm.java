@@ -17,10 +17,18 @@ public class EcrfForm {
     private final String patientId;
 
     @NotNull
+    private final String locked;
+
+    @NotNull
+    private final String status;
+
+    @NotNull
     private final Map<String, List<EcrfItemGroup>> itemGroupsPerOID;
 
-    public EcrfForm(@NotNull final String patientId) {
+    public EcrfForm(@NotNull final String patientId, @NotNull final String status, @NotNull final String locked) {
         this.patientId = patientId;
+        this.status = status;
+        this.locked = locked;
         this.itemGroupsPerOID = Maps.newHashMap();
     }
 
@@ -59,5 +67,15 @@ public class EcrfForm {
             }
         }
         return nonEmptyItemGroups;
+    }
+
+    @NotNull
+    public String locked() {
+        return locked;
+    }
+
+    @NotNull
+    public String status() {
+        return status;
     }
 }
