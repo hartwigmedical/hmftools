@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,9 +36,9 @@ public final class TreatmentResponseMatcher {
                         .collect(Collectors.toList()));
                 matchedResponses.add(response);
             } else {
-                matchedResponses.add(
-                        new BiopsyTreatmentResponseData(matchedTreatments.get(0).id(), response.assessmentDate(), response.responseDate(),
-                                response.response(), response.measurementDone()));
+                matchedResponses.add(ImmutableBiopsyTreatmentResponseData.of(matchedTreatments.get(0).id(), response.assessmentDate(),
+                        response.responseDate(), response.response(), response.measurementDone(), response.formStatus(),
+                        response.formLocked()));
             }
         }
         return matchedResponses;
