@@ -36,7 +36,7 @@ public class XMLEcrfDatamodelToEcrfFieldsTest {
         codeListItems.put(2, option2);
 
         final List<CodeList> codeLists = Lists.newArrayList(new ImmutableCodeList(codeListOID, description, codeListItems));
-        final XMLEcrfDatamodel datamodel = new ImmutableXMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
+        final XMLEcrfDatamodel datamodel = XMLEcrfDatamodel.of(studyEvents, forms, itemGroups, items, codeLists);
 
         final List<EcrfField> fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);
 
