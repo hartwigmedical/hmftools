@@ -16,40 +16,32 @@ public final class XMLEcrfChecker {
     @NotNull
     public static List<String> checkReferences(@NotNull final XMLEcrfDatamodel datamodel) {
         final List<String> missingDefs = Lists.newArrayList();
-        datamodel.studyEvents().stream().flatMap(studyEvent -> studyEvent.formOIDs().stream()).forEach(formOID -> {
-            final Optional<Form> formOpt = findByOID(datamodel.forms(), formOID);
+        datamodel.studyEvents().values().stream().flatMap(studyEvent -> studyEvent.formOIDs().stream()).forEach(formOID -> {
+            final Optional<Form> formOpt = Optional.ofNullable(datamodel.forms().get(formOID));
             if (!formOpt.isPresent()) {
                 missingDefs.add("Missing Form: " + formOID);
-            } else
+            } else {
                 formOpt.ifPresent(form -> form.itemGroupOIDs().forEach(itemGroupOID -> {
-                    final Optional<ItemGroup> itemGroupOpt = findByOID(datamodel.itemGroups(), itemGroupOID);
+                    final Optional<ItemGroup> itemGroupOpt = Optional.ofNullable(datamodel.itemGroups().get(itemGroupOID));
                     if (!itemGroupOpt.isPresent()) {
                         missingDefs.add("Missing ItemGroup: " + itemGroupOID);
-                    } else
+                    } else {
                         itemGroupOpt.ifPresent(itemGroup -> itemGroup.itemOIDs().forEach(itemOID -> {
-                            final Optional<Item> itemOpt = findByOID(datamodel.items(), itemOID);
+                            final Optional<Item> itemOpt = Optional.ofNullable(datamodel.items().get(itemOID));
                             if (!itemOpt.isPresent()) {
                                 missingDefs.add("Missing Item: " + itemOID);
-                            } else
+                            } else {
                                 itemOpt.map(Item::codeListOID).filter(Objects::nonNull).ifPresent(codeListOID -> {
-                                    if (!findByOID(datamodel.codeLists(), codeListOID).isPresent()) {
+                                    if (!Optional.ofNullable(datamodel.codeLists().get(codeListOID)).isPresent()) {
                                         missingDefs.add("Missing CodeList: " + codeListOID);
                                     }
                                 });
+                            }
                         }));
+                    }
                 }));
+            }
         });
         return missingDefs;
-    }
-
-    @NotNull
-    private static <T extends OIDObject> Optional<T> findByOID(@NotNull final List<T> objects,
-            @NotNull final String OID) {
-        for (final T object : objects) {
-            if (object.OID().equals(OID)) {
-                return Optional.of(object);
-            }
-        }
-        return Optional.empty();
     }
 }
