@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,11 +19,10 @@ public class EcrfPatient {
     @NotNull
     private final Map<String, List<EcrfStudyEvent>> studyEventsPerOID;
 
-    public EcrfPatient(@NotNull final String patientId, @NotNull final Map<EcrfField, List<String>> fields,
-            @NotNull final Map<String, List<EcrfStudyEvent>> studyEventsPerOID) {
+    public EcrfPatient(@NotNull final String patientId, @NotNull final Map<String, List<EcrfStudyEvent>> studyEventsPerOID) {
         this.patientId = patientId;
-        this.fields = fields;
         this.studyEventsPerOID = studyEventsPerOID;
+        this.fields = createFields(studyEventsPerOID);
     }
 
     @NotNull
@@ -61,5 +61,27 @@ public class EcrfPatient {
             return Lists.newArrayList();
         }
         return studyEventsPerOID.get(studyEventOID);
+    }
+
+    @NotNull
+    private static Map<EcrfField, List<String>> createFields(@NotNull final Map<String, List<EcrfStudyEvent>> studyEventsPerOID) {
+        final Map<EcrfField, List<String>> fields = Maps.newHashMap();
+        for (final String studyEventOID : studyEventsPerOID.keySet()) {
+            for (final EcrfStudyEvent studyEvent : studyEventsPerOID.get(studyEventOID)) {
+                for (final String formOID : studyEvent.formsPerOID().keySet()) {
+                    for (final EcrfForm form : studyEvent.formsPerOID().get(formOID)) {
+                        for (final String itemGroupOID : form.itemGroupsPerOID().keySet()) {
+                            for (final EcrfItemGroup itemGroup : form.itemGroupsPerOID().get(itemGroupOID)) {
+                                for (final String itemOID : itemGroup.itemsPerOID().keySet()) {
+                                    final EcrfField field = new ImmutableEcrfField(studyEventOID, formOID, itemGroupOID, itemOID);
+                                    fields.put(field, itemGroup.itemsPerOID().get(itemOID));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return fields;
     }
 }
