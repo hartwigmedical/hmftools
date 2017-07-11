@@ -3,12 +3,13 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class LowConfidenceSmoothedRegions extends BaseSmoothedRegions {
+class LowConfidenceSmoothedRegions {
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -49,8 +50,8 @@ class LowConfidenceSmoothedRegions extends BaseSmoothedRegions {
         }
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion copyNumber, @NotNull final LowConfidenceCopyNumberBuilder builder) {
-        return !isDiploid(copyNumber) || builder.withinCopyNumberTolerance(copyNumber);
+    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final LowConfidenceCopyNumberBuilder builder) {
+        return !region.status().equals(FreecStatus.SOMATIC) || builder.withinCopyNumberTolerance(region);
     }
 
 }

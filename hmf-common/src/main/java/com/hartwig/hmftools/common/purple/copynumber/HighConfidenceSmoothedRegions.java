@@ -6,13 +6,14 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
+class HighConfidenceSmoothedRegions {
 
     private final PurityAdjuster purityAdjuster;
     private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
@@ -120,18 +121,18 @@ class HighConfidenceSmoothedRegions extends BaseSmoothedRegions {
         return forwardBuilder;
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion copyNumber, @NotNull final HighConfidenceCopyNumberBuilder builder) {
-        int bafCount = copyNumber.bafCount();
-        if (!isDiploid(copyNumber)) {
+    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final HighConfidenceCopyNumberBuilder builder) {
+        int bafCount = region.bafCount();
+        if (!region.status().equals(FreecStatus.SOMATIC)) {
             return true;
         }
 
-        if (!builder.withinCopyNumberTolerance(copyNumber)) {
+        if (!builder.withinCopyNumberTolerance(region)) {
             return false;
         }
 
         if (bafCount > 0 && !Doubles.isZero(builder.averageObservedBAF())) {
-            double bafDeviation = Math.abs(copyNumber.observedBAF() - builder.averageObservedBAF());
+            double bafDeviation = Math.abs(region.observedBAF() - builder.averageObservedBAF());
             if (Doubles.greaterThan(bafDeviation, allowedBAFDeviation(bafCount))) {
                 return false;
             }
