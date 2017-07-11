@@ -10,9 +10,9 @@ import javax.xml.stream.XMLStreamReader;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodel;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelReader;
 import com.hartwig.hmftools.common.ecrf.reader.XMLEcrfDatamodelToEcrfFields;
@@ -28,26 +28,27 @@ public class CpctEcrfModel {
     private static final Logger LOGGER = LogManager.getLogger(CpctEcrfModel.class);
 
     @NotNull
+    private final XMLEcrfDatamodel datamodel;
+    @NotNull
     private final Iterable<EcrfField> fields;
     @NotNull
     private final Iterable<EcrfPatient> patients;
 
     @NotNull
-    public static CpctEcrfModel loadFromXML(@NotNull final String ecrfXmlPath)
+    public static CpctEcrfModel loadFromXML(@NotNull final String ecrfXmlPath, @NotNull final FormStatusModel formStatusModel)
             throws XMLStreamException, FileNotFoundException {
         final XMLInputFactory factory = XMLInputFactory.newInstance();
         final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
         final XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
+        final Iterable<EcrfPatient> patients = XMLPatientReader.readPatients(reader, datamodel, formStatusModel);
 
-        final Iterable<EcrfField> fields = Sets.newTreeSet(XMLEcrfDatamodelToEcrfFields.convert(datamodel));
-        final Iterable<EcrfPatient> patients = XMLPatientReader.readPatients(reader, fields);
-
-        return new CpctEcrfModel(fields, patients);
+        return new CpctEcrfModel(datamodel, patients);
     }
 
-    public CpctEcrfModel(@NotNull final Iterable<EcrfField> fields, @NotNull final Iterable<EcrfPatient> patients) {
-        this.fields = fields;
+    public CpctEcrfModel(@NotNull final XMLEcrfDatamodel datamodel, @NotNull final Iterable<EcrfPatient> patients) {
+        this.datamodel = datamodel;
         this.patients = patients;
+        this.fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);
     }
 
     @NotNull
@@ -68,11 +69,10 @@ public class CpctEcrfModel {
                 filteredPatients.add(patient);
             } else {
                 LOGGER.warn("Did not find patient " + patientId + ": Adding dummy patient.");
-                filteredPatients.add(new EcrfPatient(patientId, Maps.newHashMap(), Maps.newHashMap()));
+                filteredPatients.add(new EcrfPatient(patientId, Maps.newHashMap()));
             }
         }
         return filteredPatients;
-
     }
 
     @Nullable
@@ -112,5 +112,10 @@ public class CpctEcrfModel {
     @NotNull
     public Iterable<EcrfPatient> patients() {
         return patients;
+    }
+
+    @NotNull
+    public XMLEcrfDatamodel datamodel() {
+        return datamodel;
     }
 }
