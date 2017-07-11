@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.copynumber.freec.ImmutableFreecGCContent;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
@@ -82,7 +81,6 @@ public class PurpleDatamodelTest {
                 .fittedPloidy(0)
                 .modelBAF(0)
                 .modelTumorRatio(0)
-                .status(FreecStatus.UNKNOWN)
                 .refNormalisedCopyNumber(2)
                 .ratioSupport(true)
                 .structuralVariantSupport(StructuralVariantSupport.NONE)
