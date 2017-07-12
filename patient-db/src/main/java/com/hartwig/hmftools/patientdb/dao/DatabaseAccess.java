@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALLOGS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
@@ -130,6 +131,7 @@ public class DatabaseAccess {
         context.truncate(TREATMENT).execute();
         context.truncate(DRUG).execute();
         context.truncate(TREATMENTRESPONSE).execute();
+        context.truncate(FORMSMETADATA).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
@@ -160,13 +162,20 @@ public class DatabaseAccess {
         if (patientRecord != null) {
             return patientRecord.getValue(PATIENT.ID);
         } else {
-            return context.insertInto(PATIENT, PATIENT.CPCTID, PATIENT.REGISTRATIONDATE, PATIENT.GENDER, PATIENT.ETHNICITY,
+            final int id = context.insertInto(PATIENT, PATIENT.CPCTID, PATIENT.REGISTRATIONDATE, PATIENT.GENDER, PATIENT.ETHNICITY,
                     PATIENT.HOSPITAL, PATIENT.BIRTHYEAR, PATIENT.PRIMARYTUMORLOCATION, PATIENT.DEATHDATE)
                     .values(patient.cpctId(), Utils.toSQLDate(patient.registrationDate()), patient.gender(), patient.ethnicity(),
                             patient.hospital(), patient.birthYear(), patient.primaryTumorLocation(), Utils.toSQLDate(patient.deathDate()))
                     .returning(PATIENT.ID)
                     .fetchOne()
                     .getValue(PATIENT.ID);
+            writeFormStatus(id, PATIENT.getName(), "demography", patient.demographyStatus(), patient.demographyLocked());
+            writeFormStatus(id, PATIENT.getName(), "primaryTumor", patient.primaryTumorStatus(), patient.primaryTumorLocked());
+            writeFormStatus(id, PATIENT.getName(), "eligibility", patient.eligibilityStatus(), patient.eligibilityLocked());
+            writeFormStatus(id, PATIENT.getName(), "selectionCriteria", patient.selectionCriteriaStatus(),
+                    patient.selectionCriteriaLocked());
+            writeFormStatus(id, PATIENT.getName(), "death", patient.deathStatus(), patient.deathLocked());
+            return id;
         }
     }
 
@@ -182,6 +191,7 @@ public class DatabaseAccess {
         context.insertInto(BIOPSY, BIOPSY.ID, BIOPSY.SAMPLEID, BIOPSY.PATIENTID, BIOPSY.BIOPSYLOCATION, BIOPSY.BIOPSYDATE)
                 .values(biopsy.id(), biopsy.sampleId(), patientId, biopsy.location(), Utils.toSQLDate(biopsy.date()))
                 .execute();
+        writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus(), biopsy.formLocked());
     }
 
     private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatment) {
@@ -190,22 +200,31 @@ public class DatabaseAccess {
                 .values(treatment.id(), treatment.biopsyId(), patientId, treatment.treatmentGiven(), Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()), treatment.treatmentName(), treatment.type())
                 .execute();
-        treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug));
+        writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus(), treatment.formLocked());
+        treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus(), treatment.formLocked()));
     }
 
-    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final BiopsyTreatmentDrugData drug) {
-        context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
+    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final BiopsyTreatmentDrugData drug,
+            @NotNull final String formStatus, @NotNull final String formLocked) {
+        final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
                 .values(treatmentId, patientId, Utils.toSQLDate(drug.startDate()), Utils.toSQLDate(drug.endDate()), drug.name(),
                         drug.type())
-                .execute();
+                .returning(DRUG.ID)
+                .fetchOne()
+                .getValue(DRUG.ID);
+        writeFormStatus(id, DRUG.getName(), "treatment", formStatus, formLocked);
     }
 
     private void writeTreatmentResponseData(final int patientId, @NotNull final BiopsyTreatmentResponseData treatmentResponse) {
-        context.insertInto(TREATMENTRESPONSE, TREATMENTRESPONSE.TREATMENTID, TREATMENTRESPONSE.PATIENTID, TREATMENTRESPONSE.RESPONSEDATE,
-                TREATMENTRESPONSE.RESPONSE, TREATMENTRESPONSE.MEASUREMENTDONE)
+        final int id = context.insertInto(TREATMENTRESPONSE, TREATMENTRESPONSE.TREATMENTID, TREATMENTRESPONSE.PATIENTID,
+                TREATMENTRESPONSE.RESPONSEDATE, TREATMENTRESPONSE.RESPONSE, TREATMENTRESPONSE.MEASUREMENTDONE)
                 .values(treatmentResponse.treatmentId(), patientId, Utils.toSQLDate(treatmentResponse.date()), treatmentResponse.response(),
                         treatmentResponse.measurementDone())
-                .execute();
+                .returning(TREATMENTRESPONSE.ID)
+                .fetchOne()
+                .getValue(TREATMENTRESPONSE.ID);
+        writeFormStatus(id, TREATMENTRESPONSE.getName(), "treatmentResponse", treatmentResponse.formStatus(),
+                treatmentResponse.formLocked());
     }
 
     private void writeSomaticVariantData(final int patientId, @NotNull final String sampleId,
@@ -216,6 +235,12 @@ public class DatabaseAccess {
                 .values(sampleId, patientId, somaticVariant.gene(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
                         somaticVariant.cosmicID(), somaticVariant.totalReadCount(), somaticVariant.alleleReadCount())
                 .execute();
+    }
+
+    private void writeFormStatus(final int id, @NotNull final String tableName, @NotNull final String formName,
+            @NotNull final String formStatus, @NotNull final String formLocked) {
+        context.insertInto(FORMSMETADATA, FORMSMETADATA.ID, FORMSMETADATA.TABLENAME, FORMSMETADATA.FORM, FORMSMETADATA.STATUS,
+                FORMSMETADATA.LOCKED).values(id, tableName, formName, formStatus, formLocked).execute();
     }
 
     public void writeEcrfPatients(@NotNull final Iterable<EcrfPatient> patients, @NotNull final Set<String> sequencedPatients) {

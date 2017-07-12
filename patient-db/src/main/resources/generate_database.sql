@@ -276,3 +276,12 @@ CREATE TABLE ecrf
     INDEX(itemValue)
 );
 
+DROP TABLE IF EXISTS formsMetadata;
+CREATE TABLE formsMetadata
+(   id int NOT NULL,
+    tableName varchar(20),
+    form varchar(20),
+    status varchar(5),
+    locked varchar(5),
+    UNIQUE KEY (id, tableName, form)
+);
