@@ -12,6 +12,8 @@
             <Column name="patientId" pattern="%PatientId"/>
             <Column name="ecrfItem" pattern="%EcrfItem"/>
             <Column name="message" pattern="%message"/>
+            <Column name="formStatus" pattern="%FormStatus"/>
+            <Column name="formLocked" pattern="%FormLocked"/>
         </JDBC>
     </Appenders>
     <Loggers>

@@ -246,6 +246,8 @@ CREATE TABLE clinicalLogs
     level varchar(100),
     patientId varchar(20),
     ecrfItem varchar(100),
+    formStatus varchar(5),
+    formLocked varchar(5),
     message varchar(1000),
     PRIMARY KEY (id)
 );
