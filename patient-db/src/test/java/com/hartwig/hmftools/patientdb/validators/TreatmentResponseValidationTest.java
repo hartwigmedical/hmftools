@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseRead
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_YN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
-import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -90,10 +89,11 @@ public class TreatmentResponseValidationTest {
     public void reportsFirstMeasurementAfterTreatmentStart() {
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(CPCT_ID, Lists.newArrayList(TREATMENT_JAN_MAR),
                 Lists.newArrayList(RESPONSE_FEB2015));
-        assertEquals(1, findings.size());
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FORM_TREATMENT, FORM_TUMOR_MEASUREMENT)));
+        assertTrue(findingsFields.contains(FORM_TREATMENT));
+        assertTrue(findingsFields.contains(FORM_TUMOR_MEASUREMENT));
     }
 
     @Test

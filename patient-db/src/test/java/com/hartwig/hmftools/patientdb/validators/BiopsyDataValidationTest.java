@@ -22,6 +22,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 
 import org.junit.Test;
 
@@ -70,20 +71,24 @@ public class BiopsyDataValidationTest {
     @Test
     public void reportsBiopsyBeforeRegistration() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateRegistrationDate(CPCT_ID, MAR2016, Lists.newArrayList(BIOPSY_FEB1));
-        assertEquals(1, findings.size());
+                PatientValidator.validateRegistrationDate(CPCT_ID, ImmutablePatientData.builder().registrationDate(MAR2016).build(),
+                        Lists.newArrayList(BIOPSY_FEB1));
+        assertEquals(3, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE2, FIELD_REGISTRATION_DATE1, FIELD_BIOPSY_DATE)));
+        assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE2));
+        assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE1));
+        assertTrue(findingsFields.contains(FIELD_BIOPSY_DATE));
     }
 
     @Test
     public void reportsTreatmentBeforeBiopsy() {
         final List<ValidationFinding> findings =
                 PatientValidator.validateBiopsies(CPCT_ID, Lists.newArrayList(BIOPSY_FEB1), Lists.newArrayList(TREATMENT_JAN_FEB));
-        assertEquals(1, findings.size());
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FORM_BIOPS, FORM_TREATMENT)));
+        assertTrue(findingsFields.contains(FORM_TREATMENT));
+        assertTrue(findingsFields.contains(FORM_BIOPS));
     }
 }

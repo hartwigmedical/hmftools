@@ -32,13 +32,15 @@ public class PatientDataValidationTest {
     @Test
     public void reportsMissingFields() {
         final List<ValidationFinding> findings = PatientValidator.validatePatientData(PATIENT_DATA);
-        assertEquals(5, findings.size());
+        assertEquals(7, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE2, FIELD_REGISTRATION_DATE1)));
+        assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE2));
+        assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE1));
         assertTrue(findingsFields.contains(FIELD_SEX));
         assertTrue(findingsFields.contains(FIELD_ETHNICITY));
-        assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
+        assertTrue(findingsFields.contains(FIELD_BIRTH_YEAR1));
+        assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
         assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
     }
 }

@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
-public class EcrfDAO {
+class EcrfDAO {
     private static final Logger LOGGER = LogManager.getLogger(EcrfDAO.class);
 
     @NotNull
@@ -35,6 +35,7 @@ public class EcrfDAO {
     }
 
     void writePatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
+        LOGGER.info("writing patient: " + patient.patientId());
         final List<EcrfItem> ecrfItems = patientToEcrfItems(patient, sequenced);
         context.batch(ecrfItems.stream()
                 .map(ecrfItem -> context.insertInto(ECRF, ECRF.PATIENTID, ECRF.STUDYEVENT, ECRF.STUDYEVENTIDX, ECRF.FORM, ECRF.FORMIDX,
@@ -43,6 +44,7 @@ public class EcrfDAO {
                                 ecrfItem.itemGroupOID(), ecrfItem.itemGroupIdx(), ecrfItem.itemOID(), ecrfItem.itemValue(),
                                 ecrfItem.formStatus(), ecrfItem.locked(), ecrfItem.sequencedString()))
                 .collect(Collectors.toList())).execute();
+        LOGGER.info("finished patient: " + patient.patientId());
     }
 
     @NotNull

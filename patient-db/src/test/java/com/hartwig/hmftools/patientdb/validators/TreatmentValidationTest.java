@@ -22,6 +22,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
+import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 
 import org.junit.Test;
 
@@ -61,7 +62,7 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsMissingDrugData() {
-        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_NULL);
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_NULL, "1", "TRUE");
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -71,7 +72,7 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsIncorrectDrugData() {
-        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_WRONG);
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_WRONG, "1", "TRUE");
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -149,7 +150,7 @@ public class TreatmentValidationTest {
     public void reportsTwoOngoingTreatments() {
         final List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(CPCT_ID, Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_FEB_ONGOING));
-        assertEquals(2, findings.size());
+        assertEquals(3, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FORM_TREATMENT));
@@ -158,17 +159,20 @@ public class TreatmentValidationTest {
     @Test
     public void doesNotReportCorrectDeathTimeline() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateDeathDate(CPCT_ID, MAR2015, Lists.newArrayList(TREATMENT_JAN_JAN, TREATMENT_JAN_FEB));
+                PatientValidator.validateDeathDate(CPCT_ID, ImmutablePatientData.builder().deathDate(MAR2015).build(),
+                        Lists.newArrayList(TREATMENT_JAN_JAN, TREATMENT_JAN_FEB));
         assertEquals(0, findings.size());
     }
 
     @Test
     public void reportsDeathDateBeforeEndOfTreatment() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateDeathDate(CPCT_ID, MAR2015, Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
-        assertEquals(1, findings.size());
+                PatientValidator.validateDeathDate(CPCT_ID, ImmutablePatientData.builder().deathDate(MAR2015).build(),
+                        Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
+        assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_DEATH_DATE, FORM_TREATMENT)));
+        assertTrue(findingsFields.contains(FIELD_DEATH_DATE));
+        assertTrue(findingsFields.contains(FORM_TREATMENT));
     }
 }
