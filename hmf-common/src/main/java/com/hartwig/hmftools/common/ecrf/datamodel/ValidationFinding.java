@@ -19,6 +19,12 @@ public abstract class ValidationFinding implements Message {
     @NotNull
     public abstract String message();
 
+    @NotNull
+    public abstract String formStatus();
+
+    @NotNull
+    public abstract String formLocked();
+
     @Override
     public String getFormat() {
         return message();
