@@ -255,6 +255,7 @@ public final class PatientDbRunner {
         options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file.");
         options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file.");
         options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file.");
+        options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
         return options;
     }
 
