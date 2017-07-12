@@ -34,33 +34,63 @@ public abstract class PatientData {
     @Nullable
     public abstract LocalDate deathDate();
 
-    @Nullable
-    public abstract String demographyStatus();
+    @NotNull
+    @Value.Default
+    public String demographyStatus() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String demographyLocked();
+    @NotNull
+    @Value.Default
+    public String demographyLocked() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String primaryTumorStatus();
+    @NotNull
+    @Value.Default
+    public String primaryTumorStatus() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String primaryTumorLocked();
+    @NotNull
+    @Value.Default
+    public String primaryTumorLocked() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String eligibilityStatus();
+    @NotNull
+    @Value.Default
+    public String eligibilityStatus() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String eligibilityLocked();
+    @NotNull
+    @Value.Default
+    public String eligibilityLocked() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String selectionCriteriaStatus();
+    @NotNull
+    @Value.Default
+    public String selectionCriteriaStatus() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String selectionCriteriaLocked();
+    @NotNull
+    @Value.Default
+    public String selectionCriteriaLocked() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String deathStatus();
+    @NotNull
+    @Value.Default
+    public String deathStatus() {
+        return "";
+    }
 
-    @Nullable
-    public abstract String deathLocked();
+    @NotNull
+    @Value.Default
+    public String deathLocked() {
+        return "";
+    }
 }
