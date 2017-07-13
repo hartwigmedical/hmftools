@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.fastqstats;
 
+import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromBaseCallsDir;
+import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromDir;
+import static com.hartwig.hmftools.fastqstats.FastqStats.getSingleFastq;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -12,6 +16,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Multimap;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,7 +34,8 @@ public final class FastqStatsRunner {
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
 
     private static final String FASTQ_FILE = "file";
-    private static final String FASTQ_ROOT_DIR = "dir";
+    private static final String FLOWCELL_ROOT_DIR = "dir";
+    private static final String FASTQ_DIR = "fastq_dir";
     private static final String CSV_OUT_DIR = "out";
     private static final String THREAD_COUNT = "threadCount";
 
@@ -37,24 +43,35 @@ public final class FastqStatsRunner {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String filePath = cmd.getOptionValue(FASTQ_FILE);
-        final String dirPath = cmd.getOptionValue(FASTQ_ROOT_DIR);
+        final String flowcellDirPath = cmd.getOptionValue(FLOWCELL_ROOT_DIR);
         final String csvOutPath = cmd.getOptionValue(CSV_OUT_DIR);
         final String threadCountArg = cmd.getOptionValue(THREAD_COUNT);
+        final String fastqDirPath = cmd.getOptionValue(FASTQ_DIR);
 
-        if ((filePath == null && dirPath == null) || csvOutPath == null) {
+        if ((filePath == null && flowcellDirPath == null && fastqDirPath == null) || csvOutPath == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Fastq-Stats", options);
         } else if (filePath != null) {
-            final FastqTracker tracker = FastqStats.processFile(filePath);
+            final Multimap<String, File> fastqsPerSample = getSingleFastq(filePath);
+            final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, 1);
             writeOutputToCSV("", tracker, csvOutPath);
-        } else {
+        } else if (flowcellDirPath != null) {
             final int threadCount = getThreadCount(threadCountArg);
-            final String flowcellName = getFlowcellName(dirPath);
-            final File baseCallsDir = getBaseCallsDir(dirPath);
+            final String flowcellName = getFlowcellName(flowcellDirPath);
+            final File baseCallsDir = getBaseCallsDir(flowcellDirPath);
             final long startTime = System.currentTimeMillis();
-            final FastqTracker tracker = FastqStats.processDir(baseCallsDir, threadCount);
+            final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+            final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, threadCount);
             LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
             writeOutputToCSV(flowcellName, tracker, csvOutPath);
+        } else {
+            final int threadCount = getThreadCount(threadCountArg);
+            final File fastqDir = getDir(fastqDirPath);
+            final long startTime = System.currentTimeMillis();
+            final Multimap<String, File> fastqsPerSample = getFastqsFromDir(fastqDir);
+            final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, threadCount);
+            LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
+            writeFastqDirOutputToCSV(tracker, csvOutPath);
         }
     }
 
@@ -62,24 +79,23 @@ public final class FastqStatsRunner {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(FASTQ_FILE, true, "Path towards the original fastq file.");
-        options.addOption(FASTQ_ROOT_DIR, true, "Path towards the flowcell dir.");
+        options.addOption(FLOWCELL_ROOT_DIR, true, "Path towards the flowcell dir.");
         options.addOption(CSV_OUT_DIR, true, "Path towards the csv output file.");
         options.addOption(THREAD_COUNT, true, "Number of max threads to use (only used when running on a directory).");
+        options.addOption(FASTQ_DIR, true, "Path towards the fastq dir.");
         return options;
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
-    private static void writeOutputToCSV(@NotNull String flowcellName, @NotNull FastqTracker tracker,
-            @NotNull String csvOutPath) throws IOException {
+    private static void writeOutputToCSV(@NotNull final String flowcellName, @NotNull final FastqTracker tracker,
+            @NotNull final String csvOutPath) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
-        writer.write("Flowcell," + flowcellName + "," + tracker.flowcell().yield() + ","
-                + tracker.flowcell().q30Percentage() + "\n");
+        writer.write("Flowcell," + flowcellName + "," + tracker.flowcell().yield() + "," + tracker.flowcell().q30Percentage() + "\n");
 
         for (final String laneName : tracker.lanes().keySet()) {
             final FastqData lane = tracker.lane(laneName);
@@ -92,8 +108,19 @@ public final class FastqStatsRunner {
         for (final String sampleName : tracker.samples().keySet()) {
             for (final String laneName : tracker.samples().get(sampleName).keySet()) {
                 final FastqData sampleLaneData = tracker.samples().get(sampleName).get(laneName);
-                writer.write(sampleName + "," + laneName + "," + sampleLaneData.yield() + ","
-                        + sampleLaneData.q30Percentage() + "\n");
+                writer.write(sampleName + "," + laneName + "," + sampleLaneData.yield() + "," + sampleLaneData.q30Percentage() + "\n");
+            }
+        }
+        writer.close();
+        LOGGER.info("Written fastq qc data to " + csvOutPath);
+    }
+
+    private static void writeFastqDirOutputToCSV(@NotNull final FastqTracker tracker, @NotNull final String csvOutPath) throws IOException {
+        final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
+        for (final String sampleName : tracker.samples().keySet()) {
+            for (final String laneName : tracker.samples().get(sampleName).keySet()) {
+                final FastqData sampleLaneData = tracker.samples().get(sampleName).get(laneName);
+                writer.write(sampleName + "," + laneName + "," + sampleLaneData.yield() + "," + sampleLaneData.q30Percentage() + "\n");
             }
         }
         writer.close();
@@ -127,14 +154,19 @@ public final class FastqStatsRunner {
     @NotNull
     @VisibleForTesting
     static File getBaseCallsDir(@NotNull final String dirPath) throws IOException {
-        final File baseCallsDir = new File(
-                dirPath + File.separator + "Data" + File.separator + "Intensities" + File.separator + "BaseCalls");
-        if (!baseCallsDir.exists()) {
-            throw new IOException("dir " + baseCallsDir + " does not exist.");
-        } else if (!baseCallsDir.isDirectory()) {
-            throw new IOException(baseCallsDir + " is not a directory.");
+        return getDir(dirPath + File.separator + "Data" + File.separator + "Intensities" + File.separator + "BaseCalls");
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static File getDir(@NotNull final String dirPath) throws IOException {
+        final File dir = new File(dirPath);
+        if (!dir.exists()) {
+            throw new IOException("dir " + dirPath + " does not exist.");
+        } else if (!dir.isDirectory()) {
+            throw new IOException(dirPath + " is not a directory.");
         }
-        return baseCallsDir;
+        return dir;
     }
 
     @VisibleForTesting
