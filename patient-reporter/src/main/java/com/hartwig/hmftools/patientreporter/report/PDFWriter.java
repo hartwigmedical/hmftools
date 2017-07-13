@@ -473,6 +473,6 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(
                 cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                         cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(180);
+                cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
     }
 }
