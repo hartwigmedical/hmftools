@@ -10,6 +10,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
@@ -51,7 +52,7 @@ public class EnrichedSomaticVariantFactory {
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> addCopyNumber(builder, x, variant.alleleFrequency()));
         addTrinucleotideContext(builder, variant);
-        addMicrohomology(builder, variant);
+        addGenomeContext(builder, variant);
 
         return builder.build();
     }
@@ -60,6 +61,9 @@ public class EnrichedSomaticVariantFactory {
         return builder().from(variant)
                 .trinucleotideContext("")
                 .microhomology("")
+                .refGenomeContext("")
+                .repeatCount(0)
+                .repeatSequence("")
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .highConfidenceRegion(false)
@@ -67,20 +71,20 @@ public class EnrichedSomaticVariantFactory {
                 .adjustedVAF(0);
     }
 
-    private Builder addMicrohomology(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+    private Builder addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        long positionBeforeEvent = variant.position();
+        long start = Math.max(positionBeforeEvent - 100, 0);
+        long end = positionBeforeEvent + 100;
+        int position = (int) (positionBeforeEvent - start);
+        final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
+        builder.refGenomeContext(sequence);
 
-        if (variant.position() == 17655818) {
-            System.out.println("sdfsd");
-        }
+        RepeatContextFactory.repeats(position, sequence, variant.ref(), variant.alt())
+                .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
 
-        int refLength = variant.ref().length();
-        int altLength = variant.alt().length();
-        if (refLength > altLength) {
-            // Deletions only atm
-            long start = variant.position();
-            long end = refLength > altLength ? start + 2 * refLength : start + altLength;
-            final ReferenceSequence sequence = reference.getSubsequenceAt(variant.chromosome(), start, end);
-            final String microhomology = Microhomology.microhomology(variant.ref(), variant.alt(), sequence.getBaseString());
+        // Deletions only atm
+        if (variant.ref().length() > variant.alt().length()) {
+            final String microhomology = Microhomology.microhomology(position, sequence, variant.ref(), variant.alt());
             return builder.microhomology(microhomology);
         }
 

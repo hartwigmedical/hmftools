@@ -8,19 +8,25 @@ import org.junit.Test;
 public class MicrohomologyTest {
 
     @Test
-    public void testSangaExample() {
-        assertHomology("TATC", "TATCCACTTGAT", "T", "TATCCACTTGATATCATTAT");
-        assertHomology("TATC", "GTATCCACTTGA", "G", "GTATCCACTTGATATCATTAT");
+    public void testRepeats() {
+        assertHomology("GTAACCAGGAGTGTATT",
+                0,
+                "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG",
+                "CGTAACCAGGAGTGTATT",
+                "C");
     }
 
     @Test
-    public void testCOLO829() {
-        assertHomology("GTAACCAGGAGTGTATT", "CGTAACCAGGAGTGTATT", "C", "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGT");
-        assertHomology("AA", "AAAG", "A", "AAAGAAAG");
-        assertHomology("A", "CA", "C", "CAAAA");
+    public void testSangerExample() {
+        assertHomology("TATC", 5, "GCACTGTATCCACTTGATATCATTAT", "GTATCCACTTGA", "G");
+        assertHomology("TATC", 6, "GCACTGTATCCACTTGATATCATTAT", "TATCCACTTGAT", "T");
+        assertHomology("TATC", 7, "GCACTGTATCCACTTGATATCATTAT", "ATCCACTTGATA", "A");
+        assertHomology("TATC", 8, "GCACTGTATCCACTTGATATCATTAT", "TCCACTTGATAT", "T");
+        assertHomology("TATC", 9, "GCACTGTATCCACTTGATATCATTAT", "CCACTTGATATC", "C");
     }
 
-    private void assertHomology(@NotNull final String expected, @NotNull final String ref, @NotNull final String alt, @NotNull final String genome) {
-        assertEquals(expected, Microhomology.microhomology(ref, alt, genome));
+    private void assertHomology(@NotNull final String expected, int position, @NotNull final String sequence, @NotNull final String ref,
+            @NotNull final String alt) {
+        assertEquals(expected, Microhomology.microhomology(position, sequence, ref, alt));
     }
 }

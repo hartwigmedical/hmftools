@@ -1,19 +1,29 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
-public class Microhomology {
-    // length of normal should be deleted size * 2
+class Microhomology {
 
-    public static String microhomology(final String ref, final String alt, final String normal) {
-        int refIndex = normal.indexOf(ref);
-        String tumor = alt + normal.substring(refIndex + ref.length());
-        String commonPrefix = commonPrefix(ref, tumor);
-        return commonPrefix.charAt(0) == normal.charAt(ref.length() - 1) ? commonPrefix : commonPrefix.substring(1);
+    static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref, @NotNull final String alt) {
+        String result =
+                commonPrefix(sequence.substring(position + 1), sequence.substring(position + 1 + ref.length() - 1), ref.length() - 1);
+
+        for (int i = position; i >= 0; i--) {
+
+            final String earlierPrefix = commonPrefix(sequence.substring(i), sequence.substring(i + ref.length() - 1), ref.length() - 1);
+            if (earlierPrefix.length() > result.length()) {
+                result = earlierPrefix;
+            } else {
+                return result;
+            }
+        }
+
+        return result;
     }
 
-    private static String commonPrefix(String normal, String tumor) {
-        int minLength = Math.min(tumor.length(), normal.length());
+    private static String commonPrefix(String normal, String tumor, int maxLength) {
+        int minLength = Math.min(maxLength, Math.min(tumor.length(), normal.length()));
         if (minLength == 0) {
             return Strings.EMPTY;
         }
