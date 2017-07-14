@@ -62,6 +62,8 @@ public class DatabaseAccess {
     private final EcrfDAO ecrfDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
+        // MIVO: disable annoying jooq self-ad message
+        System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(url, userName, password);
         this.context = DSL.using(conn, SQLDialect.MYSQL);
         purityDAO = new PurityDAO(context);
