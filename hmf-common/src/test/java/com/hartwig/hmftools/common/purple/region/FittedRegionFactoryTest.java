@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.NORMAL_BAF;
+import static com.hartwig.hmftools.common.purple.BAFUtils.NORMAL_BAF;
+import static com.hartwig.hmftools.common.purple.BAFUtils.modelBAF;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.bafDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.cnvDeviation;
-import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAF;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelBAFToMinimizeDeviation;
 import static com.hartwig.hmftools.common.purple.region.FittedRegionFactory.modelRatio;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -21,26 +21,21 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void expectedFit() {
-        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, 1, 1);
+        final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, false, 1);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
         assertEquals(3, result.fittedPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
-        assertEquals(0.011751428571428583, result.deviation(), EPSILON);
+        assertEquals(0.01371000000000014, result.deviation(), EPSILON);
     }
 
     @NotNull
     private static ObservedRegion create(final double baf, final double ratio) {
-        return ImmutableEnrichedRegion.builder()
+        return PurpleDatamodelTest.createObservedRegion("1", 1, 2)
                 .observedBAF(baf)
                 .bafCount(1)
-                .chromosome("1")
-                .start(1)
-                .end(2)
                 .observedTumorRatio(ratio)
                 .observedNormalRatio(1)
-                .ratioSupport(true)
-                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .build();
     }
 

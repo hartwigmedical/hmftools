@@ -12,23 +12,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleCopyNumber implements CopyNumber {
 
-    @Value.Default
-    public boolean ratioSupport() {
-        return true;
-    }
-
-    @Value.Default
-    public StructuralVariantSupport structuralVariantSupport() {
-        return StructuralVariantSupport.NONE;
-    }
-
     public abstract int bafCount();
 
-    public abstract double averageObservedBAF();
+    public abstract boolean ratioSupport();
 
     public abstract double averageActualBAF();
 
+    public abstract double averageObservedBAF();
+
     public abstract double averageTumorCopyNumber();
+
+    public abstract StructuralVariantSupport structuralVariantSupport();
 
     public String descriptiveBAF() {
 

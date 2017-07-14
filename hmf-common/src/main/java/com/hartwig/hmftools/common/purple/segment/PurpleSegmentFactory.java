@@ -4,36 +4,25 @@ import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSuppor
 import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.NONE;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.position.GenomePositionSelector;
+import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.zipper.GenomeZipper;
-import com.hartwig.hmftools.common.zipper.GenomeZipperRegionHandler;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeRegion> {
+public class PurpleSegmentFactory {
 
     public static List<PurpleSegment> createSegments(List<GenomeRegion> regions, List<StructuralVariant> variants) {
         return createSegmentsInner(regions, StructuralVariantPositions.create(variants));
     }
 
-    public static List<PurpleSegment> createSegments(List<GenomeRegion> regions) {
-        return regions.stream()
-                .map(x -> ImmutablePurpleSegment.builder().from(x).ratioSupport(true).structuralVariantSupport(NONE).build())
-                .collect(Collectors.toList());
-    }
-
     @VisibleForTesting
     static List<PurpleSegment> createSegmentsInner(List<GenomeRegion> regions, List<StructuralVariantPosition> variants) {
-        final PurpleSegmentFactory factory = new PurpleSegmentFactory();
-        final GenomeZipper<GenomeRegion> zipper = new GenomeZipper<>(false, regions, factory);
-        zipper.addPositions(variants, factory::variant);
-        zipper.zip();
-        return factory.segments();
+        return new PurpleSegmentFactory(regions, variants).segments();
     }
 
     @VisibleForTesting
@@ -44,8 +33,22 @@ public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeReg
     private long start;
     private long end;
 
-    private PurpleSegmentFactory() {
+    private PurpleSegmentFactory(List<GenomeRegion> regions, List<StructuralVariantPosition> variants) {
         segments = Lists.newArrayList();
+
+        final GenomePositionSelector<StructuralVariantPosition> variantSelector = GenomePositionSelectorFactory.create(variants);
+        String chromosome = "";
+        for (final GenomeRegion region : regions) {
+
+            if (!chromosome.equals(region.chromosome())) {
+                chromosome = region.chromosome();
+                chromosome(chromosome);
+            }
+
+            enter(region);
+            variantSelector.select(region, this::variant);
+            exit(region);
+        }
     }
 
     @NotNull
@@ -59,22 +62,19 @@ public class PurpleSegmentFactory implements GenomeZipperRegionHandler<GenomeReg
         return segments;
     }
 
-    @Override
-    public void chromosome(@NotNull final String chromosome) {
+    private void chromosome(@NotNull final String chromosome) {
         this.chromosome = chromosome;
         svStart = NONE;
         svEnd = NONE;
     }
 
-    @Override
-    public void enter(@NotNull final GenomeRegion region) {
+    private void enter(@NotNull final GenomeRegion region) {
         start = region.start();
         end = region.end();
         ratioSupport = true;
     }
 
-    @Override
-    public void exit(@NotNull final GenomeRegion region) {
+    private void exit(@NotNull final GenomeRegion region) {
         insert(region.end());
         if (!svEnd.equals(NONE)) {
             svStart = svEnd;

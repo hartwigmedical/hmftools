@@ -41,7 +41,8 @@ public class CpctPatientReader {
     public static final String FIELD_SEX = "FLD.DEMOGRAPHY.SEX";
     public static final String FIELD_ETHNICITY = "FLD.DEMOGRAPHY.ETHNIC";
 
-    public static final String FIELD_REGISTRATION_DATE = "FLD.ELIGIBILITY.REGDTC";
+    public static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
+    public static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
     public static final String FIELD_BIRTH_YEAR1 = "FLD.SELCRIT.NBIRTHYEAR";
     public static final String FIELD_BIRTH_YEAR2 = "FLD.ELIGIBILITY.BIRTHYEAR";
     public static final String FIELD_BIRTH_YEAR3 = "FLD.ELIGIBILITY.BIRTHDTCES";
@@ -69,7 +70,9 @@ public class CpctPatientReader {
         String gender = null;
         String ethnicity = null;
         String primaryTumorLocation = null;
-        LocalDate registrationDate = null;
+        LocalDate registrationDate1 = null;
+        LocalDate registrationDate2 = null;
+
         String birthYear1 = null;
         String birthYear2 = null;
         LocalDate birthYear3 = null;
@@ -95,7 +98,7 @@ public class CpctPatientReader {
 
             for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY, true)) {
                 for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY, true)) {
-                    registrationDate = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE, 0, DATE_FORMATTER, true);
+                    registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1, 0, DATE_FORMATTER, false);
                     birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2, 0, false);
                     birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, DATE_FORMATTER, false);
                 }
@@ -104,6 +107,9 @@ public class CpctPatientReader {
             for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT, true)) {
                 for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT, true)) {
                     birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1, 0, false);
+                    if (registrationDate1 == null) {
+                        registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2, 0, DATE_FORMATTER, false);
+                    }
                 }
             }
         }
@@ -114,6 +120,7 @@ public class CpctPatientReader {
                 }
             }
         }
+        LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
         final Integer birthYear = determineBirthYear(birthYear1, birthYear2, birthYear3);
         return new PatientData(patient.patientId(), registrationDate, gender, ethnicity, impliedHospital, birthYear, primaryTumorLocation,
                 deathDate);

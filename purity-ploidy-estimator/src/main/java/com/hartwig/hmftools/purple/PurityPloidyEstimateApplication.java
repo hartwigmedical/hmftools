@@ -9,7 +9,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
+import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
+import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
@@ -18,7 +21,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
-import com.hartwig.hmftools.common.purity.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -63,8 +66,8 @@ public class PurityPloidyEstimateApplication {
 
     static final double MIN_PURITY_DEFAULT = 0.05;
     static final double MAX_PURITY_DEFAULT = 1.0;
-    static final double MIN_NORM_FACTOR = 0.33;
-    static final double MAX_NORM_FACTOR = 2.0;
+    static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
+    static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
 
     private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;
     private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
@@ -76,6 +79,8 @@ public class PurityPloidyEstimateApplication {
 
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
+    private static final String MIN_NORM_FACTOR = "min_norm_factor";
+    private static final String MAX_NORM_FACTOR = "max_norm_factor";
     private static final String DB_ENABLED = "db_enabled";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -92,8 +97,7 @@ public class PurityPloidyEstimateApplication {
     private static final String STRUCTURAL_VCF_EXTENTION = "structural_variant_extension";
     private static final String STRUCTURAL_VCF_EXTENTION_DEFAULT = "somaticSV.vcf.gz";
 
-    private static final String PLOIDY_PENALTY_EXPONENT = "ploidy_penalty_exponent";
-    private static final double PLOIDY_PENALTY_EXPONENT_DEFAULT = 1;
+    private static final String PLOIDY_PENALTY_EXPERIMENT = "ploidy_penalty_experiment";
 
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
@@ -122,9 +126,10 @@ public class PurityPloidyEstimateApplication {
 
         LOGGER.info("Loading {} Freec data", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
         // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
+        final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
+        final Multimap<String, FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
 
         final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
@@ -138,25 +143,27 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
         final ObservedRegionFactory observedRegionFactory =
                 new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, variants, tumorRatio, normalRatio);
+        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, variants, tumorRatio, normalRatio, gcContent);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
-        final double ploidyPenaltyExponent = defaultValue(cmd, PLOIDY_PENALTY_EXPONENT, PLOIDY_PENALTY_EXPONENT_DEFAULT);
+        final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
         final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
         final FittedRegionFactory fittedRegionFactory =
-                new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExponent, observedBafExponent);
+                new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
 
         LOGGER.info("Fitting purity");
         final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
         final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
+        final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
+        final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY,
                 minPurity,
                 maxPurity,
                 PURITY_INCREMENTS,
-                MIN_NORM_FACTOR,
-                MAX_NORM_FACTOR,
+                minNormFactor,
+                maxNormFactor,
                 NORM_FACTOR_INCREMENTS,
                 fittedRegionFactory,
                 observedRegions);
@@ -230,7 +237,7 @@ public class PurityPloidyEstimateApplication {
         final Options options = new Options();
 
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
-        options.addOption(PLOIDY_PENALTY_EXPONENT, true, "Ploidy penality exponent. Default 1");
+        options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
@@ -239,6 +246,9 @@ public class PurityPloidyEstimateApplication {
 
         options.addOption(MIN_PURITY, true, "Minimum purity (default 0.05)");
         options.addOption(MAX_PURITY, true, "Maximum purity (default 1.0)");
+
+        options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
+        options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
 
         options.addOption(DB_ENABLED, false, "Persist data to DB.");
         options.addOption(DB_USER, true, "Database user name.");

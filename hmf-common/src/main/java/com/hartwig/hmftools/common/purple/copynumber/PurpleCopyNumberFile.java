@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -58,6 +59,8 @@ public enum PurpleCopyNumberFile {
                 .add("bafCount")
                 .add("observedBAF")
                 .add("actualBAF")
+                .add("ratioSupport")
+                .add("structuralVariantSupport")
                 .toString();
     }
 
@@ -71,6 +74,8 @@ public enum PurpleCopyNumberFile {
                 .add(String.valueOf(copyNumber.bafCount()))
                 .add(String.valueOf(copyNumber.averageObservedBAF()))
                 .add(String.valueOf(copyNumber.averageActualBAF()))
+                .add(String.valueOf(copyNumber.ratioSupport()))
+                .add(String.valueOf(copyNumber.structuralVariantSupport()))
                 .toString();
     }
 
@@ -85,6 +90,8 @@ public enum PurpleCopyNumberFile {
                 .bafCount(Integer.valueOf(values[4]))
                 .averageObservedBAF(Double.valueOf(values[5]))
                 .averageActualBAF(Double.valueOf(values[6]))
+                .ratioSupport(true)
+                .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .build();
     }
 }

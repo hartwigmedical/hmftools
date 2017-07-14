@@ -2,53 +2,28 @@ package com.hartwig.hmftools.common.ecrf.reader;
 
 import java.util.List;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class XMLEcrfDatamodel {
-
-    @NotNull
-    private final List<StudyEvent> studyEvents;
-    @NotNull
-    private final List<Form> forms;
-    @NotNull
-    private final List<ItemGroup> itemGroups;
-    @NotNull
-    private final List<Item> items;
-    @NotNull
-    private final List<CodeList> codeLists;
-
-    XMLEcrfDatamodel(@NotNull final List<StudyEvent> studyEvents, @NotNull final List<Form> forms,
-            @NotNull final List<ItemGroup> itemGroups, @NotNull final List<Item> items,
-            @NotNull final List<CodeList> codeLists) {
-        this.studyEvents = studyEvents;
-        this.forms = forms;
-        this.itemGroups = itemGroups;
-        this.items = items;
-        this.codeLists = codeLists;
-    }
+@Value.Immutable
+@Value.Style(of = "new",
+             allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class XMLEcrfDatamodel {
 
     @NotNull
-    List<StudyEvent> studyEvents() {
-        return studyEvents;
-    }
+    public abstract List<StudyEvent> studyEvents();
 
     @NotNull
-    List<Form> forms() {
-        return forms;
-    }
+    public abstract List<Form> forms();
 
     @NotNull
-    List<ItemGroup> itemGroups() {
-        return itemGroups;
-    }
+    public abstract List<ItemGroup> itemGroups();
 
     @NotNull
-    List<Item> items() {
-        return items;
-    }
+    public abstract List<Item> items();
 
     @NotNull
-    List<CodeList> codeLists() {
-        return codeLists;
-    }
+    public abstract List<CodeList> codeLists();
 }

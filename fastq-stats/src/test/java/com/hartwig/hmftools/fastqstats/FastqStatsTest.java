@@ -1,11 +1,17 @@
 package com.hartwig.hmftools.fastqstats;
 
+import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromBaseCallsDir;
+import static com.hartwig.hmftools.fastqstats.FastqStats.getFastqsFromDir;
+import static com.hartwig.hmftools.fastqstats.FastqStats.getSingleFastq;
+import static com.hartwig.hmftools.fastqstats.FastqStatsRunner.getDir;
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 
 import org.junit.Test;
@@ -15,8 +21,9 @@ public class FastqStatsTest {
     @Test
     public void computesCorrectStatsFor100PercentDir() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCalls-100");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
         assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(300, tracker.lane("L001").yield());
@@ -28,8 +35,9 @@ public class FastqStatsTest {
     @Test
     public void computesCorrectStatsForIndividualSamples() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCalls-100&50");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
         assertEquals(83.33, tracker.flowcell().q30Percentage(), 0.01);
         assertEquals(300, tracker.lane("L001").yield());
@@ -46,8 +54,9 @@ public class FastqStatsTest {
     @Test
     public void computesCorrectStatsForIndividualLanes() throws IOException, InterruptedException {
         final URL path = Resources.getResource("DeterminedBaseCallsMultiLane-100&50");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
         assertEquals(83.33, tracker.flowcell().q30Percentage(), 0.01);
         assertEquals(1, tracker.samples().size());
@@ -66,13 +75,13 @@ public class FastqStatsTest {
     @Test
     public void computesCorrectPercentageOfUndetermined50() throws IOException, InterruptedException {
         final URL path = Resources.getResource("50UndeterminedBaseCalls");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(600, tracker.flowcell().yield());
         assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(4, tracker.samples().size());
-        final double undeterminedPercentage =
-                tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
+        final double undeterminedPercentage = tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
         assertEquals(50.0, undeterminedPercentage, 0.00001);
         assertEquals(600, tracker.lane("L001").yield());
         assertEquals(300, tracker.samples().get("Undetermined").get("L001").yield());
@@ -83,13 +92,13 @@ public class FastqStatsTest {
     @Test
     public void computesCorrectPercentageOfUndetermined100() throws IOException, InterruptedException {
         final URL path = Resources.getResource("100UndeterminedBaseCalls");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(300, tracker.flowcell().yield());
         assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(1, tracker.samples().size());
-        final double undeterminedPercentage =
-                tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
+        final double undeterminedPercentage = tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
         assertEquals(100.0, undeterminedPercentage, 0.00001);
         assertEquals(300, tracker.lane("L002").yield());
         assertEquals(300, tracker.samples().get("Undetermined").get("L002").yield());
@@ -100,12 +109,12 @@ public class FastqStatsTest {
     @Test
     public void computesCorrectStatsOfUndeterminedLane() throws IOException, InterruptedException {
         final URL path = Resources.getResource("UndeterminedBaseCalls0Q30");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(600, tracker.flowcell().yield());
         assertEquals(50.0, tracker.flowcell().q30Percentage(), 0.00001);
-        final double undeterminedPercentage =
-                tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
+        final double undeterminedPercentage = tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
         assertEquals(50.0, undeterminedPercentage, 0.00001);
         assertEquals(4, tracker.samples().size());
         assertEquals(0.0, tracker.sample("Undetermined").q30Percentage(), 0.00001);
@@ -118,8 +127,9 @@ public class FastqStatsTest {
     @Test
     public void skipsFailedSampleFile() throws IOException, InterruptedException {
         final URL path = Resources.getResource("CorruptSampleXFile");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(200, tracker.flowcell().yield());
         assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(200, tracker.lane("L001").yield());
@@ -132,29 +142,50 @@ public class FastqStatsTest {
     @Test
     public void skipsFailedUndeterminedSampleFile() throws IOException, InterruptedException {
         final URL path = Resources.getResource("CorruptUndeterminedSampleFile");
-        final File dir = new File(path.getPath());
-        final FastqTracker tracker = FastqStats.processDir(dir, FastqStatsRunner.getThreadCount(null));
+        final File baseCallsDir = new File(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, FastqStatsRunner.getThreadCount(null));
         assertEquals(200, tracker.flowcell().yield());
         assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
         assertEquals(1, tracker.samples().size());
-        final double undeterminedPercentage =
-                tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
+        final double undeterminedPercentage = tracker.sample("Undetermined").yield() * 100.0 / tracker.flowcell().yield();
         assertEquals(100.0, undeterminedPercentage, 0.00001);
         assertEquals(200, tracker.lane("L002").yield());
     }
 
     @Test
-    public void computesCorrectStatsOfSingleZippedFile() throws IOException {
+    public void computesCorrectStatsOfSingleZippedFile() throws IOException, InterruptedException {
         final URL path = Resources.getResource("fastq" + File.separator + "q30-10_Flowcell_S1_L001_R1_001.fastq.gz");
-        final FastqTracker tracker = FastqStats.processFile(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getSingleFastq(path.getPath());
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, 1);
         assertEquals(100, tracker.flowcell().yield());
         assertEquals(10.0, tracker.flowcell().q30(), 0.00001);
     }
 
-    @Test(expected = IOException.class)
-    public void processFileThrowsForUnrecognizedFormat() throws IOException {
+    @Test
+    public void skipsUnrecognizedFormat() throws IOException, InterruptedException {
         final URL path = Resources.getResource("fastq" + File.separator + "q30-10.err");
-        FastqStats.processFile(path.getPath());
+        final Multimap<String, File> fastqsPerSample = getSingleFastq(path.getPath());
+        final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, 1);
+        assertEquals(0, tracker.flowcell().yield());
+        assertEquals(0, tracker.flowcell().q30(), 0.00001);
     }
 
+    @Test
+    public void computesCorrectStatsForFastqDir() throws IOException, InterruptedException {
+        final URL path = Resources.getResource("100UndeterminedBaseCalls");
+        final File fastqDir = getDir(path.getPath());
+        final Multimap<String, File> fastqs = getFastqsFromDir(fastqDir);
+        final FastqTracker tracker = FastqStats.processFastqs(fastqs, FastqStatsRunner.getThreadCount(null));
+        assertEquals(300, tracker.flowcell().yield());
+        assertEquals(100.0, tracker.flowcell().q30Percentage(), 0.00001);
+        assertEquals(3, tracker.samples().size());
+        assertEquals(300, tracker.lane("L002").yield());
+        assertEquals(100, tracker.sample("UndeterminedF1_H7YRLADXX_S1_L002_R1_001.fastq").yield());
+        assertEquals(100, tracker.sample("UndeterminedF2_H7YRLADXX_S1_L002_R1_001.fastq").yield());
+        assertEquals(100, tracker.sample("UndeterminedF3_H7YRLADXX_S1_L002_R1_001.fastq").yield());
+        assertEquals(100, tracker.sample("UndeterminedF1_H7YRLADXX_S1_L002_R1_001.fastq").q30());
+        assertEquals(100, tracker.sample("UndeterminedF2_H7YRLADXX_S1_L002_R1_001.fastq").q30());
+        assertEquals(100, tracker.sample("UndeterminedF3_H7YRLADXX_S1_L002_R1_001.fastq").q30());
+    }
 }

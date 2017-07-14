@@ -26,7 +26,8 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_DEA
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_ETHNICITY;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_SEX;
 
 import java.time.Duration;
@@ -84,7 +85,8 @@ public class PatientValidator {
                 findings.add(new ImmutableValidationFinding(cpctId, FIELD_SEX, "gender empty"));
             }
             if (patientData.registrationDate() == null) {
-                findings.add(new ImmutableValidationFinding(cpctId, FIELD_REGISTRATION_DATE, "registration date empty or in wrong format"));
+                findings.add(new ImmutableValidationFinding(cpctId, fields(FIELD_REGISTRATION_DATE2, FIELD_REGISTRATION_DATE1),
+                        "registration date empty or in wrong format"));
             }
             if (patientData.birthYear() == null) {
                 findings.add(new ImmutableValidationFinding(cpctId, fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
@@ -314,7 +316,8 @@ public class PatientValidator {
                 final LocalDate biopsyDate = biopsy.date();
                 return biopsyDate != null && biopsyDate.isBefore(registrationDate);
             }).count() > 0) {
-                findings.add(new ImmutableValidationFinding(patientId, fields(FIELD_REGISTRATION_DATE, FIELD_BIOPSY_DATE),
+                findings.add(new ImmutableValidationFinding(patientId,
+                        fields(FIELD_REGISTRATION_DATE2, FIELD_REGISTRATION_DATE1, FIELD_BIOPSY_DATE),
                         "at least 1 biopsy date prior to registration date"));
             }
         }

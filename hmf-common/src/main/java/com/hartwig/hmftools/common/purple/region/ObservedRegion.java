@@ -16,4 +16,10 @@ public interface ObservedRegion extends GenomeRegion {
     double observedTumorRatio();
 
     double observedNormalRatio();
+
+    double observedGCContent();
+
+    double observedNonNPercentage();
+
+    double observedMappablePercentage();
 }

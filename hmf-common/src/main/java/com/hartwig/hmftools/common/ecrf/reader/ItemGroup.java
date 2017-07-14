@@ -2,27 +2,26 @@ package com.hartwig.hmftools.common.ecrf.reader;
 
 import java.util.List;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-class ItemGroup implements OIDObject {
+@Value.Immutable
+@Value.Style(of = "new",
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class ItemGroup implements OIDObject {
 
+    @Override
+    @Value.Parameter
     @NotNull
-    private final String OID;
-    @NotNull
-    private final List<String> itemOIDs;
+    public abstract String OID();
 
-    ItemGroup(@NotNull final String OID, @NotNull final List<String> itemOIDs) {
-        this.OID = OID;
-        this.itemOIDs = itemOIDs;
-    }
-
+    @Override
+    @Value.Parameter
     @NotNull
-    public String OID() {
-        return OID;
-    }
+    public abstract String name();
 
+    @Value.Parameter
     @NotNull
-    List<String> itemOIDs() {
-        return itemOIDs;
-    }
+    public abstract List<String> itemOIDs();
 }

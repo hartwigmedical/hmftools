@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.common.copynumber.freec;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,21 +32,13 @@ public enum FreecRatioFactory {
     }
 
     @NotNull
-    private static List<FreecRatio> loadRatios(@NotNull final List<String> lines)
-            throws IOException, HartwigException {
-        final List<FreecRatio> results = Lists.newArrayList();
-        for (final String line : lines) {
-            final FreecRatio ratio = fromRatioLine(line);
-            results.add(ratio);
-        }
-
-        Collections.sort(results);
-        return results;
+    private static List<FreecRatio> loadRatios(@NotNull final List<String> lines) throws IOException, HartwigException {
+        return lines.stream().map(FreecRatioFactory::fromRatioLine).sorted().collect(Collectors.toList());
     }
 
     @NotNull
     @VisibleForTesting
-    static FreecRatio fromRatioLine(@NotNull final String ratioLine) throws HartwigException {
+    static FreecRatio fromRatioLine(@NotNull final String ratioLine) {
         final String[] values = ratioLine.split(RATIO_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
@@ -56,7 +47,12 @@ public enum FreecRatioFactory {
         final double medianRatio = Double.valueOf(values[MEDIAN_RATIO_COLUMN].trim());
         final double estimatedBAF = Double.valueOf(values[ESTIMATED_BAF_COLUMN].trim());
 
-        return ImmutableFreecRatio.builder().chromosome(chromosome).position(position).ratio(ratio)
-                .medianRatio(medianRatio).estimatedBAF(estimatedBAF).build();
+        return ImmutableFreecRatio.builder()
+                .chromosome(chromosome)
+                .position(position)
+                .ratio(ratio)
+                .medianRatio(medianRatio)
+                .estimatedBAF(estimatedBAF)
+                .build();
     }
 }

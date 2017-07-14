@@ -7,27 +7,26 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purity.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.BAFUtils;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FittedRegionFactory {
 
-    public static final double NORMAL_BAF = 0.535;
-
     private final Gender gender;
     private final int maxPloidy;
     private final double cnvRatioWeightFactor;
-    private final double ploidyPenaltyExponent;
+    private final boolean ploidyPenaltyExperiment;
     private final double observedBafExponent;
 
     public FittedRegionFactory(final Gender gender, final int maxPloidy, final double cnvRatioWeightFactor,
-            final double ploidyPenaltyExponent, final double observedBafExponent) {
+            final boolean ploidyPenaltyExperiment, final double observedBafExponent) {
         this.gender = gender;
         this.maxPloidy = maxPloidy;
         this.cnvRatioWeightFactor = cnvRatioWeightFactor;
-        this.ploidyPenaltyExponent = ploidyPenaltyExponent;
+        this.ploidyPenaltyExperiment = ploidyPenaltyExperiment;
         this.observedBafExponent = observedBafExponent;
     }
 
@@ -57,19 +56,18 @@ public class FittedRegionFactory {
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(
                         observedTumorRatio / observedRegion.observedNormalRatio() / normFactor * 2));
 
-        for (int ploidy = 1; ploidy <= maxPloidy; ploidy++) {
+        for (int ploidy = 0; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
             double cnvDeviation = cnvDeviation(cnvRatioWeightFactor, modelRatio, observedTumorRatio);
 
             double[] modelBAFWithDeviation =
-                    observedRegion.bafCount() == 0 ? new double[] { 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
+                    observedRegion.bafCount() == 0 ? new double[] { 0, 0, 0 } : modelBAFToMinimizeDeviation(purity, ploidy, observedBAF);
 
             double modelBAF = modelBAFWithDeviation[0];
             double bafDeviation = modelBAFWithDeviation[1];
 
-            double deviation = Math.pow(Math.max(ploidy, 2) / 2.0, ploidyPenaltyExponent) * (bafDeviation + cnvDeviation) * Math.pow(
-                    observedBAF,
-                    observedBafExponent);
+            double ploidyPenalty = PloidyPenalty.penalty(ploidy, (int) modelBAFWithDeviation[2]);
+            double deviation = ploidyPenalty * (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.fittedPloidy(ploidy)
@@ -102,32 +100,23 @@ public class FittedRegionFactory {
 
     @VisibleForTesting
     static double[] modelBAFToMinimizeDeviation(final double purity, final int ploidy, final double actualBAF) {
-        double result = 0;
-        double deviation = 0;
+        double finalBAF = 0;
+        double finalDeviation = 0;
+        int finalMajorAllele = 0;
 
-        int minBetaAllele = (int) Math.round(ploidy / 2d);
+        int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
 
-            double modelBAF = modelBAF(purity, ploidy, betaAllele);
+            double modelBAF = BAFUtils.modelBAF(purity, ploidy, betaAllele);
             double modelDeviation = bafDeviation(modelBAF, actualBAF);
 
-            if (betaAllele == minBetaAllele || modelDeviation < deviation) {
-                result = modelBAF;
-                deviation = modelDeviation;
+            if (betaAllele == minBetaAllele || modelDeviation < finalDeviation) {
+                finalBAF = modelBAF;
+                finalDeviation = modelDeviation;
+                finalMajorAllele = betaAllele;
             }
         }
 
-        return new double[] { result, deviation };
-    }
-
-    @VisibleForTesting
-    static double modelBAF(final double purity, final int ploidy, final int alleleCount) {
-        assert (alleleCount >= ploidy / 2d);
-
-        if (ploidy / alleleCount == 2) {
-            return NORMAL_BAF;
-        }
-
-        return Math.max(NORMAL_BAF, (1 + purity * (alleleCount - 1)) / (2 + purity * (ploidy - 2)));
+        return new double[] { finalBAF, finalDeviation, finalMajorAllele };
     }
 }

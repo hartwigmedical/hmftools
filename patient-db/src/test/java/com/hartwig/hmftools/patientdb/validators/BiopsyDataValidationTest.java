@@ -5,7 +5,8 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
+import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE2;
 import static com.hartwig.hmftools.patientdb.validators.PatientValidator.fields;
 
 import static org.junit.Assert.assertEquals;
@@ -70,7 +71,7 @@ public class BiopsyDataValidationTest {
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE, FIELD_BIOPSY_DATE)));
+        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE2, FIELD_REGISTRATION_DATE1, FIELD_BIOPSY_DATE)));
     }
 
     @Test

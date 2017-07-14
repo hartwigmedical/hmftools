@@ -68,12 +68,13 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
             next(reader);
         }
 
-        return new XMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
+        return new ImmutableXMLEcrfDatamodel(studyEvents, forms, itemGroups, items, codeLists);
     }
 
     @NotNull
     private static StudyEvent extractStudyEvent(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", STUDY_EVENT_OID_ATTRIBUTE);
+        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
         final List<String> subOIDs = Lists.newArrayList();
         while (!isStudyEventEnd(reader)) {
             next(reader);
@@ -82,12 +83,13 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
             }
         }
 
-        return new StudyEvent(OID, subOIDs);
+        return new ImmutableStudyEvent(OID, name, subOIDs);
     }
 
     @NotNull
     private static Form extractForm(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", FORM_OID_ATTRIBUTE);
+        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
         final List<String> subOIDs = Lists.newArrayList();
         while (!isFormEnd(reader)) {
             next(reader);
@@ -99,12 +101,13 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
             }
         }
 
-        return new Form(OID, subOIDs);
+        return new ImmutableForm(OID, name, subOIDs);
     }
 
     @NotNull
     private static ItemGroup extractItemGroup(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
+        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
         final List<String> subOIDs = Lists.newArrayList();
         while (!isItemGroupEnd(reader)) {
             next(reader);
@@ -113,7 +116,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
             }
         }
 
-        return new ItemGroup(OID, subOIDs);
+        return new ImmutableItemGroup(OID, name, subOIDs);
     }
 
     @NotNull
@@ -128,12 +131,13 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
             }
         }
 
-        return new Item(OID, name, codeListOID);
+        return new ImmutableItem(OID, name, codeListOID);
     }
 
     @NotNull
     private static CodeList extractCodeList(@NotNull final XMLStreamReader reader) throws XMLStreamException {
         final String OID = reader.getAttributeValue("", CODE_LIST_OID_ATTRIBUTE);
+        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
         final Map<Integer, String> codeListItems = Maps.newHashMap();
         while (!isCodeListEnd(reader)) {
             next(reader);
@@ -147,7 +151,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
                 codeListItems.put(index, CodeListFactory.fromText(reader.getText()));
             }
         }
-        return new CodeList(OID, codeListItems);
+        return new ImmutableCodeList(OID, name, codeListItems);
     }
 
     private static boolean isStudyEventStart(@NotNull final XMLStreamReader reader) {

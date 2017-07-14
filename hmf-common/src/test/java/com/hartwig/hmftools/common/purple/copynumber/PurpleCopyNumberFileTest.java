@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -49,11 +50,7 @@ public class PurpleCopyNumberFileTest {
 
     @NotNull
     private PurpleCopyNumber createRandom(@NotNull Random random) {
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome(random.nextInt(22) + "")
-                .start(random.nextLong())
-                .end(random.nextLong())
-                .averageTumorCopyNumber(random.nextDouble())
+        return PurpleDatamodelTest.createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), random.nextDouble())
                 .bafCount(random.nextInt())
                 .averageObservedBAF(random.nextDouble())
                 .averageActualBAF(random.nextDouble())

@@ -4,11 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -23,41 +27,53 @@ import org.jetbrains.annotations.Nullable;
 class FastqStats {
     private static final Logger LOGGER = LogManager.getLogger(FastqStats.class);
 
+    /**
+     * Counts yield and q30 of fastqs in the fastqsPerSample multimap, using 1 thread per file.
+     * The yield and q30 of the Undetermined sample will count towards the total yield and q30 of the flowcell.
+     *
+     * @param fastqsPerSample multimap of sampleName and fastqs to process
+     * @param threadCount     number of maximum threads
+     * @return FastqTracker with yield and q30 stats for the fastqs processed.
+     */
+
     @NotNull
-    static FastqTracker processFile(@NotNull final String filePath) throws IOException {
-        final FastqTracker tracker = new FastqTracker();
-        final File file = new File(filePath);
-        final FastqData data = processFile(file);
-        final String lane = getLaneName(file);
-        return tracker.addToSample(file.getName(), lane, data);
+    static FastqTracker processFastqs(@NotNull final Multimap<String, File> fastqsPerSample, final int threadCount)
+            throws IOException, InterruptedException {
+        LOGGER.info("Using " + threadCount + " threads. Processing " + fastqsPerSample.size() + " fastQ files.");
+        final FastqTrackerWrapper tracker = new FastqTrackerWrapper();
+        final ListeningExecutorService threadPool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
+
+        for (final String sampleName : fastqsPerSample.keySet()) {
+            final Collection<File> fastqs = fastqsPerSample.get(sampleName);
+            for (final File fastq : fastqs) {
+                final String laneName = getLaneName(fastq);
+                final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(fastq));
+                addCallback(futureResult, (data) -> tracker.addDataFromSampleFile(sampleName, laneName, data),
+                        (error) -> LOGGER.error("Failed to process file: " + fastq.getName(), error));
+            }
+        }
+        threadPool.shutdown();
+        threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        return tracker.tracker();
     }
 
     /**
-     * Looks for folders starting with HMFreg in the current (BaseCalls) dir. If any folder with
-     * that pattern is found, assumes all subfolders represent samples and processes all Fastq
-     * files found in these subfolders.
-     * Any Fastq files found in the current (BaseCalls) dir that have the string UNDETERMINED at
-     * the start will be assigned to an 'Undetermined' sample. The yield and q30 from these
-     * files will count towards the total yield and q30 of the flowcell.
+     * Looks for folders starting with HMFreg in the current baseCallsDir. If any folder is found, assumes all subfolders represent
+     * samples and collects all Fastq files found in the samples subfolders.
+     * Any Fastq files in the baseCallsDir that start with 'Undetermined' will be assigned to an 'Undetermined' sample.
      *
-     * @param dir         BaseCalls directory
-     * @param threadCount number of maximum threads to use
-     * @return
-     * @throws IOException
-     * @throws InterruptedException
+     * @param baseCallsDir BaseCalls directory
+     * @return a multimap with sample names as keys and fastq files as values.
+     * @throws IOException if an error occurs when reading HMFReg/sample folders or fastq files.
      */
-    @NotNull
-    static FastqTracker processDir(@NotNull final File dir, final int threadCount)
-            throws IOException, InterruptedException {
-        final File[] files = dir.listFiles();
-        if (files == null) {
-            throw new IOException("List files in " + dir.getName() + " returned null.");
-        }
-        final FastqTrackerWrapper tracker = new FastqTrackerWrapper();
-        LOGGER.info("Using " + threadCount + " threads.");
-        final ListeningExecutorService threadPool = MoreExecutors.listeningDecorator(
-                Executors.newFixedThreadPool(threadCount));
 
+    @NotNull
+    static Multimap<String, File> getFastqsFromBaseCallsDir(@NotNull final File baseCallsDir) throws IOException {
+        final Multimap<String, File> fastqsPerSample = ArrayListMultimap.create();
+        final File[] files = baseCallsDir.listFiles();
+        if (files == null) {
+            throw new IOException("List files in " + baseCallsDir.getName() + " returned null.");
+        }
         for (final File file : files) {
             if (file.isDirectory() && file.getName().startsWith("HMFreg")) {
                 LOGGER.info("Found HMFreg folder: " + file.getName());
@@ -67,31 +83,41 @@ class FastqStats {
                 }
                 for (final File sampleFolder : sampleFolders) {
                     LOGGER.info("Found sample folder: " + sampleFolder.getName());
-                    final File[] fastqFiles = sampleFolder.listFiles(
-                            (parentDir, fileName) -> fileName.endsWith(".fastq.gz") || fileName.endsWith(".fastq"));
+                    final File[] fastqFiles =
+                            sampleFolder.listFiles((parentDir, fileName) -> fileName.endsWith(".fastq.gz") || fileName.endsWith(".fastq"));
                     if (fastqFiles == null) {
                         throw new IOException("List fastq files in " + sampleFolder.getName() + " returned null.");
                     }
-                    for (final File fastq : fastqFiles) {
-                        final String lane = getLaneName(fastq);
-                        final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(fastq));
-                        addCallback(futureResult,
-                                (data) -> tracker.addDataFromSampleFile(sampleFolder.getName(), lane, data),
-                                (error) -> LOGGER.error("Failed to process file: " + fastq.getName(), error));
-                    }
+                    fastqsPerSample.putAll(sampleFolder.getName(), Lists.newArrayList(fastqFiles));
                 }
-            } else if (!file.isDirectory() && file.getName().startsWith("Undetermined") && (
-                    file.getName().endsWith(".fastq.gz") || file.getName().endsWith(".fastq"))) {
+            } else if (!file.isDirectory() && file.getName().startsWith("Undetermined") && (file.getName().endsWith(".fastq.gz")
+                    || file.getName().endsWith(".fastq"))) {
                 LOGGER.info("Found undetermined file: " + file.getName());
-                final String lane = getLaneName(file);
-                final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(file));
-                addCallback(futureResult, (data) -> tracker.addDataFromSampleFile("Undetermined", lane, data),
-                        (error) -> LOGGER.error("Failed to process file: " + file.getName(), error));
+                fastqsPerSample.put("Undetermined", file);
             }
         }
-        threadPool.shutdown();
-        threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        return tracker.tracker();
+        return fastqsPerSample;
+    }
+
+    @NotNull
+    static Multimap<String, File> getSingleFastq(@NotNull final String filePath) throws IOException {
+        final Multimap<String, File> fastqsPerSample = ArrayListMultimap.create();
+        final File file = new File(filePath);
+        fastqsPerSample.put(file.getName(), file);
+        return fastqsPerSample;
+    }
+
+    @NotNull
+    static Multimap<String, File> getFastqsFromDir(@NotNull final File fastqDir) throws IOException {
+        final Multimap<String, File> fastqsPerSample = ArrayListMultimap.create();
+        final File[] fastqFiles = fastqDir.listFiles(file -> file.getName().endsWith(".fastq.gz") || file.getName().endsWith(".fastq"));
+        if (fastqFiles == null) {
+            throw new IOException("List files in " + fastqDir.getName() + " returned null.");
+        }
+        for (final File fastq : fastqFiles) {
+            fastqsPerSample.put(fastq.getName(), fastq);
+        }
+        return fastqsPerSample;
     }
 
     @NotNull
@@ -116,8 +142,8 @@ class FastqStats {
         return data;
     }
 
-    private static <T> void addCallback(@NotNull final ListenableFuture<T> future,
-            @NotNull final Consumer<T> onSuccess, @NotNull final Consumer<Throwable> onFailure) {
+    private static <T> void addCallback(@NotNull final ListenableFuture<T> future, @NotNull final Consumer<T> onSuccess,
+            @NotNull final Consumer<Throwable> onFailure) {
         Futures.addCallback(future, new FutureCallback<T>() {
             @Override
             public void onSuccess(@Nullable final T t) {
@@ -146,7 +172,7 @@ class FastqStats {
         if (fileNameArray.length >= 4) {
             return fileNameArray[3];
         } else {
-            LOGGER.warn("Could not get flowcell name from " + file.getName());
+            LOGGER.warn("Could not get lane name from " + file.getName());
             return "Unknown";
         }
     }

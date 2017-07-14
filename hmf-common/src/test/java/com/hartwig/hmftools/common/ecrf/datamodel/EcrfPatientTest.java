@@ -16,7 +16,7 @@ public class EcrfPatientTest {
 
     @Test
     public void canFindValuesById() {
-        final EcrfField field = new EcrfField("1", "2", "3", "4", "5", Maps.newHashMap());
+        final EcrfField field = new ImmutableEcrfField("1", "2", "3", "4", "5", Maps.newHashMap());
         final Map<EcrfField, List<String>> fieldValues = Maps.newHashMap();
         fieldValues.put(field, Lists.newArrayList("value1", "value2"));
         final EcrfPatient patient = new EcrfPatient("patient", fieldValues, Maps.newHashMap());
@@ -26,5 +26,4 @@ public class EcrfPatientTest {
         assertNotNull(values);
         assertEquals(2, values.size());
     }
-
 }

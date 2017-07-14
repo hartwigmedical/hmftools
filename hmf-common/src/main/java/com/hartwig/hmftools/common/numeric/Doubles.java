@@ -4,8 +4,7 @@ public class Doubles {
 
     private static final double EPSILON = 1e-10;
 
-    public static boolean equal(double first, double second)
-    {
+    public static boolean equal(double first, double second) {
         return Math.abs(first - second) < EPSILON;
     }
 
@@ -13,23 +12,19 @@ public class Doubles {
         return equal(value, 0);
     }
 
-    public static boolean lessThan(double value, double reference)
-    {
+    public static boolean lessThan(double value, double reference) {
         return value - reference < -EPSILON;
     }
 
-    public static boolean lessOrEqual(double value, double reference)
-    {
+    public static boolean lessOrEqual(double value, double reference) {
         return value - reference < EPSILON;
     }
 
-    public static boolean greaterThan(double value, double reference)
-    {
+    public static boolean greaterThan(double value, double reference) {
         return value - reference > EPSILON;
     }
 
-    public static boolean greaterOrEqual(double value, double reference)
-    {
+    public static boolean greaterOrEqual(double value, double reference) {
         return value - reference > -EPSILON;
     }
 
@@ -39,5 +34,9 @@ public class Doubles {
 
     public static boolean positiveOrZero(double value) {
         return greaterOrEqual(value, 0);
+    }
+
+    public static double distanceFromInteger(double value) {
+        return Math.abs((value - Math.round(value)));
     }
 }

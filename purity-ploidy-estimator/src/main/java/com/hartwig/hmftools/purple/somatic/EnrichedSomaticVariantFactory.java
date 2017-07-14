@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.purity.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
@@ -35,8 +36,8 @@ public class EnrichedSomaticVariantFactory {
             @NotNull  final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull  final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
         purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
-        highConfidenceSelector = new GenomeRegionSelector<>(highConfidenceRegions);
-        copyNumberSelector = new GenomeRegionSelector<>(copyNumbers);
+        highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
+        copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
         this.reference = reference;
     }
 
@@ -65,7 +66,7 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private Builder addCopyNumber(@NotNull final Builder builder, @NotNull final PurpleCopyNumber copyNumber, double alleleFrequency) {
-        double adjustedVAF = purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), alleleFrequency);
+        double adjustedVAF = purityAdjuster.purityAdjustedVAF(Math.max(0.001, copyNumber.averageTumorCopyNumber()), alleleFrequency);
         return builder.adjustedCopyNumber(copyNumber.averageTumorCopyNumber()).adjustedVAF(adjustedVAF);
     }
 

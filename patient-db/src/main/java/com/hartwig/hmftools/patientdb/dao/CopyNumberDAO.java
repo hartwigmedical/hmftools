@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep11;
-import org.jooq.InsertValuesStep21;
+import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -98,7 +98,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();
 
         for (List<FittedRegion> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter = context.insertInto(COPYNUMBERREGION,
+            InsertValuesStepN inserter = context.insertInto(COPYNUMBERREGION,
                     COPYNUMBERREGION.SAMPLEID,
                     COPYNUMBERREGION.CHROMOSOME,
                     COPYNUMBERREGION.START,
@@ -109,6 +109,9 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.OBSERVEDBAF,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIO,
                     COPYNUMBERREGION.OBSERVEDNORMALRATIO,
+                    COPYNUMBERREGION.OBSERVEDGCCONTENT,
+                    COPYNUMBERREGION.OBSERVEDNONNPERCENTAGE,
+                    COPYNUMBERREGION.OBSERVEDMAPPABLEPERCENTAGE,
                     COPYNUMBERREGION.MODELPLOIDY,
                     COPYNUMBERREGION.MODELBAF,
                     COPYNUMBERREGION.MODELTUMORRATIO,
@@ -125,7 +128,7 @@ class CopyNumberDAO {
         }
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep21 inserter, String sample, FittedRegion region) {
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStepN inserter, String sample, FittedRegion region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.start(),
@@ -136,6 +139,9 @@ class CopyNumberDAO {
                 region.observedBAF(),
                 region.observedTumorRatio(),
                 region.observedNormalRatio(),
+                region.observedGCContent(),
+                region.observedNonNPercentage(),
+                region.observedMappablePercentage(),
                 region.fittedPloidy(),
                 region.modelBAF(),
                 region.modelTumorRatio(),

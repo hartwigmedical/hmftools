@@ -77,6 +77,11 @@ public class DatabaseAccess {
         return purityDAO.readFittedPurity(sampleId);
     }
 
+    @Nullable
+    public FittedPurityScore readFittedPurityScore(@NotNull final String sampleId) {
+        return purityDAO.readFittedPurityScore(sampleId);
+    }
+
     @NotNull
     public List<EnrichedSomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId) {
         return somaticVariantDAO.read(sampleId, true);

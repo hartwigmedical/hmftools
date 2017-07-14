@@ -6,6 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class EnrichedRegion implements ObservedRegion {
+public abstract class EnrichedRegion implements ObservedRegion {
 
 }
