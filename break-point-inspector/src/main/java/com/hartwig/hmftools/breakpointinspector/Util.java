@@ -120,8 +120,7 @@ class Util {
         private Location() {
         }
 
-        static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary)
-                throws RuntimeException {
+        static Location parseLocationString(final String location, final SAMSequenceDictionary dictionary) throws RuntimeException {
             final Location result = new Location();
 
             final String[] split = location.split(":");
@@ -140,10 +139,11 @@ class Util {
             // query the position
             result.ReferenceIndex = dictionary.getSequenceIndex(chromosome);
             if (result.ReferenceIndex < 0) {
-                if (!chromosome.startsWith("chr"))
+                if (!chromosome.startsWith("chr")) {
                     result.ReferenceIndex = dictionary.getSequenceIndex("chr" + chromosome);
-                else
+                } else {
                     result.ReferenceIndex = dictionary.getSequenceIndex(chromosome.substring(3));
+                }
             }
             if (result.ReferenceIndex < 0) {
                 throw new RuntimeException(chromosome + " is not in the BAM");
@@ -173,10 +173,11 @@ class Util {
         }
 
         boolean closeTo(final Location other, @Nullable final Range range) {
-            if (range == null)
+            if (range == null) {
                 return closeTo(other);
-            return other != null && ReferenceIndex == other.ReferenceIndex && Position >= (other.Position
-                    + range.Start - 1) && Position <= (other.Position + range.End + 1);
+            }
+            return other != null && ReferenceIndex == other.ReferenceIndex && Position >= (other.Position + range.Start - 1)
+                    && Position <= (other.Position + range.End + 1);
         }
 
         @Override
@@ -186,10 +187,12 @@ class Util {
 
         @Override
         public boolean equals(final Object obj) {
-            if (obj == null)
+            if (obj == null) {
                 return false;
-            if (!(obj instanceof Location))
+            }
+            if (!(obj instanceof Location)) {
                 return false;
+            }
 
             Location other = (Location) obj;
             return ReferenceIndex == other.ReferenceIndex && Position == other.Position;
@@ -198,8 +201,9 @@ class Util {
         @Override
         public int compareTo(@NotNull final Location o) {
             final int comp1 = Integer.compare(ReferenceIndex, o.ReferenceIndex);
-            if (comp1 == 0)
+            if (comp1 == 0) {
                 return Integer.compare(Position, o.Position);
+            }
             return comp1;
         }
 

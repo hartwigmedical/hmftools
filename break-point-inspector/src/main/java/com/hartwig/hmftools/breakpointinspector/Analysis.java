@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -15,6 +14,8 @@ import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.*;
 import static com.hartwig.hmftools.breakpointinspector.Util.*;
 import static com.hartwig.hmftools.breakpointinspector.Stats.*;
 
+import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,8 +24,7 @@ class Analysis {
     private static boolean assessDEL(final HMFVariantContext ctx, Pair<ReadInfo, ReadInfo> pair) {
 
         final Location adjustedBP1 = ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.End);
-        final Location adjustedBP2 =
-                ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.Start);
+        final Location adjustedBP2 = ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.Start);
 
         boolean pairEvidence;
         // side
@@ -39,8 +39,7 @@ class Analysis {
 
     private static boolean assessDUP(final HMFVariantContext ctx, final Pair<ReadInfo, ReadInfo> pair) {
 
-        final Location adjustedBP1 =
-                ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
+        final Location adjustedBP1 = ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
         final Location adjustedBP2 = ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.End);
 
         boolean pairEvidence;
@@ -58,20 +57,16 @@ class Analysis {
 
         boolean pairEvidence;
         if (inv3) {
-            final Location adjustedBP1 =
-                    ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.End);
-            final Location adjustedBP2 =
-                    ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.End);
+            final Location adjustedBP1 = ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.End);
+            final Location adjustedBP2 = ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.End);
 
             pairEvidence = pair.getLeft().Read.getAlignmentStart() <= adjustedBP1.Position;
             pairEvidence &= pair.getRight().Read.getAlignmentStart() <= adjustedBP2.Position;
             pairEvidence &= !pair.getLeft().Read.getReadNegativeStrandFlag(); // forward strand x ---->
             pairEvidence &= !pair.getRight().Read.getReadNegativeStrandFlag(); // forward strand x ---->
         } else {
-            final Location adjustedBP1 =
-                    ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
-            final Location adjustedBP2 =
-                    ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.Start);
+            final Location adjustedBP1 = ctx.Uncertainty1 == null ? ctx.MantaBP1 : ctx.MantaBP1.add(ctx.Uncertainty1.Start);
+            final Location adjustedBP2 = ctx.Uncertainty2 == null ? ctx.MantaBP2 : ctx.MantaBP2.add(ctx.Uncertainty2.Start);
 
             pairEvidence = adjustedBP1.Position <= pair.getLeft().Read.getAlignmentEnd();
             pairEvidence &= adjustedBP2.Position <= pair.getRight().Read.getAlignmentEnd();
@@ -96,33 +91,45 @@ class Analysis {
         return false;
     }
 
-    private static void determineBreakpoints(final HMFVariantContext ctx, final SampleStats result,
-            final ClipStats bpClips1, final ClipStats bpClips2) {
+    private static void determineBreakpoints(final HMFVariantContext ctx, final SampleStats result, final ClipStats bpClips1,
+            final ClipStats bpClips2) {
 
         // TODO: needs finesse
 
         // 1: look at clipped pairs first
         if (result.BP1 == null) {
-            result.BP1 = bpClips1.LocationMap.entrySet().stream().filter(
-                    e -> e.getKey().closeTo(ctx.MantaBP1, ctx.Uncertainty1)).max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+            result.BP1 = bpClips1.LocationMap.entrySet()
+                    .stream()
+                    .filter(e -> e.getKey().closeTo(ctx.MantaBP1, ctx.Uncertainty1))
+                    .max(Comparator.comparingInt(a -> a.getValue().Reads.size()))
+                    .map(Map.Entry::getKey)
+                    .orElse(null);
         }
         if (result.BP2 == null) {
-            result.BP2 = bpClips2.LocationMap.entrySet().stream().filter(
-                    e -> e.getKey().closeTo(ctx.MantaBP2, ctx.Uncertainty2)).max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+            result.BP2 = bpClips2.LocationMap.entrySet()
+                    .stream()
+                    .filter(e -> e.getKey().closeTo(ctx.MantaBP2, ctx.Uncertainty2))
+                    .max(Comparator.comparingInt(a -> a.getValue().Reads.size()))
+                    .map(Map.Entry::getKey)
+                    .orElse(null);
         }
 
         // 2: then we should look at unpaired clips to determine breakpoint
         if (result.BP1 == null) {
-            result.BP1 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
-                    e -> e.getKey().closeTo(ctx.MantaBP1, ctx.Uncertainty1)).max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+            result.BP1 = result.Clipping_Stats.LocationMap.entrySet()
+                    .stream()
+                    .filter(e -> e.getKey().closeTo(ctx.MantaBP1, ctx.Uncertainty1))
+                    .max(Comparator.comparingInt(a -> a.getValue().Reads.size()))
+                    .map(Map.Entry::getKey)
+                    .orElse(null);
         }
         if (result.BP2 == null) {
-            result.BP2 = result.Clipping_Stats.LocationMap.entrySet().stream().filter(
-                    e -> e.getKey().closeTo(ctx.MantaBP2, ctx.Uncertainty2)).max(
-                    Comparator.comparingInt(a -> a.getValue().Reads.size())).map(Map.Entry::getKey).orElse(null);
+            result.BP2 = result.Clipping_Stats.LocationMap.entrySet()
+                    .stream()
+                    .filter(e -> e.getKey().closeTo(ctx.MantaBP2, ctx.Uncertainty2))
+                    .max(Comparator.comparingInt(a -> a.getValue().Reads.size()))
+                    .map(Map.Entry::getKey)
+                    .orElse(null);
         }
 
         // TODO: should we display Manta BP?
@@ -137,8 +144,8 @@ class Analysis {
         final Stats.ClipStats clipPRSR1 = new Stats.ClipStats();
         final Stats.ClipStats clipPRSR2 = new Stats.ClipStats();
 
-        final List<Pair<ReadInfo, ReadInfo>> spanningPairs = new ArrayList<>();
-        final List<Pair<ReadInfo, ReadInfo>> localPairs = new ArrayList<>();
+        final List<Pair<ReadInfo, ReadInfo>> spanningPairs = Lists.newArrayList();
+        final List<Pair<ReadInfo, ReadInfo>> localPairs = Lists.newArrayList();
 
         for (final NamedReadCollection collection : queryResult.values()) {
             for (final ReadInfo r0 : collection) {
@@ -153,16 +160,14 @@ class Analysis {
                 if (r1 == null) {
                     if (r0.Category == ReadCategory.MATE_UNMAPPED) {
                         result.Get(r0.Breakpoint).Unmapped_Mate++;
-                    } else if (r0.Category != ReadCategory.NORMAL
-                            && r0.Location != Overlap.FILTERED) { // TODO: check condition
+                    } else if (r0.Category != ReadCategory.NORMAL && r0.Location != Overlap.FILTERED) { // TODO: check condition
                         result.Get(r0.Breakpoint).Diff_Variant++;
                     }
                     continue;
                 }
 
                 // special case for BND pairings, we want them in same order as manta breakpoint
-                if (r0.Read.getInferredInsertSize() == 0 && !r0.Read.getReferenceIndex().equals(
-                        ctx.MantaBP1.ReferenceIndex)) {
+                if (r0.Read.getInferredInsertSize() == 0 && !r0.Read.getReferenceIndex().equals(ctx.MantaBP1.ReferenceIndex)) {
                     continue;
                 }
 
@@ -207,8 +212,8 @@ class Analysis {
         // look at PR evidence
         for (final Pair<ReadInfo, ReadInfo> pair : spanningPairs) {
             for (final ReadInfo r : Arrays.asList(pair.getLeft(), pair.getRight())) {
-                final boolean sr = getClips(r.Read).anyMatch(
-                        c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2));
+                final boolean sr =
+                        getClips(r.Read).anyMatch(c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2));
                 // TODO: also check side of clip
                 if (sr) {
                     result.Get(r.Breakpoint).PR_SR_Support++;
@@ -221,8 +226,9 @@ class Analysis {
         // look at normal or SR evidence
         for (final Pair<ReadInfo, ReadInfo> pair : localPairs) {
             final BreakpointStats stats = result.Get(pair.getLeft().Breakpoint);
-            final boolean sr = Stream.of(pair.getLeft(), pair.getRight()).anyMatch(r -> getClips(r.Read).anyMatch(
-                    c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
+            final boolean sr = Stream.of(pair.getLeft(), pair.getRight())
+                    .anyMatch(
+                            r -> getClips(r.Read).anyMatch(c -> c.Alignment.closeTo(r.Breakpoint == Region.BP1 ? result.BP1 : result.BP2)));
             // TODO: also check side of clip
             if (sr) {
                 stats.SR_Only_Support++;
@@ -243,8 +249,7 @@ class Analysis {
         for (final SAMRecord read : reads) {
 
             final ReadInfo info = new ReadInfo(read);
-            final NamedReadCollection collection = result.computeIfAbsent(read.getReadName(),
-                    k -> new NamedReadCollection());
+            final NamedReadCollection collection = result.computeIfAbsent(read.getReadName(), k -> new NamedReadCollection());
             collection.add(info);
 
             // if unmapped there's nothing to do
@@ -286,8 +291,9 @@ class Analysis {
                     info.Category = ReadCategory.CHIMERIC;
                 } else if (read.getNotPrimaryAlignmentFlag()) {
                     info.Category = ReadCategory.SECONDARY;
-                } else if (read.getReadPairedFlag())
+                } else if (read.getReadPairedFlag()) {
                     info.Category = ReadCategory.SPAN;
+                }
             }
 
             // determine classification
@@ -302,7 +308,7 @@ class Analysis {
     }
 
     private static List<SAMRecord> performQuery(final SamReader reader, final QueryInterval[] intervals) {
-        final List<SAMRecord> output = new ArrayList<>();
+        final List<SAMRecord> output = Lists.newArrayList();
 
         final SAMRecordIterator results = reader.query(intervals, false);
         while (results.hasNext()) {
@@ -323,17 +329,15 @@ class Analysis {
         String Filter;
     }
 
-    static StructuralVariantResult processStructuralVariant(final SamReader refReader,
-            @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
-            @Nullable final SAMFileWriter tumorWriter, final HMFVariantContext ctx, final int range) {
+    static StructuralVariantResult processStructuralVariant(final SamReader refReader, @Nullable final SAMFileWriter refWriter,
+            final SamReader tumorReader, @Nullable final SAMFileWriter tumorWriter, final HMFVariantContext ctx, final int range) {
 
         // perform query for reads
 
-        QueryInterval[] queryIntervals = {
-                new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position - range),
-                        ctx.MantaBP1.Position + range),
-                new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position - range),
-                        ctx.MantaBP2.Position + range) };
+        QueryInterval[] queryIntervals =
+                { new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position - range), ctx.MantaBP1.Position + range),
+                        new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position - range),
+                                ctx.MantaBP2.Position + range) };
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
         final StructuralVariantResult result = new StructuralVariantResult();

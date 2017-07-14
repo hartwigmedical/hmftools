@@ -50,8 +50,7 @@ public class BreakPointInspectorApplication {
         return options;
     }
 
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
@@ -82,8 +81,9 @@ public class BreakPointInspectorApplication {
             final String vcfPath = cmd.getOptionValue(VCF);
             final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
-            if (refPath == null || tumorPath == null || vcfPath == null)
+            if (refPath == null || tumorPath == null || vcfPath == null) {
                 printHelpAndExit(options);
+            }
 
             // load the files
             final File tumorBAM = new File(tumorPath);
@@ -95,8 +95,7 @@ public class BreakPointInspectorApplication {
             SAMFileWriter tumorWriter = null;
             if (tumorSlicePath != null) {
                 tumorSliceBAM = new File(tumorSlicePath);
-                tumorWriter = new SAMFileWriterFactory().makeBAMWriter(tumorReader.getFileHeader(), false,
-                        tumorSliceBAM);
+                tumorWriter = new SAMFileWriterFactory().makeBAMWriter(tumorReader.getFileHeader(), false, tumorSliceBAM);
             }
 
             final File refSliceBAM;
@@ -113,8 +112,7 @@ public class BreakPointInspectorApplication {
             final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
             final Predicate<String> isRef = s -> s.endsWith("R") || s.endsWith("BL");
             final String refSampleName = samples.stream().filter(isRef).findFirst().orElse(null);
-            final String tumorSampleName = samples.stream().filter(
-                    s -> s.endsWith("T") || !isRef.test(s)).findFirst().orElse(null);
+            final String tumorSampleName = samples.stream().filter(s -> s.endsWith("T") || !isRef.test(s)).findFirst().orElse(null);
             if (refSampleName == null || tumorSampleName == null) {
                 System.err.println("could not determine tumor and sample from VCF");
                 System.exit(1);
@@ -122,10 +120,10 @@ public class BreakPointInspectorApplication {
             }
 
             // output the header
-            final ArrayList<String> header = Lists.newArrayList("ID", "SVTYPE", "ORIENTATION", "MANTA_BP1",
-                    "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL", "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL",
-                    "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL", "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL",
-                    "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
+            final ArrayList<String> header =
+                    Lists.newArrayList("ID", "SVTYPE", "ORIENTATION", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL",
+                            "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL", "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL",
+                            "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL", "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
             header.addAll(prefixList(SampleStats.GetHeader(), "REF_"));
             header.addAll(prefixList(SampleStats.GetHeader(), "TUMOR_"));
             header.add("BPI_BP1");
@@ -134,12 +132,20 @@ public class BreakPointInspectorApplication {
             header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
-            final Map<String, VariantContext> mateMap = new HashMap<>();
-            for (final VariantContext variant : vcfReader) {
+            final Map<String, VariantContext> variantMap = new HashMap<>();
+            for (VariantContext variant : vcfReader) {
+
+                variantMap.put(variant.getID(), variant);
+                final VariantContext mateVariant = variant;
+                if (variant.hasAttribute("MATEID")) {
+                    variant = variantMap.get(variant.getAttributeAsString("MATEID", ""));
+                    if (variant == null) {
+                        continue;
+                    }
+                }
 
                 final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
-                Location location1 = Location.parseLocationString(location,
-                        tumorReader.getFileHeader().getSequenceDictionary());
+                Location location1 = Location.parseLocationString(location, tumorReader.getFileHeader().getSequenceDictionary());
                 Location location2;
 
                 // uncertainty
@@ -170,13 +176,6 @@ public class BreakPointInspectorApplication {
                         location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                         break;
                     case BND:
-                        // only assess BND in one direction
-                        mateMap.put(variant.getID(), variant);
-                        final VariantContext mateVariant = mateMap.get(variant.getAttributeAsString("MATEID", ""));
-                        if (mateVariant == null) {
-                            // TODO: what do we put as filter for skipped BND
-                            continue;
-                        }
 
                         // get the CIPOS from the mate
                         final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
@@ -187,16 +186,14 @@ public class BreakPointInspectorApplication {
                         final String[] leftSplit = call.split("\\]");
                         final String[] rightSplit = call.split("\\[");
                         if (leftSplit.length >= 2) {
-                            location2 = Location.parseLocationString(leftSplit[1],
-                                    tumorReader.getFileHeader().getSequenceDictionary());
+                            location2 = Location.parseLocationString(leftSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
                             if (leftSplit[0].length() > 0) {
                                 svType = HMFVariantType.INV3;
                             } else {
                                 svType = HMFVariantType.DUP;
                             }
                         } else if (rightSplit.length >= 2) {
-                            location2 = Location.parseLocationString(rightSplit[1],
-                                    tumorReader.getFileHeader().getSequenceDictionary());
+                            location2 = Location.parseLocationString(rightSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
                             if (rightSplit[0].length() > 0) {
                                 svType = HMFVariantType.DEL;
                             } else {
@@ -208,20 +205,19 @@ public class BreakPointInspectorApplication {
                         }
                         break;
                     default:
-                        System.err.println(
-                                variant.getID() + " : UNEXPECTED SVTYPE=" + variant.getStructuralVariantType());
+                        System.err.println(variant.getID() + " : UNEXPECTED SVTYPE=" + variant.getStructuralVariantType());
                         continue;
                 }
 
                 // handle HOMSEQ in BND
-                if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND"))
+                if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND")) {
                     uncertainty2 = new Range(-CIPOS.get(1), CIPOS.get(0));
+                }
                 // TODO: double check this
-                // TODO: anything for SVINSSEQ?
 
-                final List<String> fields = Lists.newArrayList(variant.getID(),
-                        variant.getStructuralVariantType().toString(), HMFVariantType.getOrientation(svType),
-                        location1.toString(), location2.toString(), variant.getAttributeAsString("SVLEN", "."));
+                final List<String> fields = Lists.newArrayList(variant.getID(), variant.getStructuralVariantType().toString(),
+                        HMFVariantType.getOrientation(svType), location1.toString(), location2.toString(),
+                        variant.getAttributeAsString("SVLEN", "."));
 
                 fields.addAll(parseMantaPRSR(variant.getGenotype(refSampleName)));
                 fields.addAll(parseMantaPRSR(variant.getGenotype(tumorSampleName)));
@@ -234,8 +230,8 @@ public class BreakPointInspectorApplication {
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
 
-                final Analysis.StructuralVariantResult result = Analysis.processStructuralVariant(refReader, refWriter,
-                        tumorReader, tumorWriter, ctx, range);
+                final Analysis.StructuralVariantResult result =
+                        Analysis.processStructuralVariant(refReader, refWriter, tumorReader, tumorWriter, ctx, range);
 
                 fields.addAll(result.RefStats.GetData());
                 fields.addAll(result.TumorStats.GetData());
@@ -250,10 +246,12 @@ public class BreakPointInspectorApplication {
             // close all the files
             refReader.close();
             tumorReader.close();
-            if (refWriter != null)
+            if (refWriter != null) {
                 refWriter.close();
-            if (tumorWriter != null)
+            }
+            if (tumorWriter != null) {
                 tumorWriter.close();
+            }
 
         } catch (ParseException e) {
             printHelpAndExit(options);

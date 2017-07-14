@@ -29,13 +29,13 @@ class Stats {
         int Diff_Variant = 0;
 
         static List<String> GetHeader() {
-            return Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT",
-                    "SR_ONLY_SUPPORT", "UNMAPPED_MATE", "DIFF_VARIANT");
+            return Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT", "SR_ONLY_SUPPORT", "UNMAPPED_MATE",
+                    "DIFF_VARIANT");
         }
 
         List<Integer> GetData() {
-            return Arrays.asList(PR_Only_Normal, PR_SR_Normal, PR_Only_Support, PR_SR_Support, SR_Only_Support,
-                    Unmapped_Mate, Diff_Variant);
+            return Arrays.asList(PR_Only_Normal, PR_SR_Normal, PR_Only_Support, PR_SR_Support, SR_Only_Support, Unmapped_Mate,
+                    Diff_Variant);
         }
     }
 
@@ -56,13 +56,13 @@ class Stats {
         @Override
         public String toString() {
 
-            final TreeMultimap<Integer, String> sortedClips = TreeMultimap.create(Collections.reverseOrder(),
-                    Ordering.natural());
+            final TreeMultimap<Integer, String> sortedClips = TreeMultimap.create(Collections.reverseOrder(), Ordering.natural());
             for (final Map.Entry<Util.Location, Clip> kv : LocationMap.entrySet()) {
                 final Util.Location alignment = kv.getKey();
                 final Clip stats = kv.getValue();
-                if (stats.Reads.size() < 2)
+                if (stats.Reads.size() < 2) {
                     continue; // skip if we only have hard clips
+                }
                 sortedClips.put(stats.Reads.size(), alignment + "," + stats);
             }
 
@@ -77,12 +77,12 @@ class Stats {
                     stats.HardClippedReads.add(read);
                 } else {
                     if (clip.Sequence.length() > stats.LongestClipSequence.length() && (
-                            clip.Right && clip.Sequence.startsWith(stats.LongestClipSequence)
-                                    || clip.Left && clip.Sequence.endsWith(stats.LongestClipSequence))) {
+                            clip.Right && clip.Sequence.startsWith(stats.LongestClipSequence) || clip.Left && clip.Sequence.endsWith(
+                                    stats.LongestClipSequence))) {
                         // the existing sequence supports the new sequence
                         stats.LongestClipSequence = clip.Sequence;
-                    } else if (!(clip.Right && stats.LongestClipSequence.startsWith(clip.Sequence)
-                            || clip.Left && stats.LongestClipSequence.endsWith(clip.Sequence))) {
+                    } else if (!(clip.Right && stats.LongestClipSequence.startsWith(clip.Sequence) || clip.Left && stats.LongestClipSequence
+                            .endsWith(clip.Sequence))) {
                         // this read does not support the existing sequence
                         continue;
                     }

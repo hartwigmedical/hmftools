@@ -20,12 +20,13 @@ class ReadHelpers {
 
     static boolean pairStraddlesLocation(final SAMRecord read, final Location location) {
         assert !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag();
-        if (read.getInferredInsertSize() > 0)
+        if (read.getInferredInsertSize() > 0) {
             return read.getAlignmentStart() <= location.Position
                     && (read.getAlignmentStart() + read.getInferredInsertSize()) >= location.Position;
-        else
+        } else {
             return read.getMateAlignmentStart() <= location.Position
                     && (read.getMateAlignmentStart() - read.getInferredInsertSize()) >= location.Position;
+        }
     }
 
     static boolean isClipped(final SAMRecord read) {
@@ -36,8 +37,9 @@ class ReadHelpers {
         final ClipInfo result = new ClipInfo();
         result.Left = true;
         final Cigar cigar = read.getCigar();
-        if (cigar.isEmpty())
+        if (cigar.isEmpty()) {
             return null;
+        }
         switch (cigar.getFirstCigarElement().getOperator()) {
             case H:
                 result.Alignment = Location.fromSAMRecord(read, true);
@@ -57,8 +59,9 @@ class ReadHelpers {
         final ClipInfo result = new ClipInfo();
         result.Right = true;
         final Cigar cigar = read.getCigar();
-        if (cigar.isEmpty())
+        if (cigar.isEmpty()) {
             return null;
+        }
         switch (cigar.getLastCigarElement().getOperator()) {
             case H:
                 result.Alignment = Location.fromSAMRecord(read, false);
@@ -78,13 +81,13 @@ class ReadHelpers {
         return Stream.of(getLeftClip(read), getRightClip(read)).filter(Objects::nonNull);
     }
 
-    static Region determineRegion(final SAMRecord read, final Location location1,
-            final Location location2) {
+    static Region determineRegion(final SAMRecord read, final Location location1, final Location location2) {
         if (location1.ReferenceIndex != location2.ReferenceIndex) {
-            if (read.getReferenceIndex() == location1.ReferenceIndex)
+            if (read.getReferenceIndex() == location1.ReferenceIndex) {
                 return Region.BP1;
-            else if (read.getReferenceIndex() == location2.ReferenceIndex)
+            } else if (read.getReferenceIndex() == location2.ReferenceIndex) {
                 return Region.BP2;
+            }
         } else if (read.getReferenceIndex() == location1.ReferenceIndex) {
             final int distance1 = Math.min(Math.abs(read.getAlignmentStart() - location1.Position),
                     Math.abs(read.getAlignmentEnd() - location1.Position));
@@ -96,16 +99,17 @@ class ReadHelpers {
                 // TODO: handle uncertainty
             }
             */
-            if (distance1 < distance2)
+            if (distance1 < distance2) {
                 return Region.BP1;
-            else
+            } else {
                 return Region.BP2;
+            }
         }
         return Region.OTHER;
     }
 
     static boolean isMate(final SAMRecord read, final SAMRecord mate) {
-        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(
-                mate.getReferenceIndex()) && Math.abs(read.getMateAlignmentStart() - mate.getAlignmentStart()) <= 1;
+        return read.getReadName().equals(mate.getReadName()) && read.getMateReferenceIndex().equals(mate.getReferenceIndex())
+                && Math.abs(read.getMateAlignmentStart() - mate.getAlignmentStart()) <= 1;
     }
 }

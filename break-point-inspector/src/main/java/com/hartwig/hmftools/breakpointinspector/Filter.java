@@ -8,24 +8,24 @@ import java.util.stream.Stream;
 class Filter {
 
     private static boolean concordantStrings(final String a, final String b) {
-        if (a == null || b == null)
+        if (a == null || b == null) {
             return false;
-        if (a.length() < b.length())
+        }
+        if (a.length() < b.length()) {
             return !a.isEmpty() && b.startsWith(a) || b.endsWith(a);
-        else
+        } else {
             return !b.isEmpty() && a.startsWith(b) || a.endsWith(b);
+        }
     }
 
-    static String getFilterString(final Util.HMFVariantContext ctx, final Stats.SampleStats tumorStats,
-            final Stats.SampleStats refStats) {
+    static String getFilterString(final Util.HMFVariantContext ctx, final Stats.SampleStats tumorStats, final Stats.SampleStats refStats) {
 
         final List<String> filters = new ArrayList<>(ctx.Filter);
 
         if (ctx.Type == Util.HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
                 && (ctx.MantaBP2.Position - ctx.MantaBP1.Position) < 2000) {
             // short delete logic, must have SR support
-            final int SR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(
-                    s -> s.PR_SR_Support + s.SR_Only_Support).sum();
+            final int SR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();
             if (SR == 0) {
                 filters.add("HMF_SRSupportZero");
             }
@@ -43,8 +43,9 @@ class Filter {
             concordance |= tumor_clip != null && ref_clip != null && concordantStrings(tumor_clip.LongestClipSequence,
                     ref_clip.LongestClipSequence);
         }
-        if (concordance)
+        if (concordance) {
             filters.add("HMF_ClippingConcordance");
+        }
 
         return filters.isEmpty() ? "PASS" : String.join(";", filters);
     }
