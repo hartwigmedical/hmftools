@@ -2,16 +2,9 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.ECRF;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.data.EcrfItem;
-import com.hartwig.hmftools.patientdb.data.ImmutableEcrfItem;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,55 +29,14 @@ class EcrfDAO {
 
     void writePatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
         LOGGER.info("writing patient: " + patient.patientId());
-        final List<EcrfItem> ecrfItems = patientToEcrfItems(patient, sequenced);
-        context.batch(ecrfItems.stream()
-                .map(ecrfItem -> context.insertInto(ECRF, ECRF.PATIENTID, ECRF.STUDYEVENT, ECRF.STUDYEVENTIDX, ECRF.FORM, ECRF.FORMIDX,
-                        ECRF.ITEMGROUP, ECRF.ITEMGROUPIDX, ECRF.ITEM, ECRF.ITEMVALUE, ECRF.FORMSTATUS, ECRF.LOCKED, ECRF.SEQUENCED)
-                        .values(ecrfItem.patientId(), ecrfItem.studyOID(), ecrfItem.studyIdx(), ecrfItem.formOID(), ecrfItem.formIdx(),
-                                ecrfItem.itemGroupOID(), ecrfItem.itemGroupIdx(), ecrfItem.itemOID(), ecrfItem.itemValue(),
-                                ecrfItem.formStatus(), ecrfItem.locked(), ecrfItem.sequencedString()))
+        context.batch(patient.fields()
+                .stream()
+                .map(field -> context.insertInto(ECRF, ECRF.PATIENTID, ECRF.STUDYEVENT, ECRF.STUDYEVENTKEY, ECRF.FORM, ECRF.FORMKEY,
+                        ECRF.ITEMGROUP, ECRF.ITEMGROUPKEY, ECRF.ITEM, ECRF.ITEMVALUE, ECRF.STATUS, ECRF.LOCKED, ECRF.SEQUENCED)
+                        .values(field.patientId(), field.studyEventOID(), field.studyRepeatKey(), field.formOID(), field.formRepeatKey(),
+                                field.itemGroupOID(), field.itemGroupRepeatKey(), field.itemOID(), field.itemValue(), field.status(),
+                                field.locked(), sequenced ? "TRUE" : "FALSE"))
                 .collect(Collectors.toList())).execute();
-        LOGGER.info("finished patient: " + patient.patientId());
-    }
-
-    @NotNull
-    private List<EcrfItem> patientToEcrfItems(@NotNull final EcrfPatient patient, final boolean sequenced) {
-        final String patientId = patient.patientId();
-        final List<EcrfItem> ecrfItems = Lists.newArrayList();
-        for (final String studyOID : patient.studyEventsPerOID().keySet()) {
-            final List<EcrfStudyEvent> studyEvents = patient.studyEventsPerOID(studyOID);
-            for (int studyIdx = 0; studyIdx < studyEvents.size(); studyIdx++) {
-                for (final String formOID : studyEvents.get(studyIdx).formsPerOID().keySet()) {
-                    final List<EcrfForm> forms = studyEvents.get(studyIdx).formsPerOID().get(formOID);
-                    for (int formIdx = 0; formIdx < forms.size(); formIdx++) {
-                        final String formStatus = forms.get(formIdx).status();
-                        final String formLocked = forms.get(formIdx).locked();
-                        for (final String itemGroupOID : forms.get(formIdx).itemGroupsPerOID().keySet()) {
-                            final List<EcrfItemGroup> itemGroups = forms.get(formIdx).itemGroupsPerOID().get(itemGroupOID);
-                            for (int itemGroupIdx = 0; itemGroupIdx < itemGroups.size(); itemGroupIdx++) {
-                                for (final String itemOID : itemGroups.get(itemGroupIdx).itemsPerOID().keySet()) {
-                                    final List<String> items = itemGroups.get(itemGroupIdx).itemsPerOID().get(itemOID);
-                                    if (items.size() > 0) {
-                                        final String itemValue = items.get(0);
-                                        for (final String item : items) {
-                                            if (!itemValue.equals(item)) {
-                                                LOGGER.warn(
-                                                        "Not all items in item group: " + itemGroupOID + " equal: " + item + "; expected: "
-                                                                + itemValue);
-                                                break;
-                                            }
-                                        }
-                                        ecrfItems.add(new ImmutableEcrfItem(patientId, studyOID, studyIdx, formOID, formIdx, itemGroupOID,
-                                                itemGroupIdx, itemOID, itemValue, sequenced, formStatus, formLocked));
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return ecrfItems;
+        LOGGER.info("done writing patient: " + patient.patientId());
     }
 }
