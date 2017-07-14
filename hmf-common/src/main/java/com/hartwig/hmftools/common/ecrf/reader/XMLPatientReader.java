@@ -111,7 +111,6 @@ public final class XMLPatientReader extends EcrfReader {
                     fieldValues.get(field).add(value);
                 } else {
                     final String value = reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE);
-                    LOGGER.warn("Could not resolve field with name " + name + " value(" + value + ")");
                     currentItemGroup.addItem(OID, value);
                 }
             }
