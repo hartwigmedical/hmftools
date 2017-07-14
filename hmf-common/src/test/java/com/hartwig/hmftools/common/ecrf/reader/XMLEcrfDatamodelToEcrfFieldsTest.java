@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
 
 import org.junit.Test;
 
@@ -38,10 +38,10 @@ public class XMLEcrfDatamodelToEcrfFieldsTest {
         final List<CodeList> codeLists = Lists.newArrayList(new ImmutableCodeList(codeListOID, description, codeListItems));
         final XMLEcrfDatamodel datamodel = XMLEcrfDatamodel.of(studyEvents, forms, itemGroups, items, codeLists);
 
-        final List<EcrfField> fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);
+        final List<EcrfDatamodelField> fields = XMLEcrfDatamodelToEcrfFields.convert(datamodel);
 
         assertEquals(1, fields.size());
-        final EcrfField field = fields.get(0);
+        final EcrfDatamodelField field = fields.get(0);
         assertEquals("STUDY.FORM.ITEMGROUP.ITEM", field.name());
         assertEquals(description, field.description());
 

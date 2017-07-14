@@ -6,8 +6,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
-import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableEcrfField;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
+import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableEcrfDatamodelField;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,8 +17,8 @@ public final class XMLEcrfDatamodelToEcrfFields {
     }
 
     @NotNull
-    public static List<EcrfField> convert(@NotNull final XMLEcrfDatamodel datamodel) {
-        final List<EcrfField> fields = Lists.newArrayList();
+    public static List<EcrfDatamodelField> convert(@NotNull final XMLEcrfDatamodel datamodel) {
+        final List<EcrfDatamodelField> fields = Lists.newArrayList();
         for (final StudyEvent studyEvent : datamodel.studyEvents().values()) {
             for (final String formOID : studyEvent.formOIDs()) {
                 final Form form = findByOID(datamodel.forms().values(), formOID);
@@ -32,8 +32,9 @@ public final class XMLEcrfDatamodelToEcrfFields {
                             final CodeList codeListObj = findByOID(datamodel.codeLists().values(), codeListOID);
                             codeList = codeListObj.values();
                         }
-                        final EcrfField field =
-                                new ImmutableEcrfField(studyEvent.OID(), form.OID(), itemGroup.OID(), item.OID(), item.name(), codeList);
+                        final EcrfDatamodelField field =
+                                new ImmutableEcrfDatamodelField(studyEvent.OID(), form.OID(), itemGroup.OID(), item.OID(), item.name(),
+                                        codeList);
                         fields.add(field);
                     }
                 }

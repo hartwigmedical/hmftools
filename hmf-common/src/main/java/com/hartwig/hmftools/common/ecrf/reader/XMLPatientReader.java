@@ -9,6 +9,7 @@ import javax.xml.stream.events.XMLEvent;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDataField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -39,6 +40,8 @@ public final class XMLPatientReader extends EcrfReader {
     private static final String FORM_REPEAT_KEY_ATTRIBUTE = "FormRepeatKey";
     private static final String ITEM_GROUP_TAG = "ItemGroupData";
     private static final String ITEM_GROUP_OID_ATTRIBUTE = "ItemGroupOID";
+    private static final String ITEM_GROUP_REPEAT_KEY = "ItemGroupRepeatKey";
+
     private static final String ITEM_TAG = "ItemData";
     private static final String ITEM_OID_ATTRIBUTE = "ItemOID";
     private static final String ITEM_VALUE_ATTRIBUTE = "Value";
@@ -66,12 +69,14 @@ public final class XMLPatientReader extends EcrfReader {
             @NotNull final FormStatusModel formStatusModel) throws XMLStreamException {
         final String patientId = toCPCTPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
         final Map<String, List<EcrfStudyEvent>> studyEventsPerOID = Maps.newHashMap();
+        final List<EcrfDataField> fields = Lists.newArrayList();
 
         String currentStudyEventOID = Strings.EMPTY;
         String currentStudyEventIdx = Strings.EMPTY;
-        String currentFormOID;
-        String currentFormIdx;
-        String currentItemGroupOID;
+        String currentFormOID = Strings.EMPTY;
+        String currentFormIdx = Strings.EMPTY;
+        String currentItemGroupOID = Strings.EMPTY;
+        String currentItemGroupIdx = Strings.EMPTY;
         EcrfStudyEvent currentStudy = new EcrfStudyEvent(patientId);
         EcrfForm currentForm = new EcrfForm(patientId, "", "");
         EcrfItemGroup currentItemGroup = new EcrfItemGroup(patientId);
@@ -100,6 +105,7 @@ public final class XMLPatientReader extends EcrfReader {
                 currentStudy.addForm(currentFormOID, currentForm);
             } else if (isItemGroupStart(reader)) {
                 currentItemGroupOID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
+                currentItemGroupIdx = reader.getAttributeValue("", ITEM_GROUP_REPEAT_KEY);
                 currentItemGroup = new EcrfItemGroup(patientId);
                 currentForm.addItemGroup(currentItemGroupOID, currentItemGroup);
             } else if (isFieldStart(reader)) {
@@ -111,10 +117,12 @@ public final class XMLPatientReader extends EcrfReader {
                     LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
                 }
                 currentItemGroup.addItem(OID, value);
+                fields.add(EcrfDataField.of(patientId, currentStudyEventOID, currentStudyEventIdx, currentFormOID, currentFormIdx,
+                        currentItemGroupOID, currentItemGroupIdx, OID, value, currentForm.status(), currentForm.locked()));
             }
             reader.next();
         }
-        return new EcrfPatient(patientId, studyEventsPerOID);
+        return new EcrfPatient(patientId, studyEventsPerOID, fields);
     }
 
     @NotNull

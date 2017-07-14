@@ -15,9 +15,9 @@ import javax.xml.stream.XMLStreamReader;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableEcrfField;
+import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableEcrfDatamodelField;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 
 import org.jetbrains.annotations.NotNull;
@@ -62,10 +62,11 @@ public class XMLPatientReaderTest {
                         Lists.newArrayList(item1, item2, birthDate), Lists.newArrayList(codeList)),
                 new ImmutableFormStatusModel(Maps.newHashMap()));
 
-        final EcrfField field1 = new ImmutableEcrfField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field1", "", codeListValues);
-        final EcrfField field2 = new ImmutableEcrfField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field2", "", Maps.newHashMap());
-        final EcrfField birthDateField =
-                new ImmutableEcrfField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.BIRTHDTC", "", Maps.newHashMap());
+        final EcrfDatamodelField
+                field1 = new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field1", "", codeListValues);
+        final EcrfDatamodelField field2 = new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field2", "", Maps.newHashMap());
+        final EcrfDatamodelField birthDateField =
+                new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.BIRTHDTC", "", Maps.newHashMap());
 
         // @formatter:off
         assertEquals(3, patients.size());
