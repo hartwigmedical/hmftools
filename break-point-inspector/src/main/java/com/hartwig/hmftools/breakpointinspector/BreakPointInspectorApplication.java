@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.breakpointinspector;
 
+import static com.hartwig.hmftools.breakpointinspector.Stats.SampleStats;
+import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
+import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantType;
+import static com.hartwig.hmftools.breakpointinspector.Util.Location;
+import static com.hartwig.hmftools.breakpointinspector.Util.Range;
+import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,10 +18,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import htsjdk.samtools.*;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
+import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -22,13 +26,15 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import static com.hartwig.hmftools.breakpointinspector.Util.*;
-import static com.hartwig.hmftools.breakpointinspector.Stats.*;
-
-import com.google.common.collect.Lists;
-
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFileReader;
 
 public class BreakPointInspectorApplication {
 

@@ -1,5 +1,23 @@
 package com.hartwig.hmftools.breakpointinspector;
 
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.determineRegion;
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.getClips;
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.isClipped;
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.isMate;
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.pairStraddlesLocation;
+import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.readIntersectsLocation;
+import static com.hartwig.hmftools.breakpointinspector.Stats.BreakpointStats;
+import static com.hartwig.hmftools.breakpointinspector.Stats.ClipStats;
+import static com.hartwig.hmftools.breakpointinspector.Stats.SampleStats;
+import static com.hartwig.hmftools.breakpointinspector.Util.ClassifiedReadResults;
+import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
+import static com.hartwig.hmftools.breakpointinspector.Util.Location;
+import static com.hartwig.hmftools.breakpointinspector.Util.NamedReadCollection;
+import static com.hartwig.hmftools.breakpointinspector.Util.Overlap;
+import static com.hartwig.hmftools.breakpointinspector.Util.ReadCategory;
+import static com.hartwig.hmftools.breakpointinspector.Util.ReadInfo;
+import static com.hartwig.hmftools.breakpointinspector.Util.Region;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -8,18 +26,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import htsjdk.samtools.*;
-
-import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.*;
-import static com.hartwig.hmftools.breakpointinspector.Util.*;
-import static com.hartwig.hmftools.breakpointinspector.Stats.*;
-
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+
 class Analysis {
+
+    private static Set<Integer> tumorWrittenReads = new HashSet<>();
+    private static Set<Integer> refWrittenReads = new HashSet<>();
 
     private static boolean assessDEL(final HMFVariantContext ctx, Pair<ReadInfo, ReadInfo> pair) {
 
@@ -320,15 +341,6 @@ class Analysis {
         return output;
     }
 
-    private static Set<Integer> tumorWrittenReads = new HashSet<>();
-    private static Set<Integer> refWrittenReads = new HashSet<>();
-
-    static class StructuralVariantResult {
-        SampleStats TumorStats;
-        SampleStats RefStats;
-        String Filter;
-    }
-
     static StructuralVariantResult processStructuralVariant(final SamReader refReader, @Nullable final SAMFileWriter refWriter,
             final SamReader tumorReader, @Nullable final SAMFileWriter tumorWriter, final HMFVariantContext ctx, final int range) {
 
@@ -382,5 +394,11 @@ class Analysis {
         // output
 
         return result;
+    }
+
+    static class StructuralVariantResult {
+        SampleStats TumorStats;
+        SampleStats RefStats;
+        String Filter;
     }
 }

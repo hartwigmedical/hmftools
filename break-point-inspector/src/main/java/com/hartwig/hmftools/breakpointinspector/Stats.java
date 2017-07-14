@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.getClips;
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 import static com.hartwig.hmftools.breakpointinspector.Util.toStrings;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 
@@ -41,8 +41,8 @@ class Stats {
 
     static class Clip {
         String LongestClipSequence = "";
-        List<SAMRecord> Reads = new ArrayList<>();
-        List<SAMRecord> HardClippedReads = new ArrayList<>();
+        List<SAMRecord> Reads = Lists.newArrayList();
+        List<SAMRecord> HardClippedReads = Lists.newArrayList();
 
         @Override
         public String toString() {
@@ -111,14 +111,14 @@ class Stats {
         }
 
         static List<String> GetHeader() {
-            final ArrayList<String> header = new ArrayList<>();
+            final List<String> header = Lists.newArrayList();
             header.addAll(prefixList(BreakpointStats.GetHeader(), "BP1_"));
             header.addAll(prefixList(BreakpointStats.GetHeader(), "BP2_"));
             return header;
         }
 
         List<String> GetData() {
-            final ArrayList<String> data = new ArrayList<>();
+            final List<String> data = Lists.newArrayList();
             data.addAll(toStrings(BP1_Stats.GetData()));
             data.addAll(toStrings(BP2_Stats.GetData()));
             return data;

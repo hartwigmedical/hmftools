@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import java.util.List;
+import static com.hartwig.hmftools.breakpointinspector.Util.ClipInfo;
+import static com.hartwig.hmftools.breakpointinspector.Util.Location;
+import static com.hartwig.hmftools.breakpointinspector.Util.Region;
+
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;
-
-import static com.hartwig.hmftools.breakpointinspector.Util.*;
 
 class ReadHelpers {
 
