@@ -273,7 +273,10 @@ CREATE TABLE ecrf
     INDEX(form),
     INDEX(itemGroup),
     INDEX(item),
-    INDEX(itemValue)
+    INDEX(itemValue),
+    INDEX(status),
+    INDEX(locked),
+    INDEX(sequenced)
 );
 
 DROP TABLE IF EXISTS formsMetadata;
