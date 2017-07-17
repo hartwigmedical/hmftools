@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SEQUENCEDPATIENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
@@ -152,33 +153,41 @@ public class DatabaseAccess {
     }
 
     public void writeClinicalData(@NotNull final Patient patient) {
-        final int patientId = writePatientData(patient.patientInfo());
+        final int patientId = writeSequencedPatient(patient.patientInfo());
+        writePatientData(patientId, patient.patientInfo());
         patient.sequencedBiopsies().forEach(biopsy -> writeSampleData(patientId, biopsy));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
         patient.treatmentResponses().forEach(response -> writeTreatmentResponseData(patientId, response));
     }
 
-    private int writePatientData(@NotNull final PatientData patient) {
-        final Record patientRecord = context.select(PATIENT.ID).from(PATIENT).where(PATIENT.CPCTID.eq(patient.cpctId())).fetchOne();
+    private int writeSequencedPatient(@NotNull final PatientData patient) {
+        final Record patientRecord =
+                context.select(SEQUENCEDPATIENT.ID).from(SEQUENCEDPATIENT).where(SEQUENCEDPATIENT.CPCTID.eq(patient.cpctId())).fetchOne();
         if (patientRecord != null) {
-            return patientRecord.getValue(PATIENT.ID);
+            return patientRecord.getValue(SEQUENCEDPATIENT.ID);
         } else {
-            final int id = context.insertInto(PATIENT, PATIENT.CPCTID, PATIENT.REGISTRATIONDATE, PATIENT.GENDER, PATIENT.ETHNICITY,
-                    PATIENT.HOSPITAL, PATIENT.BIRTHYEAR, PATIENT.PRIMARYTUMORLOCATION, PATIENT.DEATHDATE)
-                    .values(patient.cpctId(), Utils.toSQLDate(patient.registrationDate()), patient.gender(), patient.ethnicity(),
-                            patient.hospital(), patient.birthYear(), patient.primaryTumorLocation(), Utils.toSQLDate(patient.deathDate()))
-                    .returning(PATIENT.ID)
+            return context.insertInto(SEQUENCEDPATIENT, SEQUENCEDPATIENT.CPCTID)
+                    .values(patient.cpctId())
+                    .returning(SEQUENCEDPATIENT.ID)
                     .fetchOne()
-                    .getValue(PATIENT.ID);
-            writeFormStatus(id, PATIENT.getName(), "demography", patient.demographyStatus(), patient.demographyLocked());
-            writeFormStatus(id, PATIENT.getName(), "primaryTumor", patient.primaryTumorStatus(), patient.primaryTumorLocked());
-            writeFormStatus(id, PATIENT.getName(), "eligibility", patient.eligibilityStatus(), patient.eligibilityLocked());
-            writeFormStatus(id, PATIENT.getName(), "selectionCriteria", patient.selectionCriteriaStatus(),
-                    patient.selectionCriteriaLocked());
-            writeFormStatus(id, PATIENT.getName(), "death", patient.deathStatus(), patient.deathLocked());
-            return id;
+                    .getValue(SEQUENCEDPATIENT.ID);
+
         }
+    }
+
+    private void writePatientData(final int patientId, @NotNull final PatientData patient) {
+        context.insertInto(PATIENT, PATIENT.ID, PATIENT.REGISTRATIONDATE, PATIENT.GENDER, PATIENT.ETHNICITY, PATIENT.HOSPITAL,
+                PATIENT.BIRTHYEAR, PATIENT.PRIMARYTUMORLOCATION, PATIENT.DEATHDATE)
+                .values(patientId, Utils.toSQLDate(patient.registrationDate()), patient.gender(), patient.ethnicity(), patient.hospital(),
+                        patient.birthYear(), patient.primaryTumorLocation(), Utils.toSQLDate(patient.deathDate()))
+                .execute();
+        writeFormStatus(patientId, PATIENT.getName(), "demography", patient.demographyStatus(), patient.demographyLocked());
+        writeFormStatus(patientId, PATIENT.getName(), "primaryTumor", patient.primaryTumorStatus(), patient.primaryTumorLocked());
+        writeFormStatus(patientId, PATIENT.getName(), "eligibility", patient.eligibilityStatus(), patient.eligibilityLocked());
+        writeFormStatus(patientId, PATIENT.getName(), "selectionCriteria", patient.selectionCriteriaStatus(),
+                patient.selectionCriteriaLocked());
+        writeFormStatus(patientId, PATIENT.getName(), "death", patient.deathStatus(), patient.deathLocked());
     }
 
     private void writeSampleData(final int patientId, @NotNull final SampleData sample) {

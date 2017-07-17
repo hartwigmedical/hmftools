@@ -1,9 +1,16 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS patient;
-CREATE TABLE patient
+DROP TABLE IF EXISTS sequencedPatient;
+CREATE TABLE sequencedPatient
 (   id int NOT NULL AUTO_INCREMENT,
     cpctId varchar(255) DEFAULT NULL,
+    drupId varchar(255) DEFAULT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS patient;
+CREATE TABLE patient
+(   id int NOT NULL,
     registrationDate DATE,
     gender varchar(10),
     ethnicity varchar(255),
@@ -11,7 +18,8 @@ CREATE TABLE patient
     birthYear int,
     primaryTumorLocation varchar(255),
     deathDate DATE,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES sequencedPatient(id)
 );
 
 DROP TABLE IF EXISTS sample;
@@ -37,7 +45,7 @@ CREATE TABLE biopsy
 
 DROP TABLE IF EXISTS treatment;
 CREATE TABLE treatment
- (  id int NOT NULL,
+(   id int NOT NULL,
     biopsyId int,
     patientId int NOT NULL,
     treatmentGiven varchar(3),
@@ -48,13 +56,13 @@ CREATE TABLE treatment
     PRIMARY KEY (id),
     FOREIGN KEY (biopsyId) REFERENCES biopsy(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
- );
+);
 
 SET FOREIGN_KEY_CHECKS = 1;
 
 DROP TABLE IF EXISTS drug;
 CREATE TABLE drug
- (  id int NOT NULL AUTO_INCREMENT,
+(   id int NOT NULL AUTO_INCREMENT,
     treatmentId int,
     patientId int NOT NULL,
     startDate DATE,
@@ -64,20 +72,20 @@ CREATE TABLE drug
     PRIMARY KEY (id),
     FOREIGN KEY (treatmentId) REFERENCES treatment(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
- );
+);
 
 DROP TABLE IF EXISTS treatmentResponse;
- CREATE TABLE treatmentResponse
-  (  id int NOT NULL AUTO_INCREMENT,
-     treatmentId int,
-     patientId int NOT NULL,
-     measurementDone varchar(5),
-     responseDate DATE,
-     response varchar(25),
-     PRIMARY KEY (id),
-     FOREIGN KEY (treatmentId) REFERENCES treatment(id),
-     FOREIGN KEY (patientId) REFERENCES patient(id)
-  );
+CREATE TABLE treatmentResponse
+(   id int NOT NULL AUTO_INCREMENT,
+    treatmentId int,
+    patientId int NOT NULL,
+    measurementDone varchar(5),
+    responseDate DATE,
+    response varchar(25),
+    PRIMARY KEY (id),
+    FOREIGN KEY (treatmentId) REFERENCES treatment(id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
 
 DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
