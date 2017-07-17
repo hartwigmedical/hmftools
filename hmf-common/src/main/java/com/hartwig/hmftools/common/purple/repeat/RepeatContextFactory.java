@@ -15,7 +15,7 @@ public class RepeatContextFactory {
     private static final int MAX_LENGTH = 6;
 
     public static Optional<RepeatContext> repeats(int position, @NotNull final String refGenome, @NotNull final String ref, @NotNull final String alt) {
-        if (isDelete(ref, alt)) {
+        if (isIndel(ref, alt)) {
             return repeats(position + 1, refGenome);
         }
         return Optional.empty();
@@ -25,8 +25,8 @@ public class RepeatContextFactory {
         return alt.length() == 1 && ref.length() > 1;
     }
 
-    private static boolean isSimpleIndel(@NotNull final String ref, @NotNull final String alt) {
-        return ref.length() != alt.length() && (ref.length() == 1 || alt.length() == 1);
+    private static boolean isIndel(@NotNull final String ref, @NotNull final String alt) {
+        return ref.length() != alt.length();
     }
 
     public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {

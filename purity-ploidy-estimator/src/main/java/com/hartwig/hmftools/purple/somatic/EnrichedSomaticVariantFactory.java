@@ -82,8 +82,7 @@ public class EnrichedSomaticVariantFactory {
         RepeatContextFactory.repeats(position, sequence, variant.ref(), variant.alt())
                 .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
 
-        // Deletions only atm
-        if (variant.ref().length() > variant.alt().length()) {
+        if (variant.ref().length() != variant.alt().length()) {
             final String microhomology = Microhomology.microhomology(position, sequence, variant.ref(), variant.alt());
             return builder.microhomology(microhomology);
         }
