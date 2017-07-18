@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALLOGS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -61,6 +61,8 @@ public class DatabaseAccess {
     private final StructuralVariantDAO structuralVariantDAO;
     @NotNull
     private final EcrfDAO ecrfDAO;
+    @NotNull
+    private final ValidationFindingDAO validationFindingsDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // MIVO: disable annoying jooq self-ad message
@@ -73,6 +75,7 @@ public class DatabaseAccess {
         somaticVariantDAO = new ComprehensiveSomaticVariantDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
         ecrfDAO = new EcrfDAO(context);
+        validationFindingsDAO = new ValidationFindingDAO(context);
     }
 
     public void writePurity(@NotNull final String sampleId, @NotNull FittedPurityScore score, @NotNull List<FittedPurity> purities) {
@@ -126,8 +129,8 @@ public class DatabaseAccess {
     }
 
     public void clearClinicalTables() {
+        validationFindingsDAO.clear();
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
-        context.truncate(CLINICALLOGS).execute();
         context.truncate(PATIENT).execute();
         context.truncate(SAMPLE).execute();
         context.truncate(BIOPSY).execute();
@@ -256,5 +259,9 @@ public class DatabaseAccess {
 
     public void writeEcrfPatients(@NotNull final Iterable<EcrfPatient> patients, @NotNull final Set<String> sequencedPatients) {
         patients.forEach(patient -> ecrfDAO.writePatient(patient, sequencedPatients.contains(patient.patientId())));
+    }
+
+    public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
+        validationFindingsDAO.write(findings);
     }
 }

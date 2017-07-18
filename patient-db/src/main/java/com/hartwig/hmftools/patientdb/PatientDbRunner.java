@@ -15,6 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -139,8 +140,9 @@ public final class PatientDbRunner {
                     final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
                     LOGGER.info(patient.patientId() + ": Samples: " + tumorSamplesForPatient);
                     final Patient cpctPatient = patientReader.read(patient, tumorSamplesForPatient);
-                    PatientValidator.validatePatient(cpctPatient);
                     dbWriter.writeClinicalData(cpctPatient);
+                    final List<ValidationFinding> findings = PatientValidator.validatePatient(cpctPatient);
+                    dbWriter.writeValidationFindings(findings);
                 }
             }
             LOGGER.info("Done!");

@@ -250,8 +250,6 @@ CREATE TABLE geneCopyNumber
 DROP TABLE IF EXISTS clinicalLogs;
 CREATE TABLE clinicalLogs
 (   id int NOT NULL AUTO_INCREMENT,
-    eventDate TIMESTAMP,
-    level varchar(100),
     patientId varchar(20),
     ecrfItem varchar(100),
     formStatus varchar(5),

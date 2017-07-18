@@ -48,15 +48,12 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientValidator {
-    private static final Logger LOGGER = LogManager.getLogger(PatientValidator.class);
     private static final String FIELD_SEPARATOR = ";";
 
-    public static void validatePatient(@NotNull final Patient patient) {
+    public static List<ValidationFinding> validatePatient(@NotNull final Patient patient) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         findings.addAll(validatePatientData(patient.patientInfo()));
         final String patientId = patient.patientInfo().cpctId();
@@ -67,7 +64,7 @@ public class PatientValidator {
             findings.addAll(validateDeathDate(patientId, patient.patientInfo(), patient.treatments()));
             findings.addAll(validateRegistrationDate(patientId, patient.patientInfo(), patient.clinicalBiopsies()));
         }
-        findings.forEach(LOGGER::warn);
+        return findings;
     }
 
     @NotNull
