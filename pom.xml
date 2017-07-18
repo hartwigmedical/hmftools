@@ -17,7 +17,6 @@
         <module>health-checker</module>
         <module>patient-reporter</module>
         <module>fastq-stats</module>
-        <module>ecrf-checker</module>
         <module>patient-db</module>
         <module>purity-ploidy-estimator</module>
         <module>hmfslicer-builder</module>
