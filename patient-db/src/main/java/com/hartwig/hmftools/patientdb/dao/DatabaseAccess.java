@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -257,8 +257,13 @@ public class DatabaseAccess {
                 FORMSMETADATA.LOCKED).values(id, tableName, formName, formStatus, formLocked).execute();
     }
 
-    public void writeEcrfPatients(@NotNull final Iterable<EcrfPatient> patients, @NotNull final Set<String> sequencedPatients) {
-        patients.forEach(patient -> ecrfDAO.writePatient(patient, sequencedPatients.contains(patient.patientId())));
+    public void writeEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
+        LOGGER.info("writing datamodel...");
+        ecrfDAO.writeDatamodel(model.fields());
+        LOGGER.info("done writing datamodel.");
+        LOGGER.info("writing patients...");
+        model.patients().forEach(patient -> ecrfDAO.writePatient(patient, sequencedPatients.contains(patient.patientId())));
+        LOGGER.info("done writing patients.");
     }
 
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {

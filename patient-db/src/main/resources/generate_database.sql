@@ -273,6 +273,8 @@ CREATE TABLE ecrf
     status varchar(5),
     locked varchar(5),
     sequenced varchar(5),
+    fieldName varchar(100),
+    relevant varchar(5),
     PRIMARY KEY (id),
     INDEX(patientId),
     INDEX(studyEvent),
@@ -282,8 +284,19 @@ CREATE TABLE ecrf
     INDEX(itemValue),
     INDEX(status),
     INDEX(locked),
-    INDEX(sequenced)
+    INDEX(sequenced),
+    INDEX(fieldName),
+    INDEX(relevant)
 );
+
+DROP TABLE IF EXISTS ecrfDatamodel;
+CREATE TABLE ecrfDatamodel
+(   fieldName varchar(100),
+    description varchar(500),
+    codeList varchar(3000),
+    relevant varchar(5)
+);
+
 
 DROP TABLE IF EXISTS formsMetadata;
 CREATE TABLE formsMetadata

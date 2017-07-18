@@ -163,12 +163,10 @@ public final class PatientDbRunner {
             dbWriter.clearEcrf();
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            final Set<String> cpctPatientIds = runContexts.stream()
-                    .map(runContext -> getPatientId(runContext.setName()))
-                    .filter(setName -> setName.startsWith("CPCT"))
-                    .collect(Collectors.toSet());
+            final Set<String> cpctPatientIds =
+                    runContexts.stream().map(runContext -> getPatientId(runContext.setName())).collect(Collectors.toSet());
             LOGGER.info("Writing patients...");
-            dbWriter.writeEcrfPatients(model.patients(), cpctPatientIds);
+            dbWriter.writeEcrf(model, cpctPatientIds);
             LOGGER.info("Done!");
         }
     }
