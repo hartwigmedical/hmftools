@@ -49,7 +49,6 @@ public class PatientReader {
                 TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), clinicalBiopsies, treatments);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(ecrfPatient.patientId(), treatments, treatmentResponses);
-        final Patient patient = new Patient(patientData, sequencedBiopsies, matchedBiopsies, matchedTreatments, matchedResponses);
-        return patient;
+        return new Patient(patientData, sequencedBiopsies, matchedBiopsies, matchedTreatments, matchedResponses);
     }
 }
