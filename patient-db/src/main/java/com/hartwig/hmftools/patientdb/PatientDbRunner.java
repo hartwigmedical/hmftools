@@ -151,7 +151,7 @@ public final class PatientDbRunner {
             final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
             final SomaticVariantReader somaticVariantReader = new SomaticVariantReader(consensusRule);
             for (final RunContext runContext : runContexts) {
-                LOGGER.info("Reading somatic data form run: " + runContext.runDirectory());
+                LOGGER.info("Reading somatic data from run: " + runContext.runDirectory());
                 final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(runContext.runDirectory());
                 dbWriter.writeSomaticVariants(runContext.tumorSample(), somaticVariants);
             }
