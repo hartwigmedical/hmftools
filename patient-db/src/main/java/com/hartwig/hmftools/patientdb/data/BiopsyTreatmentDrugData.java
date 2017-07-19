@@ -2,43 +2,23 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyTreatmentDrugData {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class BiopsyTreatmentDrugData {
     @Nullable
-    private final String name;
-    @Nullable
-    private final String type;
-    @Nullable
-    private final LocalDate startDate;
-    @Nullable
-    private final LocalDate endDate;
-
-    public BiopsyTreatmentDrugData(@Nullable final String name, @Nullable final String type,
-            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
-        this.name = name;
-        this.type = type;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
+    public abstract String name();
 
     @Nullable
-    public String name() {
-        return name;
-    }
+    public abstract String type();
 
     @Nullable
-    public String type() {
-        return type;
-    }
+    public abstract LocalDate startDate();
 
     @Nullable
-    public LocalDate startDate() {
-        return startDate;
-    }
-
-    @Nullable
-    public LocalDate endDate() {
-        return endDate;
-    }
+    public abstract LocalDate endDate();
 }

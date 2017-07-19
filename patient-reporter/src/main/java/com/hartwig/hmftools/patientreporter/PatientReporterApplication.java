@@ -8,7 +8,9 @@ import java.time.format.DateTimeFormatter;
 
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -62,8 +64,7 @@ public class PatientReporterApplication {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public static void main(final String... args)
-            throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
+    public static void main(final String... args) throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -71,11 +72,11 @@ public class PatientReporterApplication {
             final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
             LOGGER.info("Generating non-sequenceable report for " + notSequenceableSample);
 
-            final NotSequenceableReason notSequenceableReason = NotSequenceableReason.fromIdentifier(
-                    cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
+            final NotSequenceableReason notSequenceableReason =
+                    NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
 
-            final NotSequenceableReporter reporter = new NotSequenceableReporter(buildCpctEcrfModel(cmd),
-                    buildLimsModel(cmd), buildReportWriter(cmd));
+            final NotSequenceableReporter reporter =
+                    new NotSequenceableReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), buildReportWriter(cmd));
 
             reporter.run(notSequenceableSample, notSequenceableReason);
         } else if (validInputForPatientReporter(cmd)) {
@@ -85,8 +86,9 @@ public class PatientReporterApplication {
 
             if (cmd.hasOption(BATCH_MODE) && validInputForBatchMode(cmd)) {
                 LOGGER.info("Switching to running patient reporter in batch-mode.");
-                final BatchReportAnalyser analyser = new BatchReportAnalyser(reporter, cmd.getOptionValue(BATCH_STATS),
-                        cmd.getOptionValue(BATCH_VARIANT_FINDINGS), cmd.getOptionValue(BATCH_CNV_FINDINGS));
+                final BatchReportAnalyser analyser =
+                        new BatchReportAnalyser(reporter, cmd.getOptionValue(BATCH_STATS), cmd.getOptionValue(BATCH_VARIANT_FINDINGS),
+                                cmd.getOptionValue(BATCH_CNV_FINDINGS));
                 analyser.run(cmd.getOptionValue(BATCH_DIRECTORY));
             } else if (validInputForSinglePatientReport(cmd)) {
                 final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
@@ -99,10 +101,9 @@ public class PatientReporterApplication {
         }
     }
 
-    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd)
-            throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL),
-                cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV));
+    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL), cmd.getOptionValue(DRUP_GENES_CSV),
+                cmd.getOptionValue(COSMIC_CSV));
     }
 
     @NotNull
@@ -111,11 +112,11 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static SinglePatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion,
-            @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException {
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion,
-                SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
-                SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
+    private static SinglePatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CommandLine cmd)
+            throws IOException, EmptyFileException, XMLStreamException {
+        final VariantAnalyzer variantAnalyzer =
+                VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
+                        SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
         return new SinglePatientReporter(cmd.hasOption(PURPLE), buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer,
@@ -123,10 +124,10 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static CpctEcrfModel buildCpctEcrfModel(@NotNull final CommandLine cmd)
-            throws FileNotFoundException, XMLStreamException {
+    private static CpctEcrfModel buildCpctEcrfModel(@NotNull final CommandLine cmd) throws FileNotFoundException, XMLStreamException {
         LOGGER.info(" Loading ECRF database...");
-        final CpctEcrfModel cpctEcrfModel = CpctEcrfModel.loadFromXML(cmd.getOptionValue(CPCT_ECRF));
+        final CpctEcrfModel cpctEcrfModel =
+                CpctEcrfModel.loadFromXML(cmd.getOptionValue(CPCT_ECRF), new ImmutableFormStatusModel(Maps.newHashMap()));
         LOGGER.info("  Loaded data for " + cpctEcrfModel.patientCount() + " patients.");
         return cpctEcrfModel;
     }
@@ -204,8 +205,8 @@ public class PatientReporterApplication {
 
     private static boolean validInputForNonSequenceableReport(@NotNull final CommandLine cmd) {
         if (validInputForEcrfAndTumorPercentages(cmd) && validInputForReportWriter(cmd)) {
-            final NotSequenceableReason notSequenceableReason = NotSequenceableReason.fromIdentifier(
-                    cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
+            final NotSequenceableReason notSequenceableReason =
+                    NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
             final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
 
             if (notSequenceableReason == NotSequenceableReason.OTHER) {
@@ -264,33 +265,26 @@ public class PatientReporterApplication {
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
         options.addOption(LIMS_CSV, true, "Complete path towards a CSV containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
-        options.addOption(TMP_DIRECTORY, true,
-                "Complete path where, if provided, temporary output files will be written to.");
-        options.addOption(RUN_DIRECTORY, true,
-                "Complete path towards a single rundir where patient reporter will run on.");
+        options.addOption(TMP_DIRECTORY, true, "Complete path where, if provided, temporary output files will be written to.");
+        options.addOption(RUN_DIRECTORY, true, "Complete path towards a single rundir where patient reporter will run on.");
 
         options.addOption(BATCH_MODE, false, "If set, runs in batch mode and generates a CSV with statistics.");
         options.addOption(BATCH_DIRECTORY, true, "The directory that will be iterated over in batch-mode.");
         options.addOption(BATCH_STATS, true, "The file which will contain the statistics of the batch mode output.");
-        options.addOption(BATCH_VARIANT_FINDINGS, true,
-                "The file which will contain the variant findings of the batch mode output.");
-        options.addOption(BATCH_CNV_FINDINGS, true,
-                "The file which will contain the cnv findings of the batch mode output.");
+        options.addOption(BATCH_VARIANT_FINDINGS, true, "The file which will contain the variant findings of the batch mode output.");
+        options.addOption(BATCH_CNV_FINDINGS, true, "The file which will contain the cnv findings of the batch mode output.");
 
         options.addOption(NOT_SEQUENCEABLE, false, "If set, generates a non-sequenceable report.");
         options.addOption(NOT_SEQUENCEABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
-        options.addOption(NOT_SEQUENCEABLE_SAMPLE, true,
-                "In case of non-sequenceable reports, the name of the sample used.");
-        options.addOption(DRUP_GENES_CSV, true,
-                "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
+        options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
+        options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
         options.addOption(PURPLE, false, "Use purple copy numbers instead of freec.");
         return options;
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }

@@ -4,20 +4,8 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss} - %msg%n"/>
         </Console>
-        <JDBC name="DatabaseAppender" tableName="clinicalLogs">
-            <ConnectionFactory class="com.hartwig.hmftools.patientdb.log4j2plugins.LoggerConnectionPool"
-                               method="getDatabaseConnection"/>
-            <Column name="eventDate" isEventTimestamp="true"/>
-            <Column name="level" pattern="%level"/>
-            <Column name="patientId" pattern="%PatientId"/>
-            <Column name="ecrfItem" pattern="%EcrfItem"/>
-            <Column name="message" pattern="%message"/>
-        </JDBC>
     </Appenders>
     <Loggers>
-        <Logger name="com.hartwig.hmftools.patientdb.validators.PatientValidator" level="info">
-            <AppenderRef ref="DatabaseAppender"/>
-        </Logger>
         <Root level="info">
             <AppenderRef ref="Console"/>
         </Root>

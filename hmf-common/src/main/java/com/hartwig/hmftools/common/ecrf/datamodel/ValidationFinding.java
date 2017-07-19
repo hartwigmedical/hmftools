@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.ecrf.datamodel;
 
-import org.apache.logging.log4j.message.Message;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +8,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(of = "new",
              allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ValidationFinding implements Message {
+public abstract class ValidationFinding {
+    @NotNull
+    public abstract String level();
+
     @NotNull
     public abstract String patientId();
 
@@ -19,23 +21,9 @@ public abstract class ValidationFinding implements Message {
     @NotNull
     public abstract String message();
 
-    @Override
-    public String getFormat() {
-        return message();
-    }
+    @NotNull
+    public abstract String formStatus();
 
-    @Override
-    public String getFormattedMessage() {
-        return message();
-    }
-
-    @Override
-    public Object[] getParameters() {
-        return null;
-    }
-
-    @Override
-    public Throwable getThrowable() {
-        return null;
-    }
+    @NotNull
+    public abstract String formLocked();
 }

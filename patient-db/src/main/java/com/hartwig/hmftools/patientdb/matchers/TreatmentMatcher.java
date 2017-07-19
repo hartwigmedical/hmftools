@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.matchers;
 
+import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
+
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
@@ -7,9 +9,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
+import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,12 +28,12 @@ public final class TreatmentMatcher {
     }
 
     @NotNull
-    public static List<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull final String patientId,
+    public static MatchResult<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull final String patientId,
             @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
         final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
+        final List<ValidationFinding> findings = Lists.newArrayList();
         if (biopsies.size() < treatments.size()) {
-            LOGGER.warn(patientId + ": has more treatments(" + treatments.size() + ") than biopsies(" + biopsies.size()
-                    + ").");
+            LOGGER.warn(patientId + ": has more treatments(" + treatments.size() + ") than biopsies(" + biopsies.size() + ").");
         }
         List<BiopsyData> remainingBiopsies = biopsies;
         for (final BiopsyTreatmentData treatment : treatments) {
@@ -37,44 +42,43 @@ public final class TreatmentMatcher {
                 matchedTreatments.add(treatment);
                 continue;
             }
-            final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream().collect(
-                    Collectors.partitioningBy(
-                            clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
+            final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream()
+                    .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
             final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 0) {
-                LOGGER.warn(patientId + ": no biopsy match for treatment [" + treatment.startDate() + " - "
-                        + treatment.endDate() + "]");
+                findings.add(new ImmutableValidationFinding("match", patientId, FORM_TREATMENT,
+                        "no biopsy match for treatment " + treatment.treatmentName() + "(" + treatment.startDate() + " - "
+                                + treatment.endDate() + ")", "", ""));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.size() > 1) {
-                LOGGER.warn(patientId + ": multiple biopsy matches for treatment [" + treatment.startDate() + " - "
-                        + treatment.endDate() + "]: " + possibleMatches.stream().map(
-                        biopsy -> "" + biopsy.date()).collect(Collectors.toList()));
+                findings.add(new ImmutableValidationFinding("match", patientId, FORM_TREATMENT,
+                        "multiple biopsy matches for treatment " + treatment.treatmentName() + "(" + treatment.startDate() + " - "
+                                + treatment.endDate() + "): " + possibleMatches.stream()
+                                .map(biopsy -> "" + biopsy.date())
+                                .collect(Collectors.toList()), "", ""));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null) {
-                LOGGER.warn(patientId + ": treatment [" + treatment.startDate() + " - " + treatment.endDate()
-                        + "] matched biopsy with null date.");
+                findings.add(new ImmutableValidationFinding("match", patientId, FORM_TREATMENT,
+                        "treatment " + treatment.treatmentName() + "(" + treatment.startDate() + " - " + treatment.endDate()
+                                + ") matched biopsy with null date.", "", ""));
                 matchedTreatments.add(treatment);
             } else {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);
-                matchedTreatments.add(
-                        new BiopsyTreatmentData(treatment.id(), treatment.treatmentGiven(), treatment.startDate(),
-                                treatment.endDate(), treatment.drugs(), clinicalBiopsy.id()));
+                matchedTreatments.add(ImmutableBiopsyTreatmentData.of(treatment.id(), treatment.treatmentGiven(), treatment.startDate(),
+                        treatment.endDate(), treatment.drugs(), clinicalBiopsy.id(), treatment.formStatus(), treatment.formLocked()));
                 remainingBiopsies = partitions.get(false);
             }
         }
-        return matchedTreatments;
+        return new MatchResult<>(matchedTreatments, findings);
     }
 
-    private static boolean isPossibleMatch(@Nullable final LocalDate biopsyDate,
-            @Nullable final LocalDate treatmentStartDate) {
+    private static boolean isPossibleMatch(@Nullable final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
         return biopsyDate == null || isWithinThreshold(biopsyDate, treatmentStartDate);
     }
 
-    private static boolean isWithinThreshold(@Nullable final LocalDate biopsyDate,
-            @Nullable final LocalDate treatmentStartDate) {
-        return biopsyDate != null && treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate)
-                || treatmentStartDate.isEqual(biopsyDate))
-                && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
+    private static boolean isWithinThreshold(@Nullable final LocalDate biopsyDate, @Nullable final LocalDate treatmentStartDate) {
+        return biopsyDate != null && treatmentStartDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(
+                biopsyDate)) && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
                 < Config.MAX_DAYS_BETWEEN_TREATMENT_AND_BIOPSY;
     }
 }

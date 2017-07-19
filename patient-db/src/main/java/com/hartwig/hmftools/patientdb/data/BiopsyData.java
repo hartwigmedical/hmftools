@@ -3,17 +3,31 @@ package com.hartwig.hmftools.patientdb.data;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyData {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class BiopsyData {
 
-    private final int id;
+    public abstract int id();
+
     @Nullable
-    private final LocalDate date;
+    public abstract LocalDate date();
+
     @Nullable
-    private final String location;
+    public abstract String location();
+
     @Nullable
-    private final String sampleId;
+    public abstract String sampleId();
+
+    @NotNull
+    public abstract String formStatus();
+
+    @NotNull
+    public abstract String formLocked();
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
 
@@ -21,34 +35,9 @@ public class BiopsyData {
         return ID_COUNTER.getAndIncrement();
     }
 
-    public BiopsyData(@Nullable final LocalDate date, @Nullable final String location) {
-        this(createId(), date, location, null);
-    }
-
-    public BiopsyData(final int id, @Nullable final LocalDate date, @Nullable final String location,
-            @Nullable final String sampleId) {
-        this.id = id;
-        this.date = date;
-        this.location = location;
-        this.sampleId = sampleId;
-    }
-
-    public int id() {
-        return id;
-    }
-
-    @Nullable
-    public LocalDate date() {
-        return date;
-    }
-
-    @Nullable
-    public String location() {
-        return location;
-    }
-
-    @Nullable
-    public String sampleId() {
-        return sampleId;
+    @NotNull
+    public static BiopsyData of(@Nullable final LocalDate date, @Nullable final String location, @NotNull final String formStatus,
+            @NotNull final String formLocked) {
+        return ImmutableBiopsyData.of(createId(), date, location, null, formStatus, formLocked);
     }
 }

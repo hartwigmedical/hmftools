@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +21,7 @@ public final class BiopsyTreatmentResponseReader {
     private static final String ITEMGROUP_MEASUREMENT = "GRP.TUMORMEASUREMENT.MEASUREMENT";
     public static final String FIELD_ASSESSMENT_DATE = "FLD.TUMORMEASUREMENT.ASSDTC";
     private static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT.TUMORMEASUREMENT";
-    public static final String FIELD_RESPONSE_DATE = "FLD.TUMORMEASUREMENT.RESPONSEDTC";
+    private static final String FIELD_RESPONSE_DATE = "FLD.TUMORMEASUREMENT.RESPONSEDTC";
     public static final String FIELD_MEASUREMENT_YN = "FLD.TUMORMEASUREMENT.TMYN";
     public static final String FIELD_RESPONSE = "FLD.TUMORMEASUREMENT.BESTRESPON";
 
@@ -59,7 +60,9 @@ public final class BiopsyTreatmentResponseReader {
                         response = responseValue;
                     }
                 }
-                treatmentResponses.add(new BiopsyTreatmentResponseData(assessmentDate, responseDate, response, measurementDone));
+                treatmentResponses.add(
+                        ImmutableBiopsyTreatmentResponseData.of(assessmentDate, responseDate, response, measurementDone, form.status(),
+                                form.locked()));
             }
         }
         return treatmentResponses;

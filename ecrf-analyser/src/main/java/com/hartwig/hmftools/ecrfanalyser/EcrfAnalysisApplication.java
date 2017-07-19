@@ -4,14 +4,19 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -51,8 +56,7 @@ public class EcrfAnalysisApplication {
 
         final String patients = cmd.getOptionValue(PATIENTS);
 
-        final List<String> patientList =
-                patients == null ? Lists.newArrayList() : Lists.newArrayList(patients.split(","));
+        final List<String> patientList = patients == null ? Lists.newArrayList() : Lists.newArrayList(patients.split(","));
 
         final String csvOut = cmd.getOptionValue(CSV_OUT_PATH);
         final String fields = cmd.getOptionValue(FIELDS, null);
@@ -61,8 +65,7 @@ public class EcrfAnalysisApplication {
         final boolean printToStdOut = cmd.hasOption(PRINT_TO_STD_OUT);
         final boolean generateDatamodel = cmd.hasOption(GENERATE_DATAMODEL);
 
-        new EcrfAnalysisApplication(ecrfXmlPath, csvOut, patientList, fieldList, patientAsRow, printToStdOut,
-                generateDatamodel).run();
+        new EcrfAnalysisApplication(ecrfXmlPath, csvOut, patientList, fieldList, patientAsRow, printToStdOut, generateDatamodel).run();
     }
 
     @NotNull
@@ -82,8 +85,7 @@ public class EcrfAnalysisApplication {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
@@ -113,16 +115,22 @@ public class EcrfAnalysisApplication {
     }
 
     private void run() throws IOException, XMLStreamException {
-        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfXmlPath);
+        final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfXmlPath, new ImmutableFormStatusModel(Maps.newHashMap()));
 
-        final Iterable<EcrfField> filteredFields = fieldIds == null ? model.fields() : model.findFieldsById(fieldIds);
+        final Iterable<EcrfDatamodelField> filteredFields = fieldIds == null ? model.fields() : model.findFieldsById(fieldIds);
         final Iterable<EcrfPatient> filteredPatients = model.findPatientsById(patientIds);
+        final Iterable<EcrfDatamodelField> relevantFilteredFields = StreamSupport.stream(filteredFields.spliterator(), false)
+                .filter(EcrfDatamodelField::isRelevant)
+                .collect(Collectors.toList());
+        final Iterable<EcrfDatamodelField> relevantModelFields = StreamSupport.stream(model.fields().spliterator(), false)
+                .filter(EcrfDatamodelField::isRelevant)
+                .collect(Collectors.toList());
 
         if (csvOutPath != null) {
             if (generateDatamodel) {
-                writeDatamodelToCSV(model.fields(), csvOutPath);
+                writeDatamodelToCSV(relevantModelFields, csvOutPath);
             } else {
-                writePatientsToCSV(filteredPatients, filteredFields, csvOutPath, patientAsRow);
+                writePatientsToCSV(filteredPatients, relevantFilteredFields, csvOutPath, patientAsRow);
             }
         }
 
@@ -139,7 +147,7 @@ public class EcrfAnalysisApplication {
     }
 
     private static void writePatientsToCSV(@NotNull final Iterable<EcrfPatient> patients,
-            @NotNull final Iterable<EcrfField> fields, @NotNull final String csvOutPath, final boolean patientAsRow)
+            @NotNull final Iterable<EcrfDatamodelField> fields, @NotNull final String csvOutPath, final boolean patientAsRow)
             throws IOException {
         final int rowCount = Iterables.size(patients) + 1;
         final int colCount = Iterables.size(fields) + 1;
@@ -167,8 +175,8 @@ public class EcrfAnalysisApplication {
     }
 
     @NotNull
-    private static String[][] toDataTable(@NotNull final Iterable<EcrfPatient> patients,
-            final @NotNull Iterable<EcrfField> fields, final int rowCount, final int colCount) {
+    private static String[][] toDataTable(@NotNull final Iterable<EcrfPatient> patients, final @NotNull Iterable<EcrfDatamodelField> fields,
+            final int rowCount, final int colCount) {
         final String[][] table = new String[rowCount][colCount];
 
         table[0][0] = "PATIENT";
@@ -212,12 +220,12 @@ public class EcrfAnalysisApplication {
         return false;
     }
 
-    private static void writeDatamodelToCSV(@NotNull final Iterable<EcrfField> fields,
-            @NotNull final String csvOutPath) throws IOException {
+    private static void writeDatamodelToCSV(@NotNull final Iterable<EcrfDatamodelField> fields, @NotNull final String csvOutPath)
+            throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(csvOutPath, false));
         writer.write("FIELD, DESCRIPTION, VALUES");
 
-        for (final EcrfField field : fields) {
+        for (final EcrfDatamodelField field : fields) {
             writer.newLine();
             writer.write(fieldToCSV(field));
         }
@@ -226,7 +234,7 @@ public class EcrfAnalysisApplication {
     }
 
     @NotNull
-    private static String fieldToCSV(@NotNull final EcrfField field) {
+    private static String fieldToCSV(@NotNull final EcrfDatamodelField field) {
         String valuesString = "";
         for (final String value : field.codeList().values()) {
             valuesString += value.replaceAll(",", ":") + "; ";
