@@ -143,6 +143,7 @@ public final class PatientDbRunner {
                     dbWriter.writeClinicalData(cpctPatient);
                     final List<ValidationFinding> findings = PatientValidator.validatePatient(cpctPatient);
                     dbWriter.writeValidationFindings(findings);
+                    dbWriter.writeValidationFindings(cpctPatient.matchFindings());
                 }
             }
             LOGGER.info("Done!");
@@ -159,13 +160,13 @@ public final class PatientDbRunner {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db -" + RAW_ECRF, ecrfOptions);
         } else {
-            LOGGER.info("Loading ecrf model...");
             dbWriter.clearEcrf();
+            LOGGER.info("loading ecrf model...");
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
+            LOGGER.info("done loading ecrf model...");
             final Set<String> cpctPatientIds =
                     runContexts.stream().map(runContext -> getPatientId(runContext.setName())).collect(Collectors.toSet());
-            LOGGER.info("Writing patients...");
             dbWriter.writeEcrf(model, cpctPatientIds);
             LOGGER.info("Done!");
         }

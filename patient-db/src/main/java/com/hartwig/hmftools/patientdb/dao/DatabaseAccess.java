@@ -156,8 +156,8 @@ public class DatabaseAccess {
     }
 
     public void writeClinicalData(@NotNull final Patient patient) {
-        final int patientId = writeSequencedPatient(patient.patientInfo());
-        writePatientData(patientId, patient.patientInfo());
+        final int patientId = writeSequencedPatient(patient.patientData());
+        writePatientData(patientId, patient.patientData());
         patient.sequencedBiopsies().forEach(biopsy -> writeSampleData(patientId, biopsy));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));

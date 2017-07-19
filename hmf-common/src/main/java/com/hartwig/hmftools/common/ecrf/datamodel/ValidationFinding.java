@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ValidationFinding {
     @NotNull
+    public abstract String level();
+
+    @NotNull
     public abstract String patientId();
 
     @NotNull

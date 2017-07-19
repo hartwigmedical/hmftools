@@ -47,7 +47,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_JAN2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
@@ -58,7 +58,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_FEB2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
@@ -69,7 +69,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         final Integer treatmentId = matchedResponses.get(0).treatmentId();
         assertNotNull(treatmentId);
@@ -82,7 +82,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_JUL2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         final Integer treatmentId = matchedResponses.get(0).treatmentId();
         assertNotNull(treatmentId);
@@ -95,7 +95,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_AUG2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
@@ -106,7 +106,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         final Integer treatmentId = matchedResponses.get(0).treatmentId();
         assertNotNull(treatmentId);
@@ -119,7 +119,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_NULL);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
@@ -130,7 +130,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015, RESPONSE_JUL2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         final Integer treatmentId1 = matchedResponses.get(0).treatmentId();
         final Integer treatmentId2 = matchedResponses.get(1).treatmentId();
@@ -146,7 +146,7 @@ public class TreatmentResponseMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015, TREATMENT_FEB_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
-                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses);
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         assertEquals(null, matchedResponses.get(0).treatmentId());
     }
