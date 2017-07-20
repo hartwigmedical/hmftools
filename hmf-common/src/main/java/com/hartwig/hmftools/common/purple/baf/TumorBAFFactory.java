@@ -31,7 +31,7 @@ public class TumorBAFFactory {
 
     public Multimap<String, TumorBAF> createBAF(@NotNull List<GermlineVariant> variants) {
         final Multimap<String, TumorBAF> result = ArrayListMultimap.create();
-        for (GermlineVariant variant : variants) {
+        for (final GermlineVariant variant : variants) {
             if (eligible(variant)) {
                 result.put(variant.chromosome(), create(variant));
             }

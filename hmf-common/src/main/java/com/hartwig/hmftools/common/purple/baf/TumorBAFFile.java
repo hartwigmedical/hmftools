@@ -5,10 +5,12 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,6 +24,13 @@ public enum TumorBAFFile {
     public static List<TumorBAF> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
         final String filePath = basePath + File.separator + sample + EXTENSION;
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    }
+
+    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull Multimap<String, TumorBAF> bafs)
+            throws IOException {
+        List<TumorBAF> sortedBafs = Lists.newArrayList(bafs.values());
+        Collections.sort(sortedBafs);
+        write(basePath, sample, sortedBafs);
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<TumorBAF> bafs)

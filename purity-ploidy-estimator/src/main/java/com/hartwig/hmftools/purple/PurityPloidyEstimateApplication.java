@@ -22,6 +22,9 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.baf.TumorBAF;
+import com.hartwig.hmftools.common.purple.baf.TumorBAFFactory;
+import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -120,9 +123,12 @@ public class PurityPloidyEstimateApplication {
         }
 
         LOGGER.info("Loading germline variant data");
+        final TumorBAFFactory bafFactory =
+                new TumorBAFFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
         final List<GermlineVariant> variants = VariantFilter.passOnly(vcfFile.variants());
+        final Multimap<String, TumorBAF> bafs = bafFactory.createBAF(variants);
         final String refSample = vcfFile.refSample();
         final String tumorSample = vcfFile.tumorSample();
 
@@ -138,10 +144,9 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Merging structural variants into freec segmentation");
         final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
-        LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
-        final ObservedRegionFactory observedRegionFactory =
-                new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, variants, tumorRatio, normalRatio, gcContent);
+        LOGGER.info("Mapping all observations to the segmented regions");
+        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory();
+        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, tumorRatio, normalRatio, gcContent);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
@@ -196,6 +201,7 @@ public class PurityPloidyEstimateApplication {
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
             FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
+            TumorBAFFile.write(outputDirectory, tumorSample, bafs);
         }
 
         LOGGER.info("Complete");
