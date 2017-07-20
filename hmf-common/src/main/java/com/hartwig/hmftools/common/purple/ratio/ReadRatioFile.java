@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.ratio;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,8 +16,14 @@ public enum ReadRatioFile {
     ;
 
     private static final String DELIMITER = "\t";
-    static final String HEADER_PREFIX = "#";
+    private static final String HEADER_PREFIX = "#";
     private static final String EXTENSION = ".purple.ratio";
+
+    @NotNull
+    public static List<ReadRatio> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+        final String filePath = basePath + File.separator + sample + EXTENSION;
+        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<ReadRatio> copyNumbers)
             throws IOException {
@@ -44,4 +52,18 @@ public enum ReadRatioFile {
                 .toString();
     }
 
+    @NotNull
+    private static List<ReadRatio> fromLines(@NotNull List<String> lines) {
+        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(ReadRatioFile::fromString).collect(toList());
+    }
+
+    @NotNull
+    private static ReadRatio fromString(@NotNull final String line) {
+        String[] values = line.split(DELIMITER);
+        return ImmutableReadRatio.builder()
+                .chromosome(values[0])
+                .position(Long.valueOf(values[1]))
+                .ratio(Double.valueOf(values[2]))
+                .build();
+    }
 }
