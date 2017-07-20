@@ -1,17 +1,17 @@
-package com.hartwig.hmftools.common.purple.gccontent;
+package com.hartwig.hmftools.common.purple.ratio;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
 
-public class ReadMedianTest {
+public class IntegerMedianTest {
 
-    private ReadMedian victim;
+    private IntegerMedian victim;
 
     @Before
     public void setup() {
-        victim = new ReadMedian();
+        victim = new IntegerMedian();
     }
 
     @Test

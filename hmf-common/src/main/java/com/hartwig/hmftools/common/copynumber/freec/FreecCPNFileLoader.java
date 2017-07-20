@@ -10,6 +10,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.LineReader;
+import com.hartwig.hmftools.common.purple.ratio.ImmutableReadCount;
+import com.hartwig.hmftools.common.purple.ratio.ReadCount;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,17 +24,17 @@ public enum FreecCPNFileLoader {
     private static final int READ_COLUMN = 2;
 
     @NotNull
-    public static Multimap<String, FreecCPN> loadCPNContent(@NotNull final String filePath) throws IOException, HartwigException {
+    public static Multimap<String, ReadCount> loadCPNContent(@NotNull final String filePath) throws IOException, HartwigException {
         final Path path = new File(filePath).toPath();
         return loadCPNContent(LineReader.build().readLines(path, x -> true));
     }
 
     @NotNull
-    private static Multimap<String, FreecCPN> loadCPNContent(@NotNull final List<String> lines) {
+    private static Multimap<String, ReadCount> loadCPNContent(@NotNull final List<String> lines) {
 
-        final Multimap<String, FreecCPN> result = ArrayListMultimap.create();
+        final Multimap<String, ReadCount> result = ArrayListMultimap.create();
         for (String line : lines) {
-            final FreecCPN gcContent = fromLine(line);
+            final ReadCount gcContent = fromLine(line);
             result.put(gcContent.chromosome(), gcContent);
         }
 
@@ -41,13 +43,13 @@ public enum FreecCPNFileLoader {
 
     @NotNull
     @VisibleForTesting
-    static FreecCPN fromLine(@NotNull final String ratioLine) {
+    static ReadCount fromLine(@NotNull final String ratioLine) {
         final String[] values = ratioLine.split(RATIO_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
         final long position = Long.valueOf(values[START_FIELD_COLUMN].trim());
         final int readCount = Integer.valueOf(values[READ_COLUMN].trim());
 
-        return ImmutableFreecCPN.builder().chromosome(chromosome).position(position).readCount(readCount).build();
+        return ImmutableReadCount.builder().chromosome(chromosome).position(position).readCount(readCount).build();
     }
 }

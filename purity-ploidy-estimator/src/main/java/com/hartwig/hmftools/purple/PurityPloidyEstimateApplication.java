@@ -12,7 +12,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
-import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
@@ -33,6 +32,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFile;
+import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
@@ -131,7 +131,7 @@ public class PurityPloidyEstimateApplication {
         // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
-        final Multimap<String, FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
+        final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
         final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
 

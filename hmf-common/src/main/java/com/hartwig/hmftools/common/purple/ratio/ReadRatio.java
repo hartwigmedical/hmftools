@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.copynumber.freec;
+package com.hartwig.hmftools.common.purple.ratio;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 
@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface FreecCPN extends GenomePosition {
-
-    int readCount();
+public interface ReadRatio extends GenomePosition {
+    double ratio();
 }

@@ -1,33 +1,54 @@
-package com.hartwig.hmftools.common.purple.gccontent;
+package com.hartwig.hmftools.common.purple.ratio;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReadMedian {
+class IntegerMedian {
 
-    private final Map<Integer, ReadCount> readCount;
+    private int count;
+    public final Map<Integer, InnerReadCount> readCount;
+    public List<Integer> theList = Lists.newArrayList();
 
-    public ReadMedian() {
+
+    IntegerMedian() {
         this.readCount = Maps.newHashMap();
     }
 
     public void addRead(int read) {
-        ReadCount count = readCount.get(read);
-        if (count == null) {
-            readCount.put(read, new ReadCount(read));
-        } else {
-            count.increment();
+//        if (read > 0) {
+            count++;
+            readCount.computeIfAbsent(read, InnerReadCount::new).increment();
+            theList.add(read);
+//        }
+    }
+
+    public int count() {
+        return count;
+    }
+
+    public int average() {
+        return theList.stream().mapToInt(x -> x).sum() / count;
+    }
+
+    public int simpleMedian() {
+        if (count > 0) {
+            Collections.sort(theList);
+            return theList.size() % 2 == 0 ? (theList.get(count / 2) + theList.get(count / 2 - 1)) / 2 : theList.get(count / 2);
         }
+        return 0;
     }
 
     public int median() {
 
-        TreeSet<ReadCount> sortedSet = Sets.newTreeSet(readCount.values());
+        TreeSet<InnerReadCount> sortedSet = Sets.newTreeSet(readCount.values());
         if (sortedSet.isEmpty()) {
             return 0;
         }
@@ -37,11 +58,11 @@ public class ReadMedian {
         }
 
         @NotNull
-        ReadCount first = sortedSet.pollFirst();
+        InnerReadCount first = sortedSet.pollFirst();
         int firstCount = first.count();
 
         @NotNull
-        ReadCount last = sortedSet.pollLast();
+        InnerReadCount last = sortedSet.pollLast();
         int lastCount = last.count();
 
         while (true) {
@@ -78,13 +99,12 @@ public class ReadMedian {
 
     }
 
-    private static class ReadCount implements Comparable<ReadCount> {
+    public static class InnerReadCount implements Comparable<InnerReadCount> {
         private final int read;
         private int count;
 
-        private ReadCount(final int read) {
+        private InnerReadCount(final int read) {
             this.read = read;
-            this.count = 1;
         }
 
         public int read() {
@@ -100,7 +120,7 @@ public class ReadMedian {
         }
 
         @Override
-        public int compareTo(@NotNull final ReadCount other) {
+        public int compareTo(@NotNull final InnerReadCount other) {
             return Integer.compare(read, other.read);
         }
     }

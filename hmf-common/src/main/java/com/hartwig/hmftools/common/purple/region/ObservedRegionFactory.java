@@ -9,11 +9,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
@@ -41,13 +41,13 @@ public class ObservedRegionFactory {
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final List<GermlineVariant> variants,
             @NotNull final List<FreecRatio> tumorRatios, @NotNull final List<FreecRatio> normalRatios,
-            @NotNull final Multimap<String, FreecGCContent> gcContents) {
+            @NotNull final Multimap<String, GCContent> gcContents) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<FreecRatio> tumorRatioSelector = GenomePositionSelectorFactory.create(tumorRatios);
         final GenomePositionSelector<FreecRatio> normalRatioSelector = GenomePositionSelectorFactory.create(normalRatios);
         final GenomePositionSelector<GermlineVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
-        final GenomePositionSelector<FreecGCContent> gcContentSelector = GenomePositionSelectorFactory.create(gcContents);
+        final GenomePositionSelector<GCContent> gcContentSelector = GenomePositionSelectorFactory.create(gcContents);
 
         for (final PurpleSegment region : regions) {
             final BAFAccumulator baf = new BAFAccumulator();
@@ -133,7 +133,7 @@ public class ObservedRegionFactory {
     }
 
     @VisibleForTesting
-    static class GCContentAccumulator implements Consumer<FreecGCContent> {
+    static class GCContentAccumulator implements Consumer<GCContent> {
 
         private int count;
         private double sumGCContent;
@@ -141,12 +141,12 @@ public class ObservedRegionFactory {
         private double sumMappablePercentage;
 
         @Override
-        public void accept(final FreecGCContent freecGCContent) {
+        public void accept(final GCContent GCContent) {
             count++;
-            if (Doubles.positiveOrZero(freecGCContent.gcContent())) {
-                sumGCContent += freecGCContent.gcContent() * freecGCContent.nonNPercentage();
-                sumNonNPercentage += freecGCContent.nonNPercentage();
-                sumMappablePercentage += freecGCContent.mappablePercentage();
+            if (Doubles.positiveOrZero(GCContent.gcContent())) {
+                sumGCContent += GCContent.gcContent() * GCContent.nonNPercentage();
+                sumNonNPercentage += GCContent.nonNPercentage();
+                sumMappablePercentage += GCContent.mappablePercentage();
             }
         }
 

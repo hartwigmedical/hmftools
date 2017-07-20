@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.copynumber.freec.ImmutableFreecGCContent;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.ratio.ImmutableGCContent;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
@@ -25,9 +25,9 @@ public class PurpleDatamodelTest {
     }
 
     @NotNull
-    public static ImmutableFreecGCContent.Builder createGCContent(String chromosome, long position, double gcContent, double nonNPercentage,
+    public static ImmutableGCContent.Builder createGCContent(String chromosome, long position, double gcContent, double nonNPercentage,
             double mappablePercentage) {
-        return ImmutableFreecGCContent.builder()
+        return ImmutableGCContent.builder()
                 .chromosome(chromosome)
                 .position(position)
                 .gcContent(gcContent)
