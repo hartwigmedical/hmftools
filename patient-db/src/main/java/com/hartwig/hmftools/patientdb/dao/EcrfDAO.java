@@ -9,14 +9,11 @@ import java.util.stream.StreamSupport;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.tools.StringUtils;
 
 class EcrfDAO {
-    private static final Logger LOGGER = LogManager.getLogger(EcrfDAO.class);
 
     @NotNull
     private final DSLContext context;

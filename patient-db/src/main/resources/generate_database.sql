@@ -1,16 +1,9 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS sequencedPatient;
-CREATE TABLE sequencedPatient
-(   id int NOT NULL AUTO_INCREMENT,
-    cpctId varchar(255) DEFAULT NULL,
-    drupId varchar(255) DEFAULT NULL,
-    PRIMARY KEY (id)
-);
-
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
-(   id int NOT NULL,
+(   id int NOT NULL AUTO_INCREMENT,
+    cpctId varchar(50),
     registrationDate DATE,
     gender varchar(10),
     ethnicity varchar(255),
@@ -18,8 +11,7 @@ CREATE TABLE patient
     birthYear int,
     primaryTumorLocation varchar(255),
     deathDate DATE,
-    PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES sequencedPatient(id)
+    PRIMARY KEY (id)
 );
 
 DROP TABLE IF EXISTS sample;
