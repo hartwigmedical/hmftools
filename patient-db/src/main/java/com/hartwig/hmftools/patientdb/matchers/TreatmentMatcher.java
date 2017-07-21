@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -46,21 +45,16 @@ public final class TreatmentMatcher {
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
             final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 0) {
-                findings.add(new ImmutableValidationFinding("match", patientId, FORM_TREATMENT,
-                        "no biopsy match for treatment " + treatment.treatmentName() + "(" + treatment.startDate() + " - "
-                                + treatment.endDate() + ")", "", ""));
+                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "no biopsy match for treatment", "", "",
+                        treatment.toString()));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.size() > 1) {
-                findings.add(new ImmutableValidationFinding("match", patientId, FORM_TREATMENT,
-                        "multiple biopsy matches for treatment " + treatment.treatmentName() + "(" + treatment.startDate() + " - "
-                                + treatment.endDate() + "): " + possibleMatches.stream()
-                                .map(biopsy -> "" + biopsy.date())
-                                .collect(Collectors.toList()), "", ""));
+                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "multiple biopsy matches for treatment", "", "",
+                        treatment + ". biopsies:  " + possibleMatches.stream().map(BiopsyData::toString).collect(Collectors.toList())));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null) {
-                findings.add(new ImmutableValidationFinding("match", patientId, FORM_TREATMENT,
-                        "treatment " + treatment.treatmentName() + "(" + treatment.startDate() + " - " + treatment.endDate()
-                                + ") matched biopsy with null date.", "", ""));
+                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "treatment matched biopsy with null date.", "", "",
+                        treatment.toString()));
                 matchedTreatments.add(treatment);
             } else {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
@@ -31,12 +30,11 @@ public final class TreatmentResponseMatcher {
             if (matchedTreatments.size() == 0) {
                 matchedResponses.add(response);
             } else if (matchedTreatments.size() > 1) {
-                findings.add(new ImmutableValidationFinding("match", patientId, FORM_TUMOR_MEASUREMENT,
-                        "treatment response " + response.response() + "(" + response.date() + ") matches multiple treatments:"
-                                + matchedTreatments.stream()
-                                .map(treatment -> treatment.treatmentName() + "(" + treatment.startDate() + " - " + treatment.endDate()
-                                        + ")")
-                                .collect(Collectors.toList()), "", ""));
+                findings.add(
+                        ValidationFinding.of("match", patientId, FORM_TUMOR_MEASUREMENT, "treatment response matches multiple treatments",
+                                "", "", "response: " + response + ". treatments: " + matchedTreatments.stream()
+                                        .map(BiopsyTreatmentData::toString)
+                                        .collect(Collectors.toList())));
                 matchedResponses.add(response);
             } else {
                 matchedResponses.add(ImmutableBiopsyTreatmentResponseData.of(matchedTreatments.get(0).id(), response.assessmentDate(),

@@ -80,4 +80,9 @@ public abstract class BiopsyTreatmentData {
         });
         return Strings.emptyToNull(joiner.toString());
     }
+
+    @Override
+    public String toString() {
+        return treatmentName() + "(" + startDate() + " - " + endDate() + ")";
+    }
 }

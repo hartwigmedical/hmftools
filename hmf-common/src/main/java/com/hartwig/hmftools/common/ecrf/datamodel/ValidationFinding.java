@@ -5,8 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(of = "new",
-             allParameters = true,
+@Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ValidationFinding {
     @NotNull
@@ -26,4 +25,19 @@ public abstract class ValidationFinding {
 
     @NotNull
     public abstract String formLocked();
+
+    @NotNull
+    public abstract String details();
+
+    @NotNull
+    public static ValidationFinding of(String level, String patientId, String ecrfItem, String message, String formStatus,
+            String formLocked, String details) {
+        return ImmutableValidationFinding.of(level, patientId, ecrfItem, message, formStatus, formLocked, details);
+    }
+
+    @NotNull
+    public static ValidationFinding of(String level, String patientId, String ecrfItem, String message, String formStatus,
+            String formLocked) {
+        return ImmutableValidationFinding.of(level, patientId, ecrfItem, message, formStatus, formLocked, "");
+    }
 }

@@ -243,8 +243,8 @@ CREATE TABLE geneCopyNumber
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS clinicalLogs;
-CREATE TABLE clinicalLogs
+DROP TABLE IF EXISTS clinicalFindings;
+CREATE TABLE clinicalFindings
 (   id int NOT NULL AUTO_INCREMENT,
     level varchar(10),
     patientId varchar(20),
@@ -252,6 +252,7 @@ CREATE TABLE clinicalLogs
     formStatus varchar(30),
     formLocked varchar(5),
     message varchar(1000),
+    details varchar(1000),
     PRIMARY KEY (id)
 );
 

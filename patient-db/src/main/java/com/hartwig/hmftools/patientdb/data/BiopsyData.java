@@ -40,4 +40,9 @@ public abstract class BiopsyData {
             @NotNull final String formLocked) {
         return ImmutableBiopsyData.of(createId(), date, location, null, formStatus, formLocked);
     }
+
+    @Override
+    public String toString() {
+        return location() + "(" + date() + ")";
+    }
 }

@@ -47,4 +47,9 @@ public abstract class BiopsyTreatmentResponseData {
         }
         return assessmentDate();
     }
+
+    @Override
+    public String toString() {
+        return response() + "(" + date() + ")";
+    }
 }

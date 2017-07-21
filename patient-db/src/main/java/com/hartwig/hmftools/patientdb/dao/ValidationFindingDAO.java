@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALLOGS;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALFINDINGS;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,15 +19,16 @@ class ValidationFindingDAO {
     }
 
     void clear() {
-        context.truncate(CLINICALLOGS).execute();
+        context.truncate(CLINICALFINDINGS).execute();
     }
 
     void write(@NotNull final List<ValidationFinding> findings) {
         context.batch(findings.stream()
-                .map(finding -> context.insertInto(CLINICALLOGS, CLINICALLOGS.LEVEL, CLINICALLOGS.PATIENTID, CLINICALLOGS.ECRFITEM,
-                        CLINICALLOGS.FORMSTATUS, CLINICALLOGS.FORMLOCKED, CLINICALLOGS.MESSAGE)
+                .map(finding -> context.insertInto(CLINICALFINDINGS, CLINICALFINDINGS.LEVEL, CLINICALFINDINGS.PATIENTID,
+                        CLINICALFINDINGS.ECRFITEM, CLINICALFINDINGS.FORMSTATUS, CLINICALFINDINGS.FORMLOCKED, CLINICALFINDINGS.MESSAGE,
+                        CLINICALFINDINGS.DETAILS)
                         .values(finding.level(), finding.patientId(), finding.ecrfItem(), finding.formStatus(), finding.formLocked(),
-                                finding.message()))
+                                finding.message(), finding.details()))
                 .collect(Collectors.toList())).execute();
     }
 }
