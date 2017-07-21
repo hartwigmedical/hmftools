@@ -357,14 +357,19 @@ public class PatientValidator {
                 return biopsyDate != null && biopsyDate.isBefore(registrationDate);
             }).collect(Collectors.toList());
             if (biopsiesPriorToRegistration.size() > 0) {
+                final String detailsMessage =
+                        "registrationDate: " + registrationDate + ". biopsies: " + biopsiesPriorToRegistration.stream()
+                                .map(BiopsyData::toString)
+                                .collect(Collectors.toList());
                 findings.add(ValidationFinding.of("ecrf", patientId, FIELD_REGISTRATION_DATE2,
                         "at least 1 biopsy date prior to registration date", patient.selectionCriteriaStatus(),
-                        patient.selectionCriteriaLocked()));
+                        patient.selectionCriteriaLocked(), detailsMessage));
                 findings.add(ValidationFinding.of("ecrf", patientId, FIELD_REGISTRATION_DATE1,
-                        "at least 1 biopsy date prior to registration date", patient.eligibilityStatus(), patient.eligibilityLocked()));
+                        "at least 1 biopsy date prior to registration date", patient.eligibilityStatus(), patient.eligibilityLocked(),
+                        detailsMessage));
                 biopsiesPriorToRegistration.forEach(biopsy -> findings.add(
                         ValidationFinding.of("ecrf", patientId, FIELD_BIOPSY_DATE, "at least 1 biopsy date prior to registration date",
-                                biopsy.formStatus(), biopsy.formLocked())));
+                                biopsy.formStatus(), biopsy.formLocked(), detailsMessage)));
             }
         }
         return findings;
