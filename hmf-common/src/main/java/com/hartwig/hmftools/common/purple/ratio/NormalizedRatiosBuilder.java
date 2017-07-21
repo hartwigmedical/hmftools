@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class NormalizedRatiosBuilder {
 
+    private static final double MIN_MAPPABLE_PERCENTAGE = 0.85;
+
     private final GCMedian gcMedian = new GCMedian();
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
@@ -44,7 +46,7 @@ public class NormalizedRatiosBuilder {
     }
 
     private ReadRatio create(Map<Integer, Integer> medianCountPerGCBucket, ReadCountWithGCContent readCount) {
-        int gcMedianValue = medianCountPerGCBucket.get(readCount.gcContent());
+        int gcMedianValue = medianCountPerGCBucket.getOrDefault(readCount.gcContent(), 0);
 
         double ratio = gcMedianValue == 0 || !readCount.isMappable() ? 0 : 1.0 * readCount.readCount() / gcMedianValue;
         return ImmutableReadRatio.builder().from(readCount).ratio(ratio).build();
@@ -81,7 +83,7 @@ public class NormalizedRatiosBuilder {
         }
 
         private boolean isMappable() {
-            return Doubles.greaterOrEqual(gcContent.mappablePercentage(), 0.85);
+            return Doubles.greaterOrEqual(gcContent.mappablePercentage(), MIN_MAPPABLE_PERCENTAGE);
         }
     }
 }

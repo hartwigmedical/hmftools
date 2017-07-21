@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class GCMedian {
+class GCMedian {
 
     private static final int MIN_GC_BUCKET = 25;
     private static final int MAX_GC_BUCKET = 75;
@@ -13,18 +13,19 @@ public class GCMedian {
     private final Map<Integer, IntegerMedian> gcContentMedian;
     private final Map<Integer, Integer> gcContentMedianValues;
 
-    public GCMedian() {
+    GCMedian() {
         globalMedian = new IntegerMedian();
         gcContentMedian = Maps.newHashMap();
         gcContentMedianValues = Maps.newHashMap();
     }
 
-    public void addRead(int gcContent, int read) {
-        assert (gcContent >= 0);
+    void addRead(int gcContent, int read) {
         assert (gcContent <= 100);
+        if (gcContent > 0) {
+            globalMedian.addRead(read);
+            gcContentMedian.computeIfAbsent(gcContent, integer -> new IntegerMedian()).addRead(read);
 
-        globalMedian.addRead(read);
-        gcContentMedian.computeIfAbsent(gcContent, integer -> new IntegerMedian()).addRead(read);
+        }
     }
 
     public int globalMedian() {
@@ -35,7 +36,7 @@ public class GCMedian {
         return gcContentMedianValues.computeIfAbsent(gcContent, key -> gcContentMedian.get(key).median());
     }
 
-    public Map<Integer, Integer> medianCountPerGCBucket() {
+    Map<Integer, Integer> medianCountPerGCBucket() {
 
         final Map<Integer, Integer> result = Maps.newHashMap();
 
@@ -51,7 +52,7 @@ public class GCMedian {
     }
 
     private int closestBucketToMin() {
-        int min = 100;
+        int min = MAX_GC_BUCKET;
 
         for (Integer gcBucket : gcContentMedian.keySet()) {
             if (gcBucket >= MIN_GC_BUCKET && gcBucket < min) {
@@ -63,7 +64,7 @@ public class GCMedian {
     }
 
     private int closestBucketToMax() {
-        int max = 0;
+        int max = MIN_GC_BUCKET;
 
         for (Integer gcBucket : gcContentMedian.keySet()) {
             if (gcBucket <= MAX_GC_BUCKET && gcBucket > max) {
@@ -73,5 +74,4 @@ public class GCMedian {
 
         return max;
     }
-
 }

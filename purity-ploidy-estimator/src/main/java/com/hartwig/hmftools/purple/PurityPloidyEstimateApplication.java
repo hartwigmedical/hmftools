@@ -144,6 +144,27 @@ public class PurityPloidyEstimateApplication {
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
         final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
 
+//        LOGGER.info("Loading read count data");
+//        final Multimap<String, ReadCount> normalReadCount = FreecCPNFileLoader.normalReadCountLines(freecDirectory, refSample);
+//        final Multimap<String, ReadCount> tumorReadCount = FreecCPNFileLoader.tumorReadCountLines(freecDirectory, tumorSample);
+//
+//        LOGGER.info("Generating normalized read ratios");
+//        final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
+//        final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
+//        for (String chromosome : normalReadCount.keySet()) {
+//            List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosome);
+//            List<ReadCount> chromosomeNormalReadCount = (List<ReadCount>) normalReadCount.get(chromosome);
+//            List<ReadCount> chromosomeTumorReadCount = (List<ReadCount>) tumorReadCount.get(chromosome);
+//            for (int i = 0; i < chromosomeNormalReadCount.size(); i++) {
+//                GCContent windowGCContent = chromosomeGCContent.get(i);
+//                ReadCount windowNormalCount = chromosomeNormalReadCount.get(i);
+//                ReadCount windowTumorCount = chromosomeTumorReadCount.get(i);
+//
+//                normalRatiosBuilder.addPosition(windowGCContent, windowNormalCount);
+//                tumorRatiosBuilder.addPosition(windowGCContent, windowTumorCount);
+//            }
+//        }
+
         LOGGER.info("Merging structural variants into freec segmentation");
         final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
@@ -205,6 +226,8 @@ public class PurityPloidyEstimateApplication {
             FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             TumorBAFFile.write(outputDirectory, tumorSample, bafs);
+//            ReadRatioFile.write(outputDirectory, refSample, normalRatiosBuilder.build().normalisedRatios());
+//            ReadRatioFile.write(outputDirectory, tumorSample, tumorRatiosBuilder.build().normalisedRatios());
         }
 
         LOGGER.info("Complete");
