@@ -257,7 +257,7 @@ CREATE TABLE clinicalLogs
     level varchar(10),
     patientId varchar(20),
     ecrfItem varchar(100),
-    formStatus varchar(5),
+    formStatus varchar(30),
     formLocked varchar(5),
     message varchar(1000),
     PRIMARY KEY (id)
@@ -275,7 +275,7 @@ CREATE TABLE ecrf
     itemGroupKey int not null,
     item varchar(100),
     itemValue varchar(1500),
-    status varchar(5),
+    status varchar(30),
     locked varchar(5),
     sequenced varchar(5),
     fieldName varchar(100),
@@ -308,7 +308,7 @@ CREATE TABLE formsMetadata
 (   id int NOT NULL,
     tableName varchar(20),
     form varchar(20),
-    status varchar(5),
+    status varchar(30),
     locked varchar(5),
     UNIQUE KEY (id, tableName, form)
 );

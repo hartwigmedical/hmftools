@@ -98,7 +98,7 @@ public final class XMLPatientReader extends EcrfReader {
                         new ImmutableFormStatusKey(patientId, formName, currentFormIdx, studyEventName, currentStudyEventIdx);
                 final FormStatusData formStatus = formStatusModel.formStatuses().get(formKey);
                 if (formStatus != null) {
-                    currentForm = new EcrfForm(patientId, formStatus.dataStatus(), formStatus.locked());
+                    currentForm = new EcrfForm(patientId, formStatus.dataStatusString(), formStatus.locked());
                 } else {
                     currentForm = new EcrfForm(patientId, "", "");
                 }
