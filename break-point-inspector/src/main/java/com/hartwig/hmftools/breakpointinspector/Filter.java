@@ -1,26 +1,15 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-class Filter {
+import com.google.common.collect.Lists;
 
-    private static boolean concordantStrings(final String a, final String b) {
-        if (a == null || b == null) {
-            return false;
-        }
-        if (a.length() < b.length()) {
-            return !a.isEmpty() && b.startsWith(a) || b.endsWith(a);
-        } else {
-            return !b.isEmpty() && a.startsWith(b) || a.endsWith(b);
-        }
-    }
+class Filter {
 
     static String getFilterString(final Util.HMFVariantContext ctx, final Stats.SampleStats tumorStats, final Stats.SampleStats refStats) {
 
-        final List<String> filters = new ArrayList<>(ctx.Filter);
+        final List<String> filters = Lists.newArrayList(ctx.Filter);
 
         if (ctx.Type == Util.HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
                 && (ctx.MantaBP2.Position - ctx.MantaBP1.Position) < 2000) {
@@ -37,12 +26,6 @@ class Filter {
         }
 
         boolean concordance = false;
-        for (final Util.Location bp : Arrays.asList(tumorStats.BP1, tumorStats.BP2)) {
-            final Stats.Clip tumor_clip = tumorStats.Clipping_Stats.LocationMap.get(bp);
-            final Stats.Clip ref_clip = refStats.Clipping_Stats.LocationMap.get(bp);
-            concordance |= tumor_clip != null && ref_clip != null && concordantStrings(tumor_clip.LongestClipSequence,
-                    ref_clip.LongestClipSequence);
-        }
         if (concordance) {
             filters.add("HMF_ClippingConcordance");
         }

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.breakpointinspector;
 import static com.hartwig.hmftools.breakpointinspector.Stats.SampleStats;
 import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
 import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantType;
-import static com.hartwig.hmftools.breakpointinspector.Util.Location;
 import static com.hartwig.hmftools.breakpointinspector.Util.Range;
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 
@@ -135,7 +134,7 @@ public class BreakPointInspectorApplication {
             header.add("BPI_BP1");
             header.add("BPI_BP2");
             header.add("FILTER");
-            header.add("TUMOR_CLIP_INFO");
+            //header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
             final Map<String, VariantContext> variantMap = new HashMap<>();
@@ -156,9 +155,9 @@ public class BreakPointInspectorApplication {
 
                 // uncertainty
                 final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
-                Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : null;
+                final Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
                 final List<Integer> CIEND = variant.getAttributeAsIntList("CIEND", 0);
-                Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : null;
+                Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
 
                 HMFVariantType svType;
                 switch (variant.getStructuralVariantType()) {
@@ -185,7 +184,7 @@ public class BreakPointInspectorApplication {
 
                         // get the CIPOS from the mate
                         final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
-                        uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : null;
+                        uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : new Range(0, 0);
 
                         // process the breakend string
                         final String call = variant.getAlternateAllele(0).getDisplayString();
@@ -236,6 +235,25 @@ public class BreakPointInspectorApplication {
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
 
+                switch (ctx.Type) {
+                    case DEL:
+                        ctx.OrientationBP1 = 1;
+                        ctx.OrientationBP2 = 1;
+                        break;
+                    case INV3:
+                        ctx.OrientationBP1 = 1;
+                        ctx.OrientationBP2 = -1;
+                        break;
+                    case INV5:
+                        ctx.OrientationBP1 = -1;
+                        ctx.OrientationBP2 = 1;
+                        break;
+                    case DUP:
+                        ctx.OrientationBP1 = -1;
+                        ctx.OrientationBP2 = -1;
+                        break;
+                }
+
                 final Analysis.StructuralVariantResult result =
                         Analysis.processStructuralVariant(refReader, refWriter, tumorReader, tumorWriter, ctx, range);
 
@@ -244,7 +262,6 @@ public class BreakPointInspectorApplication {
                 fields.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
                 fields.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
                 fields.add(result.Filter);
-                fields.add(result.TumorStats.Clipping_Stats.toString());
 
                 System.out.println(String.join("\t", fields));
             }

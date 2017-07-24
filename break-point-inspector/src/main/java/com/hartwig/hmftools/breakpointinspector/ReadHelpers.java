@@ -1,13 +1,7 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import static com.hartwig.hmftools.breakpointinspector.Util.ClipInfo;
-import static com.hartwig.hmftools.breakpointinspector.Util.Location;
 import static com.hartwig.hmftools.breakpointinspector.Util.Region;
 
-import java.util.Objects;
-import java.util.stream.Stream;
-
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;
 
 class ReadHelpers {
@@ -27,58 +21,6 @@ class ReadHelpers {
             return read.getMateAlignmentStart() <= location.Position
                     && (read.getMateAlignmentStart() - read.getInferredInsertSize()) >= location.Position;
         }
-    }
-
-    static boolean isClipped(final SAMRecord read) {
-        return read.getCigar().isClipped();
-    }
-
-    private static ClipInfo getLeftClip(final SAMRecord read) {
-        final ClipInfo result = new ClipInfo();
-        result.Left = true;
-        final Cigar cigar = read.getCigar();
-        if (cigar.isEmpty()) {
-            return null;
-        }
-        switch (cigar.getFirstCigarElement().getOperator()) {
-            case H:
-                result.Alignment = Location.fromSAMRecord(read, true);
-                result.Length = cigar.getFirstCigarElement().getLength();
-                result.HardClipped = true;
-                return result;
-            case S:
-                result.Alignment = Location.fromSAMRecord(read, true);
-                result.Length = cigar.getFirstCigarElement().getLength();
-                result.Sequence = read.getReadString().substring(0, result.Length);
-                return result;
-        }
-        return null;
-    }
-
-    private static ClipInfo getRightClip(final SAMRecord read) {
-        final ClipInfo result = new ClipInfo();
-        result.Right = true;
-        final Cigar cigar = read.getCigar();
-        if (cigar.isEmpty()) {
-            return null;
-        }
-        switch (cigar.getLastCigarElement().getOperator()) {
-            case H:
-                result.Alignment = Location.fromSAMRecord(read, false);
-                result.Length = cigar.getLastCigarElement().getLength();
-                result.HardClipped = true;
-                return result;
-            case S:
-                result.Alignment = Location.fromSAMRecord(read, false);
-                result.Length = cigar.getLastCigarElement().getLength();
-                result.Sequence = read.getReadString().substring(read.getReadLength() - result.Length);
-                return result;
-        }
-        return null;
-    }
-
-    static Stream<ClipInfo> getClips(final SAMRecord read) {
-        return Stream.of(getLeftClip(read), getRightClip(read)).filter(Objects::nonNull);
     }
 
     static Region determineRegion(final SAMRecord read, final Location location1, final Location location2) {

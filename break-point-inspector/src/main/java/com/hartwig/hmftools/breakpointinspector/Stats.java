@@ -1,21 +1,12 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import static com.hartwig.hmftools.breakpointinspector.ReadHelpers.getClips;
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 import static com.hartwig.hmftools.breakpointinspector.Util.toStrings;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
-
-import htsjdk.samtools.SAMRecord;
 
 class Stats {
 
@@ -39,65 +30,9 @@ class Stats {
         }
     }
 
-    static class Clip {
-        String LongestClipSequence = "";
-        List<SAMRecord> Reads = Lists.newArrayList();
-        List<SAMRecord> HardClippedReads = Lists.newArrayList();
-
-        @Override
-        public String toString() {
-            return LongestClipSequence + "," + Reads.size();
-        }
-    }
-
-    static class ClipStats {
-        Map<Util.Location, Clip> LocationMap = new HashMap<>();
-
-        @Override
-        public String toString() {
-
-            final TreeMultimap<Integer, String> sortedClips = TreeMultimap.create(Collections.reverseOrder(), Ordering.natural());
-            for (final Map.Entry<Util.Location, Clip> kv : LocationMap.entrySet()) {
-                final Util.Location alignment = kv.getKey();
-                final Clip stats = kv.getValue();
-                if (stats.Reads.size() < 2) {
-                    continue; // skip if we only have hard clips
-                }
-                sortedClips.put(stats.Reads.size(), alignment + "," + stats);
-            }
-
-            return String.join(";", sortedClips.values());
-        }
-
-        // TODO: we should track clip direction at each location
-        void addToClippingStats(final SAMRecord read) {
-            for (final Util.ClipInfo clip : getClips(read).collect(Collectors.toList())) {
-                final Stats.Clip stats = LocationMap.computeIfAbsent(clip.Alignment, k -> new Stats.Clip());
-                if (clip.HardClipped) {
-                    stats.HardClippedReads.add(read);
-                } else {
-                    if (clip.Sequence.length() > stats.LongestClipSequence.length() && (
-                            clip.Right && clip.Sequence.startsWith(stats.LongestClipSequence) || clip.Left && clip.Sequence.endsWith(
-                                    stats.LongestClipSequence))) {
-                        // the existing sequence supports the new sequence
-                        stats.LongestClipSequence = clip.Sequence;
-                    } else if (!(clip.Right && stats.LongestClipSequence.startsWith(clip.Sequence) || clip.Left && stats.LongestClipSequence
-                            .endsWith(clip.Sequence))) {
-                        // this read does not support the existing sequence
-                        continue;
-                    }
-                    stats.Reads.add(read);
-                }
-            }
-        }
-    }
-
     static class SampleStats {
-        Util.Location BP1;
-        Util.Location BP2;
         BreakpointStats BP1_Stats = new BreakpointStats();
         BreakpointStats BP2_Stats = new BreakpointStats();
-        ClipStats Clipping_Stats = new ClipStats();
 
         BreakpointStats Get(final Util.Region r) {
             switch (r) {
