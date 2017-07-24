@@ -33,7 +33,12 @@ public final class VCFFileStreamer {
         String line = safeReadLine(reader);
         while (line != null) {
             if (VCF_DATA_LINE_PREDICATE.test(line)) {
-                return GermlineVariantFactory.fromVCFLine(line);
+                final GermlineVariant potentialVariant = GermlineVariantFactory.fromVCFLine(line);
+                if (potentialVariant != null) {
+                    return potentialVariant;
+                } else {
+                    line = safeReadLine(reader);
+                }
             } else {
                 line = safeReadLine(reader);
             }

@@ -33,4 +33,13 @@ public class VCFFileStreamerTest {
         // KODU: Once null -> remain null
         assertNull(VCFFileStreamer.nextVariant(reader));
     }
+
+    @Test
+    public void streamerJumpsOverFaultyVariants() throws IOException, HartwigException {
+        final BufferedReader reader = VCFFileStreamer.getVCFReader(RESOURCE_DIR, "faulty_germline.vcf");
+
+        assertNotNull(VCFFileStreamer.nextVariant(reader));
+        assertNotNull(VCFFileStreamer.nextVariant(reader));
+        assertNull(VCFFileStreamer.nextVariant(reader));
+    }
 }
