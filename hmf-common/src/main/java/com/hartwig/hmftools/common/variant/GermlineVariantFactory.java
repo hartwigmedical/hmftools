@@ -34,7 +34,6 @@ public final class GermlineVariantFactory {
 
     @Nullable
     public static String tumorSampleFromHeaderLine(@NotNull final String headerLine) {
-
         return sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN);
     }
 
@@ -112,9 +111,7 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        return ImmutableGermlineSampleData.of(parts[SAMPLE_DATA_GENOTYPE_COLUMN].trim(),
-                alleleFrequencyData.totalReadCount(),
-                alleleFrequencyData.alleleReadCount(),
-                combinedDepth);
+        return ImmutableGermlineSampleData.of(parts[SAMPLE_DATA_GENOTYPE_COLUMN].trim(), alleleFrequencyData.totalReadCount(),
+                alleleFrequencyData.alleleReadCount(), combinedDepth);
     }
 }

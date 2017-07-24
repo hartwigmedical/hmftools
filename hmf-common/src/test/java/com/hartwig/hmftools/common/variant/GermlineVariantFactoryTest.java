@@ -1,10 +1,16 @@
 package com.hartwig.hmftools.common.variant;
 
-import org.apache.logging.log4j.util.Strings;
-import org.junit.Test;
+import static com.hartwig.hmftools.common.variant.GermlineVariantFactory.fromSampleData;
+import static com.hartwig.hmftools.common.variant.GermlineVariantFactory.fromVCFLine;
+import static com.hartwig.hmftools.common.variant.GermlineVariantFactory.sortReferenceAndTumor;
 
-import static com.hartwig.hmftools.common.variant.GermlineVariantFactory.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
 
 public class GermlineVariantFactoryTest {
 
@@ -19,7 +25,7 @@ public class GermlineVariantFactoryTest {
         assertReferenceAndTumor("SampleR", "SampleTII");
     }
 
-    private void assertReferenceAndTumor(String expectedReference, String expectedTumor) {
+    private static void assertReferenceAndTumor(@NotNull final String expectedReference, @NotNull final String expectedTumor) {
         assertEquals(expectedReference, sortReferenceAndTumor(expectedReference, expectedTumor)[0]);
         assertEquals(expectedReference, sortReferenceAndTumor(expectedTumor, expectedReference)[0]);
         assertEquals(expectedTumor, sortReferenceAndTumor(expectedReference, expectedTumor)[1]);
@@ -44,8 +50,7 @@ public class GermlineVariantFactoryTest {
 
     @Test
     public void extractFromInvalidSampleVCFLine() {
-        final String invalidVCFLine =
-                "1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9 \t " + INVALID_SAMPLE_DATA + " \t " + INVALID_SAMPLE_DATA;
+        final String invalidVCFLine = "1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9 \t " + INVALID_SAMPLE_DATA + " \t " + INVALID_SAMPLE_DATA;
         assertNull(fromVCFLine(invalidVCFLine));
     }
 
