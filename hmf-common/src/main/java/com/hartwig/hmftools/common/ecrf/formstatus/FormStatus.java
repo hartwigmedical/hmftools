@@ -38,6 +38,7 @@ public class FormStatus {
     private FormStatus() {
     }
 
+    @NotNull
     public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
         final Map<FormStatusKey, FormStatusData> formStatuses = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
@@ -45,8 +46,8 @@ public class FormStatus {
             final String[] parts = splitCsvLine(line, FIELD_SEPARATOR, 17);
             if (parts.length > 0) {
                 final FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
-                        removeParens(removeQuotes(parts[FORM_NAME_COLUMN])), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
-                        removeParens(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
+                        removeParentheses(removeQuotes(parts[FORM_NAME_COLUMN])), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
+                        removeParentheses(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
                 final FormStatusData formStatus =
                         new ImmutableFormStatusData(removeQuotes(parts[DATA_STATUS_COLUMN]), removeQuotes(parts[LOCKED_COLUMN]));
                 formStatuses.put(formKey, formStatus);
@@ -71,7 +72,7 @@ public class FormStatus {
     }
 
     @NotNull
-    private static String removeParens(@NotNull final String text) {
+    private static String removeParentheses(@NotNull final String text) {
         final Pattern pattern = Pattern.compile(".*(?=(?:\\([0-9]+\\))$)");
         final Matcher matcher = pattern.matcher(text);
         if (matcher.find()) {
