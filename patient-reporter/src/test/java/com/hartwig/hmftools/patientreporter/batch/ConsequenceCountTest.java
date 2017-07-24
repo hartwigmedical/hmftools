@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.batch;
 
+import static com.hartwig.hmftools.common.variant.VariantAnnotationTest.createVariantAnnotationBuilder;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -7,7 +9,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,11 +22,10 @@ public class ConsequenceCountTest {
 
         final SomaticVariant.Builder builder = new SomaticVariant.Builder();
         variants.add(builder.annotations(Lists.newArrayList(
-                new VariantAnnotation.Builder().consequences(list(VariantConsequence.FRAMESHIFT_VARIANT)).build(),
-                new VariantAnnotation.Builder().consequences(
-                        list(VariantConsequence.INFRAME_DELETION)).build())).build());
-        variants.add(builder.annotations(Lists.newArrayList(new VariantAnnotation.Builder().consequences(
-                list(VariantConsequence.INFRAME_DELETION)).build())).build());
+                createVariantAnnotationBuilder(VariantConsequence.FRAMESHIFT_VARIANT).build(),
+                createVariantAnnotationBuilder(VariantConsequence.INFRAME_DELETION).build())).build());
+        variants.add(builder.annotations(Lists.newArrayList(
+                createVariantAnnotationBuilder(VariantConsequence.INFRAME_DELETION).build())).build());
 
         final Map<VariantConsequence, Integer> counts = ConsequenceCount.count(variants);
         assertEquals(VariantConsequence.values().length, counts.size());

@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
@@ -64,7 +65,8 @@ public class FittedPurityFactory {
         int totalBAFCount = 0;
         final List<ObservedRegion> filteredRegions = Lists.newArrayList();
         for (final ObservedRegion region : observedRegions) {
-            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && Chromosomes.asInt(region.chromosome()) <= 22) {
+            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && Chromosomes.asInt(region.chromosome()) <= 22
+                    && region.status() == FreecStatus.SOMATIC) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
             }

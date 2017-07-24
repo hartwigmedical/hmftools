@@ -6,12 +6,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
-import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
@@ -22,6 +22,9 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.baf.TumorBAF;
+import com.hartwig.hmftools.common.purple.baf.TumorBAFFactory;
+import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -32,6 +35,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFile;
+import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
@@ -99,6 +103,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final String PLOIDY_PENALTY_EXPERIMENT = "ploidy_penalty_experiment";
 
+    private static final String NO_STRUCTURAL_VARIANTS = "no_sv";
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
@@ -118,9 +123,12 @@ public class PurityPloidyEstimateApplication {
         }
 
         LOGGER.info("Loading germline variant data");
+        final TumorBAFFactory bafFactory =
+                new TumorBAFFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
         final List<GermlineVariant> variants = VariantFilter.passOnly(vcfFile.variants());
+        final Multimap<String, TumorBAF> bafs = bafFactory.createBAF(variants);
         final String refSample = vcfFile.refSample();
         final String tumorSample = vcfFile.tumorSample();
 
@@ -129,21 +137,16 @@ public class PurityPloidyEstimateApplication {
         // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.
         final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
         final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
-        final Multimap<String, FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
+        final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
         final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
-
-        final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
-        final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
-        LOGGER.info("Loading structural variants from {}", structuralVariantFile);
-        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantFile);
+        final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
 
         LOGGER.info("Merging structural variants into freec segmentation");
         final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
-        LOGGER.info("Mapping all observations to the regions defined by the tumor ratios");
-        final ObservedRegionFactory observedRegionFactory =
-                new ObservedRegionFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, variants, tumorRatio, normalRatio, gcContent);
+        LOGGER.info("Mapping all observations to the segmented regions");
+        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory();
+        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, tumorRatio, normalRatio, gcContent);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
@@ -198,9 +201,23 @@ public class PurityPloidyEstimateApplication {
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
             FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
+            TumorBAFFile.write(outputDirectory, tumorSample, bafs);
         }
 
         LOGGER.info("Complete");
+    }
+
+    @NotNull
+    private List<StructuralVariant> structuralVariants(final CommandLine cmd, final String runDirectory) throws IOException {
+        if (cmd.hasOption(NO_STRUCTURAL_VARIANTS)) {
+            LOGGER.info("Structural variants support disabled.");
+            return Collections.emptyList();
+        } else {
+            final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
+            final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
+            LOGGER.info("Loading structural variants from {}", structuralVariantFile);
+            return StructuralVariantFileLoader.fromFile(structuralVariantFile);
+        }
     }
 
     private List<GeneCopyNumber> geneCopyNumbers(List<PurpleCopyNumber> copyNumbers) throws IOException, EmptyFileException {
@@ -236,6 +253,7 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(NO_STRUCTURAL_VARIANTS, false, "Disable structural variant support.");
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");

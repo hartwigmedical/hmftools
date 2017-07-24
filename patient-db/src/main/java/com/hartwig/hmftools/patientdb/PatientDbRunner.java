@@ -15,6 +15,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
@@ -55,6 +58,8 @@ public final class PatientDbRunner {
     private static final String LIMS_UMCU_CSV = "lims_umcu_csv";
     private static final String SOMATIC = "somatic";
     private static final String CLINICAL = "clinical";
+    private static final String RAW_ECRF = "raw_ecrf";
+    private static final String FORM_STATUS_FILE = "form_status";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
@@ -62,7 +67,8 @@ public final class PatientDbRunner {
         final Options basicOptions = createBasicOptions();
         final Options somaticOptions = createSomaticOptions();
         final Options clinicalOptions = createClinicalOptions();
-        final Options options = mergeOptions(basicOptions, somaticOptions, clinicalOptions);
+        final Options ecrfOptions = createEcrfOptions();
+        final Options options = mergeOptions(basicOptions, somaticOptions, clinicalOptions, ecrfOptions);
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
         final String userName = cmd.getOptionValue(DB_USER);
@@ -71,8 +77,9 @@ public final class PatientDbRunner {
         final String jdbcUrl = "jdbc:" + databaseUrl;
         final boolean somatic = cmd.hasOption(SOMATIC);
         final boolean clinical = cmd.hasOption(CLINICAL);
+        final boolean raw_ecrf = cmd.hasOption(RAW_ECRF);
 
-        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical)) {
+        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical && !raw_ecrf)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", basicOptions);
         } else {
@@ -80,6 +87,9 @@ public final class PatientDbRunner {
             if (runDirectory.isDirectory()) {
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+                if (raw_ecrf) {
+                    writeEcrf(ecrfOptions, cmd, runContexts, dbWriter);
+                }
                 if (clinical) {
                     writeClinicalData(clinicalOptions, cmd, runContexts, dbWriter);
                 }
@@ -105,14 +115,16 @@ public final class PatientDbRunner {
         final String limsCsv = cmd.getOptionValue(LIMS_CSV);
         final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
         final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
+        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_FILE);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv, formStatusPath)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -clinical", clinicalOptions);
+            formatter.printHelp("patient-db -" + CLINICAL, clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
             dbWriter.clearClinicalTables();
-            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath);
+            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
+            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final PatientReader patientReader =
                     new PatientReader(model, readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream()
@@ -128,10 +140,34 @@ public final class PatientDbRunner {
                     final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
                     LOGGER.info(patient.patientId() + ": Samples: " + tumorSamplesForPatient);
                     final Patient cpctPatient = patientReader.read(patient, tumorSamplesForPatient);
-                    PatientValidator.validatePatient(cpctPatient);
                     dbWriter.writeClinicalData(cpctPatient);
+                    final List<ValidationFinding> findings = PatientValidator.validatePatient(cpctPatient);
+                    dbWriter.writeValidationFindings(findings);
+                    dbWriter.writeValidationFindings(cpctPatient.matchFindings());
                 }
             }
+            LOGGER.info("Done!");
+        }
+    }
+
+    private static void writeEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
+            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
+            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
+            HartwigException {
+        final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
+        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_FILE);
+        if (Utils.anyNull(ecrfFilePath, formStatusPath)) {
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("patient-db -" + RAW_ECRF, ecrfOptions);
+        } else {
+            dbWriter.clearEcrf();
+            LOGGER.info("loading ecrf model...");
+            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
+            final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
+            LOGGER.info("done loading ecrf model...");
+            final Set<String> cpctPatientIds =
+                    runContexts.stream().map(runContext -> getPatientId(runContext.setName())).collect(Collectors.toSet());
+            dbWriter.writeEcrf(model, cpctPatientIds);
             LOGGER.info("Done!");
         }
     }
@@ -144,14 +180,14 @@ public final class PatientDbRunner {
         final String extremeConfidenceBed = cmd.getOptionValue(EXTREME_CONFIDENCE_BED);
         if (Utils.anyNull(highConfidenceBed, extremeConfidenceBed)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -somatic", somaticOptions);
+            formatter.printHelp("patient-db -" + SOMATIC, somaticOptions);
         } else {
             final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
             final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
             final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
             final SomaticVariantReader somaticVariantReader = new SomaticVariantReader(consensusRule);
             for (final RunContext runContext : runContexts) {
-                LOGGER.info("Reading somatic data form run: " + runContext.runDirectory());
+                LOGGER.info("Reading somatic data from run: " + runContext.runDirectory());
                 final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(runContext.runDirectory());
                 dbWriter.writeSomaticVariants(runContext.tumorSample(), somaticVariants);
             }
@@ -192,12 +228,10 @@ public final class PatientDbRunner {
     }
 
     @NotNull
-    private static Options mergeOptions(@NotNull final Options basicOptions, @NotNull final Options clinicalOptions,
-            @NotNull final Options somaticOptions) {
+    private static Options mergeOptions(@NotNull final Options... optionsArray) {
         final Options options = new Options();
-        basicOptions.getOptions().forEach(options::addOption);
-        clinicalOptions.getOptions().forEach(options::addOption);
-        somaticOptions.getOptions().forEach(options::addOption);
+        final List<Options> optionsList = Lists.newArrayList(optionsArray);
+        optionsList.forEach(opt -> opt.getOptions().forEach(options::addOption));
         return options;
     }
 
@@ -208,8 +242,9 @@ public final class PatientDbRunner {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(SOMATIC, false, "Read somatic data.");
-        options.addOption(CLINICAL, false, "Read clinical data.");
+        options.addOption(SOMATIC, false, "Read/write somatic data.");
+        options.addOption(CLINICAL, false, "Read/write clinical data.");
+        options.addOption(RAW_ECRF, false, "Read/write ecrf data.");
         return options;
     }
 
@@ -221,6 +256,15 @@ public final class PatientDbRunner {
         options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file.");
         options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file.");
         options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file.");
+        options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
+        return options;
+    }
+
+    @NotNull
+    private static Options createEcrfOptions() {
+        final Options options = new Options();
+        options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
+        options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
         return options;
     }
 

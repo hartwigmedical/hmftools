@@ -8,6 +8,7 @@ import java.io.IOException;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.purple.ratio.GCContent;
 
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ public class FreecGCContentFactoryTest {
 
     @Test
     public void canLoadNormalFile() throws IOException, HartwigException {
-        final Multimap<String, FreecGCContent> gcContent = FreecGCContentFactory.loadGCContent(BASE_PATH);
+        final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(BASE_PATH);
         assertEquals(100, gcContent.size());
     }
 }

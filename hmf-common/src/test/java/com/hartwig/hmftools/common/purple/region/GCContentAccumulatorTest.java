@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.purple.region;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.ratio.GCContent;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class GCContentAccumulatorTest {
         assertEquals(mappablePercentage, victim.getAverageMappablePercentage(), EPSILON);
     }
 
-    private static FreecGCContent create(double gcContent, double nonNPercentage, double mappablePercentage) {
+    private static GCContent create(double gcContent, double nonNPercentage, double mappablePercentage) {
         return PurpleDatamodelTest.createGCContent("1", 1, gcContent, nonNPercentage, mappablePercentage).build();
     }
 }

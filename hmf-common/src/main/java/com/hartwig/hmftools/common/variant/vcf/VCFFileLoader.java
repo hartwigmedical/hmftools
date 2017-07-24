@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.common.variant.SomaticTruthSetVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
-import java.util.ArrayList;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -113,6 +113,6 @@ public final class VCFFileLoader {
     @NotNull
     private static <T extends Variant> List<T> variants(@NotNull final List<String> lines,
             Function<String, T> transform) {
-        return lines.stream().filter(new VCFDataLinePredicate()).map(transform).collect(toList());
+        return lines.stream().filter(new VCFDataLinePredicate()).map(transform).filter(Objects::nonNull).collect(toList());
     }
 }

@@ -84,16 +84,6 @@ abstract class BaseCopyNumberBuilder {
         return purityAdjuster.purityAdjustedBAF(chromosome, copyNumber, observedBAF);
     }
 
-    @VisibleForTesting
-    static boolean isEven(double copyNumber) {
-
-        double decimal = copyNumber % 1d;
-        double wholeNumber = copyNumber - decimal;
-
-        return (wholeNumber % 2 == 0 && Doubles.lessOrEqual(decimal, 0.25)) || (wholeNumber % 2 != 0 && Doubles.greaterOrEqual(decimal,
-                0.75));
-    }
-
     boolean withinCopyNumberTolerance(@NotNull final FittedRegion copyNumber) {
         double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - averageTumorCopyNumber());
         double refNormalisedCopyNumberDeviation = Math.abs(copyNumber.refNormalisedCopyNumber() - averageRefNormalisedCopyNumber());

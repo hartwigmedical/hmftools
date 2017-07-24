@@ -23,11 +23,10 @@ public class FormStatusTest {
 
         final Map<FormStatusKey, FormStatusData> formStatuses = formStatusModel.formStatuses();
         assertEquals(3, formStatuses.size());
-        final FormStatusKey key1 = new ImmutableFormStatusKey("CPCT02000001", "Anti Coagulants (0)", "0", "Anti Coagulants (0)", "0");
+        final FormStatusKey key1 = new ImmutableFormStatusKey("CPCT02000001", "Anti Coagulants", "0", "Anti Coagulants", "0");
         final FormStatusKey key2 =
-                new ImmutableFormStatusKey("CPCT02000002", "Death Page (0)", "0", "Neoadjuvant treatment, recurrence and survival (0)",
-                        "0");
-        final FormStatusKey key3 = new ImmutableFormStatusKey("CPCT02000004", "Eligibility Screening (0)", "0", "BASELINE (0)", "0");
+                new ImmutableFormStatusKey("CPCT02000002", "Death Page", "0", "Neoadjuvant treatment, recurrence and survival", "0");
+        final FormStatusKey key3 = new ImmutableFormStatusKey("CPCT02000004", "Eligibility Screening", "0", "BASELINE", "0");
 
         assertTrue(formStatuses.containsKey(key1));
         assertTrue(formStatuses.containsKey(key2));

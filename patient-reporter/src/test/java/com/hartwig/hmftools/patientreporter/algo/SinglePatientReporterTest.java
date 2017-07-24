@@ -8,6 +8,7 @@ import java.io.IOException;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
+import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
@@ -30,18 +31,20 @@ public class SinglePatientReporterTest {
         final String hmfSlicingBed = BED_DIRECTORY + File.separator + "hmf_gene_panel.tsv";
         final HmfSlicer hmfSlicingRegion = SlicerFactory.fromHmfGenePanelFile(hmfSlicingBed);
 
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion,
-                hmfSlicingRegion);
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion, hmfSlicingRegion);
         final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        final SinglePatientReporter algo = new SinglePatientReporter(false, buildTestCpctEcrfModel(), Lims.buildEmptyModel(),
-                variantAnalyzer, copyNumberAnalyzer, null);
+        final SinglePatientReporter algo =
+                new SinglePatientReporter(false, buildTestCpctEcrfModel(), Lims.buildEmptyModel(), variantAnalyzer, copyNumberAnalyzer,
+                        null);
 
         assertNotNull(algo.run(RUN_DIRECTORY));
     }
 
     @NotNull
     private static CpctEcrfModel buildTestCpctEcrfModel() {
-        return new CpctEcrfModel(Lists.newArrayList(), Lists.newArrayList());
+        return new CpctEcrfModel(
+                ImmutableXMLEcrfDatamodel.of(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(),
+                        Lists.newArrayList()), Lists.newArrayList());
     }
 }

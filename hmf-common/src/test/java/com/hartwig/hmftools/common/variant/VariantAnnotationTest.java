@@ -12,24 +12,39 @@ public class VariantAnnotationTest {
 
     @Test
     public void canGenerateConsequenceString() {
-        final VariantAnnotation noConsequences = new VariantAnnotation.Builder().build();
+        final VariantAnnotation noConsequences = VariantAnnotationTest.createVariantAnnotationBuilder().build();
         assertEquals(Strings.EMPTY, noConsequences.consequenceString());
 
-        final VariantAnnotation oneConsequence = new VariantAnnotation.Builder().consequences(
-                Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT)).build();
-        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(),
-                oneConsequence.consequenceString());
+        final VariantAnnotation oneConsequence = createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).build();
+        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(), oneConsequence.consequenceString());
 
-        final VariantAnnotation twoConsequences = new VariantAnnotation.Builder().consequences(
-                Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.INFRAME_DELETION)).build();
-        assertTrue(twoConsequences.consequenceString().contains(
-                VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm()));
-        assertTrue(twoConsequences.consequenceString().contains(
-                VariantConsequence.INFRAME_DELETION.readableSequenceOntologyTerm()));
+        final VariantAnnotation twoConsequences =
+                createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.INFRAME_DELETION).build();
+        assertTrue(twoConsequences.consequenceString().contains(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm()));
+        assertTrue(twoConsequences.consequenceString().contains(VariantConsequence.INFRAME_DELETION.readableSequenceOntologyTerm()));
 
-        final VariantAnnotation twoConsequencesIgnoreOne = new VariantAnnotation.Builder().consequences(
-                Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.OTHER)).build();
-        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(),
-                twoConsequencesIgnoreOne.consequenceString());
+        final VariantAnnotation twoConsequencesIgnoreOne =
+                createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.OTHER).build();
+        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(), twoConsequencesIgnoreOne.consequenceString());
+    }
+
+    public static ImmutableVariantAnnotation.Builder createVariantAnnotationBuilder(VariantConsequence... consequences) {
+        return ImmutableVariantAnnotation.builder()
+                .allele(Strings.EMPTY)
+                .severity(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .geneID(Strings.EMPTY)
+                .featureType(Strings.EMPTY)
+                .featureID(Strings.EMPTY)
+                .transcriptBioType(Strings.EMPTY)
+                .rank(Strings.EMPTY)
+                .hgvsCoding(Strings.EMPTY)
+                .hgvsProtein(Strings.EMPTY)
+                .cDNAPosAndLength(Strings.EMPTY)
+                .cdsPosAndLength(Strings.EMPTY)
+                .aaPosAndLength(Strings.EMPTY)
+                .distance(Strings.EMPTY)
+                .addition(Strings.EMPTY)
+                .consequences(Lists.newArrayList(consequences));
     }
 }

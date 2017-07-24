@@ -2,77 +2,95 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PatientData {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class PatientData {
     @Nullable
-    private final String cpctId;
-    @Nullable
-    private final LocalDate registrationDate;
-    @Nullable
-    private final String gender;
-    @Nullable
-    private final String ethnicity;
-    @Nullable
-    private final String hospital;
-    @Nullable
-    private final Integer birthYear;
-    @Nullable
-    private final String primaryTumorLocation;
-    @Nullable
-    private final LocalDate deathDate;
+    public abstract String cpctId();
 
-    public PatientData(@Nullable final String cpctId, @Nullable final LocalDate registrationDate,
-            @Nullable final String gender, @Nullable final String ethnicity, @Nullable final String hospital,
-            @Nullable final Integer birthYear, @Nullable final String primaryTumorLocation,
-            @Nullable final LocalDate deathDate) {
-        this.cpctId = cpctId;
-        this.registrationDate = registrationDate;
-        this.gender = gender;
-        this.ethnicity = ethnicity;
-        this.hospital = hospital;
-        this.birthYear = birthYear;
-        this.primaryTumorLocation = primaryTumorLocation;
-        this.deathDate = deathDate;
+    @Nullable
+    public abstract LocalDate registrationDate();
+
+    @Nullable
+    public abstract String gender();
+
+    @Nullable
+    public abstract String ethnicity();
+
+    @Nullable
+    public abstract String hospital();
+
+    @Nullable
+    public abstract Integer birthYear();
+
+    @Nullable
+    public abstract String primaryTumorLocation();
+
+    @Nullable
+    public abstract LocalDate deathDate();
+
+    @NotNull
+    @Value.Default
+    public String demographyStatus() {
+        return "";
     }
 
-    @Nullable
-    public String cpctId() {
-        return cpctId;
+    @NotNull
+    @Value.Default
+    public String demographyLocked() {
+        return "";
     }
 
-    @Nullable
-    public LocalDate registrationDate() {
-        return registrationDate;
+    @NotNull
+    @Value.Default
+    public String primaryTumorStatus() {
+        return "";
     }
 
-    @Nullable
-    public String gender() {
-        return gender;
+    @NotNull
+    @Value.Default
+    public String primaryTumorLocked() {
+        return "";
     }
 
-    @Nullable
-    public String ethnicity() {
-        return ethnicity;
+    @NotNull
+    @Value.Default
+    public String eligibilityStatus() {
+        return "";
     }
 
-    @Nullable
-    public String hospital() {
-        return hospital;
+    @NotNull
+    @Value.Default
+    public String eligibilityLocked() {
+        return "";
     }
 
-    @Nullable
-    public Integer birthYear() {
-        return birthYear;
+    @NotNull
+    @Value.Default
+    public String selectionCriteriaStatus() {
+        return "";
     }
 
-    @Nullable
-    public LocalDate deathDate() {
-        return deathDate;
+    @NotNull
+    @Value.Default
+    public String selectionCriteriaLocked() {
+        return "";
     }
 
-    @Nullable
-    public String primaryTumorLocation() {
-        return primaryTumorLocation;
+    @NotNull
+    @Value.Default
+    public String deathStatus() {
+        return "";
+    }
+
+    @NotNull
+    @Value.Default
+    public String deathLocked() {
+        return "";
     }
 }

@@ -40,11 +40,11 @@ public final class GermlineVariantFactory {
         if (intersectionLength != 0 && second.length() > intersectionLength) {
             final String secondRemainder = second.substring(intersectionLength);
             if (isBloodOrReference(secondRemainder)) {
-                return new String[]{second, first};
+                return new String[] { second, first };
             }
         }
 
-        return new String[]{first, second};
+        return new String[] { first, second };
     }
 
     private static boolean isBloodOrReference(String header) {
@@ -93,16 +93,24 @@ public final class GermlineVariantFactory {
             return null;
         }
 
-        final AlleleFrequencyData alleleFrequencyData = VariantFactoryFunctions.determineAlleleFrequencies(
-                parts[SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN].trim());
+        final AlleleFrequencyData alleleFrequencyData =
+                VariantFactoryFunctions.determineAlleleFrequencies(parts[SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN].trim());
         if (alleleFrequencyData == null) {
             LOGGER.warn("Could not parse allele frequencies for germline sample data: " + sampleData);
+            return null;
+        }
+
+        final int combinedDepth;
+        try {
+            combinedDepth = Integer.valueOf(parts[SAMPLE_DATA_COMBINED_DEPTH_COLUMN]);
+        } catch (Exception e) {
+            LOGGER.warn("Could not parse combined depth for germline sample data: " + sampleData);
             return null;
         }
 
         return ImmutableGermlineSampleData.of(parts[SAMPLE_DATA_GENOTYPE_COLUMN].trim(),
                 alleleFrequencyData.totalReadCount(),
                 alleleFrequencyData.alleleReadCount(),
-                Integer.valueOf(parts[SAMPLE_DATA_COMBINED_DEPTH_COLUMN]));
+                combinedDepth);
     }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import static com.hartwig.hmftools.common.variant.VariantAnnotationTest.createVariantAnnotationBuilder;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -12,6 +14,7 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.variant.ImmutableVariantAnnotation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -57,7 +60,7 @@ public class ConsequenceDeterminerTest {
         final VariantConsequence rightConsequence = VariantConsequence.MISSENSE_VARIANT;
         final VariantConsequence wrongConsequence = VariantConsequence.OTHER;
 
-        final VariantAnnotation.Builder annotationBuilder = new VariantAnnotation.Builder().featureID(TRANSCRIPT).
+        final ImmutableVariantAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
                 featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
                 hgvsProtein(HGVS_PROTEIN);
         final VariantAnnotation rightAnnotation = annotationBuilder.consequences(

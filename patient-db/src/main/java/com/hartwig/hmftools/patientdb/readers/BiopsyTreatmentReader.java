@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,7 +48,8 @@ public class BiopsyTreatmentReader {
                 final List<BiopsyTreatmentDrugData> drugs = readDrugs(form);
                 final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
                 final LocalDate treatmentEnd = determineTreatmentEndDate(drugs);
-                treatmentDatas.add(new BiopsyTreatmentData(treatmentGiven, treatmentStart, treatmentEnd, drugs));
+                treatmentDatas.add(
+                        ImmutableBiopsyTreatmentData.of(treatmentGiven, treatmentStart, treatmentEnd, drugs, form.status(), form.locked()));
             }
         }
         return treatmentDatas;
@@ -63,7 +66,7 @@ public class BiopsyTreatmentReader {
                 drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, true);
             }
             final String drugType = drugName == null ? null : treatmentToTypeMapping.get(drugName.toLowerCase().trim());
-            drugs.add(new BiopsyTreatmentDrugData(drugName, drugType, drugStart, drugEnd));
+            drugs.add(ImmutableBiopsyTreatmentDrugData.of(drugName, drugType, drugStart, drugEnd));
         }
         return drugs;
     }

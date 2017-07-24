@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -43,8 +45,8 @@ public class FormStatus {
             final String[] parts = splitCsvLine(line, FIELD_SEPARATOR, 17);
             if (parts.length > 0) {
                 final FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
-                        removeQuotes(parts[FORM_NAME_COLUMN]), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
-                        removeQuotes(parts[STUDY_EVENT_NAME_COLUMN]), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
+                        removeParens(removeQuotes(parts[FORM_NAME_COLUMN])), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
+                        removeParens(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
                 final FormStatusData formStatus =
                         new ImmutableFormStatusData(removeQuotes(parts[DATA_STATUS_COLUMN]), removeQuotes(parts[LOCKED_COLUMN]));
                 formStatuses.put(formKey, formStatus);
@@ -56,7 +58,7 @@ public class FormStatus {
     //MIVO: split a line in a csv/tsv file by the separator, ignoring occurrences of separator in quoted groups
     @NotNull
     private static String[] splitCsvLine(@NotNull final String line, @NotNull final String separator, final int limit) {
-        return line.split(separator + "(?=([^\"]*\"[^\"]*\")*[^\"]*$)", limit);
+        return line.split(separator + "(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", limit);
     }
 
     @NotNull
@@ -68,4 +70,14 @@ public class FormStatus {
         return trimmedText;
     }
 
+    @NotNull
+    private static String removeParens(@NotNull final String text) {
+        final Pattern pattern = Pattern.compile(".*(?=(?:\\([0-9]+\\))$)");
+        final Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            return matcher.group(0).trim();
+        } else {
+            return text;
+        }
+    }
 }

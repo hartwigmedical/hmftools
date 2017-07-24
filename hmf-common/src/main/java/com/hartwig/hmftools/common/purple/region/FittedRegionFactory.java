@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.BAFUtils;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -47,7 +46,6 @@ public class FittedRegionFactory {
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
-                .status(FreecStatus.fromNormalRatio(observedRegion.observedNormalRatio()))
                 .broadBAF(0)
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)

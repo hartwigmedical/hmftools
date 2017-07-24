@@ -10,6 +10,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
@@ -51,6 +52,7 @@ public class EnrichedSomaticVariantFactory {
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> addCopyNumber(builder, x, variant.alleleFrequency()));
         addTrinucleotideContext(builder, variant);
+        addGenomeContext(builder, variant);
 
         return builder.build();
     }
@@ -58,11 +60,34 @@ public class EnrichedSomaticVariantFactory {
     private Builder createBuilder(@NotNull final SomaticVariant variant) {
         return builder().from(variant)
                 .trinucleotideContext("")
+                .microhomology("")
+                .refGenomeContext("")
+                .repeatCount(0)
+                .repeatSequence("")
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .highConfidenceRegion(false)
                 .adjustedCopyNumber(0)
                 .adjustedVAF(0);
+    }
+
+    private Builder addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        long positionBeforeEvent = variant.position();
+        long start = Math.max(positionBeforeEvent - 100, 0);
+        long end = positionBeforeEvent + 100;
+        int position = (int) (positionBeforeEvent - start);
+        final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
+        builder.refGenomeContext(sequence);
+
+        RepeatContextFactory.repeats(position, sequence, variant.ref(), variant.alt())
+                .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
+
+        if (variant.ref().length() != variant.alt().length()) {
+            final String microhomology = Microhomology.microhomology(position, sequence, variant.ref(), variant.alt());
+            return builder.microhomology(microhomology);
+        }
+
+        return builder;
     }
 
     private Builder addCopyNumber(@NotNull final Builder builder, @NotNull final PurpleCopyNumber copyNumber, double alleleFrequency) {

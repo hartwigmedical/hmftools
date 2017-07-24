@@ -16,14 +16,27 @@ public class EcrfPatientTest {
 
     @Test
     public void canFindValuesById() {
-        final EcrfField field = new ImmutableEcrfField("1", "2", "3", "4", "5", Maps.newHashMap());
-        final Map<EcrfField, List<String>> fieldValues = Maps.newHashMap();
-        fieldValues.put(field, Lists.newArrayList("value1", "value2"));
-        final EcrfPatient patient = new EcrfPatient("patient", fieldValues, Maps.newHashMap());
+        final String patientId = "patient";
+        final EcrfDatamodelField field = new ImmutableEcrfDatamodelField("1", "2", "3", "4", "5", Maps.newHashMap());
+        final EcrfItemGroup itemGroup = new EcrfItemGroup(patientId);
+        itemGroup.itemsPerOID().put("4", Lists.newArrayList("value1", "value2"));
+        final EcrfForm form = new EcrfForm(patientId, "", "");
+        form.itemGroupsPerOID().put("3", Lists.newArrayList(itemGroup));
+        final EcrfStudyEvent study = new EcrfStudyEvent(patientId);
+        study.formsPerOID().put("2", Lists.newArrayList(form));
+        final Map<String, List<EcrfStudyEvent>> studyEvents = Maps.newHashMap();
+        studyEvents.put("1", Lists.newArrayList(study));
+        final EcrfPatient patient = new EcrfPatient(patientId, studyEvents,
+                Lists.newArrayList(EcrfDataField.of(patientId, "1", "1", "2", "1", "3", "1", "4", "value1", "", ""),
+                        EcrfDataField.of(patientId, "1", "1", "2", "1", "3", "2", "4", "value1", "", "")));
 
         assertNull(patient.fieldValuesByName("does not exist"));
-        final List<String> values = patient.fieldValuesByName(field.name());
-        assertNotNull(values);
-        assertEquals(2, values.size());
+        final List<String> valuesByName = patient.fieldValuesByName(field.name());
+        assertNotNull(valuesByName);
+        assertEquals(2, valuesByName.size());
+        final List<String> valuesByField = patient.fieldValuesByEcrfField(field);
+        assertNotNull(valuesByField);
+        assertEquals(2, valuesByField.size());
+        System.out.println(field.isRelevant());
     }
 }

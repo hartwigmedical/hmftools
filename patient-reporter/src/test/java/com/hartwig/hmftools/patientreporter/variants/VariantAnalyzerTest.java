@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import static com.hartwig.hmftools.common.variant.VariantAnnotationTest.createVariantAnnotationBuilder;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -43,30 +45,29 @@ public class VariantAnalyzerTest {
         final Slicer giabHighConfidenceRegion = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
         final Slicer cpctSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(400, 500));
 
-        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, giabHighConfidenceRegion,
-                cpctSlicingRegion);
+        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, giabHighConfidenceRegion, cpctSlicingRegion);
 
-        final VariantAnnotation rightAnnotation = new VariantAnnotation.Builder().
-                consequences(list(VariantConsequence.MISSENSE_VARIANT)).featureType(RIGHT_FEATURE_TYPE).
+        final VariantAnnotation rightAnnotation =
+                createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE).
+                        featureID(RIGHT_TRANSCRIPT).build();
+
+        final VariantAnnotation wrongTranscript =
+                createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE)
+                        .featureID(WRONG_TRANSCRIPT)
+                        .build();
+
+        final VariantAnnotation wrongFeatureType =
+                createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).featureType(WRONG_FEATURE_TYPE).
+                        featureID(RIGHT_TRANSCRIPT).build();
+
+        final VariantAnnotation wrongConsequence = createVariantAnnotationBuilder(VariantConsequence.OTHER).featureType(RIGHT_FEATURE_TYPE).
                 featureID(RIGHT_TRANSCRIPT).build();
 
-        final VariantAnnotation wrongTranscript = new VariantAnnotation.Builder().
-                consequences(list(VariantConsequence.MISSENSE_VARIANT)).featureType(RIGHT_FEATURE_TYPE).
-                featureID(WRONG_TRANSCRIPT).build();
-
-        final VariantAnnotation wrongFeatureType = new VariantAnnotation.Builder().
-                consequences(list(VariantConsequence.MISSENSE_VARIANT)).featureType(WRONG_FEATURE_TYPE).
-                featureID(RIGHT_TRANSCRIPT).build();
-
-        final VariantAnnotation wrongConsequence = new VariantAnnotation.Builder().
-                consequences(list(VariantConsequence.OTHER)).featureType(RIGHT_FEATURE_TYPE).
-                featureID(RIGHT_TRANSCRIPT).build();
-
-        final List<SomaticVariant> variants = Lists.newArrayList(
-                builder().position(420).annotations(Lists.newArrayList(rightAnnotation, wrongTranscript)).build(),
-                builder().position(430).annotations(Lists.newArrayList(wrongConsequence)).build(),
-                builder().position(440).annotations(Lists.newArrayList(wrongFeatureType)).build(),
-                builder().position(460).annotations(Lists.newArrayList(rightAnnotation)).build());
+        final List<SomaticVariant> variants =
+                Lists.newArrayList(builder().position(420).annotations(Lists.newArrayList(rightAnnotation, wrongTranscript)).build(),
+                        builder().position(430).annotations(Lists.newArrayList(wrongConsequence)).build(),
+                        builder().position(440).annotations(Lists.newArrayList(wrongFeatureType)).build(),
+                        builder().position(460).annotations(Lists.newArrayList(rightAnnotation)).build());
 
         final VariantAnalysis analysis = analyzer.run(variants);
 
@@ -94,7 +95,16 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static HmfGenomeRegion hmfRegion() {
-        return new ImmutableHmfGenomeRegion(CHROMOSOME, 350, 450, RIGHT_TRANSCRIPT, TRANSCRIPT_VERSION, GENE, GENE_ID,
-                GENE_START, GENE_END, CHROMOSOME_BAND, ENTREZ_ID);
+        return new ImmutableHmfGenomeRegion(CHROMOSOME,
+                350,
+                450,
+                RIGHT_TRANSCRIPT,
+                TRANSCRIPT_VERSION,
+                GENE,
+                GENE_ID,
+                GENE_START,
+                GENE_END,
+                CHROMOSOME_BAND,
+                ENTREZ_ID);
     }
 }

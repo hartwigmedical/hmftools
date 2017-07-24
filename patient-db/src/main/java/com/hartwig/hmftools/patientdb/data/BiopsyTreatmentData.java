@@ -7,22 +7,37 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Strings;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BiopsyTreatmentData {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class BiopsyTreatmentData {
 
-    private final int id;
+    public abstract int id();
+
     @Nullable
-    private final String treatmentGiven;
+    public abstract String treatmentGiven();
+
     @Nullable
-    private final LocalDate startDate;
+    public abstract LocalDate startDate();
+
     @Nullable
-    private final LocalDate endDate;
+    public abstract LocalDate endDate();
+
     @NotNull
-    private final List<BiopsyTreatmentDrugData> drugs;
+    public abstract List<BiopsyTreatmentDrugData> drugs();
+
     @Nullable
-    private final Integer biopsyId;
+    public abstract Integer biopsyId();
+
+    @NotNull
+    public abstract String formStatus();
+
+    @NotNull
+    public abstract String formLocked();
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger();
 
@@ -30,41 +45,18 @@ public class BiopsyTreatmentData {
         return ID_COUNTER.getAndIncrement();
     }
 
-    public BiopsyTreatmentData(final int id, @Nullable final String treatmentGiven,
-            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate,
-            @NotNull final List<BiopsyTreatmentDrugData> drugs, @Nullable final Integer biopsyId) {
-        this.id = id;
-        this.treatmentGiven = treatmentGiven;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.drugs = drugs;
-        this.biopsyId = biopsyId;
-    }
-
-    public BiopsyTreatmentData(@Nullable final String treatmentGiven, @Nullable final LocalDate startDate,
-            @Nullable final LocalDate endDate, @NotNull final List<BiopsyTreatmentDrugData> drugs) {
-        this(createId(), treatmentGiven, startDate, endDate, drugs, null);
-    }
-
-    @Nullable
-    public LocalDate startDate() {
-        return startDate;
-    }
-
-    @Nullable
-    public LocalDate endDate() {
-        return endDate;
-    }
-
     @NotNull
-    public List<BiopsyTreatmentDrugData> drugs() {
-        return drugs;
+    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate, @NotNull final List<BiopsyTreatmentDrugData> drugs, @NotNull final String formStatus,
+            @NotNull final String formLocked) {
+
+        return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, startDate, endDate, drugs, null, formStatus, formLocked);
     }
 
     @Nullable
     public String treatmentName() {
         final StringJoiner joiner = new StringJoiner("/");
-        drugs.forEach(drug -> {
+        drugs().forEach(drug -> {
             final String drugName = drug.name();
             if (drugName == null) {
                 joiner.add("NULL");
@@ -78,7 +70,7 @@ public class BiopsyTreatmentData {
     @Nullable
     public String type() {
         final StringJoiner joiner = new StringJoiner("/");
-        drugs.forEach(drug -> {
+        drugs().forEach(drug -> {
             final String drugType = drug.type();
             if (drugType == null) {
                 joiner.add("NULL");
@@ -89,17 +81,8 @@ public class BiopsyTreatmentData {
         return Strings.emptyToNull(joiner.toString());
     }
 
-    public int id() {
-        return id;
-    }
-
-    @Nullable
-    public Integer biopsyId() {
-        return biopsyId;
-    }
-
-    @Nullable
-    public String treatmentGiven() {
-        return treatmentGiven;
+    @Override
+    public String toString() {
+        return treatmentName() + "(" + startDate() + " - " + endDate() + ")";
     }
 }

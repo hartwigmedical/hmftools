@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,6 +31,4 @@ public abstract class FittedRegion implements ObservedRegion {
     public abstract double segmentTumorCopyNumber();
 
     public abstract double segmentBAF();
-
-    public abstract FreecStatus status();
 }

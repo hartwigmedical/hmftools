@@ -2,52 +2,33 @@ package com.hartwig.hmftools.common.purple.region;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.copynumber.freec.FreecGCContent;
 import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.purple.baf.TumorBAF;
+import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
-import com.hartwig.hmftools.common.variant.GermlineSampleData;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ObservedRegionFactory {
 
-    private static final Set<String> HETEROZYGOUS_GENO_TYPES = Sets.newHashSet("0/1", "0|1");
-
-    private final double minRefAlleleFrequency;
-    private final double maxRefAlleleFrequency;
-    private final long minCombinedDepth;
-    private final long maxCombinedDepth;
-
-    public ObservedRegionFactory(final double minRefAlleleFrequency, final double maxRefAlleleFrequency, final long minCombinedDepth,
-            final long maxCombinedDepth) {
-        this.minRefAlleleFrequency = minRefAlleleFrequency;
-        this.maxRefAlleleFrequency = maxRefAlleleFrequency;
-        this.minCombinedDepth = minCombinedDepth;
-        this.maxCombinedDepth = maxCombinedDepth;
-    }
-
     @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final List<GermlineVariant> variants,
+    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, TumorBAF> bafs,
             @NotNull final List<FreecRatio> tumorRatios, @NotNull final List<FreecRatio> normalRatios,
-            @NotNull final Multimap<String, FreecGCContent> gcContents) {
+            @NotNull final Multimap<String, GCContent> gcContents) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<FreecRatio> tumorRatioSelector = GenomePositionSelectorFactory.create(tumorRatios);
         final GenomePositionSelector<FreecRatio> normalRatioSelector = GenomePositionSelectorFactory.create(normalRatios);
-        final GenomePositionSelector<GermlineVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
-        final GenomePositionSelector<FreecGCContent> gcContentSelector = GenomePositionSelectorFactory.create(gcContents);
+        final GenomePositionSelector<TumorBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
+        final GenomePositionSelector<GCContent> gcContentSelector = GenomePositionSelectorFactory.create(gcContents);
 
         for (final PurpleSegment region : regions) {
             final BAFAccumulator baf = new BAFAccumulator();
@@ -55,7 +36,7 @@ public class ObservedRegionFactory {
             final RatioAccumulator normalRatio = new RatioAccumulator();
             final GCContentAccumulator gcContent = new GCContentAccumulator();
 
-            variantSelector.select(region, baf);
+            bafSelector.select(region, baf);
             tumorRatioSelector.select(region, tumorRatio);
             normalRatioSelector.select(region, normalRatio);
             gcContentSelector.select(region, gcContent);
@@ -81,22 +62,13 @@ public class ObservedRegionFactory {
         return result;
     }
 
-    private class BAFAccumulator implements Consumer<GermlineVariant> {
+    private class BAFAccumulator implements Consumer<TumorBAF> {
         private int count;
         final private List<Double> bafs = Lists.newArrayList();
 
         @Override
-        public void accept(final GermlineVariant variant) {
-            final GermlineSampleData tumorData = variant.tumorData();
-            if (tumorData == null || !HETEROZYGOUS_GENO_TYPES.contains(variant.refData().genoType()) || variant.type() != VariantType.SNP
-                    || variant.refData().alleleFrequency() <= minRefAlleleFrequency
-                    || variant.refData().alleleFrequency() >= maxRefAlleleFrequency || variant.refData().combinedDepth() <= minCombinedDepth
-                    || variant.refData().combinedDepth() >= maxCombinedDepth) {
-                return;
-            }
-
-            double standardBAF = tumorData.alleleFrequency();
-            double modifiedBAF = 0.5 + Math.abs(standardBAF - 0.5);
+        public void accept(final TumorBAF variant) {
+            double modifiedBAF = 0.5 + Math.abs(variant.baf() - 0.5);
 
             count++;
             bafs.add(modifiedBAF);
@@ -133,7 +105,7 @@ public class ObservedRegionFactory {
     }
 
     @VisibleForTesting
-    static class GCContentAccumulator implements Consumer<FreecGCContent> {
+    static class GCContentAccumulator implements Consumer<GCContent> {
 
         private int count;
         private double sumGCContent;
@@ -141,12 +113,12 @@ public class ObservedRegionFactory {
         private double sumMappablePercentage;
 
         @Override
-        public void accept(final FreecGCContent freecGCContent) {
+        public void accept(final GCContent GCContent) {
             count++;
-            if (Doubles.positiveOrZero(freecGCContent.gcContent())) {
-                sumGCContent += freecGCContent.gcContent() * freecGCContent.nonNPercentage();
-                sumNonNPercentage += freecGCContent.nonNPercentage();
-                sumMappablePercentage += freecGCContent.mappablePercentage();
+            if (Doubles.positiveOrZero(GCContent.gcContent())) {
+                sumGCContent += GCContent.gcContent() * GCContent.nonNPercentage();
+                sumNonNPercentage += GCContent.nonNPercentage();
+                sumMappablePercentage += GCContent.mappablePercentage();
             }
         }
 

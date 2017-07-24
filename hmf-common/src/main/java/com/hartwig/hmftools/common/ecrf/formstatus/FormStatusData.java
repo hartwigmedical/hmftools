@@ -15,4 +15,22 @@ public abstract class FormStatusData {
 
     @NotNull
     public abstract String locked();
+
+    @NotNull
+    public String dataStatusString() {
+        switch (dataStatus()) {
+            case "0":
+                return "saved";
+            case "1":
+                return "submitted";
+            case "2":
+                return "submitted with discrepancies";
+            case "3":
+                return "submitted with missing";
+            case "4":
+                return "verified";
+            default:
+                return "unknown";
+        }
+    }
 }
