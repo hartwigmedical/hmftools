@@ -28,7 +28,7 @@ public class BAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     public BAFSupplier(final CommonConfig config, final CommandLine cmd) throws ParseException, IOException, HartwigException {
         final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
-        supplier = new VCFBAFSupplier(config, vcfExtension);
+        supplier = new VCFSupplier(config, vcfExtension);
     }
 
     @Override

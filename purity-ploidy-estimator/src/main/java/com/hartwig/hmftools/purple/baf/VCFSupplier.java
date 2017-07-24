@@ -18,9 +18,9 @@ import com.hartwig.hmftools.purple.config.CommonConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class VCFBAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
+class VCFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
-    private static final Logger LOGGER = LogManager.getLogger(VCFBAFSupplier.class);
+    private static final Logger LOGGER = LogManager.getLogger(VCFSupplier.class);
 
     private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;
     private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
@@ -29,7 +29,7 @@ class VCFBAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     private final Multimap<String, TumorBAF> bafs;
 
-    VCFBAFSupplier(final CommonConfig config, final String vcfExtension) throws IOException, HartwigException {
+    VCFSupplier(final CommonConfig config, final String vcfExtension) throws IOException, HartwigException {
 
         final TumorBAFFactory factory =
                 new TumorBAFFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
@@ -39,8 +39,9 @@ class VCFBAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
         final List<GermlineVariant> variants = VariantFilter.passOnly(vcfFile.variants());
         bafs = factory.createBAF(variants);
 
-        LOGGER.info("Persisting BAFs to disk");
-        TumorBAFFile.write(config.outputDirectory(), config.tumorSample(), bafs);
+        final String filename = TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
+        LOGGER.info("Persisting BAFs to {}", filename);
+        TumorBAFFile.write(filename, bafs);
     }
 
     @Override
