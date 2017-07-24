@@ -20,23 +20,26 @@ public enum TumorBAFFile {
     private static final String HEADER_PREFIX = "#";
     private static final String EXTENSION = ".purple.baf";
 
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + EXTENSION;
+    }
+
     @NotNull
     public static List<TumorBAF> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
+        final String filePath = generateFilename(basePath, sample);
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull Multimap<String, TumorBAF> bafs)
+    public static void write(@NotNull final String filename, @NotNull Multimap<String, TumorBAF> bafs)
             throws IOException {
         List<TumorBAF> sortedBafs = Lists.newArrayList(bafs.values());
         Collections.sort(sortedBafs);
-        write(basePath, sample, sortedBafs);
+        write(filename, sortedBafs);
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<TumorBAF> bafs)
+    public static void write(@NotNull final String filename, @NotNull List<TumorBAF> bafs)
             throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
-        Files.write(new File(filePath).toPath(), toLines(bafs));
+        Files.write(new File(filename).toPath(), toLines(bafs));
     }
 
     @NotNull

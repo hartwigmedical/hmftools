@@ -14,8 +14,9 @@ import com.hartwig.hmftools.purple.config.CommonConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
-public class FreecRatioSupplier {
+public class FreecRatioSupplier implements RatioSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(FreecRatioSupplier.class);
 
@@ -34,10 +35,14 @@ public class FreecRatioSupplier {
         tumorRatios = toRatio(tumorFreecRatios);
     }
 
+    @Override
+    @NotNull
     public Multimap<String, ReadRatio> referenceRatios() {
         return referenceRatios;
     }
 
+    @Override
+    @NotNull
     public Multimap<String, ReadRatio> tumorRatios() {
         return tumorRatios;
     }

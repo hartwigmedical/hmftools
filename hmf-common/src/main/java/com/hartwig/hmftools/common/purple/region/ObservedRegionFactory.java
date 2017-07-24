@@ -7,12 +7,12 @@ import java.util.function.Consumer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.baf.TumorBAF;
 import com.hartwig.hmftools.common.purple.ratio.GCContent;
+import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,12 +21,12 @@ public class ObservedRegionFactory {
 
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, TumorBAF> bafs,
-            @NotNull final List<FreecRatio> tumorRatios, @NotNull final List<FreecRatio> normalRatios,
+            @NotNull final Multimap<String, ReadRatio> tumorRatios, @NotNull final Multimap<String, ReadRatio> normalRatios,
             @NotNull final Multimap<String, GCContent> gcContents) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
-        final GenomePositionSelector<FreecRatio> tumorRatioSelector = GenomePositionSelectorFactory.create(tumorRatios);
-        final GenomePositionSelector<FreecRatio> normalRatioSelector = GenomePositionSelectorFactory.create(normalRatios);
+        final GenomePositionSelector<ReadRatio> tumorRatioSelector = GenomePositionSelectorFactory.create(tumorRatios);
+        final GenomePositionSelector<ReadRatio> normalRatioSelector = GenomePositionSelectorFactory.create(normalRatios);
         final GenomePositionSelector<TumorBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
         final GenomePositionSelector<GCContent> gcContentSelector = GenomePositionSelectorFactory.create(gcContents);
 
@@ -87,7 +87,7 @@ public class ObservedRegionFactory {
         }
     }
 
-    private class RatioAccumulator implements Consumer<FreecRatio> {
+    private class RatioAccumulator implements Consumer<ReadRatio> {
         private double sumRatio;
         private int count;
 
@@ -96,7 +96,7 @@ public class ObservedRegionFactory {
         }
 
         @Override
-        public void accept(final FreecRatio ratio) {
+        public void accept(final ReadRatio ratio) {
             if (Doubles.greaterThan(ratio.ratio(), -1)) {
                 count++;
                 sumRatio += ratio.ratio();

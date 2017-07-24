@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -11,11 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
-import com.hartwig.hmftools.common.copynumber.freec.FreecRatio;
-import com.hartwig.hmftools.common.copynumber.freec.FreecRatioFactory;
-import com.hartwig.hmftools.common.copynumber.freec.FreecRatioRegions;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -23,8 +18,6 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.TumorBAF;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFactory;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -46,37 +39,41 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.purple.baf.BAFSupplier;
+import com.hartwig.hmftools.purple.config.CommonConfig;
+import com.hartwig.hmftools.purple.config.CommonConfigSupplier;
+import com.hartwig.hmftools.purple.ratio.FreecRatioSupplier;
+import com.hartwig.hmftools.purple.ratio.RatioSupplier;
+import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
+import com.hartwig.hmftools.purple.segment.FreecSegmentSupplier;
+import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
 import com.hartwig.hmftools.purple.structural.StructuralVariantFileLoader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.Rserve.RserveException;
 
 public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
+
+    private static final boolean NEW_RATIOS = false;
+    private static final boolean NEW_SEGMENTS = false;
 
     static final double MIN_PURITY_DEFAULT = 0.05;
     static final double MAX_PURITY_DEFAULT = 1.0;
     static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
     static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
 
-    private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;
-    private static final double MAX_REF_ALLELE_FREQUENCY = 0.65;
-    private static final int MIN_COMBINED_DEPTH = 10;
-    private static final int MAX_COMBINED_DEPTH = 100;
     private static final int MAX_PLOIDY = 20;
     private static final double PURITY_INCREMENTS = 0.01;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
@@ -89,12 +86,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String RUN_DIRECTORY = "run_dir";
-    private static final String OUTPUT_DIRECTORY = "output_dir";
-    private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
-    private static final String FREEC_DIRECTORY = "freec_dir";
-    private static final String VCF_EXTENSION = "vcf_extension";
-    private static final String VCF_EXTENSION_DEFAULT = ".annotated_sliced.vcf";
+
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
@@ -107,70 +99,45 @@ public class PurityPloidyEstimateApplication {
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
-    public static void main(final String... args) throws ParseException, IOException, HartwigException, SQLException {
+    public static void main(final String... args)
+            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException {
         new PurityPloidyEstimateApplication(args);
     }
 
-    private PurityPloidyEstimateApplication(final String... args) throws ParseException, IOException, HartwigException, SQLException {
+    private PurityPloidyEstimateApplication(final String... args)
+            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        if (runDirectory == null) {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Purity Ploidy Estimator (PURPLE)", options);
-            System.exit(1);
-        }
+        // Get common config
+        final CommonConfig config = new CommonConfigSupplier(cmd, options).get();
+        final String runDirectory = config.runDirectory();
+        final String outputDirectory = config.outputDirectory();
+        final String tumorSample = config.tumorSample();
 
-        LOGGER.info("Loading germline variant data");
-        final TumorBAFFactory bafFactory =
-                new TumorBAFFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
-        final String vcfExtension = defaultValue(cmd, VCF_EXTENSION, VCF_EXTENSION_DEFAULT);
-        final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(runDirectory, vcfExtension);
-        final List<GermlineVariant> variants = VariantFilter.passOnly(vcfFile.variants());
-        final Multimap<String, TumorBAF> bafs = bafFactory.createBAF(variants);
-        final String refSample = vcfFile.refSample();
-        final String tumorSample = vcfFile.tumorSample();
+        // Load BAFs
+        final BAFSupplier bafSupplier = new BAFSupplier(config, cmd);
+        final Multimap<String, TumorBAF> bafs = bafSupplier.get();
 
-        // KODU: Assume we only run purple on somatic pipeline runs.
-        assert tumorSample != null;
-
-        LOGGER.info("Loading {} Freec data", tumorSample);
-        final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.
-        final List<FreecRatio> normalRatio = FreecRatioFactory.loadNormalRatios(freecDirectory, tumorSample);
-        final List<FreecRatio> tumorRatio = FreecRatioFactory.loadTumorRatios(freecDirectory, tumorSample);
+        // Load Ratios
+        final String freecDirectory = config.freecDirectory();
         final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
-        final List<GenomeRegion> regions = FreecRatioRegions.createRegionsFromRatios(tumorRatio);
-        final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
+        final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
+        final RatioSupplier ratioSupplier = NEW_RATIOS  ?  new ReadCountRatioSupplier(config, gcContent) : freecRatioSupplier;
 
-//        LOGGER.info("Loading read count data");
-//        final Multimap<String, ReadCount> normalReadCount = FreecCPNFileLoader.normalReadCountLines(freecDirectory, refSample);
-//        final Multimap<String, ReadCount> tumorReadCount = FreecCPNFileLoader.tumorReadCountLines(freecDirectory, tumorSample);
-//
-//        LOGGER.info("Generating normalized read ratios");
-//        final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
-//        final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
-//        for (String chromosome : normalReadCount.keySet()) {
-//            List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosome);
-//            List<ReadCount> chromosomeNormalReadCount = (List<ReadCount>) normalReadCount.get(chromosome);
-//            List<ReadCount> chromosomeTumorReadCount = (List<ReadCount>) tumorReadCount.get(chromosome);
-//            for (int i = 0; i < chromosomeNormalReadCount.size(); i++) {
-//                GCContent windowGCContent = chromosomeGCContent.get(i);
-//                ReadCount windowNormalCount = chromosomeNormalReadCount.get(i);
-//                ReadCount windowTumorCount = chromosomeTumorReadCount.get(i);
-//
-//                normalRatiosBuilder.addPosition(windowGCContent, windowNormalCount);
-//                tumorRatiosBuilder.addPosition(windowGCContent, windowTumorCount);
-//            }
-//        }
+        // Load Segments
+        final FreecSegmentSupplier freecSegmentSupplier = new FreecSegmentSupplier(freecRatioSupplier);
+        final PCFSegmentSupplier pcfSegmentSupplier = new PCFSegmentSupplier(config, ratioSupplier.tumorRatios());
+        final List<GenomeRegion> regions = NEW_SEGMENTS ? pcfSegmentSupplier.get() : freecSegmentSupplier.get();
 
         LOGGER.info("Merging structural variants into freec segmentation");
+        final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
         final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
         LOGGER.info("Mapping all observations to the segmented regions");
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory();
-        final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, tumorRatio, normalRatio, gcContent);
+        final List<ObservedRegion> observedRegions =
+                observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios(), gcContent);
 
         final Gender gender = Gender.fromObservedRegions(observedRegions);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
@@ -218,16 +185,14 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
             }
 
-            final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
             LOGGER.info("Writing to file location: {}", outputDirectory);
 
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
             FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
-            TumorBAFFile.write(outputDirectory, tumorSample, bafs);
-//            ReadRatioFile.write(outputDirectory, refSample, normalRatiosBuilder.build().normalisedRatios());
-//            ReadRatioFile.write(outputDirectory, tumorSample, tumorRatiosBuilder.build().normalisedRatios());
+            //            ReadRatioFile.write(outputDirectory, refSample, normalRatiosBuilder.build().normalisedRatios());
+            //            ReadRatioFile.write(outputDirectory, tumorSample, tumorRatiosBuilder.build().normalisedRatios());
         }
 
         LOGGER.info("Complete");
@@ -268,24 +233,14 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static String freecDirectory(@NotNull final CommandLine cmd, @NotNull final String runDirectory,
-            @NotNull final String refSample, @NotNull final String tumorSample) {
-        return cmd.hasOption(FREEC_DIRECTORY)
-                ? cmd.getOptionValue(FREEC_DIRECTORY)
-                : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
-    }
-
-    @NotNull
     private static Options createOptions() {
         final Options options = new Options();
+        CommonConfigSupplier.addOptions(options);
+        BAFSupplier.addOptions(options);
 
         options.addOption(NO_STRUCTURAL_VARIANTS, false, "Disable structural variant support.");
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
-        options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to freec_dir.");
-        options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
-        options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to ../copyNumber/sampleR_sampleT/freec/");
-        options.addOption(VCF_EXTENSION, true, "VCF file extension. Defaults to " + VCF_EXTENSION_DEFAULT);
         options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling.");
 
         options.addOption(MIN_PURITY, true, "Minimum purity (default 0.05)");

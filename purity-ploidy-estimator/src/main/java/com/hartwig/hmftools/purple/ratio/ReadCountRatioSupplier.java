@@ -18,8 +18,9 @@ import com.hartwig.hmftools.purple.config.CommonConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
-public class ReadCountRatioSupplier {
+public class ReadCountRatioSupplier implements RatioSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(ReadCountRatioSupplier.class);
 
@@ -61,10 +62,14 @@ public class ReadCountRatioSupplier {
         ReadRatioFile.write(config.outputDirectory(), config.tumorSample(), tumorRatios);
     }
 
+    @Override
+    @NotNull
     public Multimap<String, ReadRatio> tumorRatios() {
         return tumorRatios;
     }
 
+    @Override
+    @NotNull
     public Multimap<String, ReadRatio> referenceRatios() {
         return referenceRatios;
     }

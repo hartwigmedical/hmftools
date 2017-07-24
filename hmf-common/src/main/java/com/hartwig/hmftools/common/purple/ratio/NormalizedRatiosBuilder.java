@@ -26,7 +26,8 @@ public class NormalizedRatiosBuilder {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcContent);
         entries.put(gcContent.chromosome(), readCountWithGCContent);
 
-        if (!readCount.chromosome().equals("X") && !readCount.chromosome().equals("Y")) {
+        // TODO: TEST With/without ismappable
+        if (!readCount.chromosome().equals("X") && !readCount.chromosome().equals("Y") && readCountWithGCContent.isMappable()) {
             gcMedian.addRead(readCountWithGCContent.gcContent(), readCountWithGCContent.readCount());
         }
     }
@@ -46,9 +47,16 @@ public class NormalizedRatiosBuilder {
     }
 
     private ReadRatio create(Map<Integer, Integer> medianCountPerGCBucket, ReadCountWithGCContent readCount) {
-        int gcMedianValue = medianCountPerGCBucket.getOrDefault(readCount.gcContent(), 0);
+        int gcMedianValue = medianCountPerGCBucket.getOrDefault(readCount.gcContent(), -1);
 
-        double ratio = gcMedianValue == 0 || !readCount.isMappable() ? 0 : 1.0 * readCount.readCount() / gcMedianValue;
+        final double ratio;
+
+        if (gcMedianValue == -1 || !readCount.isMappable() || gcMedianValue == 0) {
+            ratio = -1;
+        } else {
+            ratio = 1.0 * readCount.readCount() / gcMedianValue;
+        }
+
         return ImmutableReadRatio.builder().from(readCount).ratio(ratio).build();
 
     }

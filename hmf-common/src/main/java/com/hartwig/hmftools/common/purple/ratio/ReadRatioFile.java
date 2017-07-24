@@ -18,8 +18,13 @@ public enum ReadRatioFile {
     ;
 
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "#";
+    private static final String HEADER_PREFIX = "Chr";
     private static final String EXTENSION = ".purple.ratio";
+
+    @NotNull
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + EXTENSION;
+    }
 
     @NotNull
     public static List<ReadRatio> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
@@ -50,7 +55,7 @@ public enum ReadRatioFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("chromosome").add("position").add("ratio").toString();
+        return new StringJoiner(DELIMITER, "", "").add("Chromosome").add("Position").add("Ratio").toString();
     }
 
     @NotNull
