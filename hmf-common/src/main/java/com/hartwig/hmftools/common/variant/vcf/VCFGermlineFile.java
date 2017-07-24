@@ -13,6 +13,6 @@ public abstract class VCFGermlineFile extends VCFFile<GermlineVariant> {
     @NotNull
     public abstract String refSample();
 
-    @NotNull
+    @Nullable
     public abstract String tumorSample();
 }

@@ -19,7 +19,7 @@ public class VCFFileStreamerTest {
 
     @Test
     public void canStreamGermlineVCFAsExpected() throws IOException, HartwigException {
-        final BufferedReader reader = VCFFileStreamer.getVCFReader(RESOURCE_DIR, "germline.vcf");
+        final BufferedReader reader = VCFFileStreamer.getVCFReader(RESOURCE_DIR, "somatic_germline.vcf");
 
         final GermlineVariant firstVariant = VCFFileStreamer.nextVariant(reader);
         assertNotNull(firstVariant);

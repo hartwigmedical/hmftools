@@ -132,6 +132,9 @@ public class PurityPloidyEstimateApplication {
         final String refSample = vcfFile.refSample();
         final String tumorSample = vcfFile.tumorSample();
 
+        // KODU: Assume we only run purple on somatic pipeline runs.
+        assert tumorSample != null;
+
         LOGGER.info("Loading {} Freec data", tumorSample);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
         // KODU: Even though this retrieves normal ratios, freec uses the tumor sample name in the file name.

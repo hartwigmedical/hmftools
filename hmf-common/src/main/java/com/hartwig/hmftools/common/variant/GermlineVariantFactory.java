@@ -26,11 +26,15 @@ public final class GermlineVariantFactory {
 
     @NotNull
     public static String refSampleFromHeaderLine(@NotNull final String headerLine) {
-        return sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN);
+        final String refSample = sampleFromHeaderLine(headerLine, REF_SAMPLE_COLUMN);
+        // KODU: Assume REF_SAMPLE is always the first sample, so should always exist.
+        assert refSample != null;
+        return refSample;
     }
 
-    @NotNull
+    @Nullable
     public static String tumorSampleFromHeaderLine(@NotNull final String headerLine) {
+
         return sampleFromHeaderLine(headerLine, TUMOR_SAMPLE_COLUMN);
     }
 
@@ -47,7 +51,7 @@ public final class GermlineVariantFactory {
         return new String[] { first, second };
     }
 
-    private static boolean isBloodOrReference(String header) {
+    private static boolean isBloodOrReference(@NotNull final String header) {
         return header.toLowerCase().startsWith("bl") || header.toLowerCase().startsWith("r");
     }
 
