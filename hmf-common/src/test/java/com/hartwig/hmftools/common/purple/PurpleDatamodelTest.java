@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.ratio.ImmutableGCContent;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
@@ -63,6 +64,7 @@ public class PurpleDatamodelTest {
                 .observedNonNPercentage(1)
                 .observedMappablePercentage(1)
                 .ratioSupport(true)
+                .status(FreecStatus.SOMATIC)
                 .structuralVariantSupport(StructuralVariantSupport.NONE);
     }
 
