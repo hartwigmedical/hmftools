@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
+import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.TumorBAF;
@@ -172,6 +173,7 @@ public class PurityPloidyEstimateApplication {
             final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
             final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
             final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
+            final List<GeneCopyNumber> geneCopyNumbers = geneCopyNumbers(smoothRegions);
 
             final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurityFactory.allFits(), smoothRegions);
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, smoothRegions);
@@ -182,7 +184,7 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writePurity(tumorSample, score, fittedPurityFactory.bestFitPerPurity());
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
-                dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers(smoothRegions));
+                dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
                 dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
             }
 
@@ -191,6 +193,7 @@ public class PurityPloidyEstimateApplication {
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
             FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
         }
 
         LOGGER.info("Complete");
