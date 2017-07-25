@@ -123,12 +123,12 @@ public class PurityPloidyEstimateApplication {
         final String freecDirectory = config.freecDirectory();
         final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
         final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
-        final RatioSupplier ratioSupplier = NEW_RATIOS  ?  new ReadCountRatioSupplier(config, gcContent) : freecRatioSupplier;
+        final RatioSupplier ratioSupplier = NEW_RATIOS ? new ReadCountRatioSupplier(config, gcContent) : freecRatioSupplier;
 
         // Load Segments
-        final FreecSegmentSupplier freecSegmentSupplier = new FreecSegmentSupplier(freecRatioSupplier);
-        final PCFSegmentSupplier pcfSegmentSupplier = new PCFSegmentSupplier(config, ratioSupplier.tumorRatios());
-        final List<GenomeRegion> regions = NEW_SEGMENTS ? pcfSegmentSupplier.get() : freecSegmentSupplier.get();
+        final List<GenomeRegion> regions = NEW_SEGMENTS
+                ? new PCFSegmentSupplier(config, ratioSupplier.tumorRatios()).get()
+                : new FreecSegmentSupplier(freecRatioSupplier).get();
 
         LOGGER.info("Merging structural variants into freec segmentation");
         final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);

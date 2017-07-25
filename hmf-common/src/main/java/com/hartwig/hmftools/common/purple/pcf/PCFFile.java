@@ -14,11 +14,17 @@ public class PCFFile {
 
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "sampleID";
-    private static final String EXTENSION = ".purple.pcf";
+    private static final String RATIO_EXTENSION = ".purple.ratio.pcf";
+    private static final String BAF_EXTENSION = ".purple.baf.pcf";
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
-        return basePath + File.separator + sample + EXTENSION;
+    public static String generateRatioFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + RATIO_EXTENSION;
+    }
+
+    @NotNull
+    public static String generateBAFFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + BAF_EXTENSION;
     }
 
     @NotNull
@@ -43,8 +49,8 @@ public class PCFFile {
         String[] values = line.split(DELIMITER);
         return ImmutablePCFRegion.builder()
                 .chromosome(values[1])
-                .start(Long.valueOf(values[3]) + windowSize - 1)
-                .end(Long.valueOf(values[4]))
+                .start(Long.valueOf(values[3]))
+                .end(Long.valueOf(values[4]) + windowSize - 1)
                 .build();
     }
 }
