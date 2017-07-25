@@ -24,7 +24,5 @@ public interface ObservedRegion extends GenomeRegion {
 
     double observedMappablePercentage();
 
-    default FreecStatus status() {
-        return FreecStatus.fromNormalRatio(observedNormalRatio());
-    }
+    FreecStatus status();
 }

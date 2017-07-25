@@ -118,6 +118,8 @@ public class PurityPloidyEstimateApplication {
         // Load BAFs
         final BAFSupplier bafSupplier = new BAFSupplier(config, cmd);
         final Multimap<String, TumorBAF> bafs = bafSupplier.get();
+        final Gender gender = Gender.fromBAFCount(bafs);
+        LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
 
         // Load Ratios
         final String freecDirectory = config.freecDirectory();
@@ -135,12 +137,11 @@ public class PurityPloidyEstimateApplication {
         final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
         LOGGER.info("Mapping all observations to the segmented regions");
-        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory();
+        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
         final List<ObservedRegion> observedRegions =
                 observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios(), gcContent);
 
-        final Gender gender = Gender.fromObservedRegions(observedRegions);
-        LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
+
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
         final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
         final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
@@ -186,13 +187,10 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Writing to file location: {}", outputDirectory);
-
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
             FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
             FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
-            //            ReadRatioFile.write(outputDirectory, refSample, normalRatiosBuilder.build().normalisedRatios());
-            //            ReadRatioFile.write(outputDirectory, tumorSample, tumorRatiosBuilder.build().normalisedRatios());
         }
 
         LOGGER.info("Complete");

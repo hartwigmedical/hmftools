@@ -7,10 +7,12 @@ import java.util.function.Consumer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.baf.TumorBAF;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
@@ -18,6 +20,12 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import org.jetbrains.annotations.NotNull;
 
 public class ObservedRegionFactory {
+
+    private final Gender gender;
+
+    public ObservedRegionFactory(final Gender gender) {
+        this.gender = gender;
+    }
 
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, TumorBAF> bafs,
@@ -54,6 +62,7 @@ public class ObservedRegionFactory {
                     .observedGCContent(gcContent.getAverageGCContent())
                     .observedNonNPercentage(gcContent.getAverageNonNPercentage())
                     .observedMappablePercentage(gcContent.getAverageMappablePercentage())
+                    .status(FreecStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
                     .build();
 
             result.add(copyNumber);
