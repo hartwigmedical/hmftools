@@ -22,6 +22,14 @@ public abstract class EnrichedSomaticVariant implements Variant {
 
     public abstract String repeatSequence();
 
+    public abstract String gene();
+
+    public abstract String cosmicId();
+
+    public abstract String dbsnpId();
+
+    public abstract String effect();
+
     public abstract int repeatCount();
 
     public abstract double adjustedCopyNumber();

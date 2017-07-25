@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -51,17 +52,35 @@ public class EnrichedSomaticVariantFactory {
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> addCopyNumber(builder, x, variant.alleleFrequency()));
+        addAnnotations(builder, variant);
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);
 
         return builder.build();
     }
 
+    private Builder addAnnotations(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        final List<VariantAnnotation> annotations = variant.annotations();
+        if (!annotations.isEmpty()) {
+            VariantAnnotation annotation = annotations.get(0);
+            builder.gene(annotation.gene());
+            builder.effect(annotation.consequenceString());
+        }
+        return builder;
+    }
+
     private Builder createBuilder(@NotNull final SomaticVariant variant) {
+        String cosmicId = variant.cosmicID();
+        String dbsnpId = variant.dbsnpID();
+
         return builder().from(variant)
                 .trinucleotideContext("")
                 .microhomology("")
                 .refGenomeContext("")
+                .gene("")
+                .cosmicId(cosmicId == null ? "" : cosmicId)
+                .dbsnpId(dbsnpId == null ? "" : dbsnpId)
+                .effect("")
                 .repeatCount(0)
                 .repeatSequence("")
                 .totalReadCount(variant.totalReadCount())
