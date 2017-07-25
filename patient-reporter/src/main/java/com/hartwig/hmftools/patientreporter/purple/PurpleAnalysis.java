@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -35,6 +36,9 @@ public abstract class PurpleAnalysis {
 
     @NotNull
     public abstract List<PurpleCopyNumber> copyNumbers();
+
+    @NotNull
+    public abstract List<GeneCopyNumber> geneCopyNumbers();
 
     @NotNull
     public List<CopyNumber> ploidyAdjustedCopyNumbers() {
