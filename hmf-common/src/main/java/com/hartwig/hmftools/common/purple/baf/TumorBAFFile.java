@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple.baf;
 
-import static java.util.stream.Collectors.toList;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
@@ -25,20 +24,17 @@ public enum TumorBAFFile {
     }
 
     @NotNull
-    public static List<TumorBAF> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = generateFilename(basePath, sample);
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    public static Multimap<String, TumorBAF> read(@NotNull final String fileName) throws IOException {
+        return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull Multimap<String, TumorBAF> bafs)
-            throws IOException {
+    public static void write(@NotNull final String filename, @NotNull Multimap<String, TumorBAF> bafs) throws IOException {
         List<TumorBAF> sortedBafs = Lists.newArrayList(bafs.values());
         Collections.sort(sortedBafs);
         write(filename, sortedBafs);
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<TumorBAF> bafs)
-            throws IOException {
+    public static void write(@NotNull final String filename, @NotNull List<TumorBAF> bafs) throws IOException {
         Files.write(new File(filename).toPath(), toLines(bafs));
     }
 
@@ -64,8 +60,15 @@ public enum TumorBAFFile {
     }
 
     @NotNull
-    private static List<TumorBAF> fromLines(@NotNull List<String> lines) {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(TumorBAFFile::fromString).collect(toList());
+    private static Multimap<String, TumorBAF> fromLines(@NotNull List<String> lines) {
+        Multimap<String, TumorBAF> result = ArrayListMultimap.create();
+        for (String line : lines) {
+            if (!line.startsWith(HEADER_PREFIX)) {
+                final TumorBAF region = fromString(line);
+                result.put(region.chromosome(), region);
+            }
+        }
+        return result;
     }
 
     @NotNull

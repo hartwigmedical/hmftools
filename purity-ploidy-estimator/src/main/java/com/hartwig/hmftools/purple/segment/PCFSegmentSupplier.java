@@ -35,41 +35,42 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
     public PCFSegmentSupplier(@NotNull final CommonConfig config, Multimap<String, ReadRatio> ratios)
             throws RserveException, REXPMismatchException, IOException {
 
-        Multimap<String, PCFRegion> referenceRegions = getStringPCFRegionMultimap(config, config.refSample());
-        Multimap<String, PCFRegion> tumorRegions = getStringPCFRegionMultimap(config, config.tumorSample());
+        Multimap<String, PCFRegion> tumorRegions = getStringPCFRegionMultimap(config, "tumor", config.tumorSample());
+        Multimap<String, PCFRegion> referenceRegions = getStringPCFRegionMultimap(config, "reference", config.refSample());
 
         for (String chromosome : referenceRegions.keySet()) {
             long chromosomeEnd = ratios.get(chromosome).size() * WINDOW_SIZE;
-            segments.addAll(extend(chromosome, chromosomeEnd, referenceRegions.get(chromosome)));
+            final List<GenomeRegion> tumor = Lists.newArrayList(tumorRegions.get(chromosome));
+            final List<GenomeRegion> reference = extend(chromosome, chromosomeEnd, referenceRegions.get(chromosome));
+
+            segments.addAll(SegmentMerge.merge(reference, tumor));
         }
 
         Collections.sort(segments);
     }
 
     @NotNull
-    private Multimap<String, PCFRegion> getStringPCFRegionMultimap(final @NotNull CommonConfig config, String sample)
-            throws RserveException, IOException {
+    private Multimap<String, PCFRegion> getStringPCFRegionMultimap(final @NotNull CommonConfig config, @NotNull final String description,
+            @NotNull final String sample) throws RserveException, IOException {
         final String ratioFile = ReadRatioFile.generateFilename(config.outputDirectory(), sample);
         final String pcfFile = PCFFile.generateFilename(config.outputDirectory(), sample);
         if (!new File(pcfFile).exists()) {
-            LOGGER.info("Connecting to R server to compute segmentation");
+            LOGGER.info("Connecting to R server to generate {} segmentation", description);
 
             RConnection c = new RConnection();
-            String cmdLoadData = "ratio <- read.table(\"" + ratioFile + "\", header=TRUE)";
-            String cmdCleanData =
-                    "ratio <- ratio[ratio$Ratio>0,] \n ratio$S1 = log2(ratio$Ratio) \n ratio <- ratio[!is.nan(ratio$S1),] \n ratio <- ratio[,c(\"Chromosome\",\"Position\",\"S1\")]";
-            String cmdProcessData =
-                    "ratio.seg<-pcf(ratio,verbose=FALSE,gamma=100, kmin=2,save.res = TRUE, file.names = c(\"" + pcfFile + "1\", \""
-                            + pcfFile + "\"))";
 
             c.eval("library(copynumber)");
-            c.eval(cmdLoadData);
-            c.eval(cmdCleanData);
-            c.eval(cmdProcessData);
+            c.eval("ratio <- read.table(\"" + ratioFile + "\", header=TRUE)");
+            c.eval("ratio <- ratio[ratio$Ratio>0,]");
+            c.eval("ratio$S1 = log2(ratio$Ratio)");
+            c.eval("ratio <- ratio[!is.nan(ratio$S1),]");
+            c.eval("ratio <- ratio[,c(\"Chromosome\",\"Position\",\"S1\")]");
+            c.eval("ratio.seg<-pcf(ratio,verbose=FALSE,gamma=100, kmin=2,save.res = TRUE, file.names = c(\"" + pcfFile + "1\", \"" + pcfFile
+                    + "\"))");
         }
 
-        LOGGER.info("Loading PCF segments from {}", pcfFile);
-        return PCFFile.read(pcfFile);
+        LOGGER.info("Loading {} PCF segments from {}", description, pcfFile);
+        return PCFFile.read(WINDOW_SIZE, pcfFile);
     }
 
     @Override
@@ -87,7 +88,7 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
                 result.add(create(chromosome, start, genomeRegion.start() - 1));
             }
 
-            end = genomeRegion.end() + WINDOW_SIZE - 1;
+            end = genomeRegion.end();
             start = end + 1;
             result.add(create(chromosome, genomeRegion.start(), end));
         }

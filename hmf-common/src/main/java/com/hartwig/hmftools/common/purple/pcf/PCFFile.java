@@ -22,26 +22,29 @@ public class PCFFile {
     }
 
     @NotNull
-    public static Multimap<String, PCFRegion> read(@NotNull final String filename) throws IOException {
-        return fromLines(Files.readAllLines(new File(filename).toPath()));
+    public static Multimap<String, PCFRegion> read(int windowSize, @NotNull final String filename) throws IOException {
+        return fromLines(windowSize, Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static Multimap<String, PCFRegion> fromLines(@NotNull List<String> lines) {
+    private static Multimap<String, PCFRegion> fromLines(int windowSize, @NotNull List<String> lines) {
         Multimap<String, PCFRegion> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith(HEADER_PREFIX)) {
-                final PCFRegion region = fromString(line);
+                final PCFRegion region = fromString(windowSize, line);
                 result.put(region.chromosome(), region);
             }
         }
-
         return result;
     }
 
     @NotNull
-    private static PCFRegion fromString(@NotNull final String line) {
+    private static PCFRegion fromString(int windowSize, @NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutablePCFRegion.builder().chromosome(values[1]).start(Long.valueOf(values[3])).end(Long.valueOf(values[4])).build();
+        return ImmutablePCFRegion.builder()
+                .chromosome(values[1])
+                .start(Long.valueOf(values[3]) + windowSize - 1)
+                .end(Long.valueOf(values[4]))
+                .build();
     }
 }
