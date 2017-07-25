@@ -84,7 +84,7 @@ public class SinglePatientReporter {
         if (potentialMNVCount > 0) {
             LOGGER.warn(" !! Non-zero number of potentials MNV ");
         }
-        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.stats().size())
+        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize())
                 + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);

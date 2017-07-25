@@ -57,7 +57,7 @@ public final class CopyNumberAnalyzer {
             }
         }
         Collections.sort(reports);
-        return new CopyNumberAnalysis(stats, reports);
+        return new CopyNumberAnalysis(stats.size(), reports);
     }
 
     @NotNull

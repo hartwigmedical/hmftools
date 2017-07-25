@@ -1,28 +1,23 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.List;
-import java.util.Map;
-
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberAnalysis {
 
     @NotNull
-    private final Map<HmfGenomeRegion, CopyNumberStats> stats;
+    private final int genePanelSize;
     @NotNull
     private final List<CopyNumberReport> findings;
 
-    CopyNumberAnalysis(@NotNull final Map<HmfGenomeRegion, CopyNumberStats> stats,
-            @NotNull final List<CopyNumberReport> findings) {
-        this.stats = stats;
+    CopyNumberAnalysis(final int genePanelSize, @NotNull final List<CopyNumberReport> findings) {
+        this.genePanelSize = genePanelSize;
         this.findings = findings;
     }
 
-    @NotNull
-    public Map<HmfGenomeRegion, CopyNumberStats> stats() {
-        return stats;
+    public int genePanelSize() {
+        return genePanelSize;
     }
 
     @NotNull
