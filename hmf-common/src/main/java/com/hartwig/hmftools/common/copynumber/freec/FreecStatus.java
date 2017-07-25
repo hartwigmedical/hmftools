@@ -9,8 +9,8 @@ public enum FreecStatus {
     SOMATIC,
     UNKNOWN;
 
-    private static final double GERMLINE_MIN_RATIO = 0.75;
-    private static final double GERMLINE_MAX_RATIO = 1.25;
+    private static final double GERMLINE_MIN_RATIO = 0.8;
+    private static final double GERMLINE_MAX_RATIO = 1.2;
 
     @NotNull
     public static FreecStatus fromNormalRatio(final double ratio) {
