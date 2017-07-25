@@ -67,11 +67,9 @@ public class ObservedRegionFactory {
         final private List<Double> bafs = Lists.newArrayList();
 
         @Override
-        public void accept(final TumorBAF variant) {
-            double modifiedBAF = 0.5 + Math.abs(variant.baf() - 0.5);
-
+        public void accept(final TumorBAF baf) {
             count++;
-            bafs.add(modifiedBAF);
+            bafs.add(baf.mBaf());
         }
 
         private int count() {

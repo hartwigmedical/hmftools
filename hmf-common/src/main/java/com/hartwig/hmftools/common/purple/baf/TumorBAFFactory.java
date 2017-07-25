@@ -64,6 +64,10 @@ public class TumorBAFFactory {
     private TumorBAF create(final GermlineVariant variant) {
         final GermlineSampleData tumorData = variant.tumorData();
         assert (tumorData != null);
-        return ImmutableTumorBAF.builder().from(variant).baf(tumorData.alleleFrequency()).build();
+
+        double baf = tumorData.alleleFrequency();
+        double modifiedBAF = 0.5 + Math.abs(baf - 0.5);
+
+        return ImmutableTumorBAF.builder().from(variant).baf(baf).mBaf(modifiedBAF).build();
     }
 }

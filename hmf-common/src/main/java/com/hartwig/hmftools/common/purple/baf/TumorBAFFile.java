@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public enum TumorBAFFile {
     ;
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "#";
+    private static final String HEADER_PREFIX = "Chr";
     private static final String EXTENSION = ".purple.baf";
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
@@ -48,7 +48,7 @@ public enum TumorBAFFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("chromosome").add("position").add("baf").toString();
+        return new StringJoiner(DELIMITER, "", "").add("Chromosome").add("Position").add("BAF").add("mBAF").toString();
     }
 
     @NotNull
@@ -56,6 +56,7 @@ public enum TumorBAFFile {
         return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
                 .add(String.valueOf(ratio.position()))
                 .add(String.valueOf(ratio.baf()))
+                .add(String.valueOf(ratio.mBaf()))
                 .toString();
     }
 
@@ -74,6 +75,11 @@ public enum TumorBAFFile {
     @NotNull
     private static TumorBAF fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableTumorBAF.builder().chromosome(values[0]).position(Long.valueOf(values[1])).baf(Double.valueOf(values[2])).build();
+        return ImmutableTumorBAF.builder()
+                .chromosome(values[0])
+                .position(Long.valueOf(values[1]))
+                .baf(Double.valueOf(values[2]))
+                .mBaf(Double.valueOf(values[3]))
+                .build();
     }
 }

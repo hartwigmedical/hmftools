@@ -11,4 +11,6 @@ import org.jetbrains.annotations.Nullable;
 public interface TumorBAF extends GenomePosition {
 
     double baf();
+
+    double mBaf();
 }
