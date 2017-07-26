@@ -21,7 +21,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.SinglePatientReporter;
 import com.hartwig.hmftools.patientreporter.batch.BatchReportAnalyser;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -117,7 +117,7 @@ public class PatientReporterApplication {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
-        final CopyNumberAnalyzer copyNumberAnalyzer = CopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
+        final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
         return new SinglePatientReporter(cmd.hasOption(PURPLE), buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer,
                 copyNumberAnalyzer, cmd.getOptionValue(TMP_DIRECTORY));

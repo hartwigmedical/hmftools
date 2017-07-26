@@ -44,13 +44,12 @@ public abstract class PurpleAnalysis {
     }
 
     @NotNull
-    public List<VariantReport> enrich(@NotNull List<VariantReport> variants) {
-
+    public List<VariantReport> enrich(@NotNull final List<VariantReport> variants) {
         final List<VariantReport> result = Lists.newArrayList();
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity());
         final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
 
-        for (VariantReport variant : variants) {
+        for (final VariantReport variant : variants) {
             final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variant);
             if (optionalCopyNumber.isPresent()) {
                 PurpleCopyNumber copyNumber = optionalCopyNumber.get();

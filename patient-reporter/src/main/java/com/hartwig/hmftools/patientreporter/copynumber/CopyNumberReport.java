@@ -26,9 +26,6 @@ public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
     @NotNull
     public abstract String gene();
 
-    @NotNull
-    public abstract String transcript();
-
     public abstract int copyNumber();
 
     @NotNull
@@ -42,8 +39,8 @@ public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
     //TODO: Once we get rid of freec, this class can implement GenomeRegion and gets comparable for free
     @Override
     public int compareTo(@NotNull final CopyNumberReport other) {
-        final Integer intChrom1 = toInteger(chromosome());
-        final Integer intChrom2 = toInteger(other.chromosome());
+        final Integer intChrom1 = safeToInteger(chromosome());
+        final Integer intChrom2 = safeToInteger(other.chromosome());
         if (intChrom1 == null && intChrom2 == null) {
             if (chromosome().equals(other.chromosome())) {
                 return chromosomeBand().compareTo(other.chromosomeBand());
@@ -64,12 +61,11 @@ public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
     }
 
     @Nullable
-    private static Integer toInteger(@NotNull String string) {
+    private static Integer safeToInteger(@NotNull String string) {
         try {
             return Integer.parseInt(string);
         } catch (NumberFormatException exception) {
             return null;
         }
     }
-
 }

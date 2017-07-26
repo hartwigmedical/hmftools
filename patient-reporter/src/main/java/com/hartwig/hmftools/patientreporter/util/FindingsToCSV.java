@@ -30,8 +30,8 @@ public final class FindingsToCSV {
     @NotNull
     public static List<String> cnvToCSV(@NotNull final List<CopyNumberReport> reports) {
         final List<String> lines = Lists.newArrayList();
-        lines.add("GENE,TRANSCRIPT,FINDING");
-        lines.addAll(reports.stream().map(report -> report.gene() + "," + report.transcript() + "," + Integer.toString(
+        lines.add("GENE,FINDING");
+        lines.addAll(reports.stream().map(report -> report.gene() + "," + Integer.toString(
                 report.copyNumber())).collect(Collectors.toList()));
         return lines;
     }

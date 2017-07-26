@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.util.FindingsToCSV;
@@ -43,13 +43,13 @@ public class SinglePatientReporter {
     @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
-    private final CopyNumberAnalyzer copyNumberAnalyzer;
+    private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
     @Nullable
     private final String tmpDirectory;
     private final boolean usePurple;
 
     public SinglePatientReporter(boolean usePurple, @NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
-            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
+            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer,
             @Nullable final String tmpDirectory) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
@@ -85,8 +85,8 @@ public class SinglePatientReporter {
             LOGGER.warn(" !! Non-zero number of potentials MNV ");
             LOGGER.warn(variantAnalysis.potentialConsequentialMNVs());
         }
-        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize())
-                + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
+        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
+                + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
@@ -106,7 +106,7 @@ public class SinglePatientReporter {
         final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
         final FittedPurityScore purityScore = PatientReporterHelper.loadPurityScore(runDirectory, sample);
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
-        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadGeneCopyNumbers(runDirectory, sample);
+        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
@@ -120,7 +120,7 @@ public class SinglePatientReporter {
             copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
         } else {
             LOGGER.info(" Loading freec somatic copy numbers...");
-            final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
+            final List<CopyNumber> copyNumbers = PatientReporterHelper.loadFreecCopyNumbers(runDirectory, sample);
             LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
             LOGGER.info(" Analyzing freec somatic copy numbers...");
             copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
@@ -128,7 +128,6 @@ public class SinglePatientReporter {
 
         LOGGER.info(" Analyzing somatics....");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
-
 
         if (tmpDirectory != null) {
             writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);

@@ -38,7 +38,6 @@ class PatientDataSource {
     private PatientDataSource() {
     }
 
-
     @NotNull
     static JRDataSource fromVariants(@NotNull final List<VariantReport> variants,
             @NotNull final HmfReporterData reporterData) {

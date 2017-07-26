@@ -22,17 +22,15 @@ class PurpleCopyNumberReportFactory {
     static final double ABS_LOSS = 0.5;
 
     @NotNull
-    static List<CopyNumberReport> createReport(double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+    static List<CopyNumberReport> createReport(final double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
         final List<CopyNumberReport> result = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-
+        for (final GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
             final CopyNumberReportType type = type(samplePloidy, geneCopyNumber.minCopyNumber());
             if (type != CopyNumberReportType.NEUTRAL) {
                 result.add(ImmutableCopyNumberReport.builder()
                         .chromosome(geneCopyNumber.chromosome())
                         .chromosomeBand(geneCopyNumber.chromosomeBand())
                         .gene(geneCopyNumber.gene())
-                        .transcript(geneCopyNumber.transcript())
                         .copyNumber(geneCopyNumber.value())
                         .type(type)
                         .build());
@@ -42,7 +40,8 @@ class PurpleCopyNumberReportFactory {
     }
 
     @VisibleForTesting
-    static CopyNumberReportType type(double samplePloidy, double copyNumber) {
+    @NotNull
+    static CopyNumberReportType type(final double samplePloidy, final double copyNumber) {
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
             return CopyNumberReportType.LOSS;
         }

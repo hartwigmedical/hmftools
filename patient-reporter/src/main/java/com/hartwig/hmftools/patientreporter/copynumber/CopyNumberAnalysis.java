@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberAnalysis {
 
-    @NotNull
     private final int genePanelSize;
     @NotNull
     private final List<CopyNumberReport> findings;

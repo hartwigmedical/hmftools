@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -19,7 +18,7 @@ import com.hartwig.hmftools.common.slicing.HmfSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CopyNumberAnalyzer {
+public final class FreecCopyNumberAnalyzer {
 
     private static final int NORMAL_COPYNUMBER = 2;
     private static final int MIN_CNV_FOR_GAIN = 4;
@@ -28,12 +27,11 @@ public final class CopyNumberAnalyzer {
     @NotNull
     private final Set<HmfGenomeRegion> regions;
 
-    public static CopyNumberAnalyzer fromHmfSlicingRegion(@NotNull final HmfSlicer hmfSlicingRegion) {
-        return new CopyNumberAnalyzer(Sets.newHashSet(hmfSlicingRegion.hmfRegions()));
+    public static FreecCopyNumberAnalyzer fromHmfSlicingRegion(@NotNull final HmfSlicer hmfSlicingRegion) {
+        return new FreecCopyNumberAnalyzer(Sets.newHashSet(hmfSlicingRegion.hmfRegions()));
     }
 
-    @VisibleForTesting
-    CopyNumberAnalyzer(@NotNull final Set<HmfGenomeRegion> regions) {
+    private FreecCopyNumberAnalyzer(@NotNull final Set<HmfGenomeRegion> regions) {
         this.regions = regions;
     }
 
@@ -55,7 +53,6 @@ public final class CopyNumberAnalyzer {
                         .chromosome(stat.getKey().chromosome())
                         .chromosomeBand(region.chromosomeBand())
                         .gene(region.gene())
-                        .transcript(region.transcript())
                         .copyNumber(relevantCNV)
                         .type(CopyNumberReportType.resolveType(relevantCNV))
                         .build());

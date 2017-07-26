@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.patientreporter.report;
 
-import static com.google.common.base.Strings.nullToEmpty;
-
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 
@@ -34,7 +32,7 @@ class GenePanelDataSource {
     static JRDataSource fromHmfReporterData(@NotNull final HmfReporterData reporterData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(),
                 TYPE_FIELD.getName(), GENE2_FIELD.getName(), TRANSCRIPT2_FIELD.getName(), TYPE2_FIELD.getName());
-        final List<HmfGenomeRegion> regions = reporterData.slicer().hmfRegions().stream().collect(Collectors.toList());
+        final List<HmfGenomeRegion> regions = Lists.newArrayList(reporterData.slicer().hmfRegions());
         regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
 
         for (int i = 0; i < regions.size() / 2; i++) {

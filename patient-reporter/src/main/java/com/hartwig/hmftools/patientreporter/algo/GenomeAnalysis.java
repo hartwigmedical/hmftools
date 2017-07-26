@@ -25,7 +25,7 @@ public class GenomeAnalysis {
     }
 
     @NotNull
-    public PurpleAnalysis purpleAnalysis() {
+    PurpleAnalysis purpleAnalysis() {
         return purpleAnalysis;
     }
 
