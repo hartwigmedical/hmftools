@@ -101,10 +101,6 @@ public class SinglePatientReporter {
         final String sample = variantFile.sample();
         LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for sample " + sample);
 
-        LOGGER.info(" Loading freec somatic copy numbers...");
-        final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
-        LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
-
         LOGGER.info(" Loading purity numbers...");
         final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
         final FittedPurityScore purityScore = PatientReporterHelper.loadPurityScore(runDirectory, sample);
@@ -117,11 +113,21 @@ public class SinglePatientReporter {
                     + ") range exceeds 3%. Proceed with caution.");
         }
 
+        final CopyNumberAnalysis copyNumberAnalysis;
+        if (usePurple) {
+            LOGGER.info(" Analyzing purple somatic copy numbers...");
+            copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
+        } else {
+            LOGGER.info(" Loading freec somatic copy numbers...");
+            final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
+            LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
+            LOGGER.info(" Analyzing freec somatic copy numbers...");
+            copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
+        }
+
         LOGGER.info(" Analyzing somatics....");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
-        LOGGER.info(" Analyzing {} somatic copy numbers...", usePurple ? "purple" : "freec");
-        final CopyNumberAnalysis copyNumberAnalysis = usePurple ? purpleAnalysis.copyNumberAnalysis() : copyNumberAnalyzer.run(copyNumbers);
 
         if (tmpDirectory != null) {
             writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);
