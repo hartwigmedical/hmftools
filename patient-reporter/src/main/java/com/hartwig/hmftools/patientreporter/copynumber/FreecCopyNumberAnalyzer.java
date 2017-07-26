@@ -37,7 +37,7 @@ public final class FreecCopyNumberAnalyzer {
 
     @NotNull
     public CopyNumberAnalysis run(@NotNull final List<CopyNumber> copyNumbers) {
-        final Map<HmfGenomeRegion, CopyNumberStats> stats = Maps.newHashMap();
+        final Map<HmfGenomeRegion, FreecCopyNumberStats> stats = Maps.newHashMap();
 
         final Multimap<String, CopyNumber> copyNumberPerChromosome = toChromosomeMultiMap(copyNumbers);
         for (final HmfGenomeRegion region : regions) {
@@ -45,7 +45,7 @@ public final class FreecCopyNumberAnalyzer {
                     analyzeRegion(region, Lists.newArrayList(copyNumberPerChromosome.get(region.chromosome()))));
         }
         final List<CopyNumberReport> reports = Lists.newArrayList();
-        for (final Map.Entry<HmfGenomeRegion, CopyNumberStats> stat : stats.entrySet()) {
+        for (final Map.Entry<HmfGenomeRegion, FreecCopyNumberStats> stat : stats.entrySet()) {
             final int relevantCNV = stat.getValue().min();
             if (relevantCNV >= MIN_CNV_FOR_GAIN || relevantCNV <= MAX_CNV_FOR_LOSS) {
                 final HmfGenomeRegion region = stat.getKey();
@@ -73,7 +73,7 @@ public final class FreecCopyNumberAnalyzer {
     }
 
     @NotNull
-    private static CopyNumberStats analyzeRegion(@NotNull final GenomeRegion region,
+    private static FreecCopyNumberStats analyzeRegion(@NotNull final GenomeRegion region,
             @NotNull final List<CopyNumber> copyNumbers) {
         int minCopyNumber = Integer.MAX_VALUE;
         int maxCopyNumber = Integer.MIN_VALUE;
@@ -98,6 +98,6 @@ public final class FreecCopyNumberAnalyzer {
             maxCopyNumber = Math.max(NORMAL_COPYNUMBER, maxCopyNumber);
         }
 
-        return new CopyNumberStats(minCopyNumber, maxCopyNumber, ((double) totalCopyNumber) / region.bases());
+        return new FreecCopyNumberStats(minCopyNumber, maxCopyNumber, ((double) totalCopyNumber) / region.bases());
     }
 }

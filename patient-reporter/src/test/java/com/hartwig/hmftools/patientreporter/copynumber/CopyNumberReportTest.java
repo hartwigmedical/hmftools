@@ -15,13 +15,13 @@ public class CopyNumberReportTest {
     @Test
     public void canResolveType() {
         final CopyNumberReport gain = create("18", "p2", 5);
-        assertEquals(CopyNumberReport.COPY_NUMBER_GAIN, gain.description());
+        assertEquals(CopyNumberReportType.GAIN.description(), gain.description());
 
         final CopyNumberReport loss = create("18", "p2", 0);
-        assertEquals(CopyNumberReport.COPY_NUMBER_LOSS, loss.description());
+        assertEquals(CopyNumberReportType.LOSS.description(), loss.description());
 
         final CopyNumberReport neutral = create("18", "p2", 2);
-        assertEquals(CopyNumberReport.COPY_NUMBER_NEUTRAL, neutral.description());
+        assertEquals(CopyNumberReportType.NEUTRAL.description(), neutral.description());
     }
 
     @Test

@@ -7,12 +7,14 @@ public enum CopyNumberReportType {
     LOSS("copy-loss"),
     NEUTRAL("none");
 
+    @NotNull
     private final String description;
 
-    CopyNumberReportType(final String description) {
+    CopyNumberReportType(@NotNull final String description) {
         this.description = description;
     }
 
+    @NotNull
     public String description() {
         return description;
     }
