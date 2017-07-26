@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
@@ -14,15 +12,12 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.util.FindingsToCSV;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -31,7 +26,6 @@ import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class SinglePatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(SinglePatientReporter.class);
@@ -44,18 +38,15 @@ public class SinglePatientReporter {
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
-    @Nullable
-    private final String tmpDirectory;
     private final boolean useFreec;
 
     public SinglePatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
             @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer,
-            @Nullable final String tmpDirectory, final boolean useFreec) {
+            final boolean useFreec) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
-        this.tmpDirectory = tmpDirectory;
         this.useFreec = useFreec;
     }
 
@@ -96,7 +87,7 @@ public class SinglePatientReporter {
     }
 
     @NotNull
-    public GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory) throws IOException, HartwigException {
+    private GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory) throws IOException, HartwigException {
         LOGGER.info(" Loading somatic variants...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
         final String sample = variantFile.sample();
@@ -129,33 +120,6 @@ public class SinglePatientReporter {
         LOGGER.info(" Analyzing somatics....");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
-        if (tmpDirectory != null) {
-            writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);
-        }
-
         return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis, purpleAnalysis);
-    }
-
-    private static void writeIntermediateDataToTmpFiles(@NotNull final String basePath,
-            @NotNull final VCFSomaticFile originalFile, @NotNull final VariantAnalysis variantAnalysis,
-            @NotNull final CopyNumberAnalysis copyNumberAnalysis) throws IOException {
-        final String baseName = basePath + File.separator + originalFile.sample();
-        final String consensusVCF = baseName + "_consensus_variants.vcf";
-        VCFFileWriter.writeSomaticVCF(consensusVCF, originalFile, variantAnalysis.consensusPassedVariants());
-        LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
-
-        final String consequentialVCF = baseName + "_consequential_variants.vcf";
-        VCFFileWriter.writeSomaticVCF(consequentialVCF, originalFile, variantAnalysis.consequentialVariants());
-        LOGGER.info("    Written consequential variants to " + consequentialVCF);
-
-        final String varReportFile = baseName + "_variant_report.csv";
-        final List<VariantReport> varFindings = variantAnalysis.findings();
-        Files.write(new File(varReportFile).toPath(), FindingsToCSV.varToCSV(varFindings));
-        LOGGER.info("    Written " + varFindings.size() + " variants to report to " + varReportFile);
-
-        final String cnvReportFile = baseName + "_copynumber_report.csv";
-        final List<CopyNumberReport> cnvFindings = copyNumberAnalysis.findings();
-        Files.write(new File(cnvReportFile).toPath(), FindingsToCSV.cnvToCSV(cnvFindings));
-        LOGGER.info("    Written " + cnvFindings.size() + " copy-numbers to report to " + cnvReportFile);
     }
 }

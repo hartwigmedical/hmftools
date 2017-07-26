@@ -28,24 +28,21 @@ class ConsequenceDeterminer {
 
     @VisibleForTesting
     static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
-    // KODU: This boolean exists to evaluate the impact of annotation-filtering on actual patients.
-    private static final boolean INCLUDE_ALL_ANNOTATIONS_FOR_IMPACT = false;
 
     @NotNull
     private final Slicer hmfSlicingRegion;
     @NotNull
     private final Map<String, HmfGenomeRegion> relevantTranscriptMap;
 
-    ConsequenceDeterminer(@NotNull final Slicer hmfSlicingRegion,
-            @NotNull final Map<String, HmfGenomeRegion> relevantTranscriptMap) {
+    ConsequenceDeterminer(@NotNull final Slicer hmfSlicingRegion, @NotNull final Map<String, HmfGenomeRegion> relevantTranscriptMap) {
         this.hmfSlicingRegion = hmfSlicingRegion;
         this.relevantTranscriptMap = relevantTranscriptMap;
     }
 
     @NotNull
     ConsequenceOutput run(@NotNull final List<SomaticVariant> variants) {
-        final Predicate<SomaticVariant> consequenceRule = and(isIncludedIn(hmfSlicingRegion),
-                hasActionableConsequence(relevantTranscriptMap.keySet()));
+        final Predicate<SomaticVariant> consequenceRule =
+                and(isIncludedIn(hmfSlicingRegion), hasActionableConsequence(relevantTranscriptMap.keySet()));
 
         final List<SomaticVariant> consequentialVariants = filter(variants, consequenceRule);
 
@@ -67,8 +64,7 @@ class ConsequenceDeterminer {
         final List<VariantReport> reports = Lists.newArrayList();
         for (final SomaticVariant variant : variants) {
             final ImmutableVariantReport.Builder builder = ImmutableVariantReport.builder();
-            final VariantAnnotation variantAnnotation = findPrimaryRelevantAnnotation(variant,
-                    relevantTranscriptMap.keySet());
+            final VariantAnnotation variantAnnotation = findPrimaryRelevantAnnotation(variant, relevantTranscriptMap.keySet());
             // KODU: Variants with no relevant annotations should be filtered out by now.
             assert variantAnnotation != null;
 
@@ -107,8 +103,7 @@ class ConsequenceDeterminer {
     @Nullable
     private static VariantAnnotation findPrimaryRelevantAnnotation(@NotNull final SomaticVariant variant,
             @NotNull final Set<String> relevantTranscripts) {
-        final List<VariantAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.annotations(),
-                relevantTranscripts);
+        final List<VariantAnnotation> relevantAnnotations = findAllRelevantAnnotations(variant.annotations(), relevantTranscripts);
         for (final VariantAnnotation annotation : relevantAnnotations) {
             for (final VariantConsequence consequence : annotation.consequences())
                 if (VariantConsequence.ACTIONABLE_CONSEQUENCES.contains(consequence)) {
@@ -119,14 +114,11 @@ class ConsequenceDeterminer {
     }
 
     @NotNull
-    private static List<VariantAnnotation> findAllRelevantAnnotations(
-            @NotNull final List<VariantAnnotation> annotations, @NotNull final Set<String> relevantTranscripts) {
-        if (INCLUDE_ALL_ANNOTATIONS_FOR_IMPACT) {
-            return annotations;
-        }
-
-        return annotations.stream().filter(
-                annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT) && relevantTranscripts.contains(
-                        annotation.featureID())).collect(Collectors.toList());
+    private static List<VariantAnnotation> findAllRelevantAnnotations(@NotNull final List<VariantAnnotation> annotations,
+            @NotNull final Set<String> relevantTranscripts) {
+        return annotations.stream()
+                .filter(annotation -> annotation.featureType().equals(FEATURE_TYPE_TRANSCRIPT) && relevantTranscripts.contains(
+                        annotation.featureID()))
+                .collect(Collectors.toList());
     }
 }
