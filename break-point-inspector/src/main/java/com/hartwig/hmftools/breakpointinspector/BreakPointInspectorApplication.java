@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import static com.hartwig.hmftools.breakpointinspector.Stats.SampleStats;
 import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
 import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantType;
 import static com.hartwig.hmftools.breakpointinspector.Util.Range;
@@ -25,6 +24,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFileWriter;
@@ -88,6 +88,7 @@ public class BreakPointInspectorApplication {
 
             if (refPath == null || tumorPath == null || vcfPath == null) {
                 printHelpAndExit(options);
+                return;
             }
 
             // load the files
@@ -134,13 +135,13 @@ public class BreakPointInspectorApplication {
             header.add("BPI_BP1");
             header.add("BPI_BP2");
             header.add("FILTER");
-            //header.add("TUMOR_CLIP_INFO");
             System.out.println(String.join("\t", header));
 
             final Map<String, VariantContext> variantMap = new HashMap<>();
             for (VariantContext variant : vcfReader) {
 
                 variantMap.put(variant.getID(), variant);
+
                 final VariantContext mateVariant = variant;
                 if (variant.hasAttribute("MATEID")) {
                     variant = variantMap.get(variant.getAttributeAsString("MATEID", ""));
@@ -151,7 +152,6 @@ public class BreakPointInspectorApplication {
 
                 final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
                 Location location1 = Location.parseLocationString(location, tumorReader.getFileHeader().getSequenceDictionary());
-                Location location2;
 
                 // uncertainty
                 final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
@@ -160,6 +160,7 @@ public class BreakPointInspectorApplication {
                 Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
 
                 HMFVariantType svType;
+                Location location2;
                 switch (variant.getStructuralVariantType()) {
                     case INV:
                         if (variant.hasAttribute("INV3")) {
@@ -214,21 +215,15 @@ public class BreakPointInspectorApplication {
                         continue;
                 }
 
-                // handle HOMSEQ in BND
-                if (variant.hasAttribute("HOMSEQ") && !variant.hasAttribute("CIEND")) {
-                    uncertainty2 = new Range(-CIPOS.get(1), CIPOS.get(0));
-                }
-                // TODO: double check this
-
                 final List<String> fields = Lists.newArrayList(variant.getID(), variant.getStructuralVariantType().toString(),
                         HMFVariantType.getOrientation(svType), location1.toString(), location2.toString(),
-                        variant.getAttributeAsString("SVLEN", "."));
+                        variant.getAttributeAsString("SVLEN", ""));
 
                 fields.addAll(parseMantaPRSR(variant.getGenotype(refSampleName)));
                 fields.addAll(parseMantaPRSR(variant.getGenotype(tumorSampleName)));
 
-                fields.add(variant.getAttributeAsString("HOMSEQ", "."));
-                fields.add(variant.getAttributeAsString("SVINSSEQ", "."));
+                fields.add(variant.getAttributeAsString("HOMSEQ", ""));
+                fields.add(variant.getAttributeAsString("SVINSSEQ", ""));
 
                 final HMFVariantContext ctx = new HMFVariantContext(location1, location2, svType);
                 ctx.Filter.addAll(variant.getFilters());
@@ -238,19 +233,19 @@ public class BreakPointInspectorApplication {
                 switch (ctx.Type) {
                     case DEL:
                         ctx.OrientationBP1 = 1;
-                        ctx.OrientationBP2 = 1;
+                        ctx.OrientationBP2 = -1;
                         break;
                     case INV3:
                         ctx.OrientationBP1 = 1;
-                        ctx.OrientationBP2 = -1;
+                        ctx.OrientationBP2 = 1;
                         break;
                     case INV5:
                         ctx.OrientationBP1 = -1;
-                        ctx.OrientationBP2 = 1;
+                        ctx.OrientationBP2 = -1;
                         break;
                     case DUP:
                         ctx.OrientationBP1 = -1;
-                        ctx.OrientationBP2 = -1;
+                        ctx.OrientationBP2 = 1;
                         break;
                 }
 
@@ -259,8 +254,8 @@ public class BreakPointInspectorApplication {
 
                 fields.addAll(result.RefStats.GetData());
                 fields.addAll(result.TumorStats.GetData());
-                fields.add(ctx.BP1 != null ? ctx.BP1.toString() : "err");
-                fields.add(ctx.BP2 != null ? ctx.BP2.toString() : "err");
+                fields.add(ObjectUtils.firstNonNull(result.Breakpoints.getLeft(), "err").toString());
+                fields.add(ObjectUtils.firstNonNull(result.Breakpoints.getRight(), "err").toString());
                 fields.add(result.Filter);
 
                 System.out.println(String.join("\t", fields));

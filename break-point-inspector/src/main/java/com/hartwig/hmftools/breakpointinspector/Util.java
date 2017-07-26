@@ -1,45 +1,12 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
-
 class Util {
-
-    enum ReadCategory {
-        UNSET,
-        NORMAL,
-        SPAN,
-        MATE_UNMAPPED,
-        UNMAPPED,
-        SECONDARY,
-        CHIMERIC
-    }
-
-    enum Overlap {
-        FILTERED,
-        PROXIMITY,
-        INTERSECT,
-        STRADDLE,
-        CLIP
-    }
-
-    enum Region {
-        OTHER,
-        BP1,
-        BP2
-    }
 
     enum HMFVariantType {
         DEL,
@@ -63,6 +30,16 @@ class Util {
         }
     }
 
+    static class Range {
+        int Start;
+        int End;
+
+        Range(int start, int end) {
+            Start = start;
+            End = end;
+        }
+    }
+
     static class HMFVariantContext {
         Location MantaBP1;
         Range Uncertainty1;
@@ -70,8 +47,6 @@ class Util {
         Range Uncertainty2;
         HMFVariantType Type;
         HashSet<String> Filter = Sets.newHashSet();
-        Location BP1;
-        Location BP2;
 
         int OrientationBP1 = 0;
         int OrientationBP2 = 0;
@@ -85,21 +60,5 @@ class Util {
 
     static List<String> prefixList(final List<String> list, final String prefix) {
         return list.stream().map(s -> prefix + s).collect(Collectors.toList());
-    }
-
-    static List<String> toStrings(final List<Integer> list) {
-        return list.stream().map(i -> Integer.toString(i)).collect(Collectors.toList());
-    }
-
-
-
-    static class Range {
-        int Start;
-        int End;
-
-        Range(int start, int end) {
-            Start = start;
-            End = end;
-        }
     }
 }

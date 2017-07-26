@@ -2,11 +2,9 @@ package com.hartwig.hmftools.breakpointinspector;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.SortedSet;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 
 import org.jetbrains.annotations.NotNull;
@@ -27,12 +25,11 @@ class ClipInfo {
 class ClipStats implements Comparable<ClipStats> {
     final Location Alignment;
     String LongestClipSequence = "";
-    int Support = 0;
+    int Support = 1;
 
     ClipStats(final Location alignment, final String sequence) {
         Alignment = alignment;
         LongestClipSequence = sequence;
-        Support = 1;
     }
 
     @Override
@@ -91,18 +88,8 @@ class Clipping {
         }
     }
 
-    List<ClipStats> getSortedClippedSequences() {
-        final List<ClipStats> result = Lists.newArrayList(LocationMap.values());
-        result.sort((a, b) -> Integer.compare(b.Support, a.Support));
-        return result;
-    }
-
-    ClipStats getTopSequence() {
-        final List<ClipStats> sorted = getSortedClippedSequences();
-        if (sorted.isEmpty()) {
-            return null;
-        }
-        return sorted.get(0);
+    List<ClipStats> getSequences() {
+        return LocationMap.values().stream().sorted((a, b) -> Integer.compare(b.Support, a.Support)).collect(Collectors.toList());
     }
 
     static ClipInfo getLeftClip(final SAMRecord read) {

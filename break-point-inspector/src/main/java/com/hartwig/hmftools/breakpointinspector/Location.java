@@ -3,7 +3,6 @@ package com.hartwig.hmftools.breakpointinspector;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -48,6 +47,10 @@ class Location implements Comparable<Location> {
         return result;
     }
 
+    static Location fromSAMRecord(final SAMRecord record) {
+        return fromSAMRecord(record, true);
+    }
+
     static Location fromSAMRecord(final SAMRecord record, boolean alignmentStart) {
         final Location result = new Location();
         result.ReferenceName = record.getReferenceName();
@@ -64,16 +67,8 @@ class Location implements Comparable<Location> {
         return result;
     }
 
-    boolean closeTo(final Location other) {
-        return other != null && ReferenceIndex == other.ReferenceIndex && Math.abs(other.Position - Position) <= 1;
-    }
-
-    boolean closeTo(final Location other, @Nullable final Util.Range range) {
-        if (range == null) {
-            return closeTo(other);
-        }
-        return other != null && ReferenceIndex == other.ReferenceIndex && Position >= (other.Position + range.Start - 1)
-                && Position <= (other.Position + range.End + 1);
+    boolean sameChromosomeAs(final Location other) {
+        return other != null && other.ReferenceIndex == ReferenceIndex;
     }
 
     @Override
