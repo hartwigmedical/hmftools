@@ -32,14 +32,11 @@ public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
     public abstract int copyNumber();
 
     @NotNull
-    public String resolveType() {
-        if (copyNumber() > 2) {
-            return COPY_NUMBER_GAIN;
-        } else if (copyNumber() < 2) {
-            return COPY_NUMBER_LOSS;
-        } else {
-            return COPY_NUMBER_NEUTRAL;
-        }
+    public abstract CopyNumberReportType type();
+
+    @NotNull
+    public String description() {
+        return type().description();
     }
 
     //TODO: Once we get rid of freec, this class can implement GenomeRegion and gets comparable for free

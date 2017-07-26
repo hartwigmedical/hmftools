@@ -57,6 +57,7 @@ public final class CopyNumberAnalyzer {
                         .gene(region.gene())
                         .transcript(region.transcript())
                         .copyNumber(relevantCNV)
+                        .type(CopyNumberReportType.resolveType(relevantCNV))
                         .build());
             }
         }

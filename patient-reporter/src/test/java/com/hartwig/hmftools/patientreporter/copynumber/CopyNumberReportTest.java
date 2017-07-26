@@ -14,13 +14,13 @@ public class CopyNumberReportTest {
     @Test
     public void canResolveType() {
         final CopyNumberReport gain =  create("18", "p2", 5);
-        assertEquals(CopyNumberReport.COPY_NUMBER_GAIN, gain.resolveType());
+        assertEquals(CopyNumberReport.COPY_NUMBER_GAIN, gain.description());
 
         final CopyNumberReport loss =  create("18", "p2", 0);
-        assertEquals(CopyNumberReport.COPY_NUMBER_LOSS, loss.resolveType());
+        assertEquals(CopyNumberReport.COPY_NUMBER_LOSS, loss.description());
 
         final CopyNumberReport neutral =  create("18", "p2", 2);
-        assertEquals(CopyNumberReport.COPY_NUMBER_NEUTRAL, neutral.resolveType());
+        assertEquals(CopyNumberReport.COPY_NUMBER_NEUTRAL, neutral.description());
     }
 
     @Test
@@ -42,8 +42,6 @@ public class CopyNumberReportTest {
         assertEquals(third, sortedReports.get(4));
         assertEquals(second, sortedReports.get(5));
     }
-
-
     private CopyNumberReport create(String chromosome, String chromosomeBand, int copyNumber) {
         return ImmutableCopyNumberReport.builder()
                 .chromosome(chromosome)
@@ -51,8 +49,7 @@ public class CopyNumberReportTest {
                 .gene("gene")
                 .transcript("transcript")
                 .copyNumber(copyNumber)
+                .type(CopyNumberReportType.resolveType(copyNumber))
                 .build();
     }
-
-
 }
