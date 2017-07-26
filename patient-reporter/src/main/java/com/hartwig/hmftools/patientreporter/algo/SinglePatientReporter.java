@@ -83,6 +83,7 @@ public class SinglePatientReporter {
         LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
         if (potentialMNVCount > 0) {
             LOGGER.warn(" !! Non-zero number of potentials MNV ");
+            LOGGER.warn(variantAnalysis.potentialConsequentialMNVs());
         }
         LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize())
                 + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
@@ -108,9 +109,9 @@ public class SinglePatientReporter {
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
-        if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.03)) {
+        if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
-                    + ") range exceeds 3%. Proceed with caution.");
+                    + ") range exceeds 5%. Proceed with caution.");
         }
 
         final CopyNumberAnalysis copyNumberAnalysis;
