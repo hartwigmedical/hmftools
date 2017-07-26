@@ -42,6 +42,9 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
+    // KODU: There is probably a better way to do this...
+    public static final String VERSION = "3.0";
+
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String HMF_GENE_PANEL = "hmf_gene_panel";
@@ -80,7 +83,7 @@ public class PatientReporterApplication {
 
             reporter.run(notSequenceableSample, notSequenceableReason);
         } else if (validInputForPatientReporter(cmd)) {
-            LOGGER.info("Running patient reporter");
+            LOGGER.info("Running patient reporter v" + VERSION);
             final HmfReporterData reporterData = buildReporterData(cmd);
             final SinglePatientReporter reporter = buildReporter(reporterData.slicer(), cmd);
 
