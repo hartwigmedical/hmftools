@@ -52,7 +52,7 @@ public abstract class PurpleAnalysis {
         for (final VariantReport variant : variants) {
             final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variant);
             if (optionalCopyNumber.isPresent()) {
-                PurpleCopyNumber copyNumber = optionalCopyNumber.get();
+                final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
                 double adjustedVAF =
                         Math.min(1, purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), variant.alleleFrequency()));
                 result.add(ImmutableVariantReport.builder().from(variant).baf(copyNumber.descriptiveBAF()).impliedVAF(adjustedVAF).build());
