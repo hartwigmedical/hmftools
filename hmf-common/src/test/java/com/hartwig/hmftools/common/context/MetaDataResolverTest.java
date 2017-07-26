@@ -43,6 +43,11 @@ public class MetaDataResolverTest {
     }
 
     @Test
+    public void canResolveSingleSampleMetaDataWithExplicitNullTumorSample() {
+        testSingleSample("RunDirSingleSampleWithNullTumorSample");
+    }
+
+    @Test
     public void canResolveSingleSampleMetaDataWithoutTumorSample() {
         testSingleSample("RunDirSingleSampleNoTumorSample");
     }

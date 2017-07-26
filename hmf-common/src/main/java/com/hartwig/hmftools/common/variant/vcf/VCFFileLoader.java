@@ -50,11 +50,6 @@ public final class VCFFileLoader {
     }
 
     @NotNull
-    public static VCFGermlineFile loadGermlineVCF(@NotNull final String file) throws IOException, HartwigException {
-        return toVCFGermlineFile(loadAllLinesFromVCF(file));
-    }
-    
-    @NotNull
     private static VCFSomaticFile toVCFSomaticFile(@NotNull final List<String> lines) {
         final List<String> metaInformationLines = extractMetaInformation(lines);
         final String header = extractHeader(lines);
@@ -101,7 +96,6 @@ public final class VCFFileLoader {
     private static String extractHeader(@NotNull final List<String> lines) {
         final Optional<String> optHeaderLine = lines.stream().filter(new VCFHeaderLinePredicate()).findFirst();
         Preconditions.checkState(optHeaderLine.isPresent());
-        assert optHeaderLine.isPresent();
         return optHeaderLine.get();
     }
 

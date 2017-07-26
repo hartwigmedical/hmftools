@@ -8,6 +8,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.lims.LimsModel;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -83,7 +84,7 @@ public class SinglePatientReporter {
         if (potentialMNVCount > 0) {
             LOGGER.warn(" !! Non-zero number of potentials MNV ");
         }
-        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.stats().size())
+        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize())
                 + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
@@ -107,10 +108,10 @@ public class SinglePatientReporter {
         LOGGER.info(" Loading purity numbers...");
         final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
         final FittedPurityScore purityScore = PatientReporterHelper.loadPurityScore(runDirectory, sample);
-        final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory,
-                sample);
+        final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
+        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
-        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers);
+        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.03)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
                     + ") range exceeds 3%. Proceed with caution.");
@@ -120,7 +121,7 @@ public class SinglePatientReporter {
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
         LOGGER.info(" Analyzing {} somatic copy numbers...", usePurple ? "purple" : "freec");
-        final CopyNumberAnalysis copyNumberAnalysis = copyNumberAnalyzer.run(usePurple ? purpleAnalysis.ploidyAdjustedCopyNumbers() : copyNumbers);
+        final CopyNumberAnalysis copyNumberAnalysis = usePurple ? purpleAnalysis.copyNumberAnalysis() : copyNumberAnalyzer.run(copyNumbers);
 
         if (tmpDirectory != null) {
             writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);

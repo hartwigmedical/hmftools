@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.common.purple.ratio;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import org.immutables.value.Value;
@@ -19,10 +16,4 @@ public interface NormalizedRatios {
 
     @NotNull
     Map<Integer, Integer> medianReadCount();
-
-    default List<ReadRatio> allRatios() {
-        List<ReadRatio> result = Lists.newArrayList(normalisedRatios().values());
-        Collections.sort(result);
-        return result;
-    }
 }

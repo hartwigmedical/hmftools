@@ -20,6 +20,8 @@ import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
+import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -39,7 +41,7 @@ public class PDFWriterTest {
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
         final FittedPurity fittedPurity =
-                ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).modelBAFDeviation(0).normFactor(0).score(0).build();
+                ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).modelBAFDeviation(0).normFactor(0).score(0).ploidy(2).build();
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
 
         final VariantReport variant1 = ImmutableVariantReport.builder()
@@ -91,17 +93,19 @@ public class PDFWriterTest {
                 .build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber1 = new CopyNumberReport.Builder().chromosome("2")
+        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder().chromosome("2")
                 .chromosomeBand("p23.1-p23.2")
                 .gene("ALK")
                 .transcript("ENST00000389048.3")
                 .copyNumber(0)
+                .type(CopyNumberReportType.LOSS)
                 .build();
-        final CopyNumberReport copyNumber2 = new CopyNumberReport.Builder().chromosome("3")
+        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder().chromosome("3")
                 .chromosomeBand("q26.32")
                 .gene("PIK3CA")
                 .transcript("ENST00000263967.3")
                 .copyNumber(6)
+                .type(CopyNumberReportType.GAIN)
                 .build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 

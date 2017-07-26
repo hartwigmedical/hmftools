@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
+import java.util.StringJoiner;
 
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,13 +19,10 @@ public abstract class VariantAnnotation {
 
     @NotNull
     public String consequenceString() {
-        final StringBuilder consequenceString = new StringBuilder(Strings.EMPTY);
+        final StringJoiner consequenceString = new StringJoiner("; ");
         for (final VariantConsequence consequence : consequences()) {
             if (!consequence.readableSequenceOntologyTerm().isEmpty()) {
-                if (consequenceString.length() > 0) {
-                    consequenceString.append("; ");
-                }
-                consequenceString.append(consequence.readableSequenceOntologyTerm());
+                consequenceString.add(consequence.readableSequenceOntologyTerm());
             }
         }
         return consequenceString.toString();

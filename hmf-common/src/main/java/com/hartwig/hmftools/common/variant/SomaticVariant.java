@@ -94,7 +94,7 @@ public class SomaticVariant implements Variant {
     }
 
     @Nullable
-    private String dbsnpID() {
+    public String dbsnpID() {
         return dbsnpID;
     }
 

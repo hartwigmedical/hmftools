@@ -13,6 +13,8 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecCopyNumberFactory;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -43,24 +45,31 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static FittedPurity loadPurity(@NotNull final String runDirectory,
-            @NotNull final String sample) throws IOException, HartwigException {
+    static FittedPurity loadPurity(@NotNull final String runDirectory, @NotNull final String sample) throws IOException, HartwigException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return FittedPurityFile.read(cnvBasePath, sample);
     }
 
     @NotNull
-    static FittedPurityScore loadPurityScore(@NotNull final String runDirectory,
-            @NotNull final String sample) throws IOException, HartwigException {
+    static FittedPurityScore loadPurityScore(@NotNull final String runDirectory, @NotNull final String sample)
+            throws IOException, HartwigException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return FittedPurityScoreFile.read(cnvBasePath, sample);
     }
 
     @NotNull
-    static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory,
-            @NotNull final String sample) throws IOException, HartwigException {
+    static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
+            throws IOException, HartwigException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return PurpleCopyNumberFile.read(cnvBasePath, sample);
+    }
+
+    @NotNull
+    static List<GeneCopyNumber> loadGeneCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
+            throws IOException, HartwigException {
+        final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
+        final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
+        return GeneCopyNumberFile.read(fileName);
     }
 
     @NotNull
@@ -111,8 +120,7 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    private static String guessCNVBasePath(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException {
+    private static String guessCNVBasePath(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
         final String basePath = runDirectory + File.separator + COPYNUMBER_DIRECTORY;
 
         for (final Path path : Files.list(new File(basePath).toPath()).collect(Collectors.toList())) {
@@ -121,7 +129,6 @@ final class PatientReporterHelper {
             }
         }
 
-        throw new FileNotFoundException(
-                "Could not determine CNV location in " + runDirectory + " using sample " + sample);
+        throw new FileNotFoundException("Could not determine CNV location in " + runDirectory + " using sample " + sample);
     }
 }

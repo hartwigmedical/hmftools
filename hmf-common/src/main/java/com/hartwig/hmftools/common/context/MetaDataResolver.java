@@ -7,6 +7,7 @@ import java.io.FileReader;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import org.apache.logging.log4j.LogManager;
@@ -62,6 +63,6 @@ final class MetaDataResolver {
     @Nullable
     private static String fieldValue(@NotNull final JsonObject object, @NotNull final String fieldName) {
         final JsonElement element = object.get(fieldName);
-        return element != null ? element.getAsString() : null;
+        return element != null && !(element instanceof JsonNull) ? element.getAsString() : null;
     }
 }

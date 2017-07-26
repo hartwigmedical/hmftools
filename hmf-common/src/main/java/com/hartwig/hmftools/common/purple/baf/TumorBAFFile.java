@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple.baf;
 
-import static java.util.stream.Collectors.toList;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
@@ -17,26 +16,26 @@ import org.jetbrains.annotations.NotNull;
 public enum TumorBAFFile {
     ;
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "#";
+    private static final String HEADER_PREFIX = "Chr";
     private static final String EXTENSION = ".purple.baf";
 
-    @NotNull
-    public static List<TumorBAF> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull Multimap<String, TumorBAF> bafs)
-            throws IOException {
+    @NotNull
+    public static Multimap<String, TumorBAF> read(@NotNull final String fileName) throws IOException {
+        return fromLines(Files.readAllLines(new File(fileName).toPath()));
+    }
+
+    public static void write(@NotNull final String filename, @NotNull Multimap<String, TumorBAF> bafs) throws IOException {
         List<TumorBAF> sortedBafs = Lists.newArrayList(bafs.values());
         Collections.sort(sortedBafs);
-        write(basePath, sample, sortedBafs);
+        write(filename, sortedBafs);
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<TumorBAF> bafs)
-            throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
-        Files.write(new File(filePath).toPath(), toLines(bafs));
+    public static void write(@NotNull final String filename, @NotNull List<TumorBAF> bafs) throws IOException {
+        Files.write(new File(filename).toPath(), toLines(bafs));
     }
 
     @NotNull
@@ -49,7 +48,7 @@ public enum TumorBAFFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("chromosome").add("position").add("baf").toString();
+        return new StringJoiner(DELIMITER, "", "").add("Chromosome").add("Position").add("BAF").add("mBAF").toString();
     }
 
     @NotNull
@@ -57,17 +56,30 @@ public enum TumorBAFFile {
         return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
                 .add(String.valueOf(ratio.position()))
                 .add(String.valueOf(ratio.baf()))
+                .add(String.valueOf(ratio.mBaf()))
                 .toString();
     }
 
     @NotNull
-    private static List<TumorBAF> fromLines(@NotNull List<String> lines) {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(TumorBAFFile::fromString).collect(toList());
+    private static Multimap<String, TumorBAF> fromLines(@NotNull List<String> lines) {
+        Multimap<String, TumorBAF> result = ArrayListMultimap.create();
+        for (String line : lines) {
+            if (!line.startsWith(HEADER_PREFIX)) {
+                final TumorBAF region = fromString(line);
+                result.put(region.chromosome(), region);
+            }
+        }
+        return result;
     }
 
     @NotNull
     private static TumorBAF fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableTumorBAF.builder().chromosome(values[0]).position(Long.valueOf(values[1])).baf(Double.valueOf(values[2])).build();
+        return ImmutableTumorBAF.builder()
+                .chromosome(values[0])
+                .position(Long.valueOf(values[1]))
+                .baf(Double.valueOf(values[2]))
+                .mBaf(Double.valueOf(values[3]))
+                .build();
     }
 }

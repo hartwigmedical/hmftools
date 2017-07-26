@@ -2,11 +2,13 @@ package com.hartwig.hmftools.patientreporter.copynumber;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.logging.log4j.util.Strings;
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CopyNumberReport implements Comparable<CopyNumberReport> {
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
 
     @VisibleForTesting
     static final String COPY_NUMBER_GAIN = "copy-gain";
@@ -16,68 +18,37 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
     static final String COPY_NUMBER_NEUTRAL = "none";
 
     @NotNull
-    private final String chromosome;
-    @NotNull
-    private final String gene;
-    @NotNull
-    private final String transcript;
-    @NotNull
-    private final String chromosomeBand;
-    private final int copyNumber;
+    public abstract String chromosome();
 
-    private CopyNumberReport(@NotNull final String chromosome, @NotNull final String chromosomeBand,
-            @NotNull final String gene, @NotNull final String transcript, final int copyNumber) {
-        this.chromosome = chromosome;
-        this.chromosomeBand = chromosomeBand;
-        this.gene = gene;
-        this.transcript = transcript;
-        this.copyNumber = copyNumber;
+    @NotNull
+    public abstract String chromosomeBand();
+
+    @NotNull
+    public abstract String gene();
+
+    @NotNull
+    public abstract String transcript();
+
+    public abstract int copyNumber();
+
+    @NotNull
+    public abstract CopyNumberReportType type();
+
+    @NotNull
+    public String description() {
+        return type().description();
     }
 
-    @NotNull
-    public String chromosome() {
-        return chromosome;
-    }
-
-    @NotNull
-    public String chromosomeBand() {
-        return chromosomeBand;
-    }
-
-    @NotNull
-    public String gene() {
-        return gene;
-    }
-
-    @NotNull
-    public String transcript() {
-        return transcript;
-    }
-
-    public int copyNumber() {
-        return copyNumber;
-    }
-
-    @NotNull
-    public String resolveType() {
-        if (copyNumber > 2) {
-            return COPY_NUMBER_GAIN;
-        } else if (copyNumber < 2) {
-            return COPY_NUMBER_LOSS;
-        } else {
-            return COPY_NUMBER_NEUTRAL;
-        }
-    }
-
+    //TODO: Once we get rid of freec, this class can implement GenomeRegion and gets comparable for free
     @Override
     public int compareTo(@NotNull final CopyNumberReport other) {
-        final Integer intChrom1 = toInteger(chromosome);
-        final Integer intChrom2 = toInteger(other.chromosome);
+        final Integer intChrom1 = toInteger(chromosome());
+        final Integer intChrom2 = toInteger(other.chromosome());
         if (intChrom1 == null && intChrom2 == null) {
-            if (chromosome.equals(other.chromosome)) {
-                return chromosomeBand.compareTo(other.chromosomeBand);
+            if (chromosome().equals(other.chromosome())) {
+                return chromosomeBand().compareTo(other.chromosomeBand());
             } else {
-                return chromosome.compareTo(other.chromosome);
+                return chromosome().compareTo(other.chromosome());
             }
         } else if (intChrom1 == null) {
             return 1;
@@ -85,7 +56,7 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
             return -1;
         } else {
             if (intChrom1.compareTo(intChrom2) == 0) {
-                return chromosomeBand.compareTo(other.chromosomeBand);
+                return chromosomeBand().compareTo(other.chromosomeBand());
             } else {
                 return intChrom1.compareTo(intChrom2);
             }
@@ -101,52 +72,4 @@ public class CopyNumberReport implements Comparable<CopyNumberReport> {
         }
     }
 
-    public static class Builder {
-        @NotNull
-        private String chromosome = Strings.EMPTY;
-        @NotNull
-        private String chromosomeBand = Strings.EMPTY;
-        @NotNull
-        private String gene = Strings.EMPTY;
-        @NotNull
-        private String transcript = Strings.EMPTY;
-        private int copyNumber = 0;
-
-        public Builder() {
-        }
-
-        @NotNull
-        public Builder chromosome(@NotNull final String chromosome) {
-            this.chromosome = chromosome;
-            return this;
-        }
-
-        @NotNull
-        public Builder chromosomeBand(@NotNull final String chromosomeBand) {
-            this.chromosomeBand = chromosomeBand;
-            return this;
-        }
-
-        @NotNull
-        public Builder gene(@NotNull final String gene) {
-            this.gene = gene;
-            return this;
-        }
-
-        @NotNull
-        public Builder transcript(@NotNull final String transcript) {
-            this.transcript = transcript;
-            return this;
-        }
-
-        public Builder copyNumber(final int copyNumber) {
-            this.copyNumber = copyNumber;
-            return this;
-        }
-
-        @NotNull
-        public CopyNumberReport build() {
-            return new CopyNumberReport(chromosome, chromosomeBand, gene, transcript, copyNumber);
-        }
-    }
 }

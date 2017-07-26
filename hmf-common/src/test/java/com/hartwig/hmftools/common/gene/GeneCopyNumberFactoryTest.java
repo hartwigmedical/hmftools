@@ -7,9 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 
@@ -27,20 +26,45 @@ public class GeneCopyNumberFactoryTest {
     @Before
     public void setup() {
         genes = Lists.newArrayList();
+        copyNumbers = Lists.newArrayList();
+    }
+
+    @Test
+    public void oldFreecTest() {
+        genes.add(create("1", 101, 200, "First"));
+        genes.add(create("1", 301, 400, "Second"));
+        genes.add(create("1", 601, 700, "Third"));
+
+        copyNumbers.add(createCopyNumber("1", 11, 20, 1));
+        copyNumbers.add(createCopyNumber("1", 21, 120, 2));
+        copyNumbers.add(createCopyNumber("1", 121, 170, 4));
+        copyNumbers.add(createCopyNumber("1", 171, 190, 2));
+        copyNumbers.add(createCopyNumber("1", 191, 260, 5));
+        copyNumbers.add(createCopyNumber("1", 261, 290, 2));
+        copyNumbers.add(createCopyNumber("1", 291, 500, 0));
+        copyNumbers.add(createCopyNumber("1", 501, 700, 2));
+
+        final List<GeneCopyNumber> geneCopies = GeneCopyNumberFactory.geneCopyNumbers(genes, copyNumbers);
+        assertEquals(3, geneCopies.size());
+
+        assertGeneCopy(geneCopies.get(0), "First", 2, 5, 3.3);
+        assertGeneCopy(geneCopies.get(1), "Second", 0, 0, 0.0);
+        assertGeneCopy(geneCopies.get(2), "Third", 2, 2, 2.0);
+    }
+
+    @Test
+    public void testGeneCopies() throws IOException, EmptyFileException {
+
         genes.add(create("1", 300, 600, "First"));
         genes.add(create("1", 800, 1000, "Second"));
         genes.add(create("2", 200, 700, "Third"));
 
-        copyNumbers = Lists.newArrayList();
         copyNumbers.add(createCopyNumber("1", 100, 500, 3));
         copyNumbers.add(createCopyNumber("1", 501, 700, 4));
         copyNumbers.add(createCopyNumber("1", 701, 799, 5));
         copyNumbers.add(createCopyNumber("1", 800, 1000, 6));
         copyNumbers.add(createCopyNumber("2", 1, 1000, 7));
-    }
 
-    @Test
-    public void testGeneCopies() throws IOException, EmptyFileException {
         final List<GeneCopyNumber> geneCopies = GeneCopyNumberFactory.geneCopyNumbers(genes, copyNumbers);
         assertEquals(3, geneCopies.size());
 
@@ -50,10 +74,17 @@ public class GeneCopyNumberFactoryTest {
     }
 
     private void assertGeneCopy(GeneCopyNumber victim, String gene, double min, double max, int count) {
-        assertEquals(victim.gene(), gene);
-        assertEquals(victim.minCopyNumber(), min, EPSILON);
-        assertEquals(victim.maxCopyNumber(), max, EPSILON);
-        assertEquals(victim.regions(), count);
+        assertEquals(gene, victim.gene());
+        assertEquals(min, victim.minCopyNumber(), EPSILON);
+        assertEquals(max, victim.maxCopyNumber(), EPSILON);
+        assertEquals(count, victim.regions());
+    }
+
+    private void assertGeneCopy(GeneCopyNumber victim, String gene, double min, double max, double mean) {
+        assertEquals(gene, victim.gene());
+        assertEquals(min, victim.minCopyNumber(), EPSILON);
+        assertEquals(max, victim.maxCopyNumber(), EPSILON);
+        assertEquals(mean, victim.meanCopyNumber(), EPSILON);
     }
 
     private static HmfGenomeRegion create(String chromosome, long start, long end, String name) {
@@ -62,17 +93,7 @@ public class GeneCopyNumberFactoryTest {
 
     @NotNull
     private static PurpleCopyNumber createCopyNumber(String chromosome, long start, long end, double copyNumber) {
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome(chromosome)
-                .start(start)
-                .end(end)
-                .averageTumorCopyNumber(copyNumber)
-                .bafCount(0)
-                .averageObservedBAF(0.5)
-                .averageActualBAF(0.5)
-                .ratioSupport(true)
-                .structuralVariantSupport(StructuralVariantSupport.NONE)
-                .build();
+        return PurpleDatamodelTest.createCopyNumber(chromosome, start, end, copyNumber).build();
     }
 
 }

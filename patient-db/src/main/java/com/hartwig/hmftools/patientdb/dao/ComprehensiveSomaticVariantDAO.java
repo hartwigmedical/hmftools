@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep17;
+import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -53,6 +53,10 @@ class ComprehensiveSomaticVariantDAO {
                     .position(record.getValue(COMPREHENSIVESOMATICVARIANT.POSITION))
                     .ref(ref)
                     .alt(alt)
+                    .gene(record.getValue(COMPREHENSIVESOMATICVARIANT.GENE))
+                    .cosmicId(record.getValue(COMPREHENSIVESOMATICVARIANT.COSMICID))
+                    .dbsnpId(record.getValue(COMPREHENSIVESOMATICVARIANT.DBSNPID))
+                    .effect(record.getValue(COMPREHENSIVESOMATICVARIANT.EFFECT))
                     .filter(record.getValue(COMPREHENSIVESOMATICVARIANT.FILTER))
                     .alleleReadCount(record.getValue(COMPREHENSIVESOMATICVARIANT.ALLELEREADCOUNT))
                     .totalReadCount(record.getValue(COMPREHENSIVESOMATICVARIANT.TOTALREADCOUNT))
@@ -79,13 +83,17 @@ class ComprehensiveSomaticVariantDAO {
         context.delete(COMPREHENSIVESOMATICVARIANT).where(COMPREHENSIVESOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep17 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
+            InsertValuesStep21 inserter = context.insertInto(COMPREHENSIVESOMATICVARIANT,
                     COMPREHENSIVESOMATICVARIANT.SAMPLEID,
                     COMPREHENSIVESOMATICVARIANT.CHROMOSOME,
                     COMPREHENSIVESOMATICVARIANT.POSITION,
                     COMPREHENSIVESOMATICVARIANT.FILTER,
                     COMPREHENSIVESOMATICVARIANT.REF,
                     COMPREHENSIVESOMATICVARIANT.ALT,
+                    COMPREHENSIVESOMATICVARIANT.GENE,
+                    COMPREHENSIVESOMATICVARIANT.COSMICID,
+                    COMPREHENSIVESOMATICVARIANT.DBSNPID,
+                    COMPREHENSIVESOMATICVARIANT.EFFECT,
                     COMPREHENSIVESOMATICVARIANT.ALLELEREADCOUNT,
                     COMPREHENSIVESOMATICVARIANT.TOTALREADCOUNT,
                     COMPREHENSIVESOMATICVARIANT.ADJUSTEDCOPYNUMBER,
@@ -102,13 +110,17 @@ class ComprehensiveSomaticVariantDAO {
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep17 inserter, String sample, EnrichedSomaticVariant region) {
+    private void addRecord(Timestamp timestamp, InsertValuesStep21 inserter, String sample, EnrichedSomaticVariant region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.position(),
                 filter(region.filter()),
                 region.ref(),
                 region.alt(),
+                region.gene(),
+                region.cosmicId(),
+                region.dbsnpId(),
+                region.effect(),
                 region.alleleReadCount(),
                 region.totalReadCount(),
                 region.adjustedCopyNumber(),

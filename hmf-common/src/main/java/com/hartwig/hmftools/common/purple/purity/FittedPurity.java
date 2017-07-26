@@ -16,9 +16,7 @@ public abstract class FittedPurity implements Comparable<FittedPurity> {
 
     public abstract double diploidProportion();
 
-    public double ploidy() {
-        return (1 - normFactor()) / purity() / normFactor() * 2 + 2;
-    }
+    public abstract double ploidy();
 
     @Override
     public int compareTo(@NotNull FittedPurity o) {

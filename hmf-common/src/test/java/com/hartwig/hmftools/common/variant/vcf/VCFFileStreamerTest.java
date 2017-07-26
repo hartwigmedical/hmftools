@@ -19,7 +19,7 @@ public class VCFFileStreamerTest {
 
     @Test
     public void canStreamGermlineVCFAsExpected() throws IOException, HartwigException {
-        final BufferedReader reader = VCFFileStreamer.getVCFReader(RESOURCE_DIR, "germline.vcf");
+        final BufferedReader reader = VCFFileStreamer.getVCFReader(RESOURCE_DIR, "somatic_germline.vcf");
 
         final GermlineVariant firstVariant = VCFFileStreamer.nextVariant(reader);
         assertNotNull(firstVariant);
@@ -31,6 +31,15 @@ public class VCFFileStreamerTest {
 
         assertNull(VCFFileStreamer.nextVariant(reader));
         // KODU: Once null -> remain null
+        assertNull(VCFFileStreamer.nextVariant(reader));
+    }
+
+    @Test
+    public void streamerJumpsOverFaultyVariants() throws IOException, HartwigException {
+        final BufferedReader reader = VCFFileStreamer.getVCFReader(RESOURCE_DIR, "faulty_germline.vcf");
+
+        assertNotNull(VCFFileStreamer.nextVariant(reader));
+        assertNotNull(VCFFileStreamer.nextVariant(reader));
         assertNull(VCFFileStreamer.nextVariant(reader));
     }
 }

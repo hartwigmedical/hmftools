@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -51,17 +52,35 @@ public class EnrichedSomaticVariantFactory {
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> addCopyNumber(builder, x, variant.alleleFrequency()));
+        addAnnotations(builder, variant);
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);
 
         return builder.build();
     }
 
+    private Builder addAnnotations(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        final List<VariantAnnotation> annotations = variant.annotations();
+        if (!annotations.isEmpty()) {
+            VariantAnnotation annotation = annotations.get(0);
+            builder.gene(annotation.gene());
+            builder.effect(annotation.consequenceString());
+        }
+        return builder;
+    }
+
     private Builder createBuilder(@NotNull final SomaticVariant variant) {
+        String cosmicId = variant.cosmicID();
+        String dbsnpId = variant.dbsnpID();
+
         return builder().from(variant)
                 .trinucleotideContext("")
                 .microhomology("")
                 .refGenomeContext("")
+                .gene("")
+                .cosmicId(cosmicId == null ? "" : cosmicId)
+                .dbsnpId(dbsnpId == null ? "" : dbsnpId)
+                .effect("")
                 .repeatCount(0)
                 .repeatSequence("")
                 .totalReadCount(variant.totalReadCount())
@@ -73,17 +92,18 @@ public class EnrichedSomaticVariantFactory {
 
     private Builder addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
         long positionBeforeEvent = variant.position();
-        long start = Math.max(positionBeforeEvent - 100, 0);
-        long end = positionBeforeEvent + 100;
-        int position = (int) (positionBeforeEvent - start);
+        long start = Math.max(positionBeforeEvent - 100, 1);
+        long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
+        long end = Math.min(positionBeforeEvent + 100, maxEnd);
+        int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
         builder.refGenomeContext(sequence);
 
-        RepeatContextFactory.repeats(position, sequence, variant.ref(), variant.alt())
+        RepeatContextFactory.repeats(relativePosition, sequence, variant.ref(), variant.alt())
                 .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
 
         if (variant.ref().length() != variant.alt().length()) {
-            final String microhomology = Microhomology.microhomology(position, sequence, variant.ref(), variant.alt());
+            final String microhomology = Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt());
             return builder.microhomology(microhomology);
         }
 
