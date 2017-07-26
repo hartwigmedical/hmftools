@@ -11,6 +11,10 @@ class Filter {
 
         final List<String> filters = Lists.newArrayList(ctx.Filter);
 
+        if (tumorStats.BP1_Stats.Depth < 10 || tumorStats.BP2_Stats.Depth < 10) {
+            filters.add("HMF_MinDepth");
+        }
+
         if (ctx.Type == Util.HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
                 && (ctx.MantaBP2.Position - ctx.MantaBP1.Position) < 2000) {
             // short delete logic, must have SR support

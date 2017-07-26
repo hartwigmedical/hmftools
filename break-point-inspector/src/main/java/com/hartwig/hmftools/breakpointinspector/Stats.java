@@ -14,13 +14,14 @@ class BreakpointStats {
     int PR_Only_Support = 0;
     int PR_SR_Support = 0;
     int SR_Only_Support = 0;
+    int Depth = 0;
 
     static List<String> GetHeader() {
-        return Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT", "SR_ONLY_SUPPORT");
+        return Arrays.asList("PR_ONLY_NORMAL", "PR_SR_NORMAL", "PR_ONLY_SUPPORT", "PR_SR_SUPPORT", "SR_ONLY_SUPPORT", "DEPTH");
     }
 
     List<Integer> GetData() {
-        return Arrays.asList(PR_Only_Normal, PR_SR_Normal, PR_Only_Support, PR_SR_Support, SR_Only_Support);
+        return Arrays.asList(PR_Only_Normal, PR_SR_Normal, PR_Only_Support, PR_SR_Support, SR_Only_Support, Depth);
     }
 }
 

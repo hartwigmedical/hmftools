@@ -3,6 +3,7 @@ package com.hartwig.hmftools.breakpointinspector;
 import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -75,6 +76,15 @@ class Analysis {
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
         for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
+
+            // aggregate depth at breakpoints
+            for (final SAMRecord r : Arrays.asList(pair.getLeft(), pair.getRight())) {
+                if (overlap(r, breakpoints.getLeft())) {
+                    result.BP1_Stats.Depth++;
+                } else if (overlap(r, breakpoints.getRight())) {
+                    result.BP2_Stats.Depth++;
+                }
+            }
 
             final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
             final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
