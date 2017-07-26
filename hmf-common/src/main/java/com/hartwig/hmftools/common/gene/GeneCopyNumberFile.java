@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,8 +16,8 @@ import org.jetbrains.annotations.NotNull;
 public class GeneCopyNumberFile {
     ;
 
-    private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "Chr";
+    static final String DELIMITER = "\t";
+    static final String HEADER_PREFIX = "Chr";
     private static final String EXTENSION = ".purple.gene.cnv";
 
     @NotNull
@@ -34,7 +35,8 @@ public class GeneCopyNumberFile {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<GeneCopyNumber> ratio) {
+    @VisibleForTesting
+    static List<String> toLines(@NotNull final List<GeneCopyNumber> ratio) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         ratio.stream().map(GeneCopyNumberFile::toString).forEach(lines::add);
@@ -74,7 +76,8 @@ public class GeneCopyNumberFile {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> fromLines(@NotNull List<String> lines) {
+    @VisibleForTesting
+    static List<GeneCopyNumber> fromLines(@NotNull List<String> lines) {
         return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(GeneCopyNumberFile::fromString).collect(toList());
     }
 
@@ -90,9 +93,9 @@ public class GeneCopyNumberFile {
                 .maxCopyNumber(Double.valueOf(values[5]))
                 .meanCopyNumber(Double.valueOf(values[6]))
                 .regions(Integer.valueOf(values[7]))
-                .transcriptID(values[7])
-                .transcriptVersion(Integer.valueOf(values[7]))
-                .chromosomeBand(values[7])
+                .transcriptID(values[8])
+                .transcriptVersion(Integer.valueOf(values[9]))
+                .chromosomeBand(values[10])
                 .build();
     }
 }
