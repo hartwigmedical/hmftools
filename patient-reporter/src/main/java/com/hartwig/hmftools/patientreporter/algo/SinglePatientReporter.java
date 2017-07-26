@@ -46,17 +46,17 @@ public class SinglePatientReporter {
     private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
     @Nullable
     private final String tmpDirectory;
-    private final boolean usePurple;
+    private final boolean useFreec;
 
-    public SinglePatientReporter(boolean usePurple, @NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
+    public SinglePatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
             @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer,
-            @Nullable final String tmpDirectory) {
+            @Nullable final String tmpDirectory, final boolean useFreec) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
         this.tmpDirectory = tmpDirectory;
-        this.usePurple = usePurple;
+        this.useFreec = useFreec;
     }
 
     @NotNull
@@ -115,15 +115,15 @@ public class SinglePatientReporter {
         }
 
         final CopyNumberAnalysis copyNumberAnalysis;
-        if (usePurple) {
-            LOGGER.info(" Analyzing purple somatic copy numbers...");
-            copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
-        } else {
+        if (useFreec) {
             LOGGER.info(" Loading freec somatic copy numbers...");
             final List<CopyNumber> copyNumbers = PatientReporterHelper.loadFreecCopyNumbers(runDirectory, sample);
             LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
             LOGGER.info(" Analyzing freec somatic copy numbers...");
             copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
+        } else {
+            LOGGER.info(" Analyzing purple somatic copy numbers...");
+            copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
         }
 
         LOGGER.info(" Analyzing somatics....");

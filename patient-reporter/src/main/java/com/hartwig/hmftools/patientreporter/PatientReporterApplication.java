@@ -60,7 +60,7 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
-    private static final String PURPLE = "purple";
+    private static final String FREEC = "freec";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -119,8 +119,8 @@ public class PatientReporterApplication {
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
         final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new SinglePatientReporter(cmd.hasOption(PURPLE), buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer,
-                copyNumberAnalyzer, cmd.getOptionValue(TMP_DIRECTORY));
+        return new SinglePatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer,
+                cmd.getOptionValue(TMP_DIRECTORY), cmd.hasOption(FREEC));
     }
 
     @NotNull
@@ -279,7 +279,7 @@ public class PatientReporterApplication {
         options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
-        options.addOption(PURPLE, false, "Use purple copy numbers instead of freec.");
+        options.addOption(FREEC, false, "Use purple copy numbers instead of freec.");
         return options;
     }
 

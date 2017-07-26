@@ -39,7 +39,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
-    private static final String VERSION = "2.0";
+    private static final String VERSION = "3.0";
 
     // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
     private static final String FONT = "Times New Roman";
