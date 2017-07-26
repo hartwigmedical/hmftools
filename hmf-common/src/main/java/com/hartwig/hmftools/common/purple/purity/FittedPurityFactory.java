@@ -96,22 +96,24 @@ public class FittedPurityFactory {
     }
 
     @NotNull
-    private FittedPurity fitPurity(final double purity, final double normFactor, final double sumWeight,
+    private FittedPurity fitPurity(final double purity, final double normFactor, final double totalBafCount,
             @NotNull final Collection<ObservedRegion> observedRegions) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;
         double modelBAFDeviation = 0;
+        double averagePloidy = 0;
 
         for (final ObservedRegion enrichedRegion : observedRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
-            modelDeviation += enrichedRegion.bafCount() / sumWeight * fittedRegion.deviation();
-            modelBAFDeviation += enrichedRegion.bafCount() / sumWeight * fittedRegion.bafDeviation();
+            modelDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.deviation();
+            modelBAFDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.bafDeviation();
+            averagePloidy += fittedRegion.tumorCopyNumber() * fittedRegion.bafCount() / totalBafCount;
             if (fittedRegion.fittedPloidy() == 2) {
-                diploidProportion += enrichedRegion.bafCount() / sumWeight;
+                diploidProportion += enrichedRegion.bafCount() / totalBafCount;
             }
         }
 
-        return builder.score(modelDeviation).modelBAFDeviation(modelBAFDeviation).diploidProportion(diploidProportion).build();
+        return builder.score(modelDeviation).modelBAFDeviation(modelBAFDeviation).diploidProportion(diploidProportion).ploidy(averagePloidy).build();
     }
 }

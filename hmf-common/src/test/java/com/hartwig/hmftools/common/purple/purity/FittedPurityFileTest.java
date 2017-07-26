@@ -51,6 +51,7 @@ public class FittedPurityFileTest {
                 .score(random.nextDouble())
                 .modelBAFDeviation(random.nextDouble())
                 .diploidProportion(random.nextDouble())
+                .ploidy(random.nextDouble())
                 .build();
     }
 }

@@ -62,9 +62,13 @@ public enum FittedPurityFile {
 
     @NotNull
     private static String toString(@NotNull final FittedPurity purity) {
-        return String.valueOf(purity.purity()) + DELIMITER + purity.normFactor() + DELIMITER + purity.score()
-                + DELIMITER + purity.modelBAFDeviation() + DELIMITER + purity.diploidProportion() + DELIMITER
-                + purity.ploidy();
+        return new StringJoiner(DELIMITER).add(String.valueOf(purity.purity()))
+                .add(String.valueOf(purity.normFactor()))
+                .add(String.valueOf(purity.score()))
+                .add(String.valueOf(purity.modelBAFDeviation()))
+                .add(String.valueOf(purity.diploidProportion()))
+                .add(String.valueOf(purity.ploidy()))
+                .toString();
     }
 
     @NotNull
@@ -76,6 +80,7 @@ public enum FittedPurityFile {
                 .score(Double.valueOf(values[2]))
                 .modelBAFDeviation(Double.valueOf(values[3]))
                 .diploidProportion(Double.valueOf(values[4]))
+                .ploidy(Double.valueOf(values[5]))
                 .build();
     }
 }
