@@ -27,8 +27,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class SinglePatientReporter {
-    private static final Logger LOGGER = LogManager.getLogger(SinglePatientReporter.class);
+public class PatientReporter {
+    private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
 
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
@@ -40,7 +40,7 @@ public class SinglePatientReporter {
     private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
     private final boolean useFreec;
 
-    public SinglePatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
+    public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
             @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer,
             final boolean useFreec) {
         this.cpctEcrfModel = cpctEcrfModel;

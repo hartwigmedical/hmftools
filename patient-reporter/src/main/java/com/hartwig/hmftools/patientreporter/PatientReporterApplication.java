@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
-import com.hartwig.hmftools.patientreporter.algo.SinglePatientReporter;
+import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
@@ -79,7 +79,7 @@ public class PatientReporterApplication {
             LOGGER.info("Running patient reporter v" + VERSION);
 
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final SinglePatientReporter reporter = buildReporter(reporterData.slicer(), cmd);
+            final PatientReporter reporter = buildReporter(reporterData.slicer(), cmd);
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
@@ -99,14 +99,14 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static SinglePatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CommandLine cmd)
+    private static PatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CommandLine cmd)
             throws IOException, EmptyFileException, XMLStreamException {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
         final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new SinglePatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer,
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer,
                 cmd.hasOption(FREEC));
     }
 
