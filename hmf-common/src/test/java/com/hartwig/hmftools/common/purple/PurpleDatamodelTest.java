@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class PurpleDatamodelTest {
 
-    public static final String CHROMOSOME = "1";
+    private static final String CHROMOSOME = "1";
 
     @Test
     public void testDefaultFittedRegion() {

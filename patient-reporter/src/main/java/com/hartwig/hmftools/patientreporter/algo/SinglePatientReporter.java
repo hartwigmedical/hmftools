@@ -121,7 +121,7 @@ public class SinglePatientReporter {
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
         LOGGER.info(" Analyzing {} somatic copy numbers...", usePurple ? "purple" : "freec");
-        final CopyNumberAnalysis copyNumberAnalysis = copyNumberAnalyzer.run(usePurple ? purpleAnalysis.ploidyAdjustedCopyNumbers() : copyNumbers);
+        final CopyNumberAnalysis copyNumberAnalysis = usePurple ? purpleAnalysis.copyNumberAnalysis() : copyNumberAnalyzer.run(copyNumbers);
 
         if (tmpDirectory != null) {
             writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);

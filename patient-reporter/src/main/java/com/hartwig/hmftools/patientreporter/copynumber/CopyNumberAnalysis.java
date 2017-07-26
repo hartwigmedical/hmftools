@@ -11,7 +11,7 @@ public class CopyNumberAnalysis {
     @NotNull
     private final List<CopyNumberReport> findings;
 
-    CopyNumberAnalysis(final int genePanelSize, @NotNull final List<CopyNumberReport> findings) {
+    public CopyNumberAnalysis(final int genePanelSize, @NotNull final List<CopyNumberReport> findings) {
         this.genePanelSize = genePanelSize;
         this.findings = findings;
     }
