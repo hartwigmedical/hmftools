@@ -40,6 +40,7 @@ class PurityDAO {
                         .modelBAFDeviation(0)
                         .score(result.getValue(PURITY.SCORE))
                         .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
+                        .ploidy(result.getValue(PURITY.PLOIDY))
                         .build();
     }
 
