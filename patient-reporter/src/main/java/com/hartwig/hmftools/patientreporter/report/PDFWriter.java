@@ -388,7 +388,9 @@ public class PDFWriter implements ReportWriter {
         return toList("Details on reported copy numbers", Lists.newArrayList(
                 "The lowest copy number value along the region of the canonical transcript is determined as "
                         + "a measure for the gene's copy number.",
-                "Any gene with a value of 0 (loss) or >3 (gain) is included in the list of findings."));
+                "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
+                "Any gene with no copies is reported as loss.", "Any gene with at least 8 copies is reported as a gain.",
+                "Any gene with more copies than 2.2 times the average tumor ploidy is reported as a gain."));
     }
 
     @NotNull

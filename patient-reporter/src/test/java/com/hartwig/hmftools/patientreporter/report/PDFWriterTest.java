@@ -101,8 +101,7 @@ public class PDFWriterTest {
                 .build();
         final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder().chromosome("3")
                 .chromosomeBand("q26.32")
-                .gene("PIK3CA")
-                .copyNumber(6)
+                .gene("PIK3CA").copyNumber(9)
                 .type(CopyNumberReportType.GAIN)
                 .build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
