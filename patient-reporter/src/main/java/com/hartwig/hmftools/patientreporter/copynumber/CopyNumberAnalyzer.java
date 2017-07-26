@@ -51,9 +51,13 @@ public final class CopyNumberAnalyzer {
             final int relevantCNV = stat.getValue().min();
             if (relevantCNV >= MIN_CNV_FOR_GAIN || relevantCNV <= MAX_CNV_FOR_LOSS) {
                 final HmfGenomeRegion region = stat.getKey();
-                reports.add(new CopyNumberReport.Builder().chromosome(stat.getKey().chromosome()).chromosomeBand(
-                        region.chromosomeBand()).gene(region.gene()).
-                        transcript(region.transcript()).copyNumber(relevantCNV).build());
+                reports.add(ImmutableCopyNumberReport.builder()
+                        .chromosome(stat.getKey().chromosome())
+                        .chromosomeBand(region.chromosomeBand())
+                        .gene(region.gene())
+                        .transcript(region.transcript())
+                        .copyNumber(relevantCNV)
+                        .build());
             }
         }
         Collections.sort(reports);

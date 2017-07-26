@@ -13,24 +13,24 @@ public class CopyNumberReportTest {
 
     @Test
     public void canResolveType() {
-        final CopyNumberReport gain = new CopyNumberReport.Builder().copyNumber(5).build();
+        final CopyNumberReport gain =  create("18", "p2", 5);
         assertEquals(CopyNumberReport.COPY_NUMBER_GAIN, gain.resolveType());
 
-        final CopyNumberReport loss = new CopyNumberReport.Builder().copyNumber(0).build();
+        final CopyNumberReport loss =  create("18", "p2", 0);
         assertEquals(CopyNumberReport.COPY_NUMBER_LOSS, loss.resolveType());
 
-        final CopyNumberReport neutral = new CopyNumberReport.Builder().copyNumber(2).build();
+        final CopyNumberReport neutral =  create("18", "p2", 2);
         assertEquals(CopyNumberReport.COPY_NUMBER_NEUTRAL, neutral.resolveType());
     }
 
     @Test
     public void canSort() {
-        final CopyNumberReport first = new CopyNumberReport.Builder().chromosome("18").chromosomeBand("p2").build();
-        final CopyNumberReport second = new CopyNumberReport.Builder().chromosome("Y").chromosomeBand("q1").build();
-        final CopyNumberReport third = new CopyNumberReport.Builder().chromosome("X").chromosomeBand("q1").build();
-        final CopyNumberReport fourth = new CopyNumberReport.Builder().chromosome("12").chromosomeBand("q1").build();
-        final CopyNumberReport fifth = new CopyNumberReport.Builder().chromosome("18").chromosomeBand("p1").build();
-        final CopyNumberReport sixth = new CopyNumberReport.Builder().chromosome("X").chromosomeBand("p1").build();
+        final CopyNumberReport first = create("18", "p2", 2);
+        final CopyNumberReport second = create("Y", "q1", 2);
+        final CopyNumberReport third = create("X", "q1", 2);
+        final CopyNumberReport fourth = create("12", "q1", 2);
+        final CopyNumberReport fifth = create("18", "p1", 2);
+        final CopyNumberReport sixth = create("X", "p1", 2);
 
         final List<CopyNumberReport> reports = Lists.newArrayList(first, second, third, fourth, fifth, sixth);
         final List<CopyNumberReport> sortedReports = Lists.newArrayList(Sets.newTreeSet(reports));
@@ -42,4 +42,17 @@ public class CopyNumberReportTest {
         assertEquals(third, sortedReports.get(4));
         assertEquals(second, sortedReports.get(5));
     }
+
+
+    private CopyNumberReport create(String chromosome, String chromosomeBand, int copyNumber) {
+        return ImmutableCopyNumberReport.builder()
+                .chromosome(chromosome)
+                .chromosomeBand(chromosomeBand)
+                .gene("gene")
+                .transcript("transcript")
+                .copyNumber(copyNumber)
+                .build();
+    }
+
+
 }
