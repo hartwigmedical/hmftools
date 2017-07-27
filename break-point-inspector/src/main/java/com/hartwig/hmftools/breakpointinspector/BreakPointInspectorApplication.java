@@ -249,7 +249,7 @@ public class BreakPointInspectorApplication {
                         break;
                 }
 
-                final Analysis.StructuralVariantResult result =
+                final StructuralVariantResult result =
                         Analysis.processStructuralVariant(refReader, refWriter, tumorReader, tumorWriter, ctx, range);
 
                 fields.addAll(result.RefStats.GetData());

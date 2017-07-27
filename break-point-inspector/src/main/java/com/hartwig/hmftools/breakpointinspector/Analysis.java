@@ -3,13 +3,14 @@ package com.hartwig.hmftools.breakpointinspector;
 import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -28,13 +29,6 @@ class Analysis {
     }
 
     private static class PairedReads extends ArrayList<Pair<SAMRecord, SAMRecord>> {
-    }
-
-    static class StructuralVariantResult {
-        Pair<Location, Location> Breakpoints;
-        SampleStats TumorStats = new SampleStats();
-        SampleStats RefStats = new SampleStats();
-        String Filter = "";
     }
 
     private static int orientation(final SAMRecord record) {
@@ -76,15 +70,6 @@ class Analysis {
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
         for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
-
-            // aggregate depth at breakpoints
-            for (final SAMRecord r : Arrays.asList(pair.getLeft(), pair.getRight())) {
-                if (overlap(r, breakpoints.getLeft())) {
-                    result.BP1_Stats.Depth++;
-                } else if (overlap(r, breakpoints.getRight())) {
-                    result.BP2_Stats.Depth++;
-                }
-            }
 
             final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
             final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
@@ -305,13 +290,25 @@ class Analysis {
         final PairedReads pairs = new PairedReads();
         for (final AlignmentList list : alignments.values()) {
             for (int i = 0; i < list.size(); ++i) {
+
                 final SAMRecord r0 = list.get(i);
+                if (r0.getReadUnmappedFlag()) {
+                    continue;
+                }
+
                 for (int j = i + 1; j < list.size(); ++j) {
+
                     final SAMRecord r1 = list.get(j);
+                    if (r1.getReadUnmappedFlag()) {
+                        continue;
+                    }
+
                     if (isMate(r0, r1)) {
                         pairs.add(Pair.of(r0, r1));
                     }
+
                 }
+
             }
         }
         return pairs;
@@ -376,13 +373,26 @@ class Analysis {
         result.Breakpoints = determineBreakpoints(ctx, tumorPairedReads);
 
         if (stream(result.Breakpoints).anyMatch(Objects::isNull)) {
-            result.Filter = "HMF_BreakpointError";
+            List<String> filters = Lists.newArrayList(ctx.Filter);
+            filters.add("HMF_BreakpointError");
+            result.Filter = String.join(";", filters);
             return result;
         }
 
         result.TumorStats = collectEvidence(ctx, tumorPairedReads, result.Breakpoints);
         result.RefStats = collectEvidence(ctx, refPairedReads, result.Breakpoints);
-        result.Filter = Filter.getFilterString(ctx, result.TumorStats, result.RefStats);
+
+        // load sample clipping
+        for (final SAMRecord r : tumorReads) {
+            result.TumorStats.Sample_Clipping.add(Clipping.getLeftClip(r));
+            result.TumorStats.Sample_Clipping.add(Clipping.getRightClip(r));
+        }
+        for (final SAMRecord r : refReads) {
+            result.RefStats.Sample_Clipping.add(Clipping.getLeftClip(r));
+            result.RefStats.Sample_Clipping.add(Clipping.getRightClip(r));
+        }
+
+        result.Filter = Filter.getFilterString(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
 
         return result;
     }

@@ -1,17 +1,23 @@
 package com.hartwig.hmftools.breakpointinspector;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 class Filter {
 
-    static String getFilterString(final Util.HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats) {
+    static String getFilterString(final Util.HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,
+            final Pair<Location, Location> breakpoints) {
 
         final List<String> filters = Lists.newArrayList(ctx.Filter);
 
-        if (tumorStats.BP1_Stats.Depth < 10 || tumorStats.BP2_Stats.Depth < 10) {
+        if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats)
+                .mapToInt(s -> s.PR_Only_Normal + s.PR_SR_Normal + s.PR_Only_Support + s.PR_SR_Support)
+                .anyMatch(i -> i < 10)) {
             filters.add("HMF_MinDepth");
         }
 
@@ -36,7 +42,38 @@ class Filter {
             }
         }
 
-        boolean concordance = false; // TODO:
+        final List<Location> adjusted_bp = Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 1 : 0),
+                breakpoints.getRight().add(ctx.OrientationBP2 > 0 ? 1 : 0));
+
+        boolean concordance = false;
+        for (final Location bp : adjusted_bp) {
+            for (final ClipStats t : tumorStats.Sample_Clipping.getSequencesAt(bp)) {
+
+                if (t.LongestClipSequence.length() < 5) {
+                    continue;
+                }
+
+                final String tumorSeq = t.Left
+                        ? t.LongestClipSequence.substring(t.LongestClipSequence.length() - 5)
+                        : t.LongestClipSequence.substring(0, 5);
+
+                for (final ClipStats r : refStats.Sample_Clipping.getSequencesAt(bp)) {
+
+                    if (t.Left != r.Left) {
+                        continue;
+                    } else if (r.LongestClipSequence.length() < 5) {
+                        continue;
+                    }
+
+                    if (t.Left) {
+                        concordance |= tumorSeq.equals(r.LongestClipSequence.substring(r.LongestClipSequence.length() - 5));
+                    } else {
+                        concordance |= tumorSeq.equals(r.LongestClipSequence.substring(0, 5));
+                    }
+                }
+            }
+        }
+
         if (concordance) {
             filters.add("HMF_ClippingConcordance");
         }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,10 +27,17 @@ class ClipStats implements Comparable<ClipStats> {
     final Location Alignment;
     String LongestClipSequence = "";
     int Support = 1;
+    boolean Left = false;
+    boolean Right = false;
 
-    ClipStats(final Location alignment, final String sequence) {
+    ClipStats(final Location alignment, final String sequence, final boolean left) {
         Alignment = alignment;
         LongestClipSequence = sequence;
+        if (left) {
+            Left = true;
+        } else {
+            Right = true;
+        }
     }
 
     @Override
@@ -56,6 +64,9 @@ class Clipping {
         boolean found = false;
         final SortedSet<ClipStats> existing = LocationMap.removeAll(clip.Alignment);
         for (final ClipStats c : existing) {
+            if (clip.Left != c.Left) {
+                continue;
+            }
             if (clip.Left) {
                 if (c.LongestClipSequence.length() > clip.Sequence.length()) {
                     if (c.LongestClipSequence.endsWith(clip.Sequence)) {
@@ -84,12 +95,16 @@ class Clipping {
         }
 
         if (!found) {
-            LocationMap.put(clip.Alignment, new ClipStats(clip.Alignment, clip.Sequence));
+            LocationMap.put(clip.Alignment, new ClipStats(clip.Alignment, clip.Sequence, clip.Left));
         }
     }
 
     List<ClipStats> getSequences() {
         return LocationMap.values().stream().sorted((a, b) -> Integer.compare(b.Support, a.Support)).collect(Collectors.toList());
+    }
+
+    List<ClipStats> getSequencesAt(final Location location) {
+        return Lists.newArrayList(LocationMap.get(location));
     }
 
     static ClipInfo getLeftClip(final SAMRecord read) {
