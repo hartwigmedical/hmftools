@@ -29,25 +29,21 @@ public class ObservedRegionFactory {
 
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, TumorBAF> bafs,
-            @NotNull final Multimap<String, ReadRatio> tumorRatios, @NotNull final Multimap<String, ReadRatio> normalRatios,
-            @NotNull final Multimap<String, GCContent> gcContents) {
+            @NotNull final Multimap<String, ReadRatio> tumorRatios, @NotNull final Multimap<String, ReadRatio> normalRatios) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<ReadRatio> tumorRatioSelector = GenomePositionSelectorFactory.create(tumorRatios);
         final GenomePositionSelector<ReadRatio> normalRatioSelector = GenomePositionSelectorFactory.create(normalRatios);
         final GenomePositionSelector<TumorBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
-        final GenomePositionSelector<GCContent> gcContentSelector = GenomePositionSelectorFactory.create(gcContents);
 
         for (final PurpleSegment region : regions) {
             final BAFAccumulator baf = new BAFAccumulator();
             final RatioAccumulator tumorRatio = new RatioAccumulator();
             final RatioAccumulator normalRatio = new RatioAccumulator();
-            final GCContentAccumulator gcContent = new GCContentAccumulator();
 
             bafSelector.select(region, baf);
             tumorRatioSelector.select(region, tumorRatio);
             normalRatioSelector.select(region, normalRatio);
-            gcContentSelector.select(region, gcContent);
 
             double myTumorRatio = tumorRatio.meanRatio();
             double myNormalRatio = normalRatio.meanRatio();
@@ -59,9 +55,7 @@ public class ObservedRegionFactory {
                     .observedNormalRatio(myNormalRatio)
                     .ratioSupport(region.ratioSupport())
                     .structuralVariantSupport(region.structuralVariantSupport())
-                    .observedGCContent(gcContent.getAverageGCContent())
-                    .observedNonNPercentage(gcContent.getAverageNonNPercentage())
-                    .observedMappablePercentage(gcContent.getAverageMappablePercentage())
+                    .observedTumorRatioCount(tumorRatio.count())
                     .status(FreecStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
                     .build();
 
@@ -100,6 +94,10 @@ public class ObservedRegionFactory {
 
         private double meanRatio() {
             return count > 0 ? sumRatio / count : 0;
+        }
+
+        private int count() {
+            return count;
         }
 
         @Override

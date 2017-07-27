@@ -66,10 +66,8 @@ public class PurpleDatamodelTest {
                 .start(start)
                 .end(end)
                 .observedTumorRatio(1)
+                .observedTumorRatioCount(1)
                 .observedNormalRatio(1)
-                .observedGCContent(1)
-                .observedNonNPercentage(1)
-                .observedMappablePercentage(1)
                 .ratioSupport(true)
                 .status(FreecStatus.SOMATIC)
                 .structuralVariantSupport(StructuralVariantSupport.NONE);
