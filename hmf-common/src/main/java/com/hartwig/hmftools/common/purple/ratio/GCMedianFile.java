@@ -21,12 +21,12 @@ public enum GCMedianFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull final String fileName, @NotNull final List<GCMedians> medians) throws IOException {
+    public static void write(@NotNull final String fileName, @NotNull final List<GCMedian> medians) throws IOException {
         Files.write(new File(fileName).toPath(), toLines(medians));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<GCMedians> medians) {
+    static List<String> toLines(@NotNull final List<GCMedian> medians) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         medians.stream().map(GCMedianFile::toString).forEach(lines::add);
@@ -39,7 +39,7 @@ public enum GCMedianFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final GCMedians median) {
+    private static String toString(@NotNull final GCMedian median) {
         return new StringJoiner(DELIMITER).add(String.valueOf(median.gcContent())).add(String.valueOf(median.medianCount())).toString();
     }
 

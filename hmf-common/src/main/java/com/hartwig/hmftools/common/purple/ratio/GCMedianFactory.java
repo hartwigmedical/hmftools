@@ -22,16 +22,16 @@ class GCMedianFactory {
         }
     }
 
-    Map<Integer, GCMedians> medianCountPerGCBucket() {
+    Map<Integer, GCMedian> medianCountPerGCBucket() {
 
-        final Map<Integer, GCMedians> result = Maps.newHashMap();
+        final Map<Integer, GCMedian> result = Maps.newHashMap();
 
         int closestBucketToMin = closestBucketToMin();
         int closestBucketToMax = closestBucketToMax();
 
         for (Integer key : gcContentMedian.keySet()) {
             int bucket = Math.min(closestBucketToMax, Math.max(closestBucketToMin, key));
-            result.put(key, ImmutableGCMedians.builder().gcContent(key).medianCount(gcContentMedian.get(bucket).median()).build());
+            result.put(key, ImmutableGCMedian.builder().gcContent(key).medianCount(gcContentMedian.get(bucket).median()).build());
         }
 
         return result;

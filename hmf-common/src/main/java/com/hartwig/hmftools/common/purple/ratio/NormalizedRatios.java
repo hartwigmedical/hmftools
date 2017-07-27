@@ -15,5 +15,5 @@ public interface NormalizedRatios {
     Multimap<String, ReadRatio> normalisedRatios();
 
     @NotNull
-    List<GCMedians> medianReadCount();
+    List<GCMedian> medianReadCount();
 }

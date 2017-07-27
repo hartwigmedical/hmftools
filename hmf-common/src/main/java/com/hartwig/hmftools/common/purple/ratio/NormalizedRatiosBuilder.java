@@ -36,8 +36,8 @@ public class NormalizedRatiosBuilder {
 
     public NormalizedRatios build() {
 
-        final Map<Integer, GCMedians> medianCountPerGCBucket = gcMedian.medianCountPerGCBucket();
-        final List<GCMedians> medians = Lists.newArrayList(medianCountPerGCBucket.values());
+        final Map<Integer, GCMedian> medianCountPerGCBucket = gcMedian.medianCountPerGCBucket();
+        final List<GCMedian> medians = Lists.newArrayList(medianCountPerGCBucket.values());
         Collections.sort(medians);
         final ImmutableNormalizedRatios.Builder builder = ImmutableNormalizedRatios.builder().addAllMedianReadCount(medians);
 
@@ -50,8 +50,8 @@ public class NormalizedRatiosBuilder {
         return builder.build();
     }
 
-    private ReadRatio create(Map<Integer, GCMedians> medianCountPerGCBucket, ReadCountWithGCContent readCount) {
-        GCMedians gcMedian = medianCountPerGCBucket.get(readCount.gcContent());
+    private ReadRatio create(Map<Integer, GCMedian> medianCountPerGCBucket, ReadCountWithGCContent readCount) {
+        GCMedian gcMedian = medianCountPerGCBucket.get(readCount.gcContent());
         int gcMedianCount = gcMedian == null ? -1 : gcMedian.medianCount();
 
         final double ratio;
