@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.ratio.ImmutableGCContent;
+import com.hartwig.hmftools.common.purple.ratio.ImmutableReadCount;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
@@ -26,8 +27,8 @@ public class PurpleDatamodelTest {
     }
 
     @NotNull
-    public static ImmutableGCContent.Builder createGCContent(String chromosome, long position, double gcContent, double nonNPercentage,
-            double mappablePercentage) {
+    public static ImmutableGCContent.Builder createGCContent(@NotNull final String chromosome, final long position, final double gcContent,
+            final double nonNPercentage, final double mappablePercentage) {
         return ImmutableGCContent.builder()
                 .chromosome(chromosome)
                 .position(position)
@@ -37,7 +38,13 @@ public class PurpleDatamodelTest {
     }
 
     @NotNull
-    public static ImmutablePurpleCopyNumber.Builder createCopyNumber(@NotNull String chromosome, long start, long end, double copyNumber) {
+    public static ImmutableReadCount.Builder createReadCount(@NotNull final String chromosome, final long position, final int readCount) {
+        return ImmutableReadCount.builder().chromosome(chromosome).position(position).readCount(readCount);
+    }
+
+    @NotNull
+    public static ImmutablePurpleCopyNumber.Builder createCopyNumber(@NotNull final String chromosome, final long start, final long end,
+            final double copyNumber) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(chromosome)
                 .start(start)
@@ -69,7 +76,8 @@ public class PurpleDatamodelTest {
     }
 
     @NotNull
-    public static ImmutableFittedRegion.Builder createDefaultFittedRegion(@NotNull final String chromosome, long start, long end) {
+    public static ImmutableFittedRegion.Builder createDefaultFittedRegion(@NotNull final String chromosome, final long start,
+            final long end) {
         final ObservedRegion observedRegion = createObservedRegion(chromosome, start, end).build();
         return ImmutableFittedRegion.builder()
                 .from(observedRegion)

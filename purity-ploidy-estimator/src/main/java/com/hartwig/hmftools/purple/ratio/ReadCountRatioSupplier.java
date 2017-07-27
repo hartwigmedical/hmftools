@@ -9,6 +9,7 @@ import java.util.List;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.ratio.GCContent;
+import com.hartwig.hmftools.common.purple.ratio.GCMedianFile;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatios;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatiosBuilder;
 import com.hartwig.hmftools.common.purple.ratio.ReadCount;
@@ -56,6 +57,14 @@ public class ReadCountRatioSupplier implements RatioSupplier {
 
         referenceRatios = normalizedReferenceRatios.normalisedRatios();
         tumorRatios = normalizedTumorRatios.normalisedRatios();
+
+        final String tumorGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.tumorSample());
+        LOGGER.info("Persisting read count medians to {}", tumorGCMedianFileName);
+        GCMedianFile.write(tumorGCMedianFileName, normalizedTumorRatios.medianReadCount());
+
+        final String referenceGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.refSample());
+        LOGGER.info("Persisting read count medians to {}", referenceGCMedianFileName);
+        GCMedianFile.write(referenceGCMedianFileName, normalizedReferenceRatios.medianReadCount());
 
         LOGGER.info("Persisting gc normalized read ratios to file");
         ReadRatioFile.write(config.outputDirectory(), config.refSample(), referenceRatios);

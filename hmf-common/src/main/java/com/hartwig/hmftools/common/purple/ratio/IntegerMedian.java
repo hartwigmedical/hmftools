@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.common.purple.ratio;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -13,40 +10,17 @@ import org.jetbrains.annotations.NotNull;
 
 class IntegerMedian {
 
-    private int count;
-    public final Map<Integer, InnerReadCount> readCount;
-    public List<Integer> theList = Lists.newArrayList();
-
+    private final Map<Integer, InnerReadCount> readCount;
 
     IntegerMedian() {
         this.readCount = Maps.newHashMap();
     }
 
-    public void addRead(int read) {
-//        if (read > 0) {
-            count++;
-            readCount.computeIfAbsent(read, InnerReadCount::new).increment();
-            theList.add(read);
-//        }
+    void addRead(int read) {
+        readCount.computeIfAbsent(read, InnerReadCount::new).increment();
     }
 
-    public int count() {
-        return count;
-    }
-
-    public int average() {
-        return theList.stream().mapToInt(x -> x).sum() / count;
-    }
-
-    public int simpleMedian() {
-        if (count > 0) {
-            Collections.sort(theList);
-            return theList.size() % 2 == 0 ? (theList.get(count / 2) + theList.get(count / 2 - 1)) / 2 : theList.get(count / 2);
-        }
-        return 0;
-    }
-
-    public int median() {
+    int median() {
 
         TreeSet<InnerReadCount> sortedSet = Sets.newTreeSet(readCount.values());
         if (sortedSet.isEmpty()) {

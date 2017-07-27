@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.ratio;
 
-import java.util.Map;
+import java.util.List;
 
 import com.google.common.collect.Multimap;
 
@@ -15,5 +15,5 @@ public interface NormalizedRatios {
     Multimap<String, ReadRatio> normalisedRatios();
 
     @NotNull
-    Map<Integer, Integer> medianReadCount();
+    List<GCMedians> medianReadCount();
 }
