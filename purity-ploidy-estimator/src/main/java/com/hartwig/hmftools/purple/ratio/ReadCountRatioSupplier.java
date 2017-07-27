@@ -33,7 +33,7 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             throws IOException, HartwigException {
 
         final String tumorRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
-        final String referenceRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
+        final String referenceRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.refSample());
 
         if (new File(tumorRatioFile).exists() && new File(referenceRatioFile).exists()) {
             LOGGER.info("Loading reference ratios from {}", referenceRatioFile);

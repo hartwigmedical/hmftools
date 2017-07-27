@@ -18,8 +18,7 @@ public enum FreecStatus {
         if (Doubles.isZero(ratio)) {
             return UNKNOWN;
         }
-//        double adjustment = chromosome.equals("X") && gender.equals(Gender.MALE) || chromosome.equals("Y") ? 0.5 : 0;
-        double adjustment = 0;
+        double adjustment = chromosome.equals("X") && gender.equals(Gender.MALE) || chromosome.equals("Y") ? 0.5 : 0;
         if (Doubles.greaterThan(ratio, GERMLINE_MAX_RATIO - adjustment) || Doubles.lessThan(ratio, GERMLINE_MIN_RATIO - adjustment)) {
             return GERMLINE;
         }
