@@ -67,7 +67,6 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    private static final boolean NEW_RATIOS = false;
     private static final boolean NEW_SEGMENTS = false;
 
     static final double MIN_PURITY_DEFAULT = 0.05;
@@ -125,13 +124,18 @@ public class PurityPloidyEstimateApplication {
         // JOBA: Load Ratios
         final String freecDirectory = config.freecDirectory();
         final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
-        final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
-        final RatioSupplier ratioSupplier = NEW_RATIOS ? new ReadCountRatioSupplier(config, gcContent) : freecRatioSupplier;
 
-        // JOBA: Load Segments
-        final List<GenomeRegion> regions = NEW_SEGMENTS
-                ? new PCFSegmentSupplier(config, ratioSupplier.tumorRatios()).get()
-                : new FreecSegmentSupplier(freecRatioSupplier).get();
+
+        final RatioSupplier ratioSupplier;
+        final List<GenomeRegion> regions;
+        if (NEW_SEGMENTS) {
+            ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
+            regions = new PCFSegmentSupplier(config, ratioSupplier.tumorRatios()).get();
+        } else {
+            final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
+            ratioSupplier = freecRatioSupplier;
+            regions = new FreecSegmentSupplier(freecRatioSupplier).get();
+        }
 
         LOGGER.info("Merging structural variants into freec segmentation");
         final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
