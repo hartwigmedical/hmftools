@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
@@ -240,46 +241,55 @@ class Analysis {
             }
         }
 
+        // determinate candidates based on clipping info
+
+        final List<Location> bp1_candidates = bp1_clipping.getSequences()
+                .stream()
+                .filter(c -> c.LongestClipSequence.length() >= 5)
+                .filter(c -> withinRange(c.Alignment, ctx.MantaBP1, ctx.Uncertainty1))
+                .map(c -> c.Alignment)
+                .collect(Collectors.toList());
+
+        if (bp1_candidates.isEmpty()) {
+            // TODO: add innermost position as candidate
+        }
+
+        final List<Location> bp2_candidates = bp2_clipping.getSequences()
+                .stream()
+                .filter(c -> c.LongestClipSequence.length() >= 5)
+                .filter(c -> withinRange(c.Alignment, ctx.MantaBP2, ctx.Uncertainty2))
+                .map(c -> c.Alignment)
+                .collect(Collectors.toList());
+
+        if (bp2_candidates.isEmpty()) {
+            // TODO: add innermost position as candidate
+        }
+
         Location breakpoint1 = null;
         Location breakpoint2 = null;
-
         long max_count = 0;
-        for (final ClipStats bp1 : bp1_clipping.getSequences()) {
 
-            if (!withinRange(bp1.Alignment, ctx.MantaBP1, ctx.Uncertainty1)) {
-                continue;
-            }
-            if (bp1.LongestClipSequence.length() < 5) {
-                continue;
-            }
+        for (final Location candidate1 : bp1_candidates) {
+            for (final Location candidate2 : bp2_candidates) {
 
-            for (final ClipStats bp2 : bp2_clipping.getSequences()) {
-
-                if (bp1.Alignment.compareTo(bp2.Alignment) >= 0) {
-                    continue;
-                }
-
-                if (!withinRange(bp2.Alignment, ctx.MantaBP2, ctx.Uncertainty2)) {
-                    continue;
-                }
-
-                if (bp2.LongestClipSequence.length() < 5) {
+                if (candidate1.compareTo(candidate2) >= 0) {
                     continue;
                 }
 
                 final long count = interesting.stream().
                         filter(p -> ctx.OrientationBP1 > 0
-                                ? Location.fromSAMRecord(p.getLeft(), true).compareTo(bp1.Alignment) <= 0
-                                : Location.fromSAMRecord(p.getLeft(), false).compareTo(bp1.Alignment) >= 0).
+                                ? Location.fromSAMRecord(p.getLeft(), true).compareTo(candidate1) <= 0
+                                : Location.fromSAMRecord(p.getLeft(), false).compareTo(candidate1) >= 0).
                         filter(p -> ctx.OrientationBP2 > 0
-                                ? Location.fromSAMRecord(p.getRight(), true).compareTo(bp2.Alignment) <= 0
-                                : Location.fromSAMRecord(p.getRight(), false).compareTo(bp2.Alignment) >= 0).count();
+                                ? Location.fromSAMRecord(p.getRight(), true).compareTo(candidate2) <= 0
+                                : Location.fromSAMRecord(p.getRight(), false).compareTo(candidate2) >= 0).count();
 
                 if (count > max_count) {
-                    breakpoint1 = ctx.OrientationBP1 > 0 ? bp1.Alignment.add(-1) : bp1.Alignment;
-                    breakpoint2 = ctx.OrientationBP2 > 0 ? bp2.Alignment.add(-1) : bp2.Alignment;
+                    breakpoint1 = ctx.OrientationBP1 > 0 ? candidate1.add(-1) : candidate1;
+                    breakpoint2 = ctx.OrientationBP2 > 0 ? candidate2.add(-1) : candidate2;
                     max_count = count;
                 }
+                
             }
         }
 
