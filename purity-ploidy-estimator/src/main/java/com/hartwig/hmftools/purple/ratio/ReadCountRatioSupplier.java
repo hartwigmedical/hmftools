@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.ratio;
 import static com.hartwig.hmftools.common.copynumber.freec.FreecCPNFileLoader.normalReadCountLines;
 import static com.hartwig.hmftools.common.copynumber.freec.FreecCPNFileLoader.tumorReadCountLines;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -31,44 +32,56 @@ public class ReadCountRatioSupplier implements RatioSupplier {
     public ReadCountRatioSupplier(final CommonConfig config, final Multimap<String, GCContent> gcContent)
             throws IOException, HartwigException {
 
-        LOGGER.info("Loading read count data");
-        final Multimap<String, ReadCount> tumorReadCount = tumorReadCountLines(config.freecDirectory(), config.tumorSample());
-        final Multimap<String, ReadCount> normalReadCount = normalReadCountLines(config.freecDirectory(), config.refSample());
+        final String tumorRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
+        final String referenceRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
 
-        LOGGER.info("Generating gc normalized read ratios");
-        final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
-        final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
-        for (String chromosome : normalReadCount.keySet()) {
-            List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosome);
-            List<ReadCount> chromosomeNormalReadCount = (List<ReadCount>) normalReadCount.get(chromosome);
-            List<ReadCount> chromosomeTumorReadCount = (List<ReadCount>) tumorReadCount.get(chromosome);
-            for (int i = 0; i < chromosomeNormalReadCount.size(); i++) {
-                GCContent windowGCContent = chromosomeGCContent.get(i);
-                ReadCount windowNormalCount = chromosomeNormalReadCount.get(i);
-                ReadCount windowTumorCount = chromosomeTumorReadCount.get(i);
+        if (new File(tumorRatioFile).exists() && new File(referenceRatioFile).exists()) {
+            LOGGER.info("Loading reference ratios from {}", referenceRatioFile);
+            referenceRatios = ReadRatioFile.read(referenceRatioFile);
 
-                normalRatiosBuilder.addPosition(windowGCContent, windowNormalCount);
-                tumorRatiosBuilder.addPosition(windowGCContent, windowTumorCount);
+            LOGGER.info("Loading tumor ratios from {}", tumorRatioFile);
+            tumorRatios = ReadRatioFile.read(tumorRatioFile);
+        } else {
+
+            LOGGER.info("Loading read count data");
+            final Multimap<String, ReadCount> tumorReadCount = tumorReadCountLines(config.freecDirectory(), config.tumorSample());
+            final Multimap<String, ReadCount> normalReadCount = normalReadCountLines(config.freecDirectory(), config.refSample());
+
+            LOGGER.info("Generating gc normalized read ratios");
+            final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
+            final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
+            for (String chromosome : normalReadCount.keySet()) {
+                List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosome);
+                List<ReadCount> chromosomeNormalReadCount = (List<ReadCount>) normalReadCount.get(chromosome);
+                List<ReadCount> chromosomeTumorReadCount = (List<ReadCount>) tumorReadCount.get(chromosome);
+                for (int i = 0; i < chromosomeNormalReadCount.size(); i++) {
+                    GCContent windowGCContent = chromosomeGCContent.get(i);
+                    ReadCount windowNormalCount = chromosomeNormalReadCount.get(i);
+                    ReadCount windowTumorCount = chromosomeTumorReadCount.get(i);
+
+                    normalRatiosBuilder.addPosition(windowGCContent, windowNormalCount);
+                    tumorRatiosBuilder.addPosition(windowGCContent, windowTumorCount);
+                }
             }
+
+            NormalizedRatios normalizedReferenceRatios = normalRatiosBuilder.build();
+            NormalizedRatios normalizedTumorRatios = tumorRatiosBuilder.build();
+
+            referenceRatios = normalizedReferenceRatios.normalisedRatios();
+            tumorRatios = normalizedTumorRatios.normalisedRatios();
+
+            final String tumorGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.tumorSample());
+            LOGGER.info("Persisting read count medians to {}", tumorGCMedianFileName);
+            GCMedianFile.write(tumorGCMedianFileName, normalizedTumorRatios.medianReadCount());
+
+            final String referenceGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.refSample());
+            LOGGER.info("Persisting read count medians to {}", referenceGCMedianFileName);
+            GCMedianFile.write(referenceGCMedianFileName, normalizedReferenceRatios.medianReadCount());
+
+            LOGGER.info("Persisting gc normalized read ratios to file");
+            ReadRatioFile.write(config.outputDirectory(), config.refSample(), referenceRatios);
+            ReadRatioFile.write(config.outputDirectory(), config.tumorSample(), tumorRatios);
         }
-
-        NormalizedRatios normalizedReferenceRatios = normalRatiosBuilder.build();
-        NormalizedRatios normalizedTumorRatios = tumorRatiosBuilder.build();
-
-        referenceRatios = normalizedReferenceRatios.normalisedRatios();
-        tumorRatios = normalizedTumorRatios.normalisedRatios();
-
-        final String tumorGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.tumorSample());
-        LOGGER.info("Persisting read count medians to {}", tumorGCMedianFileName);
-        GCMedianFile.write(tumorGCMedianFileName, normalizedTumorRatios.medianReadCount());
-
-        final String referenceGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.refSample());
-        LOGGER.info("Persisting read count medians to {}", referenceGCMedianFileName);
-        GCMedianFile.write(referenceGCMedianFileName, normalizedReferenceRatios.medianReadCount());
-
-        LOGGER.info("Persisting gc normalized read ratios to file");
-        ReadRatioFile.write(config.outputDirectory(), config.refSample(), referenceRatios);
-        ReadRatioFile.write(config.outputDirectory(), config.tumorSample(), tumorRatios);
     }
 
     @Override

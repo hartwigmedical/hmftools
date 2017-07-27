@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple.ratio;
 
-import static java.util.stream.Collectors.toList;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
@@ -27,9 +26,8 @@ public enum ReadRatioFile {
     }
 
     @NotNull
-    public static List<ReadRatio> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    public static Multimap<String, ReadRatio> read(@NotNull final String filename) throws IOException {
+        return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull Multimap<String, ReadRatio> ratios)
@@ -67,8 +65,15 @@ public enum ReadRatioFile {
     }
 
     @NotNull
-    private static List<ReadRatio> fromLines(@NotNull List<String> lines) {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(ReadRatioFile::fromString).collect(toList());
+    private static Multimap<String, ReadRatio> fromLines(@NotNull List<String> lines) {
+        Multimap<String, ReadRatio> result = ArrayListMultimap.create();
+        for (String line : lines) {
+            if (!line.startsWith(HEADER_PREFIX)) {
+                final ReadRatio region = fromString(line);
+                result.put(region.chromosome(), region);
+            }
+        }
+        return result;
     }
 
     @NotNull
