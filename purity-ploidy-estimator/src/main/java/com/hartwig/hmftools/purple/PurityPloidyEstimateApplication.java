@@ -91,8 +91,8 @@ public class PurityPloidyEstimateApplication {
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
-    private static final String STRUCTURAL_VCF_EXTENTION = "structural_variant_extension";
-    private static final String STRUCTURAL_VCF_EXTENTION_DEFAULT = "somaticSV.vcf.gz";
+    private static final String STRUCTURAL_VCF_EXTENSION = "structural_variant_extension";
+    private static final String STRUCTURAL_VCF_EXTENSION_DEFAULT = "somaticSV.vcf.gz";
 
     private static final String PLOIDY_PENALTY_EXPERIMENT = "ploidy_penalty_experiment";
 
@@ -110,25 +110,25 @@ public class PurityPloidyEstimateApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        // Get common config
+        // JOBA: Get common config
         final CommonConfig config = new CommonConfigSupplier(cmd, options).get();
         final String runDirectory = config.runDirectory();
         final String outputDirectory = config.outputDirectory();
         final String tumorSample = config.tumorSample();
 
-        // Load BAFs
+        // JOBA: Load BAFs
         final BAFSupplier bafSupplier = new BAFSupplier(config, cmd);
         final Multimap<String, TumorBAF> bafs = bafSupplier.get();
         final Gender gender = Gender.fromBAFCount(bafs);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
 
-        // Load Ratios
+        // JOBA: Load Ratios
         final String freecDirectory = config.freecDirectory();
         final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
         final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
         final RatioSupplier ratioSupplier = NEW_RATIOS ? new ReadCountRatioSupplier(config, gcContent) : freecRatioSupplier;
 
-        // Load Segments
+        // JOBA: Load Segments
         final List<GenomeRegion> regions = NEW_SEGMENTS
                 ? new PCFSegmentSupplier(config, ratioSupplier.tumorRatios()).get()
                 : new FreecSegmentSupplier(freecRatioSupplier).get();
@@ -141,7 +141,6 @@ public class PurityPloidyEstimateApplication {
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
         final List<ObservedRegion> observedRegions =
                 observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios(), gcContent);
-
 
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
         final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
@@ -164,7 +163,7 @@ public class PurityPloidyEstimateApplication {
                 fittedRegionFactory,
                 observedRegions);
 
-        Optional<FittedPurity> optionalBestFit = fittedPurityFactory.bestFit();
+        final Optional<FittedPurity> optionalBestFit = fittedPurityFactory.bestFit();
         if (optionalBestFit.isPresent()) {
             final FittedPurity bestFit = optionalBestFit.get();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
@@ -205,7 +204,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Structural variants support disabled.");
             return Collections.emptyList();
         } else {
-            final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENTION, STRUCTURAL_VCF_EXTENTION_DEFAULT);
+            final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENSION, STRUCTURAL_VCF_EXTENSION_DEFAULT);
             final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
             LOGGER.info("Loading structural variants from {}", structuralVariantFile);
             return StructuralVariantFileLoader.fromFile(structuralVariantFile);
