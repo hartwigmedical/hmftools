@@ -3,10 +3,14 @@ package com.hartwig.hmftools.cobalt;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.purple.ratio.ReadCount;
@@ -22,11 +26,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 public class CountBamLinesApplication {
@@ -37,58 +37,46 @@ public class CountBamLinesApplication {
     private static final String COUNT_FILE = "count_file";
     private static final int WINDOW_SIZE = 1000;
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
         new CountBamLinesApplication(args);
     }
 
-    private CountBamLinesApplication(final String... args) throws ParseException, IOException {
+    private CountBamLinesApplication(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
-        if (!cmd.hasOption(BAM_FILE) || !cmd.hasOption(COUNT_FILE)) {
+        if (!cmd.hasOption(BAM_FILE) || !cmd.hasOption(COUNT_FILE) || !cmd.hasOption(CHR_LENGTHS)) {
             printUsageAndExit(options);
         }
 
-        final Map<String, ChromosomeLength> chromosomeLength = chromosomeLength(cmd);
-
         final File inputFile = new File(cmd.getOptionValue(BAM_FILE));
         final String outputFile = cmd.getOptionValue(COUNT_FILE);
-        ReadCountFile.createFile(outputFile);
 
-        SamReaderFactory readerFactory = SamReaderFactory.make();
-        SamReader reader = readerFactory.open(inputFile);
-        SAMRecordIterator iterator = reader.iterator();
+        final SamReaderFactory readerFactory = SamReaderFactory.make();
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
+        final ExecutorService executorService = Executors.newFixedThreadPool(4, namedThreadFactory);
 
-        ChromosomeCount counter = null;
-        while (iterator.hasNext()) {
-
-            SAMRecord record = iterator.next();
-            String contig = record.getContig();
-            if (contig != null) {
-
-                if (counter == null || !counter.contig().equals(contig)) {
-                    persist(outputFile, counter);
-
-                    final String chromosome = chromosome(contig);
-                    final long length = Optional.ofNullable(chromosomeLength.get(chromosome)).map(ChromosomeLength::position).orElse(0L);
-
-                    LOGGER.info("Generating windows on chromosome {}", chromosome);
-                    counter = new ChromosomeCount(contig, chromosome, length, WINDOW_SIZE);
-                }
-                counter.addRecord(record);
-            }
+        final List<Future<ChromosomeCount>> futures = Lists.newArrayList();
+        final List<ChromosomeLength> lengths = ChromosomeLengthFile.read(cmd.getOptionValue(CHR_LENGTHS));
+        for (ChromosomeLength chromosome : lengths) {
+            final CallableChromosome callable =
+                    new CallableChromosome(chromosome.chromosome(), chromosome.position(), WINDOW_SIZE, readerFactory, inputFile);
+            futures.add(executorService.submit(callable));
         }
 
-        persist(outputFile, counter);
+        ReadCountFile.createFile(outputFile);
+        for (Future<ChromosomeCount> future : futures) {
+            persist(outputFile, future.get());
+        }
+
         LOGGER.info("Complete");
+        executorService.shutdown();
     }
 
-    private void persist(@NotNull final String filename, @Nullable ChromosomeCount counter) throws IOException {
-        if (counter != null) {
-            final List<ReadCount> readCounts = counter.readCount();
-            LOGGER.info("Persisting {} windows from chromosome {}", readCounts.size(), counter.chromosome());
-            ReadCountFile.append(filename, readCounts);
-        }
+    private void persist(@NotNull final String filename, @NotNull ChromosomeCount counter) throws IOException {
+        final List<ReadCount> readCounts = counter.readCount();
+        LOGGER.info("Persisting {} windows from chromosome {}", readCounts.size(), counter.chromosome());
+        ReadCountFile.append(filename, readCounts);
     }
 
     private static void printUsageAndExit(@NotNull final Options options) {
@@ -113,14 +101,4 @@ public class CountBamLinesApplication {
         return options;
     }
 
-    @NotNull
-    private Map<String, ChromosomeLength> chromosomeLength(@NotNull final CommandLine cmd) throws IOException {
-        return cmd.hasOption(CHR_LENGTHS) ? ChromosomeLengthFile.read(cmd.getOptionValue(CHR_LENGTHS)) : Maps.newHashMap();
-    }
-
-    @NotNull
-    private static String chromosome(@NotNull final String contig) {
-        final String lower = contig.toLowerCase();
-        return lower.startsWith("chr") ? contig.substring(3) : contig;
-    }
 }

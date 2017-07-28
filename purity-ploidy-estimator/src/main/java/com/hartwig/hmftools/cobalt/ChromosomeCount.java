@@ -41,7 +41,6 @@ class ChromosomeCount {
     }
 
     void addRecord(SAMRecord record) {
-        assert (record.getContig().equals(chromosome));
         if (isEligible(record)) {
 
             long window = windowPosition(record.getAlignmentStart());
