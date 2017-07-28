@@ -7,20 +7,21 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CopyNumberReportTest {
 
     @Test
     public void canResolveType() {
-        final CopyNumberReport gain =  create("18", "p2", 5);
-        assertEquals(CopyNumberReport.COPY_NUMBER_GAIN, gain.description());
+        final CopyNumberReport gain = create("18", "p2", 5);
+        assertEquals(CopyNumberReportType.GAIN.description(), gain.description());
 
-        final CopyNumberReport loss =  create("18", "p2", 0);
-        assertEquals(CopyNumberReport.COPY_NUMBER_LOSS, loss.description());
+        final CopyNumberReport loss = create("18", "p2", 0);
+        assertEquals(CopyNumberReportType.LOSS.description(), loss.description());
 
-        final CopyNumberReport neutral =  create("18", "p2", 2);
-        assertEquals(CopyNumberReport.COPY_NUMBER_NEUTRAL, neutral.description());
+        final CopyNumberReport neutral = create("18", "p2", 2);
+        assertEquals(CopyNumberReportType.NEUTRAL.description(), neutral.description());
     }
 
     @Test
@@ -42,12 +43,13 @@ public class CopyNumberReportTest {
         assertEquals(third, sortedReports.get(4));
         assertEquals(second, sortedReports.get(5));
     }
-    private CopyNumberReport create(String chromosome, String chromosomeBand, int copyNumber) {
+
+    @NotNull
+    private static CopyNumberReport create(@NotNull final String chromosome, @NotNull final String chromosomeBand, final int copyNumber) {
         return ImmutableCopyNumberReport.builder()
                 .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)
                 .gene("gene")
-                .transcript("transcript")
                 .copyNumber(copyNumber)
                 .type(CopyNumberReportType.resolveType(copyNumber))
                 .build();

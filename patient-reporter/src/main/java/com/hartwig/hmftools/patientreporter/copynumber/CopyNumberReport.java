@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,13 +7,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
-
-    @VisibleForTesting
-    static final String COPY_NUMBER_GAIN = "copy-gain";
-    @VisibleForTesting
-    static final String COPY_NUMBER_LOSS = "copy-loss";
-    @VisibleForTesting
-    static final String COPY_NUMBER_NEUTRAL = "none";
 
     @NotNull
     public abstract String chromosome();
@@ -25,9 +16,6 @@ public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
 
     @NotNull
     public abstract String gene();
-
-    @NotNull
-    public abstract String transcript();
 
     public abstract int copyNumber();
 
@@ -39,11 +27,11 @@ public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
         return type().description();
     }
 
-    //TODO: Once we get rid of freec, this class can implement GenomeRegion and gets comparable for free
+    //TODO (JOBA): Once we get rid of freec, this class can implement GenomeRegion and gets comparable for free
     @Override
     public int compareTo(@NotNull final CopyNumberReport other) {
-        final Integer intChrom1 = toInteger(chromosome());
-        final Integer intChrom2 = toInteger(other.chromosome());
+        final Integer intChrom1 = safeToInteger(chromosome());
+        final Integer intChrom2 = safeToInteger(other.chromosome());
         if (intChrom1 == null && intChrom2 == null) {
             if (chromosome().equals(other.chromosome())) {
                 return chromosomeBand().compareTo(other.chromosomeBand());
@@ -64,12 +52,11 @@ public abstract class CopyNumberReport implements Comparable<CopyNumberReport> {
     }
 
     @Nullable
-    private static Integer toInteger(@NotNull String string) {
+    private static Integer safeToInteger(@NotNull final String string) {
         try {
             return Integer.parseInt(string);
         } catch (NumberFormatException exception) {
             return null;
         }
     }
-
 }

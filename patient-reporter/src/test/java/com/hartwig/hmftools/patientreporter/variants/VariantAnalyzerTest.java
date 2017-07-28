@@ -79,11 +79,6 @@ public class VariantAnalyzerTest {
     }
 
     @NotNull
-    private static List<VariantConsequence> list(@NotNull final VariantConsequence consequence) {
-        return Lists.newArrayList(consequence);
-    }
-
-    @NotNull
     private static SomaticVariant.Builder builder() {
         return new SomaticVariant.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).filter(PASS_FILTER);
     }
@@ -95,16 +90,7 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static HmfGenomeRegion hmfRegion() {
-        return new ImmutableHmfGenomeRegion(CHROMOSOME,
-                350,
-                450,
-                RIGHT_TRANSCRIPT,
-                TRANSCRIPT_VERSION,
-                GENE,
-                GENE_ID,
-                GENE_START,
-                GENE_END,
-                CHROMOSOME_BAND,
-                ENTREZ_ID);
+        return new ImmutableHmfGenomeRegion(CHROMOSOME, 350, 450, RIGHT_TRANSCRIPT, TRANSCRIPT_VERSION, GENE, GENE_ID, GENE_START, GENE_END,
+                CHROMOSOME_BAND, ENTREZ_ID);
     }
 }

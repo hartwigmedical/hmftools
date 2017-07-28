@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -44,20 +45,22 @@ class HighConfidenceCopyNumberBuilder extends BaseCopyNumberBuilder {
     public void extendRegion(@NotNull final FittedRegion value) {
         super.extendRegion(value);
 
-        if (value.bafCount() > 0) {
+        if (value.status() == FreecStatus.SOMATIC) {
+            if (value.bafCount() > 0) {
 
-            if (!weighWithBaf) {
-                resetAverage();
-                weighWithBaf = true;
+                if (!weighWithBaf) {
+                    resetAverage();
+                    weighWithBaf = true;
+                }
+
+                long weight = value.bafCount();
+                averageInBaf(weight, value.observedBAF());
+                averageInCopyNumber(weight, value.tumorCopyNumber(), value.refNormalisedCopyNumber());
+
+            } else if (!weighWithBaf) {
+                long weight = Math.max(1, value.bases() / 1000);
+                averageInCopyNumber(weight, value.tumorCopyNumber(), value.refNormalisedCopyNumber());
             }
-
-            long weight = value.bafCount();
-            averageInBaf(weight, value.observedBAF());
-            averageInCopyNumber(weight, value.tumorCopyNumber(), value.refNormalisedCopyNumber());
-
-        } else if (!weighWithBaf) {
-            long weight = Math.max(1, value.bases() / 1000);
-            averageInCopyNumber(weight, value.tumorCopyNumber(), value.refNormalisedCopyNumber());
         }
     }
 

@@ -65,7 +65,7 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static List<GeneCopyNumber> loadGeneCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
+    static List<GeneCopyNumber> loadPurpleGeneCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
             throws IOException, HartwigException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
@@ -78,7 +78,7 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static List<CopyNumber> loadCNVFile(@NotNull final String runDirectory, @NotNull final String sample)
+    static List<CopyNumber> loadFreecCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
             throws IOException, HartwigException {
         final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
         return FreecCopyNumberFactory.loadCNV(cnvBasePath, sample);

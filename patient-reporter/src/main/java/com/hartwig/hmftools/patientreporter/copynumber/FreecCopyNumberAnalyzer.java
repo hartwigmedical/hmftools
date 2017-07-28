@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -19,7 +18,7 @@ import com.hartwig.hmftools.common.slicing.HmfSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CopyNumberAnalyzer {
+public final class FreecCopyNumberAnalyzer {
 
     private static final int NORMAL_COPYNUMBER = 2;
     private static final int MIN_CNV_FOR_GAIN = 4;
@@ -28,18 +27,17 @@ public final class CopyNumberAnalyzer {
     @NotNull
     private final Set<HmfGenomeRegion> regions;
 
-    public static CopyNumberAnalyzer fromHmfSlicingRegion(@NotNull final HmfSlicer hmfSlicingRegion) {
-        return new CopyNumberAnalyzer(Sets.newHashSet(hmfSlicingRegion.hmfRegions()));
+    public static FreecCopyNumberAnalyzer fromHmfSlicingRegion(@NotNull final HmfSlicer hmfSlicingRegion) {
+        return new FreecCopyNumberAnalyzer(Sets.newHashSet(hmfSlicingRegion.hmfRegions()));
     }
 
-    @VisibleForTesting
-    CopyNumberAnalyzer(@NotNull final Set<HmfGenomeRegion> regions) {
+    private FreecCopyNumberAnalyzer(@NotNull final Set<HmfGenomeRegion> regions) {
         this.regions = regions;
     }
 
     @NotNull
     public CopyNumberAnalysis run(@NotNull final List<CopyNumber> copyNumbers) {
-        final Map<HmfGenomeRegion, CopyNumberStats> stats = Maps.newHashMap();
+        final Map<HmfGenomeRegion, FreecCopyNumberStats> stats = Maps.newHashMap();
 
         final Multimap<String, CopyNumber> copyNumberPerChromosome = toChromosomeMultiMap(copyNumbers);
         for (final HmfGenomeRegion region : regions) {
@@ -47,7 +45,7 @@ public final class CopyNumberAnalyzer {
                     analyzeRegion(region, Lists.newArrayList(copyNumberPerChromosome.get(region.chromosome()))));
         }
         final List<CopyNumberReport> reports = Lists.newArrayList();
-        for (final Map.Entry<HmfGenomeRegion, CopyNumberStats> stat : stats.entrySet()) {
+        for (final Map.Entry<HmfGenomeRegion, FreecCopyNumberStats> stat : stats.entrySet()) {
             final int relevantCNV = stat.getValue().min();
             if (relevantCNV >= MIN_CNV_FOR_GAIN || relevantCNV <= MAX_CNV_FOR_LOSS) {
                 final HmfGenomeRegion region = stat.getKey();
@@ -55,7 +53,6 @@ public final class CopyNumberAnalyzer {
                         .chromosome(stat.getKey().chromosome())
                         .chromosomeBand(region.chromosomeBand())
                         .gene(region.gene())
-                        .transcript(region.transcript())
                         .copyNumber(relevantCNV)
                         .type(CopyNumberReportType.resolveType(relevantCNV))
                         .build());
@@ -76,7 +73,7 @@ public final class CopyNumberAnalyzer {
     }
 
     @NotNull
-    private static CopyNumberStats analyzeRegion(@NotNull final GenomeRegion region,
+    private static FreecCopyNumberStats analyzeRegion(@NotNull final GenomeRegion region,
             @NotNull final List<CopyNumber> copyNumbers) {
         int minCopyNumber = Integer.MAX_VALUE;
         int maxCopyNumber = Integer.MIN_VALUE;
@@ -101,6 +98,6 @@ public final class CopyNumberAnalyzer {
             maxCopyNumber = Math.max(NORMAL_COPYNUMBER, maxCopyNumber);
         }
 
-        return new CopyNumberStats(minCopyNumber, maxCopyNumber, ((double) totalCopyNumber) / region.bases());
+        return new FreecCopyNumberStats(minCopyNumber, maxCopyNumber, ((double) totalCopyNumber) / region.bases());
     }
 }

@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +40,6 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
-    private static final String VERSION = "2.0";
 
     // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
     private static final String FONT = "Times New Roman";
@@ -134,7 +134,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> genePanelPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Sequencing Report v" + VERSION + " - Gene Panel Information")
+                        cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Gene Panel Information")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         genePanelSection(reporterData)
@@ -143,7 +143,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> additionalInfoPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Sequencing Report v" + VERSION + " - Additional Information")
+                        cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Additional Information")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
@@ -388,7 +388,9 @@ public class PDFWriter implements ReportWriter {
         return toList("Details on reported copy numbers", Lists.newArrayList(
                 "The lowest copy number value along the region of the canonical transcript is determined as "
                         + "a measure for the gene's copy number.",
-                "Any gene with a value of 0 (loss) or >3 (gain) is included in the list of findings."));
+                "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
+                "Any gene with no copies is reported as loss.", "Any gene with at least 8 copies is reported as a gain.",
+                "Any gene with more copies than 2.2 times the average tumor ploidy is reported as a gain."));
     }
 
     @NotNull

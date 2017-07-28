@@ -15,9 +15,9 @@ public final class HmfReporterDataLoader {
     private HmfReporterDataLoader() {
     }
 
-    public static HmfReporterData buildFromFiles(@NotNull final String hmfGenePanelFile,
-            @NotNull final String drupFilterFile, @NotNull final String cosmicFile)
-            throws IOException, HartwigException {
+    @NotNull
+    public static HmfReporterData buildFromFiles(@NotNull final String hmfGenePanelFile, @NotNull final String drupFilterFile,
+            @NotNull final String cosmicFile) throws IOException, HartwigException {
         final HmfSlicer hmfSlicer = SlicerFactory.fromHmfGenePanelFile(hmfGenePanelFile);
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);

@@ -6,7 +6,7 @@ import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GenomeAnalysis {
+class GenomeAnalysis {
     @NotNull
     private final String sample;
     @NotNull
@@ -25,22 +25,22 @@ public class GenomeAnalysis {
     }
 
     @NotNull
-    public PurpleAnalysis purpleAnalysis() {
+    PurpleAnalysis purpleAnalysis() {
         return purpleAnalysis;
     }
 
     @NotNull
-    public String sample() {
+    String sample() {
         return sample;
     }
 
     @NotNull
-    public VariantAnalysis variantAnalysis() {
+    VariantAnalysis variantAnalysis() {
         return variantAnalysis;
     }
 
     @NotNull
-    public CopyNumberAnalysis copyNumberAnalysis() {
+    CopyNumberAnalysis copyNumberAnalysis() {
         return copyNumberAnalysis;
     }
 }

@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
@@ -14,15 +12,12 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.util.FindingsToCSV;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -31,10 +26,9 @@ import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class SinglePatientReporter {
-    private static final Logger LOGGER = LogManager.getLogger(SinglePatientReporter.class);
+public class PatientReporter {
+    private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
 
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
@@ -43,20 +37,17 @@ public class SinglePatientReporter {
     @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
-    private final CopyNumberAnalyzer copyNumberAnalyzer;
-    @Nullable
-    private final String tmpDirectory;
-    private final boolean usePurple;
+    private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
+    private final boolean useFreec;
 
-    public SinglePatientReporter(boolean usePurple, @NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
-            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final CopyNumberAnalyzer copyNumberAnalyzer,
-            @Nullable final String tmpDirectory) {
+    public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
+            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer,
+            final boolean useFreec) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
         this.variantAnalyzer = variantAnalyzer;
         this.copyNumberAnalyzer = copyNumberAnalyzer;
-        this.tmpDirectory = tmpDirectory;
-        this.usePurple = usePurple;
+        this.useFreec = useFreec;
     }
 
     @NotNull
@@ -83,9 +74,10 @@ public class SinglePatientReporter {
         LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
         if (potentialMNVCount > 0) {
             LOGGER.warn(" !! Non-zero number of potentials MNV ");
+            LOGGER.warn(variantAnalysis.potentialConsequentialMNVs());
         }
-        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize())
-                + " regions which led to " + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
+        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
+                + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
@@ -95,61 +87,39 @@ public class SinglePatientReporter {
     }
 
     @NotNull
-    public GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory) throws IOException, HartwigException {
+    private GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory) throws IOException, HartwigException {
         LOGGER.info(" Loading somatic variants...");
         final VCFSomaticFile variantFile = PatientReporterHelper.loadVariantFile(runDirectory);
         final String sample = variantFile.sample();
         LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for sample " + sample);
 
-        LOGGER.info(" Loading freec somatic copy numbers...");
-        final List<CopyNumber> copyNumbers = PatientReporterHelper.loadCNVFile(runDirectory, sample);
-        LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
-
         LOGGER.info(" Loading purity numbers...");
         final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
         final FittedPurityScore purityScore = PatientReporterHelper.loadPurityScore(runDirectory, sample);
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
-        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadGeneCopyNumbers(runDirectory, sample);
+        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
-        if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.03)) {
+        if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
-                    + ") range exceeds 3%. Proceed with caution.");
+                    + ") range exceeds 5%. Proceed with caution.");
+        }
+
+        final CopyNumberAnalysis copyNumberAnalysis;
+        if (useFreec) {
+            LOGGER.info(" Loading freec somatic copy numbers...");
+            final List<CopyNumber> copyNumbers = PatientReporterHelper.loadFreecCopyNumbers(runDirectory, sample);
+            LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
+            LOGGER.info(" Analyzing freec somatic copy numbers...");
+            copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
+        } else {
+            LOGGER.info(" Analyzing purple somatic copy numbers...");
+            copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
         }
 
         LOGGER.info(" Analyzing somatics....");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
-        LOGGER.info(" Analyzing {} somatic copy numbers...", usePurple ? "purple" : "freec");
-        final CopyNumberAnalysis copyNumberAnalysis = usePurple ? purpleAnalysis.copyNumberAnalysis() : copyNumberAnalyzer.run(copyNumbers);
-
-        if (tmpDirectory != null) {
-            writeIntermediateDataToTmpFiles(tmpDirectory, variantFile, variantAnalysis, copyNumberAnalysis);
-        }
-
         return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis, purpleAnalysis);
-    }
-
-    private static void writeIntermediateDataToTmpFiles(@NotNull final String basePath,
-            @NotNull final VCFSomaticFile originalFile, @NotNull final VariantAnalysis variantAnalysis,
-            @NotNull final CopyNumberAnalysis copyNumberAnalysis) throws IOException {
-        final String baseName = basePath + File.separator + originalFile.sample();
-        final String consensusVCF = baseName + "_consensus_variants.vcf";
-        VCFFileWriter.writeSomaticVCF(consensusVCF, originalFile, variantAnalysis.consensusPassedVariants());
-        LOGGER.info("    Written consensus-passed variants to " + consensusVCF);
-
-        final String consequentialVCF = baseName + "_consequential_variants.vcf";
-        VCFFileWriter.writeSomaticVCF(consequentialVCF, originalFile, variantAnalysis.consequentialVariants());
-        LOGGER.info("    Written consequential variants to " + consequentialVCF);
-
-        final String varReportFile = baseName + "_variant_report.csv";
-        final List<VariantReport> varFindings = variantAnalysis.findings();
-        Files.write(new File(varReportFile).toPath(), FindingsToCSV.varToCSV(varFindings));
-        LOGGER.info("    Written " + varFindings.size() + " variants to report to " + varReportFile);
-
-        final String cnvReportFile = baseName + "_copynumber_report.csv";
-        final List<CopyNumberReport> cnvFindings = copyNumberAnalysis.findings();
-        Files.write(new File(cnvReportFile).toPath(), FindingsToCSV.cnvToCSV(cnvFindings));
-        LOGGER.info("    Written " + cnvFindings.size() + " copy-numbers to report to " + cnvReportFile);
     }
 }
