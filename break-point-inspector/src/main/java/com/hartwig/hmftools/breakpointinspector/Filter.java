@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 class Filter {
 
-    static String getFilterString(final Util.HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,
+    static String getFilterString(final HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,
             final Pair<Location, Location> breakpoints) {
 
         final List<String> filters = Lists.newArrayList(ctx.Filter);
@@ -21,7 +21,13 @@ class Filter {
             filters.add("HMF_MinDepth");
         }
 
-        if (ctx.Type == Util.HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
+        final boolean anchorLengthOkay = tumorStats.PR_Evidence.stream()
+                .anyMatch(p -> Stream.of(p.getLeft(), p.getRight()).anyMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= 30));
+        if (!anchorLengthOkay) {
+            filters.add("HMF_MinAnchorLength");
+        }
+
+        if (ctx.Type == HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
                 && (ctx.MantaBP2.Position - ctx.MantaBP1.Position) < 2000) {
             // short delete logic, must have SR support
             final int tumor_SR =
@@ -40,6 +46,10 @@ class Filter {
             if (refStats.BP1_Stats.PR_Only_Support + refStats.BP1_Stats.PR_SR_Support > 0) {
                 filters.add("HMF_PRNormalSupport");
             }
+        }
+
+        if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_Only_Support + s.PR_SR_Support).sum() == 0) {
+            filters.add("HMF_PRSupportZero");
         }
 
         final List<Location> adjusted_bp = Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 1 : 0),

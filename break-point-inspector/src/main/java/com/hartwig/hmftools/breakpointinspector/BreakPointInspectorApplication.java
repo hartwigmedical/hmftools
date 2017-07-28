@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
-import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantType;
-import static com.hartwig.hmftools.breakpointinspector.Util.Range;
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 
 import java.io.File;

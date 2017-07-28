@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.breakpointinspector;
 
-import static com.hartwig.hmftools.breakpointinspector.Util.HMFVariantContext;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,7 +56,7 @@ class Analysis {
         return (orientation > 0 ? record.getCigar().isRightClipped() : record.getCigar().isLeftClipped());
     }
 
-    private static boolean withinRange(final Location a, final Location b, final Util.Range range) {
+    private static boolean withinRange(final Location a, final Location b, final Range range) {
         final int ALLOWABLE_DIFF = 3;
         return a.ReferenceIndex == b.ReferenceIndex && (a.Position >= b.Position + range.Start - ALLOWABLE_DIFF) && (a.Position
                 <= b.Position + range.End + ALLOWABLE_DIFF);
@@ -124,6 +122,8 @@ class Analysis {
                 } else {
                     result.BP2_Stats.PR_Only_Support++;
                 }
+
+                result.PR_Evidence.add(pair);
 
             } else if (proper) {
 
@@ -225,14 +225,14 @@ class Analysis {
         // include more clipping information
 
         for (final Pair<SAMRecord, SAMRecord> pair : clipped_proper) {
-            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r, true).sameChromosomeAs(ctx.MantaBP1))) {
+            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(ctx.MantaBP1))) {
                 if (ctx.OrientationBP1 > 0) {
                     bp1_clipping.add(Clipping.getRightClip(pair.getRight()));
                 } else {
                     bp1_clipping.add(Clipping.getLeftClip(pair.getLeft()));
                 }
             }
-            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r, true).sameChromosomeAs(ctx.MantaBP2))) {
+            if (stream(pair).allMatch(r -> Location.fromSAMRecord(r).sameChromosomeAs(ctx.MantaBP2))) {
                 if (ctx.OrientationBP2 > 0) {
                     bp2_clipping.add(Clipping.getRightClip(pair.getRight()));
                 } else {
@@ -246,23 +246,45 @@ class Analysis {
         final List<Location> bp1_candidates = bp1_clipping.getSequences()
                 .stream()
                 .filter(c -> c.LongestClipSequence.length() >= 5)
-                .filter(c -> withinRange(c.Alignment, ctx.MantaBP1, ctx.Uncertainty1))
                 .map(c -> c.Alignment)
+                .filter(c -> withinRange(c, ctx.MantaBP1, ctx.Uncertainty1))
                 .collect(Collectors.toList());
 
         if (bp1_candidates.isEmpty()) {
-            // TODO: add innermost position as candidate
+            final Location candidate = interesting.stream()
+                    .map(Pair::getLeft)
+                    .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP1 < 0).add(ctx.OrientationBP1 > 0 ? 0 : -1))
+                    .filter(l -> withinRange(l, ctx.MantaBP1, ctx.Uncertainty1))
+                    .max((a, b) -> ctx.OrientationBP1 > 0 ? a.compareTo(b) : b.compareTo(a))
+                    .orElse(null);
+
+            if (candidate == null) {
+                return Pair.of(null, null);
+            }
+
+            bp1_candidates.add(candidate);
         }
 
         final List<Location> bp2_candidates = bp2_clipping.getSequences()
                 .stream()
                 .filter(c -> c.LongestClipSequence.length() >= 5)
-                .filter(c -> withinRange(c.Alignment, ctx.MantaBP2, ctx.Uncertainty2))
                 .map(c -> c.Alignment)
+                .filter(c -> withinRange(c, ctx.MantaBP2, ctx.Uncertainty2))
                 .collect(Collectors.toList());
 
         if (bp2_candidates.isEmpty()) {
-            // TODO: add innermost position as candidate
+            final Location candidate = interesting.stream()
+                    .map(Pair::getRight)
+                    .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP2 < 0).add(ctx.OrientationBP2 > 0 ? 0 : -1))
+                    .filter(l -> withinRange(l, ctx.MantaBP2, ctx.Uncertainty2))
+                    .max((a, b) -> ctx.OrientationBP2 > 0 ? a.compareTo(b) : b.compareTo(a))
+                    .orElse(null);
+
+            if (candidate == null) {
+                return Pair.of(null, null);
+            }
+
+            bp2_candidates.add(candidate);
         }
 
         Location breakpoint1 = null;
@@ -289,7 +311,7 @@ class Analysis {
                     breakpoint2 = ctx.OrientationBP2 > 0 ? candidate2.add(-1) : candidate2;
                     max_count = count;
                 }
-                
+
             }
         }
 

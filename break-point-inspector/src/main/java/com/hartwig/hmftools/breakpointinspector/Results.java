@@ -10,6 +10,8 @@ import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import htsjdk.samtools.SAMRecord;
+
 class BreakpointStats {
     int PR_Only_Normal = 0;
     int PR_SR_Normal = 0;
@@ -30,6 +32,7 @@ class SampleStats {
     BreakpointStats BP1_Stats = new BreakpointStats();
     BreakpointStats BP2_Stats = new BreakpointStats();
     Clipping Sample_Clipping = new Clipping();
+    List<Pair<SAMRecord, SAMRecord>> PR_Evidence = Lists.newArrayList();
 
     static List<String> GetHeader() {
         final List<String> header = Lists.newArrayList();
