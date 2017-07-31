@@ -17,6 +17,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class BAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
@@ -25,14 +26,15 @@ public class BAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
     private static final String VCF_EXTENSION = "vcf_extension";
     private static final String VCF_EXTENSION_DEFAULT = ".annotated_sliced.vcf";
 
-    public static void addOptions(Options options) {
+    public static void addOptions(@NotNull final Options options) {
         options.addOption(VCF_EXTENSION, true, "VCF file extension. Defaults to " + VCF_EXTENSION_DEFAULT);
     }
 
+    @NotNull
     private final Supplier<Multimap<String, TumorBAF>> supplier;
 
-    public BAFSupplier(final CommonConfig config, final CommandLine cmd) throws ParseException, IOException, HartwigException {
-
+    public BAFSupplier(@NotNull final CommonConfig config, @NotNull final CommandLine cmd)
+            throws ParseException, IOException, HartwigException {
         final String bafFile = TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
         if (new File(bafFile).exists()) {
             LOGGER.info("Reading BAFs from {}", bafFile);
@@ -48,6 +50,7 @@ public class BAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
     }
 
     @Override
+    @NotNull
     public Multimap<String, TumorBAF> get() {
         return supplier.get();
     }
