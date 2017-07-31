@@ -30,7 +30,10 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class BreakPointInspectorApplication {
 
@@ -40,6 +43,7 @@ public class BreakPointInspectorApplication {
     private static final String TUMOR_SLICE = "tumor_slice";
     private static final String PROXIMITY = "proximity";
     private static final String VCF = "vcf";
+    private static final String VCF_OUT = "output_vcf";
 
     private static Options createOptions() {
         final Options options = new Options();
@@ -48,7 +52,8 @@ public class BreakPointInspectorApplication {
         options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
         options.addOption(TUMOR_SLICE, true, "the sliced Tumor BAM to output");
         options.addOption(PROXIMITY, true, "distance to scan around breakpoint");
-        options.addOption(VCF, true, "VCF file to batch inspect (can be compressed)");
+        options.addOption(VCF, true, "Manta VCF file to batch inspect (can be compressed)");
+        options.addOption(VCF_OUT, true, "VCF output file (annotated and filtered version of Manta VCF)");
         return options;
     }
 
@@ -110,6 +115,19 @@ public class BreakPointInspectorApplication {
 
             final File vcfFile = new File(vcfPath);
             final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+
+            final String vcfOutputPath = cmd.getOptionValue(VCF_OUT);
+            final VariantContextWriter vcfWriter;
+            if (vcfOutputPath != null) {
+                final VCFHeader header = vcfReader.getFileHeader();
+                vcfWriter = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
+                        .setOutputFile(vcfOutputPath)
+                        .build();
+                // TODO: add HMF filter & info meta-data
+                vcfWriter.writeHeader(header);
+            } else {
+                vcfWriter = null;
+            }
 
             // work out the reference sample
             final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
@@ -266,6 +284,9 @@ public class BreakPointInspectorApplication {
             }
             if (tumorWriter != null) {
                 tumorWriter.close();
+            }
+            if (vcfWriter != null) {
+                vcfWriter.close();
             }
 
         } catch (ParseException e) {
