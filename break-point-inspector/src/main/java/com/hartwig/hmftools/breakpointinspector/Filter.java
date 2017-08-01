@@ -14,7 +14,7 @@ import htsjdk.variant.vcf.VCFHeader;
 
 class Filter {
 
-    private static VCFFilterHeaderLine[] METADATA = { new VCFFilterHeaderLine("HMF_BreakpointError", "BPI failed to determine breakpoints"),
+    private final static VCFFilterHeaderLine[] METADATA = { new VCFFilterHeaderLine("HMF_BreakpointError", "BPI failed to determine breakpoints"),
             new VCFFilterHeaderLine("HMF_MinDepth", "The depth across one of the breakpoints is <10"),
             new VCFFilterHeaderLine("HMF_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in alignment"),
             new VCFFilterHeaderLine("HMF_SRSupportZero", "Short delete (<2000) must have SR support"),
