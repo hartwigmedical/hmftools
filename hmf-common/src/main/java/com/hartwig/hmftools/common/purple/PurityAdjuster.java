@@ -34,8 +34,8 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedCopyNumber(final String chromosome, final double ratio) {
-        final double typicalCopyNumber = isMaleSexChromosome(chromosome) ? 0.5 : 1;
-        return purityAdjustedCopyNumber(ratio, typicalCopyNumber);
+        final double typicalRatio = isMaleSexChromosome(chromosome) ? 0.5 : 1;
+        return purityAdjustedCopyNumber(ratio, typicalRatio);
     }
 
     private double purityAdjustedCopyNumber(final double tumorRatio, final double normalRatio) {
