@@ -3,6 +3,7 @@ package com.hartwig.hmftools.breakpointinspector;
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,5 +58,6 @@ class StructuralVariantResult {
     Pair<Location, Location> Breakpoints;
     SampleStats TumorStats = new SampleStats();
     SampleStats RefStats = new SampleStats();
-    String Filter = "";
+    Collection<String> Filters;
+    String FilterString = "";
 }

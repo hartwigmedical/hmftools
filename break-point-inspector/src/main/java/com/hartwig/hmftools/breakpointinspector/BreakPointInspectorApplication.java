@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -123,7 +124,8 @@ public class BreakPointInspectorApplication {
                 vcfWriter = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
                         .setOutputFile(vcfOutputPath)
                         .build();
-                // TODO: add HMF filter & info meta-data
+                // TODO: add HMF info meta-data
+                Filter.updateHeader(header);
                 vcfWriter.writeHeader(header);
             } else {
                 vcfWriter = null;
@@ -271,9 +273,17 @@ public class BreakPointInspectorApplication {
                 fields.addAll(result.TumorStats.GetData());
                 fields.add(ObjectUtils.firstNonNull(result.Breakpoints.getLeft(), "err").toString());
                 fields.add(ObjectUtils.firstNonNull(result.Breakpoints.getRight(), "err").toString());
-                fields.add(result.Filter);
+                fields.add(result.FilterString);
 
                 System.out.println(String.join("\t", fields));
+
+                final Set<String> filters = variant.getCommonInfo().getFiltersMaybeNull();
+                if (filters != null) {
+                    filters.clear();
+                }
+                variant.getCommonInfo().addFilters(result.Filters);
+
+                vcfWriter.add(variant);
             }
 
             // close all the files

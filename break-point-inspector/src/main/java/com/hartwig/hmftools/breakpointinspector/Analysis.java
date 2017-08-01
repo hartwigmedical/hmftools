@@ -405,9 +405,10 @@ class Analysis {
         result.Breakpoints = determineBreakpoints(ctx, tumorPairedReads);
 
         if (stream(result.Breakpoints).anyMatch(Objects::isNull)) {
-            List<String> filters = Lists.newArrayList(ctx.Filter);
+            final List<String> filters = Lists.newArrayList(ctx.Filter);
             filters.add("HMF_BreakpointError");
-            result.Filter = String.join(";", filters);
+            result.Filters = filters;
+            result.FilterString = String.join(";", filters);
             return result;
         }
 
@@ -424,7 +425,8 @@ class Analysis {
             result.RefStats.Sample_Clipping.add(Clipping.getRightClip(r));
         }
 
-        result.Filter = Filter.getFilterString(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
+        result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
+        result.FilterString = String.join(";", result.Filters);
 
         return result;
     }
