@@ -12,7 +12,7 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class CallableChromosome implements Callable<ChromosomeCount> {
+class CallableChromosome implements Callable<ChromosomeCount> {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
@@ -21,9 +21,9 @@ public class CallableChromosome implements Callable<ChromosomeCount> {
     private final SamReaderFactory readerFactory;
     private final ChromosomeCount chromosomeCount;
 
-    public CallableChromosome(final String chromosome, final long length, final int windowSize, final SamReaderFactory readerFactory,
+    CallableChromosome(final String chromosome, final long length, final int windowSize, final SamReaderFactory readerFactory,
             final File inputFile) {
-        this.chromosomeCount = new ChromosomeCount(chromosome, chromosome, length, windowSize);
+        this.chromosomeCount = new ChromosomeCount(chromosome, length, windowSize);
         this.chromosome = chromosome;
         this.readerFactory = readerFactory;
         this.inputFile = inputFile;

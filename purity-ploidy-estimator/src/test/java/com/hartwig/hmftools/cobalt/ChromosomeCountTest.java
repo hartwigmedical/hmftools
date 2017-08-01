@@ -8,7 +8,7 @@ public class ChromosomeCountTest {
 
     @Test
     public void testWindow() {
-        final ChromosomeCount count = new ChromosomeCount("chr1", "1", 249250621, 1000);
+        final ChromosomeCount count = new ChromosomeCount("1", 249250621, 1000);
         assertEquals(1, count.windowPosition(1));
         assertEquals(1, count.windowPosition(1000));
 
@@ -21,7 +21,7 @@ public class ChromosomeCountTest {
 
     @Test
     public void testFinalWindow() {
-        final ChromosomeCount count = new ChromosomeCount("chr1", "1", 249250621, 1000);
+        final ChromosomeCount count = new ChromosomeCount("1", 249250621, 1000);
         assertEquals(249250001, count.lastWindowPosition());
     }
 

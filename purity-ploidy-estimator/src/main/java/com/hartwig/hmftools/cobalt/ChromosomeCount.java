@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableReadCount;
-import com.hartwig.hmftools.common.purple.ratio.ReadCount;
+import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
+import com.hartwig.hmftools.common.cobalt.ReadCount;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +13,6 @@ import htsjdk.samtools.SAMRecord;
 
 class ChromosomeCount {
 
-    private final String contig;
     private final String chromosome;
     private final long chromosomeLength;
     private final int windowSize;
@@ -22,18 +21,13 @@ class ChromosomeCount {
     private long start;
     private int count;
 
-    ChromosomeCount(@NotNull final String contig, @NotNull final String chromosome, final long chromosomeLength, final int windowSize) {
-        this.contig = contig;
+    ChromosomeCount(@NotNull final String chromosome, final long chromosomeLength, final int windowSize) {
         this.chromosome = chromosome;
         this.chromosomeLength = chromosomeLength;
         this.windowSize = windowSize;
 
         start = 1;
         count = -1;
-    }
-
-    String contig() {
-        return contig;
     }
 
     String chromosome() {
@@ -53,7 +47,7 @@ class ChromosomeCount {
         }
     }
 
-    public List<ReadCount> readCount() {
+    List<ReadCount> readCount() {
 
         // Finalise last record
         addReadCount(start, count);
@@ -72,7 +66,8 @@ class ChromosomeCount {
     }
 
     private boolean isEligible(SAMRecord record) {
-        return !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.getSecondOfPairFlag());
+        return record.getMappingQuality() > 0 && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag()
+                || record.isSecondaryOrSupplementary());
     }
 
     @VisibleForTesting
@@ -84,5 +79,4 @@ class ChromosomeCount {
     long windowPosition(long position) {
         return (position - 1) / windowSize * windowSize + 1;
     }
-
 }

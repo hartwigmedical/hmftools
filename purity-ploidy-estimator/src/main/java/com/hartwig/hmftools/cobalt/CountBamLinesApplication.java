@@ -13,8 +13,8 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
-import com.hartwig.hmftools.common.purple.ratio.ReadCount;
-import com.hartwig.hmftools.common.purple.ratio.ReadCountFile;
+import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 import com.hartwig.hmftools.purple.LoadSomaticVariants;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,9 +32,10 @@ import htsjdk.samtools.SamReaderFactory;
 public class CountBamLinesApplication {
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
-    private static final String CHR_LENGTHS = "chr_len_file";
+    private static final String THREADS = "threads";
     private static final String BAM_FILE = "bam_file";
     private static final String COUNT_FILE = "count_file";
+    private static final String CHR_LENGTHS = "chr_len_file";
     private static final int WINDOW_SIZE = 1000;
 
     public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
@@ -51,10 +52,11 @@ public class CountBamLinesApplication {
 
         final File inputFile = new File(cmd.getOptionValue(BAM_FILE));
         final String outputFile = cmd.getOptionValue(COUNT_FILE);
+        final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
 
         final SamReaderFactory readerFactory = SamReaderFactory.make();
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
-        final ExecutorService executorService = Executors.newFixedThreadPool(4, namedThreadFactory);
+        final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
         final List<Future<ChromosomeCount>> futures = Lists.newArrayList();
         final List<ChromosomeLength> lengths = ChromosomeLengthFile.read(cmd.getOptionValue(CHR_LENGTHS));
@@ -64,7 +66,7 @@ public class CountBamLinesApplication {
             futures.add(executorService.submit(callable));
         }
 
-        ReadCountFile.createFile(outputFile);
+        ReadCountFile.createFile(WINDOW_SIZE, outputFile);
         for (Future<ChromosomeCount> future : futures) {
             persist(outputFile, future.get());
         }
@@ -94,11 +96,11 @@ public class CountBamLinesApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
+        options.addOption(THREADS, true, "Number of threads. Default 4.");
         options.addOption(CHR_LENGTHS, true, "Location of chromosome lengths file");
         options.addOption(BAM_FILE, true, "Location of input bam file");
         options.addOption(COUNT_FILE, true, "Location of output count file");
 
         return options;
     }
-
 }
