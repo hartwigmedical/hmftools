@@ -6,8 +6,8 @@ import com.google.common.collect.Maps;
 
 class GCMedianFactory {
 
-    private static final int MIN_BUCKET = 25;
-    private static final int MAX_BUCKET = 75;
+    private static final int MIN_BUCKET = 20;
+    private static final int MAX_BUCKET = 70;
 
     private final Map<Integer, IntegerMedian> gcContentMedian;
 
@@ -17,7 +17,7 @@ class GCMedianFactory {
 
     void addReadCount(int gcBucket, int readCount) {
         assert (gcBucket <= 100);
-        if (gcBucket > 0) {
+        if (gcBucket >= MIN_BUCKET && gcBucket <= MAX_BUCKET) {
             gcContentMedian.computeIfAbsent(gcBucket, integer -> new IntegerMedian()).addRead(readCount);
         }
     }
@@ -26,38 +26,11 @@ class GCMedianFactory {
 
         final Map<Integer, GCMedian> result = Maps.newHashMap();
 
-        int closestBucketToMin = closestBucketToMin();
-        int closestBucketToMax = closestBucketToMax();
-
         for (Integer key : gcContentMedian.keySet()) {
-            int bucket = Math.min(closestBucketToMax, Math.max(closestBucketToMin, key));
-            result.put(key, ImmutableGCMedian.builder().gcContent(key).medianCount(gcContentMedian.get(bucket).median()).build());
+            result.put(key, ImmutableGCMedian.builder().gcContent(key).medianCount(gcContentMedian.get(key).median()).build());
         }
 
         return result;
     }
 
-    private int closestBucketToMin() {
-        int min = MAX_BUCKET;
-
-        for (Integer bucket : gcContentMedian.keySet()) {
-            if (bucket >= MIN_BUCKET && bucket < min) {
-                min = bucket;
-            }
-        }
-
-        return min;
-    }
-
-    private int closestBucketToMax() {
-        int max = MIN_BUCKET;
-
-        for (Integer bucket : gcContentMedian.keySet()) {
-            if (bucket <= MAX_BUCKET && bucket > max) {
-                max = bucket;
-            }
-        }
-
-        return max;
-    }
 }
