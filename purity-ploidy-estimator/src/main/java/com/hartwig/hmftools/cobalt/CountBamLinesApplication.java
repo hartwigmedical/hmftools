@@ -36,8 +36,9 @@ public class CountBamLinesApplication {
 
     private static final String THREADS = "threads";
     private static final String INPUT_FILE = "input";
-    private static final String OUTPUT_FILE = "output";
+    private static final String OUTPUT_DIR = "output_dir";
     private static final String WINDOW_SIZE = "window_size";
+    private static final String SAMPLE = "sample";
     private static final int WINDOW_SIZE_DEFAULT = 1000;
 
     public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
@@ -48,13 +49,20 @@ public class CountBamLinesApplication {
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
-        if (!cmd.hasOption(INPUT_FILE) || !cmd.hasOption(OUTPUT_FILE)) {
+        if (!cmd.hasOption(INPUT_FILE) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE)) {
             printUsageAndExit(options);
         }
 
+        final String sample = cmd.getOptionValue(SAMPLE);
+        final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
         final File inputFile = new File(cmd.getOptionValue(INPUT_FILE));
-        final String outputFile = cmd.getOptionValue(OUTPUT_FILE);
+        final String outputFile = ReadCountFile.generateFilename(outputDir, sample);
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
+        final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
+        LOGGER.info("Input File: {}", inputFile.toString());
+        LOGGER.info("Output File: {}", outputFile);
+        LOGGER.info("Thread Count: {}, Window Size: {}", threadCount, windowSize);
+
 
         final SamReaderFactory readerFactory = SamReaderFactory.make();
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
@@ -64,17 +72,18 @@ public class CountBamLinesApplication {
         try (SamReader reader = readerFactory.open(inputFile)) {
             lengths = ChromosomeLengthFactory.create(reader.getFileHeader());
         }
-        ChromosomeLengthFile.write(outputFile + ".len", lengths);
 
+        final String chromosomeLengthFilename = ChromosomeLengthFile.generateFilename(outputDir, sample);
+        ChromosomeLengthFile.write(chromosomeLengthFilename, lengths);
 
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for (ChromosomeLength chromosome : lengths) {
             final ChromosomeReadCount callable =
-                    new ChromosomeReadCount(inputFile, readerFactory, chromosome.chromosome(), chromosome.position(), WINDOW_SIZE_DEFAULT);
+                    new ChromosomeReadCount(inputFile, readerFactory, chromosome.chromosome(), chromosome.position(), windowSize);
             futures.add(executorService.submit(callable));
         }
 
-        ReadCountFile.createFile(WINDOW_SIZE_DEFAULT, outputFile);
+        ReadCountFile.createFile(windowSize, outputFile);
         for (Future<ChromosomeReadCount> future : futures) {
             persist(outputFile, future.get());
         }
@@ -112,7 +121,8 @@ public class CountBamLinesApplication {
         options.addOption(WINDOW_SIZE, true, "Window size. Default 1000.");
         options.addOption(THREADS, true, "Number of threads. Default 4.");
         options.addOption(INPUT_FILE, true, "Input bam location/filename");
-        options.addOption(OUTPUT_FILE, true, "Output count location/filename");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
+        options.addOption(SAMPLE, true, "Name of sample");
 
         return options;
     }

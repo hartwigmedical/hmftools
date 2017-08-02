@@ -7,7 +7,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -26,7 +25,7 @@ public class ReadCountFile {
     }
 
     public static void createFile(int windowSize, @NotNull final String filename) throws IOException {
-        Files.write(new File(filename).toPath(), (header() + "\n").getBytes());
+        Files.write(new File(filename).toPath(), (header() + "\n" + metaData(windowSize) + "\n").getBytes());
     }
 
     public static void append(@NotNull final String filename, @NotNull final List<ReadCount> readCounts) throws IOException {
@@ -46,7 +45,7 @@ public class ReadCountFile {
     }
 
     @NotNull
-    private static String metaInformation(int windowSize) {
+    private static String metaData(int windowSize) {
         return HEADER_PREFIX + "windowSize=" + windowSize;
     }
 
@@ -66,7 +65,6 @@ public class ReadCountFile {
     @NotNull
     private static Multimap<String, ReadCount> fromLines(@NotNull final List<String> lines) {
 
-
         final Multimap<String, ReadCount> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith(HEADER_PREFIX)) {
@@ -79,8 +77,7 @@ public class ReadCountFile {
     }
 
     @NotNull
-    @VisibleForTesting
-    static ReadCount fromLine(@NotNull final String ratioLine) {
+    private static ReadCount fromLine(@NotNull final String ratioLine) {
         final String[] values = ratioLine.split(DELIMITER);
 
         final String chromosome = values[0].trim();
