@@ -283,7 +283,9 @@ public class BreakPointInspectorApplication {
                 }
                 variant.getCommonInfo().addFilters(result.Filters);
 
-                vcfWriter.add(variant);
+                if (vcfWriter !=null) {
+                    vcfWriter.add(variant);
+                }
             }
 
             // close all the files

@@ -408,7 +408,7 @@ class Analysis {
             final List<String> filters = Lists.newArrayList(ctx.Filter);
             filters.add("HMF_BreakpointError");
             result.Filters = filters;
-            result.FilterString = String.join(";", filters);
+            result.FilterString = filters.isEmpty() ? "PASS" : String.join(";", filters);
             return result;
         }
 
@@ -426,7 +426,7 @@ class Analysis {
         }
 
         result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
-        result.FilterString = String.join(";", result.Filters);
+        result.FilterString = result.Filters.isEmpty() ? "PASS" : String.join(";", result.Filters);
 
         return result;
     }
