@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.purple;
 
+import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.ratio.ImmutableGCContent;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableReadCount;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;

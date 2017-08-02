@@ -45,6 +45,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.CommonConfigSupplier;
+import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.ratio.FreecRatioSupplier;
 import com.hartwig.hmftools.purple.ratio.RatioSupplier;
 import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
@@ -130,7 +131,7 @@ public class PurityPloidyEstimateApplication {
         final List<GenomeRegion> regions;
         if (NEW_SEGMENTS) {
             ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
-            regions = new PCFSegmentSupplier(config, ratioSupplier.tumorRatios()).get();
+            regions = new PCFSegmentSupplier(config, new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get()).get();
         } else {
             final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
             ratioSupplier = freecRatioSupplier;
@@ -144,7 +145,7 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Mapping all observations to the segmented regions");
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
         final List<ObservedRegion> observedRegions =
-                observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios(), gcContent);
+                observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios());
 
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
         final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);

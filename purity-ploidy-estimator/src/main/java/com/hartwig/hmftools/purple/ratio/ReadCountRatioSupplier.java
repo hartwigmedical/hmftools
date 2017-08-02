@@ -1,19 +1,18 @@
 package com.hartwig.hmftools.purple.ratio;
 
-import static com.hartwig.hmftools.common.copynumber.freec.FreecCPNFileLoader.normalReadCountLines;
-import static com.hartwig.hmftools.common.copynumber.freec.FreecCPNFileLoader.tumorReadCountLines;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.position.GenomePositionSelector;
+import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.ratio.GCMedianFile;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatios;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatiosBuilder;
-import com.hartwig.hmftools.common.purple.ratio.ReadCount;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatioFile;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -35,7 +34,7 @@ public class ReadCountRatioSupplier implements RatioSupplier {
         final String tumorRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
         final String referenceRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.refSample());
 
-        if (new File(tumorRatioFile).exists() && new File(referenceRatioFile).exists()) {
+        if (!config.forceRecalculate() && new File(tumorRatioFile).exists() && new File(referenceRatioFile).exists()) {
             LOGGER.info("Loading reference ratios from {}", referenceRatioFile);
             referenceRatios = ReadRatioFile.read(referenceRatioFile);
 
@@ -44,23 +43,22 @@ public class ReadCountRatioSupplier implements RatioSupplier {
         } else {
 
             LOGGER.info("Loading read count data");
-            final Multimap<String, ReadCount> tumorReadCount = tumorReadCountLines(config.freecDirectory(), config.tumorSample());
-            final Multimap<String, ReadCount> normalReadCount = normalReadCountLines(config.freecDirectory(), config.refSample());
+            final ReadCountSupplier readCountSupplier = new ReadCountSupplier(config);
+            final Multimap<String, ReadCount> tumorReadCount = readCountSupplier.tumorReadCount();
+            final Multimap<String, ReadCount> normalReadCount = readCountSupplier.referenceReadCount();
+
+            final GenomePositionSelector<ReadCount> referenceReadCountSelector = GenomePositionSelectorFactory.create(normalReadCount);
+            final GenomePositionSelector<ReadCount> tumorReadCountSelector = GenomePositionSelectorFactory.create(tumorReadCount);
 
             LOGGER.info("Generating gc normalized read ratios");
             final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
             final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
             for (String chromosome : normalReadCount.keySet()) {
                 List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosome);
-                List<ReadCount> chromosomeNormalReadCount = (List<ReadCount>) normalReadCount.get(chromosome);
-                List<ReadCount> chromosomeTumorReadCount = (List<ReadCount>) tumorReadCount.get(chromosome);
-                for (int i = 0; i < chromosomeNormalReadCount.size(); i++) {
-                    GCContent windowGCContent = chromosomeGCContent.get(i);
-                    ReadCount windowNormalCount = chromosomeNormalReadCount.get(i);
-                    ReadCount windowTumorCount = chromosomeTumorReadCount.get(i);
+                for (GCContent windowGCContent : chromosomeGCContent) {
 
-                    normalRatiosBuilder.addPosition(windowGCContent, windowNormalCount);
-                    tumorRatiosBuilder.addPosition(windowGCContent, windowTumorCount);
+                    referenceReadCountSelector.select(windowGCContent).ifPresent(x -> normalRatiosBuilder.addPosition(windowGCContent, x));
+                    tumorReadCountSelector.select(windowGCContent).ifPresent(x -> tumorRatiosBuilder.addPosition(windowGCContent, x));
                 }
             }
 

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
