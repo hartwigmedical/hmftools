@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.purple.config;
 
+import java.io.File;
+
 public class CommonConfig {
+
+    private static final int WINDOW_SIZE = 1000;
+
     private final String normalSample;
     private final String tumorSample;
     private final String outputDirectory;
@@ -41,4 +46,13 @@ public class CommonConfig {
     public boolean forceRecalculate() {
         return forceRecalculate;
     }
+
+    public String cobaltDirectory() {
+        return  runDirectory + File.separator + "cobalt";
+    }
+
+    public int windowSize() {
+        return WINDOW_SIZE;
+    }
+
 }
