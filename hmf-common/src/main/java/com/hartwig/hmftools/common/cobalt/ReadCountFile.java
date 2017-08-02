@@ -25,7 +25,7 @@ public class ReadCountFile {
     }
 
     public static void createFile(int windowSize, @NotNull final String filename) throws IOException {
-        Files.write(new File(filename).toPath(), (header() + "\n" + metaData(windowSize) + "\n").getBytes());
+        Files.write(new File(filename).toPath(), (metaData(windowSize) + "\n" + header() + "\n").getBytes());
     }
 
     public static void append(@NotNull final String filename, @NotNull final List<ReadCount> readCounts) throws IOException {
@@ -46,7 +46,7 @@ public class ReadCountFile {
 
     @NotNull
     private static String metaData(int windowSize) {
-        return HEADER_PREFIX + "windowSize=" + windowSize;
+        return HEADER_PREFIX + "#windowSize=" + windowSize;
     }
 
     @NotNull
