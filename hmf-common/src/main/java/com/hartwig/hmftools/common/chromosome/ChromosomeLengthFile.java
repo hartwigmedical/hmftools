@@ -14,6 +14,12 @@ import org.jetbrains.annotations.NotNull;
 public class ChromosomeLengthFile {
 
     private static final String DELIMITER = "\t";
+    private static final String EXTENSION = ".chr.len";
+
+    @NotNull
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + EXTENSION;
+    }
 
     @NotNull
     public static List<ChromosomeLength> read(@NotNull final String filename) throws IOException {
