@@ -59,8 +59,10 @@ class HMFVariantContext {
     }
 
     boolean isShortDelete() {
-        return Type == HMFVariantType.DEL && MantaBP1.ReferenceIndex == MantaBP2.ReferenceIndex
-                && (MantaBP2.Position - MantaBP1.Position) < 2000;
+        boolean b = Type == HMFVariantType.DEL;
+        b &= MantaBP1.ReferenceIndex == MantaBP2.ReferenceIndex;
+        b &= (MantaBP2.Position - MantaBP1.Position) < 2000;
+        return b;
     }
 }
 

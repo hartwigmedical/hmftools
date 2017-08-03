@@ -310,8 +310,8 @@ public class BreakPointInspectorApplication {
             if (vcfOutputPath != null) {
                 // update header
                 final VCFHeader header = vcfReader.getFileHeader();
-                header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
-                header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
+                header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
+                header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
                 Filter.updateHeader(header);
                 AlleleFrequency.updateHeader(header);
                 // setup VCF
