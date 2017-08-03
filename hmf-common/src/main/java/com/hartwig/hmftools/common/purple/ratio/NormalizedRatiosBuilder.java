@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -21,7 +22,7 @@ public class NormalizedRatiosBuilder {
     private final GCMedianFactory gcMedian = new GCMedianFactory();
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
-    public void addPosition(@NotNull final GCContent gcContent, @NotNull final ReadCount readCount) {
+    public void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCContent gcContent, @NotNull final ReadCount readCount) {
         if (gcContent.compareTo(readCount) != 0) {
             throw new IllegalArgumentException();
         }
@@ -30,7 +31,7 @@ public class NormalizedRatiosBuilder {
         entries.put(gcContent.chromosome(), readCountWithGCContent);
 
         // TODO: TEST With/without ismappable
-        if (!readCount.chromosome().equals("X") && !readCount.chromosome().equals("Y") && readCountWithGCContent.isMappable()) {
+        if (chromosome.isAutosome() && readCountWithGCContent.isMappable()) {
             gcMedian.addReadCount(readCountWithGCContent.gcContent(), readCountWithGCContent.readCount());
         }
     }

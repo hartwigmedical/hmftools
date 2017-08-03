@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
@@ -53,12 +55,16 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             LOGGER.info("Generating gc normalized read ratios");
             final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
             final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
-            for (String chromosome : normalReadCount.keySet()) {
-                List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosome);
+            for (String chromosomeName : normalReadCount.keySet()) {
+                final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
+
+                List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosomeName);
                 for (GCContent windowGCContent : chromosomeGCContent) {
 
-                    referenceReadCountSelector.select(windowGCContent).ifPresent(x -> normalRatiosBuilder.addPosition(windowGCContent, x));
-                    tumorReadCountSelector.select(windowGCContent).ifPresent(x -> tumorRatiosBuilder.addPosition(windowGCContent, x));
+                    referenceReadCountSelector.select(windowGCContent)
+                            .ifPresent(x -> normalRatiosBuilder.addPosition(chromosome, windowGCContent, x));
+                    tumorReadCountSelector.select(windowGCContent)
+                            .ifPresent(x -> tumorRatiosBuilder.addPosition(chromosome, windowGCContent, x));
                 }
             }
 
