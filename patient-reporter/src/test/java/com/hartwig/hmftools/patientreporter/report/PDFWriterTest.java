@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
+import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
@@ -142,8 +143,10 @@ public class PDFWriterTest {
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
         final String tumorPercentageString = "10%";
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
+        final NotSequenceableStudy study = NotSequenceableStudy.CPCT;
+
         final JasperReportBuilder report =
-                PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentageString, reason, logoStream);
+                PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentageString, reason, study, logoStream);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {

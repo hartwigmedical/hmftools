@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
+import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,11 +75,11 @@ public class PDFWriter implements ReportWriter {
 
     @Override
     public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
+            @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
             throws IOException, DRException {
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage,
-                reason, logoStream);
+        final JasperReportBuilder reportBuilder =
+                generateNotSequenceableReport(sample, tumorType, tumorPercentage, reason, study, logoStream);
         writeReport(sample, reportBuilder);
         logoStream.close();
     }
@@ -101,15 +102,15 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample,
-            @NotNull final String tumorType, @NotNull final String tumorPercentageString,
-            @NotNull final NotSequenceableReason reason, @NotNull final InputStream logoStream) {
+    static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
+            @NotNull final String tumorPercentageString, @NotNull final NotSequenceableReason reason,
+            @NotNull final NotSequenceableStudy study, @NotNull final InputStream logoStream) {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
                         mainPageTopSection(sample, tumorType, tumorPercentageString, logoStream),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        mainPageNotSequenceableSection(reason));
+                        mainPageNotSequenceableSection(reason, study));
         // @formatter:on
 
         return report().noData(report);
@@ -117,8 +118,8 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final InputStream logoStream, @NotNull final HmfReporterData reporterData) {
+    static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report, @NotNull final InputStream logoStream,
+            @NotNull final HmfReporterData reporterData) {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
@@ -161,9 +162,8 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample,
-            @NotNull final String tumorType, @NotNull final String tumorPercentage,
-            @NotNull final InputStream logoStream) {
+    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample, @NotNull final String tumorType,
+            @NotNull final String tumorPercentage, @NotNull final InputStream logoStream) {
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
@@ -191,15 +191,16 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageAboutSection() {
-        return toList("About this report", Lists.newArrayList(
-                "This test is performed for research purpose and is not meant to be used for clinical decision making.",
-                "Additional information on the various fields can be found on the final page of this report.",
-                "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl.",
-                "For other questions, please contact us via info@hartwigmedicalfoundation.nl."));
+        return toList("About this report",
+                Lists.newArrayList("This test is performed for research purpose and is not meant to be used for clinical decision making.",
+                        "Additional information on the various fields can be found on the final page of this report.",
+                        "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl.",
+                        "For other questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequenceableReason reason) {
+    private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequenceableReason reason,
+            @NotNull final NotSequenceableStudy study) {
         final String title;
         final String subTitle;
         final String message;
@@ -239,9 +240,9 @@ public class PDFWriter implements ReportWriter {
                                 "unless additional fresh tumor material can be provided for a new assessment.")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("When possible, please resubmit using the same CPCT-number. In case additional tumor " +
+                cmp.text("When possible, please resubmit using the same " + study.studyName() + "-number. In case additional tumor " +
                         "material cannot be provided, please be notified that the patient will not be evaluable " +
-                        "for the CPCT-02 study.").setStyle(fontStyle()),
+                        "for the " + study.studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl")
                         .setStyle(fontStyle()));
@@ -249,8 +250,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report,
-            @NotNull final HmfReporterData reporterData) {
+    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData) {
         final String mutationalLoadAddition =
                 "Patients with a mutational load over 140 could be " + "eligible for immunotherapy within DRUP.";
 
@@ -321,10 +321,8 @@ public class PDFWriter implements ReportWriter {
         final long coverage = Math.round(reporterData.slicer().numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "Findings are reported for the set of " + Integer.toString(
-                                reporterData.slicer().numberOfRegions())
-                                + " genes (canonical transcripts) indicated below (covering " + coverage
-                                + " MBases)"));
+                        "Findings are reported for the set of " + Integer.toString(reporterData.slicer().numberOfRegions())
+                                + " genes (canonical transcripts) indicated below (covering " + coverage + " MBases)"));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), createGenePanel(reporterData));
     }
@@ -358,10 +356,8 @@ public class PDFWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
         return toList("Details on reported genomic variant fields",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
-                        "The 'position' refers to the chromosome and start base of the variant with "
-                                + "respect to this reference genome.",
-                        "The 'variant' displays what was expected as reference base and what "
-                                + "was found instead ('ref' > 'alt').",
+                        "The 'position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
+                        "The 'variant' displays what was expected as reference base and what " + "was found instead ('ref' > 'alt').",
                         "The 'depth (VAF)' displays the number of observations of the specific variant versus "
                                 + "the total number of reads in this location in the format 'alt / total (%)'.",
                         "The 'predicted effect' provides additional information on the variant, including "
@@ -377,8 +373,7 @@ public class PDFWriter implements ReportWriter {
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
                                 + "proportion of A’s and B’s (e.g. AAABB for 3 copies A, and 2 copies B). "
                                 + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "
-                                + "Frequency) value refers to the alternative allele frequency after correction "
-                                + "for tumor purity.",
+                                + "Frequency) value refers to the alternative allele frequency after correction " + "for tumor purity.",
                         "The tumor mutational load is the total number of somatic missense variants found across"
                                 + " the whole genome of the tumor biopsy."));
     }
@@ -404,16 +399,15 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static VerticalListBuilder toList(@NotNull final String title, @NotNull final Iterable<String> lines) {
         final VerticalListBuilder list = cmp.verticalList();
-        list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_HEADER_INDENT),
-                cmp.text(title).setStyle(fontStyle().bold().setFontSize(11))),
+        list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_HEADER_INDENT), cmp.text(title).setStyle(fontStyle().bold().setFontSize(11))),
                 cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP));
         boolean isFirst = true;
         for (final String line : lines) {
             if (!isFirst) {
                 list.add(cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP));
             }
-            list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT),
-                    cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT), cmp.text(line).setStyle(fontStyle())));
+            list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT), cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
+                    cmp.text(line).setStyle(fontStyle())));
 
             isFirst = false;
         }
@@ -432,16 +426,21 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static StyleBuilder tableHeaderStyle() {
-        return fontStyle().bold().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER).setVerticalTextAlignment(
-                VerticalTextAlignment.MIDDLE).setFontSize(10).setBorder(stl.pen1Point()).setBackgroundColor(
-                BORKIE_COLOR).setPadding(PADDING);
+        return fontStyle().bold()
+                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
+                .setFontSize(10)
+                .setBorder(stl.pen1Point())
+                .setBackgroundColor(BORKIE_COLOR)
+                .setPadding(PADDING);
     }
 
     @NotNull
     private static StyleBuilder dataStyle() {
-        return fontStyle().setFontSize(8).setHorizontalTextAlignment(
-                HorizontalTextAlignment.CENTER).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE).setPadding(
-                PADDING);
+        return fontStyle().setFontSize(8)
+                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
+                .setPadding(PADDING);
     }
 
     @NotNull
@@ -464,17 +463,15 @@ public class PDFWriter implements ReportWriter {
         return new AbstractSimpleExpression<String>() {
             @Override
             public String evaluate(@NotNull final ReportParameters data) {
-                return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + data.getValue(
-                        field.getName());
+                return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + data.getValue(field.getName());
             }
         };
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> predictedEffectColumn() {
-        return cmp.verticalList(
-                cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
-                        cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
+        return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
+                cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
                 cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
     }
 }
