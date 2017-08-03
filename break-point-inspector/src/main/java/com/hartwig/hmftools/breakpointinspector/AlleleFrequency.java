@@ -8,8 +8,10 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 class AlleleFrequency {
 
+    static final String VCF_INFO_TAG = "BPI_SV";
+
     static void updateHeader(final VCFHeader header) {
-        header.addMetaDataLine(new VCFInfoHeaderLine("SVAF", 2, VCFHeaderLineType.Float, "AF at each breakpoint"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(VCF_INFO_TAG, 2, VCFHeaderLineType.Float, "AF at each breakpoint"));
     }
 
     private static Double calculate(final HMFVariantContext ctx, final BreakpointStats bp) {

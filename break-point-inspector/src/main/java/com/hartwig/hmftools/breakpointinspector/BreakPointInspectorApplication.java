@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,6 +32,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -119,22 +121,6 @@ public class BreakPointInspectorApplication {
             final File vcfFile = new File(vcfPath);
             final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
 
-            final String vcfOutputPath = cmd.getOptionValue(VCF_OUT);
-            final VariantContextWriter vcfWriter;
-            if (vcfOutputPath != null) {
-                final VCFHeader header = vcfReader.getFileHeader();
-                vcfWriter = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
-                        .setOutputFile(vcfOutputPath)
-                        .build();
-                header.addMetaDataLine(new VCFInfoHeaderLine("ADJSTART", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
-                header.addMetaDataLine(new VCFInfoHeaderLine("ADJEND", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
-                Filter.updateHeader(header);
-                AlleleFrequency.updateHeader(header);
-                vcfWriter.writeHeader(header);
-            } else {
-                vcfWriter = null;
-            }
-
             // work out the reference sample
             final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
             final Predicate<String> isRef = s -> s.endsWith("R") || s.endsWith("BL");
@@ -147,20 +133,24 @@ public class BreakPointInspectorApplication {
             }
 
             // output the header
-            final ArrayList<String> header =
-                    Lists.newArrayList("ID", "SVTYPE", "ORIENTATION", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL",
-                            "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL", "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL",
-                            "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL", "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ", "MANTA_INSSEQ");
-            header.addAll(prefixList(SampleStats.GetHeader(), "REF_"));
-            header.addAll(prefixList(SampleStats.GetHeader(), "TUMOR_"));
-            header.add("BPI_BP1");
-            header.add("BPI_BP2");
-            header.add("FILTER");
-            header.add("AF_BP1");
-            header.add("AF_BP2");
-            System.out.println(String.join("\t", header));
+            {
+                final ArrayList<String> header =
+                        Lists.newArrayList("ID", "SVTYPE", "ORIENTATION", "MANTA_BP1", "MANTA_BP2", "MANTA_SVLEN", "MANTA_REF_PR_NORMAL",
+                                "MANTA_REF_PR_SUPPORT", "MANTA_REF_SR_NORMAL", "MANTA_REF_SR_SUPPORT", "MANTA_TUMOR_PR_NORMAL",
+                                "MANTA_TUMOR_PR_SUPPORT", "MANTA_TUMOR_SR_NORMAL", "MANTA_TUMOR_SR_SUPPORT", "MANTA_HOMSEQ",
+                                "MANTA_INSSEQ");
+                header.addAll(prefixList(SampleStats.GetHeader(), "REF_"));
+                header.addAll(prefixList(SampleStats.GetHeader(), "TUMOR_"));
+                header.add("BPI_BP1");
+                header.add("BPI_BP2");
+                header.add("FILTER");
+                header.add("AF_BP1");
+                header.add("AF_BP2");
+                System.out.println(String.join("\t", header));
+            }
 
             final Map<String, VariantContext> variantMap = new HashMap<>();
+            final List<VariantContext> variants = Lists.newArrayList();
             for (VariantContext variant : vcfReader) {
 
                 variantMap.put(variant.getID(), variant);
@@ -291,25 +281,49 @@ public class BreakPointInspectorApplication {
 
                 System.out.println(String.join("\t", fields));
 
-                final Set<String> filters = variant.getCommonInfo().getFiltersMaybeNull();
-                if (filters != null) {
-                    filters.clear();
-                }
-                variant.getCommonInfo().addFilters(result.Filters);
-                if (result.Filters.isEmpty()) {
-                    variant.getCommonInfo()
-                            .putAttribute("SVAF", Arrays.asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight()));
-                }
-                if (result.Breakpoints.getLeft() != null) {
-                    variant.getCommonInfo().putAttribute("ADJSTART", result.Breakpoints.getLeft().Position);
-                }
-                if (result.Breakpoints.getRight() != null) {
-                    variant.getCommonInfo().putAttribute("ADJEND", result.Breakpoints.getRight().Position);
-                }
+                final BiConsumer<VariantContext, Boolean> vcfUpdater = (v, swap) -> {
+                    final Set<String> filters = v.getCommonInfo().getFiltersMaybeNull();
+                    if (filters != null) {
+                        filters.clear();
+                    }
+                    v.getCommonInfo().addFilters(result.Filters);
+                    if (result.Filters.isEmpty()) {
+                        final List<Double> af = Arrays.asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight());
+                        v.getCommonInfo().putAttribute(AlleleFrequency.VCF_INFO_TAG, swap ? Lists.reverse(af) : af);
+                    }
+                    if (result.Breakpoints.getLeft() != null) {
+                        v.getCommonInfo().putAttribute(swap ? "BPI_END" : "BPI_START", result.Breakpoints.getLeft().Position);
+                    }
+                    if (result.Breakpoints.getRight() != null) {
+                        v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.Breakpoints.getRight().Position);
+                    }
+                    variants.add(v);
+                };
 
-                if (vcfWriter != null) {
-                    vcfWriter.add(variant);
+                vcfUpdater.accept(variant, false);
+                if (mateVariant != variant) {
+                    vcfUpdater.accept(mateVariant, true);
                 }
+            }
+
+            final String vcfOutputPath = cmd.getOptionValue(VCF_OUT);
+            if (vcfOutputPath != null) {
+                // update header
+                final VCFHeader header = vcfReader.getFileHeader();
+                header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
+                header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
+                Filter.updateHeader(header);
+                AlleleFrequency.updateHeader(header);
+                // setup VCF
+                final VariantContextWriter writer = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
+                        .setOutputFile(vcfOutputPath)
+                        .build();
+                writer.writeHeader(header);
+                // write variants
+                variants.sort(new VariantContextComparator(header.getSequenceDictionary()));
+                variants.forEach(writer::add);
+                // clean up
+                writer.close();
             }
 
             // close all the files
@@ -321,10 +335,6 @@ public class BreakPointInspectorApplication {
             if (tumorWriter != null) {
                 tumorWriter.close();
             }
-            if (vcfWriter != null) {
-                vcfWriter.close();
-            }
-
         } catch (ParseException e) {
             printHelpAndExit(options);
             System.exit(1);
