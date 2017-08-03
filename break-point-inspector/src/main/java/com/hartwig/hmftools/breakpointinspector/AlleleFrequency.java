@@ -2,7 +2,15 @@ package com.hartwig.hmftools.breakpointinspector;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
+
 class AlleleFrequency {
+
+    static void updateHeader(final VCFHeader header) {
+        header.addMetaDataLine(new VCFInfoHeaderLine("SVAF", 2, VCFHeaderLineType.Float, "AF at each breakpoint"));
+    }
 
     private static Double calculate(final HMFVariantContext ctx, final BreakpointStats bp) {
         if (ctx.isShortDelete()) {

@@ -147,10 +147,13 @@ class Analysis {
 
                 if (clip_bp1) {
                     result.BP1_Stats.SR_Only_Support++;
+                    continue;
                 }
                 if (clip_bp2) {
                     result.BP2_Stats.SR_Only_Support++;
+                    continue;
                 }
+
                 if (span_bp1) {
                     if (overlap_bp1) {
                         result.BP1_Stats.PR_SR_Normal++;

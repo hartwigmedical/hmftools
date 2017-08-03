@@ -35,6 +35,8 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class BreakPointInspectorApplication {
 
@@ -124,8 +126,10 @@ public class BreakPointInspectorApplication {
                 vcfWriter = new VariantContextWriterBuilder().setReferenceDictionary(header.getSequenceDictionary())
                         .setOutputFile(vcfOutputPath)
                         .build();
-                // TODO: add HMF info meta-data
+                header.addMetaDataLine(new VCFInfoHeaderLine("ADJSTART", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
+                header.addMetaDataLine(new VCFInfoHeaderLine("ADJEND", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend locus"));
                 Filter.updateHeader(header);
+                AlleleFrequency.updateHeader(header);
                 vcfWriter.writeHeader(header);
             } else {
                 vcfWriter = null;
@@ -292,7 +296,16 @@ public class BreakPointInspectorApplication {
                     filters.clear();
                 }
                 variant.getCommonInfo().addFilters(result.Filters);
-                // TODO: add AF to VCF
+                if (result.Filters.isEmpty()) {
+                    variant.getCommonInfo()
+                            .putAttribute("SVAF", Arrays.asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight()));
+                }
+                if (result.Breakpoints.getLeft() != null) {
+                    variant.getCommonInfo().putAttribute("ADJSTART", result.Breakpoints.getLeft().Position);
+                }
+                if (result.Breakpoints.getRight() != null) {
+                    variant.getCommonInfo().putAttribute("ADJEND", result.Breakpoints.getRight().Position);
+                }
 
                 if (vcfWriter != null) {
                     vcfWriter.add(variant);
