@@ -21,7 +21,7 @@ class ReadCountSupplier {
     ReadCountSupplier(final CommonConfig config) throws IOException, HartwigException {
 
         final String cobaltTumorSampleFilename = generateFilename(config.cobaltDirectory(), config.tumorSample());
-        final String cobaltReferenceSampleFilename = generateFilename(config.cobaltDirectory(), config.tumorSample());
+        final String cobaltReferenceSampleFilename = generateFilename(config.cobaltDirectory(), config.refSample());
         if (new File(cobaltTumorSampleFilename).exists()) {
             tumorReadCount = readFile(cobaltTumorSampleFilename);
             referenceReadCount = readFile(cobaltReferenceSampleFilename);
