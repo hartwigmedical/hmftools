@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
+import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +16,6 @@ public interface ReportWriter {
     void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException;
 
-    void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason)
-            throws IOException, DRException;
+    void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType, @NotNull final String tumorPercentage,
+            @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study) throws IOException, DRException;
 }

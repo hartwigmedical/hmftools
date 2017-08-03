@@ -5,14 +5,14 @@ import java.io.File;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class VariantFactory {
-    static final String VCF_COLUMN_SEPARATOR = "\t";
-    private static final int CHROMOSOME_COLUMN = 0;
-    private static final int POSITION_COLUMN = 1;
+public final class VariantFactory {
+    public static final String VCF_COLUMN_SEPARATOR = "\t";
+    public static final int CHROMOSOME_COLUMN = 0;
+    public static final int POSITION_COLUMN = 1;
     static final int ID_COLUMN = 2;
-    private static final int REF_COLUMN = 3;
-    private static final int ALT_COLUMN = 4;
-    static final int FILTER_COLUMN = 6;
+    public static final int REF_COLUMN = 3;
+    public static final int ALT_COLUMN = 4;
+    public static final int FILTER_COLUMN = 6;
     static final int INFO_COLUMN = 7;
 
     @NotNull

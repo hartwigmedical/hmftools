@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
+import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
@@ -42,7 +43,7 @@ public class PatientReporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
     // KODU: There is probably a better way to do this...
-    public static final String VERSION = "3.0";
+    public static final String VERSION = "3.1";
 
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
@@ -66,15 +67,20 @@ public class PatientReporterApplication {
 
         if (cmd.hasOption(NOT_SEQUENCEABLE) && validInputForNonSequenceableReport(cmd)) {
             final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
-            LOGGER.info("Generating non-sequenceable report for " + notSequenceableSample);
+            final NotSequenceableStudy study = NotSequenceableStudy.fromSample(notSequenceableSample);
+            if (study == null) {
+                LOGGER.warn("Could not determine study for sample " + notSequenceableSample);
+            } else {
+                LOGGER.info("Generating non-sequenceable report for " + notSequenceableSample);
 
-            final NotSequenceableReason notSequenceableReason =
-                    NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
+                final NotSequenceableReason notSequenceableReason =
+                        NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
 
-            final NotSequenceableReporter reporter =
-                    new NotSequenceableReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), buildReportWriter(cmd));
+                final NotSequenceableReporter reporter =
+                        new NotSequenceableReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), buildReportWriter(cmd));
 
-            reporter.run(notSequenceableSample, notSequenceableReason);
+                reporter.run(notSequenceableSample, notSequenceableReason, study);
+            }
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Running patient reporter v" + VERSION);
 

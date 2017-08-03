@@ -27,11 +27,10 @@ public class NotSequenceableReporter {
         this.reportWriter = reportWriter;
     }
 
-    public void run(@NotNull final String sample, @NotNull final NotSequenceableReason reason)
+    public void run(@NotNull final String sample, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
             throws IOException, DRException {
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
-        final String tumorPercentageString = PatientReportFormat.formatNullablePercent(
-                limsModel.findTumorPercentageForSample(sample));
-        reportWriter.writeNonSequenceableReport(sample, tumorType, tumorPercentageString, reason);
+        final String tumorPercentageString = PatientReportFormat.formatNullablePercent(limsModel.findTumorPercentageForSample(sample));
+        reportWriter.writeNonSequenceableReport(sample, tumorType, tumorPercentageString, reason, study);
     }
 }
