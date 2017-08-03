@@ -112,7 +112,6 @@ public class StrelkaPostProcessApplication {
             return false;
         }
         try {
-            LOGGER.info("qual: " + variant.qualityScore() + " for " + variant.originalVCFLine());
             return variant.allelicFrequency() * variant.qualityScore() > THRESHOLD || (!highConfidenceSlicer.includes(variant)
                     && variant.qualityScore() > LC_QUALITY_SCORE_THRESHOLD && variant.allelicFrequency() > LC_ALLELE_FREQUENCY_THRESHOLD);
         } catch (final HartwigException e) {
