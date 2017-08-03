@@ -44,7 +44,6 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             tumorRatios = ReadRatioFile.read(tumorRatioFile);
         } else {
 
-            LOGGER.info("Loading read count data");
             final ReadCountSupplier readCountSupplier = new ReadCountSupplier(config);
             final Multimap<String, ReadCount> tumorReadCount = readCountSupplier.tumorReadCount();
             final Multimap<String, ReadCount> normalReadCount = readCountSupplier.referenceReadCount();
