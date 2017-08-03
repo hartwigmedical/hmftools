@@ -65,7 +65,7 @@ public class BreakPointInspectorApplication {
 
     private static void printHelpAndExit(final Options options) {
         final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Break-Point-Inspector", "Inspect structural variants", options, "", true);
+        formatter.printHelp("Break-Point-Inspector", "A second layer of filtering on top of Manta", options, "", true);
         System.exit(1);
     }
 
@@ -283,7 +283,7 @@ public class BreakPointInspectorApplication {
                 }
                 variant.getCommonInfo().addFilters(result.Filters);
 
-                if (vcfWriter !=null) {
+                if (vcfWriter != null) {
                     vcfWriter.add(variant);
                 }
             }

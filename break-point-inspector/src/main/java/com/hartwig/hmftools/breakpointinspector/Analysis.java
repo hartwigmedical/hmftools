@@ -4,12 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -172,7 +169,35 @@ class Analysis {
         return result;
     }
 
-    private static Pair<Location, Location> determineBreakpoints(final HMFVariantContext ctx, final PairedReads pairs) {
+    enum BreakpointError {
+        NONE,
+        NO_CLIPPING,
+        NO_EVIDENCE
+    }
+
+    private static class BreakpointResult {
+        private BreakpointResult(final Pair<Location, Location> breakpoints) {
+            Breakpoints = breakpoints;
+        }
+
+        private BreakpointResult(final BreakpointError error) {
+            Breakpoints = Pair.of(null, null);
+            Error = error;
+        }
+
+        static BreakpointResult from(final Pair<Location, Location> breakpoints) {
+            return new BreakpointResult(breakpoints);
+        }
+
+        static BreakpointResult from(final BreakpointError error) {
+            return new BreakpointResult(error);
+        }
+
+        Pair<Location, Location> Breakpoints;
+        BreakpointError Error = BreakpointError.NONE;
+    }
+
+    private static BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final PairedReads pairs) {
 
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
@@ -259,7 +284,7 @@ class Analysis {
                     .orElse(null);
 
             if (candidate == null) {
-                return Pair.of(null, null);
+                return BreakpointResult.from(BreakpointError.NO_EVIDENCE);
             }
 
             bp1_candidates.add(candidate);
@@ -281,7 +306,7 @@ class Analysis {
                     .orElse(null);
 
             if (candidate == null) {
-                return Pair.of(null, null);
+                return BreakpointResult.from(BreakpointError.NO_EVIDENCE);
             }
 
             bp2_candidates.add(candidate);
@@ -315,7 +340,7 @@ class Analysis {
             }
         }
 
-        return Pair.of(breakpoint1, breakpoint2);
+        return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
     }
 
     private static PairedReads pairs(final AlignmentMap alignments) {
@@ -401,31 +426,24 @@ class Analysis {
         final PairedReads tumorPairedReads = pairs(readsByName(tumorReads));
         final PairedReads refPairedReads = pairs(readsByName(refReads));
 
+        final BreakpointResult breakpoints = determineBreakpoints(ctx, tumorPairedReads);
+
         final StructuralVariantResult result = new StructuralVariantResult();
-        result.Breakpoints = determineBreakpoints(ctx, tumorPairedReads);
+        result.Breakpoints = breakpoints.Breakpoints;
 
-        if (stream(result.Breakpoints).anyMatch(Objects::isNull)) {
-            final List<String> filters = Lists.newArrayList(ctx.Filter);
-            filters.add("HMF_BreakpointError");
-            result.Filters = filters;
-            result.FilterString = filters.isEmpty() ? "PASS" : String.join(";", filters);
-            return result;
+        if (breakpoints.Error != BreakpointError.NONE) {
+            result.Filters = Filter.getErrorFilter();
+        } else {
+            result.TumorStats = collectEvidence(ctx, tumorPairedReads, result.Breakpoints);
+            result.RefStats = collectEvidence(ctx, refPairedReads, result.Breakpoints);
+
+            // load sample clipping
+            tumorReads.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));
+            refReads.forEach(r -> Clipping.getClips(r).forEach(c -> result.RefStats.Sample_Clipping.add(c)));
+
+            result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
         }
 
-        result.TumorStats = collectEvidence(ctx, tumorPairedReads, result.Breakpoints);
-        result.RefStats = collectEvidence(ctx, refPairedReads, result.Breakpoints);
-
-        // load sample clipping
-        for (final SAMRecord r : tumorReads) {
-            result.TumorStats.Sample_Clipping.add(Clipping.getLeftClip(r));
-            result.TumorStats.Sample_Clipping.add(Clipping.getRightClip(r));
-        }
-        for (final SAMRecord r : refReads) {
-            result.RefStats.Sample_Clipping.add(Clipping.getLeftClip(r));
-            result.RefStats.Sample_Clipping.add(Clipping.getRightClip(r));
-        }
-
-        result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
         result.FilterString = result.Filters.isEmpty() ? "PASS" : String.join(";", result.Filters);
 
         return result;

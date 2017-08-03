@@ -2,6 +2,7 @@ package com.hartwig.hmftools.breakpointinspector;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -14,19 +15,25 @@ import htsjdk.variant.vcf.VCFHeader;
 
 class Filter {
 
-    private final static VCFFilterHeaderLine[] METADATA = { new VCFFilterHeaderLine("HMF_BreakpointError", "BPI failed to determine breakpoints"),
-            new VCFFilterHeaderLine("HMF_MinDepth", "The depth across one of the breakpoints is <10"),
-            new VCFFilterHeaderLine("HMF_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in alignment"),
-            new VCFFilterHeaderLine("HMF_SRSupportZero", "Short delete (<2000) must have SR support"),
-            new VCFFilterHeaderLine("HMF_SRNormalSupport", "Short delete (<2000) has SR support in normal"),
-            new VCFFilterHeaderLine("HMF_PRNormalSupport", "PR support in the normal"),
-            new VCFFilterHeaderLine("HMF_PRSupportZero", "No PR support in tumor"),
-            new VCFFilterHeaderLine("HMF_ClippingConcordance", "At least 5 base clipped bases concordance between tumor and normal") };
+    private final static VCFFilterHeaderLine[] METADATA =
+            { new VCFFilterHeaderLine("HMF_BreakpointError", "BPI failed to determine breakpoints"),
+                    new VCFFilterHeaderLine("HMF_MinDepth", "The depth across one of the breakpoints is <10"),
+                    new VCFFilterHeaderLine("HMF_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in alignment"),
+                    new VCFFilterHeaderLine("HMF_SRSupportZero", "Short delete (<2000) must have SR support"),
+                    new VCFFilterHeaderLine("HMF_SRNormalSupport", "Short delete (<2000) has SR support in normal"),
+                    new VCFFilterHeaderLine("HMF_PRNormalSupport", "PR support in the normal"),
+                    new VCFFilterHeaderLine("HMF_PRSupportZero", "No PR support in tumor"),
+                    new VCFFilterHeaderLine("HMF_ClippingConcordance",
+                            "At least 5 base clipped bases concordance between tumor and normal") };
 
     static void updateHeader(final VCFHeader header) {
         for (final VCFFilterHeaderLine line : METADATA) {
             header.addMetaDataLine(line);
         }
+    }
+
+    static Collection<String> getErrorFilter() {
+        return Collections.singletonList("HMF_BreakpointError");
     }
 
     static Collection<String> getFilters(final HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,

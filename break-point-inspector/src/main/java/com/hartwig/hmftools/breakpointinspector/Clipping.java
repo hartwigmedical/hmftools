@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
@@ -149,5 +150,9 @@ class Clipping {
                 return result;
         }
         return null;
+    }
+
+    static Stream<ClipInfo> getClips(final SAMRecord read) {
+        return Stream.of(getLeftClip(read), getRightClip(read));
     }
 }
