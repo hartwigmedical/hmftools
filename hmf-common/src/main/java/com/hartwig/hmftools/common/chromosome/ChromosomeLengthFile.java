@@ -45,7 +45,7 @@ public class ChromosomeLengthFile {
     @NotNull
     private static ChromosomeLength fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableChromosomeLength.builder().chromosome(values[0]).position(Long.valueOf(values[2])).build();
+        return ImmutableChromosomeLength.builder().chromosome(values[0]).position(Long.valueOf(values[1])).build();
     }
 
     @NotNull
