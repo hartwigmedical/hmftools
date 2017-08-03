@@ -20,6 +20,7 @@
         <module>purity-ploidy-estimator</module>
         <module>hmfslicer-builder</module>
         <module>rups-checker</module>
+        <module>strelka-post-process</module>
     </modules>
 
     <properties>

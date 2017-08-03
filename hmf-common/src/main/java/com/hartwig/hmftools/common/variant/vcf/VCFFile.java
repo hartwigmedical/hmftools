@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.common.variant.vcf;
 
-import com.hartwig.hmftools.common.variant.Variant;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
+
+import com.hartwig.hmftools.common.variant.Variant;
+
+import org.jetbrains.annotations.NotNull;
 
 public abstract class VCFFile<T extends Variant> {
 
