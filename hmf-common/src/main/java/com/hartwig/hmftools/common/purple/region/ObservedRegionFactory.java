@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
@@ -71,8 +72,10 @@ public class ObservedRegionFactory {
 
         @Override
         public void accept(final TumorBAF baf) {
-            count++;
-            bafs.add(baf.mBaf());
+            if (HumanChromosome.valueOf(baf).isHomologous(gender)) {
+                count++;
+                bafs.add(baf.mBaf());
+            }
         }
 
         private int count() {
