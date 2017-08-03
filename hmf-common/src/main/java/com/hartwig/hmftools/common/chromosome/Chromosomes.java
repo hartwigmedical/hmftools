@@ -7,6 +7,7 @@ public final class Chromosomes {
     private Chromosomes() {
     }
 
+    @Deprecated
     public static int asInt(@NotNull final String chromosome) {
         switch (chromosome) {
             case "X": return 23;

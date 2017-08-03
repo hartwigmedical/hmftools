@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -64,8 +65,11 @@ public class FittedPurityFactory {
     private void fitPurity(@NotNull final Collection<ObservedRegion> observedRegions) {
         int totalBAFCount = 0;
         final List<ObservedRegion> filteredRegions = Lists.newArrayList();
+
         for (final ObservedRegion region : observedRegions) {
-            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && Chromosomes.asInt(region.chromosome()) <= 22
+            final Chromosome chromosome = HumanChromosome.valueOf(region);
+
+            if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
                     && region.status() == FreecStatus.SOMATIC) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
@@ -114,6 +118,10 @@ public class FittedPurityFactory {
             }
         }
 
-        return builder.score(modelDeviation).modelBAFDeviation(modelBAFDeviation).diploidProportion(diploidProportion).ploidy(averagePloidy).build();
+        return builder.score(modelDeviation)
+                .modelBAFDeviation(modelBAFDeviation)
+                .diploidProportion(diploidProportion)
+                .ploidy(averagePloidy)
+                .build();
     }
 }

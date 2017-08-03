@@ -6,9 +6,9 @@ import org.jetbrains.annotations.NotNull;
 
 public interface Chromosome {
 
-    boolean isAllosome();
+    boolean isAutosome();
 
-    int intValue();
+    boolean isAllosome();
 
     boolean isHomologous(@NotNull Gender gender);
 }

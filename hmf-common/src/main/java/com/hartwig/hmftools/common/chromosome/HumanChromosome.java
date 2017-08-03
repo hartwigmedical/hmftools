@@ -5,47 +5,53 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 public enum HumanChromosome implements Chromosome {
-    _1(1, false),
-    _2(2, false),
-    _3(3, false),
-    _4(4, false),
-    _5(5, false),
-    _6(6, false),
-    _7(7, false),
-    _8(8, false),
-    _9(9, false),
-    _10(10, false),
-    _11(11, false),
-    _12(12, false),
-    _13(13, false),
-    _14(14, false),
-    _15(15, false),
-    _16(16, false),
-    _17(17, false),
-    _18(18, false),
-    _19(19, false),
-    _20(20, false),
-    _21(21, false),
-    _22(22, false),
-    _X(23, true),
-    _Y(24, true),
-    _MT(25, false);
+    _1(true, false),
+    _2(true, false),
+    _3(true, false),
+    _4(true, false),
+    _5(true, false),
+    _6(true, false),
+    _7(true, false),
+    _8(true, false),
+    _9(true, false),
+    _10(true, false),
+    _11(true, false),
+    _12(true, false),
+    _13(true, false),
+    _14(true, false),
+    _15(true, false),
+    _16(true, false),
+    _17(true, false),
+    _18(true, false),
+    _19(true, false),
+    _20(true, false),
+    _21(true, false),
+    _22(true, false),
+    _X(false, true),
+    _Y(false, true),
+    _MT(false, false);
 
-    private final int value;
-    private final boolean isSexChromosome;
+    private final boolean isAutosome;
+    private final boolean isAllosome;
 
-    HumanChromosome(final int value, final boolean isSexChromosome) {
-        this.value = value;
-        this.isSexChromosome = isSexChromosome;
+    HumanChromosome(final boolean isAutosome, boolean isAllosome) {
+        this.isAutosome = isAutosome;
+        this.isAllosome = isAllosome;
+    }
+
+    @Override
+    public boolean isAutosome() {
+        return isAutosome;
     }
 
     @Override
     public boolean isAllosome() {
-        return isSexChromosome;
+        return isAllosome;
     }
 
     public static Set<HumanChromosome> autosomes() {
@@ -64,16 +70,24 @@ public enum HumanChromosome implements Chromosome {
         return fromString(position.chromosome());
     }
 
+    public static HumanChromosome valueOf(@NotNull final GenomeRegion region) {
+        return fromString(region.chromosome());
+    }
 
-    public static Chromosome fromString(@NotNull final String chromosome) {
+    public static HumanChromosome fromString(@NotNull final String chromosome) {
         return HumanChromosome.valueOf("_" + chromosome);
     }
 
     public int intValue() {
-        return value;
+        return this.ordinal() + 1;
     }
 
     public boolean isHomologous(@NotNull Gender gender) {
         return gender == Gender.FEMALE || !isAllosome();
+    }
+
+    @Override
+    public String toString() {
+        return name().substring(1);
     }
 }
