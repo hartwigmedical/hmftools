@@ -44,6 +44,11 @@ class Analysis {
                 && Math.abs(read.getMateAlignmentStart() - mate.getAlignmentStart()) <= 1;
     }
 
+    private static boolean span(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
+        return Location.fromSAMRecord(pair.getLeft(), true).compareTo(breakpoint) <= 0
+                && Location.fromSAMRecord(pair.getRight(), false).compareTo(breakpoint) >= 0;
+    }
+
     private static boolean overlap(final SAMRecord read, final Location breakpoint) {
         return read.getReferenceIndex() == breakpoint.ReferenceIndex && read.getAlignmentStart() <= breakpoint.Position
                 && breakpoint.Position <= read.getAlignmentEnd();
@@ -135,10 +140,8 @@ class Analysis {
                                 .compareTo(breakpoints.getRight()) == 0 && clippedOnCorrectSide(
                                 ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP2);
 
-                final boolean span_bp1 = Location.fromSAMRecord(pair.getLeft(), true).compareTo(breakpoints.getLeft()) < 0
-                        && Location.fromSAMRecord(pair.getRight(), false).compareTo(breakpoints.getLeft()) > 0;
-                final boolean span_bp2 = Location.fromSAMRecord(pair.getLeft(), true).compareTo(breakpoints.getRight()) < 0
-                        && Location.fromSAMRecord(pair.getRight(), false).compareTo(breakpoints.getRight()) > 0;
+                final boolean span_bp1 = span(pair, breakpoints.getLeft());
+                final boolean span_bp2 = span(pair, breakpoints.getRight());
                 final boolean overlap_bp1 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getLeft()));
                 final boolean overlap_bp2 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getRight()));
 
@@ -171,7 +174,7 @@ class Analysis {
 
     enum BreakpointError {
         NONE,
-        NO_CLIPPING,
+        ALGO_ERROR,
         NO_EVIDENCE
     }
 
@@ -340,6 +343,10 @@ class Analysis {
             }
         }
 
+        if (breakpoint1 == null || breakpoint2 == null) {
+            return BreakpointResult.from(BreakpointError.ALGO_ERROR);
+        }
+
         return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
     }
 
@@ -436,6 +443,7 @@ class Analysis {
         } else {
             result.TumorStats = collectEvidence(ctx, tumorPairedReads, result.Breakpoints);
             result.RefStats = collectEvidence(ctx, refPairedReads, result.Breakpoints);
+            result.AlleleFrequency = AlleleFrequency.calculate(ctx, result.TumorStats);
 
             // load sample clipping
             tumorReads.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));

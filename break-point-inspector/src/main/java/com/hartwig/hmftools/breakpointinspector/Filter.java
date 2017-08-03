@@ -53,8 +53,7 @@ class Filter {
             filters.add("HMF_MinAnchorLength");
         }
 
-        if (ctx.Type == HMFVariantType.DEL && ctx.MantaBP1.ReferenceIndex == ctx.MantaBP2.ReferenceIndex
-                && (ctx.MantaBP2.Position - ctx.MantaBP1.Position) < 2000) {
+        if (ctx.isShortDelete()) {
             // short delete logic, must have SR support
             final int tumor_SR =
                     Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();

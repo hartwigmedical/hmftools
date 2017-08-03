@@ -152,6 +152,8 @@ public class BreakPointInspectorApplication {
             header.add("BPI_BP1");
             header.add("BPI_BP2");
             header.add("FILTER");
+            header.add("AF_BP1");
+            header.add("AF_BP2");
             System.out.println(String.join("\t", header));
 
             final Map<String, VariantContext> variantMap = new HashMap<>();
@@ -179,6 +181,10 @@ public class BreakPointInspectorApplication {
                 HMFVariantType svType;
                 Location location2;
                 switch (variant.getStructuralVariantType()) {
+                    case INS:
+                        svType = HMFVariantType.INS;
+                        location2 = location1.set(variant.getAttributeAsInt("END", 0));
+                        break;
                     case INV:
                         if (variant.hasAttribute("INV3")) {
                             svType = HMFVariantType.INV3;
@@ -248,6 +254,7 @@ public class BreakPointInspectorApplication {
                 ctx.Uncertainty2 = uncertainty2;
 
                 switch (ctx.Type) {
+                    case INS:
                     case DEL:
                         ctx.OrientationBP1 = 1;
                         ctx.OrientationBP2 = -1;
@@ -275,6 +282,9 @@ public class BreakPointInspectorApplication {
                 fields.add(ObjectUtils.firstNonNull(result.Breakpoints.getRight(), "err").toString());
                 fields.add(result.FilterString);
 
+                fields.add(String.format("%.2f", result.AlleleFrequency.getLeft()));
+                fields.add(String.format("%.2f", result.AlleleFrequency.getRight()));
+
                 System.out.println(String.join("\t", fields));
 
                 final Set<String> filters = variant.getCommonInfo().getFiltersMaybeNull();
@@ -282,6 +292,7 @@ public class BreakPointInspectorApplication {
                     filters.clear();
                 }
                 variant.getCommonInfo().addFilters(result.Filters);
+                // TODO: add AF to VCF
 
                 if (vcfWriter != null) {
                     vcfWriter.add(variant);

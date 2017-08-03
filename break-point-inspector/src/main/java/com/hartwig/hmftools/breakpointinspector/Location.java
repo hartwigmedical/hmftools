@@ -67,6 +67,12 @@ class Location implements Comparable<Location> {
         return result;
     }
 
+    Location set(int position) {
+        final Location result = add(0);
+        result.Position = position;
+        return result;
+    }
+
     boolean sameChromosomeAs(final Location other) {
         return other != null && other.ReferenceIndex == ReferenceIndex;
     }

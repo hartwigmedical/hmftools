@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.breakpointinspector;
 
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
+import static com.hartwig.hmftools.breakpointinspector.Util.toStrings;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -42,10 +42,6 @@ class SampleStats {
         return header;
     }
 
-    private static List<String> toStrings(final List<Integer> list) {
-        return list.stream().map(i -> Integer.toString(i)).collect(Collectors.toList());
-    }
-
     List<String> GetData() {
         final List<String> data = Lists.newArrayList();
         data.addAll(toStrings(BP1_Stats.GetData()));
@@ -56,6 +52,7 @@ class SampleStats {
 
 class StructuralVariantResult {
     Pair<Location, Location> Breakpoints;
+    Pair<Double, Double> AlleleFrequency = Pair.of(0.0, 0.0);
     SampleStats TumorStats = new SampleStats();
     SampleStats RefStats = new SampleStats();
     Collection<String> Filters;
