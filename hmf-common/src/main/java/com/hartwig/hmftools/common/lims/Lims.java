@@ -30,8 +30,8 @@ public final class Lims {
     }
 
     @NotNull
-    public static LimsModel buildModelFromCsv(@NotNull final String pathToCsv,
-            @NotNull final DateTimeFormatter dateFormatter) throws IOException, EmptyFileException {
+    public static LimsModel buildModelFromCsv(@NotNull final String pathToCsv, @NotNull final DateTimeFormatter dateFormatter)
+            throws IOException, EmptyFileException {
         final Map<String, LimsData> limsDataPerSample = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines) {
@@ -39,8 +39,7 @@ public final class Lims {
             // MIVO: skip empty lines and invalid samples
             if (parts.length > 0 && !parts[0].trim().equals("INVALID")) {
                 final String sample = parts[0].trim();
-                readLimsLine(sample, line, dateFormatter).ifPresent(
-                        limsBiopsyData -> limsDataPerSample.put(sample, limsBiopsyData));
+                readLimsLine(sample, line, dateFormatter).ifPresent(limsBiopsyData -> limsDataPerSample.put(sample, limsBiopsyData));
             }
         }
         return new LimsModel(limsDataPerSample);
@@ -65,7 +64,6 @@ public final class Lims {
                 final Double tumorPercentage = parts.length == 4 ? readTumorPercentage(sample, parts[3]) : null;
                 return Optional.of(new LimsTumorData(samplingDate, arrivalDate, tumorPercentage));
             }
-            LOGGER.warn("Invalid sample name: " + sample + " in row: " + line);
             return Optional.empty();
         } catch (Exception e) {
             LOGGER.warn("Invalid row found in lims csv: " + line);
@@ -74,14 +72,12 @@ public final class Lims {
     }
 
     @Nullable
-    private static Double readTumorPercentage(@NotNull final String sample,
-            @NotNull final String tumorPercentageField) {
+    private static Double readTumorPercentage(@NotNull final String sample, @NotNull final String tumorPercentageField) {
         if (!tumorPercentageField.replaceAll("\"", Strings.EMPTY).trim().equals(Strings.EMPTY)) {
             try {
                 return Double.valueOf(tumorPercentageField) / 100D;
             } catch (final NumberFormatException e) {
-                LOGGER.warn(
-                        "Could not parse tumor percentage from " + tumorPercentageField + " for sample: " + sample);
+                LOGGER.warn("Could not parse tumor percentage from " + tumorPercentageField + " for sample: " + sample);
                 return null;
             }
         }
@@ -97,8 +93,7 @@ public final class Lims {
     }
 
     @Nullable
-    private static LocalDate getNullableDate(@Nullable final String dateField,
-            @NotNull final DateTimeFormatter dateFormatter) {
+    private static LocalDate getNullableDate(@Nullable final String dateField, @NotNull final DateTimeFormatter dateFormatter) {
         if (dateField == null) {
             return null;
         }
