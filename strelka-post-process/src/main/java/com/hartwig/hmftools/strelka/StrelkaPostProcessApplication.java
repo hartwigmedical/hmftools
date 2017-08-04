@@ -47,6 +47,7 @@ public class StrelkaPostProcessApplication {
     private static final String SIMPLIFIED_FORMAT = "GT:AD:DP";
     private static final String AD_FORMAT_HEADER_LINE =
             "##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the ref and alt alleles in the order listed\">";
+    private static final String GT_FORMAT_HEADER_LINE = "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">";
     private static final String GATK_COMPAT_HEADER_LINE =
             "##StrelkaGATKCompatibility=Added GT fields to strelka calls for gatk compatibility.";
     private static final double THRESHOLD = 1.3;
@@ -98,6 +99,7 @@ public class StrelkaPostProcessApplication {
                 .collect(Collectors.toList());
         linesToWrite.addAll(strelkaFile.originalMetaInformationLines());
         linesToWrite.add(AD_FORMAT_HEADER_LINE);
+        linesToWrite.add(GT_FORMAT_HEADER_LINE);
         linesToWrite.add(GATK_COMPAT_HEADER_LINE);
         linesToWrite.add(transformHeader(strelkaFile.originalHeaderLine(), sampleName));
         linesToWrite.addAll(newVariantLines);
