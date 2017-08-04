@@ -122,9 +122,9 @@ public class StrelkaPostProcessApplication {
 
     @NotNull
     private static String simplifyTumorDataString(@NotNull final StrelkaSomaticVariant variant) {
-        final int dp = Integer.parseInt(variant.tumorData().get(DP_FIELD_KEY).get(0));
-        final int ad_ref = variant.readRefAD();
-        final int ad_alt = variant.readAltAD();
+        final String dp = variant.tumorData().get(DP_FIELD_KEY).get(0);
+        final String ad_ref = variant.readRefAD();
+        final String ad_alt = variant.readAltAD();
         return GT_VALUE + FORMAT_SEPARATOR + ad_ref + FORMAT_VALUES_SEPARATOR + ad_alt + FORMAT_SEPARATOR + dp;
     }
 
