@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.strelka;
 
 import static com.hartwig.hmftools.common.variant.VariantFactory.VCF_COLUMN_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.strelka.StrelkaSomaticVariant.ALLELE_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.strelka.StrelkaSomaticVariantFactory.FORMAT_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.strelka.StrelkaSomaticVariantFactory.FORMAT_VALUES_SEPARATOR;
 
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
@@ -103,8 +105,9 @@ public class StrelkaPostProcessApplication {
         LOGGER.info("Written  output variants to " + outputVcf);
     }
 
-    private static boolean checkVariant(@NotNull final StrelkaSomaticVariant variant, @NotNull final Slicer highConfidenceSlicer) {
-        if (variant.alt().split(",").length > 1) {
+    @VisibleForTesting
+    static boolean checkVariant(@NotNull final StrelkaSomaticVariant variant, @NotNull final Slicer highConfidenceSlicer) {
+        if (variant.alt().split(ALLELE_SEPARATOR).length > 1) {
             LOGGER.warn("More than 1 alt for record: " + variant.originalVCFLine());
             return true;
         } else if (variant.alt().equals(".")) {
@@ -112,8 +115,8 @@ public class StrelkaPostProcessApplication {
             return false;
         }
         try {
-            return variant.allelicFrequency() * variant.qualityScore() > THRESHOLD || (!highConfidenceSlicer.includes(variant)
-                    && variant.qualityScore() > LC_QUALITY_SCORE_THRESHOLD && variant.allelicFrequency() > LC_ALLELE_FREQUENCY_THRESHOLD);
+            return variant.qualityScore() > LC_QUALITY_SCORE_THRESHOLD && variant.allelicFrequency() > LC_ALLELE_FREQUENCY_THRESHOLD || (
+                    highConfidenceSlicer.includes(variant) && variant.allelicFrequency() * variant.qualityScore() > THRESHOLD);
         } catch (final HartwigException e) {
             LOGGER.error(e.getMessage());
             return false;
@@ -121,7 +124,8 @@ public class StrelkaPostProcessApplication {
     }
 
     @NotNull
-    private static String simplifyTumorDataString(@NotNull final StrelkaSomaticVariant variant) {
+    @VisibleForTesting
+    static String simplifyTumorDataString(@NotNull final StrelkaSomaticVariant variant) {
         final String dp = variant.tumorData().get(DP_FIELD_KEY).get(0);
         final String ad_ref = variant.readRefAD();
         final String ad_alt = variant.readAltAD();

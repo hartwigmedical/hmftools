@@ -25,7 +25,7 @@ public abstract class StrelkaSomaticVariant implements Variant {
     private static final String INDEL_TIER_INDEX_FIELD = "TQSI_NT";
     private static final String TIR_FIELD = "TIR";
     private static final String TAR_FIELD = "TAR";
-    private static final String ALLELE_SEPARATOR = ",";
+    public static final String ALLELE_SEPARATOR = ",";
 
     @NotNull
     public abstract String originalVCFLine();
