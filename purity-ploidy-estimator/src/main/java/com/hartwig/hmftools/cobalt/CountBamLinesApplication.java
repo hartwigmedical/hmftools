@@ -39,7 +39,10 @@ public class CountBamLinesApplication {
     private static final String OUTPUT_DIR = "output_dir";
     private static final String WINDOW_SIZE = "window_size";
     private static final String SAMPLE = "sample";
+    private static final String MIN_QUALITY = "min_quality";
+
     private static final int WINDOW_SIZE_DEFAULT = 1000;
+    private static final int MIN_QUALITY_DEFAULT = 10;
 
     public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
         new CountBamLinesApplication(args);
@@ -59,10 +62,10 @@ public class CountBamLinesApplication {
         final String outputFile = ReadCountFile.generateFilename(outputDir, sample);
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
         final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
+        final int minQuality = cmd.hasOption(MIN_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_QUALITY)) : MIN_QUALITY_DEFAULT;
         LOGGER.info("Input File: {}", inputFile.toString());
         LOGGER.info("Output File: {}", outputFile);
-        LOGGER.info("Thread Count: {}, Window Size: {}", threadCount, windowSize);
-
+        LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minQuality);
 
         final SamReaderFactory readerFactory = SamReaderFactory.make();
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
@@ -78,8 +81,12 @@ public class CountBamLinesApplication {
 
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for (ChromosomeLength chromosome : lengths) {
-            final ChromosomeReadCount callable =
-                    new ChromosomeReadCount(inputFile, readerFactory, chromosome.chromosome(), chromosome.position(), windowSize);
+            final ChromosomeReadCount callable = new ChromosomeReadCount(inputFile,
+                    readerFactory,
+                    chromosome.chromosome(),
+                    chromosome.position(),
+                    windowSize,
+                    minQuality);
             futures.add(executorService.submit(callable));
         }
 

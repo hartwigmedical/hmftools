@@ -29,17 +29,19 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
     private final long chromosomeLength;
     private final int windowSize;
     private final List<ReadCount> result = Lists.newArrayList();
+    private final int minQuality;
 
     private long start;
     private int count;
 
     ChromosomeReadCount(final File inputFile, final SamReaderFactory readerFactory, @NotNull final String chromosome,
-            final long chromosomeLength, final int windowSize) {
+            final long chromosomeLength, final int windowSize, final int minQuality) {
         this.inputFile = inputFile;
         this.readerFactory = readerFactory;
         this.chromosome = chromosome;
         this.chromosomeLength = chromosomeLength;
         this.windowSize = windowSize;
+        this.minQuality = minQuality;
 
         start = 1;
         count = -1;
@@ -94,7 +96,7 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
     }
 
     private boolean isEligible(SAMRecord record) {
-        return record.getMappingQuality() > 0 && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag()
+        return record.getMappingQuality() >= minQuality && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag()
                 || record.isSecondaryOrSupplementary());
     }
 
