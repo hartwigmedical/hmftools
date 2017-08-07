@@ -7,7 +7,7 @@ import com.google.common.collect.Maps;
 class GCMedianFactory {
 
     private static final int MIN_BUCKET = 20;
-    private static final int MAX_BUCKET = 70;
+    private static final int MAX_BUCKET = 60;
 
     private final Map<Integer, IntegerMedian> gcContentMedian;
 
