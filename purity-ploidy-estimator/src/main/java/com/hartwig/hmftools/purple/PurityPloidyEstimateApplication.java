@@ -136,7 +136,9 @@ public class PurityPloidyEstimateApplication {
         final List<GenomeRegion> regions;
         if (NEW_SEGMENTS) {
             ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
-            regions = new PCFSegmentSupplier(executorService, config, new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get()).get();
+            regions =
+                    new PCFSegmentSupplier(executorService, config, new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get())
+                            .get();
         } else {
             final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
             ratioSupplier = freecRatioSupplier;
@@ -163,7 +165,8 @@ public class PurityPloidyEstimateApplication {
         final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
         final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
         final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY,
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                MAX_PLOIDY,
                 minPurity,
                 maxPurity,
                 PURITY_INCREMENTS,

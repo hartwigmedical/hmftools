@@ -8,6 +8,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -31,13 +35,16 @@ public class FittedPurityFactory {
     private final double normFactorIncrements;
     @NotNull
     private final FittedRegionFactory fittedRegionFactory;
+    private final ExecutorService executorService;
 
     private final List<FittedPurity> allPurities = Lists.newArrayList();
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
 
-    public FittedPurityFactory(final int maxPloidy, final double minPurity, final double maxPurity, final double purityIncrements,
+    public FittedPurityFactory(final ExecutorService executorService, final int maxPloidy, final double minPurity, final double maxPurity, final double purityIncrements,
             final double minNormFactor, final double maxNormFactor, final double normFactorIncrements,
-            @NotNull final FittedRegionFactory fittedRegionFactory, @NotNull final Collection<ObservedRegion> observedRegions) {
+            @NotNull final FittedRegionFactory fittedRegionFactory, @NotNull final Collection<ObservedRegion> observedRegions)
+            throws ExecutionException, InterruptedException {
+        this.executorService = executorService;
         this.maxPloidy = maxPloidy;
         this.minPurity = minPurity;
         this.maxPurity = maxPurity;
@@ -62,7 +69,7 @@ public class FittedPurityFactory {
         return bestScoringPerPurity;
     }
 
-    private void fitPurity(@NotNull final Collection<ObservedRegion> observedRegions) {
+    private void fitPurity(@NotNull final Collection<ObservedRegion> observedRegions) throws ExecutionException, InterruptedException {
         int totalBAFCount = 0;
         final List<ObservedRegion> filteredRegions = Lists.newArrayList();
 
@@ -76,27 +83,42 @@ public class FittedPurityFactory {
             }
         }
 
+        List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
         for (double purity = minPurity; lessOrEqual(purity, maxPurity); purity += purityIncrements) {
-            final List<FittedPurity> fittedPurities = Lists.newArrayList();
+            futures.add(executorService.submit(callableFitPurity(purity, totalBAFCount, filteredRegions)));
+        }
 
-            for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
-                double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);
+        for (Future<List<FittedPurity>> future : futures) {
+            List<FittedPurity> fittedPurities = future.get();
 
-                if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
-                    fittedPurities.add(fitPurity(purity, normFactor, totalBAFCount, filteredRegions));
-                }
-            }
-
-            Collections.sort(fittedPurities);
             if (!fittedPurities.isEmpty()) {
                 bestScoringPerPurity.add(fittedPurities.get(0));
             }
-
             allPurities.addAll(fittedPurities);
         }
-
         Collections.sort(bestScoringPerPurity);
         Collections.sort(allPurities);
+    }
+
+    private Callable<List<FittedPurity>> callableFitPurity(final double purity, final double totalBAFCount,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
+        return () -> fitPurity(purity, totalBAFCount, observedRegions);
+    }
+
+    private List<FittedPurity> fitPurity(final double purity, final double totalBAFCount,
+            @NotNull final Collection<ObservedRegion> observedRegions) {
+
+        final List<FittedPurity> fittedPurities = Lists.newArrayList();
+        for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
+            double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);
+
+            if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
+                fittedPurities.add(fitPurity(purity, normFactor, totalBAFCount, observedRegions));
+            }
+        }
+
+        Collections.sort(fittedPurities);
+        return fittedPurities;
     }
 
     @NotNull
