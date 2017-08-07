@@ -35,6 +35,11 @@ public class PurityAdjuster {
         this.normFactor = normFactor;
     }
 
+    public double purity() {
+        return purity;
+    }
+
+
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
         final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
         final double typicalRatio = chromosome.isHomologous(gender) ? 1 : 0.5;

@@ -108,7 +108,10 @@ abstract class BaseCopyNumberBuilder {
             maxDeviation = LC_MAX_COPY_NUMBER_TOLERANCE;
         }
 
-        return (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
+        double result = (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
+
+        // Adjust for low purity
+        return result * Math.max(1, 0.20 / purityAdjuster.purity());
     }
 
 }

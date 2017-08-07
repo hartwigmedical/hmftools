@@ -68,7 +68,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    private static final boolean NEW_SEGMENTS = false;
+    private static final boolean NEW_SEGMENTS = true;
 
     static final double MIN_PURITY_DEFAULT = 0.05;
     static final double MAX_PURITY_DEFAULT = 1.0;
