@@ -7,8 +7,10 @@ import java.util.List;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.ratio.GCContent;
@@ -60,10 +62,11 @@ public class ReadCountRatioSupplier implements RatioSupplier {
                 List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosomeName);
                 for (GCContent windowGCContent : chromosomeGCContent) {
 
-                    referenceReadCountSelector.select(windowGCContent)
-                            .ifPresent(x -> normalRatiosBuilder.addPosition(chromosome, windowGCContent, x));
-                    tumorReadCountSelector.select(windowGCContent)
-                            .ifPresent(x -> tumorRatiosBuilder.addPosition(chromosome, windowGCContent, x));
+                    final ReadCount referenceCount = referenceReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
+                    normalRatiosBuilder.addPosition(chromosome, windowGCContent, referenceCount);
+
+                    final ReadCount tumorCount = tumorReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
+                    tumorRatiosBuilder.addPosition(chromosome, windowGCContent, tumorCount);
                 }
             }
 
@@ -97,6 +100,10 @@ public class ReadCountRatioSupplier implements RatioSupplier {
     @NotNull
     public Multimap<String, ReadRatio> referenceRatios() {
         return referenceRatios;
+    }
+
+    private ReadCount empty(@NotNull final GenomePosition position) {
+        return ImmutableReadCount.builder().from(position).readCount(0).build();
     }
 
 }

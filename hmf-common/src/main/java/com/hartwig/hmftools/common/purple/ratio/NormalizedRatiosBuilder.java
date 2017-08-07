@@ -22,6 +22,7 @@ public class NormalizedRatiosBuilder {
     private final GCMedianFactory gcMedian = new GCMedianFactory();
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
+
     public void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCContent gcContent, @NotNull final ReadCount readCount) {
         if (gcContent.compareTo(readCount) != 0) {
             throw new IllegalArgumentException();
@@ -31,7 +32,7 @@ public class NormalizedRatiosBuilder {
         entries.put(gcContent.chromosome(), readCountWithGCContent);
 
         // TODO: TEST With/without ismappable
-        if (chromosome.isAutosome() && readCountWithGCContent.isMappable()) {
+        if (chromosome.isAutosome() && readCountWithGCContent.isMappable() && readCount.readCount() > 0) {
             gcMedian.addReadCount(readCountWithGCContent.gcContent(), readCountWithGCContent.readCount());
         }
     }
