@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurityAdjuster {
 
-    static final double AMBIGUOUS_BAF = 0.542;
+    private static final double AMBIGUOUS_BAF = 0.542;
     private static final double CLONAL_DISTANCE = 0.25;
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
@@ -51,8 +51,12 @@ public class PurityAdjuster {
 
     public double purityAdjustedBAF(final String chromosomeName, final double copyNumber, final double observedFrequency) {
         final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-        if (!chromosome.isHomologous(gender)) {
+        if (!chromosome.isHomologous(gender) || Doubles.lessOrEqual(copyNumber, 0.5)) {
             return 0;
+        }
+
+        if (Doubles.lessOrEqual(copyNumber, 1)) {
+            return 1;
         }
 
         double typicalFrequency = 0.5;

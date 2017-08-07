@@ -14,6 +14,9 @@ public class PurityAdjusterTest {
 
     @Test
     public void testBaf() {
+        assertBaf( 0, 0.8, 0.5, 0.6 );
+        assertBaf( 1, 0.8, 1, 0.6 );
+
         assertBaf( 0.625, 0.8, 2, 0.6 );
         assertBafMaleSex( 0, 0.8, 2, 0.6 );
     }
