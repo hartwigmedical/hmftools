@@ -8,6 +8,9 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
@@ -68,7 +71,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    private static final boolean NEW_SEGMENTS = true;
+    private static final boolean NEW_SEGMENTS = false;
 
     static final double MIN_PURITY_DEFAULT = 0.05;
     static final double MAX_PURITY_DEFAULT = 1.0;
@@ -101,14 +104,17 @@ public class PurityPloidyEstimateApplication {
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException {
+            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
+            InterruptedException {
         new PurityPloidyEstimateApplication(args);
     }
 
     private PurityPloidyEstimateApplication(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException {
+            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
+            InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
+        final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
         // JOBA: Get common config
         final CommonConfig config = new CommonConfigSupplier(cmd, options).get();
@@ -126,12 +132,11 @@ public class PurityPloidyEstimateApplication {
         final String freecDirectory = config.freecDirectory();
         final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
 
-
         final RatioSupplier ratioSupplier;
         final List<GenomeRegion> regions;
         if (NEW_SEGMENTS) {
             ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
-            regions = new PCFSegmentSupplier(config, new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get()).get();
+            regions = new PCFSegmentSupplier(executorService, config, new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get()).get();
         } else {
             final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
             ratioSupplier = freecRatioSupplier;
@@ -201,6 +206,7 @@ public class PurityPloidyEstimateApplication {
         }
 
         LOGGER.info("Complete");
+        executorService.shutdown();
     }
 
     @NotNull

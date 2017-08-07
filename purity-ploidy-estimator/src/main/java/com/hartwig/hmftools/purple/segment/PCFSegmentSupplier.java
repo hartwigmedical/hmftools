@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
@@ -33,11 +37,17 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
 
     private final List<GenomeRegion> segments = Lists.newArrayList();
 
-    public PCFSegmentSupplier(@NotNull final CommonConfig config, Map<String, ChromosomeLength> chromosomeLengths)
-            throws RserveException, REXPMismatchException, IOException {
+    public PCFSegmentSupplier(@NotNull final ExecutorService executorService, @NotNull final CommonConfig config,
+            Map<String, ChromosomeLength> chromosomeLengths)
+            throws RserveException, REXPMismatchException, IOException, ExecutionException, InterruptedException {
 
-        Multimap<String, PCFRegion> tumorRegions = ratioSegmentation(config, "tumor ratio", config.tumorSample());
-        Multimap<String, PCFRegion> referenceRegions = ratioSegmentation(config, "reference ratio", config.refSample());
+        final Future<Multimap<String, PCFRegion>> tumorRegionsFuture =
+                executorService.submit(callable(config, "tumor ratio", config.tumorSample()));
+        final Future<Multimap<String, PCFRegion>> referenceRegionsFuture =
+                executorService.submit(callable(config, "reference ratio", config.refSample()));
+
+        Multimap<String, PCFRegion> tumorRegions = tumorRegionsFuture.get();
+        Multimap<String, PCFRegion> referenceRegions = referenceRegionsFuture.get();
 
         for (String chromosome : referenceRegions.keySet()) {
             long chromosomeEnd = chromosomeLengths.get(chromosome).position();
@@ -48,6 +58,11 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
         }
 
         Collections.sort(segments);
+    }
+
+    private Callable<Multimap<String, PCFRegion>> callable(final @NotNull CommonConfig config, @NotNull final String description,
+            @NotNull final String sample) {
+        return () -> ratioSegmentation(config, description, sample);
     }
 
     @NotNull
