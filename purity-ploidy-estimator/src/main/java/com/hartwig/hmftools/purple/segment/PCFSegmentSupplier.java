@@ -62,11 +62,12 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
 
             c.eval("library(copynumber)");
             c.eval("ratio <- read.table(\"" + ratioFile + "\", header=TRUE)");
-            c.eval("ratio <- ratio[ratio$Ratio>0,]");
+            c.eval("ratio <- ratio[ratio$Ratio>=0,]");
+            c.eval("ratio$Ratio[ratio$Ratio<0.001] <- 0.001 ");
             c.eval("ratio$S1 = log2(ratio$Ratio)");
             c.eval("ratio <- ratio[!is.nan(ratio$S1),]");
             c.eval("ratio <- ratio[,c(\"Chromosome\",\"Position\",\"S1\")]");
-            c.eval("ratio.seg<-pcf(ratio,verbose=FALSE,gamma=100, kmin=3,save.res = TRUE, file.names = c(\"" + pcfFile + "1\", \"" + pcfFile
+            c.eval("ratio.seg<-pcf(ratio,verbose=FALSE,gamma=100, kmin=1,save.res = TRUE, file.names = c(\"" + pcfFile + "1\", \"" + pcfFile
                     + "\"))");
         }
 
