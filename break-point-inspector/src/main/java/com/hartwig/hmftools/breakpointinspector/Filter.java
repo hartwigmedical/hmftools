@@ -17,14 +17,14 @@ import htsjdk.variant.vcf.VCFHeader;
 class Filter {
 
     private enum Filters {
-        BreakpointError("HMF_BreakpointError", "BPI failed to determine breakpoints"),
-        MinDepth("HMF_MinDepth", "The depth across one of the breakpoints is <10"),
-        MinAnchorLength("HMF_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in alignment"),
-        SRSupportZero("HMF_SRSupportZero", "Short delete (<2000) must have SR support"),
-        SRNormalSupport("HMF_SRNormalSupport", "Short delete (<2000) has SR support in normal"),
-        PRNormalSupport("HMF_PRNormalSupport", "PR support in the normal"),
-        PRSupportZero("HMF_PRSupportZero", "No PR support in tumor"),
-        ClippingConcordance("HMF_ClippingConcordance", "At least 5 base clipped bases concordance between tumor and normal");
+        BreakpointError("BPI_BreakpointError", "BPI failed to determine breakpoints"),
+        MinDepth("BPI_MinDepth", "The depth across one of the breakpoints is <10"),
+        MinAnchorLength("BPI_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in both alignments"),
+        SRSupportZero("BPI_SRSupportZero", "Short delete (<2000) must have SR support"),
+        SRNormalSupport("BPI_SRNormalSupport", "Short delete (<2000) has SR support in normal"),
+        PRNormalSupport("BPI_PRNormalSupport", "PR support in the normal"),
+        PRSupportZero("BPI_PRSupportZero", "No PR support in tumor"),
+        ClippingConcordance("BPI_ClippingConcordance", "At least 5 base clipped bases concordance between tumor and normal");
 
         private final String Name;
         private final String Description;
@@ -64,7 +64,7 @@ class Filter {
         }
 
         final boolean anchorLengthOkay = tumorStats.PR_Evidence.stream()
-                .anyMatch(p -> Stream.of(p.getLeft(), p.getRight()).anyMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= 30));
+                .anyMatch(p -> Stream.of(p.getLeft(), p.getRight()).allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= 30));
         if (!anchorLengthOkay) {
             filters.add(Filters.MinAnchorLength);
         }

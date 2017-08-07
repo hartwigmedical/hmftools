@@ -8,7 +8,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 class AlleleFrequency {
 
-    static final String VCF_INFO_TAG = "BPI_SV";
+    static final String VCF_INFO_TAG = "BPI_AF";
 
     static void updateHeader(final VCFHeader header) {
         header.addMetaDataLine(new VCFInfoHeaderLine(VCF_INFO_TAG, 2, VCFHeaderLineType.Float, "AF at each breakpoint"));
