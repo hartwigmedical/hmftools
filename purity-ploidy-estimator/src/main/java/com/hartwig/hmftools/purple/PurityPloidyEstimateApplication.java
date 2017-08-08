@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
@@ -212,8 +211,8 @@ public class PurityPloidyEstimateApplication {
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
         }
 
+        executorService.shutdown();
         LOGGER.info("Complete");
-        executorService.awaitTermination(30L, TimeUnit.SECONDS);
     }
 
     @NotNull
