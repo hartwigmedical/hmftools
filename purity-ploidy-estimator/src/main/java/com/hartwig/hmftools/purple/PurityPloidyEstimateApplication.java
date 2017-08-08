@@ -7,12 +7,14 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -71,8 +73,6 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    private static final boolean NEW_SEGMENTS = false;
-
     static final double MIN_PURITY_DEFAULT = 0.05;
     static final double MAX_PURITY_DEFAULT = 1.0;
     static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
@@ -83,6 +83,7 @@ public class PurityPloidyEstimateApplication {
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
     private static final int THREADS_DEFAULT = 2;
 
+    private static final String COBALT = "cobalt";
     private static final String THREADS = "threads";
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
@@ -137,11 +138,10 @@ public class PurityPloidyEstimateApplication {
 
         final RatioSupplier ratioSupplier;
         final List<GenomeRegion> regions;
-        if (NEW_SEGMENTS) {
+        if (cmd.hasOption(COBALT)) {
             ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
-            regions =
-                    new PCFSegmentSupplier(executorService, config, new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get())
-                            .get();
+            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
+            regions = new PCFSegmentSupplier(executorService, config, lengths).get();
         } else {
             final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
             ratioSupplier = freecRatioSupplier;
@@ -271,6 +271,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(THREADS, true, "Number of threads (default 2)");
+        options.addOption(COBALT, false, "Use cobalt segmentation.");
 
         return options;
     }
