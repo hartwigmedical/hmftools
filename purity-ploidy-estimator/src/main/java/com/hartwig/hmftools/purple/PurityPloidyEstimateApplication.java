@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
@@ -81,7 +82,9 @@ public class PurityPloidyEstimateApplication {
     private static final int MAX_PLOIDY = 20;
     private static final double PURITY_INCREMENTS = 0.01;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
+    private static final int THREADS_DEFAULT = 2;
 
+    private static final String THREADS = "threads";
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
     private static final String MIN_NORM_FACTOR = "min_norm_factor";
@@ -114,7 +117,8 @@ public class PurityPloidyEstimateApplication {
             InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
-        final ExecutorService executorService = Executors.newFixedThreadPool(2);
+        final int threads = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
+        final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
         // JOBA: Get common config
         final CommonConfig config = new CommonConfigSupplier(cmd, options).get();
@@ -209,7 +213,7 @@ public class PurityPloidyEstimateApplication {
         }
 
         LOGGER.info("Complete");
-        executorService.shutdown();
+        executorService.awaitTermination(30L, TimeUnit.SECONDS);
     }
 
     @NotNull
@@ -267,6 +271,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(THREADS, true, "Number of threads (default 2)");
 
         return options;
     }
