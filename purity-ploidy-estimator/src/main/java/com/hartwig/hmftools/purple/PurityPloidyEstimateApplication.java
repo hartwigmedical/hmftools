@@ -93,6 +93,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+    private static final String GC_PROFILE = "gc_profile";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -132,13 +133,10 @@ public class PurityPloidyEstimateApplication {
         final Gender gender = Gender.fromBAFCount(bafs);
         LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
 
-        // JOBA: Load Ratios
-        final String freecDirectory = config.freecDirectory();
-        final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
-
         final RatioSupplier ratioSupplier;
         final List<GenomeRegion> regions;
         if (cmd.hasOption(COBALT)) {
+            final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
             ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
             regions = new PCFSegmentSupplier(executorService, config, lengths).get();
@@ -272,6 +270,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(COBALT, false, "Use cobalt segmentation.");
+        options.addOption(GC_PROFILE, true, "Location of GC Profile.");
 
         return options;
     }

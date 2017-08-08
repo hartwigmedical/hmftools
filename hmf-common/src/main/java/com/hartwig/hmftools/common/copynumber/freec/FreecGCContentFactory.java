@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.common.copynumber.freec;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.ratio.ImmutableGCContent;
@@ -17,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 public enum FreecGCContentFactory {
     ;
-    private static final String GC_FILE = "GC_profile.1000bp.cnp";
 
     private static final String RATIO_COLUMN_SEPARATOR = "\t";
     private static final int CHROMOSOME_COLUMN = 0;
@@ -27,9 +25,8 @@ public enum FreecGCContentFactory {
     private static final int MAPPABLE_PERCENTAGE_COLUMN = 4;
 
     @NotNull
-    public static Multimap<String, GCContent> loadGCContent(@NotNull final String basePath) throws IOException, HartwigException {
-        final Path path = PathRegexFinder.build().findPath(basePath, GC_FILE);
-        return loadGCContent(LineReader.build().readLines(path, x -> true));
+    public static Multimap<String, GCContent> loadGCContent(@NotNull final String fileName) throws IOException, HartwigException {
+        return loadGCContent(LineReader.build().readLines(new File(fileName).toPath(), x -> true));
     }
 
     @NotNull
