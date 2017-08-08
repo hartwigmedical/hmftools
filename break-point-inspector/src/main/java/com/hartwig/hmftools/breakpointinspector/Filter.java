@@ -69,15 +69,16 @@ class Filter {
             filters.add(Filters.MinAnchorLength);
         }
 
-        if (ctx.isShortDelete()) {
-            // short delete logic, must have SR support
+        // short variant logic
+        if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
+            // must have SR support
             final int tumor_SR =
                     Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();
             if (tumor_SR == 0) {
                 filters.add(Filters.SRSupportZero);
             }
 
-            // short delete logic, must not have SR support in normal
+            // must not have SR support in normal
             final int ref_SR = Stream.of(refStats.BP1_Stats, refStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();
             if (ref_SR > 0) {
                 filters.add(Filters.SRNormalSupport);
@@ -93,6 +94,7 @@ class Filter {
             filters.add(Filters.PRSupportZero);
         }
 
+        // we must adjust from Manta breakpoint convention to our clipping position convention
         final List<Location> adjusted_bp = Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 1 : 0),
                 breakpoints.getRight().add(ctx.OrientationBP2 > 0 ? 1 : 0));
 
