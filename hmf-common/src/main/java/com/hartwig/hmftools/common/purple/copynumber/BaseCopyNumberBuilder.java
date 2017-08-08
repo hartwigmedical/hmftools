@@ -111,7 +111,7 @@ abstract class BaseCopyNumberBuilder {
         double result = (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
 
         // Adjust for low purity
-        return result * Math.max(1, 0.20 / purityAdjuster.purity());
+        return result * Math.max(1, 0.30 / purityAdjuster.purity());
     }
 
 }
