@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.region.GenomeRegionSelectorImpl.compar
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -23,6 +24,20 @@ public class GenomePositionSelectorImpl<P extends GenomePosition> implements Gen
     GenomePositionSelectorImpl(@NotNull Collection<P> positions) {
         this.positions = positions.iterator();
         next = this.positions.hasNext() ? this.positions.next() : null;
+    }
+
+    @Override
+    public Optional<P> select(@NotNull final GenomePosition position) {
+
+        while (next != null && next.compareTo(position) < 0) {
+            next = positions.hasNext() ? this.positions.next() : null;
+        }
+
+        if (next != null && next.compareTo(position) == 0) {
+            return Optional.of(next);
+        }
+
+        return Optional.empty();
     }
 
     @Override

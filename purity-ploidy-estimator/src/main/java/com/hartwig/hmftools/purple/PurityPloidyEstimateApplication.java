@@ -7,9 +7,14 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -45,6 +50,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.CommonConfigSupplier;
+import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.ratio.FreecRatioSupplier;
 import com.hartwig.hmftools.purple.ratio.RatioSupplier;
 import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
@@ -67,9 +73,6 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    private static final boolean NEW_RATIOS = false;
-    private static final boolean NEW_SEGMENTS = false;
-
     static final double MIN_PURITY_DEFAULT = 0.05;
     static final double MAX_PURITY_DEFAULT = 1.0;
     static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
@@ -78,7 +81,10 @@ public class PurityPloidyEstimateApplication {
     private static final int MAX_PLOIDY = 20;
     private static final double PURITY_INCREMENTS = 0.01;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
+    private static final int THREADS_DEFAULT = 2;
 
+    private static final String COBALT = "cobalt";
+    private static final String THREADS = "threads";
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
     private static final String MIN_NORM_FACTOR = "min_norm_factor";
@@ -101,14 +107,18 @@ public class PurityPloidyEstimateApplication {
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException {
+            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
+            InterruptedException {
         new PurityPloidyEstimateApplication(args);
     }
 
     private PurityPloidyEstimateApplication(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException {
+            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
+            InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
+        final int threads = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
+        final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
         // JOBA: Get common config
         final CommonConfig config = new CommonConfigSupplier(cmd, options).get();
@@ -125,13 +135,18 @@ public class PurityPloidyEstimateApplication {
         // JOBA: Load Ratios
         final String freecDirectory = config.freecDirectory();
         final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(freecDirectory);
-        final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
-        final RatioSupplier ratioSupplier = NEW_RATIOS ? new ReadCountRatioSupplier(config, gcContent) : freecRatioSupplier;
 
-        // JOBA: Load Segments
-        final List<GenomeRegion> regions = NEW_SEGMENTS
-                ? new PCFSegmentSupplier(config, ratioSupplier.tumorRatios()).get()
-                : new FreecSegmentSupplier(freecRatioSupplier).get();
+        final RatioSupplier ratioSupplier;
+        final List<GenomeRegion> regions;
+        if (cmd.hasOption(COBALT)) {
+            ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
+            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
+            regions = new PCFSegmentSupplier(executorService, config, lengths).get();
+        } else {
+            final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
+            ratioSupplier = freecRatioSupplier;
+            regions = new FreecSegmentSupplier(freecRatioSupplier).get();
+        }
 
         LOGGER.info("Merging structural variants into freec segmentation");
         final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
@@ -140,7 +155,7 @@ public class PurityPloidyEstimateApplication {
         LOGGER.info("Mapping all observations to the segmented regions");
         final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
         final List<ObservedRegion> observedRegions =
-                observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios(), gcContent);
+                observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios());
 
         final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
         final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
@@ -153,7 +168,8 @@ public class PurityPloidyEstimateApplication {
         final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
         final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
         final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(MAX_PLOIDY,
+        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                MAX_PLOIDY,
                 minPurity,
                 maxPurity,
                 PURITY_INCREMENTS,
@@ -195,6 +211,7 @@ public class PurityPloidyEstimateApplication {
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
         }
 
+        executorService.shutdown();
         LOGGER.info("Complete");
     }
 
@@ -253,6 +270,8 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(THREADS, true, "Number of threads (default 2)");
+        options.addOption(COBALT, false, "Use cobalt segmentation.");
 
         return options;
     }

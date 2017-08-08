@@ -142,7 +142,7 @@ class HighConfidenceSmoothedRegions {
     }
 
     static double allowedBAFDeviation(int bafCount) {
-        return 1d / Math.pow(Math.max(1, bafCount), 0.95) * 0.38 + 0.022;
+        return 1d / Math.max(1, bafCount) * 0.35 + 0.03;
     }
 
     private int indexOfEnd(int minIndex, @NotNull PurpleCopyNumber region) {

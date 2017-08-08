@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.common.variant.strelka;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +25,7 @@ public abstract class StrelkaSomaticVariant implements Variant {
     private static final String INDEL_TIER_INDEX_FIELD = "TQSI_NT";
     private static final String TIR_FIELD = "TIR";
     private static final String TAR_FIELD = "TAR";
+    public static final String ALLELE_SEPARATOR = ",";
 
     @NotNull
     public abstract String originalVCFLine();
@@ -94,23 +99,39 @@ public abstract class StrelkaSomaticVariant implements Variant {
         return firstField / sum;
     }
 
-    public int readRefAD() {
+    public String readRefAD() {
         if (type() == VariantType.SNP) {
-            return Integer.parseInt(tumorData().get(ref() + "U").get(0));
+            return readAD(ref());
         } else if (type() == VariantType.INDEL) {
-            return Integer.parseInt(tumorData().get(TAR_FIELD).get(0));
+            return tumorData().get(TAR_FIELD).get(0);
         } else {
-            return 0;
+            return "0";
         }
     }
 
-    public int readAltAD() {
+    public String readAltAD() {
         if (type() == VariantType.SNP) {
-            return Integer.parseInt(tumorData().get(alt() + "U").get(0));
+            return readAD(alt());
         } else if (type() == VariantType.INDEL) {
-            return Integer.parseInt(tumorData().get(TIR_FIELD).get(0));
+            return tumorData().get(TIR_FIELD).get(0);
         } else {
-            return 0;
+            return "0";
         }
+    }
+
+    @NotNull
+    private String readAD(@NotNull final String allelesField) {
+        final List<String> allAlleles = Lists.newArrayList(allelesField.split(ALLELE_SEPARATOR));
+        final List<String> alleleAds = allAlleles.stream().map(allele -> {
+            final String alleleKey = allele + "U";
+            if (tumorData().get(alleleKey).size() > 0) {
+                final String alleleAd = tumorData().get(alleleKey).get(0);
+                if (!alleleAd.equals("") && !alleleAd.equals(".")) {
+                    return alleleAd;
+                }
+            }
+            return "0";
+        }).collect(Collectors.toList());
+        return Strings.join(alleleAds, ',');
     }
 }

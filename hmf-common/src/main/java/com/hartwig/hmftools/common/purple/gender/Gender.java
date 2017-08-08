@@ -7,13 +7,15 @@ import com.hartwig.hmftools.common.purple.baf.TumorBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 
+import org.jetbrains.annotations.NotNull;
+
 public enum Gender {
     MALE,
     FEMALE;
 
     private static final int MIN_BAF_COUNT = 1000;
 
-    public static Gender fromBAFCount(Multimap<String, TumorBAF> bafs) {
+    public static Gender fromBAFCount(@NotNull final Multimap<String, TumorBAF> bafs) {
         return bafs.get("X").stream().filter(x -> x.position() > 2_699_520 && x.position() < 155_260_560).count() > MIN_BAF_COUNT
                 ? FEMALE
                 : MALE;

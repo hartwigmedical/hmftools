@@ -22,6 +22,7 @@ public class CommonConfigSupplier implements Supplier<CommonConfig> {
 
     private static final Logger LOGGER = LogManager.getLogger(CommonConfig.class);
 
+    private static final String FORCE = "force";
     private static final String FREEC_DIRECTORY = "freec_dir";
     private static final String REF_SAMPLE = "ref_sample";
     private static final String TUMOR_SAMPLE = "tumor_sample";
@@ -35,6 +36,7 @@ public class CommonConfigSupplier implements Supplier<CommonConfig> {
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
         options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to run_dir/copyNumber/refSample_tumorSample/freec/");
+        options.addOption(FORCE, false, "Force recalculation of data. Do not use cached results");
     }
 
     private final CommonConfig config;
@@ -60,7 +62,7 @@ public class CommonConfigSupplier implements Supplier<CommonConfig> {
 
         final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        config = new CommonConfig(refSample, tumorSample, outputDirectory, runDirectory, freecDirectory);
+        config = new CommonConfig(refSample, tumorSample, outputDirectory, runDirectory, freecDirectory, cmd.hasOption(FORCE));
 
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", config.refSample(), config.tumorSample());
         LOGGER.info("Run Directory: {}", config.runDirectory());

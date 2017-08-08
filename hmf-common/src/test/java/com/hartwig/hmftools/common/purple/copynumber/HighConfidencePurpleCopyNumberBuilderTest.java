@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.MAX_COPY_NUMBER_TOLERANCE;
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.HC_MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.LC_MAX_COPY_NUMBER_TOLERANCE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,15 +31,15 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
         final HighConfidenceCopyNumberBuilder builderWithoutSVSupport =
                 new HighConfidenceCopyNumberBuilder(purityAdjuster, secondWithoutSV);
 
-        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
-        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
-        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(thirdWithSV), EPSILON);
-        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(thirdWithoutSV), EPSILON);
+        assertEquals(HC_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
+        assertEquals(HC_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
+        assertEquals(HC_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(thirdWithSV), EPSILON);
+        assertEquals(LC_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(thirdWithoutSV), EPSILON);
 
-        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
-        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
-        assertEquals(STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithSV), EPSILON);
-        assertEquals(MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithoutSV), EPSILON);
+        assertEquals(LC_MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
+        assertEquals(LC_MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
+        assertEquals(HC_MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithSV), EPSILON);
+        assertEquals(LC_MAX_COPY_NUMBER_TOLERANCE, builderWithoutSVSupport.maxCopyNumberDeviation(thirdWithoutSV), EPSILON);
     }
 
     @Test

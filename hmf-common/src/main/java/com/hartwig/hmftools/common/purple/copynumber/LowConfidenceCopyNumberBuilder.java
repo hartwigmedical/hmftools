@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -33,7 +34,7 @@ class LowConfidenceCopyNumberBuilder extends BaseCopyNumberBuilder {
 
     @Override
     public double averageTumorCopyNumber() {
-        return sumWeightedCopyNumber / copyNumberBases;
+        return copyNumberBases == 0 ? copyNumberBases : sumWeightedCopyNumber / copyNumberBases;
     }
 
     @Override
@@ -45,21 +46,24 @@ class LowConfidenceCopyNumberBuilder extends BaseCopyNumberBuilder {
     public void extendRegion(@NotNull final FittedRegion value) {
         super.extendRegion(value);
 
-        bafCount += value.bafCount();
+        if (value.status() == FreecStatus.SOMATIC) {
 
-        if (!Doubles.isZero(value.tumorCopyNumber())) {
-            copyNumberBases += value.bases();
-            sumWeightedCopyNumber += value.tumorCopyNumber() * value.bases();
-        }
+            bafCount += value.bafCount();
 
-        if (!Doubles.isZero(value.observedBAF())) {
-            refNormalisedCopyNumberBases += value.bases();
-            sumWeightedBAF += value.observedBAF() * value.bases();
-        }
+            if (!Doubles.isZero(value.tumorCopyNumber())) {
+                copyNumberBases += value.bases();
+                sumWeightedCopyNumber += value.tumorCopyNumber() * value.bases();
+            }
 
-        if (!Doubles.isZero(value.refNormalisedCopyNumber())) {
-            bafBases += value.bases();
-            sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * value.bases();
+            if (!Doubles.isZero(value.observedBAF())) {
+                bafBases += value.bases();
+                sumWeightedBAF += value.observedBAF() * value.bases();
+            }
+
+            if (!Doubles.isZero(value.refNormalisedCopyNumber())) {
+                refNormalisedCopyNumberBases += value.bases();
+                sumWeightedRefNormalisedCopyNumber += value.refNormalisedCopyNumber() * value.bases();
+            }
         }
     }
 }

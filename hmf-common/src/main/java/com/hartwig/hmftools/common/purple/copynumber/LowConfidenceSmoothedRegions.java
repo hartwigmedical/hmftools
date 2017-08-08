@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
@@ -51,7 +52,9 @@ class LowConfidenceSmoothedRegions {
     }
 
     private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final LowConfidenceCopyNumberBuilder builder) {
-        return !region.status().equals(FreecStatus.SOMATIC) || builder.withinCopyNumberTolerance(region);
+        return region.status().equals(FreecStatus.GERMLINE) || builder.withinCopyNumberTolerance(region)
+                || Doubles.isZero(region.tumorCopyNumber())
+                || Doubles.isZero(builder.averageTumorCopyNumber());
     }
 
 }

@@ -12,9 +12,9 @@ abstract class BaseCopyNumberBuilder {
 
     private static final double MIN_COPY_NUMBER_TOLERANCE = 0.3;
     @VisibleForTesting
-    static final double MAX_COPY_NUMBER_TOLERANCE = 1.3;
+    static final double LC_MAX_COPY_NUMBER_TOLERANCE = 1.3;
     @VisibleForTesting
-    static final double STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE = 0.7;
+    static final double HC_MAX_COPY_NUMBER_TOLERANCE = 0.7;
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -101,8 +101,17 @@ abstract class BaseCopyNumberBuilder {
                 ? !structuralVariantSupport.equals(StructuralVariantSupport.NONE)
                 : !fittedRegion.structuralVariantSupport().equals(StructuralVariantSupport.NONE);
 
-        double maxDeviation = structuralBreakTransition ? STRUCTURAL_VARIANCE_MAX_COPY_NUMBER_TOLERANCE : MAX_COPY_NUMBER_TOLERANCE;
-        return (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
+        final double maxDeviation;
+        if (structuralBreakTransition || fittedRegion.observedTumorRatioCount() > 5) {
+            maxDeviation = HC_MAX_COPY_NUMBER_TOLERANCE;
+        } else {
+            maxDeviation = LC_MAX_COPY_NUMBER_TOLERANCE;
+        }
+
+        double result = (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
+
+        // Adjust for low purity
+        return result * Math.max(1, 0.20 / purityAdjuster.purity());
     }
 
 }

@@ -14,15 +14,11 @@ public interface ObservedRegion extends GenomeRegion {
 
     double observedBAF();
 
+    int observedTumorRatioCount();
+
     double observedTumorRatio();
 
     double observedNormalRatio();
-
-    double observedGCContent();
-
-    double observedNonNPercentage();
-
-    double observedMappablePercentage();
 
     FreecStatus status();
 }

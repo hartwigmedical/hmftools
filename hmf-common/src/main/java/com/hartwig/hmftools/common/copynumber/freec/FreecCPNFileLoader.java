@@ -8,11 +8,11 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
+import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.LineReader;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableReadCount;
-import com.hartwig.hmftools.common.purple.ratio.ReadCount;
 
 import org.jetbrains.annotations.NotNull;
 

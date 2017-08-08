@@ -4,10 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class FreecStatusTest {
 
     @Test

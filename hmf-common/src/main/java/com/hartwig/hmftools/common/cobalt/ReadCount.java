@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.ratio;
+package com.hartwig.hmftools.common.cobalt;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 

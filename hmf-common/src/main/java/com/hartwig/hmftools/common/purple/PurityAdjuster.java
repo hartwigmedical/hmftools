@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.purple;
 import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -11,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurityAdjuster {
 
-    static final double AMBIGUOUS_BAF = 0.542;
+    private static final double AMBIGUOUS_BAF = 0.542;
     private static final double CLONAL_DISTANCE = 0.25;
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
@@ -33,9 +35,15 @@ public class PurityAdjuster {
         this.normFactor = normFactor;
     }
 
-    public double purityAdjustedCopyNumber(final String chromosome, final double ratio) {
-        final double typicalCopyNumber = isMaleSexChromosome(chromosome) ? 0.5 : 1;
-        return purityAdjustedCopyNumber(ratio, typicalCopyNumber);
+    public double purity() {
+        return purity;
+    }
+
+
+    public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
+        final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
+        final double typicalRatio = chromosome.isHomologous(gender) ? 1 : 0.5;
+        return purityAdjustedCopyNumber(ratio, typicalRatio);
     }
 
     private double purityAdjustedCopyNumber(final double tumorRatio, final double normalRatio) {
@@ -46,8 +54,17 @@ public class PurityAdjuster {
         return purityAdjustedFrequency(copyNumber, observedFrequency, 0);
     }
 
-    public double purityAdjustedBAF(final String chromosome, final double copyNumber, final double observedFrequency) {
-        double typicalFrequency = isMaleSexChromosome(chromosome) ? 0 : 0.5;
+    public double purityAdjustedBAF(final String chromosomeName, final double copyNumber, final double observedFrequency) {
+        final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
+        if (!chromosome.isHomologous(gender) || Doubles.lessOrEqual(copyNumber, 0.5)) {
+            return 0;
+        }
+
+        if (Doubles.lessOrEqual(copyNumber, 1)) {
+            return 1;
+        }
+
+        double typicalFrequency = 0.5;
         double rawAdjustedBaf = purityAdjustedFrequency(copyNumber, observedFrequency, typicalFrequency);
 
         int ploidy = (int) Math.round(copyNumber);
@@ -76,10 +93,6 @@ public class PurityAdjuster {
         double normalAmount = 2 * (1 - purity) * typicalFrequency;
 
         return (observedFrequency * (normalPloidy + tumorPloidy) - normalAmount) / copyNumber / purity;
-    }
-
-    private boolean isMaleSexChromosome(String chromosome) {
-        return gender.equals(Gender.MALE) && (chromosome.equals("X") || chromosome.equals("Y"));
     }
 
 }
