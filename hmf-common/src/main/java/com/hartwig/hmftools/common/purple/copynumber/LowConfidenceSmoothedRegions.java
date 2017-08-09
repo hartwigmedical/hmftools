@@ -31,17 +31,17 @@ class LowConfidenceSmoothedRegions {
 
     private void run() {
 
-        LowConfidenceCopyNumberBuilder builder = null;
+        CopyNumberBuilder builder = null;
         for (FittedRegion fittedRegion : fittedRegions) {
 
             if (builder == null) {
-                builder = new LowConfidenceCopyNumberBuilder(purityAdjuster, fittedRegion);
+                builder = new CopyNumberBuilder(false, purityAdjuster, fittedRegion);
             } else {
                 if (isSimilar(fittedRegion, builder)) {
                     builder.extendRegion(fittedRegion);
                 } else {
                     smoothedRegions.add(builder.build());
-                    builder = new LowConfidenceCopyNumberBuilder(purityAdjuster, fittedRegion);
+                    builder = new CopyNumberBuilder(false, purityAdjuster, fittedRegion);
                 }
             }
         }
@@ -51,10 +51,9 @@ class LowConfidenceSmoothedRegions {
         }
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final LowConfidenceCopyNumberBuilder builder) {
+    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final CopyNumberBuilder builder) {
         return region.status().equals(FreecStatus.GERMLINE) || builder.withinCopyNumberTolerance(region)
-                || Doubles.isZero(region.tumorCopyNumber())
-                || Doubles.isZero(builder.averageTumorCopyNumber());
+                || Doubles.isZero(region.tumorCopyNumber()) || Doubles.isZero(builder.averageTumorCopyNumber());
     }
 
 }

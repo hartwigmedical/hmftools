@@ -37,7 +37,7 @@ class HighConfidenceSmoothedRegions {
     private void run() {
         if (!highConfidenceRegions.isEmpty()) {
             int largestIncludedIndex = -1;
-            HighConfidenceCopyNumberBuilder currentBuilder;
+            CopyNumberBuilder currentBuilder;
 
             for (int i = 0; i < highConfidenceRegions.size(); i++) {
                 final PurpleCopyNumber currentRegion = highConfidenceRegions.get(i);
@@ -45,7 +45,7 @@ class HighConfidenceSmoothedRegions {
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new HighConfidenceCopyNumberBuilder(purityAdjuster, fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new CopyNumberBuilder(true, purityAdjuster, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -66,7 +66,7 @@ class HighConfidenceSmoothedRegions {
         }
     }
 
-    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull HighConfidenceCopyNumberBuilder builder) {
+    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull CopyNumberBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, builder)) {
@@ -80,15 +80,15 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private HighConfidenceCopyNumberBuilder forwards(int startIndex, int endIndex, final @NotNull HighConfidenceCopyNumberBuilder builder) {
-        HighConfidenceCopyNumberBuilder current = builder;
+    private CopyNumberBuilder forwards(int startIndex, int endIndex, final @NotNull CopyNumberBuilder builder) {
+        CopyNumberBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, current)) {
                 current.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(current.build());
-                current = new HighConfidenceCopyNumberBuilder(purityAdjuster, copyNumber);
+                current = new CopyNumberBuilder(true, purityAdjuster, copyNumber);
             }
         }
 
@@ -96,10 +96,9 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private HighConfidenceCopyNumberBuilder backwards(int startIndex, int endIndex,
-            @NotNull final HighConfidenceCopyNumberBuilder forwardBuilder) {
+    private CopyNumberBuilder backwards(int startIndex, int endIndex, @NotNull final CopyNumberBuilder forwardBuilder) {
         final Deque<PurpleCopyNumber> preRegions = new ArrayDeque<>();
-        HighConfidenceCopyNumberBuilder reverseBuilder = forwardBuilder;
+        CopyNumberBuilder reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
             final FittedRegion copyNumber = fittedRegions.get(i);
@@ -109,7 +108,7 @@ class HighConfidenceSmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder.build());
                 }
-                reverseBuilder = new HighConfidenceCopyNumberBuilder(purityAdjuster, copyNumber);
+                reverseBuilder = new CopyNumberBuilder(true, purityAdjuster, copyNumber);
             }
         }
 
@@ -121,7 +120,7 @@ class HighConfidenceSmoothedRegions {
         return forwardBuilder;
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final HighConfidenceCopyNumberBuilder builder) {
+    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final CopyNumberBuilder builder) {
         int bafCount = region.bafCount();
         if (!region.status().equals(FreecStatus.SOMATIC)) {
             return true;

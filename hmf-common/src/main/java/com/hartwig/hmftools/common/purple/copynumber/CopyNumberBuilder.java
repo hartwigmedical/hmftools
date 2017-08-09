@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-abstract class BaseCopyNumberBuilder {
+final class CopyNumberBuilder {
 
     private static final double MIN_COPY_NUMBER_TOLERANCE = 0.3;
     @VisibleForTesting
@@ -18,57 +18,52 @@ abstract class BaseCopyNumberBuilder {
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
-    private final String chromosome;
-    private long start = 1;
-    private long end;
-    private boolean ratioSupport;
-    private StructuralVariantSupport structuralVariantSupport;
+    private final CombinedFittedRegion combinedRegion;
 
-    BaseCopyNumberBuilder(@NotNull final PurityAdjuster purityAdjuster, @NotNull final FittedRegion fittedRegion) {
+    CopyNumberBuilder(boolean highConfidence, @NotNull final PurityAdjuster purityAdjuster, final FittedRegion combinedRegion) {
         this.purityAdjuster = purityAdjuster;
-        this.chromosome = fittedRegion.chromosome();
-        this.start = fittedRegion.start();
-        this.structuralVariantSupport = fittedRegion.structuralVariantSupport();
-        this.ratioSupport = fittedRegion.ratioSupport();
-        extendRegion(fittedRegion);
+        this.combinedRegion = new CombinedFittedRegion(highConfidence, combinedRegion);
     }
 
     public String chromosome() {
-        return chromosome;
+        return combinedRegion.region().chromosome();
     }
 
-    public abstract int bafCount();
+    public final int bafCount() {
+        return combinedRegion.region().bafCount();
+    }
 
-    public abstract double averageObservedBAF();
+    public final double averageObservedBAF() {
+        return combinedRegion.region().observedBAF();
+    }
 
-    public abstract double averageTumorCopyNumber();
+    public final double averageTumorCopyNumber() {
+        return combinedRegion.region().tumorCopyNumber();
+    }
 
-    abstract double averageRefNormalisedCopyNumber();
+    public final double averageRefNormalisedCopyNumber() {
+        return combinedRegion.region().refNormalisedCopyNumber();
+    }
 
     public void extendRegion(@NotNull final FittedRegion value) {
-        assert (chromosome.equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
-
-        if (value.start() <= start) {
-            structuralVariantSupport = value.structuralVariantSupport();
-            ratioSupport = value.ratioSupport();
-        }
-
-        start = Math.min(value.start(), start);
-        end = Math.max(value.end(), end);
+        assert (chromosome().equals(value.chromosome())) : "Regions cannot be extended between chromosomes";
+        combinedRegion.combine(value);
     }
 
     @NotNull
     public PurpleCopyNumber build() {
+        final FittedRegion region = combinedRegion.region();
+
         return ImmutablePurpleCopyNumber.builder()
-                .chromosome(chromosome)
-                .start(start)
-                .end(end)
+                .chromosome(chromosome())
+                .start(region.start())
+                .end(region.end())
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
                 .averageActualBAF(purityAdjustedBAF(averageObservedBAF()))
                 .averageTumorCopyNumber(averageTumorCopyNumber())
-                .ratioSupport(ratioSupport)
-                .structuralVariantSupport(structuralVariantSupport)
+                .ratioSupport(region.ratioSupport())
+                .structuralVariantSupport(region.structuralVariantSupport())
                 .build();
     }
 
@@ -81,7 +76,7 @@ abstract class BaseCopyNumberBuilder {
             return observedBAF;
         }
 
-        return purityAdjuster.purityAdjustedBAF(chromosome, copyNumber, observedBAF);
+        return purityAdjuster.purityAdjustedBAF(chromosome(), copyNumber, observedBAF);
     }
 
     boolean withinCopyNumberTolerance(@NotNull final FittedRegion copyNumber) {
@@ -94,25 +89,28 @@ abstract class BaseCopyNumberBuilder {
         return Doubles.lessOrEqual(copyNumberDeviation, adjustedMaxDeviation);
     }
 
-
     @VisibleForTesting
     double maxCopyNumberDeviation(@NotNull FittedRegion fittedRegion) {
-        if (fittedRegion.bafCount() >= 10) {
+        boolean structuralBreakTransition = fittedRegion.start() < combinedRegion.region().start()
+                ? !combinedRegion.region().structuralVariantSupport().equals(StructuralVariantSupport.NONE)
+                : !fittedRegion.structuralVariantSupport().equals(StructuralVariantSupport.NONE);
+
+        return maxCopyNumberDeviation(fittedRegion.bafCount(), fittedRegion.observedTumorRatioCount(), structuralBreakTransition);
+    }
+
+    private double maxCopyNumberDeviation(int bafCount, int observedTumorRatioCount, boolean structuralBreakTransition) {
+        if (bafCount >= 10) {
             return MIN_COPY_NUMBER_TOLERANCE;
         }
 
-        boolean structuralBreakTransition = fittedRegion.start() < start
-                ? !structuralVariantSupport.equals(StructuralVariantSupport.NONE)
-                : !fittedRegion.structuralVariantSupport().equals(StructuralVariantSupport.NONE);
-
         final double maxDeviation;
-        if (structuralBreakTransition || fittedRegion.observedTumorRatioCount() > 5) {
+        if (structuralBreakTransition || observedTumorRatioCount > 5) {
             maxDeviation = HC_MAX_COPY_NUMBER_TOLERANCE;
         } else {
             maxDeviation = LC_MAX_COPY_NUMBER_TOLERANCE;
         }
 
-        return (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
+        return (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * bafCount + maxDeviation;
     }
 
 }

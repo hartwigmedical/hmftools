@@ -22,7 +22,7 @@ class HighConfidenceRegions {
     @NotNull
     private final List<PurpleCopyNumber> result = Lists.newArrayList();
     @Nullable
-    private HighConfidenceCopyNumberBuilder builder;
+    private CopyNumberBuilder builder;
     @Nullable
     private FittedRegion last;
     private final double maxDeviation;
@@ -45,7 +45,7 @@ class HighConfidenceRegions {
     private void process(@NotNull final FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
-            builder = new HighConfidenceCopyNumberBuilder(purityAdjuster, current);
+            builder = new CopyNumberBuilder(true, purityAdjuster, current);
         } else {
             assert builder != null;
             builder.extendRegion(current);

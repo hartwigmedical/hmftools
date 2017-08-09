@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.HC_MAX_COPY_NUMBER_TOLERANCE;
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceCopyNumberBuilder.LC_MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberBuilder.HC_MAX_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberBuilder.LC_MAX_COPY_NUMBER_TOLERANCE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class HighConfidencePurpleCopyNumberBuilderTest {
+public class CopyNumberBuilderTest {
     private static final double EPSILON = 1e-10;
 
     @Test
@@ -27,9 +27,8 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
         final FittedRegion thirdWithoutSV = create(2001, 3000, StructuralVariantSupport.NONE);
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final HighConfidenceCopyNumberBuilder builderWithSVSupport = new HighConfidenceCopyNumberBuilder(purityAdjuster, secondWithSV);
-        final HighConfidenceCopyNumberBuilder builderWithoutSVSupport =
-                new HighConfidenceCopyNumberBuilder(purityAdjuster, secondWithoutSV);
+        final CopyNumberBuilder builderWithSVSupport = new CopyNumberBuilder(true, purityAdjuster, secondWithSV);
+        final CopyNumberBuilder builderWithoutSVSupport = new CopyNumberBuilder(true, purityAdjuster, secondWithoutSV);
 
         assertEquals(HC_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithSV), EPSILON);
         assertEquals(HC_MAX_COPY_NUMBER_TOLERANCE, builderWithSVSupport.maxCopyNumberDeviation(firstWithoutSV), EPSILON);
@@ -68,59 +67,15 @@ public class HighConfidencePurpleCopyNumberBuilderTest {
     }
 
     private void testPurityAdjustedBaf(final double purity, final int ploidy, final int alleleCount) {
-        final HighConfidenceCopyNumberBuilder builder = createBuilder(purity, 1, 100, ploidy);
+        final CopyNumberBuilder builder = createBuilder(purity, 1, 100, ploidy);
 
         double expectedPurityAdjustedBAF = 1d * alleleCount / ploidy;
         double observedBAF = modelBAF(purity, ploidy, alleleCount);
         assertEquals(expectedPurityAdjustedBAF, builder.purityAdjustedBAF(observedBAF), EPSILON);
     }
 
-    private HighConfidenceCopyNumberBuilder createBuilder(double purity, long start, long end, double copyNumber) {
-        return new HighConfidenceCopyNumberBuilder(new PurityAdjuster(Gender.MALE, purity, 1), create(start, end, copyNumber));
-    }
-
-    @Test
-    public void averageOnLengthUntilNonZeroBafCount() {
-        final HighConfidenceCopyNumberBuilder builder = createBuilder(1, 1, 100_000_000, 3);
-        assertAverages(builder, 0, 3);
-
-        builder.extendRegion(create(100_000_001, 200_000_000, 4));
-        assertAverages(builder, 0, 3.5);
-
-        builder.extendRegion(create(200_000_001, 200_000_010, 1, 0.5, 3));
-        assertAverages(builder, 0.5, 3);
-
-        builder.extendRegion(create(200_000_011, 300_000_000, 3, 1, 4d));
-        assertAverages(builder, 0.875, 3.75);
-    }
-
-    @Test
-    public void averageOnLengthForNonZeroRatio() {
-        HighConfidenceCopyNumberBuilder builder = createBuilder(1, 1, 100, 3);
-        assertAverages(builder, 0, 3);
-
-        builder.extendRegion(create(101, 200, 0));
-        assertAverages(builder, 0, 3);
-    }
-
-    @Test
-    public void doNotIncludeZeroRatio() {
-        final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        HighConfidenceCopyNumberBuilder builder = new HighConfidenceCopyNumberBuilder(purityAdjuster, startRegion);
-        assertAverages(builder, 0.5, 0);
-
-        builder.extendRegion(create(201, 300, 200, 1, 2));
-        assertAverages(builder, 0.75, 2);
-    }
-
-    private static void assertAverages(@NotNull HighConfidenceCopyNumberBuilder victim, double expectedBAF, double expectedRatio) {
-        assertAverages(victim.build(), expectedBAF, expectedRatio);
-    }
-
-    private static void assertAverages(@NotNull PurpleCopyNumber victim, double expectedBAF, double expectedRatio) {
-        assertEquals(expectedBAF, victim.averageObservedBAF(), EPSILON);
-        assertEquals(expectedRatio, victim.averageTumorCopyNumber(), EPSILON);
+    private CopyNumberBuilder createBuilder(double purity, long start, long end, double copyNumber) {
+        return new CopyNumberBuilder(true, new PurityAdjuster(Gender.MALE, purity, 1), create(start, end, copyNumber));
     }
 
     private static FittedRegion create(long start, long end, double copyNumber) {
