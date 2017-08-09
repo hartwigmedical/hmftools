@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
@@ -16,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Centra {
 
-    private static final Logger LOGGER = LogManager.getLogger(FormStatus.class);
+    private static final Logger LOGGER = LogManager.getLogger(Centra.class);
 
     private static final int ID_COLUMN = 0;
     private static final int CPCT_RECIPIENTS_COLUMN = 4;
