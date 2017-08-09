@@ -22,6 +22,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 
@@ -41,19 +42,15 @@ class ReportMailer {
     private ReportMailer() {
     }
 
+    @NotNull
     static Multipart createMessageBody(@NotNull final String templatePath, @NotNull final String attachmentPath)
             throws IOException, EmptyFileException, MessagingException {
         final Multipart multipart = new MimeMultipart();
         final LocalDate mebDate = determineMebDate();
         final LocalDate mebDeadline = determineMebDeadline();
         final BodyPart messageBodyPart = new MimeBodyPart();
-        final List<String> templateLines = FileReader.build().readLines(new File(templatePath).toPath());
-        final List<String> emailLines = templateLines.stream()
-                .map(line -> line.replaceAll(MEB_DATE_TAG, mebDate.format(DATE_FORMATTER)))
-                .map(line -> line.replaceAll(MEB_DEADLINE_TAG, mebDeadline.format(DATE_FORMATTER)))
-                .collect(Collectors.toList());
-        emailLines.add("\n\n");
-        messageBodyPart.setText(Strings.join(emailLines, '\n'));
+        final String messageBody = fillTemplate(templatePath, mebDate, mebDeadline);
+        messageBodyPart.setText(messageBody);
 
         final BodyPart attachmentBodyPart = new MimeBodyPart();
         final DataSource source = new FileDataSource(attachmentPath);
@@ -73,10 +70,23 @@ class ReportMailer {
         final Session session = Session.getDefaultInstance(props);
         final Message message = new MimeMessage(session);
         message.setFrom(new InternetAddress(sender));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipients.replaceAll(";", ",")));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipients));
         message.setSubject(subject);
         message.setContent(messageBody);
         Transport.send(message);
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String fillTemplate(@NotNull final String templatePath, @NotNull final LocalDate mebDate, @NotNull final LocalDate mebDeadline)
+            throws IOException, EmptyFileException {
+        final List<String> templateLines = FileReader.build().readLines(new File(templatePath).toPath());
+        final List<String> emailLines = templateLines.stream()
+                .map(line -> line.replaceAll(MEB_DATE_TAG, mebDate.format(DATE_FORMATTER)))
+                .map(line -> line.replaceAll(MEB_DEADLINE_TAG, mebDeadline.format(DATE_FORMATTER)))
+                .collect(Collectors.toList());
+        emailLines.add("\n\n");
+        return Strings.join(emailLines, '\n');
     }
 
     @NotNull

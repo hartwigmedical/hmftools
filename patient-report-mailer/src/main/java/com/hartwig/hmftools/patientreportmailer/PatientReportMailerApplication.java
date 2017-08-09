@@ -8,6 +8,7 @@ import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.centra.Centra;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -73,16 +74,18 @@ public class PatientReportMailerApplication {
     }
 
     @NotNull
-    private static String getRecipients(@NotNull final String reportPath, @NotNull final String centraPath, @NotNull final String drupEmail)
+    @VisibleForTesting
+    static String getRecipients(@NotNull final String reportPath, @NotNull final String centraPath, @NotNull final String drupEmail)
             throws IOException, EmptyFileException {
-        final String patientId = getPatientIdFromReportPath(reportPath);
-        final String centraId = getCentraFromPatientId(patientId);
-        if (patientId.startsWith("DRUP")) {
+        final String sample = getSampleFromReportPath(reportPath);
+        if (sample.startsWith("DRUP")) {
+            final String centraId = getCentraFromSample(sample);
             final Map<String, String> centraRecipients = Centra.readDRUPRecipientsFromCSV(centraPath);
-            return centraRecipients.get(centraId) + "," + drupEmail;
-        } else if (patientId.startsWith("CPCT")) {
+            return centraRecipients.get(centraId).replaceAll(";", ",") + "," + drupEmail;
+        } else if (sample.startsWith("CPCT")) {
+            final String centraId = getCentraFromSample(sample);
             final Map<String, String> centraRecipients = Centra.readCPCTRecipientsFromCSV(centraPath);
-            return centraRecipients.get(centraId);
+            return centraRecipients.get(centraId).replaceAll(";", ",");
         } else {
             throw new IllegalArgumentException("PatientId was neither CPCT nor DRUP");
         }
@@ -94,16 +97,9 @@ public class PatientReportMailerApplication {
         return new File(reportPath).getName().split("_")[0];
     }
 
-    @NotNull
-    private static String getPatientIdFromReportPath(@NotNull final String reportPath) {
-        final String sample = getSampleFromReportPath(reportPath);
-        return sample.substring(0, sample.length() - 1);
-    }
-
     // MIVO: assumes patientId is in DRUP/CPCT format
     @NotNull
-    private static String getCentraFromPatientId(@NotNull final String patientId) {
+    private static String getCentraFromSample(@NotNull final String patientId) {
         return patientId.substring(6, 8);
     }
-
 }
