@@ -66,8 +66,6 @@ public class TumorBAFFactory {
         assert (tumorData != null);
 
         double baf = tumorData.alleleFrequency();
-        double modifiedBAF = 0.5 + Math.abs(baf - 0.5);
-
-        return ImmutableTumorBAF.builder().from(variant).baf(baf).mBaf(modifiedBAF).build();
+        return ImmutableTumorBAF.builder().from(variant).baf(baf).build();
     }
 }

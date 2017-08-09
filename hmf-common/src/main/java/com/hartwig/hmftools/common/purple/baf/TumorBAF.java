@@ -12,5 +12,7 @@ public interface TumorBAF extends GenomePosition {
 
     double baf();
 
-    double mBaf();
+    default double mBaf() {
+        return 0.5 + Math.abs(baf() - 0.5);
+    }
 }
