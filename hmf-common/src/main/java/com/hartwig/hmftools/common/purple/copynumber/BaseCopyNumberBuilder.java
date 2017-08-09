@@ -88,8 +88,12 @@ abstract class BaseCopyNumberBuilder {
         double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - averageTumorCopyNumber());
         double refNormalisedCopyNumberDeviation = Math.abs(copyNumber.refNormalisedCopyNumber() - averageRefNormalisedCopyNumber());
         double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
-        return Doubles.lessOrEqual(copyNumberDeviation, maxCopyNumberDeviation(copyNumber));
+        double rawMaxDeviation = maxCopyNumberDeviation(copyNumber);
+        double adjustedMaxDeviation = purityAdjuster.purityAdjustedMaxCopyNumberDeviation(rawMaxDeviation);
+
+        return Doubles.lessOrEqual(copyNumberDeviation, adjustedMaxDeviation);
     }
+
 
     @VisibleForTesting
     double maxCopyNumberDeviation(@NotNull FittedRegion fittedRegion) {
@@ -108,10 +112,7 @@ abstract class BaseCopyNumberBuilder {
             maxDeviation = LC_MAX_COPY_NUMBER_TOLERANCE;
         }
 
-        double result = (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
-
-        // Adjust for low purity
-        return result * Math.max(1, 0.30 / purityAdjuster.purity());
+        return (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * fittedRegion.bafCount() + maxDeviation;
     }
 
 }

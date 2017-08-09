@@ -79,6 +79,10 @@ public class PurityAdjuster {
         return rawAdjustedBaf;
     }
 
+    public double purityAdjustedMaxCopyNumberDeviation(double maxCopyNumberDeviation) {
+        return maxCopyNumberDeviation * Math.max(1, 0.15 / purity);
+    }
+
     @VisibleForTesting
     static boolean isClonal(final double copyNumber) {
         return Doubles.lessOrEqual(Doubles.distanceFromInteger(copyNumber), CLONAL_DISTANCE);

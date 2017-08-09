@@ -25,9 +25,11 @@ class HighConfidenceRegions {
     private HighConfidenceCopyNumberBuilder builder;
     @Nullable
     private FittedRegion last;
+    private final double maxDeviation;
 
     HighConfidenceRegions(@NotNull final PurityAdjuster purityAdjuster) {
         this.purityAdjuster = purityAdjuster;
+        maxDeviation = purityAdjuster.purityAdjustedMaxCopyNumberDeviation(MAX_COPY_NUMBER_DEVIATION);
     }
 
     @NotNull
@@ -68,7 +70,7 @@ class HighConfidenceRegions {
         assert builder != null;
 
         double copyNumberDeviation = Math.abs(current.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        if (Doubles.greaterThan(copyNumberDeviation, MAX_COPY_NUMBER_DEVIATION)) {
+        if (Doubles.greaterThan(copyNumberDeviation, maxDeviation)) {
             return true;
         }
 
