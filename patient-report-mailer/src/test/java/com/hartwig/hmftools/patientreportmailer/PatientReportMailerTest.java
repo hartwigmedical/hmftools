@@ -48,4 +48,12 @@ public class PatientReportMailerTest {
         assertEquals("meb.date: " + MEB_DATE, messageLines[0]);
         assertEquals("meb.deadline: " + MEB_DEADLINE, messageLines[1]);
     }
+
+    @Test
+    public void determinesNextMebDates() {
+        final LocalDate mebSeed = LocalDate.parse("15-08-2017", DATE_FORMATTER);
+        final LocalDate expectedDate = LocalDate.parse("10-08-2017", DATE_FORMATTER);
+        assertEquals(expectedDate, ReportMailer.determineMebDeadline(mebSeed, expectedDate));
+        assertEquals(LocalDate.parse("24-08-2017", DATE_FORMATTER), ReportMailer.determineMebDeadline(mebSeed, expectedDate.plusDays(1)));
+    }
 }

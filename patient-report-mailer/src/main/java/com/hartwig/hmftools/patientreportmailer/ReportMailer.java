@@ -38,6 +38,7 @@ class ReportMailer {
     private static final String MEB_DEADLINE_TAG = "<<meb.deadline>>";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final LocalDate mebDateSeed = LocalDate.parse("15-08-2017", DATE_FORMATTER);
 
     private ReportMailer() {
     }
@@ -91,11 +92,21 @@ class ReportMailer {
 
     @NotNull
     private static LocalDate determineMebDate() {
-        return LocalDate.now();
+        return determineMebDeadline().plusDays(5);
     }
 
     @NotNull
     private static LocalDate determineMebDeadline() {
-        return LocalDate.now();
+        return determineMebDeadline(mebDateSeed, LocalDate.now());
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static LocalDate determineMebDeadline(@NotNull final LocalDate mebSeed, @NotNull final LocalDate currentDate) {
+        LocalDate nextDeadline = mebSeed.minusDays(5);
+        while (nextDeadline.isBefore(currentDate)) {
+            nextDeadline = nextDeadline.plusDays(14);
+        }
+        return nextDeadline;
     }
 }
