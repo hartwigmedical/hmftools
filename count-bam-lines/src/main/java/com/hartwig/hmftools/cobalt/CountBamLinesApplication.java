@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +27,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -56,14 +58,20 @@ public class CountBamLinesApplication {
         }
 
         final String sample = cmd.getOptionValue(SAMPLE);
-        final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
+        final Path outputPath = selectOrCreateOutputPath(cmd.getOptionValue(OUTPUT_DIR));
+        if (outputPath == null) {
+            System.exit(1);
+        }
+
         final File inputFile = new File(cmd.getOptionValue(INPUT_FILE));
-        final String outputFile = ReadCountFile.generateFilename(outputDir, sample);
+        final String outputCountFile = ReadCountFile.generateFilename(outputPath.toString(), sample);
+        final String chromosomeLengthFile = ChromosomeLengthFile.generateFilename(outputPath.toString(), sample);
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
         final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
         final int minQuality = cmd.hasOption(MIN_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_QUALITY)) : MIN_QUALITY_DEFAULT;
         LOGGER.info("Input File: {}", inputFile.toString());
-        LOGGER.info("Output File: {}", outputFile);
+        LOGGER.info("Output Read Counts: {}", outputCountFile);
+        LOGGER.info("Output Chromosome Lengths: {}", chromosomeLengthFile);
         LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minQuality);
 
         final SamReaderFactory readerFactory = SamReaderFactory.make();
@@ -74,9 +82,7 @@ public class CountBamLinesApplication {
         try (SamReader reader = readerFactory.open(inputFile)) {
             lengths = ChromosomeLengthFactory.create(reader.getFileHeader());
         }
-
-        final String chromosomeLengthFilename = ChromosomeLengthFile.generateFilename(outputDir, sample);
-        ChromosomeLengthFile.write(chromosomeLengthFilename, lengths);
+        ChromosomeLengthFile.write(chromosomeLengthFile, lengths);
 
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for (ChromosomeLength chromosome : lengths) {
@@ -89,13 +95,29 @@ public class CountBamLinesApplication {
             futures.add(executorService.submit(callable));
         }
 
-        ReadCountFile.createFile(windowSize, outputFile);
+        ReadCountFile.createFile(windowSize, outputCountFile);
         for (Future<ChromosomeReadCount> future : futures) {
-            persist(outputFile, future.get());
+            persist(outputCountFile, future.get());
         }
 
         LOGGER.info("Complete");
         executorService.shutdown();
+    }
+
+    @Nullable
+    private Path selectOrCreateOutputPath(@NotNull final String outputString) {
+        final File outputFile = new File(outputString);
+        if (!outputFile.exists() && !outputFile.mkdirs()) {
+            LOGGER.error("Unable to create output directory {} ", outputString);
+            return null;
+        }
+
+        if (!outputFile.isDirectory()) {
+            LOGGER.error("Output dir {} is not a valid directory", outputString);
+            return null;
+        }
+
+        return outputFile.toPath();
     }
 
     private void persist(@NotNull final String filename, @NotNull ChromosomeReadCount counter) throws IOException {
