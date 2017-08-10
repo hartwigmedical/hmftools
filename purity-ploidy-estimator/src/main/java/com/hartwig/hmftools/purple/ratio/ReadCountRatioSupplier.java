@@ -57,16 +57,20 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
             final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
             for (String chromosomeName : normalReadCount.keySet()) {
-                final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
+                if (HumanChromosome.contains(chromosomeName)) {
+                    final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
+                    List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosomeName);
+                    for (GCContent windowGCContent : chromosomeGCContent) {
 
-                List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosomeName);
-                for (GCContent windowGCContent : chromosomeGCContent) {
+                        final ReadCount referenceCount =
+                                referenceReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
+                        normalRatiosBuilder.addPosition(chromosome, windowGCContent, referenceCount);
 
-                    final ReadCount referenceCount = referenceReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
-                    normalRatiosBuilder.addPosition(chromosome, windowGCContent, referenceCount);
-
-                    final ReadCount tumorCount = tumorReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
-                    tumorRatiosBuilder.addPosition(chromosome, windowGCContent, tumorCount);
+                        final ReadCount tumorCount = tumorReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
+                        tumorRatiosBuilder.addPosition(chromosome, windowGCContent, tumorCount);
+                    }
+                } else {
+                    LOGGER.info("Excluding unsupported {} chromosome from read ratios", chromosomeName);
                 }
             }
 
