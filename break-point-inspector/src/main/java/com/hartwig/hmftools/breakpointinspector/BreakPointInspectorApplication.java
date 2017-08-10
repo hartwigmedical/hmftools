@@ -121,16 +121,15 @@ public class BreakPointInspectorApplication {
             final File vcfFile = new File(vcfPath);
             final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
 
-            // work out the reference sample
+            // get the sample names -- turns out Manta puts Ref first, then Tumor
             final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
-            final Predicate<String> isRef = s -> s.endsWith("R") || s.endsWith("BL");
-            final String refSampleName = samples.stream().filter(isRef).findFirst().orElse(null);
-            final String tumorSampleName = samples.stream().filter(s -> s.endsWith("T") || !isRef.test(s)).findFirst().orElse(null);
-            if (refSampleName == null || tumorSampleName == null) {
+            if (samples.size() != 2) {
                 System.err.println("could not determine tumor and sample from VCF");
                 System.exit(1);
                 return;
             }
+            final String refSampleName = samples.get(0);
+            final String tumorSampleName = samples.get(1);
 
             // output the header
             {
