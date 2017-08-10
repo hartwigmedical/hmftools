@@ -18,6 +18,7 @@
         <module>fastq-stats</module>
         <module>patient-db</module>
         <module>purity-ploidy-estimator</module>
+        <module>count-bam-lines</module>
         <module>hmfslicer-builder</module>
         <module>rups-checker</module>
         <module>strelka-post-process</module>
