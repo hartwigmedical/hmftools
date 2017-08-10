@@ -20,8 +20,8 @@ class Filter {
         BreakpointError("BPI_BreakpointError", "BPI failed to determine breakpoints"),
         MinDepth("BPI_MinDepth", "The depth across one of the breakpoints is <10"),
         MinAnchorLength("BPI_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in both alignments"),
-        SRSupportZero("BPI_SRSupportZero", "Short delete (<2000) must have SR support"),
-        SRNormalSupport("BPI_SRNormalSupport", "Short delete (<2000) has SR support in normal"),
+        SRSupportZero("BPI_SRSupportZero", "Short delete or dupe (<1000) must have SR support"),
+        SRNormalSupport("BPI_SRNormalSupport", "Short delete or dupe (<1000) has SR support in normal"),
         PRNormalSupport("BPI_PRNormalSupport", "PR support in the normal"),
         PRSupportZero("BPI_PRSupportZero", "No PR support in tumor"),
         ClippingConcordance("BPI_ClippingConcordance", "At least 5 base clipped bases concordance between tumor and normal");
