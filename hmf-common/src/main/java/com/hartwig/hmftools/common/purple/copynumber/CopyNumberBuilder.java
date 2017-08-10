@@ -51,26 +51,10 @@ final class CopyNumberBuilder {
     }
 
     @NotNull
-    public PurpleCopyNumber build() {
-        final FittedRegion region = combinedRegion.region();
-
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome(chromosome())
-                .start(region.start())
-                .end(region.end())
-                .bafCount(bafCount())
-                .averageObservedBAF(averageObservedBAF())
-                .averageActualBAF(purityAdjustedBAF())
-                .averageTumorCopyNumber(averageTumorCopyNumber())
-                .ratioSupport(region.ratioSupport())
-                .structuralVariantSupport(region.structuralVariantSupport())
-                .build();
+    public FittedRegion build() {
+        return combinedRegion.region();
     }
 
-    @VisibleForTesting
-    private double purityAdjustedBAF() {
-        return purityAdjuster.purityAdjustedBAF(chromosome(), averageTumorCopyNumber(), averageObservedBAF());
-    }
 
     boolean withinCopyNumberTolerance(@NotNull final FittedRegion copyNumber) {
         double tumorCopyNumberDeviation = Math.abs(copyNumber.tumorCopyNumber() - averageTumorCopyNumber());

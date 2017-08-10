@@ -17,7 +17,7 @@ class LowConfidenceSmoothedRegions {
     @NotNull
     private final List<FittedRegion> fittedRegions;
     @NotNull
-    private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
+    private final List<FittedRegion> smoothedRegions = Lists.newArrayList();
 
     LowConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
@@ -25,7 +25,7 @@ class LowConfidenceSmoothedRegions {
         run();
     }
 
-    List<PurpleCopyNumber> smoothedRegions() {
+    List<FittedRegion> smoothedRegions() {
         return smoothedRegions;
     }
 

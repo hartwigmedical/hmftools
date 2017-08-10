@@ -20,7 +20,7 @@ class HighConfidenceRegions {
     @NotNull
     private final PurityAdjuster purityAdjuster;
     @NotNull
-    private final List<PurpleCopyNumber> result = Lists.newArrayList();
+    private final List<FittedRegion> result = Lists.newArrayList();
     @Nullable
     private CopyNumberBuilder builder;
     @Nullable
@@ -33,7 +33,7 @@ class HighConfidenceRegions {
     }
 
     @NotNull
-    List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
+    List<FittedRegion> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
         fittedRegions.stream().filter(
                 copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
                         && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);

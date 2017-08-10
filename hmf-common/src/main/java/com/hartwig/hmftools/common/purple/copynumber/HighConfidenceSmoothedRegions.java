@@ -10,18 +10,19 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 class HighConfidenceSmoothedRegions {
 
     private final PurityAdjuster purityAdjuster;
-    private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
-    private final List<PurpleCopyNumber> highConfidenceRegions;
+    private final List<FittedRegion> smoothedRegions = Lists.newArrayList();
+    private final List<? extends GenomeRegion> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
 
-    HighConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
-            @NotNull final List<FittedRegion> fittedRegions) {
+    HighConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final List<? extends GenomeRegion> highConfidenceRegions, @NotNull final List<FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
         this.highConfidenceRegions = highConfidenceRegions;
         this.fittedRegions = fittedRegions;
@@ -30,7 +31,7 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    List<PurpleCopyNumber> smoothedRegions() {
+    List<FittedRegion> smoothedRegions() {
         return smoothedRegions;
     }
 
@@ -40,7 +41,7 @@ class HighConfidenceSmoothedRegions {
             CopyNumberBuilder currentBuilder;
 
             for (int i = 0; i < highConfidenceRegions.size(); i++) {
-                final PurpleCopyNumber currentRegion = highConfidenceRegions.get(i);
+                final GenomeRegion currentRegion = highConfidenceRegions.get(i);
                 int startOfRegionIndex = indexOfStart(largestIncludedIndex + 1, currentRegion);
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
@@ -97,7 +98,7 @@ class HighConfidenceSmoothedRegions {
 
     @NotNull
     private CopyNumberBuilder backwards(int startIndex, int endIndex, @NotNull final CopyNumberBuilder forwardBuilder) {
-        final Deque<PurpleCopyNumber> preRegions = new ArrayDeque<>();
+        final Deque<FittedRegion> preRegions = new ArrayDeque<>();
         CopyNumberBuilder reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
@@ -144,11 +145,11 @@ class HighConfidenceSmoothedRegions {
         return 1d / Math.max(1, bafCount) * 0.35 + 0.03;
     }
 
-    private int indexOfEnd(int minIndex, @NotNull PurpleCopyNumber region) {
+    private int indexOfEnd(int minIndex, @NotNull GenomeRegion region) {
         return indexOf(minIndex, copyNumber -> copyNumber.end() == region.end());
     }
 
-    private int indexOfStart(int minIndex, @NotNull PurpleCopyNumber region) {
+    private int indexOfStart(int minIndex, @NotNull GenomeRegion region) {
         return indexOf(minIndex, copyNumber -> copyNumber.start() == region.start());
     }
 
