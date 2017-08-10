@@ -24,6 +24,7 @@
         <module>rups-checker</module>
         <module>strelka-post-process</module>
         <module>patient-report-mailer</module>
+        <module>civic-api-client</module>
     </modules>
 
     <properties>
@@ -49,6 +50,8 @@
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
         <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
         <javax.mail.version>1.6.0</javax.mail.version>
+        <rxjava2.version>2.1.2</rxjava2.version>
+        <retrofit.version>2.3.0</retrofit.version>
 
         <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
@@ -228,6 +231,26 @@
                 <groupId>com.sun.mail</groupId>
                 <artifactId>javax.mail</artifactId>
                 <version>${javax.mail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.reactivex.rxjava2</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${rxjava2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>retrofit</artifactId>
+                <version>${retrofit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>adapter-rxjava2</artifactId>
+                <version>${retrofit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>converter-gson</artifactId>
+                <version>${retrofit.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
