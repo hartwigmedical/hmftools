@@ -2,6 +2,13 @@
 
 **Co**unt **ba**m **l**ines is designed to count the number of read starts within each 1000 base window of a bam.
 
+It will only include reads that match ALL the following criteria:
+* Equals or exceeds min quality (default 10)
+* Is not unmapped
+* Is not duplicated
+* Is neither secondary nor supplementary
+
+
 ## Usage
 
 Argument | Default | Description
