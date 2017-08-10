@@ -60,7 +60,7 @@ final class CopyNumberBuilder {
                 .end(region.end())
                 .bafCount(bafCount())
                 .averageObservedBAF(averageObservedBAF())
-                .averageActualBAF(purityAdjustedBAF(averageObservedBAF()))
+                .averageActualBAF(purityAdjustedBAF())
                 .averageTumorCopyNumber(averageTumorCopyNumber())
                 .ratioSupport(region.ratioSupport())
                 .structuralVariantSupport(region.structuralVariantSupport())
@@ -68,15 +68,8 @@ final class CopyNumberBuilder {
     }
 
     @VisibleForTesting
-    double purityAdjustedBAF(final double observedBAF) {
-
-        double copyNumber = averageTumorCopyNumber();
-
-        if (Doubles.isZero(copyNumber)) {
-            return observedBAF;
-        }
-
-        return purityAdjuster.purityAdjustedBAF(chromosome(), copyNumber, observedBAF);
+    private double purityAdjustedBAF() {
+        return purityAdjuster.purityAdjustedBAF(chromosome(), averageTumorCopyNumber(), averageObservedBAF());
     }
 
     boolean withinCopyNumberTolerance(@NotNull final FittedRegion copyNumber) {

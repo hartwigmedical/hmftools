@@ -15,6 +15,7 @@ public class PurityAdjuster {
 
     private static final double AMBIGUOUS_BAF = 0.542;
     private static final double CLONAL_DISTANCE = 0.25;
+    private static final double MAX_DEVIATION_ADJUSTMENT = 0.15;
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
         return new PurityAdjuster(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
@@ -80,7 +81,7 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedMaxCopyNumberDeviation(double maxCopyNumberDeviation) {
-        return maxCopyNumberDeviation * Math.max(1, 0.15 / purity);
+        return maxCopyNumberDeviation * Math.max(1, MAX_DEVIATION_ADJUSTMENT / purity);
     }
 
     @VisibleForTesting
