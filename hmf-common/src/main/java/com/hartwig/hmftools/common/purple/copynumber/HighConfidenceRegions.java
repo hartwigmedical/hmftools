@@ -34,9 +34,10 @@ class HighConfidenceRegions {
 
     @NotNull
     List<FittedRegion> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
-        fittedRegions.stream().filter(
-                copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
-                        && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);
+        fittedRegions.stream()
+                .filter(copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
+                        && !Doubles.isZero(copyNumber.observedTumorRatio()))
+                .forEach(this::process);
 
         endRegion();
         return result;
@@ -61,8 +62,7 @@ class HighConfidenceRegions {
         }
     }
 
-    private static boolean isNewChromosome(@NotNull final FittedRegion current,
-            @Nullable final FittedRegion previous) {
+    private static boolean isNewChromosome(@NotNull final FittedRegion current, @Nullable final FittedRegion previous) {
         return previous != null && !current.chromosome().equals(previous.chromosome());
     }
 
