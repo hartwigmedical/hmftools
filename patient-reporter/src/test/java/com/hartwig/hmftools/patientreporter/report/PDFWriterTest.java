@@ -42,7 +42,7 @@ public class PDFWriterTest {
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
         final FittedPurity fittedPurity =
-                ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).modelBAFDeviation(0).normFactor(0).score(0).ploidy(2).build();
+                ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
 
         final VariantReport variant1 = ImmutableVariantReport.builder()

@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.numeric.Doubles.positiveOrZero;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -37,11 +36,10 @@ public class FittedPurityFactory {
     private final FittedRegionFactory fittedRegionFactory;
     private final ExecutorService executorService;
 
-    private final List<FittedPurity> allPurities = Lists.newArrayList();
     private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
 
-    public FittedPurityFactory(final ExecutorService executorService, final int maxPloidy, final double minPurity, final double maxPurity, final double purityIncrements,
-            final double minNormFactor, final double maxNormFactor, final double normFactorIncrements,
+    public FittedPurityFactory(final ExecutorService executorService, final int maxPloidy, final double minPurity, final double maxPurity,
+            final double purityIncrements, final double minNormFactor, final double maxNormFactor, final double normFactorIncrements,
             @NotNull final FittedRegionFactory fittedRegionFactory, @NotNull final Collection<ObservedRegion> observedRegions)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
@@ -55,14 +53,6 @@ public class FittedPurityFactory {
         this.fittedRegionFactory = fittedRegionFactory;
 
         fitPurity(observedRegions);
-    }
-
-    public Optional<FittedPurity> bestFit() {
-        return allPurities.isEmpty() ? Optional.empty() : Optional.of(allPurities.get(0));
-    }
-
-    public List<FittedPurity> allFits() {
-        return allPurities;
     }
 
     public List<FittedPurity> bestFitPerPurity() {
@@ -94,10 +84,9 @@ public class FittedPurityFactory {
             if (!fittedPurities.isEmpty()) {
                 bestScoringPerPurity.add(fittedPurities.get(0));
             }
-            allPurities.addAll(fittedPurities);
         }
+
         Collections.sort(bestScoringPerPurity);
-        Collections.sort(allPurities);
     }
 
     private Callable<List<FittedPurity>> callableFitPurity(final double purity, final double totalBAFCount,
@@ -127,23 +116,17 @@ public class FittedPurityFactory {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
         double modelDeviation = 0;
         double diploidProportion = 0;
-        double modelBAFDeviation = 0;
         double averagePloidy = 0;
 
         for (final ObservedRegion enrichedRegion : observedRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
             modelDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.deviation();
-            modelBAFDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.bafDeviation();
             averagePloidy += fittedRegion.tumorCopyNumber() * fittedRegion.bafCount() / totalBafCount;
             if (fittedRegion.fittedPloidy() == 2) {
                 diploidProportion += enrichedRegion.bafCount() / totalBafCount;
             }
         }
 
-        return builder.score(modelDeviation)
-                .modelBAFDeviation(modelBAFDeviation)
-                .diploidProportion(diploidProportion)
-                .ploidy(averagePloidy)
-                .build();
+        return builder.score(modelDeviation).diploidProportion(diploidProportion).ploidy(averagePloidy).build();
     }
 }

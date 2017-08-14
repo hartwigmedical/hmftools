@@ -5,8 +5,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 public abstract class FittedPurityScore {
 
-    public abstract double polyclonalProportion();
-
     public abstract double minPurity();
 
     public abstract double maxPurity();
@@ -14,4 +12,8 @@ public abstract class FittedPurityScore {
     public abstract double minPloidy();
 
     public abstract double maxPloidy();
+
+    public abstract double minDiploidProportion();
+
+    public abstract double maxDiploidProportion();
 }

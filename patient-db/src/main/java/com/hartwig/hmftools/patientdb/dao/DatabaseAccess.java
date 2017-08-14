@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -67,9 +68,9 @@ public class DatabaseAccess {
         validationFindingsDAO = new ValidationFindingDAO(context);
     }
 
-    public void writePurity(@NotNull final String sampleId, @NotNull FittedPurityScore score, @NotNull List<FittedPurity> purities) {
-        purityDAO.write(sampleId, score);
-        purityDAO.write(sampleId, purities);
+    public void writePurity(@NotNull final String sampleId, @NotNull final PurityContext context) {
+        purityDAO.write(sampleId, context);
+        purityDAO.write(sampleId, context.bestPerPurity());
     }
 
     @Nullable
