@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,12 +27,12 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.BestFitFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFile;
+import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
@@ -45,7 +44,9 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -73,7 +74,7 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    static final double MIN_PURITY_DEFAULT = 0.05;
+    static final double MIN_PURITY_DEFAULT = 0.08;
     static final double MAX_PURITY_DEFAULT = 1.0;
     static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
     static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
@@ -106,6 +107,8 @@ public class PurityPloidyEstimateApplication {
     private static final String NO_STRUCTURAL_VARIANTS = "no_sv";
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
+
+    private static final String SOMATIC_VARIANT_FILE = "somatic_variants";
 
     public static void main(final String... args)
             throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
@@ -177,37 +180,41 @@ public class PurityPloidyEstimateApplication {
                 fittedRegionFactory,
                 observedRegions);
 
-        final Optional<FittedPurity> optionalBestFit = fittedPurityFactory.bestFit();
-        if (optionalBestFit.isPresent()) {
-            final FittedPurity bestFit = optionalBestFit.get();
-            final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
+        final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity());
+        final FittedPurity bestFit = bestFitFactory.bestFit();
+        final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
-            final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, bestFit.purity(), bestFit.normFactor());
-            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
-            final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
-            final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
-            final List<GeneCopyNumber> geneCopyNumbers = geneCopyNumbers(smoothRegions);
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, bestFit.purity(), bestFit.normFactor());
+        final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
+        final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
+        final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
+        final List<GeneCopyNumber> geneCopyNumbers = geneCopyNumbers(smoothRegions);
+        final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, smoothRegions);
 
-            final FittedPurityScore score = FittedPurityScoreFactory.score(fittedPurityFactory.allFits(), smoothRegions);
-            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, smoothRegions);
+        final PurityContext purityContext = ImmutablePurityContext.builder()
+                .bestFit(bestFitFactory.bestFit())
+                .bestPerPurity(fittedPurityFactory.bestFitPerPurity())
+                .status(bestFitFactory.status())
+                .gender(gender)
+                .score(bestFitFactory.score())
+                .polyClonalProportion(0) //TODO: FIX
+                .build();
 
-            if (cmd.hasOption(DB_ENABLED)) {
-                LOGGER.info("Persisting to database");
-                final DatabaseAccess dbAccess = databaseAccess(cmd);
-                dbAccess.writePurity(tumorSample, score, fittedPurityFactory.bestFitPerPurity());
-                dbAccess.writeCopynumbers(tumorSample, smoothRegions);
-                dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
-                dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
-                dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
-            }
-
-            LOGGER.info("Writing to file location: {}", outputDirectory);
-            PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
-            FittedPurityFile.write(outputDirectory, tumorSample, fittedPurityFactory.bestFitPerPurity());
-            FittedPurityScoreFile.write(outputDirectory, tumorSample, score);
-            FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
-            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
+        if (cmd.hasOption(DB_ENABLED)) {
+            LOGGER.info("Persisting to database");
+            final DatabaseAccess dbAccess = databaseAccess(cmd);
+            dbAccess.writePurity(tumorSample, purityContext);
+            dbAccess.writeCopynumbers(tumorSample, smoothRegions);
+            dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
+            dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+            dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
         }
+
+        LOGGER.info("Writing to file location: {}", outputDirectory);
+        FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
+        PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
+        FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
+        GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
 
         executorService.shutdown();
         LOGGER.info("Complete");
@@ -223,6 +230,18 @@ public class PurityPloidyEstimateApplication {
             final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
             LOGGER.info("Loading structural variants from {}", structuralVariantFile);
             return StructuralVariantFileLoader.fromFile(structuralVariantFile);
+        }
+    }
+
+    @NotNull
+    private List<SomaticVariant> somaticVariants(final CommandLine cmd) throws IOException, HartwigException {
+        if (cmd.hasOption(SOMATIC_VARIANT_FILE)) {
+            LOGGER.info("Reading somatic VCF File");
+            // TODO: PASS AND
+            return VCFFileLoader.loadSomaticVCF(cmd.getOptionValue(SOMATIC_VARIANT_FILE)).variants();
+        } else {
+            LOGGER.info("Somatic variant support disabled");
+            return Collections.emptyList();
         }
     }
 

@@ -160,20 +160,41 @@ CREATE TABLE purityScore
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(20) NOT NULL,
+    minPurity DOUBLE PRECISION not null,
+    maxPurity DOUBLE PRECISION not null,
+    minPloidy DOUBLE PRECISION not null,
+    maxPloidy DOUBLE PRECISION not null,
+    minDiploidProportion DOUBLE PRECISION not null,
+    maxDiploidProportion DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+
+DROP VIEW IF EXISTS purity;
+DROP TABLE IF EXISTS purity;
+CREATE TABLE purity
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(20) NOT NULL,
+    gender varchar(255) NOT NULL,
+    status varchar(255) NOT NULL,
+    purity DOUBLE PRECISION not null,
+    normFactor DOUBLE PRECISION not null,
+    score DOUBLE PRECISION not null,
+    ploidy DOUBLE PRECISION not null,
+    diploidProportion DOUBLE PRECISION not null,
     polyclonalProportion DOUBLE PRECISION not null,
     minPurity DOUBLE PRECISION not null,
     maxPurity DOUBLE PRECISION not null,
     minPloidy DOUBLE PRECISION not null,
     maxPloidy DOUBLE PRECISION not null,
+    minDiploidProportion DOUBLE PRECISION not null,
+    maxDiploidProportion DOUBLE PRECISION not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
 
-CREATE OR REPLACE VIEW purity AS
-SELECT p.*, s.polyclonalProportion, s.minPurity, s.maxPurity, s.minPloidy, s.maxPloidy
-FROM purityRange p, purityScore s
-WHERE p.sampleId = s.sampleId
-  AND (p.sampleId, p.score) IN (SELECT sampleId, MIN(score) FROM purityRange GROUP BY sampleId);
 
 DROP TABLE IF EXISTS copyNumberRegion;
 CREATE TABLE copyNumberRegion

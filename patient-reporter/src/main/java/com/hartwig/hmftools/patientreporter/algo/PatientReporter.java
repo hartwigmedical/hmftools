@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -94,8 +95,9 @@ public class PatientReporter {
         LOGGER.info("  " + variantFile.variants().size() + " somatic variants loaded for sample " + sample);
 
         LOGGER.info(" Loading purity numbers...");
-        final FittedPurity purity = PatientReporterHelper.loadPurity(runDirectory, sample);
-        final FittedPurityScore purityScore = PatientReporterHelper.loadPurityScore(runDirectory, sample);
+        final PurityContext context = PatientReporterHelper.loadPurity(runDirectory, sample);
+        final FittedPurity purity = context.bestFit();
+        final FittedPurityScore purityScore = context.score();
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);

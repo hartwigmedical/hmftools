@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYRANGE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYSCORE;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -12,6 +11,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +37,6 @@ class PurityDAO {
                 : ImmutableFittedPurity.builder()
                         .purity(result.getValue(PURITY.PURITY_))
                         .normFactor(result.getValue(PURITY.NORMFACTOR))
-                        .modelBAFDeviation(0)
                         .score(result.getValue(PURITY.SCORE))
                         .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
                         .ploidy(result.getValue(PURITY.PLOIDY))
@@ -47,42 +46,88 @@ class PurityDAO {
     @Nullable
     FittedPurityScore readFittedPurityScore(@NotNull final String sample) {
         @Nullable
-        Record result = context.select().from(PURITYSCORE).where(PURITYSCORE.SAMPLEID.eq(sample)).fetchOne();
+        Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
         return result == null
                 ? null
                 : ImmutableFittedPurityScore.builder()
-                        .minPurity(result.getValue(PURITYSCORE.MINPURITY))
-                        .maxPurity(result.getValue(PURITYSCORE.MAXPURITY))
-                        .minPloidy(result.getValue(PURITYSCORE.MINPLOIDY))
-                        .maxPloidy(result.getValue(PURITYSCORE.MAXPLOIDY))
-                        .polyclonalProportion(result.getValue(PURITYSCORE.POLYCLONALPROPORTION))
+                        .minPurity(result.getValue(PURITY.MINPURITY))
+                        .maxPurity(result.getValue(PURITY.MAXPURITY))
+                        .minPloidy(result.getValue(PURITY.MINPLOIDY))
+                        .maxPloidy(result.getValue(PURITY.MAXPLOIDY))
+                        .minDiploidProportion(result.getValue(PURITY.MINDIPLOIDPROPORTION))
+                        .maxDiploidProportion(result.getValue(PURITY.MAXDIPLOIDPROPORTION))
                         .build();
     }
 
-    void write(@NotNull final String sample, @NotNull FittedPurityScore score) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(PURITYSCORE).where(PURITYSCORE.SAMPLEID.eq(sample)).execute();
+    void write(@NotNull final String sample, @NotNull final PurityContext purity) {
 
-        context.insertInto(PURITYSCORE, PURITYSCORE.SAMPLEID, PURITYSCORE.POLYCLONALPROPORTION, PURITYSCORE.MINPURITY,
-                PURITYSCORE.MAXPURITY, PURITYSCORE.MINPLOIDY, PURITYSCORE.MAXPLOIDY, PURITYSCORE.MODIFIED)
-                .values(sample, score.polyclonalProportion(), score.minPurity(), score.maxPurity(), score.minPloidy(),
-                        score.maxPloidy(), timestamp)
+        final FittedPurity bestFit = purity.bestFit();
+        final FittedPurityScore score = purity.score();
+
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+        context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
+
+        context.insertInto(PURITY,
+                PURITY.SAMPLEID,
+                PURITY.PURITY_,
+                PURITY.GENDER,
+                PURITY.STATUS,
+                PURITY.NORMFACTOR,
+                PURITY.SCORE,
+                PURITY.PLOIDY,
+                PURITY.DIPLOIDPROPORTION,
+                PURITY.MINDIPLOIDPROPORTION,
+                PURITY.MAXDIPLOIDPROPORTION,
+                PURITY.MINPURITY,
+                PURITY.MAXPURITY,
+                PURITY.MINPLOIDY,
+                PURITY.MAXPLOIDY,
+                PURITY.POLYCLONALPROPORTION,
+                PURITY.MODIFIED)
+                .values(sample,
+                        bestFit.purity(),
+                        purity.gender().toString(),
+                        purity.status().toString(),
+                        bestFit.normFactor(),
+                        bestFit.score(),
+                        bestFit.ploidy(),
+                        bestFit.diploidProportion(),
+                        score.minDiploidProportion(),
+                        score.maxDiploidProportion(),
+                        score.minPurity(),
+                        score.maxPurity(),
+                        score.minPloidy(),
+                        score.maxPloidy(),
+                        purity.polyClonalProportion(),
+                        timestamp)
                 .execute();
+
     }
 
     void write(@NotNull final String sample, @NotNull List<FittedPurity> purities) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStep7 inserter = context.insertInto(PURITYRANGE, PURITYRANGE.SAMPLEID, PURITYRANGE.PURITY, PURITYRANGE.NORMFACTOR,
-                PURITYRANGE.SCORE, PURITYRANGE.PLOIDY, PURITYRANGE.DIPLOIDPROPORTION, PURITYRANGE.MODIFIED);
+        InsertValuesStep7 inserter = context.insertInto(PURITYRANGE,
+                PURITYRANGE.SAMPLEID,
+                PURITYRANGE.PURITY,
+                PURITYRANGE.NORMFACTOR,
+                PURITYRANGE.SCORE,
+                PURITYRANGE.PLOIDY,
+                PURITYRANGE.DIPLOIDPROPORTION,
+                PURITYRANGE.MODIFIED);
 
         purities.forEach(x -> addPurity(timestamp, inserter, sample, x));
         inserter.execute();
     }
 
     private void addPurity(Timestamp timestamp, InsertValuesStep7 inserter, String sample, FittedPurity purity) {
-        inserter.values(sample, purity.purity(), purity.normFactor(), purity.score(), purity.ploidy(),
-                purity.diploidProportion(), timestamp);
+        inserter.values(sample,
+                purity.purity(),
+                purity.normFactor(),
+                purity.score(),
+                purity.ploidy(),
+                purity.diploidProportion(),
+                timestamp);
     }
 }

@@ -21,36 +21,32 @@ public class FittedPurityScoreFactory {
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
     @NotNull
-    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities,
-            @NotNull final List<PurpleCopyNumber> regions) {
+    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities) {
         ImmutableFittedPurityScore.Builder builder = ImmutableFittedPurityScore.builder()
                 .minPloidy(0)
                 .minPurity(0)
+                .minDiploidProportion(0)
                 .maxPloidy(0)
                 .maxPurity(0)
-                .polyclonalProportion(polyclonalProproption(regions));
+                .maxDiploidProportion(0);
 
         if (!purities.isEmpty()) {
             Collections.sort(purities);
 
-            final FittedPurity best = purities.get(0);
+            final FittedPurity lowestScored = purities.get(0);
 
-            final List<FittedPurity> withinRange = purities.stream()
-                    .filter(inRange(best.score()))
-                    .collect(Collectors.toList());
+            final List<FittedPurity> withinRange = purities.stream().filter(inRange(lowestScored.score())).collect(Collectors.toList());
 
+            withinRange.stream().max(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.maxPloidy(x.ploidy()));
+            withinRange.stream().min(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.minPloidy(x.ploidy()));
+            withinRange.stream().max(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.maxPurity(x.purity()));
+            withinRange.stream().min(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.minPurity(x.purity()));
             withinRange.stream()
-                    .max(FittedPurityScoreFactory::comparePloidy)
-                    .ifPresent(x -> builder.maxPloidy(x.ploidy()));
+                    .max(FittedPurityScoreFactory::compareDiploidProportion)
+                    .ifPresent(x -> builder.maxDiploidProportion(x.purity()));
             withinRange.stream()
-                    .min(FittedPurityScoreFactory::comparePloidy)
-                    .ifPresent(x -> builder.minPloidy(x.ploidy()));
-            withinRange.stream()
-                    .max(FittedPurityScoreFactory::comparePurity)
-                    .ifPresent(x -> builder.maxPurity(x.purity()));
-            withinRange.stream()
-                    .min(FittedPurityScoreFactory::comparePurity)
-                    .ifPresent(x -> builder.minPurity(x.purity()));
+                    .min(FittedPurityScoreFactory::compareDiploidProportion)
+                    .ifPresent(x -> builder.minDiploidProportion(x.purity()));
         }
 
         return builder.build();
@@ -62,6 +58,10 @@ public class FittedPurityScoreFactory {
 
     private static int comparePloidy(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
         return Double.compare(o1.ploidy(), o2.ploidy());
+    }
+
+    private static int compareDiploidProportion(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
+        return Double.compare(o1.diploidProportion(), o2.diploidProportion());
     }
 
     @NotNull
