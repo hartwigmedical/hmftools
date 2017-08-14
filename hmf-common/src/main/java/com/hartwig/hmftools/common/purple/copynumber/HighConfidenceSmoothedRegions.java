@@ -10,18 +10,19 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 class HighConfidenceSmoothedRegions {
 
     private final PurityAdjuster purityAdjuster;
-    private final List<PurpleCopyNumber> smoothedRegions = Lists.newArrayList();
-    private final List<PurpleCopyNumber> highConfidenceRegions;
+    private final List<FittedRegion> smoothedRegions = Lists.newArrayList();
+    private final List<? extends GenomeRegion> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
 
-    HighConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> highConfidenceRegions,
-            @NotNull final List<FittedRegion> fittedRegions) {
+    HighConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final List<? extends GenomeRegion> highConfidenceRegions, @NotNull final List<FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
         this.highConfidenceRegions = highConfidenceRegions;
         this.fittedRegions = fittedRegions;
@@ -30,22 +31,22 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    List<PurpleCopyNumber> smoothedRegions() {
+    List<FittedRegion> smoothedRegions() {
         return smoothedRegions;
     }
 
     private void run() {
         if (!highConfidenceRegions.isEmpty()) {
             int largestIncludedIndex = -1;
-            HighConfidenceCopyNumberBuilder currentBuilder;
+            CopyNumberBuilder currentBuilder;
 
             for (int i = 0; i < highConfidenceRegions.size(); i++) {
-                final PurpleCopyNumber currentRegion = highConfidenceRegions.get(i);
+                final GenomeRegion currentRegion = highConfidenceRegions.get(i);
                 int startOfRegionIndex = indexOfStart(largestIncludedIndex + 1, currentRegion);
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new HighConfidenceCopyNumberBuilder(purityAdjuster, fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new CopyNumberBuilder(true, purityAdjuster, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -66,7 +67,7 @@ class HighConfidenceSmoothedRegions {
         }
     }
 
-    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull HighConfidenceCopyNumberBuilder builder) {
+    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull CopyNumberBuilder builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, builder)) {
@@ -80,15 +81,15 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private HighConfidenceCopyNumberBuilder forwards(int startIndex, int endIndex, final @NotNull HighConfidenceCopyNumberBuilder builder) {
-        HighConfidenceCopyNumberBuilder current = builder;
+    private CopyNumberBuilder forwards(int startIndex, int endIndex, final @NotNull CopyNumberBuilder builder) {
+        CopyNumberBuilder current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, current)) {
                 current.extendRegion(copyNumber);
             } else {
                 smoothedRegions.add(current.build());
-                current = new HighConfidenceCopyNumberBuilder(purityAdjuster, copyNumber);
+                current = new CopyNumberBuilder(true, purityAdjuster, copyNumber);
             }
         }
 
@@ -96,10 +97,9 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private HighConfidenceCopyNumberBuilder backwards(int startIndex, int endIndex,
-            @NotNull final HighConfidenceCopyNumberBuilder forwardBuilder) {
-        final Deque<PurpleCopyNumber> preRegions = new ArrayDeque<>();
-        HighConfidenceCopyNumberBuilder reverseBuilder = forwardBuilder;
+    private CopyNumberBuilder backwards(int startIndex, int endIndex, @NotNull final CopyNumberBuilder forwardBuilder) {
+        final Deque<FittedRegion> preRegions = new ArrayDeque<>();
+        CopyNumberBuilder reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
             final FittedRegion copyNumber = fittedRegions.get(i);
@@ -109,7 +109,7 @@ class HighConfidenceSmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder.build());
                 }
-                reverseBuilder = new HighConfidenceCopyNumberBuilder(purityAdjuster, copyNumber);
+                reverseBuilder = new CopyNumberBuilder(true, purityAdjuster, copyNumber);
             }
         }
 
@@ -121,7 +121,7 @@ class HighConfidenceSmoothedRegions {
         return forwardBuilder;
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final HighConfidenceCopyNumberBuilder builder) {
+    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final CopyNumberBuilder builder) {
         int bafCount = region.bafCount();
         if (!region.status().equals(FreecStatus.SOMATIC)) {
             return true;
@@ -145,11 +145,11 @@ class HighConfidenceSmoothedRegions {
         return 1d / Math.max(1, bafCount) * 0.35 + 0.03;
     }
 
-    private int indexOfEnd(int minIndex, @NotNull PurpleCopyNumber region) {
+    private int indexOfEnd(int minIndex, @NotNull GenomeRegion region) {
         return indexOf(minIndex, copyNumber -> copyNumber.end() == region.end());
     }
 
-    private int indexOfStart(int minIndex, @NotNull PurpleCopyNumber region) {
+    private int indexOfStart(int minIndex, @NotNull GenomeRegion region) {
         return indexOf(minIndex, copyNumber -> copyNumber.start() == region.start());
     }
 

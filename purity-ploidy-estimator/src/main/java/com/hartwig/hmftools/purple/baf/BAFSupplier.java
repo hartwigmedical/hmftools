@@ -23,11 +23,13 @@ public class BAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     private static final Logger LOGGER = LogManager.getLogger(BAFSupplier.class);
 
+    private static final String BAF_FILE = "baf";
     private static final String VCF_EXTENSION = "vcf_extension";
     private static final String VCF_EXTENSION_DEFAULT = ".annotated_sliced.vcf";
 
     public static void addOptions(@NotNull final Options options) {
         options.addOption(VCF_EXTENSION, true, "VCF file extension. Defaults to " + VCF_EXTENSION_DEFAULT);
+        options.addOption(BAF_FILE, true, "BAF file location");
     }
 
     @NotNull
@@ -35,7 +37,9 @@ public class BAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     public BAFSupplier(@NotNull final CommonConfig config, @NotNull final CommandLine cmd)
             throws ParseException, IOException, HartwigException {
-        final String bafFile = TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
+        final String bafFile = cmd.hasOption(BAF_FILE)
+                ? cmd.getOptionValue(BAF_FILE)
+                : TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
         if (new File(bafFile).exists()) {
             LOGGER.info("Reading BAFs from {}", bafFile);
             supplier = new FileSupplier(bafFile);

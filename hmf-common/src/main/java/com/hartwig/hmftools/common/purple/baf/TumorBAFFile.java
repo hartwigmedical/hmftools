@@ -79,7 +79,6 @@ public enum TumorBAFFile {
                 .chromosome(values[0])
                 .position(Long.valueOf(values[1]))
                 .baf(Double.valueOf(values[2]))
-                .mBaf(Double.valueOf(values[3]))
                 .build();
     }
 }

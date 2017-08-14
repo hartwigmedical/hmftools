@@ -37,7 +37,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(1001, 2000, 2));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<PurpleCopyNumber> results =
+        final List<FittedRegion> results =
                 new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(2, results.size());
 
@@ -55,7 +55,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(3001, 4000, 3));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<PurpleCopyNumber> results =
+        final List<FittedRegion> results =
                 new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(3, results.size());
 
@@ -75,7 +75,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(1441, 2000, 2));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<PurpleCopyNumber> results =
+        final List<FittedRegion> results =
                 new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(4, results.size());
 
@@ -93,7 +93,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(3001, 5000, 5));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<PurpleCopyNumber> results =
+        final List<FittedRegion> results =
                 new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(2, results.size());
 
@@ -101,10 +101,10 @@ public class HighConfidenceSmoothedRegionsTest {
         assertRegion(results.get(1), 3001, 5000, 5);
     }
 
-    private void assertRegion(PurpleCopyNumber victim, long expectedStart, long expectedEnd, double expectedCopyNumber) {
+    private void assertRegion(FittedRegion victim, long expectedStart, long expectedEnd, double expectedCopyNumber) {
         assertEquals(expectedStart, victim.start());
         assertEquals(expectedEnd, victim.end());
-        assertEquals(expectedCopyNumber, victim.averageTumorCopyNumber(), EPSILON);
+        assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
     }
 
     private FittedRegion createFittedCopyNumber(long start, long end, double copyNumber) {

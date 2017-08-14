@@ -19,9 +19,11 @@
         <module>patient-db</module>
         <module>break-point-inspector</module>
         <module>purity-ploidy-estimator</module>
+        <module>count-bam-lines</module>
         <module>hmfslicer-builder</module>
         <module>rups-checker</module>
         <module>strelka-post-process</module>
+        <module>patient-report-mailer</module>
     </modules>
 
     <properties>
@@ -46,6 +48,7 @@
         <jfreechart.version>1.0.14</jfreechart.version>
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
         <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
+        <javax.mail.version>1.6.0</javax.mail.version>
 
         <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
@@ -220,6 +223,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-dbcp2</artifactId>
                 <version>${apache.dbcp2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>javax.mail</artifactId>
+                <version>${javax.mail.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

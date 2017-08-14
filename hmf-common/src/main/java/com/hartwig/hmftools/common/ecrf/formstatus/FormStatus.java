@@ -51,11 +51,12 @@ public final class FormStatus {
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines) {
             final String[] parts = splitCsvLine(line, FIELD_SEPARATOR, FIELD_COUNT);
-            if (parts.length == 17) {
+            if (parts.length == FIELD_COUNT) {
                 final FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
                         removeParentheses(removeQuotes(parts[FORM_NAME_COLUMN])), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
                         removeParentheses(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
-                final FormStatusData formStatus = new ImmutableFormStatusData(removeQuotes(parts[DATA_STATUS_COLUMN]), removeQuotes(parts[LOCKED_COLUMN]));
+                final FormStatusData formStatus =
+                        new ImmutableFormStatusData(removeQuotes(parts[DATA_STATUS_COLUMN]), removeQuotes(parts[LOCKED_COLUMN]));
                 formStatuses.put(formKey, formStatus);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in form status csv: " + line);

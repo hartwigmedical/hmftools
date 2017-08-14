@@ -20,21 +20,24 @@ class HighConfidenceRegions {
     @NotNull
     private final PurityAdjuster purityAdjuster;
     @NotNull
-    private final List<PurpleCopyNumber> result = Lists.newArrayList();
+    private final List<FittedRegion> result = Lists.newArrayList();
     @Nullable
-    private HighConfidenceCopyNumberBuilder builder;
+    private CopyNumberBuilder builder;
     @Nullable
     private FittedRegion last;
+    private final double maxDeviation;
 
     HighConfidenceRegions(@NotNull final PurityAdjuster purityAdjuster) {
         this.purityAdjuster = purityAdjuster;
+        maxDeviation = purityAdjuster.purityAdjustedMaxCopyNumberDeviation(MAX_COPY_NUMBER_DEVIATION);
     }
 
     @NotNull
-    List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
-        fittedRegions.stream().filter(
-                copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
-                        && !Doubles.isZero(copyNumber.observedTumorRatio())).forEach(this::process);
+    List<FittedRegion> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
+        fittedRegions.stream()
+                .filter(copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
+                        && !Doubles.isZero(copyNumber.observedTumorRatio()))
+                .forEach(this::process);
 
         endRegion();
         return result;
@@ -43,7 +46,7 @@ class HighConfidenceRegions {
     private void process(@NotNull final FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
-            builder = new HighConfidenceCopyNumberBuilder(purityAdjuster, current);
+            builder = new CopyNumberBuilder(true, purityAdjuster, current);
         } else {
             assert builder != null;
             builder.extendRegion(current);
@@ -59,8 +62,7 @@ class HighConfidenceRegions {
         }
     }
 
-    private static boolean isNewChromosome(@NotNull final FittedRegion current,
-            @Nullable final FittedRegion previous) {
+    private static boolean isNewChromosome(@NotNull final FittedRegion current, @Nullable final FittedRegion previous) {
         return previous != null && !current.chromosome().equals(previous.chromosome());
     }
 
@@ -68,7 +70,7 @@ class HighConfidenceRegions {
         assert builder != null;
 
         double copyNumberDeviation = Math.abs(current.tumorCopyNumber() - builder.averageTumorCopyNumber());
-        if (Doubles.greaterThan(copyNumberDeviation, MAX_COPY_NUMBER_DEVIATION)) {
+        if (Doubles.greaterThan(copyNumberDeviation, maxDeviation)) {
             return true;
         }
 

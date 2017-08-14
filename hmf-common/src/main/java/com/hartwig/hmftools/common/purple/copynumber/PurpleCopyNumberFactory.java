@@ -17,7 +17,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurpleCopyNumberFactory {
 
-    @NotNull private final PurityAdjuster purityAdjuster;
+    @NotNull
+    private final PurityAdjuster purityAdjuster;
 
     private final List<PurpleCopyNumber> highConfidenceRegions;
     private final List<PurpleCopyNumber> smoothedRegions;
@@ -27,23 +28,22 @@ public class PurpleCopyNumberFactory {
         smoothedRegions = Lists.newArrayList();
         highConfidenceRegions = Lists.newArrayList();
 
-        final Set<String> orderedChromosomes = fittedRegions.stream()
-                .map(GenomeRegion::chromosome)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        final Set<String> orderedChromosomes =
+                fittedRegions.stream().map(GenomeRegion::chromosome).collect(Collectors.toCollection(LinkedHashSet::new));
 
         for (String chromosome : orderedChromosomes) {
-            final List<FittedRegion> chromosomeFittedRegions = fittedRegions.stream()
-                    .filter(matchesChromosome(chromosome))
-                    .collect(toList());
+            final List<FittedRegion> chromosomeFittedRegions =
+                    fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
 
-            final List<PurpleCopyNumber> highConfidence = highConfidence(chromosome, chromosomeFittedRegions);
+            final List<PurpleCopyNumber> highConfidence = highConfidence(chromosomeFittedRegions);
             highConfidenceRegions.addAll(highConfidence);
 
-            final List<PurpleCopyNumber> smooth = highConfidence.isEmpty()
+            final List<FittedRegion> smoothFittedRegions = highConfidence.isEmpty()
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
-            smoothedRegions.addAll(RegionStepFilter.filter(smooth));
+            final List<PurpleCopyNumber> copyNumbers = smoothFittedRegions.stream().map(this::create).collect(toList());
+            smoothedRegions.addAll(RegionStepFilter.filter(copyNumbers));
         }
     }
 
@@ -55,8 +55,23 @@ public class PurpleCopyNumberFactory {
         return smoothedRegions;
     }
 
-    private List<PurpleCopyNumber> highConfidence(final String chromosome, @NotNull final List<FittedRegion> fittedRegions) {
-        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions);
+    private List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
+        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions).stream().map(this::create).collect(toList());
+    }
+
+    @NotNull
+    private PurpleCopyNumber create(@NotNull final FittedRegion region) {
+        return ImmutablePurpleCopyNumber.builder()
+                .chromosome(region.chromosome())
+                .start(region.start())
+                .end(region.end())
+                .bafCount(region.bafCount())
+                .averageObservedBAF(region.observedBAF())
+                .averageActualBAF(purityAdjuster.purityAdjustedBAF(region.chromosome(), region.tumorCopyNumber(), region.observedBAF()))
+                .averageTumorCopyNumber(region.tumorCopyNumber())
+                .ratioSupport(region.ratioSupport())
+                .structuralVariantSupport(region.structuralVariantSupport())
+                .build();
     }
 
     @NotNull

@@ -78,6 +78,15 @@ public enum HumanChromosome implements Chromosome {
         return HumanChromosome.valueOf("_" + chromosome);
     }
 
+    public static boolean contains(@NotNull final String chromosome) {
+        try {
+            fromString(chromosome);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     public int intValue() {
         return this.ordinal() + 1;
     }
