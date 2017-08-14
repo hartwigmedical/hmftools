@@ -52,6 +52,20 @@ public class FittedPurityScoreFactory {
         return builder.build();
     }
 
+    public static double polyclonalProproption(@NotNull final Collection<PurpleCopyNumber> regions) {
+        int polyclonalCount = 0;
+        int totalCount = 0;
+
+        for (final PurpleCopyNumber region : regions) {
+            totalCount += region.bafCount();
+            if (isPolyclonal(region.averageTumorCopyNumber())) {
+                polyclonalCount += region.bafCount();
+            }
+        }
+
+        return totalCount == 0 ? 0 : 1d * polyclonalCount / totalCount;
+    }
+
     private static int comparePurity(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
         return Double.compare(o1.purity(), o2.purity());
     }
@@ -71,20 +85,6 @@ public class FittedPurityScoreFactory {
             double relDifference = Math.abs(absDifference / score);
             return lessOrEqual(absDifference, ABS_RANGE) || lessOrEqual(relDifference, PERCENT_RANGE);
         };
-    }
-
-    private static double polyclonalProproption(@NotNull final Collection<PurpleCopyNumber> regions) {
-        int polyclonalCount = 0;
-        int totalCount = 0;
-
-        for (final PurpleCopyNumber region : regions) {
-            totalCount += region.bafCount();
-            if (isPolyclonal(region.averageTumorCopyNumber())) {
-                polyclonalCount += region.bafCount();
-            }
-        }
-
-        return totalCount == 0 ? 0 : 1d * polyclonalCount / totalCount;
     }
 
     @VisibleForTesting

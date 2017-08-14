@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProproption;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
 import java.io.IOException;
@@ -197,7 +198,7 @@ public class PurityPloidyEstimateApplication {
                 .status(bestFitFactory.status())
                 .gender(gender)
                 .score(bestFitFactory.score())
-                .polyClonalProportion(0) //TODO: FIX
+                .polyClonalProportion(polyclonalProproption(smoothRegions))
                 .build();
 
         if (cmd.hasOption(DB_ENABLED)) {
