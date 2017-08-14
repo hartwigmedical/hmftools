@@ -59,7 +59,7 @@ public class GenerateCircosData {
         final String etcOutput = cmd.getOptionValue(OUTPUT_DIR) + File.separator + "etc";
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        LOGGER.info("Loading {} data from database");
+        LOGGER.info("Loading {} data from database", sample);
         final FittedPurity purity = dbAccess.readFittedPurity(sample);
         if (purity == null) {
             LOGGER.error("Purity not available");
@@ -116,8 +116,6 @@ public class GenerateCircosData {
 
         LOGGER.info("Complete Successfully");
     }
-
-
 
     @NotNull
     private static Options createBasicOptions() {
