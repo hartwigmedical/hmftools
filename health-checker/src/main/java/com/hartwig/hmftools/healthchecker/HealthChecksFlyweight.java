@@ -24,8 +24,7 @@ final class HealthChecksFlyweight {
     private static final HealthChecksFlyweight INSTANCE = new HealthChecksFlyweight();
     private static final Reflections BASE = new Reflections("com.hartwig.hmftools.healthchecker");
 
-    private static final Set<Class<? extends ErrorHandlingChecker>> BASE_SET = BASE.getSubTypesOf(
-            ErrorHandlingChecker.class);
+    private static final Set<Class<? extends ErrorHandlingChecker>> BASE_SET = BASE.getSubTypesOf(ErrorHandlingChecker.class);
 
     static {
         BASE_SET.forEach(checker -> {

@@ -89,8 +89,7 @@ public final class HealthChecksApplication {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
@@ -101,8 +100,7 @@ public final class HealthChecksApplication {
 
         final Observable<HealthChecker> checkerObservable = Observable.from(checkers).subscribeOn(Schedulers.io());
 
-        BlockingObservable.from(checkerObservable).subscribe(createHealthCheckerAction(), createErrorHandler(),
-                this::generateReport);
+        BlockingObservable.from(checkerObservable).subscribe(createHealthCheckerAction(), createErrorHandler(), this::generateReport);
     }
 
     @NotNull
@@ -123,9 +121,7 @@ public final class HealthChecksApplication {
             final Report report = HealthCheckReportFactory.create(reportType);
 
             final Optional<String> reportPath = report.generateReport(runContext, reportOutputPath);
-            if (reportPath.isPresent()) {
-                LOGGER.info(String.format("Report generated -> \n%s", reportPath.get()));
-            }
+            reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
         } catch (final GenerateReportException e) {
             LOGGER.log(Level.ERROR, e.getMessage());
         }
