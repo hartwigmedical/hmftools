@@ -115,7 +115,7 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
                 String.valueOf(variantsWithDBSNPAndNotCOSMIC.size()));
         checks.add(dbsnpCheck);
 
-        final HealthCheck proportionCheck = calculateProportion(variantsForType, sampleId, type);
+        final HealthCheck proportionCheck = calculateProportion(variants.size(), variantsForType.size(), sampleId, type);
         checks.add(proportionCheck);
         return checks;
     }
@@ -143,12 +143,11 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
     }
 
     @NotNull
-    private static HealthCheck calculateProportion(@NotNull final List<SomaticVariant> variants, @NotNull final String sampleId,
+    private static HealthCheck calculateProportion(final int variantsSize, final int variantsForTypeSize, @NotNull final String sampleId,
             @NotNull final VariantType type) {
-        final List<SomaticVariant> variantsWithCallerCount = VariantFilter.filter(variants, VariantPredicates.withType(type));
         double proportion = 0D;
-        if (!variantsWithCallerCount.isEmpty() && !variants.isEmpty()) {
-            proportion = (double) variantsWithCallerCount.size() / variants.size();
+        if (variantsSize > 0 && variantsForTypeSize > 0) {
+            proportion = (double) variantsForTypeSize / variantsSize;
         }
         return new HealthCheck(sampleId, SomaticCheck.PROPORTION_CHECK.checkName(type.name()), String.valueOf(proportion));
     }
