@@ -191,6 +191,7 @@ public final class PatientDbRunner {
                 final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(runContext.runDirectory());
                 dbWriter.writeSomaticVariants(runContext.tumorSample(), somaticVariants);
             }
+            LOGGER.info("Done!");
         }
     }
 
