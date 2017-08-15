@@ -64,17 +64,7 @@ public final class VariantPredicates {
     }
 
     @NotNull
-    public static Predicate<SomaticVariant> withCaller(@NotNull final String caller) {
-        return variant -> variant.callers().contains(caller);
-    }
-
-    @NotNull
     public static Predicate<SomaticVariant> withMinCallers(final int count) {
         return variant -> variant.callerCount() >= count;
-    }
-
-    @NotNull
-    public static Predicate<SomaticVariant> withExactCallerCount(final int count) {
-        return variant -> variant.callerCount() == count;
     }
 }
