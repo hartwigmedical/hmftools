@@ -41,7 +41,6 @@ chromosomes                 = -EXCLUDE
 	# Somatic Variants Scatter Plot (Purple)
 	<plot>
 		skip_run = yes
-		min_value_change = 0.1
 
 		type = scatter
 		file = SAMPLE.snp.circos
