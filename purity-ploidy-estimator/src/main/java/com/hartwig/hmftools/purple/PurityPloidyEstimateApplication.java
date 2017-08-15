@@ -116,101 +116,102 @@ public class PurityPloidyEstimateApplication {
         final CommandLine cmd = createCommandLine(options, args);
         final int threads = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
+        try {
+            // JOBA: Get common config
+            final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
+            final CommonConfig config = configSupplier.get();
+            final String outputDirectory = config.outputDirectory();
+            final String tumorSample = config.tumorSample();
 
-        // JOBA: Get common config
-        final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
-        final CommonConfig config = configSupplier.get();
-        final String runDirectory = config.runDirectory();
-        final String outputDirectory = config.outputDirectory();
-        final String tumorSample = config.tumorSample();
+            // JOBA: Load BAFs
+            final BAFSupplier bafSupplier = new BAFSupplier(config, cmd);
+            final Multimap<String, TumorBAF> bafs = bafSupplier.get();
+            final Gender gender = Gender.fromBAFCount(bafs);
+            LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
 
-        // JOBA: Load BAFs
-        final BAFSupplier bafSupplier = new BAFSupplier(config, cmd);
-        final Multimap<String, TumorBAF> bafs = bafSupplier.get();
-        final Gender gender = Gender.fromBAFCount(bafs);
-        LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
+            final RatioSupplier ratioSupplier;
+            final List<GenomeRegion> regions;
+            if (cmd.hasOption(COBALT)) {
+                final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
+                ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
+                final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
+                regions = new PCFSegmentSupplier(executorService, config, lengths).get();
+            } else {
+                final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
+                ratioSupplier = freecRatioSupplier;
+                regions = new FreecSegmentSupplier(freecRatioSupplier).get();
+            }
 
-        final RatioSupplier ratioSupplier;
-        final List<GenomeRegion> regions;
-        if (cmd.hasOption(COBALT)) {
-            final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
-            ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
-            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
-            regions = new PCFSegmentSupplier(executorService, config, lengths).get();
-        } else {
-            final FreecRatioSupplier freecRatioSupplier = new FreecRatioSupplier(config);
-            ratioSupplier = freecRatioSupplier;
-            regions = new FreecSegmentSupplier(freecRatioSupplier).get();
+            LOGGER.info("Merging structural variants into freec segmentation");
+            final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
+            final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
+
+            LOGGER.info("Mapping all observations to the segmented regions");
+            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
+            final List<ObservedRegion> observedRegions =
+                    observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios());
+
+            final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
+            final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
+            final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
+            final FittedRegionFactory fittedRegionFactory =
+                    new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
+
+            LOGGER.info("Fitting purity");
+            final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
+            final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
+            final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
+            final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
+            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                    MAX_PLOIDY,
+                    minPurity,
+                    maxPurity,
+                    PURITY_INCREMENTS,
+                    minNormFactor,
+                    maxNormFactor,
+                    NORM_FACTOR_INCREMENTS,
+                    fittedRegionFactory,
+                    observedRegions);
+
+            final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity());
+            final FittedPurity bestFit = bestFitFactory.bestFit();
+            final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
+
+            final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, bestFit.purity(), bestFit.normFactor());
+            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
+            final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
+            final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
+            final List<GeneCopyNumber> geneCopyNumbers = geneCopyNumbers(smoothRegions);
+            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, smoothRegions);
+
+            final PurityContext purityContext = ImmutablePurityContext.builder()
+                    .bestFit(bestFitFactory.bestFit())
+                    .bestPerPurity(fittedPurityFactory.bestFitPerPurity())
+                    .status(bestFitFactory.status())
+                    .gender(gender)
+                    .score(bestFitFactory.score())
+                    .polyClonalProportion(polyclonalProproption(smoothRegions))
+                    .build();
+
+            if (cmd.hasOption(DB_ENABLED)) {
+                LOGGER.info("Persisting to database");
+                final DatabaseAccess dbAccess = databaseAccess(cmd);
+                dbAccess.writePurity(tumorSample, purityContext);
+                dbAccess.writeCopynumbers(tumorSample, smoothRegions);
+                dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
+                dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+                dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
+            }
+
+            LOGGER.info("Writing to file location: {}", outputDirectory);
+            FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
+            PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
+            FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
+
+        } finally {
+            executorService.shutdown();
         }
-
-        LOGGER.info("Merging structural variants into freec segmentation");
-        final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
-
-        LOGGER.info("Mapping all observations to the segmented regions");
-        final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
-        final List<ObservedRegion> observedRegions =
-                observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios());
-
-        final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
-        final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
-        final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-        final FittedRegionFactory fittedRegionFactory =
-                new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
-
-        LOGGER.info("Fitting purity");
-        final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
-        final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
-        final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
-        final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                MAX_PLOIDY,
-                minPurity,
-                maxPurity,
-                PURITY_INCREMENTS,
-                minNormFactor,
-                maxNormFactor,
-                NORM_FACTOR_INCREMENTS,
-                fittedRegionFactory,
-                observedRegions);
-
-        final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity());
-        final FittedPurity bestFit = bestFitFactory.bestFit();
-        final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
-
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, bestFit.purity(), bestFit.normFactor());
-        final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
-        final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
-        final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
-        final List<GeneCopyNumber> geneCopyNumbers = geneCopyNumbers(smoothRegions);
-        final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, smoothRegions);
-
-        final PurityContext purityContext = ImmutablePurityContext.builder()
-                .bestFit(bestFitFactory.bestFit())
-                .bestPerPurity(fittedPurityFactory.bestFitPerPurity())
-                .status(bestFitFactory.status())
-                .gender(gender)
-                .score(bestFitFactory.score())
-                .polyClonalProportion(polyclonalProproption(smoothRegions))
-                .build();
-
-        if (cmd.hasOption(DB_ENABLED)) {
-            LOGGER.info("Persisting to database");
-            final DatabaseAccess dbAccess = databaseAccess(cmd);
-            dbAccess.writePurity(tumorSample, purityContext);
-            dbAccess.writeCopynumbers(tumorSample, smoothRegions);
-            dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
-            dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
-            dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
-        }
-
-        LOGGER.info("Writing to file location: {}", outputDirectory);
-        FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
-        PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
-        FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
-        GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
-
-        executorService.shutdown();
         LOGGER.info("Complete");
     }
 
