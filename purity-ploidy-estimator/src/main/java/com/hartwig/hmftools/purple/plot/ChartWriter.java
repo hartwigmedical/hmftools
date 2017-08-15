@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -33,10 +34,10 @@ public class ChartWriter {
             @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<EnrichedSomaticVariant> variants) throws IOException {
 
         final List<PurpleCopyNumber> filteredCopyNumber =
-                copyNumbers.stream().filter(x -> !isSexChromosome(x)).filter(x -> x.bafCount() > 0).collect(Collectors.toList());
+                copyNumbers.stream().filter(ChartWriter::isAutosome).filter(x -> x.bafCount() > 0).collect(Collectors.toList());
 
         final List<EnrichedSomaticVariant> filteredSomaticVariants =
-                variants.stream().filter(x -> !isSexChromosome(x)).collect(Collectors.toList());
+                variants.stream().filter(ChartWriter::isAutosome).collect(Collectors.toList());
 
         final String subtitle = subtitle(sample, purity, score);
 
@@ -88,12 +89,12 @@ public class ChartWriter {
         ChartUtilities.saveChartAsPNG(new File(fileName), chart, 500, 300);
     }
 
-    private static boolean isSexChromosome(GenomeRegion region) {
-        return region.chromosome().equals("X") || region.chromosome().equals("Y");
+    private static boolean isAutosome(GenomeRegion region) {
+        return HumanChromosome.contains(region.chromosome()) && HumanChromosome.valueOf(region).isAutosome();
     }
 
-    private static boolean isSexChromosome(GenomePosition region) {
-        return region.chromosome().equals("X") || region.chromosome().equals("Y");
+    private static boolean isAutosome(GenomePosition position) {
+        return HumanChromosome.contains(position.chromosome()) && HumanChromosome.valueOf(position).isAutosome();
     }
 
 }
