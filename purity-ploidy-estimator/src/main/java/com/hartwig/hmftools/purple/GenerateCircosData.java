@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosomes;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
@@ -40,6 +41,7 @@ public class GenerateCircosData {
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateCircosData.class);
 
+    private static final int MAX_SOMATIC_VARIANTS = 40000;
     private static final String OUTPUT_DIR = "output_dir";
     private static final String SAMPLE = "sample";
     private static final String DB_USER = "db_user";
@@ -78,12 +80,12 @@ public class GenerateCircosData {
             System.exit(-1);
         }
 
-        final List<EnrichedSomaticVariant> somaticVariants = dbAccess.readComprehensiveSomaticVariants(sample)
+        final List<EnrichedSomaticVariant> allSomaticVariants = dbAccess.readComprehensiveSomaticVariants(sample)
                 .stream()
                 .filter(x -> x.type() == VariantType.SNP)
                 .filter(x -> Chromosomes.asInt(x.chromosome()) <= 25)
                 .collect(Collectors.toList());
-        if (somaticVariants.isEmpty()) {
+        if (allSomaticVariants.isEmpty()) {
             LOGGER.error("Somatic Variants not available");
             System.exit(-1);
         }
@@ -96,7 +98,8 @@ public class GenerateCircosData {
 
         LOGGER.info("Writing data files");
         final String baseDataOutput = dataOutput + File.separator + sample;
-        CircosFileWriter.writePositions(baseDataOutput + ".snp.circos", somaticVariants, EnrichedSomaticVariant::adjustedVAF);
+        final List<EnrichedSomaticVariant> downsampledSomaticVariants = downsample(allSomaticVariants);
+        CircosFileWriter.writePositions(baseDataOutput + ".snp.circos", downsampledSomaticVariants, EnrichedSomaticVariant::adjustedVAF);
         CircosFileWriter.writeRegions(baseDataOutput + ".cnv.circos", copyNumber, x -> x.averageTumorCopyNumber() - 2);
         CircosFileWriter.writeRegions(baseDataOutput + ".baf.circos", copyNumber, PurpleCopyNumber::averageActualBAF);
 
@@ -112,7 +115,7 @@ public class GenerateCircosData {
         Files.write(new File(circosConfigOutput).toPath(), content.getBytes(charset));
 
         LOGGER.info("Writing QC plots");
-        new ChartWriter(sample, plotOutput).write(purity, purityscore, copyNumber, somaticVariants);
+        new ChartWriter(sample, plotOutput).write(purity, purityscore, copyNumber, allSomaticVariants);
 
         LOGGER.info("Complete Successfully");
     }
@@ -140,5 +143,21 @@ public class GenerateCircosData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
         final String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
+    }
+
+    private List<EnrichedSomaticVariant> downsample(List<EnrichedSomaticVariant> variants) {
+        if (variants.size() <= MAX_SOMATIC_VARIANTS) {
+            return variants;
+        }
+
+        long scale = Math.round(Math.ceil(1.0 * variants.size() / MAX_SOMATIC_VARIANTS));
+        final List<EnrichedSomaticVariant> result = Lists.newArrayList();
+        for (int i = 0; i < variants.size(); i++) {
+            if (i % scale == 0) {
+                result.add(variants.get(i));
+            }
+        }
+
+        return result;
     }
 }
