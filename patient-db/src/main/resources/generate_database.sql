@@ -91,8 +91,7 @@ CREATE TABLE somaticVariant
     alleleReadCount int NOT NULL,
     totalReadCount int NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (sampleId) REFERENCES sample(sampleId),
-    FOREIGN KEY (patientId) references patient(id)
+    FOREIGN KEY (sampleId) REFERENCES sample(sampleId)
 );
 
 DROP TABLE IF EXISTS comprehensiveSomaticVariant;
