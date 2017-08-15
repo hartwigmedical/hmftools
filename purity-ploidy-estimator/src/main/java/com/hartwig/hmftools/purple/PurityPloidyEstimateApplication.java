@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.baf.TumorBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -45,13 +44,12 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CommonConfig;
-import com.hartwig.hmftools.purple.config.CommonConfigSupplier;
+import com.hartwig.hmftools.purple.config.ConfigSupplier;
+import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.ratio.FreecRatioSupplier;
 import com.hartwig.hmftools.purple.ratio.RatioSupplier;
@@ -100,16 +98,10 @@ public class PurityPloidyEstimateApplication {
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
-    private static final String STRUCTURAL_VCF_EXTENSION = "structural_variant_extension";
-    private static final String STRUCTURAL_VCF_EXTENSION_DEFAULT = "somaticSV.vcf.gz";
-
     private static final String PLOIDY_PENALTY_EXPERIMENT = "ploidy_penalty_experiment";
 
-    private static final String NO_STRUCTURAL_VARIANTS = "no_sv";
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
-
-    private static final String SOMATIC_VARIANT_FILE = "somatic_variants";
 
     public static void main(final String... args)
             throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
@@ -126,7 +118,8 @@ public class PurityPloidyEstimateApplication {
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
         // JOBA: Get common config
-        final CommonConfig config = new CommonConfigSupplier(cmd, options).get();
+        final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
+        final CommonConfig config = configSupplier.get();
         final String runDirectory = config.runDirectory();
         final String outputDirectory = config.outputDirectory();
         final String tumorSample = config.tumorSample();
@@ -151,7 +144,7 @@ public class PurityPloidyEstimateApplication {
         }
 
         LOGGER.info("Merging structural variants into freec segmentation");
-        final List<StructuralVariant> structuralVariants = structuralVariants(cmd, runDirectory);
+        final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
         final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
         LOGGER.info("Mapping all observations to the segmented regions");
@@ -222,26 +215,14 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private List<StructuralVariant> structuralVariants(final CommandLine cmd, final String runDirectory) throws IOException {
-        if (cmd.hasOption(NO_STRUCTURAL_VARIANTS)) {
+    private List<StructuralVariant> structuralVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
+        final StructuralVariantConfig config = configSupplier.structuralVariantConfig();
+        if (config.file().isPresent()) {
+            final String filePath = config.file().get().toString();
+            LOGGER.info("Loading structural variants from {}", filePath);
+            return StructuralVariantFileLoader.fromFile(filePath);
+        } else {
             LOGGER.info("Structural variants support disabled.");
-            return Collections.emptyList();
-        } else {
-            final String structuralVariantExtension = defaultValue(cmd, STRUCTURAL_VCF_EXTENSION, STRUCTURAL_VCF_EXTENSION_DEFAULT);
-            final String structuralVariantFile = PathExtensionFinder.build().findPath(runDirectory, structuralVariantExtension).toString();
-            LOGGER.info("Loading structural variants from {}", structuralVariantFile);
-            return StructuralVariantFileLoader.fromFile(structuralVariantFile);
-        }
-    }
-
-    @NotNull
-    private List<SomaticVariant> somaticVariants(final CommandLine cmd) throws IOException, HartwigException {
-        if (cmd.hasOption(SOMATIC_VARIANT_FILE)) {
-            LOGGER.info("Reading somatic VCF File");
-            // TODO: PASS AND
-            return VCFFileLoader.loadSomaticVCF(cmd.getOptionValue(SOMATIC_VARIANT_FILE)).variants();
-        } else {
-            LOGGER.info("Somatic variant support disabled");
             return Collections.emptyList();
         }
     }
@@ -270,10 +251,9 @@ public class PurityPloidyEstimateApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        CommonConfigSupplier.addOptions(options);
+        ConfigSupplier.addOptions(options);
         BAFSupplier.addOptions(options);
 
-        options.addOption(NO_STRUCTURAL_VARIANTS, false, "Disable structural variant support.");
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
         options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling.");
