@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.config;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
@@ -18,7 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CommonConfigSupplier implements Supplier<CommonConfig> {
+public class ConfigSupplier implements Supplier<CommonConfig> {
 
     private static final Logger LOGGER = LogManager.getLogger(CommonConfig.class);
 
@@ -30,6 +31,9 @@ public class CommonConfigSupplier implements Supplier<CommonConfig> {
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
 
+    private static final String STRUCTURAL_VARIANTS = "structural_vcf";
+    private static final String SOMATIC_VARIANTS = "somatic_vcf";
+
     public static void addOptions(Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
         options.addOption(TUMOR_SAMPLE, true, "The tumor sample name. Defaults to value in metadata.");
@@ -37,15 +41,19 @@ public class CommonConfigSupplier implements Supplier<CommonConfig> {
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
         options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to run_dir/copyNumber/refSample_tumorSample/freec/");
         options.addOption(FORCE, false, "Force recalculation of data. Do not use cached results");
+
+        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation.");
+        options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
     }
 
-    private final CommonConfig config;
+    private final CommonConfig commonConfig;
+    private final SomaticConfig somaticConfig;
+    private final StructuralVariantConfig structuralVariantConfig;
 
-    public CommonConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
+    public ConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         if (runDirectory == null) {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Purity Ploidy Estimator (PURPLE)", opt);
+            printHelp(opt);
             throw new ParseException(RUN_DIRECTORY + " is a mandatory argument");
         }
 
@@ -62,11 +70,28 @@ public class CommonConfigSupplier implements Supplier<CommonConfig> {
 
         final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        config = new CommonConfig(refSample, tumorSample, outputDirectory, runDirectory, freecDirectory, cmd.hasOption(FORCE));
+        commonConfig = new CommonConfig(refSample, tumorSample, outputDirectory, runDirectory, freecDirectory, cmd.hasOption(FORCE));
 
-        LOGGER.info("Reference Sample: {}, Tumor Sample: {}", config.refSample(), config.tumorSample());
-        LOGGER.info("Run Directory: {}", config.runDirectory());
-        LOGGER.info("Output Directory: {}", config.outputDirectory());
+        LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
+        LOGGER.info("Run Directory: {}", commonConfig.runDirectory());
+        LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
+
+        somaticConfig = createSomaticConfig(cmd, opt);
+        structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
+
+    }
+
+    @Override
+    public CommonConfig get() {
+        return commonConfig;
+    }
+
+    public SomaticConfig somaticConfig() {
+        return somaticConfig;
+    }
+
+    public StructuralVariantConfig structuralVariantConfig() {
+        return structuralVariantConfig;
     }
 
     @NotNull
@@ -77,8 +102,47 @@ public class CommonConfigSupplier implements Supplier<CommonConfig> {
                 : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
     }
 
-    @Override
-    public CommonConfig get() {
-        return config;
+    @NotNull
+    private static SomaticConfig createSomaticConfig(CommandLine cmd, Options opt) throws ParseException {
+
+        final Optional<File> file;
+        if (cmd.hasOption(SOMATIC_VARIANTS)) {
+            final String somaticFilename = cmd.getOptionValue(SOMATIC_VARIANTS);
+            final File somaticFile = new File(somaticFilename);
+            if (!somaticFile.exists()) {
+                printHelp(opt);
+                throw new ParseException("Unable to read somatic variants from: " + somaticFilename);
+            }
+            file = Optional.of(somaticFile);
+        } else {
+            file = Optional.empty();
+        }
+
+        return ImmutableSomaticConfig.builder().file(file).build();
     }
+
+    @NotNull
+    private static StructuralVariantConfig createStructuralVariantConfig(CommandLine cmd, Options opt) throws ParseException {
+
+        final Optional<File> file;
+        if (cmd.hasOption(STRUCTURAL_VARIANTS)) {
+            final String somaticFilename = cmd.getOptionValue(STRUCTURAL_VARIANTS);
+            final File somaticFile = new File(somaticFilename);
+            if (!somaticFile.exists()) {
+                printHelp(opt);
+                throw new ParseException("Unable to read structural variants from: " + somaticFilename);
+            }
+            file = Optional.of(somaticFile);
+        } else {
+            file = Optional.empty();
+        }
+
+        return ImmutableStructuralVariantConfig.builder().file(file).build();
+    }
+
+    private static void printHelp(Options opt) {
+        final HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("Purity Ploidy Estimator (PURPLE)", opt);
+    }
+
 }
