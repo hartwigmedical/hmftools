@@ -51,6 +51,7 @@ public class LoadSomaticVariants {
 
         LOGGER.info("Reading somatic VCF File");
         final VCFSomaticFile vcfFile = VCFFileLoader.loadSomaticVCF(vcfFileLocation);
+        final String sample = vcfFile.sample();
 
         LOGGER.info("Reading high confidence bed file");
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(bedFileLocation);
@@ -59,7 +60,7 @@ public class LoadSomaticVariants {
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
         LOGGER.info("Querying purple database");
-        final FittedPurity fittedPurity = dbAccess.readFittedPurity(vcfFile.sample());
+        final FittedPurity fittedPurity = dbAccess.readFittedPurity(sample);
         if (fittedPurity == null) {
             LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }
@@ -67,7 +68,7 @@ public class LoadSomaticVariants {
         final double normFactor = fittedPurity == null ? 1 : fittedPurity.normFactor();
 
         final Multimap<String, PurpleCopyNumber> copyNumbers =
-                Multimaps.index(dbAccess.readCopynumbers(vcfFile.sample()), PurpleCopyNumber::chromosome);
+                Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
 
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
@@ -75,7 +76,7 @@ public class LoadSomaticVariants {
         final List<EnrichedSomaticVariant> variants = enrichedSomaticVariantFactory.enrich(vcfFile.variants());
 
         LOGGER.info("Persisting variants to database");
-        dbAccess.writeComprehensiveSomaticVariants(vcfFile.sample(), variants);
+        dbAccess.writeComprehensiveSomaticVariants(sample, variants);
 
         LOGGER.info("Complete");
     }
