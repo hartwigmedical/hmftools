@@ -83,7 +83,6 @@ DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id int NOT NULL AUTO_INCREMENT,
     sampleId varchar(20) NOT NULL,
-    patientId int NOT NULL,
     gene varchar(255) NOT NULL,
     position varchar(255) NOT NULL,
     ref varchar(255) NOT NULL,

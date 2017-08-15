@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.sql.Connection;
@@ -8,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -26,7 +26,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.Record;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
@@ -126,28 +125,22 @@ public class DatabaseAccess {
         clinicalDAO.clear();
     }
 
+    public void clearSomaticTables() {
+        context.truncate(SOMATICVARIANT).execute();
+    }
+
     public void writeClinicalData(@NotNull final Patient patient) {
         clinicalDAO.writeClinicalData(patient);
     }
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull final List<SomaticVariantData> somaticVariants) {
-        final Record sampleRecord = context.select(SAMPLE.PATIENTID).from(SAMPLE).where(SAMPLE.SAMPLEID.eq(sampleId)).fetchOne();
-        if (sampleRecord != null) {
-            final int patientId = sampleRecord.getValue(SAMPLE.PATIENTID);
-            somaticVariants.forEach(somaticVariantData -> writeSomaticVariantData(patientId, sampleId, somaticVariantData));
-        } else {
-            LOGGER.warn(sampleId + ": was not found in table " + SAMPLE.getName());
-        }
-    }
-
-    private void writeSomaticVariantData(final int patientId, @NotNull final String sampleId,
-            @NotNull final SomaticVariantData somaticVariant) {
-        context.insertInto(SOMATICVARIANT, SOMATICVARIANT.SAMPLEID, SOMATICVARIANT.PATIENTID, SOMATICVARIANT.GENE, SOMATICVARIANT.POSITION,
-                SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.COSMICID, SOMATICVARIANT.TOTALREADCOUNT,
-                SOMATICVARIANT.ALLELEREADCOUNT)
-                .values(sampleId, patientId, somaticVariant.gene(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
-                        somaticVariant.cosmicID(), somaticVariant.totalReadCount(), somaticVariant.alleleReadCount())
-                .execute();
+        context.batch(somaticVariants.stream()
+                .map(somaticVariant -> context.insertInto(SOMATICVARIANT, SOMATICVARIANT.SAMPLEID, SOMATICVARIANT.GENE,
+                        SOMATICVARIANT.POSITION, SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.COSMICID,
+                        SOMATICVARIANT.TOTALREADCOUNT, SOMATICVARIANT.ALLELEREADCOUNT)
+                        .values(sampleId, somaticVariant.gene(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
+                                somaticVariant.cosmicID(), somaticVariant.totalReadCount(), somaticVariant.alleleReadCount()))
+                .collect(Collectors.toList())).execute();
     }
 
     public void writeEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {

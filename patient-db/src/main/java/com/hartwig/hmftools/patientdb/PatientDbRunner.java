@@ -182,6 +182,7 @@ public final class PatientDbRunner {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db -" + SOMATIC, somaticOptions);
         } else {
+            dbWriter.clearSomaticTables();
             final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
             final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
             final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
