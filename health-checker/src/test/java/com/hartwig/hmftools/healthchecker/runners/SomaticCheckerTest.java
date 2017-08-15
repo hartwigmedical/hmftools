@@ -9,11 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.variant.SomaticVariantConstants;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
@@ -27,25 +26,22 @@ import org.junit.Test;
 public class SomaticCheckerTest {
 
     private static final double EPSILON = 1.0e-4;
-    private static final int EXPECTED_NUM_CHECKS = 48;
+    private static final int EXPECTED_NUM_CHECKS = 9;
 
-    private static final String RUN_DIRECTORY =
-            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run";
+    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run";
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 
-    private static final String MINIMAL_RUN_DIRECTORY =
-            RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run2";
+    private static final String MINIMAL_RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run2";
     private static final String MINIMAL_REF_SAMPLE = "sample3";
     private static final String MINIMAL_TUMOR_SAMPLE = "sample4";
 
+    private static final String AF_RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "af_test";
+    private static final String AF_REF_SAMPLE = "sample1";
+    private static final String AF_TUMOR_SAMPLE = "sample2";
+
     private static final String INDELS = VariantType.INDEL.toString();
     private static final String SNP = VariantType.SNP.toString();
-
-    private static final String MUTECT = SomaticVariantConstants.MUTECT.toUpperCase();
-    private static final String FREEBAYES = SomaticVariantConstants.FREEBAYES.toUpperCase();
-    private static final String STRELKA = SomaticVariantConstants.STRELKA.toUpperCase();
-    private static final String VARSCAN = SomaticVariantConstants.VARSCAN.toUpperCase();
 
     private final SomaticChecker checker = new SomaticChecker();
 
@@ -61,60 +57,12 @@ public class SomaticCheckerTest {
 
         assertCheck(checks, SomaticCheck.COUNT_TOTAL.checkName(SNP), 987);
         assertCheck(checks, SomaticCheck.DBSNP_COUNT.checkName(SNP), 819);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(SNP, MUTECT), 737);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(SNP, FREEBAYES), 205);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(SNP, VARSCAN), 655);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(SNP, STRELKA), 758);
 
         assertCheck(checks, SomaticCheck.COUNT_TOTAL.checkName(INDELS), 67);
         assertCheck(checks, SomaticCheck.DBSNP_COUNT.checkName(INDELS), 42);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(INDELS, MUTECT), 0);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(INDELS, FREEBAYES), 11);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(INDELS, VARSCAN), 58);
-        assertCheck(checks, SomaticCheck.COUNT_PER_CALLER.checkName(INDELS, STRELKA), 23);
 
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(SNP, MUTECT), 0.9137);
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(INDELS, MUTECT), 0.0);
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(SNP, FREEBAYES), 0.1655);
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(INDELS, FREEBAYES), 0.1904);
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(SNP, VARSCAN), 0.8539);
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(INDELS, VARSCAN), 1.0);
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(SNP, STRELKA), 0.9694);
-        assertCheck(checks, SomaticCheck.SENSITIVITY_CHECK.checkName(INDELS, STRELKA), 1.0);
-
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(SNP, MUTECT), 0.8914);
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(INDELS, MUTECT), 0.0);
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(SNP, FREEBAYES), 0.5804);
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(INDELS, FREEBAYES), 0.3636);
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(SNP, VARSCAN), 0.9374);
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(INDELS, VARSCAN), 0.3620);
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(SNP, STRELKA), 0.9195);
-        assertCheck(checks, SomaticCheck.PRECISION_CHECK.checkName(INDELS, STRELKA), 0.9130);
-
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(SNP, "1"), 0.2715);
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(INDELS, "1"), 0.6865);
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(SNP, "2"), 0.1590);
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(INDELS, "2"), 0.2537);
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(SNP, "3"), 0.4812);
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(INDELS, "3"), 0.0597);
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(SNP, "4"), 0.08814);
-        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(INDELS, "4"), 0.0);
-
-        assertCheck(checks, SomaticCheck.AF_LOWER_SD.checkName(MUTECT), 0.1075);
-        assertCheck(checks, SomaticCheck.AF_MEDIAN.checkName(MUTECT), 0.1578);
-        assertCheck(checks, SomaticCheck.AF_UPPER_SD.checkName(MUTECT), 0.2253);
-
-        assertCheck(checks, SomaticCheck.AF_LOWER_SD.checkName(FREEBAYES), 0.2143);
-        assertCheck(checks, SomaticCheck.AF_MEDIAN.checkName(FREEBAYES), 0.2571);
-        assertCheck(checks, SomaticCheck.AF_UPPER_SD.checkName(FREEBAYES), 0.3333);
-
-        assertCheck(checks, SomaticCheck.AF_LOWER_SD.checkName(VARSCAN), 0.128);
-        assertCheck(checks, SomaticCheck.AF_MEDIAN.checkName(VARSCAN), 0.1651);
-        assertCheck(checks, SomaticCheck.AF_UPPER_SD.checkName(VARSCAN), 0.243);
-
-        assertCheck(checks, SomaticCheck.AF_LOWER_SD.checkName(STRELKA), 0.1136);
-        assertCheck(checks, SomaticCheck.AF_MEDIAN.checkName(STRELKA), 0.1627);
-        assertCheck(checks, SomaticCheck.AF_UPPER_SD.checkName(STRELKA), 0.2381);
+        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(SNP), 0.93643);
+        assertCheck(checks, SomaticCheck.PROPORTION_CHECK.checkName(INDELS), 0.06356);
     }
 
     @Test
@@ -140,10 +88,19 @@ public class SomaticCheckerTest {
 
     @Test
     public void canAnalyseMinimalVCF() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE,
-                MINIMAL_TUMOR_SAMPLE);
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(MINIMAL_RUN_DIRECTORY, MINIMAL_REF_SAMPLE, MINIMAL_TUMOR_SAMPLE);
         final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
         assertEquals(EXPECTED_NUM_CHECKS, result.getChecks().size());
+    }
+
+    @Test
+    public void canDetermineAFs() throws IOException, HartwigException {
+        final RunContext runContext = TestRunContextFactory.forSomaticTest(AF_RUN_DIRECTORY, AF_REF_SAMPLE, AF_TUMOR_SAMPLE);
+        final MultiValueResult result = (MultiValueResult) checker.tryRun(runContext);
+        final List<HealthCheck> checks = result.getChecks();
+        assertCheck(checks, SomaticCheck.AF_LOWER_SD.checkName(), 0.1);
+        assertCheck(checks, SomaticCheck.AF_MEDIAN.checkName(), 0.5);
+        assertCheck(checks, SomaticCheck.AF_UPPER_SD.checkName(), 0.9);
     }
 
     @NotNull
@@ -167,10 +124,8 @@ public class SomaticCheckerTest {
         assertEquals(normalCheckNames, errorCheckNames);
     }
 
-    private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String checkName,
-            final double expectedValue) {
-        final Optional<HealthCheck> report = checks.stream().filter(
-                data -> data.getCheckName().equals(checkName)).findFirst();
+    private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String checkName, final double expectedValue) {
+        final Optional<HealthCheck> report = checks.stream().filter(data -> data.getCheckName().equals(checkName)).findFirst();
 
         assert report.isPresent();
         final String check = report.get().getValue();
