@@ -80,18 +80,6 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
                         HealthCheckConstants.ERROR_VALUE));
                 checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.DBSNP_COUNT.checkName(type.name()),
                         HealthCheckConstants.ERROR_VALUE));
-                checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream()
-                        .map(caller -> new HealthCheck(runContext.tumorSample(),
-                                SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller), HealthCheckConstants.ERROR_VALUE))
-                        .collect(Collectors.toList()));
-                checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream()
-                        .map(caller -> new HealthCheck(runContext.tumorSample(),
-                                SomaticCheck.PRECISION_CHECK.checkName(type.name(), caller), HealthCheckConstants.ERROR_VALUE))
-                        .collect(Collectors.toList()));
-                checks.addAll(SomaticVariantConstants.ALL_CALLERS.stream()
-                        .map(caller -> new HealthCheck(runContext.tumorSample(),
-                                SomaticCheck.SENSITIVITY_CHECK.checkName(type.name(), caller), HealthCheckConstants.ERROR_VALUE))
-                        .collect(Collectors.toList()));
                 checks.add(new HealthCheck(runContext.tumorSample(), SomaticCheck.PROPORTION_CHECK.checkName(type.name()),
                         HealthCheckConstants.ERROR_VALUE));
             }
@@ -133,22 +121,6 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
                 String.valueOf(variantsWithDBSNPAndNotCOSMIC.size()));
         checks.add(dbsnpCheck);
 
-        for (final String caller : SomaticVariantConstants.ALL_CALLERS) {
-            List<SomaticVariant> callsPerCaller = VariantFilter.filter(variantsForType, VariantPredicates.withCaller(caller));
-            checks.add(new HealthCheck(sampleId, SomaticCheck.COUNT_PER_CALLER.checkName(type.name(), caller),
-                    String.valueOf(callsPerCaller.size())));
-        }
-
-        final List<HealthCheck> precisionChecks = SomaticVariantConstants.ALL_CALLERS.stream()
-                .map(caller -> calculatePrecision(variantsForType, sampleId, type, caller))
-                .collect(Collectors.toList());
-        checks.addAll(precisionChecks);
-
-        final List<HealthCheck> sensitivityChecks = SomaticVariantConstants.ALL_CALLERS.stream()
-                .map(caller -> calculateSensitivity(variantsForType, sampleId, type, caller))
-                .collect(Collectors.toList());
-        checks.addAll(sensitivityChecks);
-
         final HealthCheck proportionCheck = calculateProportion(variantsForType, sampleId, type);
         checks.add(proportionCheck);
         return checks;
@@ -181,34 +153,6 @@ public class SomaticChecker extends ErrorHandlingChecker implements HealthChecke
             }
         }
         return checks;
-    }
-
-    @NotNull
-    private static HealthCheck calculatePrecision(@NotNull final List<SomaticVariant> variants, @NotNull final String sampleId,
-            @NotNull final VariantType type, @NotNull final String caller) {
-        final List<SomaticVariant> variantsForCaller = VariantFilter.filter(variants, VariantPredicates.withCaller(caller));
-        final List<SomaticVariant> variantsForCallerWithMoreThanOneCaller =
-                VariantFilter.filter(variantsForCaller, VariantPredicates.withMinCallers(2));
-
-        double precision = 0D;
-        if (!variantsForCallerWithMoreThanOneCaller.isEmpty() && !variantsForCaller.isEmpty()) {
-            precision = (double) variantsForCallerWithMoreThanOneCaller.size() / variantsForCaller.size();
-        }
-        return new HealthCheck(sampleId, SomaticCheck.PRECISION_CHECK.checkName(type.name(), caller), String.valueOf(precision));
-    }
-
-    @NotNull
-    private static HealthCheck calculateSensitivity(@NotNull final List<SomaticVariant> variants, @NotNull final String sampleId,
-            @NotNull final VariantType type, @NotNull final String caller) {
-        final List<SomaticVariant> variantsWithMoreThanOneCaller = VariantFilter.filter(variants, VariantPredicates.withMinCallers(2));
-        final List<SomaticVariant> variantsForCallerWithMoreThanOneCaller =
-                VariantFilter.filter(variantsWithMoreThanOneCaller, VariantPredicates.withCaller(caller));
-
-        double sensitivity = 0D;
-        if (!variantsForCallerWithMoreThanOneCaller.isEmpty() && !variantsWithMoreThanOneCaller.isEmpty()) {
-            sensitivity = (double) variantsForCallerWithMoreThanOneCaller.size() / variantsWithMoreThanOneCaller.size();
-        }
-        return new HealthCheck(sampleId, SomaticCheck.SENSITIVITY_CHECK.checkName(type.name(), caller), String.valueOf(sensitivity));
     }
 
     @NotNull
