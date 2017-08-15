@@ -78,7 +78,14 @@ class Analysis {
                     Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(ctx.MantaBP1) && Location.fromSAMRecord(pair.getRight())
                             .sameChromosomeAs(ctx.MantaBP2);
 
-            boolean support = correctOrientation && correctChromosome;
+            final boolean leftCorrectPosition = ctx.OrientationBP1 > 0
+                    ? breakpoints.getLeft().Position - pair.getLeft().getAlignmentEnd() < 200
+                    : pair.getLeft().getAlignmentStart() - breakpoints.getLeft().Position < 200;
+            final boolean rightCorrectPosition = ctx.OrientationBP2 > 0
+                    ? breakpoints.getRight().Position - pair.getRight().getAlignmentEnd() < 200
+                    : pair.getRight().getAlignmentStart() - breakpoints.getRight().Position < 200;
+
+            boolean support = correctOrientation && correctChromosome && leftCorrectPosition && rightCorrectPosition;
             if (support) {
 
                 final int left_outer = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 > 0).compareTo(breakpoints.getLeft());
