@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.PatientReport;
@@ -96,6 +97,10 @@ public class PatientReporter {
 
         LOGGER.info(" Loading purity numbers...");
         final PurityContext context = PatientReporterHelper.loadPurity(runDirectory, sample);
+        if (context.status().equals(FittedPurityStatus.NO_TUMOR)) {
+            LOGGER.warn("PURPLE DID NOT DETECT A TUMOR. Proceed with utmost caution!");
+        }
+
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore purityScore = context.score();
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
