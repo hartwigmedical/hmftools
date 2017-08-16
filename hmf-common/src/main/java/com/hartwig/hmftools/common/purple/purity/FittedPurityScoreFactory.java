@@ -43,10 +43,10 @@ public class FittedPurityScoreFactory {
             withinRange.stream().min(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.minPurity(x.purity()));
             withinRange.stream()
                     .max(FittedPurityScoreFactory::compareDiploidProportion)
-                    .ifPresent(x -> builder.maxDiploidProportion(x.purity()));
+                    .ifPresent(x -> builder.maxDiploidProportion(x.diploidProportion()));
             withinRange.stream()
                     .min(FittedPurityScoreFactory::compareDiploidProportion)
-                    .ifPresent(x -> builder.minDiploidProportion(x.purity()));
+                    .ifPresent(x -> builder.minDiploidProportion(x.diploidProportion()));
         }
 
         return builder.build();
