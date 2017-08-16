@@ -77,8 +77,14 @@ public class ConfigSupplier implements Supplier<CommonConfig> {
         LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
 
         somaticConfig = createSomaticConfig(cmd, opt);
-        structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
+        if (!somaticConfig.file().isPresent()) {
+            LOGGER.info("No somatic vcf supplied");
+        }
 
+        structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
+        if (!structuralVariantConfig.file().isPresent()) {
+            LOGGER.info("No structural vcf supplied");
+        }
     }
 
     @Override
