@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.GermlineSampleData;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileStreamer;
-import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
@@ -29,9 +28,7 @@ import org.jetbrains.annotations.NotNull;
 public class GermlineChecker extends ErrorHandlingChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineChecker.class);
-
-    private static final String GERMLINE_VCF_EXTENSION_V1_9 = "_GoNLv5.vcf";
-    private static final String GERMLINE_VCF_EXTENSION_V1_10 = ".annotated.vcf";
+    private static final String GERMLINE_VCF_EXTENSION = ".annotated.vcf";
 
     private static final List<VariantType> TYPES_TO_INCLUDE = Lists.newArrayList(VariantType.SNP, VariantType.INDEL);
     private static final String HETEROZYGOUS_GENOTYPE = "0/1";
@@ -83,8 +80,7 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     @Override
     public BaseResult errorRun(@NotNull final RunContext runContext) {
         if (runContext.isSomaticRun()) {
-            return toPatientResult(getErrorChecksForSample(runContext.refSample()),
-                    getErrorChecksForSample(runContext.tumorSample()));
+            return toPatientResult(getErrorChecksForSample(runContext.refSample()), getErrorChecksForSample(runContext.tumorSample()));
         } else {
             return toMultiValueResult(getErrorChecksForSample(runContext.refSample()));
         }
@@ -102,11 +98,7 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static BufferedReader openReader(@NotNull final String runDirectory) throws IOException, HartwigException {
-        try {
-            return VCFFileStreamer.getVCFReader(runDirectory, GERMLINE_VCF_EXTENSION_V1_10);
-        } catch (FileNotFoundException exception) {
-            return VCFFileStreamer.getVCFReader(runDirectory, GERMLINE_VCF_EXTENSION_V1_9);
-        }
+        return VCFFileStreamer.getVCFReader(runDirectory, GERMLINE_VCF_EXTENSION);
     }
 
     private static void updateStats(@NotNull final GermlineStats stats, @NotNull final VariantType type,
@@ -131,12 +123,9 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static List<HealthCheck> buildChecks(@NotNull final String sample, @NotNull final GermlineStats stats) {
-        return Lists.newArrayList(
-                new HealthCheck(sample, GermlineCheck.GERMLINE_SNP_COUNT.toString(), Long.toString(stats.snpCount)),
-                new HealthCheck(sample, GermlineCheck.GERMLINE_INDEL_COUNT.toString(),
-                        Long.toString(stats.indelCount)),
-                new HealthCheck(sample, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT.toString(),
-                        Long.toString(stats.heterozygousCount)),
+        return Lists.newArrayList(new HealthCheck(sample, GermlineCheck.GERMLINE_SNP_COUNT.toString(), Long.toString(stats.snpCount)),
+                new HealthCheck(sample, GermlineCheck.GERMLINE_INDEL_COUNT.toString(), Long.toString(stats.indelCount)),
+                new HealthCheck(sample, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT.toString(), Long.toString(stats.heterozygousCount)),
                 new HealthCheck(sample, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF.toString(),
                         Long.toString(stats.heterozygousCountAbove50VAF)),
                 new HealthCheck(sample, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF.toString(),
@@ -144,8 +133,7 @@ public class GermlineChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private BaseResult toPatientResult(@NotNull final List<HealthCheck> refChecks,
-            @NotNull final List<HealthCheck> tumorChecks) {
+    private BaseResult toPatientResult(@NotNull final List<HealthCheck> refChecks, @NotNull final List<HealthCheck> tumorChecks) {
         HealthCheck.log(LOGGER, refChecks);
         HealthCheck.log(LOGGER, tumorChecks);
 

@@ -7,9 +7,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
@@ -23,8 +23,6 @@ public class GermlineCheckerTest {
 
     private static final String BASE_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("variants");
     private static final String RUN_DIRECTORY = BASE_DIRECTORY + File.separator + "run";
-    private static final String RUN_DIRECTORY_V1_10 = BASE_DIRECTORY + File.separator + "run_v1_10";
-    private static final String RUN_DIRECTORY_V1_9 = BASE_DIRECTORY + File.separator + "run_v1_9";
     private static final String SINGLE_SAMPLE_RUN = BASE_DIRECTORY + File.separator + "single_sample_run";
 
     private static final String SINGLE_SAMPLE = "sample";
@@ -60,9 +58,8 @@ public class GermlineCheckerTest {
 
         assertEquals(CheckType.GERMLINE, result.getCheckType());
         final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
-        assertChecks(checks, EXPECTED_SINGLE_SAMPLE_SNPS, EXPECTED_SINGLE_SAMPLE_INDELS,
-                EXPECTED_SINGLE_SAMPLE_HETEROZYGOUS_COUNT, EXPECTED_SINGLE_SAMPLE_HETEROZYGOUS_COUNT_ABOVE_50,
-                EXPECTED_SINGLE_SAMPLE_HETEROZYGOUS_COUNT_BELOW_50);
+        assertChecks(checks, EXPECTED_SINGLE_SAMPLE_SNPS, EXPECTED_SINGLE_SAMPLE_INDELS, EXPECTED_SINGLE_SAMPLE_HETEROZYGOUS_COUNT,
+                EXPECTED_SINGLE_SAMPLE_HETEROZYGOUS_COUNT_ABOVE_50, EXPECTED_SINGLE_SAMPLE_HETEROZYGOUS_COUNT_BELOW_50);
     }
 
     @Test
@@ -81,31 +78,6 @@ public class GermlineCheckerTest {
     }
 
     @Test
-    public void canCountSNPAndIndels_V1_10() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_V1_10, REF_SAMPLE,
-                TUMOR_SAMPLE);
-        final PatientResult result = (PatientResult) checker.tryRun(runContext);
-
-        assertEquals(CheckType.GERMLINE, result.getCheckType());
-        final List<HealthCheck> refChecks = result.getRefSampleChecks();
-        final List<HealthCheck> tumorChecks = result.getTumorSampleChecks();
-
-        assertChecks(refChecks, EXPECTED_REF_SNPS, EXPECTED_REF_INDELS, EXPECTED_REF_HETEROZYGOUS_COUNT,
-                EXPECTED_REF_HETEROZYGOUS_COUNT_ABOVE_50, EXPECTED_REF_HETEROZYGOUS_COUNT_BELOW_50);
-        assertChecks(tumorChecks, EXPECTED_TUMOR_SNPS, EXPECTED_TUMOR_INDELS, EXPECTED_TUMOR_HETEROZYGOUS_COUNT,
-                EXPECTED_TUMOR_HETEROZYGOUS_COUNT_ABOVE_50, EXPECTED_TUMOR_HETEROZYGOUS_COUNT_BELOW_50);
-    }
-
-    @Test
-    public void canCountSNPAndIndelsV1_9InSomatic() throws IOException, HartwigException {
-        final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY_V1_9, REF_SAMPLE,
-                TUMOR_SAMPLE);
-        final PatientResult result = (PatientResult) checker.tryRun(runContext);
-        assertChecks(result.getRefSampleChecks(), 1, 0, 1, 1, 0);
-        assertChecks(result.getTumorSampleChecks(), 1, 0, 1, 1, 0);
-    }
-
-    @Test
     public void errorYieldsCorrectOutputForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(RUN_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final PatientResult result = (PatientResult) checker.errorRun(runContext);
@@ -120,24 +92,22 @@ public class GermlineCheckerTest {
         assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, result.getChecks().size());
     }
 
-    private static void assertChecks(@NotNull final List<HealthCheck> checks, final int expectedCountSNP,
-            final int expectedCountIndels, final int expectedHeterozygousCount,
-            final int expectedHeterozygousCountAbove50VAF, final int expectedHeterozygousCountBelow50VAF) {
+    private static void assertChecks(@NotNull final List<HealthCheck> checks, final int expectedCountSNP, final int expectedCountIndels,
+            final int expectedHeterozygousCount, final int expectedHeterozygousCountAbove50VAF,
+            final int expectedHeterozygousCountBelow50VAF) {
         assertEquals(EXPECTED_NUM_CHECKS_PER_SAMPLE, checks.size());
 
         assertCheck(checks, GermlineCheck.GERMLINE_SNP_COUNT, expectedCountSNP);
         assertCheck(checks, GermlineCheck.GERMLINE_INDEL_COUNT, expectedCountIndels);
         assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT, expectedHeterozygousCount);
-        assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF,
-                expectedHeterozygousCountAbove50VAF);
-        assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF,
-                expectedHeterozygousCountBelow50VAF);
+        assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_ABOVE_50_VAF, expectedHeterozygousCountAbove50VAF);
+        assertCheck(checks, GermlineCheck.GERMLINE_HETEROZYGOUS_COUNT_BELOW_50_VAF, expectedHeterozygousCountBelow50VAF);
     }
 
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final GermlineCheck checkName,
             final int expectedValue) {
-        final Optional<HealthCheck> optCheck = checks.stream().filter(
-                check -> check.getCheckName().equals(checkName.toString())).findFirst();
+        final Optional<HealthCheck> optCheck =
+                checks.stream().filter(check -> check.getCheckName().equals(checkName.toString())).findFirst();
         assert optCheck.isPresent();
         assertEquals(Integer.toString(expectedValue), optCheck.get().getValue());
     }
