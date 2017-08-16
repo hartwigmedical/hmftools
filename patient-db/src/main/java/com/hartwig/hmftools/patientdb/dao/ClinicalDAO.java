@@ -42,7 +42,7 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    public void writeClinicalData(@NotNull final Patient patient) {
+    void writeClinicalData(@NotNull final Patient patient) {
         final int patientId = writePatientData(patient.patientData());
         patient.sequencedBiopsies().forEach(biopsy -> writeSampleData(patientId, biopsy));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));

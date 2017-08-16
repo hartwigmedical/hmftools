@@ -144,6 +144,10 @@ public class DatabaseAccess {
                 .collect(Collectors.toList())).execute();
     }
 
+    public boolean containsVariantsForSample(@NotNull final String sampleId) {
+        return context.selectCount().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sampleId)).fetchOne(0, Integer.class) > 0;
+    }
+
     public void writeEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("writing datamodel...");
         ecrfDAO.writeDatamodel(model.fields());

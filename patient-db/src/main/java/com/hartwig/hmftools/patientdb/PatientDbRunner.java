@@ -60,6 +60,7 @@ public final class PatientDbRunner {
     private static final String CLINICAL = "clinical";
     private static final String RAW_ECRF = "raw_ecrf";
     private static final String FORM_STATUS_FILE = "form_status";
+    private static final String CLEAR_SOMATIC_TABLES = "clear_somatic";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
@@ -129,7 +130,7 @@ public final class PatientDbRunner {
                     new PatientReader(model, readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream()
                     .map(runContext -> getPatientId(runContext.setName()))
-                    .filter(setName -> setName.startsWith("CPCT"))
+                    .filter(patientId -> patientId.startsWith("CPCT"))
                     .collect(Collectors.toSet());
             LOGGER.info("Reading CPCT clinical data for " + cpctPatientIds.size() + " patients.");
             for (final String patientId : cpctPatientIds) {
@@ -178,19 +179,28 @@ public final class PatientDbRunner {
             HartwigException {
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String extremeConfidenceBed = cmd.getOptionValue(EXTREME_CONFIDENCE_BED);
+        final boolean clearTables = cmd.hasOption(CLEAR_SOMATIC_TABLES);
         if (Utils.anyNull(highConfidenceBed, extremeConfidenceBed)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db -" + SOMATIC, somaticOptions);
         } else {
-            dbWriter.clearSomaticTables();
+            if (clearTables) {
+                dbWriter.clearSomaticTables();
+            }
             final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
             final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
             final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
             final SomaticVariantReader somaticVariantReader = new SomaticVariantReader(consensusRule);
-            for (final RunContext runContext : runContexts) {
-                LOGGER.info("Reading somatic data from run: " + runContext.runDirectory());
-                final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(runContext.runDirectory());
-                dbWriter.writeSomaticVariants(runContext.tumorSample(), somaticVariants);
+            final List<RunContext> cpctRunContexts =
+                    runContexts.stream().filter(runContext -> runContext.setName().contains("HMFregCPCT")).collect(Collectors.toList());
+            for (final RunContext cpctRunContext : cpctRunContexts) {
+                if (dbWriter.containsVariantsForSample(cpctRunContext.tumorSample())) {
+                    LOGGER.info("Somatic variants table contains data for sample: " + cpctRunContext.tumorSample() + ". Skipping.");
+                } else {
+                    LOGGER.info("Reading somatic data from run: " + cpctRunContext.runDirectory());
+                    final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(cpctRunContext.runDirectory());
+                    dbWriter.writeSomaticVariants(cpctRunContext.tumorSample(), somaticVariants);
+                }
             }
             LOGGER.info("Done!");
         }
@@ -275,6 +285,7 @@ public final class PatientDbRunner {
         final Options options = new Options();
         options.addOption(HIGH_CONFIDENCE_BED, true, "The full path towards the high confidence bed.");
         options.addOption(EXTREME_CONFIDENCE_BED, true, "The full path towards the extreme confidence bed.");
+        options.addOption(CLEAR_SOMATIC_TABLES, false, "Flag to delete existing somatic data");
         return options;
     }
 
