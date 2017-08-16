@@ -56,6 +56,7 @@ import com.hartwig.hmftools.purple.ratio.RatioSupplier;
 import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
 import com.hartwig.hmftools.purple.segment.FreecSegmentSupplier;
 import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
+import com.hartwig.hmftools.purple.somatic.SomaticSupplier;
 import com.hartwig.hmftools.purple.structural.StructuralVariantFileLoader;
 
 import org.apache.commons.cli.CommandLine;
@@ -173,7 +174,7 @@ public class PurityPloidyEstimateApplication {
                     fittedRegionFactory,
                     observedRegions);
 
-            final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity());
+            final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity(), new SomaticSupplier(configSupplier.somaticConfig()));
             final FittedPurity bestFit = bestFitFactory.bestFit();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
