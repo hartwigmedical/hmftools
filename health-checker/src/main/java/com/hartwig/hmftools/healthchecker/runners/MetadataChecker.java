@@ -11,10 +11,10 @@ import java.util.Locale;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathRegexFinder;
 import com.hartwig.hmftools.common.io.reader.LineReader;
-import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
@@ -35,10 +35,9 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     private static final String LOG_FILENAME_FORMAT = "%s.log";
     private static final String DATE_OUT_FORMAT = "yyyy-MM-dd";
     private static final String DATE_IN_FORMAT =
-            "[EEE MMM d HH:mm:ss z yyyy]" + "[EEE MMM ppd HH:mm:ss z yyyy]" + "[EEE d MMM HH:mm:ss z yyyy]"
-                    + "[EEE d MMM yyyy HH:mm:ss z]" + "[EEE MMM d yyyy HH:mm:ss z]";
-    private static final String SOMATIC_LINE_TO_GET_DATE_FROM_REGEX = "End\\s+(Kinship|Finalize)";
-    private static final String SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM_REGEX = "End\\s+(germline variant annotation|Finalize)";
+            "[EEE MMM d HH:mm:ss z yyyy]" + "[EEE MMM ppd HH:mm:ss z yyyy]" + "[EEE d MMM HH:mm:ss z yyyy]" + "[EEE d MMM yyyy HH:mm:ss z]"
+                    + "[EEE MMM d yyyy HH:mm:ss z]";
+    private static final String LINE_TO_GET_DATE_FROM_REGEX = "End\\s+Finalize";
     private static final String DATE_LINE_FIELD_SEPARATOR = "\t";
 
     private static final String PIPELINE_LOG_REGEX = "PipelineCheck.log";
@@ -60,7 +59,6 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final String runDate = extractRunDate(runContext);
         final String pipelineVersion = extractPipelineVersion(runContext.runDirectory());
-
         return toFinalResult(runContext, runDate, pipelineVersion);
     }
 
@@ -81,16 +79,12 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     @NotNull
     private BaseResult toFinalResult(@NotNull final RunContext runContext, @NotNull final String runDate,
             @NotNull final String pipelineVersion) {
-        final List<HealthCheck> refMetaData = toHealthCheckList(runContext.refSample(), runContext, runDate,
-                pipelineVersion);
+        final List<HealthCheck> refMetaData = toHealthCheckList(runContext.refSample(), runContext, runDate, pipelineVersion);
         HealthCheck.log(LOGGER, refMetaData);
 
         if (runContext.isSomaticRun()) {
-            final List<HealthCheck> tumorMetaData = toHealthCheckList(runContext.tumorSample(), runContext, runDate,
-                    pipelineVersion);
-
+            final List<HealthCheck> tumorMetaData = toHealthCheckList(runContext.tumorSample(), runContext, runDate, pipelineVersion);
             HealthCheck.log(LOGGER, tumorMetaData);
-
             return new PatientResult(checkType(), refMetaData, tumorMetaData);
         } else {
             return new MultiValueResult(checkType(), refMetaData);
@@ -98,9 +92,8 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private static List<HealthCheck> toHealthCheckList(@NotNull final String sampleId,
-            @NotNull final RunContext runContext, @NotNull final String runDate,
-            @NotNull final String pipelineVersion) {
+    private static List<HealthCheck> toHealthCheckList(@NotNull final String sampleId, @NotNull final RunContext runContext,
+            @NotNull final String runDate, @NotNull final String pipelineVersion) {
         return Lists.newArrayList(new HealthCheck(sampleId, MetadataCheck.SET_NAME.toString(), runContext.setName()),
                 new HealthCheck(sampleId, MetadataCheck.RUN_DATE.toString(), runDate),
                 new HealthCheck(sampleId, MetadataCheck.PIPELINE_VERSION.toString(), pipelineVersion));
@@ -108,12 +101,9 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     private static String extractRunDate(@NotNull final RunContext runContext) throws IOException, HartwigException {
-        final Path dateTimeLogPath = PathRegexFinder.build().findPath(runContext.runDirectory(),
-                String.format(LOG_FILENAME_FORMAT, runContext.setName()));
-        final Predicate<String> dateLineFilter = runContext.isSomaticRun() ?
-                doesLineMatch(SOMATIC_LINE_TO_GET_DATE_FROM_REGEX) :
-                doesLineMatch(SINGLE_SAMPLE_LINE_TO_GET_DATE_FROM_REGEX);
-        List<String> dateLines = LineReader.build().readLines(dateTimeLogPath, dateLineFilter);
+        final Path dateTimeLogPath =
+                PathRegexFinder.build().findPath(runContext.runDirectory(), String.format(LOG_FILENAME_FORMAT, runContext.setName()));
+        List<String> dateLines = LineReader.build().readLines(dateTimeLogPath, doesLineMatch(LINE_TO_GET_DATE_FROM_REGEX));
         final String date = datePart(getLast(dateLines).split(DATE_LINE_FIELD_SEPARATOR));
         final DateTimeFormatter inFormatter = DateTimeFormatter.ofPattern(DATE_IN_FORMAT, Locale.ENGLISH);
         final LocalDateTime formattedDate = LocalDateTime.parse(date, inFormatter);
@@ -131,11 +121,9 @@ public class MetadataChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private static String extractPipelineVersion(@NotNull final String runDirectory)
-            throws IOException, HartwigException {
+    private static String extractPipelineVersion(@NotNull final String runDirectory) throws IOException, HartwigException {
         final Path pipelineLogPath = PathRegexFinder.build().findPath(runDirectory, PIPELINE_LOG_REGEX);
-        final List<String> versionsLine = LineReader.build().readLines(pipelineLogPath,
-                doesLineMatch(PIPELINE_VERSION_REGEX));
+        final List<String> versionsLine = LineReader.build().readLines(pipelineLogPath, doesLineMatch(PIPELINE_VERSION_REGEX));
         return versionsLine.get(PIPELINE_VERSION_LINE_INDEX).split(PIPELINE_VERSION_LINE_SEPARATOR)[1].trim();
     }
 
