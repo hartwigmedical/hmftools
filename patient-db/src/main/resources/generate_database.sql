@@ -158,21 +158,6 @@ CREATE TABLE purityRange
 );
 
 DROP TABLE IF EXISTS purityScore;
-CREATE TABLE purityScore
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
-    minPurity DOUBLE PRECISION not null,
-    maxPurity DOUBLE PRECISION not null,
-    minPloidy DOUBLE PRECISION not null,
-    maxPloidy DOUBLE PRECISION not null,
-    minDiploidProportion DOUBLE PRECISION not null,
-    maxDiploidProportion DOUBLE PRECISION not null,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
-
 DROP VIEW IF EXISTS purity;
 DROP TABLE IF EXISTS purity;
 CREATE TABLE purity

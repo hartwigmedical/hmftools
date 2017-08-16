@@ -1,13 +1,9 @@
 package com.hartwig.hmftools.common.purple.purity;
 
 import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
-import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -16,8 +12,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FittedPurityScoreFactory {
 
-    private static final double PERCENT_RANGE = 0.1;
-    private static final double ABS_RANGE = 0.0005;
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
     @NotNull
@@ -30,24 +24,16 @@ public class FittedPurityScoreFactory {
                 .maxPurity(0)
                 .maxDiploidProportion(0);
 
-        if (!purities.isEmpty()) {
-            Collections.sort(purities);
-
-            final FittedPurity lowestScored = purities.get(0);
-
-            final List<FittedPurity> withinRange = purities.stream().filter(inRange(lowestScored.score())).collect(Collectors.toList());
-
-            withinRange.stream().max(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.maxPloidy(x.ploidy()));
-            withinRange.stream().min(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.minPloidy(x.ploidy()));
-            withinRange.stream().max(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.maxPurity(x.purity()));
-            withinRange.stream().min(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.minPurity(x.purity()));
-            withinRange.stream()
-                    .max(FittedPurityScoreFactory::compareDiploidProportion)
-                    .ifPresent(x -> builder.maxDiploidProportion(x.diploidProportion()));
-            withinRange.stream()
-                    .min(FittedPurityScoreFactory::compareDiploidProportion)
-                    .ifPresent(x -> builder.minDiploidProportion(x.diploidProportion()));
-        }
+        purities.stream().max(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.maxPloidy(x.ploidy()));
+        purities.stream().min(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.minPloidy(x.ploidy()));
+        purities.stream().max(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.maxPurity(x.purity()));
+        purities.stream().min(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.minPurity(x.purity()));
+        purities.stream()
+                .max(FittedPurityScoreFactory::compareDiploidProportion)
+                .ifPresent(x -> builder.maxDiploidProportion(x.diploidProportion()));
+        purities.stream()
+                .min(FittedPurityScoreFactory::compareDiploidProportion)
+                .ifPresent(x -> builder.minDiploidProportion(x.diploidProportion()));
 
         return builder.build();
     }
@@ -76,15 +62,6 @@ public class FittedPurityScoreFactory {
 
     private static int compareDiploidProportion(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
         return Double.compare(o1.diploidProportion(), o2.diploidProportion());
-    }
-
-    @NotNull
-    private static Predicate<FittedPurity> inRange(final double score) {
-        return fittedPurity -> {
-            double absDifference = Math.abs(fittedPurity.score() - score);
-            double relDifference = Math.abs(absDifference / score);
-            return lessOrEqual(absDifference, ABS_RANGE) || lessOrEqual(relDifference, PERCENT_RANGE);
-        };
     }
 
     @VisibleForTesting
