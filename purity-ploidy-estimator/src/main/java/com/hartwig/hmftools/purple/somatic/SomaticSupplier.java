@@ -28,17 +28,17 @@ public class SomaticSupplier implements Supplier<List<SomaticVariant>> {
     @Override
     public List<SomaticVariant> get() {
         if (config.file().isPresent()) {
-            String filename = config.file().toString();
+            String filename = config.file().get().toString();
             try {
-                List<SomaticVariant> result = VCFFileLoader.loadSomaticVCF(filename)
+                LOGGER.info("Reading somatic variants from {}", filename);
+                return VCFFileLoader.loadSomaticVCF(filename)
                         .variants()
                         .stream()
                         .filter(x -> x.type() == VariantType.SNP)
                         .filter(VariantFilter::isPass)
                         .collect(Collectors.toList());
-                LOGGER.info("Reading somatic variants from {}", filename);
-                return result;
             } catch (Exception e) {
+                LOGGER.warn("Error reading somatic variants: {}", e.getMessage());
                 return Collections.emptyList();
             }
         }

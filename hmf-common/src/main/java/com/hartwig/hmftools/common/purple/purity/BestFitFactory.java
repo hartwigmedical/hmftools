@@ -18,6 +18,8 @@ public class BestFitFactory {
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
     private static final double HIGHLY_DIPLOID_PERCENTAGE = 0.98;
+    private static final double MIN_PURITY = 0.1;
+    private static final int MIN_VARIANTS = 1000;
 
     private final FittedPurity bestFit;
     private final FittedPurityScore score;
@@ -32,16 +34,16 @@ public class BestFitFactory {
         final List<FittedPurity> candidates = candidates(lowestScore.score(), fittedPurities);
         score = FittedPurityScoreFactory.score(candidates);
 
-        if (isHighlyDiploid(score)) {
+        if (Doubles.lessOrEqual(score.minPurity(), MIN_PURITY) && isHighlyDiploid(score)) {
             final List<SomaticVariant> somatics = somaticSupplier.get();
             if (somatics.size() == 0) {
                 status = FittedPurityStatus.HIGHLY_DIPLOID;
                 bestFit = lowestScore;
-            } else if (somatics.size() < 1000) {
+            } else if (somatics.size() < MIN_VARIANTS) {
                 status = FittedPurityStatus.NO_TUMOR;
                 bestFit = lowestScore;
             } else {
-                status = FittedPurityStatus.HIGHLY_DIPLOID;
+                status = FittedPurityStatus.SOMATIC;
                 bestFit = BestFitSomatics.bestSomaticFit(somatics, candidates);
             }
 
