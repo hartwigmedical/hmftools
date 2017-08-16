@@ -191,8 +191,9 @@ public final class PatientDbRunner {
             final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
             final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
             final SomaticVariantReader somaticVariantReader = new SomaticVariantReader(consensusRule);
-            final List<RunContext> cpctRunContexts =
-                    runContexts.stream().filter(runContext -> runContext.setName().contains("HMFregCPCT")).collect(Collectors.toList());
+            final List<RunContext> cpctRunContexts = runContexts.stream()
+                    .filter(runContext -> getPatientId(runContext.setName()).startsWith("CPCT"))
+                    .collect(Collectors.toList());
             for (final RunContext cpctRunContext : cpctRunContexts) {
                 if (dbWriter.containsVariantsForSample(cpctRunContext.tumorSample())) {
                     LOGGER.info("Somatic variants table contains data for sample: " + cpctRunContext.tumorSample() + ". Skipping.");
