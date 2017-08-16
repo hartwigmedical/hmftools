@@ -45,7 +45,7 @@ public class PatientReader {
     @NotNull
     public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<String> tumorSamplesForPatient)
             throws IOException, HartwigException {
-        LOGGER.info("Reading patient " + ecrfPatient.patientId());
+        LOGGER.info("Reading patient " + ecrfPatient.patientId() + ": Samples: " + tumorSamplesForPatient);
         final List<SampleData> sequencedBiopsies = sampleReader.read(tumorSamplesForPatient);
         final PatientData patientData = cpctPatientReader.read(ecrfPatient);
         final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(ecrfPatient);

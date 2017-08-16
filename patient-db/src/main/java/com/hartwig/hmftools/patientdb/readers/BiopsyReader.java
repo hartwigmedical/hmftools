@@ -32,12 +32,12 @@ public final class BiopsyReader {
     static List<BiopsyData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyData> biopsies = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, true)) {
-                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, true)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, true);
-                    final String location = itemGroup.readItemString(FIELD_LOCATION, 0, true);
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, false)) {
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, false)) {
+                    final LocalDate date = itemGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, false);
+                    final String location = itemGroup.readItemString(FIELD_LOCATION, 0, false);
                     if (location == null || location.trim().toLowerCase().startsWith("other")) {
-                        final String location_other = itemGroup.readItemString(FIELD_LOCATION_OTHER, 0, true);
+                        final String location_other = itemGroup.readItemString(FIELD_LOCATION_OTHER, 0, false);
                         biopsies.add(ImmutableBiopsyData.of(date, location_other, form.status(), form.locked()));
                     } else {
                         biopsies.add(ImmutableBiopsyData.of(date, location, form.status(), form.locked()));

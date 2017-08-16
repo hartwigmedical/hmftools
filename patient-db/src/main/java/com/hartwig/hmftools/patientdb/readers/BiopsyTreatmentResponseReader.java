@@ -34,10 +34,10 @@ public final class BiopsyTreatmentResponseReader {
     static List<BiopsyTreatmentResponseData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentResponseData> treatmentResponses = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT, true)) {
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT, false)) {
                 LocalDate assessmentDate = null;
-                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT, true)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE, 0, DATE_FORMATTER, true);
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT, false)) {
+                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE, 0, DATE_FORMATTER, false);
                     if (date != null) {
                         assessmentDate = date;
                         break;
@@ -46,16 +46,16 @@ public final class BiopsyTreatmentResponseReader {
                 LocalDate responseDate = null;
                 String measurementDone = null;
                 String response = null;
-                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT, true)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, DATE_FORMATTER, true);
+                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT, false)) {
+                    final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, DATE_FORMATTER, false);
                     if (date != null) {
                         responseDate = date;
                     }
-                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_YN, 0, true);
+                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_YN, 0, false);
                     if (measurementDoneValue != null) {
                         measurementDone = measurementDoneValue;
                     }
-                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE, 0, true);
+                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE, 0, false);
                     if (responseValue != null) {
                         response = responseValue;
                     }

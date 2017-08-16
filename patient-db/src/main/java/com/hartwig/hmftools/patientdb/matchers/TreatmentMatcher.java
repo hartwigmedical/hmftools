@@ -52,7 +52,7 @@ public final class TreatmentMatcher {
                 findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "multiple biopsy matches for treatment", "", "",
                         treatment + ". biopsies:  " + possibleMatches.stream().map(BiopsyData::toString).collect(Collectors.toList())));
                 matchedTreatments.add(treatment);
-            } else if (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null) {
+            } else if (possibleMatches.get(0).date() == null) {
                 findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "treatment matched biopsy with null date.", "", "",
                         treatment.toString()));
                 matchedTreatments.add(treatment);

@@ -136,10 +136,9 @@ public final class PatientDbRunner {
             for (final String patientId : cpctPatientIds) {
                 final EcrfPatient patient = model.findPatientById(patientId);
                 if (patient == null) {
-                    LOGGER.warn("Could not find patient with id: " + patientId + " in ecrf file.");
+                    LOGGER.error("Could not find patient with id: " + patientId + " in ecrf file.");
                 } else {
                     final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
-                    LOGGER.info(patient.patientId() + ": Samples: " + tumorSamplesForPatient);
                     final Patient cpctPatient = patientReader.read(patient, tumorSamplesForPatient);
                     dbWriter.writeClinicalData(cpctPatient);
                     final List<ValidationFinding> findings = PatientValidator.validatePatient(cpctPatient);

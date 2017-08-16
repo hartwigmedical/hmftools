@@ -43,7 +43,7 @@ public class BiopsyTreatmentReader {
     List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) {
         final List<BiopsyTreatmentData> treatmentDatas = Lists.newArrayList();
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, true)) {
+            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT, false)) {
                 final String treatmentGiven = readTreatmentGiven(form);
                 final List<BiopsyTreatmentDrugData> drugs = readDrugs(form);
                 final LocalDate treatmentStart = determineTreatmentStartDate(drugs);
@@ -58,12 +58,12 @@ public class BiopsyTreatmentReader {
     @NotNull
     private List<BiopsyTreatmentDrugData> readDrugs(@NotNull final EcrfForm form) {
         final List<BiopsyTreatmentDrugData> drugs = Lists.newArrayList();
-        for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, true)) {
-            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, true);
-            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, true);
-            String drugName = itemGroup.readItemString(FIELD_DRUG, 0, true);
+        for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO, false)) {
+            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START, 0, DATE_FORMATTER, false);
+            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END, 0, DATE_FORMATTER, false);
+            String drugName = itemGroup.readItemString(FIELD_DRUG, 0, false);
             if (drugName == null || drugName.trim().toLowerCase().startsWith("other")) {
-                drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, true);
+                drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, false);
             }
             final String drugType = drugName == null ? null : treatmentToTypeMapping.get(drugName.toLowerCase().trim());
             drugs.add(ImmutableBiopsyTreatmentDrugData.of(drugName, drugType, drugStart, drugEnd));
@@ -101,9 +101,9 @@ public class BiopsyTreatmentReader {
 
     @Nullable
     private static String readTreatmentGiven(@NotNull final EcrfForm form) {
-        final List<EcrfItemGroup> itemGroups = form.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER, true);
+        final List<EcrfItemGroup> itemGroups = form.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER, false);
         if (itemGroups.size() > 0) {
-            return itemGroups.get(0).readItemString(FIELD_TREATMENT_GIVEN, 0, true);
+            return itemGroups.get(0).readItemString(FIELD_TREATMENT_GIVEN, 0, false);
         }
         return null;
     }

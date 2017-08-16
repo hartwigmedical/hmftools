@@ -135,13 +135,18 @@ public class DatabaseAccess {
     }
 
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull final List<SomaticVariantData> somaticVariants) {
-        context.batch(somaticVariants.stream()
-                .map(somaticVariant -> context.insertInto(SOMATICVARIANT, SOMATICVARIANT.SAMPLEID, SOMATICVARIANT.GENE,
-                        SOMATICVARIANT.POSITION, SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.COSMICID,
-                        SOMATICVARIANT.TOTALREADCOUNT, SOMATICVARIANT.ALLELEREADCOUNT)
-                        .values(sampleId, somaticVariant.gene(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
-                                somaticVariant.cosmicID(), somaticVariant.totalReadCount(), somaticVariant.alleleReadCount()))
-                .collect(Collectors.toList())).execute();
+        try {
+            context.batch(somaticVariants.stream()
+                    .map(somaticVariant -> context.insertInto(SOMATICVARIANT, SOMATICVARIANT.SAMPLEID, SOMATICVARIANT.GENE,
+                            SOMATICVARIANT.POSITION, SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.COSMICID,
+                            SOMATICVARIANT.TOTALREADCOUNT, SOMATICVARIANT.ALLELEREADCOUNT)
+                            .values(sampleId, somaticVariant.gene(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
+                                    somaticVariant.cosmicID(), somaticVariant.totalReadCount(), somaticVariant.alleleReadCount()))
+                    .collect(Collectors.toList())).execute();
+        } catch (final Exception e) {
+            LOGGER.error("Could not write somatic variants for sample: " + sampleId);
+            LOGGER.error(e.getMessage());
+        }
     }
 
     public boolean containsVariantsForSample(@NotNull final String sampleId) {
