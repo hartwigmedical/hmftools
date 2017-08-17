@@ -17,10 +17,12 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 class StructuralVariantFactory {
 
-    private static String TYPE = "SVTYPE";
-    private static String MATE_ID = "MATEID";
-    private static String INS_SEQ = "SVINSSEQ";
-    private static String HOM_SEQ = "HOMSEQ";
+    private final static String TYPE = "SVTYPE";
+    private final static String MATE_ID = "MATEID";
+    private final static String INS_SEQ = "SVINSSEQ";
+    private final static String HOM_SEQ = "HOMSEQ";
+    private final static String BPI_START = "BPI_START";
+    private final static String BPI_END = "BPI_END";
 
     private final Map<String, VariantContext> unmatched = new HashMap<>();
     private final List<StructuralVariant> results = Lists.newArrayList();
@@ -29,7 +31,6 @@ class StructuralVariantFactory {
 
     void addVariantContext(VariantContext context) {
         if (filter.test(context)) {
-
             samples.addAll(context.getSampleNames());
             final StructuralVariantType type = type(context);
             if (type.equals(StructuralVariantType.BND)) {
@@ -61,6 +62,9 @@ class StructuralVariantFactory {
         final StructuralVariantType type = type(context);
         Preconditions.checkArgument(!StructuralVariantType.BND.equals(type));
 
+        final int start = context.hasAttribute(BPI_START) ? context.getAttributeAsInt(BPI_START, -1) : context.getStart();
+        final int end = context.hasAttribute(BPI_END) ? context.getAttributeAsInt(BPI_END, -1) : context.getEnd();
+
         byte startOrientation = 0, endOrientation = 0;
         switch (type) {
             case INV:
@@ -85,11 +89,11 @@ class StructuralVariantFactory {
 
         return ImmutableStructuralVariant.builder()
                 .startChromosome(context.getContig())
-                .startPosition(context.getStart())
+                .startPosition(start)
                 .startOrientation(startOrientation)
                 .startHomology(context.getAttributeAsString(HOM_SEQ, ""))
                 .endChromosome(context.getContig())
-                .endPosition(context.getEnd())
+                .endPosition(end)
                 .endOrientation(endOrientation)
                 .endHomology("")
                 .insertSequence(context.getAttributeAsString(INS_SEQ, ""))
@@ -100,6 +104,9 @@ class StructuralVariantFactory {
     private static StructuralVariant create(VariantContext first, VariantContext second) {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(first)));
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(second)));
+
+        final int start = first.hasAttribute(BPI_START) ? first.getAttributeAsInt(BPI_START, -1) : first.getStart();
+        final int end = second.hasAttribute(BPI_START) ? second.getAttributeAsInt(BPI_START, -1) : second.getStart();
 
         byte startOrientation = 0, endOrientation = 0;
         final String alt = first.getAlternateAllele(0).getDisplayString();
@@ -123,11 +130,11 @@ class StructuralVariantFactory {
 
         return ImmutableStructuralVariant.builder()
                 .startChromosome(first.getContig())
-                .startPosition(first.getStart())
+                .startPosition(start)
                 .startOrientation(startOrientation)
                 .startHomology(first.getAttributeAsString(HOM_SEQ, ""))
                 .endChromosome(second.getContig())
-                .endPosition(second.getEnd())
+                .endPosition(end)
                 .endOrientation(endOrientation)
                 .endHomology(second.getAttributeAsString(HOM_SEQ, ""))
                 .insertSequence(first.getAttributeAsString(INS_SEQ, ""))
