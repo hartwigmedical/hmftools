@@ -120,12 +120,12 @@ public class PurityPloidyEstimateApplication {
         try {
             // JOBA: Get common config
             final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
-            final CommonConfig config = configSupplier.get();
+            final CommonConfig config = configSupplier.commonConfig();
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
 
             // JOBA: Load BAFs
-            final BAFSupplier bafSupplier = new BAFSupplier(config, cmd);
+            final BAFSupplier bafSupplier = new BAFSupplier(config, configSupplier.bafConfig());
             final Multimap<String, TumorBAF> bafs = bafSupplier.get();
             final Gender gender = Gender.fromBAFCount(bafs);
             LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
@@ -254,7 +254,6 @@ public class PurityPloidyEstimateApplication {
     private static Options createOptions() {
         final Options options = new Options();
         ConfigSupplier.addOptions(options);
-        BAFSupplier.addOptions(options);
 
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");

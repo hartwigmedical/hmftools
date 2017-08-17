@@ -4,12 +4,12 @@ import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
 
 import java.io.File;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -19,7 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ConfigSupplier implements Supplier<CommonConfig> {
+public class ConfigSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(CommonConfig.class);
 
@@ -33,6 +33,8 @@ public class ConfigSupplier implements Supplier<CommonConfig> {
 
     private static final String STRUCTURAL_VARIANTS = "structural_vcf";
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
+    private static final String BAF_VARIANTS = "baf_vcf";
+    private static final String BAF = "baf";
 
     public static void addOptions(Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
@@ -44,11 +46,15 @@ public class ConfigSupplier implements Supplier<CommonConfig> {
 
         options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation.");
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
+
+        options.addOption(BAF_VARIANTS, true, "Location of vcf to calculate BAF.");
+        options.addOption(BAF, true, "Baf file location.");
     }
 
     private final CommonConfig commonConfig;
     private final SomaticConfig somaticConfig;
     private final StructuralVariantConfig structuralVariantConfig;
+    private final BAFConfig bafConfig;
 
     public ConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -85,10 +91,11 @@ public class ConfigSupplier implements Supplier<CommonConfig> {
         if (!structuralVariantConfig.file().isPresent()) {
             LOGGER.info("No structural vcf supplied");
         }
+
+        bafConfig = createBAFConfig(cmd, opt, commonConfig);
     }
 
-    @Override
-    public CommonConfig get() {
+    public CommonConfig commonConfig() {
         return commonConfig;
     }
 
@@ -98,6 +105,10 @@ public class ConfigSupplier implements Supplier<CommonConfig> {
 
     public StructuralVariantConfig structuralVariantConfig() {
         return structuralVariantConfig;
+    }
+
+    public BAFConfig bafConfig() {
+        return bafConfig;
     }
 
     @NotNull
@@ -144,6 +155,41 @@ public class ConfigSupplier implements Supplier<CommonConfig> {
         }
 
         return ImmutableStructuralVariantConfig.builder().file(file).build();
+    }
+
+    @NotNull
+    private static BAFConfig createBAFConfig(CommandLine cmd, Options opt, CommonConfig config) throws ParseException {
+
+        final ImmutableBAFConfig.Builder builder = ImmutableBAFConfig.builder().bafFile(Optional.empty()).bafVCFFile(Optional.empty());
+
+        if (cmd.hasOption(BAF)) {
+            final String filename = cmd.getOptionValue(BAF);
+            final File file = new File(filename);
+            if (!file.exists()) {
+                printHelp(opt);
+                throw new ParseException("Unable to read bafs from: " + filename);
+            }
+            return builder.bafFile(Optional.of(file)).build();
+        }
+
+        final String cachedBafFilename = TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
+        final File cachedFile = new File(cachedBafFilename);
+        if (cachedFile.exists()) {
+            return builder.bafFile(Optional.of(cachedFile)).build();
+        }
+
+        if (cmd.hasOption(BAF_VARIANTS)) {
+            final String filename = cmd.getOptionValue(BAF_VARIANTS);
+            final File file = new File(filename);
+            if (!file.exists()) {
+                printHelp(opt);
+                throw new ParseException("Unable to read bafs from: " + filename);
+            }
+            return builder.bafVCFFile(Optional.of(file)).build();
+        }
+
+        printHelp(opt);
+        throw new ParseException("Cached baf file " + cachedBafFilename + " not found. Please supply one of -baf or -baf_vcf arguments.");
     }
 
     private static void printHelp(Options opt) {

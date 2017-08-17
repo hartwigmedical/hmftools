@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.baf;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
@@ -12,7 +13,6 @@ import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
-import com.hartwig.hmftools.purple.config.CommonConfig;
 
 class VCFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
@@ -23,12 +23,12 @@ class VCFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     private final Multimap<String, TumorBAF> bafs;
 
-    VCFSupplier(final CommonConfig config, final String vcfExtension) throws IOException, HartwigException {
+    VCFSupplier(final File vcfFilename) throws IOException, HartwigException {
 
         final TumorBAFFactory factory =
                 new TumorBAFFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
 
-        final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(config.runDirectory(), vcfExtension);
+        final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(vcfFilename.toString());
         final List<GermlineVariant> variants = VariantFilter.passOnly(vcfFile.variants());
         bafs = factory.createBAF(variants);
     }
