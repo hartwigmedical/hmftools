@@ -69,21 +69,22 @@ class StructuralVariantFactory {
         switch (type) {
             case INV:
                 if (context.hasAttribute("INV3")) {
-                    startOrientation = 1;
-                    endOrientation = -1;
+                    startOrientation = endOrientation = 1;
                 } else if (context.hasAttribute("INV5")) {
-                    startOrientation = -1;
-                    endOrientation = 1;
+                    startOrientation = endOrientation = -1;
                 }
                 break;
             case DEL:
-                startOrientation = endOrientation = 1;
+                startOrientation = 1;
+                endOrientation = -1;
                 break;
             case INS:
-                startOrientation = endOrientation = 1;
+                startOrientation = 1;
+                endOrientation = -1;
                 break;
             case DUP:
-                startOrientation = endOrientation = -1;
+                startOrientation = -1;
+                endOrientation = 1;
                 break;
         }
 
@@ -114,17 +115,17 @@ class StructuralVariantFactory {
         final String[] rightSplit = alt.split("\\[");
         if (leftSplit.length >= 2) {
             if (leftSplit[0].length() > 0) {
-                startOrientation = 1;
-                endOrientation = -1;
-            } else {
-                startOrientation = endOrientation = -1;
-            }
-        } else if (rightSplit.length >= 2) {
-            if (rightSplit[0].length() > 0) {
                 startOrientation = endOrientation = 1;
             } else {
                 startOrientation = -1;
                 endOrientation = 1;
+            }
+        } else if (rightSplit.length >= 2) {
+            if (rightSplit[0].length() > 0) {
+                startOrientation = 1;
+                endOrientation = -1;
+            } else {
+                startOrientation = endOrientation = -1;
             }
         }
 
