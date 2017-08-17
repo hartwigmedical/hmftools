@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
@@ -24,6 +25,8 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import org.jetbrains.annotations.NotNull;
 
 public class FittedPurityFactory {
+
+    private static final double MAX_TUMOR_RATIO_TO_FIT = 3;
 
     private final int maxPloidy;
     private final double minPurity;
@@ -67,7 +70,7 @@ public class FittedPurityFactory {
             final Chromosome chromosome = HumanChromosome.valueOf(region);
 
             if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
-                    && region.status() == FreecStatus.SOMATIC) {
+                    && region.status() == FreecStatus.SOMATIC && Doubles.lessOrEqual(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
             }
@@ -117,6 +120,8 @@ public class FittedPurityFactory {
         double modelDeviation = 0;
         double diploidProportion = 0;
         double averagePloidy = 0;
+
+        //TODO: FIX AVERAGE PLOIDY
 
         for (final ObservedRegion enrichedRegion : observedRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
