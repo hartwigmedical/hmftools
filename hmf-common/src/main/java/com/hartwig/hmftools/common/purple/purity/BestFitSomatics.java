@@ -29,8 +29,8 @@ class BestFitSomatics {
 
     private static int count(@NotNull List<SomaticVariant> somatics, @NotNull FittedPurity purity) {
 
-        double minVaf = purity.purity() / 2.0 - 0.1;
-        double maxVaf = purity.purity() / 2.0 + 0.1;
+        double minVaf = purity.purity() / 2.0 - 0.01;
+        double maxVaf = purity.purity() / 2.0 + 0.01;
 
         int count = 0;
         for (SomaticVariant somatic : somatics) {

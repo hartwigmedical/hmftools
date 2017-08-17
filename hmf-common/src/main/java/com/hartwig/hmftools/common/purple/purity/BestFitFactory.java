@@ -54,7 +54,7 @@ public class BestFitFactory {
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score) {
-        return Doubles.greaterOrEqual(score.maxPurity(), HIGHLY_DIPLOID_PERCENTAGE);
+        return Doubles.greaterOrEqual(score.maxDiploidProportion(), HIGHLY_DIPLOID_PERCENTAGE);
     }
 
     public FittedPurityStatus status() {
