@@ -76,8 +76,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.Rserve.RserveException;
 
 public class PurityPloidyEstimateApplication {
 
@@ -115,14 +113,12 @@ public class PurityPloidyEstimateApplication {
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
     public static void main(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
-            InterruptedException {
+            throws ParseException, IOException, HartwigException, SQLException, ExecutionException, InterruptedException {
         new PurityPloidyEstimateApplication(args);
     }
 
     private PurityPloidyEstimateApplication(final String... args)
-            throws ParseException, IOException, HartwigException, SQLException, REXPMismatchException, RserveException, ExecutionException,
-            InterruptedException {
+            throws ParseException, IOException, HartwigException, SQLException, ExecutionException, InterruptedException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         final int threads = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
@@ -237,7 +233,10 @@ public class PurityPloidyEstimateApplication {
 
                 final String basePlotDirectory = config.outputDirectory() + File.separator + "plot";
                 LOGGER.info("Writing plots to: {}", basePlotDirectory);
-                new ChartWriter(tumorSample, basePlotDirectory).write(purityContext.bestFit(), purityContext.score(), smoothRegions, enrichedSomatics);
+                new ChartWriter(tumorSample, basePlotDirectory).write(purityContext.bestFit(),
+                        purityContext.score(),
+                        smoothRegions,
+                        enrichedSomatics);
             }
 
         } finally {

@@ -5,17 +5,16 @@ PURPLE is a **pur**ity **pl**oidy **e**stimator. It leverages both CNV and BAF i
 
 
 ## R Dependencies
-CopyNumber. Installed with the following commands:
+Copy number segmentation is done with the Bioconductor
+[copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
+
+
+This can be installed in R with the following commands:
 ```
    source("https://bioconductor.org/biocLite.R”)
    biocLite("copy number”)
 ```
-RServe. Installed and run with the following command:
-```
-   install.packages("Rserve”)
-   library(Rserve)
-   Rserve()
-```
+
 
 ## Required Input
 

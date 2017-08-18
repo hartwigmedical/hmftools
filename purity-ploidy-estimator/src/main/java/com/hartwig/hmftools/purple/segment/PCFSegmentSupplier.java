@@ -15,11 +15,11 @@ import java.util.function.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.purple.pcf.ImmutablePCFRegion;
 import com.hartwig.hmftools.common.purple.pcf.PCFFile;
 import com.hartwig.hmftools.common.purple.pcf.PCFRegion;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatioFile;
+import com.hartwig.hmftools.common.r.RExecutor;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.purple.PurityPloidyEstimateApplication;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -27,9 +27,6 @@ import com.hartwig.hmftools.purple.config.CommonConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.Rserve.RConnection;
-import org.rosuda.REngine.Rserve.RserveException;
 
 public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
 
@@ -38,8 +35,7 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
     private final List<GenomeRegion> segments = Lists.newArrayList();
 
     public PCFSegmentSupplier(@NotNull final ExecutorService executorService, @NotNull final CommonConfig config,
-            Map<String, ChromosomeLength> chromosomeLengths)
-            throws RserveException, REXPMismatchException, IOException, ExecutionException, InterruptedException {
+            Map<String, ChromosomeLength> chromosomeLengths) throws IOException, ExecutionException, InterruptedException {
 
         final Future<Multimap<String, PCFRegion>> tumorRegionsFuture =
                 executorService.submit(callable(config, "tumor ratio", config.tumorSample()));
@@ -67,47 +63,17 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
 
     @NotNull
     private Multimap<String, PCFRegion> ratioSegmentation(final @NotNull CommonConfig config, @NotNull final String description,
-            @NotNull final String sample) throws RserveException, IOException {
+            @NotNull final String sample) throws IOException, InterruptedException {
         final String ratioFile = ReadRatioFile.generateFilename(config.outputDirectory(), sample);
         final String pcfFile = PCFFile.generateRatioFilename(config.outputDirectory(), sample);
         if (config.forceRecalculate() || !new File(pcfFile).exists()) {
-            LOGGER.info("Connecting to R server to generate {} segmentation", description);
-
-            RConnection c = new RConnection();
-
-            c.eval("library(copynumber)");
-            c.eval("ratio <- read.table(\"" + ratioFile + "\", header=TRUE)");
-            c.eval("ratio <- ratio[ratio$Ratio>=0,]");
-            c.eval("ratio$Ratio[ratio$Ratio<0.001] <- 0.001 ");
-            c.eval("ratio$S1 = log2(ratio$Ratio)");
-            c.eval("ratio <- ratio[!is.nan(ratio$S1),]");
-            c.eval("ratio <- ratio[,c(\"Chromosome\",\"Position\",\"S1\")]");
-            c.eval("ratio.seg<-pcf(ratio,verbose=FALSE,gamma=100, kmin=1,save.res = TRUE, file.names = c(\"" + pcfFile + "1\", \"" + pcfFile
-                    + "\"))");
+            int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, pcfFile);
+            if (result != 0) {
+                throw new IOException("R execution failed. Unable to complete segmentation.");
+            }
         }
 
         LOGGER.info("Loading {} PCF segments from {}", description, pcfFile);
-        return PCFFile.read(config.windowSize(), pcfFile);
-    }
-
-    @NotNull
-    private Multimap<String, PCFRegion> bafSegmentation(final @NotNull CommonConfig config, @NotNull final String sample)
-            throws RserveException, IOException {
-        final String bafFile = TumorBAFFile.generateFilename(config.outputDirectory(), sample);
-        final String pcfFile = PCFFile.generateBAFFilename(config.outputDirectory(), sample);
-        if (config.forceRecalculate() || !new File(pcfFile).exists()) {
-            LOGGER.info("Connecting to R server to generate baf segmentation");
-
-            RConnection c = new RConnection();
-
-            c.eval("library(copynumber)");
-            c.eval("baf <- read.table(\"" + bafFile + "\", header=TRUE)");
-            c.eval("baf <- baf[,c(\"Chromosome\",\"Position\",\"mBAF\")]");
-            c.eval("baf.seg<-pcf(baf,verbose=FALSE,gamma=100, kmin=1,save.res = TRUE, file.names = c(\"" + pcfFile + "1\", \"" + pcfFile
-                    + "\"))");
-        }
-
-        LOGGER.info("Loading baf PCF segments from {}", pcfFile);
         return PCFFile.read(config.windowSize(), pcfFile);
     }
 
