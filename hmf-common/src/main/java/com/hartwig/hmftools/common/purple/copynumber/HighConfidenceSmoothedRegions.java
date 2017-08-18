@@ -16,14 +16,14 @@ import org.jetbrains.annotations.NotNull;
 
 class HighConfidenceSmoothedRegions {
 
-    private final PurityAdjuster purityAdjuster;
     private final List<FittedRegion> smoothedRegions = Lists.newArrayList();
     private final List<? extends GenomeRegion> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
+    private final CopyNumberDeviation deviation;
 
     HighConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final List<? extends GenomeRegion> highConfidenceRegions, @NotNull final List<FittedRegion> fittedRegions) {
-        this.purityAdjuster = purityAdjuster;
+        this.deviation = new CopyNumberDeviation(purityAdjuster);
         this.highConfidenceRegions = highConfidenceRegions;
         this.fittedRegions = fittedRegions;
 
@@ -38,7 +38,7 @@ class HighConfidenceSmoothedRegions {
     private void run() {
         if (!highConfidenceRegions.isEmpty()) {
             int largestIncludedIndex = -1;
-            CopyNumberBuilder currentBuilder;
+            CombinedFittedRegion currentBuilder;
 
             for (int i = 0; i < highConfidenceRegions.size(); i++) {
                 final GenomeRegion currentRegion = highConfidenceRegions.get(i);
@@ -46,7 +46,7 @@ class HighConfidenceSmoothedRegions {
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new CopyNumberBuilder(true, purityAdjuster, fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new CombinedFittedRegion(true, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -57,21 +57,21 @@ class HighConfidenceSmoothedRegions {
                 boolean isLastBroadRegion = i == highConfidenceRegions.size() - 1;
                 if (isLastBroadRegion) {
                     currentBuilder = forwards(endOfRegionIndex + 1, fittedRegions.size() - 1, currentBuilder);
-                    smoothedRegions.add(currentBuilder.build());
+                    smoothedRegions.add(currentBuilder.region());
                 } else {
                     int nextStartIndex = indexOfStart(endOfRegionIndex + 1, highConfidenceRegions.get(i + 1));
                     largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1, currentBuilder);
-                    smoothedRegions.add(currentBuilder.build());
+                    smoothedRegions.add(currentBuilder.region());
                 }
             }
         }
     }
 
-    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull CopyNumberBuilder builder) {
+    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull CombinedFittedRegion builder) {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
-            if (isSimilar(copyNumber, builder)) {
-                builder.extendRegion(copyNumber);
+            if (isSimilar(copyNumber, builder.region())) {
+                builder.combine(copyNumber);
             } else {
                 return i - 1;
             }
@@ -81,15 +81,15 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private CopyNumberBuilder forwards(int startIndex, int endIndex, final @NotNull CopyNumberBuilder builder) {
-        CopyNumberBuilder current = builder;
+    private CombinedFittedRegion forwards(int startIndex, int endIndex, final @NotNull CombinedFittedRegion builder) {
+        CombinedFittedRegion current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
-            if (isSimilar(copyNumber, current)) {
-                current.extendRegion(copyNumber);
+            if (isSimilar(copyNumber, current.region())) {
+                current.combine(copyNumber);
             } else {
-                smoothedRegions.add(current.build());
-                current = new CopyNumberBuilder(true, purityAdjuster, copyNumber);
+                smoothedRegions.add(current.region());
+                current = new CombinedFittedRegion(true, copyNumber);
             }
         }
 
@@ -97,42 +97,42 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private CopyNumberBuilder backwards(int startIndex, int endIndex, @NotNull final CopyNumberBuilder forwardBuilder) {
+    private CombinedFittedRegion backwards(int startIndex, int endIndex, @NotNull final CombinedFittedRegion forwardBuilder) {
         final Deque<FittedRegion> preRegions = new ArrayDeque<>();
-        CopyNumberBuilder reverseBuilder = forwardBuilder;
+        CombinedFittedRegion reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
             final FittedRegion copyNumber = fittedRegions.get(i);
-            if (isSimilar(copyNumber, reverseBuilder)) {
-                reverseBuilder.extendRegion(copyNumber);
+            if (isSimilar(copyNumber, reverseBuilder.region())) {
+                reverseBuilder.combine(copyNumber);
             } else {
                 if (reverseBuilder != forwardBuilder) {
-                    preRegions.addFirst(reverseBuilder.build());
+                    preRegions.addFirst(reverseBuilder.region());
                 }
-                reverseBuilder = new CopyNumberBuilder(true, purityAdjuster, copyNumber);
+                reverseBuilder = new CombinedFittedRegion(true, copyNumber);
             }
         }
 
         if (reverseBuilder != forwardBuilder) {
-            preRegions.addFirst(reverseBuilder.build());
+            preRegions.addFirst(reverseBuilder.region());
         }
 
         smoothedRegions.addAll(preRegions);
         return forwardBuilder;
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final CopyNumberBuilder builder) {
-        int bafCount = region.bafCount();
-        if (!region.status().equals(FreecStatus.SOMATIC)) {
+    private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final FittedRegion combinedRegion) {
+        int bafCount = newRegion.bafCount();
+        if (!newRegion.status().equals(FreecStatus.SOMATIC)) {
             return true;
         }
 
-        if (!builder.withinCopyNumberTolerance(region)) {
+        if (!deviation.withinCopyNumberTolerance(combinedRegion, newRegion)) {
             return false;
         }
 
-        if (bafCount > 0 && !Doubles.isZero(builder.averageObservedBAF())) {
-            double bafDeviation = Math.abs(region.observedBAF() - builder.averageObservedBAF());
+        if (bafCount > 0 && !Doubles.isZero(combinedRegion.observedBAF())) {
+            double bafDeviation = Math.abs(newRegion.observedBAF() - combinedRegion.observedBAF());
             if (Doubles.greaterThan(bafDeviation, allowedBAFDeviation(bafCount))) {
                 return false;
             }

@@ -18,10 +18,12 @@ class LowConfidenceSmoothedRegions {
     private final List<FittedRegion> fittedRegions;
     @NotNull
     private final List<FittedRegion> smoothedRegions = Lists.newArrayList();
+    private final CopyNumberDeviation deviation;
 
     LowConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
         this.fittedRegions = fittedRegions;
+        this.deviation = new CopyNumberDeviation(purityAdjuster);
         run();
     }
 
@@ -31,29 +33,29 @@ class LowConfidenceSmoothedRegions {
 
     private void run() {
 
-        CopyNumberBuilder builder = null;
+        CombinedFittedRegion builder = null;
         for (FittedRegion fittedRegion : fittedRegions) {
 
             if (builder == null) {
-                builder = new CopyNumberBuilder(false, purityAdjuster, fittedRegion);
+                builder = new CombinedFittedRegion(false, fittedRegion);
             } else {
-                if (isSimilar(fittedRegion, builder)) {
-                    builder.extendRegion(fittedRegion);
+                if (isSimilar(fittedRegion, builder.region())) {
+                    builder.combine(fittedRegion);
                 } else {
-                    smoothedRegions.add(builder.build());
-                    builder = new CopyNumberBuilder(false, purityAdjuster, fittedRegion);
+                    smoothedRegions.add(builder.region());
+                    builder = new CombinedFittedRegion(false, fittedRegion);
                 }
             }
         }
 
         if (builder != null) {
-            smoothedRegions.add(builder.build());
+            smoothedRegions.add(builder.region());
         }
     }
 
-    private static boolean isSimilar(@NotNull final FittedRegion region, @NotNull final CopyNumberBuilder builder) {
-        return region.status().equals(FreecStatus.GERMLINE) || builder.withinCopyNumberTolerance(region)
-                || Doubles.isZero(region.tumorCopyNumber()) || Doubles.isZero(builder.averageTumorCopyNumber());
+    private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final FittedRegion currentRegion) {
+        return newRegion.status().equals(FreecStatus.GERMLINE) || deviation.withinCopyNumberTolerance(currentRegion, newRegion)
+                || Doubles.isZero(newRegion.tumorCopyNumber()) || Doubles.isZero(currentRegion.tumorCopyNumber());
     }
 
 }

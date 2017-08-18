@@ -18,17 +18,14 @@ class HighConfidenceRegions {
     private static final double MAX_COPY_NUMBER_DEVIATION = 0.30;
 
     @NotNull
-    private final PurityAdjuster purityAdjuster;
-    @NotNull
     private final List<FittedRegion> result = Lists.newArrayList();
     @Nullable
-    private CopyNumberBuilder builder;
+    private CombinedFittedRegion builder;
     @Nullable
     private FittedRegion last;
     private final double maxDeviation;
 
     HighConfidenceRegions(@NotNull final PurityAdjuster purityAdjuster) {
-        this.purityAdjuster = purityAdjuster;
         maxDeviation = purityAdjuster.purityAdjustedMaxCopyNumberDeviation(MAX_COPY_NUMBER_DEVIATION);
     }
 
@@ -46,10 +43,10 @@ class HighConfidenceRegions {
     private void process(@NotNull final FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
-            builder = new CopyNumberBuilder(true, purityAdjuster, current);
+            builder = new CombinedFittedRegion(true, current);
         } else {
             assert builder != null;
-            builder.extendRegion(current);
+            builder.combine(current);
         }
 
         last = current;
@@ -57,7 +54,7 @@ class HighConfidenceRegions {
 
     private void endRegion() {
         if (builder != null) {
-            result.add(builder.build());
+            result.add(builder.region());
             builder = null;
         }
     }
@@ -69,12 +66,12 @@ class HighConfidenceRegions {
     private boolean isLargeDeviation(@NotNull final FittedRegion current) {
         assert builder != null;
 
-        double copyNumberDeviation = Math.abs(current.tumorCopyNumber() - builder.averageTumorCopyNumber());
+        double copyNumberDeviation = Math.abs(current.tumorCopyNumber() - builder.region().tumorCopyNumber());
         if (Doubles.greaterThan(copyNumberDeviation, maxDeviation)) {
             return true;
         }
 
-        double bafDeviation = Math.abs(current.observedBAF() - builder.averageObservedBAF());
+        double bafDeviation = Math.abs(current.observedBAF() - builder.region().observedBAF());
         return Doubles.greaterThan(bafDeviation, MAX_BAF_DEVIATION);
     }
 }
