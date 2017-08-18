@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProproption;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
@@ -44,19 +46,26 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
+import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
+import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.ratio.FreecRatioSupplier;
 import com.hartwig.hmftools.purple.ratio.RatioSupplier;
 import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
 import com.hartwig.hmftools.purple.segment.FreecSegmentSupplier;
 import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
-import com.hartwig.hmftools.purple.somatic.SomaticSupplier;
+import com.hartwig.hmftools.purple.somatic.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.purple.structural.StructuralVariantFileLoader;
 
 import org.apache.commons.cli.CommandLine;
@@ -95,6 +104,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String GC_PROFILE = "gc_profile";
+    private static final String PLOT = "plot";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -130,6 +140,10 @@ public class PurityPloidyEstimateApplication {
             final Gender gender = Gender.fromBAFCount(bafs);
             LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
 
+            // JOBA: Load structural and somatic variants
+            final List<SomaticVariant> somaticVariants = somaticVariants(configSupplier);
+            final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
+
             final RatioSupplier ratioSupplier;
             final List<GenomeRegion> regions;
             if (cmd.hasOption(COBALT)) {
@@ -144,7 +158,6 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Merging structural variants into freec segmentation");
-            final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
             final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
             LOGGER.info("Mapping all observations to the segmented regions");
@@ -174,7 +187,7 @@ public class PurityPloidyEstimateApplication {
                     fittedRegionFactory,
                     observedRegions);
 
-            final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity(), new SomaticSupplier(configSupplier.somaticConfig()));
+            final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity(), somaticVariants);
             final FittedPurity bestFit = bestFitFactory.bestFit();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
@@ -204,11 +217,28 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
             }
 
-            LOGGER.info("Writing to file location: {}", outputDirectory);
+            LOGGER.info("Writing purple data to: {}", outputDirectory);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
+
+            if (cmd.hasOption(PLOT)) {
+                final String baseCircosDirectory = config.outputDirectory() + File.separator + "circos";
+                LOGGER.info("Writing circos data to: {}", baseCircosDirectory);
+                final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
+                        new EnrichedSomaticVariantFactory(purityContext.bestFit(), smoothRegions);
+                final List<EnrichedSomaticVariant> enrichedSomatics = enrichedSomaticVariantFactory.enrich(somaticVariants);
+
+                new GenerateCircosDataHelper(tumorSample, baseCircosDirectory).write(gender,
+                        smoothRegions,
+                        enrichedSomatics,
+                        structuralVariants);
+
+                final String basePlotDirectory = config.outputDirectory() + File.separator + "plot";
+                LOGGER.info("Writing plots to: {}", basePlotDirectory);
+                new ChartWriter(tumorSample, basePlotDirectory).write(purityContext.bestFit(), purityContext.score(), smoothRegions, enrichedSomatics);
+            }
 
         } finally {
             executorService.shutdown();
@@ -229,15 +259,28 @@ public class PurityPloidyEstimateApplication {
         }
     }
 
+    @NotNull
+    private List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException, HartwigException {
+        final SomaticConfig config = configSupplier.somaticConfig();
+        if (config.file().isPresent()) {
+            String filename = config.file().get().toString();
+            LOGGER.info("Loading somatic variants from {}", filename);
+            return VCFFileLoader.loadSomaticVCF(filename)
+                    .variants()
+                    .stream()
+                    .filter(x -> x.type() == VariantType.SNP)
+                    .filter(VariantFilter::isPass)
+                    .collect(Collectors.toList());
+        } else {
+            LOGGER.info("Somatic variants support disabled.");
+            return Collections.emptyList();
+        }
+    }
+
     private List<GeneCopyNumber> geneCopyNumbers(List<PurpleCopyNumber> copyNumbers) throws IOException, EmptyFileException {
         final InputStream inputStream = getClass().getResourceAsStream("/bed/hmf_gene_panel.tsv");
         final List<HmfGenomeRegion> hmgGenomeRegions = HmfSlicerFileLoader.fromInputStream(inputStream);
         return GeneCopyNumberFactory.geneCopyNumbers(hmgGenomeRegions, copyNumbers);
-    }
-
-    @NotNull
-    private static String defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, @NotNull final String defaultValue) {
-        return cmd.hasOption(opt) ? cmd.getOptionValue(opt) : defaultValue;
     }
 
     private static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
@@ -272,6 +315,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(COBALT, false, "Use cobalt segmentation.");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
+        options.addOption(PLOT, false, "Generate circos data.");
 
         return options;
     }

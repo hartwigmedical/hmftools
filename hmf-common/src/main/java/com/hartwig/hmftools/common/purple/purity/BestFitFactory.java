@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -25,7 +24,7 @@ public class BestFitFactory {
     private final FittedPurityScore score;
     private final FittedPurityStatus status;
 
-    public BestFitFactory(final List<FittedPurity> fittedPurities, Supplier<List<SomaticVariant>> somaticSupplier) {
+    public BestFitFactory(final List<FittedPurity> fittedPurities, List<SomaticVariant> somatics) {
         assert (!fittedPurities.isEmpty());
 
         Collections.sort(fittedPurities);
@@ -35,7 +34,6 @@ public class BestFitFactory {
         score = FittedPurityScoreFactory.score(candidates);
 
         if (Doubles.lessOrEqual(score.minPurity(), MIN_PURITY) && isHighlyDiploid(score)) {
-            final List<SomaticVariant> somatics = somaticSupplier.get();
             if (somatics.size() == 0) {
                 status = FittedPurityStatus.HIGHLY_DIPLOID;
                 bestFit = lowestScore;

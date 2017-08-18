@@ -3,13 +3,16 @@ package com.hartwig.hmftools.purple.somatic;
 import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.Builder;
 import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.builder;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
@@ -32,7 +35,7 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
     @NotNull
-    private final IndexedFastaSequenceFile reference;
+    private final Optional<IndexedFastaSequenceFile> optionalReference;
 
     public EnrichedSomaticVariantFactory(double purity, double normFactor,
             @NotNull  final Multimap<String, GenomeRegion> highConfidenceRegions,
@@ -40,7 +43,14 @@ public class EnrichedSomaticVariantFactory {
         purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        this.reference = reference;
+        this.optionalReference = Optional.of(reference);
+    }
+
+    public EnrichedSomaticVariantFactory(@NotNull  final FittedPurity purity, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+        purityAdjuster = new PurityAdjuster(Gender.MALE, purity);
+        highConfidenceSelector = GenomeRegionSelectorFactory.create(Collections.emptyList());
+        copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        this.optionalReference = Optional.empty();
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<SomaticVariant> variants) {
@@ -91,22 +101,24 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private Builder addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        long positionBeforeEvent = variant.position();
-        long start = Math.max(positionBeforeEvent - 100, 1);
-        long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
-        long end = Math.min(positionBeforeEvent + 100, maxEnd);
-        int relativePosition = (int) (positionBeforeEvent - start);
-        final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
-        builder.refGenomeContext(sequence);
+        if (optionalReference.isPresent()) {
+            final IndexedFastaSequenceFile reference = optionalReference.get();
+            long positionBeforeEvent = variant.position();
+            long start = Math.max(positionBeforeEvent - 100, 1);
+            long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
+            long end = Math.min(positionBeforeEvent + 100, maxEnd);
+            int relativePosition = (int) (positionBeforeEvent - start);
+            final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
+            builder.refGenomeContext(sequence);
 
-        RepeatContextFactory.repeats(relativePosition, sequence, variant.ref(), variant.alt())
-                .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
+            RepeatContextFactory.repeats(relativePosition, sequence, variant.ref(), variant.alt())
+                    .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
 
-        if (variant.ref().length() != variant.alt().length()) {
-            final String microhomology = Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt());
-            return builder.microhomology(microhomology);
+            if (variant.ref().length() != variant.alt().length()) {
+                final String microhomology = Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt());
+                return builder.microhomology(microhomology);
+            }
         }
-
         return builder;
     }
 
@@ -116,9 +128,14 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private Builder addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final ReferenceSequence sequence =
-                reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
-        return builder.trinucleotideContext(sequence.getBaseString());
+        if (optionalReference.isPresent()) {
+            final IndexedFastaSequenceFile reference = optionalReference.get();
+            final ReferenceSequence sequence =
+                    reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
+            return builder.trinucleotideContext(sequence.getBaseString());
+        }
+
+        return builder;
     }
 
     private Builder inHighConfidenceRegion(@NotNull final Builder builder) {

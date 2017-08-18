@@ -25,9 +25,14 @@ public class ChartWriter {
     @NotNull
     private final String outputDirectory;
 
-    public ChartWriter(@NotNull final String sample, @NotNull final String outputDirectory) {
+    public ChartWriter(@NotNull final String sample, @NotNull final String outputDirectory) throws IOException {
         this.sample = sample;
         this.outputDirectory = outputDirectory;
+
+        final File output = new File(outputDirectory);
+        if (!output.exists() && !output.mkdirs()) {
+            throw new IOException("Unable to create plot directory " + outputDirectory);
+        }
     }
 
     public void write(@NotNull final FittedPurity purity, @NotNull FittedPurityScore score,
