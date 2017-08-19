@@ -3,7 +3,6 @@ package com.hartwig.hmftools.purple;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProproption;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -54,6 +53,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
+import com.hartwig.hmftools.purple.config.CircosConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
@@ -219,25 +219,22 @@ public class PurityPloidyEstimateApplication {
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
 
-            if (cmd.hasOption(PLOT)) {
-                final String baseCircosDirectory = config.outputDirectory() + File.separator + "circos";
-                LOGGER.info("Writing circos data to: {}", baseCircosDirectory);
-                final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
-                        new EnrichedSomaticVariantFactory(purityContext.bestFit(), smoothRegions);
-                final List<EnrichedSomaticVariant> enrichedSomatics = enrichedSomaticVariantFactory.enrich(somaticVariants);
+            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
+                    new EnrichedSomaticVariantFactory(purityContext.bestFit(), smoothRegions);
+            final List<EnrichedSomaticVariant> enrichedSomatics = enrichedSomaticVariantFactory.enrich(somaticVariants);
 
-                new GenerateCircosDataHelper(tumorSample, baseCircosDirectory).write(gender,
-                        smoothRegions,
-                        enrichedSomatics,
-                        structuralVariants);
+            final CircosConfig circosConfig = configSupplier.circosConfig();
+            LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
+            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(),
+                    purityContext.score(),
+                    smoothRegions,
+                    enrichedSomatics);
 
-                final String basePlotDirectory = config.outputDirectory() + File.separator + "plot";
-                LOGGER.info("Writing plots to: {}", basePlotDirectory);
-                new ChartWriter(tumorSample, basePlotDirectory).write(purityContext.bestFit(),
-                        purityContext.score(),
-                        smoothRegions,
-                        enrichedSomatics);
-            }
+            LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
+            new GenerateCircosDataHelper(tumorSample, configSupplier.circosConfig()).write(gender,
+                    smoothRegions,
+                    enrichedSomatics,
+                    structuralVariants);
 
         } finally {
             executorService.shutdown();

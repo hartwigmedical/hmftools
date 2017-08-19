@@ -35,6 +35,7 @@ public class ConfigSupplier {
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
     private static final String BAF_VARIANTS = "baf_vcf";
     private static final String BAF = "baf";
+    private static final String CIRCOS = "circos";
 
     public static void addOptions(Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
@@ -49,12 +50,14 @@ public class ConfigSupplier {
 
         options.addOption(BAF_VARIANTS, true, "Location of vcf to calculate BAF.");
         options.addOption(BAF, true, "Baf file location.");
+        options.addOption(CIRCOS, true, "Location of circos binary.");
     }
 
     private final CommonConfig commonConfig;
     private final SomaticConfig somaticConfig;
     private final StructuralVariantConfig structuralVariantConfig;
     private final BAFConfig bafConfig;
+    private final CircosConfig circosConfig;
 
     public ConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -93,6 +96,7 @@ public class ConfigSupplier {
         }
 
         bafConfig = createBAFConfig(cmd, opt, commonConfig);
+        circosConfig = createCircosConfig(cmd, commonConfig);
     }
 
     public CommonConfig commonConfig() {
@@ -109,6 +113,10 @@ public class ConfigSupplier {
 
     public BAFConfig bafConfig() {
         return bafConfig;
+    }
+
+    public CircosConfig circosConfig() {
+        return circosConfig;
     }
 
     @NotNull
@@ -155,6 +163,15 @@ public class ConfigSupplier {
         }
 
         return ImmutableStructuralVariantConfig.builder().file(file).build();
+    }
+
+    @NotNull
+    private static CircosConfig createCircosConfig(CommandLine cmd, CommonConfig config) {
+        return ImmutableCircosConfig.builder()
+                .plotDirectory(config.outputDirectory() + File.separator + "plot")
+                .circosDirectory(config.outputDirectory() + File.separator + "circos")
+                .circosBinary(cmd.hasOption(CIRCOS) ? Optional.of(cmd.getOptionValue(CIRCOS)) : Optional.empty())
+                .build();
     }
 
     @NotNull
