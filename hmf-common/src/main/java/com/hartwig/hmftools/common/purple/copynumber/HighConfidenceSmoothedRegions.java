@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 class HighConfidenceSmoothedRegions {
 
-    private final List<FittedRegion> smoothedRegions = Lists.newArrayList();
+    private final List<CombinedFittedRegion> combinedRegions = Lists.newArrayList();
     private final List<? extends GenomeRegion> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
     private final CopyNumberDeviation deviation;
@@ -32,7 +33,7 @@ class HighConfidenceSmoothedRegions {
 
     @NotNull
     List<FittedRegion> smoothedRegions() {
-        return smoothedRegions;
+        return (combinedRegions).stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
     }
 
     private void run() {
@@ -57,11 +58,11 @@ class HighConfidenceSmoothedRegions {
                 boolean isLastBroadRegion = i == highConfidenceRegions.size() - 1;
                 if (isLastBroadRegion) {
                     currentBuilder = forwards(endOfRegionIndex + 1, fittedRegions.size() - 1, currentBuilder);
-                    smoothedRegions.add(currentBuilder.region());
+                    combinedRegions.add(currentBuilder);
                 } else {
                     int nextStartIndex = indexOfStart(endOfRegionIndex + 1, highConfidenceRegions.get(i + 1));
                     largestIncludedIndex = forwardsUntilDifferent(endOfRegionIndex + 1, nextStartIndex - 1, currentBuilder);
-                    smoothedRegions.add(currentBuilder.region());
+                    combinedRegions.add(currentBuilder);
                 }
             }
         }
@@ -88,7 +89,7 @@ class HighConfidenceSmoothedRegions {
             if (isSimilar(copyNumber, current.region())) {
                 current.combine(copyNumber);
             } else {
-                smoothedRegions.add(current.region());
+                combinedRegions.add(current);
                 current = new CombinedFittedRegion(true, copyNumber);
             }
         }
@@ -98,7 +99,7 @@ class HighConfidenceSmoothedRegions {
 
     @NotNull
     private CombinedFittedRegion backwards(int startIndex, int endIndex, @NotNull final CombinedFittedRegion forwardBuilder) {
-        final Deque<FittedRegion> preRegions = new ArrayDeque<>();
+        final Deque<CombinedFittedRegion> preRegions = new ArrayDeque<>();
         CombinedFittedRegion reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
@@ -107,17 +108,17 @@ class HighConfidenceSmoothedRegions {
                 reverseBuilder.combine(copyNumber);
             } else {
                 if (reverseBuilder != forwardBuilder) {
-                    preRegions.addFirst(reverseBuilder.region());
+                    preRegions.addFirst(reverseBuilder);
                 }
                 reverseBuilder = new CombinedFittedRegion(true, copyNumber);
             }
         }
 
         if (reverseBuilder != forwardBuilder) {
-            preRegions.addFirst(reverseBuilder.region());
+            preRegions.addFirst(reverseBuilder);
         }
 
-        smoothedRegions.addAll(preRegions);
+        combinedRegions.addAll(preRegions);
         return forwardBuilder;
     }
 
@@ -163,4 +164,24 @@ class HighConfidenceSmoothedRegions {
 
         throw new IllegalArgumentException();
     }
+
+    private List<CombinedFittedRegion> secondPass(List<CombinedFittedRegion> regions) {
+
+        final List<CombinedFittedRegion> result = Lists.newArrayList();
+
+        CombinedFittedRegion current = regions.get(0);
+        for (int i = 1; i < regions.size(); i++) {
+            CombinedFittedRegion next = regions.get(i);
+            if (isSimilar(next.region(), current.region())) {
+                current.combine(next.region());
+            } else {
+                result.add(current);
+                current = next;
+            }
+        }
+        result.add(current);
+
+        return result;
+    }
+
 }
