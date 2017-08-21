@@ -123,7 +123,7 @@ class HighConfidenceSmoothedRegions {
     }
 
     private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final FittedRegion combinedRegion) {
-        int bafCount = newRegion.bafCount();
+        int bafCount = Math.min(newRegion.bafCount(), combinedRegion.bafCount());
         if (!newRegion.status().equals(FreecStatus.SOMATIC)) {
             return true;
         }

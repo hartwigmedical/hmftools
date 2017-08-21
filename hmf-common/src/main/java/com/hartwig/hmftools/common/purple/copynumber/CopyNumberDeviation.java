@@ -14,7 +14,11 @@ final class CopyNumberDeviation {
     @VisibleForTesting
     static final double LC_MAX_COPY_NUMBER_TOLERANCE = 1.3;
     @VisibleForTesting
+    static final double MC_MAX_COPY_NUMBER_TOLERANCE = 0.9;
+    @VisibleForTesting
     static final double HC_MAX_COPY_NUMBER_TOLERANCE = 0.7;
+    @VisibleForTesting
+    static final int MAX_BAF_COUNT = 50;
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -38,22 +42,24 @@ final class CopyNumberDeviation {
                 ? !first.structuralVariantSupport().equals(StructuralVariantSupport.NONE)
                 : !second.structuralVariantSupport().equals(StructuralVariantSupport.NONE);
 
-        return maxCopyNumberDeviation(second.bafCount(), second.observedTumorRatioCount(), structuralBreakTransition);
+        return maxCopyNumberDeviation(Math.min(first.bafCount(), second.bafCount()), second.observedTumorRatioCount(), structuralBreakTransition);
     }
 
     private static double maxCopyNumberDeviation(int bafCount, int observedTumorRatioCount, boolean structuralBreakTransition) {
-        if (bafCount >= 10) {
+        if (bafCount >= MAX_BAF_COUNT) {
             return MIN_COPY_NUMBER_TOLERANCE;
         }
 
         final double maxDeviation;
-        if (structuralBreakTransition || observedTumorRatioCount > 5) {
+        if (structuralBreakTransition) {
             maxDeviation = HC_MAX_COPY_NUMBER_TOLERANCE;
+        } else if (observedTumorRatioCount > 5) {
+            maxDeviation = MC_MAX_COPY_NUMBER_TOLERANCE;
         } else {
             maxDeviation = LC_MAX_COPY_NUMBER_TOLERANCE;
         }
 
-        return (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / 10 * bafCount + maxDeviation;
+        return (MIN_COPY_NUMBER_TOLERANCE - maxDeviation) / MAX_BAF_COUNT * bafCount + maxDeviation;
     }
 
 }

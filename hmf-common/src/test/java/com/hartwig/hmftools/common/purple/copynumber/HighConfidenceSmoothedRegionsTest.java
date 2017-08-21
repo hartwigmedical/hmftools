@@ -32,7 +32,8 @@ public class HighConfidenceSmoothedRegionsTest {
     @Test
     public void beforeFirstHighConfidenceRegion() {
         final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
-        final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1, 300, 1),
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(
+                createFittedCopyNumber(1, 300, 1),
                 createFittedCopyNumber(301, 1000, 2),
                 createFittedCopyNumber(1001, 2000, 2));
 
@@ -109,7 +110,7 @@ public class HighConfidenceSmoothedRegionsTest {
 
     private FittedRegion createFittedCopyNumber(long start, long end, double copyNumber) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
-                .bafCount(10)
+                .bafCount(CopyNumberDeviation.MAX_BAF_COUNT)
                 .observedBAF(0.5)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
@@ -118,7 +119,7 @@ public class HighConfidenceSmoothedRegionsTest {
 
     private PurpleCopyNumber createRegion(long start, long end, double copyNumber) {
         return PurpleDatamodelTest.createCopyNumber("1", start, end, copyNumber)
-                .bafCount(10)
+                .bafCount(CopyNumberDeviation.MAX_BAF_COUNT)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5)
                 .build();
