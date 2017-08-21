@@ -12,9 +12,9 @@ import retrofit2.http.Path;
 public interface CivicApi {
     @NotNull
     @GET("genes/{id}?identifier_type=entrez_id")
-    Observable<CivicGene> getGene(@Path("id") @NotNull final String entrezId);
+    Observable<CivicGene> getGene(@Path("id") @NotNull final int entrezId);
 
     @NotNull
     @GET("variants/{id}")
-    Observable<CivicVariant> getVariant(@Path("id") @NotNull final String variantId);
+    Observable<CivicVariant> getVariant(@Path("id") @NotNull final int variantId);
 }
