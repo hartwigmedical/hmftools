@@ -1,9 +1,7 @@
-package com.hartwig.hmftools.purple.structural;
+package com.hartwig.hmftools.common.variant.structural;
 
 import java.io.IOException;
 import java.util.List;
-
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,8 +17,7 @@ public class StructuralVariantFileLoader {
         final StructuralVariantFactory factory = new StructuralVariantFactory();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
-                new VCFCodec(),
-                false)) {
+                new VCFCodec(), false)) {
             reader.iterator().forEach(factory::addVariantContext);
         }
 

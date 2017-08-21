@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.structural;
+package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,14 +8,11 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-class StructuralVariantFactory {
+public class StructuralVariantFactory {
 
     private final static String TYPE = "SVTYPE";
     private final static String MATE_ID = "MATEID";
@@ -29,7 +26,7 @@ class StructuralVariantFactory {
     private final PassingVariantFilter filter = new PassingVariantFilter();
     private final Set<String> samples = Sets.newHashSet();
 
-    void addVariantContext(VariantContext context) {
+    public void addVariantContext(VariantContext context) {
         if (filter.test(context)) {
             samples.addAll(context.getSampleNames());
             final StructuralVariantType type = type(context);

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.LoadSomaticVariants;
 
