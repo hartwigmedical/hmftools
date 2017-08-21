@@ -10,7 +10,8 @@ import org.jetbrains.annotations.NotNull;
 
 final class CopyNumberDeviation {
 
-    private static final double MIN_COPY_NUMBER_TOLERANCE = 0.3;
+    @VisibleForTesting
+    static final double MIN_COPY_NUMBER_TOLERANCE = 0.3;
     @VisibleForTesting
     static final double LC_MAX_COPY_NUMBER_TOLERANCE = 1.3;
     @VisibleForTesting

@@ -32,14 +32,12 @@ public class HighConfidenceSmoothedRegionsTest {
     @Test
     public void beforeFirstHighConfidenceRegion() {
         final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2));
-        final List<FittedRegion> copyNumbers = Lists.newArrayList(
-                createFittedCopyNumber(1, 300, 1),
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1, 300, 1),
                 createFittedCopyNumber(301, 1000, 2),
                 createFittedCopyNumber(1001, 2000, 2));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<FittedRegion> results =
-                new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
+        final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(2, results.size());
 
         assertRegion(results.get(0), 1, 300, 1);
@@ -56,8 +54,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(3001, 4000, 3));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<FittedRegion> results =
-                new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
+        final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(3, results.size());
 
         assertRegion(results.get(0), 1001, 2200, 2);
@@ -76,14 +73,34 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(1441, 2000, 2));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<FittedRegion> results =
-                new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
+        final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(4, results.size());
 
         assertRegion(results.get(0), 1001, 1110, 2);
         assertRegion(results.get(1), 1111, 1330, 1);
         assertRegion(results.get(2), 1331, 1440, 3);
         assertRegion(results.get(3), 1441, 2000, 2);
+    }
+
+    @Test
+    public void secondPass() {
+        final double baseCopyNumber = 2;
+
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, baseCopyNumber));
+
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1001, 1110, baseCopyNumber),
+                createFittedCopyNumber(1111,
+                        1220,
+                        baseCopyNumber + CopyNumberDeviation.MIN_COPY_NUMBER_TOLERANCE + 0.1),
+                createFittedCopyNumber(1221,
+                        2000,
+                        baseCopyNumber + CopyNumberDeviation.MIN_COPY_NUMBER_TOLERANCE - 0.1));
+
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
+        final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
+        assertEquals(1, results.size());
+
+        assertRegion(results.get(0), 1001, 2000, 2.2);
     }
 
     @Test
@@ -94,8 +111,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 createFittedCopyNumber(3001, 5000, 5));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
-        final List<FittedRegion> results =
-                new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
+        final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
         assertEquals(2, results.size());
 
         assertRegion(results.get(0), 1001, 3000, 2);

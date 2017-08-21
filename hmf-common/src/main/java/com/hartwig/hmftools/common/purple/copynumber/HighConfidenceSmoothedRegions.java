@@ -33,7 +33,7 @@ class HighConfidenceSmoothedRegions {
 
     @NotNull
     List<FittedRegion> smoothedRegions() {
-        return (combinedRegions).stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
+        return secondPass(combinedRegions).stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
     }
 
     private void run() {
