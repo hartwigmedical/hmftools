@@ -15,7 +15,7 @@ public class PurityAdjuster {
 
     private static final double AMBIGUOUS_BAF = 0.542;
     private static final double CLONAL_DISTANCE = 0.25;
-    private static final double MAX_DEVIATION_ADJUSTMENT = 0.15;
+    private static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
 
     public static double impliedSamplePloidy(final double purity, final double normFactor) {
         return new PurityAdjuster(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
@@ -47,7 +47,7 @@ public class PurityAdjuster {
         return purityAdjustedCopyNumber(ratio, typicalRatio);
     }
 
-    private double purityAdjustedCopyNumber(final double tumorRatio, final double normalRatio) {
+    public double purityAdjustedCopyNumber(final double tumorRatio, final double normalRatio) {
         return Doubles.isZero(tumorRatio) ? 0 : 2 * normalRatio + 2 * (tumorRatio - normalRatio * normFactor) / purity / normFactor;
     }
 
