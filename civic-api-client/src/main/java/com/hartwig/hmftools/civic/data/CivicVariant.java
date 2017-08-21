@@ -2,25 +2,36 @@ package com.hartwig.hmftools.civic.data;
 
 import java.util.List;
 
-public abstract class CivicVariant {
-    public abstract String id();
+import com.google.gson.annotations.SerializedName;
 
+import org.immutables.gson.Gson;
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Value.Immutable
+@Gson.TypeAdapters
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public abstract class CivicVariant {
+
+    public abstract int id();
+
+    @Nullable
     public abstract String gene();
 
+    @Nullable
     public abstract String name();
 
+    @Nullable
     public abstract String description();
 
-    public abstract String chromosome();
+    public abstract CivicVariantCoordinates coordinates();
 
-    public abstract String start();
-
-    public abstract String stop();
-
-    public abstract String representativeTranscript();
-
-    public abstract String referenceBuild();
-
+    @SerializedName("evidence_items")
     public abstract List<CivicEvidenceItem> evidenceItems();
 
+    @Override
+    public String toString() {
+        return name() + "(" + id() + "): " + evidenceItems();
+    }
 }
