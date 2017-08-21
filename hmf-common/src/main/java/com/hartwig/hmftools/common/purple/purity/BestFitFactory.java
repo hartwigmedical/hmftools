@@ -35,11 +35,11 @@ public class BestFitFactory {
         score = FittedPurityScoreFactory.score(candidates);
 
         if (Doubles.lessOrEqual(score.minPurity(), ALL_CANDIDATES_MIN_PURITY) && isHighlyDiploid(score)) {
-            if (somatics.size() == 0 || Doubles.lessOrEqual(lowestScore.purity(), LOWEST_SCORE_MIN_PURITY)) {
-                status = FittedPurityStatus.HIGHLY_DIPLOID;
-                bestFit = lowestScore;
-            } else if (somatics.size() < MIN_VARIANTS) {
+            if (noDetectableTumor(somatics.size())) {
                 status = FittedPurityStatus.NO_TUMOR;
+                bestFit = lowestScore;
+            } else if (somaticsWontHelp(somatics.size(), lowestScore.purity())) {
+                status = FittedPurityStatus.HIGHLY_DIPLOID;
                 bestFit = lowestScore;
             } else {
                 status = FittedPurityStatus.SOMATIC;
@@ -50,6 +50,14 @@ public class BestFitFactory {
             status = FittedPurityStatus.NORMAL;
             bestFit = lowestScore;
         }
+    }
+
+    private boolean noDetectableTumor(int somaticCount) {
+        return somaticCount > 0 && somaticCount < MIN_VARIANTS;
+    }
+
+    private boolean somaticsWontHelp(int somaticCount, double lowestScoringPurity) {
+        return somaticCount == 0 || Doubles.lessOrEqual(lowestScoringPurity, LOWEST_SCORE_MIN_PURITY);
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score) {
