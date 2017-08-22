@@ -10,6 +10,7 @@
 
     <modules>
         <module>hmf-common</module>
+        <module>sv-annotation</module>
         <module>somatic-sampler</module>
         <module>batch-health-check-reader</module>
         <module>consensus-rule-filter</module>
@@ -52,6 +53,7 @@
 
         <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
+        <sv-annotation.version>1.0</sv-annotation.version>
 
         <!-- Used by health checker -->
         <reactivex.version>1.1.5</reactivex.version>
@@ -106,6 +108,11 @@
                 <version>${hmf-common.version}</version>
                 <scope>test</scope>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>sv-annotation</artifactId>
+                <version>${sv-annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

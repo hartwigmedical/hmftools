@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 
 import javax.xml.stream.XMLStreamException;
@@ -24,7 +25,11 @@ import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
+import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
+import com.hartwig.hmftools.svannotation.MySQLAnnotator;
+import com.hartwig.hmftools.svannotation.NullAnnotator;
+import com.hartwig.hmftools.svannotation.StructuralVariantAnnotator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -58,10 +63,12 @@ public class PatientReporterApplication {
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String FREEC = "freec";
+    private static final String ENSEMBL_DB = "ensembl_db";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public static void main(final String... args) throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
+    public static void main(final String... args)
+            throws ParseException, IOException, HartwigException, DRException, XMLStreamException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -106,14 +113,24 @@ public class PatientReporterApplication {
 
     @NotNull
     private static PatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException, XMLStreamException {
+            throws IOException, EmptyFileException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
         final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer,
-                cmd.hasOption(FREEC));
+        final StructuralVariantAnnotator annotator;
+        if (cmd.hasOption(ENSEMBL_DB)) {
+            final String url = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
+            LOGGER.info("connecting to: {}", url);
+            annotator = MySQLAnnotator.make(url, "anonymous", "");
+        } else {
+            annotator = NullAnnotator.make();
+        }
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator);
+
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer, copyNumberAnalyzer,
+                cmd.hasOption(FREEC), cmd.hasOption(ENSEMBL_DB));
     }
 
     @NotNull
@@ -235,6 +252,9 @@ public class PatientReporterApplication {
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
         options.addOption(FREEC, false, "Use freec copy numbers instead of purple.");
+
+        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+
         return options;
     }
 

@@ -132,6 +132,15 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberReport(report));
 
+        final ComponentBuilder<?, ?> structuralVariantPage =
+                cmp.verticalList(
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Structural Variant Information")
+                                .setStyle(sectionHeaderStyle()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        structuralVariantSection(report, reporterData)
+                );
+
         final ComponentBuilder<?, ?> genePanelPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -155,7 +164,14 @@ public class PDFWriter implements ReportWriter {
                 );
 
         final ComponentBuilder<?, ?> totalReport =
-                cmp.multiPageList().add(reportMainPage).newPage().add(genePanelPage).newPage().add(additionalInfoPage);
+                cmp.multiPageList()
+                        .add(reportMainPage)
+                        .newPage()
+                        .add(structuralVariantPage)
+                        .newPage()
+                        .add(genePanelPage)
+                        .newPage()
+                        .add(additionalInfoPage);
         // @formatter:on
 
         return report().noData(totalReport);
@@ -293,6 +309,36 @@ public class PDFWriter implements ReportWriter {
                         cmp.text(mutationalLoadAddition).setStyle(fontStyle()))
         );
         // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> structuralVariantSection(@NotNull final PatientReport report,
+            @NotNull final HmfReporterData reporterData) {
+        // @formatter:off
+        final ComponentBuilder<?, ?> table;
+        if (report.structuralVariants().size() > 0) {
+            table = cmp.subreport(
+                        baseTable()
+                            .fields(PatientDataSource.structuralVariantFields())
+                            .columns(
+                                col.column("Gene", PatientDataSource.SV_GENE_FIELD).setFixedWidth(50),
+                                col.column("Position", PatientDataSource.SV_POSITION_FIELD).setFixedWidth(80),
+                                col.column("Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30),
+                                col.column("Length / Translocation Partner", PatientDataSource.SV_PARTNER_FIELD),
+                                col.column("HGVS", PatientDataSource.SV_HGVS_FIELD),
+                                col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD).setFixedWidth(50),
+                                col.column("Gene Context", PatientDataSource.SV_GENE_CONTEXT),
+                                col.column("VAF", PatientDataSource.SV_VAF).setFixedWidth(30),
+                                col.column("TAF", PatientDataSource.SV_TAF).setFixedWidth(30)
+                            )
+                            .setDataSource(PatientDataSource.fromStructuralVariants(report.structuralVariants(), reporterData))
+                    );
+        } else {
+            table = cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        }
+        // @formatter:on
+
+        return cmp.verticalList(cmp.text("Gene Disruptions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
     }
 
     @NotNull

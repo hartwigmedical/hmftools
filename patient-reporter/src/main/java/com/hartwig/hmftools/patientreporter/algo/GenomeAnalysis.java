@@ -2,9 +2,11 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class GenomeAnalysis {
     @NotNull
@@ -15,13 +17,17 @@ class GenomeAnalysis {
     private final CopyNumberAnalysis copyNumberAnalysis;
     @NotNull
     private final PurpleAnalysis purpleAnalysis;
+    @NotNull
+    private final StructuralVariantAnalysis structuralVariantAnalysis;
 
     GenomeAnalysis(@NotNull final String sample, @NotNull final VariantAnalysis variantAnalysis,
-            @NotNull final CopyNumberAnalysis copyNumberAnalysis, @NotNull final PurpleAnalysis purpleAnalysis) {
+            @NotNull final CopyNumberAnalysis copyNumberAnalysis, @NotNull final PurpleAnalysis purpleAnalysis,
+            @NotNull final StructuralVariantAnalysis structuralVariantAnalysis) {
         this.sample = sample;
         this.variantAnalysis = variantAnalysis;
         this.copyNumberAnalysis = copyNumberAnalysis;
         this.purpleAnalysis = purpleAnalysis;
+        this.structuralVariantAnalysis = structuralVariantAnalysis;
     }
 
     @NotNull
@@ -42,5 +48,10 @@ class GenomeAnalysis {
     @NotNull
     CopyNumberAnalysis copyNumberAnalysis() {
         return copyNumberAnalysis;
+    }
+
+    @NotNull
+    StructuralVariantAnalysis structuralVariantAnalysis() {
+        return structuralVariantAnalysis;
     }
 }

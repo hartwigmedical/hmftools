@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,7 @@ final class PatientReporterHelper {
     private static final String COPYNUMBER_DIRECTORY = "copyNumber";
     private static final String FREEC_DIRECTORY = "freec";
     private static final String PURPLE_DIRECTORY = "purple";
+    private static final String MANTA_FILENAME = "somaticSV.vcf.gz";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
 
@@ -61,6 +63,15 @@ final class PatientReporterHelper {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
         return GeneCopyNumberFile.read(fileName);
+    }
+
+    @Nullable
+    static Path findMantaVCF(@NotNull final String runDirectory) {
+        try {
+            return Files.walk(Paths.get(runDirectory)).filter(p -> p.getFileName().endsWith(MANTA_FILENAME)).findFirst().orElse(null);
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
     @NotNull

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -25,6 +26,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
+import com.hartwig.hmftools.svannotation.StructuralVariantAnnotation;
 
 import org.junit.Test;
 
@@ -107,12 +109,14 @@ public class PDFWriterTest {
                 .build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 
+        final List<StructuralVariantAnnotation> svAnnotations = Collections.emptyList();
+
         final int mutationalLoad = 361;
         final String tumorType = "Melanoma";
         final Double pathologyTumorPercentage = 0.6;
 
         final PatientReport patientReport =
-                new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, fittedPurity);
+                new PatientReport(sample, variants, svAnnotations, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, fittedPurity);
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
