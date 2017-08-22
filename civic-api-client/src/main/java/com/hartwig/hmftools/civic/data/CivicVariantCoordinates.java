@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.civic.data;
 
 import com.google.gson.annotations.SerializedName;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -18,16 +19,16 @@ public abstract class CivicVariantCoordinates {
     public abstract String chromosome2();
 
     @Nullable
-    public abstract Integer start();
+    public abstract Long start();
 
     @Nullable
-    public abstract Integer start2();
+    public abstract Long start2();
 
     @Nullable
-    public abstract Integer stop();
+    public abstract Long stop();
 
     @Nullable
-    public abstract Integer stop2();
+    public abstract Long stop2();
 
     @Nullable
     @SerializedName("representative_transcript")
@@ -52,4 +53,26 @@ public abstract class CivicVariantCoordinates {
     @Nullable
     @SerializedName("reference_build")
     public abstract String referenceBuild();
+
+    public boolean equals(@NotNull final SomaticVariant variant) {
+        final String refBases = referenceBases();
+        final String altBases = variantBases();
+        if (refBases == null || altBases == null) {
+            return false;
+        }
+        return containsVariant(variant) && refBases.equals(variant.ref()) && altBases.equals(variant.alt());
+    }
+
+    private boolean checkCoordinates(@NotNull final SomaticVariant variant, final String chromosome, final Long start, final Long stop) {
+        return chromosome != null && start != null && stop != null && chromosome.equals(variant.chromosome()) && start <= variant.position()
+                && stop >= variant.position();
+
+    }
+
+    public boolean containsVariant(@NotNull final SomaticVariant variant) {
+        final boolean firstCoordContainsVariant = checkCoordinates(variant, chromosome(), start(), stop());
+        final boolean secondCoordContainsVariant = checkCoordinates(variant, chromosome2(), start2(), stop2());
+        return firstCoordContainsVariant || secondCoordContainsVariant;
+    }
+
 }
