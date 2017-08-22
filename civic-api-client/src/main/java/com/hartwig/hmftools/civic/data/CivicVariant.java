@@ -25,6 +25,9 @@ public abstract class CivicVariant {
     @Nullable
     public abstract String description();
 
+    @SerializedName("variant_types")
+    public abstract List<CivicVariantType> variantTypes();
+
     public abstract CivicVariantCoordinates coordinates();
 
     @SerializedName("evidence_items")

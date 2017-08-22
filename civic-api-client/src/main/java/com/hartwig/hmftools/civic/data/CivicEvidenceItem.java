@@ -36,6 +36,10 @@ public abstract class CivicEvidenceItem {
 
     public abstract List<CivicDrug> drugs();
 
+    public abstract String status();
+
+    public abstract CivicEvidenceSource source();
+
     @Override
     public String toString() {
         return level() + ": " + direction() + " " + significance() + " to " + drugs();

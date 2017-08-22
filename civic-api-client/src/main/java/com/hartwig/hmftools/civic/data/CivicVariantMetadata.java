@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicVariantKey {
+public abstract class CivicVariantMetadata {
     public abstract String name();
 
     public abstract int id();
