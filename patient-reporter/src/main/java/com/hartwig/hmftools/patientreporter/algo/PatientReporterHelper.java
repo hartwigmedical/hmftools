@@ -37,6 +37,7 @@ final class PatientReporterHelper {
     private static final String COPYNUMBER_DIRECTORY = "copyNumber";
     private static final String FREEC_DIRECTORY = "freec";
     private static final String PURPLE_DIRECTORY = "purple";
+    private static final String MANTA_BPI_FILENAME = "_somaticSV_bpi.vcf";
     private static final String MANTA_FILENAME = "somaticSV.vcf.gz";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
@@ -68,7 +69,12 @@ final class PatientReporterHelper {
     @Nullable
     static Path findMantaVCF(@NotNull final String runDirectory) {
         try {
-            return Files.walk(Paths.get(runDirectory)).filter(p -> p.getFileName().endsWith(MANTA_FILENAME)).findFirst().orElse(null);
+            final Path vanilla_manta =
+                    Files.walk(Paths.get(runDirectory)).filter(p -> p.getFileName().endsWith(MANTA_FILENAME)).findFirst().orElse(null);
+            return Files.walk(Paths.get(runDirectory))
+                    .filter(p -> p.getFileName().endsWith(MANTA_BPI_FILENAME))
+                    .findFirst()
+                    .orElse(vanilla_manta);
         } catch (final Exception e) {
             return null;
         }
