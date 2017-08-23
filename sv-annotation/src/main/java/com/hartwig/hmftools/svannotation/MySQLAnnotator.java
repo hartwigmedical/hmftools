@@ -142,22 +142,27 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
                         .fetchOne(0, Integer.class);
 
                 final int exon_upstream;
+                final int exon_upstream_phase;
                 final int exon_downstream;
+                final int exon_downstream_phase;
 
                 if (gene_strand > 0) {
                     // forward strand
                     exon_upstream = exonLeft == null ? 0 : exonLeft.get(0, Integer.class);
+                    exon_upstream_phase = exonLeft == null ? 0 : exonLeft.get(2, Integer.class);
                     exon_downstream = exonRight == null ? 0 : exonRight.get(0, Integer.class);
+                    exon_downstream_phase = exonRight == null ? 0 : exonRight.get(1, Integer.class);
                 } else {
                     // reverse strand
                     exon_downstream = exonLeft == null ? 0 : exonLeft.get(0, Integer.class);
+                    exon_downstream_phase = exonLeft == null ? 0 : exonLeft.get(1, Integer.class);
                     exon_upstream = exonRight == null ? 0 : exonRight.get(0, Integer.class);
+                    exon_upstream_phase = exonRight == null ? 0 : exonRight.get(2, Integer.class);
                 }
 
-                // TODO: exon phasing
-
                 final TranscriptAnnotation transcript =
-                        new TranscriptAnnotation(gene, transcript_stable_id, exon_upstream, exon_downstream, exon_max, canonical);
+                        new TranscriptAnnotation(gene, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
+                                exon_downstream_phase, exon_max, canonical);
                 gene.addTranscriptAnnotation(transcript);
             }
         }

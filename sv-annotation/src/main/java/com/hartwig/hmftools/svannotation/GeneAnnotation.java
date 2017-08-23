@@ -45,7 +45,7 @@ public class GeneAnnotation {
         transcriptAnnotations.add(a);
     }
 
-    public List<TranscriptAnnotation> getTranscriptAnnotations() {
+    public List<TranscriptAnnotation> getTranscripts() {
         return ImmutableList.copyOf(transcriptAnnotations);
     }
 
