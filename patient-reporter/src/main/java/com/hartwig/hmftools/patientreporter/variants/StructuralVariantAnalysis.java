@@ -10,7 +10,6 @@ public class StructuralVariantAnalysis {
 
     public static class GeneFusion {
         public String Type;
-        public String Orientation;
         public String Start;
         public String GeneStart;
         public String GeneContextStart;

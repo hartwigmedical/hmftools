@@ -138,7 +138,9 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Structural Variant Information")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        structuralVariantSection(report, reporterData)
+                        geneFusionReport(report),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneDisruptionReport(report)
                 );
 
         final ComponentBuilder<?, ?> genePanelPage =
@@ -312,8 +314,34 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> structuralVariantSection(@NotNull final PatientReport report,
-            @NotNull final HmfReporterData reporterData) {
+    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final PatientReport report) {
+        // @formatter:off
+        final ComponentBuilder<?, ?> table;
+        if (report.geneFusions().size() > 0) {
+            table = cmp.subreport(
+                        baseTable()
+                            .fields(PatientDataSource.geneFusionFields())
+                            .columns(
+                                col.column("Gene A", PatientDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("Position A", PatientDataSource.POSITION_FIELD),
+                                col.column("Gene A Context", PatientDataSource.SV_GENE_CONTEXT),
+                                col.column("Gene B", PatientDataSource.SV_PARTNER_GENE_FIELD).setFixedWidth(50),
+                                col.column("Position B", PatientDataSource.SV_PARTNER_POSITION_FIELD),
+                                col.column("Gene B Context", PatientDataSource.SV_PARTNER_CONTEXT_FIELD),
+                                col.column("SV Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30)
+                            )
+                            .setDataSource(PatientDataSource.fromGeneFusions(report.geneFusions()))
+                    );
+        } else {
+            table = cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        }
+        // @formatter:on
+
+        return cmp.verticalList(cmp.text("Gene Fusions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final PatientReport report) {
         // @formatter:off
         final ComponentBuilder<?, ?> table;
         if (report.geneDisruptions().size() > 0) {
@@ -321,17 +349,17 @@ public class PDFWriter implements ReportWriter {
                         baseTable()
                             .fields(PatientDataSource.geneDisruptionFields())
                             .columns(
-                                col.column("Gene", PatientDataSource.SV_GENE_FIELD).setFixedWidth(50),
-                                col.column("Position", PatientDataSource.SV_POSITION_FIELD),
+                                col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("Position", PatientDataSource.POSITION_FIELD),
                                 col.column("Gene Context", PatientDataSource.SV_GENE_CONTEXT),
-                                col.column("Partner", PatientDataSource.SV_PARTNER_FIELD),
+                                col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD),
+                                col.column("Partner", PatientDataSource.SV_PARTNER_POSITION_FIELD),
                                 col.column("HGVS", PatientDataSource.SV_HGVS_FIELD),
                                 col.column("Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30),
-                                col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD),
                                 col.column("VAF", PatientDataSource.SV_VAF).setFixedWidth(30),
                                 col.column("TAF", PatientDataSource.SV_TAF).setFixedWidth(30)
                             )
-                            .setDataSource(PatientDataSource.fromGeneDisruptions(report.geneDisruptions(), reporterData))
+                            .setDataSource(PatientDataSource.fromGeneDisruptions(report.geneDisruptions()))
                     );
         } else {
             table = cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));

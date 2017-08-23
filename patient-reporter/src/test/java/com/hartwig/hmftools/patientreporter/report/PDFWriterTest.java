@@ -112,6 +112,7 @@ public class PDFWriterTest {
                 .build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 
+        final List<StructuralVariantAnalysis.GeneFusion> fusions = Collections.emptyList();
         final List<StructuralVariantAnalysis.GeneDisruption> disruptions = Collections.emptyList();
 
         final int mutationalLoad = 361;
@@ -119,7 +120,7 @@ public class PDFWriterTest {
         final Double pathologyTumorPercentage = 0.6;
 
         final PatientReport patientReport =
-                new PatientReport(sample, variants, disruptions, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage,
+                new PatientReport(sample, variants, fusions, disruptions, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage,
                         fittedPurity);
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";

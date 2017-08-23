@@ -18,6 +18,8 @@ public class PatientReport {
     @NotNull
     private final List<VariantReport> variants;
     @NotNull
+    private final List<StructuralVariantAnalysis.GeneFusion> geneFusions;
+    @NotNull
     private final List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions;
     @NotNull
     private final List<CopyNumberReport> copyNumbers;
@@ -30,11 +32,13 @@ public class PatientReport {
     private final FittedPurity fittedPurity;
 
     public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
+            @NotNull final List<StructuralVariantAnalysis.GeneFusion> geneFusions,
             @NotNull final List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions,
             @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad, @NotNull final String tumorType,
             @Nullable final Double tumorPercentage, @NotNull final FittedPurity fittedPurity) {
         this.sample = sample;
         this.variants = variants;
+        this.geneFusions = geneFusions;
         this.geneDisruptions = geneDisruptions;
         this.copyNumbers = copyNumbers;
         this.mutationalLoad = mutationalLoad;
@@ -53,6 +57,12 @@ public class PatientReport {
         return variants;
     }
 
+    @NotNull
+    public List<StructuralVariantAnalysis.GeneFusion> geneFusions() {
+        return geneFusions;
+    }
+
+    @NotNull
     public List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions() {
         return geneDisruptions;
     }

@@ -92,12 +92,13 @@ public class PatientReporter {
         LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
         LOGGER.info("  Number of raw structural variants : " + Integer.toString(svCount));
+        LOGGER.info("  Number of gene fusions to report : " + Integer.toString(svAnalysis.getFusions().size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(svAnalysis.getDisruptions().size()));
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
-        return new PatientReport(sample, purpleEnrichedVariants, svAnalysis.getDisruptions(), copyNumberAnalysis.findings(), mutationalLoad,
+        return new PatientReport(sample, purpleEnrichedVariants, svAnalysis.getFusions(), svAnalysis.getDisruptions(), copyNumberAnalysis.findings(), mutationalLoad,
                 tumorType, tumorPercentage, purpleAnalysis.fittedPurity());
     }
 
