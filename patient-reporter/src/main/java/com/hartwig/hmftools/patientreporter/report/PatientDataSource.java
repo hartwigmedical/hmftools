@@ -89,7 +89,7 @@ class PatientDataSource {
                         SV_TAF.getName());
 
         disruptions.forEach(
-                g -> dataSource.add(g.GeneName, g.Location, g.Type, g.Partner, g.HGVS, g.Orientation, g.GeneContext, "TODO", "TODO"));
+                g -> dataSource.add(g.GeneName, g.Location, g.Type, g.Partner, g.HGVS, g.Orientation, g.GeneContext, g.VAF, g.TAF));
 
         return dataSource;
     }

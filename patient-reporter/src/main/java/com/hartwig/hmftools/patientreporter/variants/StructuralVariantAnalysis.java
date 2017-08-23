@@ -27,6 +27,8 @@ public class StructuralVariantAnalysis {
         public String HGVS;
         public String Type;
         public String Orientation;
+        public String VAF;
+        public String TAF = "TODO";
     }
 
     private final List<StructuralVariantAnnotation> annotations;

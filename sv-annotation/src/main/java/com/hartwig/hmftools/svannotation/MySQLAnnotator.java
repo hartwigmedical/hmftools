@@ -57,15 +57,16 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
         final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(variant);
 
         annotation.setBreakendAnnotations(
-                annotateBreakend(annotation, variant.startChromosome(), variant.startPosition(), variant.startOrientation()),
-                annotateBreakend(annotation, variant.endChromosome(), variant.endPosition(), variant.endOrientation()));
+                annotateBreakend(annotation, variant.startChromosome(), variant.startPosition(), variant.startOrientation(),
+                        variant.startAF()),
+                annotateBreakend(annotation, variant.endChromosome(), variant.endPosition(), variant.endOrientation(), variant.endAF()));
 
         return annotation;
     }
 
     private BreakendAnnotations annotateBreakend(final StructuralVariantAnnotation parent, String chromosome, final long position,
-            final int orientation) {
-        final BreakendAnnotations annotation = new BreakendAnnotations(parent, chromosome, position, orientation);
+            final int orientation, final Double alleleFrequency) {
+        final BreakendAnnotations annotation = new BreakendAnnotations(parent, chromosome, position, orientation, alleleFrequency);
 
         final int PROMOTER_DISTANCE = 10000;
 

@@ -7,6 +7,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.svannotation.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.StructuralVariantAnnotator;
@@ -89,6 +90,7 @@ public class StructuralVariantAnalyzer {
                 disruption.HGVS = "TODO";
                 disruption.Type = g.getBreakend().getStructuralVariant().getVariant().type().toString();
                 disruption.Orientation = g.getBreakend().getOrientation() > 0 ? "5\"" : "3\"";
+                disruption.VAF = PatientReportFormat.formatNullablePercent(g.getBreakend().getAlleleFrequency());
 
                 disruptions.add(disruption);
                 annotations.remove(g.getBreakend().getStructuralVariant());
