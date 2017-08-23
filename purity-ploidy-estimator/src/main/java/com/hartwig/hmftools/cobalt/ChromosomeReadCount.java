@@ -8,7 +8,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
-import com.hartwig.hmftools.purple.LoadSomaticVariants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +20,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
 
-    private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
+    private static final Logger LOGGER = LogManager.getLogger(ChromosomeReadCount.class);
 
     private final File inputFile;
     private final SamReaderFactory readerFactory;
