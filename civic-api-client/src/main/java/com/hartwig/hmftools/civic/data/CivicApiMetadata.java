@@ -10,12 +10,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicEvidenceSource {
-    @Nullable
-    public abstract String name();
+public abstract class CivicApiMetadata {
 
-    public abstract String citation();
+    @SerializedName("current_page")
+    public abstract int currentPage();
 
-    @SerializedName("source_url")
-    public abstract String url();
+    @SerializedName("per_page")
+    public abstract int perPage();
+
+    @SerializedName("total_pages")
+    public abstract int totalPages();
+
+    @SerializedName("total_count")
+    public abstract int totalElements();
 }

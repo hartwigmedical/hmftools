@@ -32,8 +32,6 @@ public abstract class CivicEvidenceItem {
     @SerializedName("evidence_direction")
     public abstract String direction();
 
-    //    public abstract String origin();
-
     public abstract List<CivicDrug> drugs();
 
     public abstract String status();
@@ -42,6 +40,6 @@ public abstract class CivicEvidenceItem {
 
     @Override
     public String toString() {
-        return level() + ": " + direction() + " " + significance() + " to " + drugs();
+        return name() + "[" + level() + "]: " + direction() + " " + significance() + " to " + drugs();
     }
 }

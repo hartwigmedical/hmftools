@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.civic.data;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -16,8 +18,11 @@ public abstract class CivicVariant {
 
     public abstract int id();
 
-    @Nullable
+    @SerializedName("entrez_name")
     public abstract String gene();
+
+    @SerializedName("gene_id")
+    public abstract int geneId();
 
     @Nullable
     public abstract String name();
@@ -33,8 +38,20 @@ public abstract class CivicVariant {
     @SerializedName("evidence_items")
     public abstract List<CivicEvidenceItem> evidenceItems();
 
+    public List<CivicEvidenceItem> evidenceItemsWithDrugs() {
+        return evidenceItems().stream()
+                .filter(evidenceItem -> !evidenceItem.drugs().isEmpty())
+                .sorted(Comparator.comparing(CivicEvidenceItem::level))
+                .collect(Collectors.toList());
+    }
+
+    public String summaryUrl() {
+        final String URL_FORMAT = "https://civic.genome.wustl.edu/events/genes/%d/summary/variants/%d/summary#variant";
+        return String.format(URL_FORMAT, geneId(), id());
+    }
+
     @Override
     public String toString() {
-        return name() + "(" + id() + "): " + evidenceItems();
+        return "Civic Variant: " + name() + ": " + summaryUrl();
     }
 }

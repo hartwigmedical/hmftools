@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.civic.data;
 
+import java.util.List;
+
 import com.google.gson.annotations.SerializedName;
 
 import org.immutables.gson.Gson;
@@ -10,12 +12,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicEvidenceSource {
-    @Nullable
-    public abstract String name();
+public abstract class CivicIndexResult<T> {
 
-    public abstract String citation();
+    @SerializedName("_meta")
+    public abstract CivicApiMetadata meta();
 
-    @SerializedName("source_url")
-    public abstract String url();
+    public abstract List<T> records();
 }
