@@ -25,8 +25,8 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
+import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
-import com.hartwig.hmftools.svannotation.StructuralVariantAnnotation;
 
 import org.junit.Test;
 
@@ -96,27 +96,31 @@ public class PDFWriterTest {
                 .build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder().chromosome("2")
+        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
+                .chromosome("2")
                 .chromosomeBand("p23.1-p23.2")
                 .gene("ALK")
                 .copyNumber(0)
                 .type(CopyNumberReportType.LOSS)
                 .build();
-        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder().chromosome("3")
+        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder()
+                .chromosome("3")
                 .chromosomeBand("q26.32")
-                .gene("PIK3CA").copyNumber(9)
+                .gene("PIK3CA")
+                .copyNumber(9)
                 .type(CopyNumberReportType.GAIN)
                 .build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
 
-        final List<StructuralVariantAnnotation> svAnnotations = Collections.emptyList();
+        final List<StructuralVariantAnalysis.GeneDisruption> disruptions = Collections.emptyList();
 
         final int mutationalLoad = 361;
         final String tumorType = "Melanoma";
         final Double pathologyTumorPercentage = 0.6;
 
         final PatientReport patientReport =
-                new PatientReport(sample, variants, svAnnotations, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, fittedPurity);
+                new PatientReport(sample, variants, disruptions, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage,
+                        fittedPurity);
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";

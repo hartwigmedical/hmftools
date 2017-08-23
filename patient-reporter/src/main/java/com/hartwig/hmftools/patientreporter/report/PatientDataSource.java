@@ -3,18 +3,11 @@ package com.hartwig.hmftools.patientreporter.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
-import com.hartwig.hmftools.svannotation.GeneAnnotation;
-import com.hartwig.hmftools.svannotation.StructuralVariantAnnotation;
-import com.hartwig.hmftools.svannotation.TranscriptAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -87,75 +80,18 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromStructuralVariants(@NotNull List<StructuralVariantAnnotation> variants,
+    static JRDataSource fromGeneDisruptions(@NotNull List<StructuralVariantAnalysis.GeneDisruption> disruptions,
             @NotNull final HmfReporterData reporterData) {
 
-        final DRDataSource svDatasource =
+        final DRDataSource dataSource =
                 new DRDataSource(SV_GENE_FIELD.getName(), SV_POSITION_FIELD.getName(), SV_TYPE_FIELD.getName(), SV_PARTNER_FIELD.getName(),
                         SV_HGVS_FIELD.getName(), SV_ORIENTATION_FIELD.getName(), SV_GENE_CONTEXT.getName(), SV_VAF.getName(),
                         SV_TAF.getName());
 
-        final Predicate<GeneAnnotation> inCosmic = g -> reporterData.cosmicModel().data().containsKey(g.getGeneName());
-        final Predicate<StructuralVariantAnnotation> intronicDisruption = sv -> {
-            for (final GeneAnnotation g : sv.getStartAnnotations().getGenes()) {
-                if (sv.getEndAnnotations()
-                        .getGenes()
-                        .stream()
-                        .filter(o -> o.getCanonical().isIntronic() && g.getCanonical().isIntronic()
-                                && o.getCanonical().getExonUpstream() == g.getCanonical().getExonUpstream())
-                        .count() > 0) {
-                    return true;
-                }
-            }
-            return false;
-        };
+        disruptions.forEach(
+                g -> dataSource.add(g.GeneName, g.Location, g.Type, g.Partner, g.HGVS, g.Orientation, g.GeneContext, "TODO", "TODO"));
 
-        final List<GeneAnnotation> genes = Lists.newArrayList();
-        for (final StructuralVariantAnnotation sv : variants) {
-
-            if (intronicDisruption.test(sv)) {
-                continue;
-            }
-
-            genes.addAll(sv.getStartAnnotations().getGenes());
-            genes.addAll(sv.getEndAnnotations().getGenes());
-        }
-
-        final ArrayListMultimap<String, GeneAnnotation> geneMap = ArrayListMultimap.create();
-        for (final GeneAnnotation g : genes) {
-            if (!inCosmic.test(g)) {
-                continue;
-            }
-            geneMap.put(g.getGeneName(), g);
-        }
-
-        final Function<TranscriptAnnotation, String> exonDescription = (t) -> {
-            if (t.isPromoter()) {
-                return "Promoter Region";
-            } else if (t.isExonic()) {
-                return String.format("In exon %d / %d", t.getExonUpstream(), t.getExonMax());
-            } else {
-                return String.format("Between exon %d and %d / %d", t.getExonUpstream(), t.getExonDownstream(), t.getExonMax());
-            }
-        };
-
-        for (final String geneName : geneMap.keySet()) {
-            for (final GeneAnnotation g : geneMap.get(geneName)) {
-                final StructuralVariant sv = g.getBreakend().getStructuralVariant().getVariant();
-                final String partner = sv.startChromosome().equals(sv.endChromosome())
-                        ? Long.toString(sv.endPosition() - sv.startPosition())
-                        : g.getOtherBreakend().getChromosome();
-                final String hgvs = "TODO";
-                final String orientation = g.getBreakend().getOrientation() > 0 ? "5\"" : "3\"";
-                final String vaf = "TODO";
-                final String taf = "TODO";
-
-                svDatasource.add(geneName, g.getBreakend().getPositionString(), sv.type().toString(), partner, hgvs, orientation,
-                        exonDescription.apply(g.getCanonical()), vaf, taf);
-            }
-        }
-
-        return svDatasource;
+        return dataSource;
     }
 
     @NotNull
@@ -180,7 +116,7 @@ class PatientDataSource {
     }
 
     @NotNull
-    static FieldBuilder<?>[] structuralVariantFields() {
+    static FieldBuilder<?>[] geneDisruptionFields() {
         return new FieldBuilder<?>[] { SV_GENE_FIELD, SV_POSITION_FIELD, SV_TYPE_FIELD, SV_PARTNER_FIELD, SV_HGVS_FIELD,
                 SV_ORIENTATION_FIELD, SV_GENE_CONTEXT, SV_VAF, SV_TAF };
     }

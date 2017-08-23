@@ -123,11 +123,11 @@ public class PatientReporterApplication {
         if (cmd.hasOption(ENSEMBL_DB)) {
             final String url = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
             LOGGER.info("connecting to: {}", url);
-            annotator = MySQLAnnotator.make(url, "anonymous", "");
+            annotator = MySQLAnnotator.make(url);
         } else {
             annotator = NullAnnotator.make();
         }
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator);
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, hmfSlicingRegion);
 
         return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer, copyNumberAnalyzer,
                 cmd.hasOption(FREEC), cmd.hasOption(ENSEMBL_DB));

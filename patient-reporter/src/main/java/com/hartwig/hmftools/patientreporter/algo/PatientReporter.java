@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
@@ -93,11 +92,12 @@ public class PatientReporter {
         LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
         LOGGER.info("  Number of raw structural variants : " + Integer.toString(svCount));
+        LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(svAnalysis.getDisruptions().size()));
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
-        return new PatientReport(sample, purpleEnrichedVariants, svAnalysis.getAnnotations(), copyNumberAnalysis.findings(), mutationalLoad,
+        return new PatientReport(sample, purpleEnrichedVariants, svAnalysis.getDisruptions(), copyNumberAnalysis.findings(), mutationalLoad,
                 tumorType, tumorPercentage, purpleAnalysis.fittedPurity());
     }
 
@@ -143,15 +143,15 @@ public class PatientReporter {
         final Path mantaVcfPath = PatientReporterHelper.findMantaVCF(runDirectory);
         final StructuralVariantAnalysis svAnalysis;
         if (doSV && mantaVcfPath != null) {
-            LOGGER.info("Loading structural variants...");
+            LOGGER.info("Loading structural variants from VCF...");
             final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(mantaVcfPath.toString());
-            LOGGER.info("Annotating structural variants...");
+            LOGGER.info("Analysing structural variants...");
             svAnalysis = structuralVariantAnalyzer.run(structuralVariants);
         } else {
             if (doSV) {
                 LOGGER.warn("Could not find Manta VCF!");
             }
-            svAnalysis = new StructuralVariantAnalysis(Collections.emptyList());
+            svAnalysis = new StructuralVariantAnalysis();
         }
 
         return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis, purpleAnalysis, svAnalysis);

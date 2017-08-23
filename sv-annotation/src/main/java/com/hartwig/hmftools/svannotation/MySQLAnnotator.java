@@ -28,13 +28,13 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
     private final DSLContext context;
     private final int coord_system_id;
 
-    public static StructuralVariantAnnotator make(final String url, final String username, final String password) throws SQLException {
-        return new MySQLAnnotator(url, username, password);
+    public static StructuralVariantAnnotator make(final String url) throws SQLException {
+        return new MySQLAnnotator(url);
     }
 
-    private MySQLAnnotator(final String url, final String username, final String password) throws SQLException {
+    private MySQLAnnotator(final String url) throws SQLException {
         System.setProperty("org.jooq.no-logo", "true");
-        final Connection conn = DriverManager.getConnection(url, username, password);
+        final Connection conn = DriverManager.getConnection(url);
         context = DSL.using(conn, SQLDialect.MYSQL);
         coord_system_id = findCoordSystemId();
     }

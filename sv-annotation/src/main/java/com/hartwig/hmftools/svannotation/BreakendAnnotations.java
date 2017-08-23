@@ -49,7 +49,7 @@ public class BreakendAnnotations {
     }
 
     public String getPositionString() {
-        return chromosome + ":" + Long.toString(position);
+        return String.format("chr%s:%d",chromosome, position);
     }
 
     public List<GeneAnnotation> getGenes() {

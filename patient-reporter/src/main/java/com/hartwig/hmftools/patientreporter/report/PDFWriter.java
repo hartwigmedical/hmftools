@@ -316,22 +316,22 @@ public class PDFWriter implements ReportWriter {
             @NotNull final HmfReporterData reporterData) {
         // @formatter:off
         final ComponentBuilder<?, ?> table;
-        if (report.structuralVariants().size() > 0) {
+        if (report.geneDisruptions().size() > 0) {
             table = cmp.subreport(
                         baseTable()
-                            .fields(PatientDataSource.structuralVariantFields())
+                            .fields(PatientDataSource.geneDisruptionFields())
                             .columns(
                                 col.column("Gene", PatientDataSource.SV_GENE_FIELD).setFixedWidth(50),
-                                col.column("Position", PatientDataSource.SV_POSITION_FIELD).setFixedWidth(80),
-                                col.column("Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30),
-                                col.column("Length / Translocation Partner", PatientDataSource.SV_PARTNER_FIELD),
-                                col.column("HGVS", PatientDataSource.SV_HGVS_FIELD),
-                                col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD).setFixedWidth(50),
+                                col.column("Position", PatientDataSource.SV_POSITION_FIELD),
                                 col.column("Gene Context", PatientDataSource.SV_GENE_CONTEXT),
+                                col.column("Partner", PatientDataSource.SV_PARTNER_FIELD),
+                                col.column("HGVS", PatientDataSource.SV_HGVS_FIELD),
+                                col.column("Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30),
+                                col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD),
                                 col.column("VAF", PatientDataSource.SV_VAF).setFixedWidth(30),
                                 col.column("TAF", PatientDataSource.SV_TAF).setFixedWidth(30)
                             )
-                            .setDataSource(PatientDataSource.fromStructuralVariants(report.structuralVariants(), reporterData))
+                            .setDataSource(PatientDataSource.fromGeneDisruptions(report.geneDisruptions(), reporterData))
                     );
         } else {
             table = cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));

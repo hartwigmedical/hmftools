@@ -36,7 +36,7 @@ public class PatientReporterTest {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion, hmfSlicingRegion);
         final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        final StructuralVariantAnalyzer structuralVariantAnalyzer = new StructuralVariantAnalyzer(NullAnnotator.make());
+        final StructuralVariantAnalyzer structuralVariantAnalyzer = new StructuralVariantAnalyzer(NullAnnotator.make(), hmfSlicingRegion);
 
         final PatientReporter algo =
                 new PatientReporter(buildTestCpctEcrfModel(), Lims.buildEmptyModel(), variantAnalyzer, structuralVariantAnalyzer,
