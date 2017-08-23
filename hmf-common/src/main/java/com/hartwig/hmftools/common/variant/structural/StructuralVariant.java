@@ -24,6 +24,12 @@ public abstract class StructuralVariant {
 
     public abstract String endHomology();
 
+    @Nullable
+    public abstract Double startAF();
+
+    @Nullable
+    public abstract Double endAF();
+
     public abstract String insertSequence();
 
     public abstract StructuralVariantType type();
