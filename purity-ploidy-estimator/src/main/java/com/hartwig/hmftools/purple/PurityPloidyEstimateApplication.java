@@ -99,7 +99,6 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String GC_PROFILE = "gc_profile";
-    private static final String PLOT = "plot";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -289,7 +288,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
-        options.addOption(PLOT, false, "Generate circos data.");
 
         return options;
     }

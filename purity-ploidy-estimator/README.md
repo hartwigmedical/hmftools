@@ -11,8 +11,8 @@ Copy number segmentation is done with the Bioconductor
 
 This can be installed in R with the following commands:
 ```
-   source("https://bioconductor.org/biocLite.R”)
-   biocLite("copy number”)
+   source("https://bioconductor.org/biocLite.R")
+   biocLite("copy number")
 ```
 
 
