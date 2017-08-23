@@ -21,15 +21,10 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
-import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
-import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
-import com.hartwig.hmftools.patientdb.readers.SomaticVariantReader;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.apache.commons.cli.CommandLine;
@@ -56,7 +51,6 @@ public final class PatientDbRunner {
     private static final String LIMS_CSV = "lims_csv";
     private static final String LIMS_OLD_CSV = "lims_old_csv";
     private static final String LIMS_UMCU_CSV = "lims_umcu_csv";
-    private static final String SOMATIC = "somatic";
     private static final String CLINICAL = "clinical";
     private static final String RAW_ECRF = "raw_ecrf";
     private static final String FORM_STATUS_FILE = "form_status";
@@ -76,11 +70,10 @@ public final class PatientDbRunner {
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
         final String jdbcUrl = "jdbc:" + databaseUrl;
-        final boolean somatic = cmd.hasOption(SOMATIC);
         final boolean clinical = cmd.hasOption(CLINICAL);
         final boolean raw_ecrf = cmd.hasOption(RAW_ECRF);
 
-        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!somatic && !clinical && !raw_ecrf)) {
+        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!clinical && !raw_ecrf)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", basicOptions);
         } else {
@@ -93,9 +86,6 @@ public final class PatientDbRunner {
                 }
                 if (clinical) {
                     writeClinicalData(clinicalOptions, cmd, runContexts, dbWriter);
-                }
-                if (somatic) {
-                    writeSomaticData(somaticOptions, cmd, runContexts, dbWriter);
                 }
             } else {
                 if (!runDirectory.exists()) {
@@ -172,40 +162,6 @@ public final class PatientDbRunner {
         }
     }
 
-    private static void writeSomaticData(@NotNull final Options somaticOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
-            HartwigException {
-        final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-        final String extremeConfidenceBed = cmd.getOptionValue(EXTREME_CONFIDENCE_BED);
-        final boolean clearTables = cmd.hasOption(CLEAR_SOMATIC_TABLES);
-        if (Utils.anyNull(highConfidenceBed, extremeConfidenceBed)) {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -" + SOMATIC, somaticOptions);
-        } else {
-            if (clearTables) {
-                dbWriter.clearSomaticTables();
-            }
-            final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
-            final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
-            final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
-            final SomaticVariantReader somaticVariantReader = new SomaticVariantReader(consensusRule);
-            final List<RunContext> cpctRunContexts = runContexts.stream()
-                    .filter(runContext -> getPatientId(runContext.setName()).startsWith("CPCT"))
-                    .collect(Collectors.toList());
-            for (final RunContext cpctRunContext : cpctRunContexts) {
-                if (dbWriter.containsVariantsForSample(cpctRunContext.tumorSample())) {
-                    LOGGER.info("Somatic variants table contains data for sample: " + cpctRunContext.tumorSample() + ". Skipping.");
-                } else {
-                    LOGGER.info("Reading somatic data from run: " + cpctRunContext.runDirectory());
-                    final List<SomaticVariantData> somaticVariants = somaticVariantReader.read(cpctRunContext.runDirectory());
-                    dbWriter.writeSomaticVariants(cpctRunContext.tumorSample(), somaticVariants);
-                }
-            }
-            LOGGER.info("Done!");
-        }
-    }
-
     @NotNull
     private static List<String> getTumorSamplesForPatient(@NotNull final String patientId, @NotNull final List<RunContext> runContexts) {
         final List<String> sampleIdsForPatient = Lists.newArrayList();
@@ -254,7 +210,6 @@ public final class PatientDbRunner {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(SOMATIC, false, "Read/write somatic data.");
         options.addOption(CLINICAL, false, "Read/write clinical data.");
         options.addOption(RAW_ECRF, false, "Read/write ecrf data.");
         return options;

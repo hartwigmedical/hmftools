@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.somatic;
+package com.hartwig.hmftools.common.variant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

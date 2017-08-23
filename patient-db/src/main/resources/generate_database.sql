@@ -79,23 +79,9 @@ CREATE TABLE treatmentResponse
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
+DROP TABLE IF EXISTS comprehensiveSomaticVariant;
 DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
-(   id int NOT NULL AUTO_INCREMENT,
-    sampleId varchar(20) NOT NULL,
-    gene varchar(255) NOT NULL,
-    position varchar(255) NOT NULL,
-    ref varchar(255) NOT NULL,
-    alt varchar(255) NOT NULL,
-    cosmicId varchar(255),
-    alleleReadCount int NOT NULL,
-    totalReadCount int NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (sampleId) REFERENCES sample(sampleId)
-);
-
-DROP TABLE IF EXISTS comprehensiveSomaticVariant;
-CREATE TABLE comprehensiveSomaticVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(20) NOT NULL,

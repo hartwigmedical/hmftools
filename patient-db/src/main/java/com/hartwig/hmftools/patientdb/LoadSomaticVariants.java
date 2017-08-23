@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.patientdb;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,10 +13,10 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.somatic.EnrichedSomaticVariantFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,8 +34,8 @@ public class LoadSomaticVariants {
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
     private static final String VCF_FILE = "vcf_file";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String REF_GENOME = "ref_genome";
+    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -76,7 +76,7 @@ public class LoadSomaticVariants {
         final List<EnrichedSomaticVariant> variants = enrichedSomaticVariantFactory.enrich(vcfFile.variants());
 
         LOGGER.info("Persisting variants to database");
-        dbAccess.writeComprehensiveSomaticVariants(sample, variants);
+        dbAccess.writeSomaticVariants(sample, variants);
 
         LOGGER.info("Complete");
     }

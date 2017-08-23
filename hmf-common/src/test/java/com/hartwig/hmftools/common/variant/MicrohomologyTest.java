@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.somatic;
+package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertEquals;
 

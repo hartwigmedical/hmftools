@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.somatic;
+package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.Builder;
 import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.builder;
@@ -17,16 +17,17 @@ import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantAnnotation;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
 public class EnrichedSomaticVariantFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -36,6 +37,8 @@ public class EnrichedSomaticVariantFactory {
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
     @NotNull
     private final Optional<IndexedFastaSequenceFile> optionalReference;
+
+    private int unmatchedAnnotations;
 
     public EnrichedSomaticVariantFactory(double purity, double normFactor,
             @NotNull  final Multimap<String, GenomeRegion> highConfidenceRegions,
@@ -54,7 +57,12 @@ public class EnrichedSomaticVariantFactory {
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<SomaticVariant> variants) {
-        return variants.stream().map(this::enrich).collect(Collectors.toList());
+        final List<EnrichedSomaticVariant> result = variants.stream().map(this::enrich).collect(Collectors.toList());
+        if (unmatchedAnnotations > 0) {
+            LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
+        }
+
+        return result;
     }
 
     private EnrichedSomaticVariant enrich(@NotNull final SomaticVariant variant) {
@@ -72,9 +80,18 @@ public class EnrichedSomaticVariantFactory {
     private Builder addAnnotations(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
         final List<VariantAnnotation> annotations = variant.annotations();
         if (!annotations.isEmpty()) {
-            VariantAnnotation annotation = annotations.get(0);
-            builder.gene(annotation.gene());
-            builder.effect(annotation.consequenceString());
+            // MIVO: get the first annotation for now, eventually we will want all
+            final VariantAnnotation variantAnnotation = variant.annotations().get(0);
+            variant.annotations().forEach(annotation -> {
+                if (!annotation.gene().equals(variantAnnotation.gene())) {
+                    unmatchedAnnotations++;
+                    LOGGER.debug("Annotated gene (" + annotation.gene()
+                            + ") does not match gene expected from first annotation ( " + variantAnnotation.gene()
+                            + ") for variant: " + variant);
+                }
+            });
+            builder.gene(variantAnnotation.gene());
+            builder.effect(variantAnnotation.consequenceString());
         }
         return builder;
     }
