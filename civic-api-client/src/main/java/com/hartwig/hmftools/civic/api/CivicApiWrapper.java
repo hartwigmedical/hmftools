@@ -51,7 +51,7 @@ public class CivicApiWrapper {
                 .filter(civicVariant -> !civicVariant.evidenceItemsWithDrugs().isEmpty());
     }
 
-    public static Observable<CivicVariant> getVariantsAtPosition(final int entrezId, @NotNull final Variant variant) {
+    public static Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final Variant variant) {
         return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().containsVariant(variant));
     }
 
