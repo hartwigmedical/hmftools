@@ -85,7 +85,7 @@ public class PatientReporter {
         final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
         return new PatientReport(sample, purpleEnrichedVariants, copyNumberAnalysis.findings(), mutationalLoad,
-                tumorType, tumorPercentage, purpleAnalysis.fittedPurity());
+                tumorType, tumorPercentage, purpleAnalysis.purityString());
     }
 
     @NotNull
@@ -106,7 +106,7 @@ public class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
-        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
+        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(context.status(), purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
                     + ") range exceeds 5%. Proceed with caution.");

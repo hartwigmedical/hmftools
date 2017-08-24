@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -24,19 +23,19 @@ public class PatientReport {
     @Nullable
     private final Double tumorPercentage;
     @NotNull
-    private final FittedPurity fittedPurity;
+    private final String purplePurity;
 
     public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
             @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad,
             @NotNull final String tumorType, @Nullable final Double tumorPercentage,
-            @NotNull final FittedPurity fittedPurity) {
+            @NotNull final String purplePurity) {
         this.sample = sample;
         this.variants = variants;
         this.copyNumbers = copyNumbers;
         this.mutationalLoad = mutationalLoad;
         this.tumorType = tumorType;
         this.tumorPercentage = tumorPercentage;
-        this.fittedPurity = fittedPurity;
+        this.purplePurity = purplePurity;
     }
 
     @NotNull
@@ -68,6 +67,6 @@ public class PatientReport {
     }
 
     public String impliedPurityString() {
-        return PatientReportFormat.formatPercent(fittedPurity.purity());
+        return purplePurity;
     }
 }

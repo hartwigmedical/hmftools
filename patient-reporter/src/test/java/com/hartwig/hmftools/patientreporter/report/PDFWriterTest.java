@@ -112,7 +112,7 @@ public class PDFWriterTest {
         final Double pathologyTumorPercentage = 0.6;
 
         final PatientReport patientReport =
-                new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, fittedPurity);
+                new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%");
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
