@@ -94,15 +94,18 @@ public class PDFWriterTest {
                 .build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder().chromosome("2")
+        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
+                .chromosome("2")
                 .chromosomeBand("p23.1-p23.2")
                 .gene("ALK")
                 .copyNumber(0)
                 .type(CopyNumberReportType.LOSS)
                 .build();
-        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder().chromosome("3")
+        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder()
+                .chromosome("3")
                 .chromosomeBand("q26.32")
-                .gene("PIK3CA").copyNumber(9)
+                .gene("PIK3CA")
+                .copyNumber(9)
                 .type(CopyNumberReportType.GAIN)
                 .build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
@@ -124,7 +127,9 @@ public class PDFWriterTest {
 
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
+        final JasperReportBuilder evidenceReport = EvidenceItemsWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(report);
+        assertNotNull(evidenceReport);
 
         if (SHOW_AND_PRINT) {
             report.show().print();
@@ -132,6 +137,7 @@ public class PDFWriterTest {
 
         if (WRITE_TO_PDF) {
             report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
+            evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_evidence_report.pdf"));
         }
         logoStream.close();
     }

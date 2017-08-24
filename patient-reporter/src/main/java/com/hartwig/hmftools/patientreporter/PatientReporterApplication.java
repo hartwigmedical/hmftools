@@ -22,6 +22,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.report.EvidenceItemsWriter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -89,6 +90,7 @@ public class PatientReporterApplication {
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
+            new EvidenceItemsWriter(cmd.getOptionValue(REPORT_DIRECTORY)).writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);
         }
@@ -112,8 +114,7 @@ public class PatientReporterApplication {
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
         final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer,
-                cmd.hasOption(FREEC));
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer, cmd.hasOption(FREEC));
     }
 
     @NotNull

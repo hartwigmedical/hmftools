@@ -46,6 +46,10 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>civic-api-client</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

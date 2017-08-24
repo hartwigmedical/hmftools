@@ -55,6 +55,8 @@
 
         <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
+        <civic-api.version>1.0</civic-api.version>
+
 
         <!-- Used by health checker -->
         <reactivex.version>1.1.5</reactivex.version>
@@ -257,6 +259,11 @@
                 <groupId>com.squareup.retrofit2</groupId>
                 <artifactId>converter-gson</artifactId>
                 <version>${retrofit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>civic-api-client</artifactId>
+                <version>${civic-api.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
