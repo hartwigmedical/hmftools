@@ -42,4 +42,13 @@ public abstract class CivicEvidenceItem {
     public String toString() {
         return name() + "[" + level() + "]: " + direction() + " " + significance() + " to " + drugs();
     }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof CivicEvidenceItem) {
+            final CivicEvidenceItem other = (CivicEvidenceItem) obj;
+            return other.id() == id();
+        }
+        return false;
+    }
 }

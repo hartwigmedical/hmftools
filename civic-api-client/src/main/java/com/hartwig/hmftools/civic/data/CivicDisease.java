@@ -10,11 +10,20 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicDisease {
-    public abstract String id();
+public abstract class CivicDisease implements Comparable<CivicDisease> {
+    public abstract int id();
 
     public abstract String name();
 
     @SerializedName("display_name")
     public abstract String displayName();
+
+    @Nullable
+    @SerializedName("doid")
+    public abstract String ontologyId();
+
+    @Override
+    public int compareTo(@NotNull final CivicDisease other) {
+        return Integer.compare(id(), other.id());
+    }
 }

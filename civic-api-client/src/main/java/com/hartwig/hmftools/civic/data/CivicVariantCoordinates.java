@@ -77,6 +77,7 @@ public abstract class CivicVariantCoordinates {
 
     @Override
     public String toString() {
-        return "chr: " + chromosome() + "[" + start() + " -> " + stop() + "]";
+        return "chr: " + chromosome() + "[" + start() + " -> " + stop() + "]" + " / chr2: " + chromosome2() + "[" + start2() + " -> "
+                + stop2() + "]";
     }
 }
