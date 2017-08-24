@@ -13,8 +13,7 @@ import org.junit.Test;
 
 public class CosmicTest {
 
-    private static final String COSMIC_EXAMPLE_FILE =
-            Resources.getResource("cosmic").getPath() + File.separator + "CosmicExample.csv";
+    private static final String COSMIC_EXAMPLE_FILE = Resources.getResource("cosmic").getPath() + File.separator + "CosmicExample.csv";
 
     @Test
     public void canLoadFromCsv() throws IOException, EmptyFileException {

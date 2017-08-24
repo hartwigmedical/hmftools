@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -92,7 +93,7 @@ public class PatientReporterApplication {
             LOGGER.info("Running patient reporter v" + VERSION);
 
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(reporterData.slicer(), cmd);
+            final PatientReporter reporter = buildReporter(reporterData.slicer(), reporterData.cosmicModel(), cmd);
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
@@ -112,8 +113,8 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException, XMLStreamException, SQLException {
+    private static PatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CosmicModel cosmic,
+            @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
@@ -127,7 +128,7 @@ public class PatientReporterApplication {
         } else {
             annotator = NullAnnotator.make();
         }
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, hmfSlicingRegion);
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, hmfSlicingRegion, cosmic);
 
         return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer, copyNumberAnalyzer,
                 cmd.hasOption(FREEC), cmd.hasOption(ENSEMBL_DB));

@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.cosmic.Cosmic;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -27,6 +28,7 @@ public class PatientReporterTest {
 
     private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
     private static final String BED_DIRECTORY = Resources.getResource("bed").getPath();
+    private static final String COSMIC_EXAMPLE_FILE = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
@@ -36,7 +38,8 @@ public class PatientReporterTest {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion, hmfSlicingRegion);
         final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        final StructuralVariantAnalyzer structuralVariantAnalyzer = new StructuralVariantAnalyzer(NullAnnotator.make(), hmfSlicingRegion);
+        final StructuralVariantAnalyzer structuralVariantAnalyzer =
+                new StructuralVariantAnalyzer(NullAnnotator.make(), hmfSlicingRegion, Cosmic.buildModelFromCsv(COSMIC_EXAMPLE_FILE));
 
         final PatientReporter algo =
                 new PatientReporter(buildTestCpctEcrfModel(), Lims.buildEmptyModel(), variantAnalyzer, structuralVariantAnalyzer,

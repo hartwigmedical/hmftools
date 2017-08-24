@@ -11,10 +11,9 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -23,10 +22,9 @@ import org.jooq.impl.DSL;
 
 public class MySQLAnnotator implements StructuralVariantAnnotator {
 
-    private static final Logger LOGGER = LogManager.getLogger(MySQLAnnotator.class);
-
     private final DSLContext context;
     private final int coord_system_id;
+    private final int entrez_db_id;
 
     public static StructuralVariantAnnotator make(final String url) throws SQLException {
         return new MySQLAnnotator(url);
@@ -37,6 +35,7 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
         final Connection conn = DriverManager.getConnection(url);
         context = DSL.using(conn, SQLDialect.MYSQL);
         coord_system_id = findCoordSystemId();
+        entrez_db_id = findEntrezDatabaeId();
     }
 
     private int findCoordSystemId() {
@@ -44,6 +43,14 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
                 .from(table(name("coord_system")))
                 .where(field(name("version")).eq("GRCh37"))
                 .orderBy(field(name("rank")))
+                .limit(1)
+                .fetchOne(0, Integer.class);
+    }
+
+    private int findEntrezDatabaeId() {
+        return context.select(field(name("external_db_id")))
+                .from(table(name("external_db")))
+                .where(field(name("db_name")).eq("EntrezGene"))
                 .limit(1)
                 .fetchOne(0, Integer.class);
     }
@@ -64,9 +71,19 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
         return annotation;
     }
 
-    private BreakendAnnotations annotateBreakend(final StructuralVariantAnnotation parent, String chromosome, final long position,
+    @Override
+    public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
+        final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(null);
+
+        annotation.setBreakendAnnotations(annotateBreakend(annotation, region.chromosome(), region.start(), 1, 0.0),
+                annotateBreakend(annotation, region.chromosome(), region.end(), -1, 0.0));
+
+        return annotation;
+    }
+
+    private Breakend annotateBreakend(final StructuralVariantAnnotation parent, String chromosome, final long position,
             final int orientation, final Double alleleFrequency) {
-        final BreakendAnnotations annotation = new BreakendAnnotations(parent, chromosome, position, orientation, alleleFrequency);
+        final Breakend breakend = new Breakend(parent, chromosome, position, orientation, alleleFrequency);
 
         final int PROMOTER_DISTANCE = 10000;
 
@@ -99,8 +116,18 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
             final int canonical_transcript_id = g.get(3, Integer.class);
             final int gene_strand = g.get(4, Integer.class);
 
-            final GeneAnnotation gene = new GeneAnnotation(annotation, gene_name, gene_stable_id, gene_strand);
-            annotation.addGeneAnnotation(gene);
+            final String entrez_id = context.select(field(name("xref", "dbprimary_acc")))
+                    .from(table(name("xref")))
+                    .innerJoin(table(name("object_xref")))
+                    .on(field(name("object_xref", "xref_id")).eq(field(name("xref", "xref_id"))))
+                    .where(field(name("xref", "external_db_id")).eq(entrez_db_id))
+                    .and(field(name("object_xref", "ensembl_id")).eq(gene_id))
+                    .and(field(name("object_xref", "ensembl_object_type")).eq("gene"))
+                    .limit(1)
+                    .fetchOne(0, String.class);
+
+            final Gene gene = new Gene(breakend, gene_name, gene_stable_id, entrez_id, gene_strand);
+            breakend.addGeneAnnotation(gene);
 
             final Result<?> transcripts = context.select(field(name("transcript_id")), field(name("stable_id")))
                     .from(table(name("transcript")))
@@ -160,13 +187,13 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
                     exon_upstream_phase = exonRight == null ? 0 : exonRight.get(2, Integer.class);
                 }
 
-                final TranscriptAnnotation transcript =
-                        new TranscriptAnnotation(gene, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
+                final Transcript transcript =
+                        new Transcript(gene, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
                                 exon_downstream_phase, exon_max, canonical);
                 gene.addTranscriptAnnotation(transcript);
             }
         }
 
-        return annotation;
+        return breakend;
     }
 }

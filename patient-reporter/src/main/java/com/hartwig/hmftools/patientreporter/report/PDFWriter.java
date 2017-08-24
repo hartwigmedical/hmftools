@@ -322,12 +322,12 @@ public class PDFWriter implements ReportWriter {
                         baseTable()
                             .fields(PatientDataSource.geneFusionFields())
                             .columns(
-                                col.column("Gene A", PatientDataSource.GENE_FIELD).setFixedWidth(50),
-                                col.column("Position A", PatientDataSource.POSITION_FIELD),
-                                col.column("Gene A Context", PatientDataSource.SV_GENE_CONTEXT),
-                                col.column("Gene B", PatientDataSource.SV_PARTNER_GENE_FIELD).setFixedWidth(50),
-                                col.column("Position B", PatientDataSource.SV_PARTNER_POSITION_FIELD),
-                                col.column("Gene B Context", PatientDataSource.SV_PARTNER_CONTEXT_FIELD),
+                                col.column("5\" Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("5\" Position", PatientDataSource.POSITION_FIELD),
+                                col.column("5\" Gene Context", PatientDataSource.SV_GENE_CONTEXT),
+                                col.column("3\" Gene", PatientDataSource.SV_PARTNER_GENE_FIELD).setFixedWidth(50),
+                                col.column("3\" Position", PatientDataSource.SV_PARTNER_POSITION_FIELD),
+                                col.column("3\" Gene Context", PatientDataSource.SV_PARTNER_CONTEXT_FIELD),
                                 col.column("SV Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30)
                             )
                             .setDataSource(PatientDataSource.fromGeneFusions(report.geneFusions()))

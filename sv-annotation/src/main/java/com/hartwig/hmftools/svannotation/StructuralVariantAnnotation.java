@@ -5,16 +5,16 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 public class StructuralVariantAnnotation {
 
     private final StructuralVariant Variant;
-    private BreakendAnnotations StartAnnotations;
-    private BreakendAnnotations EndAnnotations;
+    private Breakend StartAnnotations;
+    private Breakend EndAnnotations;
 
     StructuralVariantAnnotation(final StructuralVariant variant) {
         Variant = variant;
-        StartAnnotations = new BreakendAnnotations(this);
-        EndAnnotations = new BreakendAnnotations(this);
+        StartAnnotations = new Breakend(this);
+        EndAnnotations = new Breakend(this);
     }
 
-    void setBreakendAnnotations(final BreakendAnnotations start, final BreakendAnnotations end) {
+    void setBreakendAnnotations(final Breakend start, final Breakend end) {
         StartAnnotations = start;
         EndAnnotations = end;
     }
@@ -23,11 +23,12 @@ public class StructuralVariantAnnotation {
         return Variant;
     }
 
-    public BreakendAnnotations getStartAnnotations() {
+    public Breakend getStart() {
         return StartAnnotations;
     }
 
-    public BreakendAnnotations getEndAnnotations() {
+    public Breakend getEnd() {
         return EndAnnotations;
     }
+
 }
