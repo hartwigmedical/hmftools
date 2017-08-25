@@ -8,7 +8,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SomaticVariant implements Variant {
+public class SomaticVariant implements Variant, AllelicDepth {
 
     @NotNull
     private final String originalVCFLine;
@@ -147,6 +147,7 @@ public class SomaticVariant implements Variant {
         return alleleReadCount;
     }
 
+    @Override
     public double alleleFrequency() {
         return (double) alleleReadCount / totalReadCount;
     }
