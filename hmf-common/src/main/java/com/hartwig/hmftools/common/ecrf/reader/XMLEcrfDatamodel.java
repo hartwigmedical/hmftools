@@ -36,11 +36,11 @@ public abstract class XMLEcrfDatamodel {
     @NotNull
     public static XMLEcrfDatamodel of(@NotNull final List<StudyEvent> studyEvents, @NotNull final List<Form> forms,
             @NotNull final List<ItemGroup> itemGroups, @NotNull final List<Item> items, @NotNull final List<CodeList> codeLists) {
-        final Map<String, StudyEvent> studyEventMap = studyEvents.stream().collect(toMap(OIDObject::OID, Function.identity()));
-        final Map<String, Form> formMap = forms.stream().collect(toMap(OIDObject::OID, Function.identity()));
-        final Map<String, ItemGroup> itemGroupMap = itemGroups.stream().collect(toMap(OIDObject::OID, Function.identity()));
-        final Map<String, Item> itemMap = items.stream().collect(toMap(OIDObject::OID, Function.identity()));
-        final Map<String, CodeList> codeListMap = codeLists.stream().collect(toMap(OIDObject::OID, Function.identity()));
+        final Map<String, StudyEvent> studyEventMap = studyEvents.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        final Map<String, Form> formMap = forms.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        final Map<String, ItemGroup> itemGroupMap = itemGroups.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        final Map<String, Item> itemMap = items.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        final Map<String, CodeList> codeListMap = codeLists.stream().collect(toMap(OIDObject::oid, Function.identity()));
         return ImmutableXMLEcrfDatamodel.of(studyEventMap, formMap, itemGroupMap, itemMap, codeListMap);
     }
 

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -136,7 +136,7 @@ class GenerateCircosDataHelper {
     private List<EnrichedSomaticVariant> filter(@NotNull final List<EnrichedSomaticVariant> somaticVariants) {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.SNP)
-                .filter(x -> Chromosomes.asInt(x.chromosome()) <= 25)
+                .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
                 .collect(Collectors.toList());
     }
 
