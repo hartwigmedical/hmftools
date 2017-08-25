@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartUtilities;
@@ -36,12 +36,12 @@ public class ChartWriter {
     }
 
     public void write(@NotNull final FittedPurity purity, @NotNull FittedPurityScore score,
-            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<EnrichedSomaticVariant> variants) throws IOException {
+            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<PurityAdjustedSomaticVariant> variants) throws IOException {
 
         final List<PurpleCopyNumber> filteredCopyNumber =
                 copyNumbers.stream().filter(ChartWriter::isAutosome).filter(x -> x.bafCount() > 0).collect(Collectors.toList());
 
-        final List<EnrichedSomaticVariant> filteredSomaticVariants =
+        final List<PurityAdjustedSomaticVariant> filteredSomaticVariants =
                 variants.stream().filter(ChartWriter::isAutosome).collect(Collectors.toList());
 
         final String subtitle = subtitle(sample, purity, score);
@@ -79,7 +79,7 @@ public class ChartWriter {
         ChartUtilities.saveChartAsPNG(new File(fileName), chart, 500, 300);
     }
 
-    private void somaticPloidyPDF(@NotNull final String subtitle, @NotNull final List<EnrichedSomaticVariant> variants) throws IOException {
+    private void somaticPloidyPDF(@NotNull final String subtitle, @NotNull final List<PurityAdjustedSomaticVariant> variants) throws IOException {
         String fileName = outputDirectory + File.separator + sample + ".variant.png";
         JFreeChart chart = CopyNumberCharts.somaticPloidyPDF(variants);
         chart.addSubtitle(new TextTitle(subtitle));

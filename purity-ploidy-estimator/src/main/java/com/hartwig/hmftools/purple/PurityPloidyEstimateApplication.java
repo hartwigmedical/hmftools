@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
@@ -42,16 +41,14 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
+import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
+import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
+import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -133,7 +130,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
 
             // JOBA: Load structural and somatic variants
-            final List<SomaticVariant> somaticVariants = somaticVariants(configSupplier);
+            final List<PurpleSomaticVariant> somaticVariants = somaticVariants(configSupplier);
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
 
             // JOBA: Ratio Segmentation
@@ -208,9 +205,8 @@ public class PurityPloidyEstimateApplication {
             FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
 
-            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
-                    new EnrichedSomaticVariantFactory(purityContext.bestFit(), smoothRegions);
-            final List<EnrichedSomaticVariant> enrichedSomatics = enrichedSomaticVariantFactory.enrich(somaticVariants);
+            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
+                    new PurityAdjustedPurpleSomaticVariantFactory(purityContext.bestFit(), smoothRegions).create(somaticVariants);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
@@ -245,17 +241,12 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException, HartwigException {
+    private List<PurpleSomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException, HartwigException {
         final SomaticConfig config = configSupplier.somaticConfig();
         if (config.file().isPresent()) {
             String filename = config.file().get().toString();
             LOGGER.info("Loading somatic variants from {}", filename);
-            return VCFFileLoader.loadSomaticVCF(filename)
-                    .variants()
-                    .stream()
-                    .filter(x -> x.type() == VariantType.SNP)
-                    .filter(VariantFilter::isPass)
-                    .collect(Collectors.toList());
+            return new PurpleSomaticVariantFactory().fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
         } else {
             LOGGER.info("Somatic variants support disabled.");
             return Collections.emptyList();

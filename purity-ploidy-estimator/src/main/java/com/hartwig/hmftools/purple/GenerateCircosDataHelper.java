@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -55,7 +55,7 @@ class GenerateCircosDataHelper {
     }
 
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
-            @NotNull final List<EnrichedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants)
+            @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants)
             throws IOException, InterruptedException {
 
         createDirectory(config.plotDirectory());
@@ -102,9 +102,9 @@ class GenerateCircosDataHelper {
         CircosFileWriter.writeRegions(baseCircosSample + ".baf.circos", copyNumber, PurpleCopyNumber::averageActualBAF);
     }
 
-    private void writeEnrichedSomatics(@NotNull final List<EnrichedSomaticVariant> somaticVariants) throws IOException {
-        final List<EnrichedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
-        CircosFileWriter.writePositions(baseCircosSample + ".snp.circos", downsampledSomaticVariants, EnrichedSomaticVariant::adjustedVAF);
+    private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
+        final List<PurityAdjustedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
+        CircosFileWriter.writePositions(baseCircosSample + ".snp.circos", downsampledSomaticVariants, PurityAdjustedSomaticVariant::adjustedVAF);
     }
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {
@@ -133,20 +133,20 @@ class GenerateCircosDataHelper {
     }
 
     @NotNull
-    private List<EnrichedSomaticVariant> filter(@NotNull final List<EnrichedSomaticVariant> somaticVariants) {
+    private List<PurityAdjustedSomaticVariant> filter(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.SNP)
                 .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
                 .collect(Collectors.toList());
     }
 
-    private List<EnrichedSomaticVariant> downsample(List<EnrichedSomaticVariant> variants) {
+    private List<PurityAdjustedSomaticVariant> downsample(List<PurityAdjustedSomaticVariant> variants) {
         if (variants.size() <= MAX_SOMATIC_VARIANTS) {
             return variants;
         }
 
         long scale = Math.round(Math.ceil(1.0 * variants.size() / MAX_SOMATIC_VARIANTS));
-        final List<EnrichedSomaticVariant> result = Lists.newArrayList();
+        final List<PurityAdjustedSomaticVariant> result = Lists.newArrayList();
         for (int i = 0; i < variants.size(); i++) {
             if (i % scale == 0) {
                 result.add(variants.get(i));
