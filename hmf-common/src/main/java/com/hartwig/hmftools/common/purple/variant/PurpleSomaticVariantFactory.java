@@ -9,8 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -26,12 +24,11 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleSomaticVariantFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(PurpleSomaticVariantFactory.class);
-
     private final CompoundFilter filter;
 
     public PurpleSomaticVariantFactory() {
         final CompoundFilter filter = new CompoundFilter(true);
+        filter.add(PurpleSomaticVariantFactory::ntFilter);
         filter.add(new PassingVariantFilter());
         filter.add(new SnpFilter());
 
@@ -43,8 +40,13 @@ public class PurpleSomaticVariantFactory {
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
 
-            if (!sampleInFile(sample, (VCFHeader) reader.getHeader())) {
+            final VCFHeader header = (VCFHeader) reader.getHeader();
+            if (!sampleInFile(sample, header)) {
                 throw new IllegalArgumentException("Sample " + sample + " not found in vcf file " + vcfFile);
+            }
+
+            if (!header.hasFormatLine("AD")) {
+                throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
             for (final VariantContext context : reader.iterator()) {
@@ -60,10 +62,7 @@ public class PurpleSomaticVariantFactory {
                                 .filter("PASS")
                                 .type(VariantType.SNP)
                                 .build());
-                    } else {
-                        LOGGER.warn("Missing AD flag.");
                     }
-
                 }
             }
         }
@@ -88,5 +87,9 @@ public class PurpleSomaticVariantFactory {
             totalReadCount += afField;
         }
         return alleleReadCount / (double) totalReadCount;
+    }
+
+    private static boolean ntFilter(final VariantContext record) {
+        return !record.getCommonInfo().hasAttribute("NT") || record.getCommonInfo().getAttribute("NT").equals("ref");
     }
 }
