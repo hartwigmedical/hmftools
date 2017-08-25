@@ -34,7 +34,7 @@ class GenerateCircosDataHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateCircosDataHelper.class);
 
-    private static final int MAX_SOMATIC_VARIANTS = 40000;
+    private static final int MAX_SOMATIC_VARIANTS = 25000;
     private final String sample;
     private final CircosConfig config;
     private final String baseCircosSample;
