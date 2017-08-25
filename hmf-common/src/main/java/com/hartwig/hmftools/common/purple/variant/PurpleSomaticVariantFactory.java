@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,7 @@ public class PurpleSomaticVariantFactory {
         filter.add(PurpleSomaticVariantFactory::ntFilter);
         filter.add(new PassingVariantFilter());
         filter.add(new SnpFilter());
+        filter.add(new ChromosomeFilter());
 
         this.filter = filter;
     }
