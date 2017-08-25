@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.baf;
+package com.hartwig.hmftools.common.baf;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 

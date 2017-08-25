@@ -35,10 +35,6 @@ public class CommonConfig {
         return outputDirectory;
     }
 
-    public String runDirectory() {
-        return runDirectory;
-    }
-
     public String freecDirectory() {
         return freecDirectory;
     }
@@ -48,7 +44,11 @@ public class CommonConfig {
     }
 
     public String cobaltDirectory() {
-        return  runDirectory + File.separator + "cobalt";
+        return runDirectory + File.separator + "cobalt";
+    }
+
+    public String amberDirectory() {
+        return runDirectory + File.separator + "amber";
     }
 
     public int windowSize() {

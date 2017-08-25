@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.baf;
+package com.hartwig.hmftools.common.baf;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,10 +17,15 @@ public enum TumorBAFFile {
     ;
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "Chr";
-    private static final String EXTENSION = ".purple.baf";
+    private static final String PURPLE_EXTENSION = ".purple.baf";
+    private static final String AMBER_EXTENSION = ".amber.baf";
 
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
-        return basePath + File.separator + sample + EXTENSION;
+    public static String generatePurpleFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + PURPLE_EXTENSION;
+    }
+
+    public static String generateAmberFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + AMBER_EXTENSION;
     }
 
     @NotNull
@@ -75,10 +80,6 @@ public enum TumorBAFFile {
     @NotNull
     private static TumorBAF fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableTumorBAF.builder()
-                .chromosome(values[0])
-                .position(Long.valueOf(values[1]))
-                .baf(Double.valueOf(values[2]))
-                .build();
+        return ImmutableTumorBAF.builder().chromosome(values[0]).position(Long.valueOf(values[1])).baf(Double.valueOf(values[2])).build();
     }
 }

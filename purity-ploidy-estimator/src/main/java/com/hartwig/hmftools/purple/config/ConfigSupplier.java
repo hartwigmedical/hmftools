@@ -5,11 +5,11 @@ import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
 import java.io.File;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -82,7 +82,6 @@ public class ConfigSupplier {
         commonConfig = new CommonConfig(refSample, tumorSample, outputDirectory, runDirectory, freecDirectory, cmd.hasOption(FORCE));
 
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
-        LOGGER.info("Run Directory: {}", commonConfig.runDirectory());
         LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
 
         somaticConfig = createSomaticConfig(cmd, opt);
@@ -189,10 +188,16 @@ public class ConfigSupplier {
             return builder.bafFile(Optional.of(file)).build();
         }
 
-        final String cachedBafFilename = TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
-        final File cachedFile = new File(cachedBafFilename);
-        if (cachedFile.exists()) {
-            return builder.bafFile(Optional.of(cachedFile)).build();
+        final String amberBaf = TumorBAFFile.generateAmberFilename(config.amberDirectory(), config.tumorSample());
+        final File amberFile = new File(amberBaf);
+        if (amberFile.exists()) {
+            return builder.bafFile(Optional.of(amberFile)).build();
+        }
+
+        final String purpleBaf = TumorBAFFile.generatePurpleFilename(config.outputDirectory(), config.tumorSample());
+        final File purpleFile = new File(purpleBaf);
+        if (purpleFile.exists()) {
+            return builder.bafFile(Optional.of(purpleFile)).build();
         }
 
         if (cmd.hasOption(BAF_VARIANTS)) {
@@ -206,7 +211,7 @@ public class ConfigSupplier {
         }
 
         printHelp(opt);
-        throw new ParseException("Cached baf file " + cachedBafFilename + " not found. Please supply one of -baf or -baf_vcf arguments.");
+        throw new ParseException("Cached baf file " + purpleBaf + " not found. Please supply one of -baf or -baf_vcf arguments.");
     }
 
     private static void printHelp(Options opt) {

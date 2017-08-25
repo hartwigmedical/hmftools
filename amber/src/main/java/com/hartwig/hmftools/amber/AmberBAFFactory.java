@@ -5,19 +5,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.baf.ImmutableTumorBAF;
+import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.purple.baf.ImmutableTumorBAF;
-import com.hartwig.hmftools.common.purple.baf.TumorBAF;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class AmberBAFFactory {
 
-    private final double minHetAFPercentage; // 0.4
-    private final double maxHetAFPercentage; // 0.65
+    private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
 
+    private final double minHetAFPercentage;
+    private final double maxHetAFPercentage;
     private final double minDepthPercentage;
     private final double maxDepthPercentage;
 
@@ -52,7 +55,7 @@ class AmberBAFFactory {
                 if (baf.isPresent()) {
                     result.add(baf.get());
                 } else {
-                    // LOG WARNING
+                    LOGGER.warn("Unable to locate position in tumor. Ensure pileups are created from same bed.");
                 }
             }
         }
@@ -110,5 +113,4 @@ class AmberBAFFactory {
         int count = reads.size();
         return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
     }
-
 }

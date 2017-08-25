@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.pileup.PileupFile;
-import com.hartwig.hmftools.common.purple.baf.TumorBAF;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -24,11 +24,19 @@ public class AmberApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
 
-
     private static final String SAMPLE = "sample";
     private static final String REFERENCE_PILEUP = "reference";
     private static final String TUMOR_PILEUP = "tumor";
     private static final String OUTPUT_DIR = "output_dir";
+    private static final String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
+    private static final String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
+    private static final String MIN_DEPTH_PERCENTAGE = "min_depth_percent";
+    private static final String MAX_DEPTH_PERCENTAGE = "min_depth_percent";
+
+    private static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
+    private static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
+    private static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
+    private static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
 
     public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
         new AmberApplication(args);
@@ -42,19 +50,30 @@ public class AmberApplication {
             printUsageAndExit(options);
         }
 
+        final File outputDir = new File(cmd.getOptionValue(OUTPUT_DIR));
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            throw new IOException("Unable to write directory " + cmd.getOptionValue(OUTPUT_DIR));
+        }
+
+        final AmberBAFFactory factory = new AmberBAFFactory(defaultValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE),
+                defaultValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE),
+                defaultValue(cmd, MIN_DEPTH_PERCENTAGE, DEFAULT_MIN_DEPTH_PERCENTAGE),
+                defaultValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE));
+
+        LOGGER.info("Loading tumor file {}", cmd.getOptionValue(TUMOR_PILEUP));
+        final List<Pileup> tumor = PileupFile.read(cmd.getOptionValue(TUMOR_PILEUP));
+
         LOGGER.info("Loading reference file {}", cmd.getOptionValue(REFERENCE_PILEUP));
         final List<Pileup> normal = PileupFile.read(cmd.getOptionValue(REFERENCE_PILEUP));
 
-        LOGGER.info("Loading reference file {}", cmd.getOptionValue(TUMOR_PILEUP));
-        final List<Pileup> tumor = PileupFile.read(cmd.getOptionValue(TUMOR_PILEUP));
+        LOGGER.info("Calculating BAFs");
+        final List<TumorBAF> result = factory.create(normal, tumor);
 
-        LOGGER.info("Calculating Tumor BAFs");
-        final AmberBAFFactory factory = new AmberBAFFactory(0.4, 0.65, 0.5, 2.0);
-        final List<TumorBAF> bafs = factory.create(normal, tumor);
+        final String filename = TumorBAFFile.generateAmberFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
+        LOGGER.info("Persisting file {}", filename);
+        TumorBAFFile.write(filename, result);
 
-        final String filename = cmd.getOptionValue(OUTPUT_DIR) + File.separator + cmd.getOptionValue(SAMPLE) + ".amber.baf";
-        TumorBAFFile.write(filename, bafs);
-
+        LOGGER.info("Complete");
     }
 
     private static void printUsageAndExit(@NotNull final Options options) {
@@ -74,6 +93,16 @@ public class AmberApplication {
         }
     }
 
+    private static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
+        if (cmd.hasOption(opt)) {
+            final double result = Double.valueOf(cmd.getOptionValue(opt));
+            LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            return result;
+        }
+
+        return defaultValue;
+    }
+
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
@@ -81,7 +110,10 @@ public class AmberApplication {
         options.addOption(TUMOR_PILEUP, true, "Tumor Pileup");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(SAMPLE, true, "Name of sample");
-
+        options.addOption(MIN_HET_AF_PERCENTAGE, true, "Min heterozygous AF%");
+        options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF%");
+        options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth");
+        options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth");
         return options;
     }
 }
