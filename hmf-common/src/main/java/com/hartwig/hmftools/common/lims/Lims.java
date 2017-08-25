@@ -58,11 +58,11 @@ public final class Lims {
                 if (parts.length == 4) {
                     LOGGER.warn("Sample " + sample + " has tumor percentage even though it is a reference sample.");
                 }
-                return Optional.of(new LimsBloodData(samplingDate, arrivalDate));
+                return Optional.of(ImmutableLimsBloodData.of(samplingDate, arrivalDate));
             }
             if (isTumor(sample)) {
                 final Double tumorPercentage = parts.length == 4 ? readTumorPercentage(sample, parts[3]) : null;
-                return Optional.of(new LimsTumorData(samplingDate, arrivalDate, tumorPercentage));
+                return Optional.of(ImmutableLimsTumorData.of(samplingDate, arrivalDate, tumorPercentage));
             }
             return Optional.empty();
         } catch (Exception e) {
