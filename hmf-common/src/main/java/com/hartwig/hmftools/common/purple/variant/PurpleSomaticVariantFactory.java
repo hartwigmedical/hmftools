@@ -22,6 +22,7 @@ import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.SnpFilter;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleSomaticVariantFactory {
 
@@ -41,6 +42,10 @@ public class PurpleSomaticVariantFactory {
         final List<PurpleSomaticVariant> variants = Lists.newArrayList();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
+
+            if (!sampleInFile(sample, (VCFHeader) reader.getHeader())) {
+                throw new IllegalArgumentException("Sample " + sample + " not found in vcf file " + vcfFile);
+            }
 
             for (final VariantContext context : reader.iterator()) {
                 if (filter.test(context)) {
@@ -66,7 +71,12 @@ public class PurpleSomaticVariantFactory {
         return variants;
     }
 
-    private static String alt(VariantContext context) {
+    private boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {
+        return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
+    }
+
+    @NotNull
+    private static String alt(@NotNull final VariantContext context) {
         return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
     }
 
