@@ -22,9 +22,15 @@ class Analysis {
     }
 
     private static class AlignmentMap extends HashMap<String, AlignmentList> {
+        AlignmentMap(int initialSize) {
+            super(initialSize);
+        }
     }
 
     private static class PairedReads extends ArrayList<Pair<SAMRecord, SAMRecord>> {
+        PairedReads(int initialSize) {
+            super(initialSize);
+        }
     }
 
     private static int orientation(final SAMRecord record) {
@@ -361,7 +367,7 @@ class Analysis {
     }
 
     private static PairedReads pairs(final AlignmentMap alignments) {
-        final PairedReads pairs = new PairedReads();
+        final PairedReads pairs = new PairedReads(alignments.size());
         for (final AlignmentList list : alignments.values()) {
             for (int i = 0; i < list.size(); ++i) {
 
@@ -389,7 +395,7 @@ class Analysis {
     }
 
     private static AlignmentMap readsByName(final List<SAMRecord> alignments) {
-        final AlignmentMap result = new AlignmentMap();
+        final AlignmentMap result = new AlignmentMap(alignments.size());
         alignments.forEach(a -> result.computeIfAbsent(a.getReadName(), k -> new AlignmentList()).add(a));
         return result;
     }
