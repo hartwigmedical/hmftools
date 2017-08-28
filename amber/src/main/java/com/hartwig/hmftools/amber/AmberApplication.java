@@ -31,7 +31,7 @@ public class AmberApplication {
     private static final String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
     private static final String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
     private static final String MIN_DEPTH_PERCENTAGE = "min_depth_percent";
-    private static final String MAX_DEPTH_PERCENTAGE = "min_depth_percent";
+    private static final String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
 
     private static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
     private static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
