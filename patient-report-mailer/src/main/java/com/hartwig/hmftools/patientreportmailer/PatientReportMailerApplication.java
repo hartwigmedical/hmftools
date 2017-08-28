@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreportmailer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -10,6 +9,7 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.centra.Centra;
+import com.hartwig.hmftools.common.centra.CentraModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 
@@ -54,6 +54,7 @@ public class PatientReportMailerApplication {
         final String subject = getSampleFromReportPath(reportPath) + " HMF Report";
         ReportMailer.sendEmail(subject, messageBody, sender, recipients);
         LOGGER.info("Done.");
+
     }
 
     @NotNull
@@ -78,14 +79,19 @@ public class PatientReportMailerApplication {
     static String getRecipients(@NotNull final String reportPath, @NotNull final String centraPath, @NotNull final String drupEmail)
             throws IOException, EmptyFileException {
         final String sample = getSampleFromReportPath(reportPath);
+        final CentraModel centraModel = Centra.readFromCSV(centraPath);
         if (sample.startsWith("DRUP")) {
-            final String centraId = getCentraFromSample(sample);
-            final Map<String, String> centraRecipients = Centra.readDRUPRecipientsFromCSV(centraPath);
-            return centraRecipients.get(centraId).replaceAll(";", ",") + "," + drupEmail;
+            final String recipients = centraModel.getDrupRecipientsFromSample(sample);
+            if (recipients == null || recipients.isEmpty()) {
+                throw new IllegalArgumentException("could not get drup recipients for sample: " + sample);
+            }
+            return recipients.replaceAll(";", ",") + "," + drupEmail;
         } else if (sample.startsWith("CPCT")) {
-            final String centraId = getCentraFromSample(sample);
-            final Map<String, String> centraRecipients = Centra.readCPCTRecipientsFromCSV(centraPath);
-            return centraRecipients.get(centraId).replaceAll(";", ",");
+            final String recipients = centraModel.getCpctRecipientsFromSample(sample);
+            if (recipients == null || recipients.isEmpty()) {
+                throw new IllegalArgumentException("could not get cpct recipients for sample: " + sample);
+            }
+            return recipients.replaceAll(";", ",");
         } else {
             throw new IllegalArgumentException("PatientId was neither CPCT nor DRUP");
         }
@@ -95,11 +101,5 @@ public class PatientReportMailerApplication {
     @NotNull
     private static String getSampleFromReportPath(@NotNull final String reportPath) {
         return new File(reportPath).getName().split("_")[0];
-    }
-
-    // MIVO: assumes patientId is in DRUP/CPCT format
-    @NotNull
-    private static String getCentraFromSample(@NotNull final String patientId) {
-        return patientId.substring(6, 8);
     }
 }
