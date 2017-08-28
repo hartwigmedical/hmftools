@@ -58,6 +58,7 @@ public class PatientReporterApplication {
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String FREEC = "freec";
+    private static final String CENTRA_CSV = "centra_csv";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -96,7 +97,7 @@ public class PatientReporterApplication {
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL), cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(COSMIC_CSV));
+                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTRA_CSV));
     }
 
     @NotNull
@@ -112,8 +113,7 @@ public class PatientReporterApplication {
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
         final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer,
-                cmd.hasOption(FREEC));
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer, cmd.hasOption(FREEC));
     }
 
     @NotNull
@@ -143,6 +143,7 @@ public class PatientReporterApplication {
             final String hmfGenePanel = cmd.getOptionValue(HMF_GENE_PANEL);
             final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
+            final String centraCsv = cmd.getOptionValue(CENTRA_CSV);
             final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
 
             if (cpctSlicingBed == null || !exists(cpctSlicingBed)) {
@@ -155,6 +156,8 @@ public class PatientReporterApplication {
                 LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
             } else if (cosmicCsv == null || !exists(cosmicCsv)) {
                 LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
+            } else if (centraCsv == null || !exists(centraCsv)) {
+                LOGGER.warn(CENTRA_CSV + " has to be an existing file: " + centraCsv);
             } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
                 LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
             } else {
@@ -235,6 +238,7 @@ public class PatientReporterApplication {
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
         options.addOption(FREEC, false, "Use freec copy numbers instead of purple.");
+        options.addOption(CENTRA_CSV, true, "Path towards a CSV containing centra data.");
         return options;
     }
 

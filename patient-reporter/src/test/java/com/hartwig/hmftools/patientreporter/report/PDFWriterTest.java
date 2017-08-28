@@ -94,15 +94,18 @@ public class PDFWriterTest {
                 .build();
         final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
 
-        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder().chromosome("2")
+        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
+                .chromosome("2")
                 .chromosomeBand("p23.1-p23.2")
                 .gene("ALK")
                 .copyNumber(0)
                 .type(CopyNumberReportType.LOSS)
                 .build();
-        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder().chromosome("3")
+        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder()
+                .chromosome("3")
                 .chromosomeBand("q26.32")
-                .gene("PIK3CA").copyNumber(9)
+                .gene("PIK3CA")
+                .copyNumber(9)
                 .type(CopyNumberReportType.GAIN)
                 .build();
         final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
@@ -117,10 +120,11 @@ public class PDFWriterTest {
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
+        final String centraPath = Resources.getResource("centra").getPath() + File.separator + "centra.csv";
 
         // KODU: Refers to the actual cosmic path on datastore:
         // final String cosmicPath = REPORT_BASE_DIR + "/hmf/tmp/170529_grch37_cosmic_census.csv";
-        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath, cosmicPath);
+        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath, cosmicPath, centraPath);
 
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);

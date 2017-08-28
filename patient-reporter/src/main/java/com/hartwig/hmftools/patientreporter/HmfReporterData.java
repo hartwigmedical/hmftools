@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
+import com.hartwig.hmftools.common.centra.CentraModel;
 import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
@@ -22,4 +23,7 @@ public abstract class HmfReporterData {
 
     @NotNull
     public abstract DrupFilter drupFilter();
+
+    @NotNull
+    public abstract CentraModel centraModel();
 }
