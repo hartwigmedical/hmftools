@@ -35,6 +35,7 @@ import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
+import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 
@@ -158,7 +159,23 @@ public class PDFWriter implements ReportWriter {
                 cmp.multiPageList().add(reportMainPage).newPage().add(genePanelPage).newPage().add(additionalInfoPage);
         // @formatter:on
 
-        return report().noData(totalReport);
+        // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
+        //  - footerBand, detailBand, etc are shown when data source is not empty
+        //  - noData band is shown when data source is empty; intended to be used when there is no data to show in the report
+        //  (e.g. would be appropriate to be used for notSequenceableReport)
+        //
+        // more info: http://www.dynamicreports.org/examples/bandreport
+        //
+        // todo: fix when implementing new report layout
+
+        final DRDataSource singleItemDataSource = new DRDataSource("item");
+        singleItemDataSource.add(new Object());
+
+        return report().pageFooter(cmp.pageXslashY())
+                .lastPageFooter(cmp.pageXslashY(),
+                        cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)))
+                .addDetail(totalReport)
+                .setDataSource(singleItemDataSource);
     }
 
     @NotNull
