@@ -24,8 +24,10 @@ Arguments without default values are mandatory.
 ### Example Usage
 
 ```
-java -jar cobalt.jar -input /run_dir/SAMPLE.BAM -output_dir /run_dir/cobalt -sample SAMPLE -threads 24
+java -jar cobalt.jar -input /run_dir/SAMPLE.bam -output_dir /run_dir/cobalt -sample SAMPLE -threads 24
 ```
+
+This will write output to `/run_dir/cobalt/SAMPLE.cobalt.count`
 
 ## Output
 The output is a tab delimited file with the name of the sample followed by the extension "cobalt.count".
@@ -35,4 +37,4 @@ A count of -1 indicates no read starts within that window.
 Not all empty windows will be written to file - only the first and last of each chromosome.
 
 A second output file "sample.chr.len" is written with the lengths of each chromosome from the bam file.
-This assists with downstream processes to produce accurante last window sizes.
+This assists with downstream processes to produce accurate last window sizes.
