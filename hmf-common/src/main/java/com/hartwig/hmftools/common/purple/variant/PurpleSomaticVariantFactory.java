@@ -29,10 +29,11 @@ public class PurpleSomaticVariantFactory {
 
     public PurpleSomaticVariantFactory() {
         final CompoundFilter filter = new CompoundFilter(true);
-        filter.add(PurpleSomaticVariantFactory::ntFilter);
         filter.add(new PassingVariantFilter());
         filter.add(new SnpFilter());
         filter.add(new ChromosomeFilter());
+        filter.add(PurpleSomaticVariantFactory::ntFilter);
+        filter.add(PurpleSomaticVariantFactory::sgtFilter);
 
         this.filter = filter;
     }
@@ -93,5 +94,15 @@ public class PurpleSomaticVariantFactory {
 
     private static boolean ntFilter(final VariantContext record) {
         return !record.getCommonInfo().hasAttribute("NT") || record.getCommonInfo().getAttribute("NT").equals("ref");
+    }
+
+    private static boolean sgtFilter(final VariantContext record) {
+        if (record.getCommonInfo().hasAttribute("SGT")) {
+            final String[] sgt = record.getCommonInfo().getAttributeAsString("SGT", "GC->AT").split("->");
+            if (sgt.length == 2 && sgt[0].equals(sgt[1])) {
+                return false;
+            }
+        }
+        return true;
     }
 }
