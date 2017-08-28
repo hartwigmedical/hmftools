@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,6 +20,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ObjectUtils;
@@ -52,13 +52,13 @@ public class BreakPointInspectorApplication {
 
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(REF_PATH, true, "the Reference BAM (indexed)");
-        options.addOption(REF_SLICE, true, "the sliced Reference BAM to output");
-        options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
-        options.addOption(TUMOR_SLICE, true, "the sliced Tumor BAM to output");
-        options.addOption(PROXIMITY, true, "distance to scan around breakpoint");
-        options.addOption(VCF, true, "Manta VCF file to batch inspect (can be compressed)");
-        options.addOption(VCF_OUT, true, "VCF output file (annotated and filtered version of Manta VCF)");
+        options.addOption(Option.builder(REF_PATH).required().hasArg().desc("the Reference BAM (required)").build());
+        options.addOption(Option.builder(REF_SLICE).hasArg().desc("the sliced Reference BAM to output (optional)").build());
+        options.addOption(Option.builder(TUMOR_PATH).required().hasArg().desc("the Tumor BAM (required)").build());
+        options.addOption(Option.builder(TUMOR_SLICE).hasArg().desc("the sliced Tumor BAM to output (optional)").build());
+        options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to scan around breakpoint (optional, default=500)").build());
+        options.addOption(Option.builder(VCF).required().hasArg().desc("Manta VCF file to batch inspect (required)").build());
+        options.addOption(Option.builder(VCF_OUT).hasArg().desc("VCF output file (optional)").build());
         return options;
     }
 
