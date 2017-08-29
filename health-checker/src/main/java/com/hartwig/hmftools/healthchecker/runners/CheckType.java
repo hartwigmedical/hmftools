@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 public enum CheckType {
     KINSHIP,
-    WGS_METRICS,
-    SOMATIC;
+    COVERAGE,
+    SOMATIC_VARIANTS;
 
     @NotNull
     public static Optional<CheckType> getByCategory(@NotNull final String typeToCheck) {

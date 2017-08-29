@@ -35,7 +35,7 @@ public class ReportTest {
     public void generateStdOutReport() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC_VARIANTS);
         report.addResult(baseConfig1);
 
         final BaseResult baseConfig2 = new TestResult(CheckType.KINSHIP);
@@ -53,7 +53,7 @@ public class ReportTest {
     public void generateReportMetadataIOException() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC_VARIANTS);
         report.addResult(baseConfig1);
 
         final BaseResult baseConfig2 = new TestResult(CheckType.KINSHIP);
@@ -71,7 +71,7 @@ public class ReportTest {
     public void generateReportMetadataHealthCheckException() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC_VARIANTS);
         report.addResult(baseConfig1);
 
         final BaseResult baseConfig2 = new TestResult(CheckType.KINSHIP);
@@ -100,7 +100,7 @@ public class ReportTest {
         };
         final Report report = JsonReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC_VARIANTS);
         report.addResult(baseConfig1);
 
         final Optional<String> result = report.generateReport(MOCK_RUN_CONTEXT, MOCK_OUTPUT_DIR);

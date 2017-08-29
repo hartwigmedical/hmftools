@@ -9,9 +9,9 @@ public class CheckTypeTest {
 
     @Test
     public void getByTypeSuccess() {
-        final Optional<CheckType> checkType = CheckType.getByCategory("somatic");
+        final Optional<CheckType> checkType = CheckType.getByCategory("coverage");
         assert checkType.isPresent();
-        Assert.assertTrue(checkType.get() == CheckType.SOMATIC);
+        Assert.assertTrue(checkType.get() == CheckType.COVERAGE);
     }
 
     @Test
