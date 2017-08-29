@@ -26,6 +26,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
@@ -33,6 +34,7 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
+import net.sf.dynamicreports.report.constant.HorizontalImageAlignment;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
@@ -56,10 +58,11 @@ public class PDFWriter implements ReportWriter {
     private static final int PADDING = 1;
 
     @NotNull
-    private final String reportDirectory;
-    @NotNull
     @VisibleForTesting
     static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
+
+    @NotNull
+    private final String reportDirectory;
 
     public PDFWriter(@NotNull final String reportDirectory) {
         this.reportDirectory = reportDirectory;
@@ -152,7 +155,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        disclaimerSection()
+                        disclaimerSection(reporterData.centraModel().getAddressStringForSample(report.sample()))
                 );
 
         final ComponentBuilder<?, ?> totalReport =
@@ -172,8 +175,8 @@ public class PDFWriter implements ReportWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.pageXslashY(),
-                        cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)))
+                .lastPageFooter(cmp.verticalList(signatureFooter(reporterData.signaturePath()), cmp.pageXslashY(),
+                        cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .addDetail(totalReport)
                 .setDataSource(singleItemDataSource);
     }
@@ -406,11 +409,26 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> disclaimerSection() {
-        return toList("Disclaimer", Lists.newArrayList("This test is not certified for diagnostic purposes.",
+    private static ComponentBuilder<?, ?> disclaimerSection(@Nullable final String recipientAddress) {
+        return toList("Test details", Lists.newArrayList("Method used: Next Generation Sequencing",
+                "Sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam", "Recipient: " + recipientAddress,
+                "QC succeeded", "This test is not certified for diagnostic purposes.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
                         + "findings using certified assays.",
                 "When no mutations are reported, the absence of mutations is not guaranteed."));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> signatureFooter(@NotNull final String signaturePath) {
+        // @formatter:off
+        return cmp.horizontalList(
+                cmp.horizontalGap(370),
+                cmp.verticalList(
+                        cmp.text("Edwin Cuppen, "),
+                        cmp.text("Director Hartwig Medical Foundation"),
+                        cmp.image(signaturePath).setWidth(60).setHeight(50).setStyle(stl.style().setHorizontalImageAlignment(HorizontalImageAlignment.CENTER))),
+                cmp.horizontalGap(10));
+        // @formatter:on
     }
 
     @NotNull
