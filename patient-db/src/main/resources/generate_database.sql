@@ -16,7 +16,7 @@ CREATE TABLE patient
 
 DROP TABLE IF EXISTS sample;
 CREATE TABLE sample
-(   sampleId varchar(20) NOT NULL,
+(   sampleId varchar(255) NOT NULL,
     patientId int NOT NULL,
     arrivalDate DATE NOT NULL,
     PRIMARY KEY (sampleId),
@@ -84,7 +84,7 @@ DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     position int not null,
     filter varchar(255) NOT NULL,
@@ -113,7 +113,7 @@ DROP TABLE IF EXISTS copyNumber;
 CREATE TABLE copyNumber
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
@@ -131,7 +131,7 @@ DROP TABLE IF EXISTS purityRange;
 CREATE TABLE purityRange
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     purity DOUBLE PRECISION not null,
     normFactor DOUBLE PRECISION not null,
     score DOUBLE PRECISION not null,
@@ -147,7 +147,7 @@ DROP TABLE IF EXISTS purity;
 CREATE TABLE purity
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     gender varchar(255) NOT NULL,
     status varchar(255) NOT NULL,
     purity DOUBLE PRECISION not null,
@@ -171,7 +171,7 @@ DROP TABLE IF EXISTS copyNumberRegion;
 CREATE TABLE copyNumberRegion
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
@@ -200,7 +200,7 @@ DROP TABLE IF EXISTS structuralVariant;
 CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     startChromosome varchar(255) NOT NULL,
     endChromosome varchar(255) NOT NULL,
     startPosition int not null,
@@ -219,7 +219,7 @@ DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
