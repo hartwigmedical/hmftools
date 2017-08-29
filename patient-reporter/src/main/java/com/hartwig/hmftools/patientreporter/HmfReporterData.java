@@ -26,4 +26,7 @@ public abstract class HmfReporterData {
 
     @NotNull
     public abstract CentraModel centraModel();
+
+    @NotNull
+    public abstract String signaturePath();
 }

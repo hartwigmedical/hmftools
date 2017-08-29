@@ -19,11 +19,12 @@ public final class HmfReporterDataLoader {
 
     @NotNull
     public static HmfReporterData buildFromFiles(@NotNull final String hmfGenePanelFile, @NotNull final String drupFilterFile,
-            @NotNull final String cosmicFile, @NotNull final String centraFile) throws IOException, HartwigException {
+            @NotNull final String cosmicFile, @NotNull final String centraFile, @NotNull final String signaturePath)
+            throws IOException, HartwigException {
         final HmfSlicer hmfSlicer = SlicerFactory.fromHmfGenePanelFile(hmfGenePanelFile);
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
         final CentraModel centraModel = Centra.readFromCSV(centraFile);
-        return new ImmutableHmfReporterData(hmfSlicer, cosmicModel, drupFilter, centraModel);
+        return new ImmutableHmfReporterData(hmfSlicer, cosmicModel, drupFilter, centraModel, signaturePath);
     }
 }

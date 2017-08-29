@@ -59,6 +59,7 @@ public class PatientReporterApplication {
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String FREEC = "freec";
     private static final String CENTRA_CSV = "centra_csv";
+    private static final String SIGNATURE = "signature";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -97,7 +98,7 @@ public class PatientReporterApplication {
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL), cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTRA_CSV));
+                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTRA_CSV), cmd.getOptionValue(SIGNATURE));
     }
 
     @NotNull
@@ -145,6 +146,7 @@ public class PatientReporterApplication {
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
             final String centraCsv = cmd.getOptionValue(CENTRA_CSV);
             final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
+            final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
             if (cpctSlicingBed == null || !exists(cpctSlicingBed)) {
                 LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
@@ -158,6 +160,8 @@ public class PatientReporterApplication {
                 LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
             } else if (centraCsv == null || !exists(centraCsv)) {
                 LOGGER.warn(CENTRA_CSV + " has to be an existing file: " + centraCsv);
+            } else if (signaturePath == null || !exists(signaturePath)) {
+                LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
             } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
                 LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
             } else {
@@ -239,6 +243,7 @@ public class PatientReporterApplication {
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
         options.addOption(FREEC, false, "Use freec copy numbers instead of purple.");
         options.addOption(CENTRA_CSV, true, "Path towards a CSV containing centra data.");
+        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         return options;
     }
 
