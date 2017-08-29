@@ -1,12 +1,11 @@
 
 # PURPLE
 
-PURPLE is a **pur**ity **pl**oidy **e**stimator. It leverages both CNV and BAF information to estimate the purity of a sample and then supply a copy number profile.
+PURPLE is a **pur**ity **pl**oidy **e**stimator. It leverages the read depth and tumor BAF to estimate the purity of a sample and generate a copy number profile.
 
 
 ## R Dependencies
-Copy number segmentation is done with the Bioconductor
-[copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
+Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
 
 
 This can be installed in R with the following commands:
@@ -18,31 +17,42 @@ This can be installed in R with the following commands:
 
 ## Required Input
 
-### Read Count
+### COBALT
 
-We require the number of read starts per kbase window for both the normal and tumor sample.
+We use COBALT to determine the number of read starts per kbase window. This must be done for both the reference and tumor samples.
 
-We use COBALT (**co**unt **ba**m **l**ines) to do this with a min quality threshold of 10.
-
-### BAF
-
-The BAF is the allelic frequency in the tumor of a set of high confidence heterozygous SNPs in the normal sample.
-
-These are generated in our pipeline by the GATK haplotype caller and filtered using a bed file of 700k common germline SNPs.
-
-In the next version, PURPLE will generate this directly from the BAMs, but for now it needs to be provided.
-
-An example file might look:
-
-Chromosome | Position | BAF
-:--- | :---: | :---:
-1 | 1186502 | 0.166
-1 | 1333436 | 0.2
+For more information on how to run COBALT please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/count-bam-lines).
 
 
+### AMBER
+
+We use AMBER to calculate the allelic frequency in the tumor from a set of high confidence heterozygous SNPs in the normal sample
+
+For more information on how to run AMBER please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/amber).
+
+## Usage
+
+Argument | Default | Description
+---|---|---
+-ref_sample | None | Name of reference sample.
+-tumor_sample | None | Name of tumor sample.
+-run_dir | None | Base directory of run. Default values of output_dir, amber and cobalt will be relative to this.
+-output_dir |  <run_dir>/purple | Output directory.
+-baf | <amber_dir>/<tumor_sample>.amber.baf | Location of baf file. By default will look in the amber directory.
+-amber | <run_dir>/amber | Location of amber directory.
+-cobalt | <run_dir>/cobalt | Location of cobalt directory.
+-threads | 2 | Number of threads to use.
+-somatic_vcf | None | Optional location of somatic variants vcf. Sample name should match <tumor_sample>. GZ files supported.
+-structural_vcf | None | Optional location of structural variants vcf. Sample name should match <tumor_sample>. GZ files supported.
+-circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
+-db_enabled | None | Optionally include if you wish to persist results to a database.
+-db_user | None | Database username. Mandatory if db_enabled.
+-db_pass | None | Database password. Mandatory if db_enabled.
+-db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
+
+Arguments without default values are mandatory.
 
 ## Algorithm
-
 
 ### Segmentation
 The idea is to identify maximal set of break points so we can have discrete segments with a single BAF and absolute copy number.
