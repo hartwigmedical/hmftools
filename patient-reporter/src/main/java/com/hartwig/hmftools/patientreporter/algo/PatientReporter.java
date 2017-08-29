@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
@@ -70,8 +71,7 @@ public class PatientReporter {
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants after applying pass-only filter : " + Integer.toString(passedCount));
         LOGGER.info("  Number of variants after applying consensus rule : " + Integer.toString(consensusPassedCount));
-        LOGGER.info("  Number of missense variants in consensus rule (mutational load) : " + Integer.toString(
-                mutationalLoad));
+        LOGGER.info("  Number of missense variants in consensus rule (mutational load) : " + Integer.toString(mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
         LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
         if (potentialMNVCount > 0) {
@@ -84,8 +84,8 @@ public class PatientReporter {
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
         final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
-        return new PatientReport(sample, purpleEnrichedVariants, copyNumberAnalysis.findings(), mutationalLoad,
-                tumorType, tumorPercentage, purpleAnalysis.purityString());
+        return ImmutablePatientReport.of(sample, purpleEnrichedVariants, copyNumberAnalysis.findings(), mutationalLoad, tumorType,
+                tumorPercentage, purpleAnalysis.purityString());
     }
 
     @NotNull
@@ -106,7 +106,8 @@ public class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
-        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(context.status(), purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
+        final PurpleAnalysis purpleAnalysis =
+                ImmutablePurpleAnalysis.of(context.status(), purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
                     + ") range exceeds 5%. Proceed with caution.");

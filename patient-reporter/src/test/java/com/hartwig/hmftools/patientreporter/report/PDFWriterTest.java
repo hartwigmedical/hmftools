@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
+import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
@@ -115,7 +116,7 @@ public class PDFWriterTest {
         final Double pathologyTumorPercentage = 0.6;
 
         final PatientReport patientReport =
-                new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%");
+                ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%");
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
