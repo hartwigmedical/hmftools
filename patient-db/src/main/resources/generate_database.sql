@@ -26,7 +26,7 @@ CREATE TABLE sample
 DROP TABLE IF EXISTS biopsy;
 CREATE TABLE biopsy
 (   id int NOT NULL,
-    sampleId varchar(20),
+    sampleId varchar(255),
     patientId int NOT NULL,
     biopsyLocation varchar(255),
     biopsyDate DATE,
