@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -27,11 +28,12 @@ public class SomaticVariantsCheckerTest {
     private static final double EPSILON = 1.0e-4;
     private static final int EXPECTED_NUM_CHECKS = 4;
 
-    private static final String RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run";
+    private static final String BASE_DIRECTORY = Resources.getResource("somatics").getPath();
+    private static final String RUN_DIRECTORY = BASE_DIRECTORY + File.separator + "run";
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";
 
-    private static final String MINIMAL_RUN_DIRECTORY = RunnerTestFunctions.getRunnerResourcePath("variants") + File.separator + "run2";
+    private static final String MINIMAL_RUN_DIRECTORY = BASE_DIRECTORY + File.separator + "run2";
     private static final String MINIMAL_REF_SAMPLE = "sample3";
     private static final String MINIMAL_TUMOR_SAMPLE = "sample4";
 
