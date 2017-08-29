@@ -54,7 +54,6 @@ public class PatientReportMailerApplication {
         final String subject = getSampleFromReportPath(reportPath) + " HMF Report";
         ReportMailer.sendEmail(subject, messageBody, sender, recipients);
         LOGGER.info("Done.");
-
     }
 
     @NotNull

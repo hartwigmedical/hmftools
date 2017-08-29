@@ -10,8 +10,6 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>somatic-sampler</module>
-        <module>batch-health-check-reader</module>
         <module>consensus-rule-filter</module>
         <module>health-checker</module>
         <module>patient-reporter</module>
