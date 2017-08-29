@@ -51,15 +51,8 @@ public final class VCFFileLoader {
     }
 
     @NotNull
-    public static VCFGermlineFile loadGermlineVCF(@NotNull final String file)
-            throws IOException, HartwigException {
+    public static VCFGermlineFile loadGermlineVCF(@NotNull final String file) throws IOException, HartwigException {
         return toVCFGermlineFile(loadAllLinesFromVCF(file));
-    }
-
-    @NotNull
-    public static VCFGermlineFile loadGermlineVCF(@NotNull final String basePath, @NotNull final String fileExtension)
-            throws IOException, HartwigException {
-        return toVCFGermlineFile(loadAllLinesFromVCF(basePath, fileExtension));
     }
 
     @NotNull

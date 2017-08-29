@@ -3,14 +3,14 @@ package com.hartwig.hmftools.common.variant;
 import java.util.Arrays;
 import java.util.List;
 
-public final class SomaticVariantConstants {
+final class SomaticVariantConstants {
 
-    public static final String MUTECT = "mutect";
-    public static final String VARSCAN = "varscan";
-    public static final String STRELKA = "strelka";
-    public static final String FREEBAYES = "freebayes";
+    static final String MUTECT = "mutect";
+    static final String VARSCAN = "varscan";
+    static final String STRELKA = "strelka";
+    static final String FREEBAYES = "freebayes";
 
-    public static final List<String> ALL_CALLERS = Arrays.asList(MUTECT, VARSCAN, STRELKA, FREEBAYES);
+    static final List<String> ALL_CALLERS = Arrays.asList(MUTECT, VARSCAN, STRELKA, FREEBAYES);
 
     private SomaticVariantConstants() {
     }
