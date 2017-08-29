@@ -2,8 +2,8 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.centra.Centra;
-import com.hartwig.hmftools.common.centra.CentraModel;
+import com.hartwig.hmftools.common.center.Center;
+import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.cosmic.Cosmic;
 import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -19,12 +19,12 @@ public final class HmfReporterDataLoader {
 
     @NotNull
     public static HmfReporterData buildFromFiles(@NotNull final String hmfGenePanelFile, @NotNull final String drupFilterFile,
-            @NotNull final String cosmicFile, @NotNull final String centraFile, @NotNull final String signaturePath)
+            @NotNull final String cosmicFile, @NotNull final String centerFile, @NotNull final String signaturePath)
             throws IOException, HartwigException {
         final HmfSlicer hmfSlicer = SlicerFactory.fromHmfGenePanelFile(hmfGenePanelFile);
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
-        final CentraModel centraModel = Centra.readFromCSV(centraFile);
-        return new ImmutableHmfReporterData(hmfSlicer, cosmicModel, drupFilter, centraModel, signaturePath);
+        final CenterModel centerModel = Center.readFromCSV(centerFile);
+        return new ImmutableHmfReporterData(hmfSlicer, cosmicModel, drupFilter, centerModel, signaturePath);
     }
 }

@@ -155,7 +155,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        disclaimerSection(reporterData.centraModel().getAddressStringForSample(report.sample()))
+                        disclaimerSection(reporterData.centerModel().getAddressStringForSample(report.sample()))
                 );
 
         final ComponentBuilder<?, ?> totalReport =

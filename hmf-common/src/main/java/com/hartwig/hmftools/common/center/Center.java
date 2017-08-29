@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.centra;
+package com.hartwig.hmftools.common.center;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,9 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class Centra {
+public final class Center {
 
-    private static final Logger LOGGER = LogManager.getLogger(Centra.class);
+    private static final Logger LOGGER = LogManager.getLogger(Center.class);
 
     private static final int ID_COLUMN = 0;
     private static final int CPCT_RECIPIENTS_COLUMN = 4;
@@ -27,23 +27,23 @@ public final class Centra {
 
     private static final String FIELD_SEPARATOR = ",";
 
-    private Centra() {
+    private Center() {
     }
 
     @NotNull
-    public static CentraModel readFromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
-        final Map<String, CentraData> centraPerId = Maps.newHashMap();
+    public static CenterModel readFromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+        final Map<String, CenterData> centerPerId = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        for (String line : lines) {
+        for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
-                centraPerId.put(parts[ID_COLUMN],
-                        ImmutableCentraData.of(parts[CPCT_RECIPIENTS_COLUMN], parts[DRUP_RECIPIENTS_COLUMN], parts[ADDRESS_NAME_FIELD],
+                centerPerId.put(parts[ID_COLUMN],
+                        ImmutableCenterData.of(parts[CPCT_RECIPIENTS_COLUMN], parts[DRUP_RECIPIENTS_COLUMN], parts[ADDRESS_NAME_FIELD],
                                 parts[ADDRESS_ZIP_FIELD], parts[ADDRESS_CITY_FIELD]));
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in centra csv: " + line);
+                LOGGER.warn("Could not properly parse line in center csv: " + line);
             }
         }
-        return ImmutableCentraModel.of(centraPerId);
+        return ImmutableCenterModel.of(centerPerId);
     }
 }

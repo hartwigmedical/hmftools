@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.centra;
+package com.hartwig.hmftools.common.center;
 
 import java.util.List;
 import java.util.Map;
@@ -15,50 +15,50 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CentraModel {
-    private static final Logger LOGGER = LogManager.getLogger(CentraModel.class);
+public abstract class CenterModel {
+    private static final Logger LOGGER = LogManager.getLogger(CenterModel.class);
 
     @NotNull
-    protected abstract Map<String, CentraData> centraPerId();
+    protected abstract Map<String, CenterData> centerPerId();
 
     @Nullable
-    String getCpctRecipients(@NotNull final String centraId) {
-        final CentraData centra = centraPerId().get(centraId);
-        if (centra == null) {
-            LOGGER.error("Centra model does not contain id " + centraId);
+    String getCpctRecipients(@NotNull final String centerId) {
+        final CenterData center = centerPerId().get(centerId);
+        if (center == null) {
+            LOGGER.error("Center model does not contain id " + centerId);
             return null;
         }
-        return centra.cpctRecipients();
+        return center.cpctRecipients();
     }
 
     @Nullable
     public String getCpctRecipientsFromSample(@NotNull final String sample) {
-        return getCpctRecipients(getCentraIdFromSample(sample));
+        return getCpctRecipients(getCenterIdFromSample(sample));
     }
 
     @Nullable
-    String getDrupRecipients(@NotNull final String centraId) {
-        final CentraData centra = centraPerId().get(centraId);
-        if (centra == null) {
-            LOGGER.error("Centra model does not contain id " + centraId);
+    String getDrupRecipients(@NotNull final String centerId) {
+        final CenterData center = centerPerId().get(centerId);
+        if (center == null) {
+            LOGGER.error("Center model does not contain id " + centerId);
             return null;
         }
-        return centra.drupRecipients();
+        return center.drupRecipients();
     }
 
     @Nullable
     public String getDrupRecipientsFromSample(@NotNull final String sample) {
-        return getDrupRecipients(getCentraIdFromSample(sample));
+        return getDrupRecipients(getCenterIdFromSample(sample));
     }
 
     @Nullable
-    CentraData centraPerId(@NotNull final String centraId) {
-        return centraPerId().get(centraId);
+    CenterData centerPerId(@NotNull final String centerId) {
+        return centerPerId().get(centerId);
     }
 
     // MIVO: expects sample in DRUP/CPCT format
     @NotNull
-    private static String getCentraIdFromSample(@NotNull final String sample) {
+    private static String getCenterIdFromSample(@NotNull final String sample) {
         final String ucSample = sample.toUpperCase();
         if ((ucSample.startsWith("DRUP") || ucSample.startsWith("CPCT")) && sample.length() >= 12) {
             return sample.substring(6, 8);
@@ -68,29 +68,30 @@ public abstract class CentraModel {
 
     @Nullable
     public String getAddressStringForSample(@NotNull final String sample) {
-        final String centraId = getCentraIdFromSample(sample);
-        final CentraData centra = centraPerId(centraId);
-        if (centra == null) {
-            LOGGER.error("Centra model does not contain id " + centraId);
+        final String centerId = getCenterIdFromSample(sample);
+        final CenterData center = centerPerId(centerId);
+        if (center == null) {
+            LOGGER.error("Center model does not contain id " + centerId);
             return null;
         }
-        checkAddressFields(centra);
-        return centra.addressName() + ", " + centra.addressZip() + " " + centra.addressCity();
+        checkAddressFields(center);
+        return center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
     }
 
-    private void checkAddressFields(@NotNull final CentraData centra) {
+    private static void checkAddressFields(@NotNull final CenterData center) {
         final List<String> missingFields = Lists.newArrayList();
-        if (centra.addressName().isEmpty()) {
+        if (center.addressName().isEmpty()) {
             missingFields.add("name");
         }
 
-        if (centra.addressZip().isEmpty()) {
+        if (center.addressZip().isEmpty()) {
             missingFields.add("zip");
         }
 
-        if (centra.addressCity().isEmpty()) {
+        if (center.addressCity().isEmpty()) {
             missingFields.add("city");
         }
+
         if (!missingFields.isEmpty()) {
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
         }

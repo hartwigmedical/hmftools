@@ -58,7 +58,7 @@ public class PatientReporterApplication {
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String FREEC = "freec";
-    private static final String CENTRA_CSV = "centra_csv";
+    private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -98,7 +98,7 @@ public class PatientReporterApplication {
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL), cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTRA_CSV), cmd.getOptionValue(SIGNATURE));
+                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE));
     }
 
     @NotNull
@@ -144,7 +144,7 @@ public class PatientReporterApplication {
             final String hmfGenePanel = cmd.getOptionValue(HMF_GENE_PANEL);
             final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
-            final String centraCsv = cmd.getOptionValue(CENTRA_CSV);
+            final String centerCsv = cmd.getOptionValue(CENTER_CSV);
             final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
             final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
@@ -158,8 +158,8 @@ public class PatientReporterApplication {
                 LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
             } else if (cosmicCsv == null || !exists(cosmicCsv)) {
                 LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
-            } else if (centraCsv == null || !exists(centraCsv)) {
-                LOGGER.warn(CENTRA_CSV + " has to be an existing file: " + centraCsv);
+            } else if (centerCsv == null || !exists(centerCsv)) {
+                LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
             } else if (signaturePath == null || !exists(signaturePath)) {
                 LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
             } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
@@ -242,7 +242,7 @@ public class PatientReporterApplication {
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
         options.addOption(FREEC, false, "Use freec copy numbers instead of purple.");
-        options.addOption(CENTRA_CSV, true, "Path towards a CSV containing centra data.");
+        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         return options;
     }

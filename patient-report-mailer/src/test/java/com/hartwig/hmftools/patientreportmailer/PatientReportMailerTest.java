@@ -13,30 +13,31 @@ import org.junit.Test;
 
 public class PatientReportMailerTest {
 
-    private static final String CENTRA_FILE = Resources.getResource("centra.csv").getPath();
+    private static final String CENTER_FILE = Resources.getResource("centers.csv").getPath();
     private static final String CPCT_REPORT = Resources.getResource("CPCT02010001T_hmf_report.pdf").getPath();
     private static final String DRUP_REPORT = Resources.getResource("DRUP01010001TII_hmf_report.pdf").getPath();
     private static final String OTHER_REPORT = Resources.getResource("TEST_hmf_report.pdf").getPath();
     private static final String TEMPLATE_FILE = Resources.getResource("template.txt").getPath();
     private static final String MEB_DATE = "03-03-2017";
     private static final String MEB_DEADLINE = "02-02-2017";
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     @Test
     public void canReadCPCTRecipients() throws IOException, EmptyFileException {
-        final String recipients = PatientReportMailerApplication.getRecipients(CPCT_REPORT, CENTRA_FILE, "");
+        final String recipients = PatientReportMailerApplication.getRecipients(CPCT_REPORT, CENTER_FILE, "");
         assertEquals("my@email.com, my2@email.com", recipients);
     }
 
     @Test
     public void canReadDRUPRecipients() throws IOException, EmptyFileException {
-        final String recipients = PatientReportMailerApplication.getRecipients(DRUP_REPORT, CENTRA_FILE, "drup@email.com");
+        final String recipients = PatientReportMailerApplication.getRecipients(DRUP_REPORT, CENTER_FILE, "drup@email.com");
         assertEquals("my3@email.com,drup@email.com", recipients);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void throwsOnNonCPCTorDRUP() throws IOException, EmptyFileException {
-        PatientReportMailerApplication.getRecipients(OTHER_REPORT, CENTRA_FILE, "drup@email.com");
+        PatientReportMailerApplication.getRecipients(OTHER_REPORT, CENTER_FILE, "drup@email.com");
     }
 
     @Test

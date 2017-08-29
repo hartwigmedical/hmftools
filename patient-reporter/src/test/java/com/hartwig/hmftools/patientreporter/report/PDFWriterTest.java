@@ -120,13 +120,13 @@ public class PDFWriterTest {
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
-        final String centraPath = Resources.getResource("centra").getPath() + File.separator + "centra.csv";
+        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
 
         // KODU: Refers to the actual cosmic path on datastore:
         // final String cosmicPath = REPORT_BASE_DIR + "/hmf/tmp/170529_grch37_cosmic_census.csv";
         final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath, cosmicPath, centraPath, signaturePath);
+                HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath, cosmicPath, centerPath, signaturePath);
 
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
