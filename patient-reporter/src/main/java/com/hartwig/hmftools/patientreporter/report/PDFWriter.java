@@ -410,12 +410,13 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> disclaimerSection(@Nullable final String recipientAddress) {
-        return toList("Test details", Lists.newArrayList("Method used: Next Generation Sequencing",
-                "Sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam", "Recipient: " + recipientAddress,
-                "QC succeeded", "This test is not certified for diagnostic purposes.",
+        return toList("Test details", Lists.newArrayList("This test is not certified for diagnostic purposes.",
+                "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
+                "The data on which this report is based has passed all internal quality controls.",
+                "The samples have been analysed by Next Generation Sequencing",
+                "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
-                        + "findings using certified assays.",
-                "When no mutations are reported, the absence of mutations is not guaranteed."));
+                        + "findings using certified assays.", "This report is addressed at: " + recipientAddress));
     }
 
     @NotNull

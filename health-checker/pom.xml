@@ -10,7 +10,7 @@
 
     <artifactId>health-checker</artifactId>
     <packaging>jar</packaging>
-    <version>1.3</version>
+    <version>1.4</version>
     <name>HMF Tools - Health Checker</name>
 
     <dependencies>

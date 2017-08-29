@@ -43,7 +43,7 @@ public class PatientReporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
     // KODU: There is probably a better way to do this...
-    public static final String VERSION = "3.4";
+    public static final String VERSION = "3.5";
 
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
