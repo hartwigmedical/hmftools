@@ -7,18 +7,9 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 
 public enum CheckType {
-    METADATA,
-    MAPPING,
-    PRESTATS,
     KINSHIP,
-    INSERT_SIZE,
-    SUMMARY_METRICS,
     WGS_METRICS,
-    SOMATIC,
-    SLICED,
-    REALIGNER,
-    GERMLINE,
-    COPYNUMBER;
+    SOMATIC;
 
     @NotNull
     public static Optional<CheckType> getByCategory(@NotNull final String typeToCheck) {

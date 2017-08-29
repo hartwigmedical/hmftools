@@ -9,10 +9,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.exception.GenerateReportException;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.context.TestRunContextFactory;
+import com.hartwig.hmftools.common.exception.GenerateReportException;
+import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.runners.CheckType;
 
@@ -35,10 +35,10 @@ public class ReportTest {
     public void generateStdOutReport() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.MAPPING);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
         report.addResult(baseConfig1);
 
-        final BaseResult baseConfig2 = new TestResult(CheckType.PRESTATS);
+        final BaseResult baseConfig2 = new TestResult(CheckType.KINSHIP);
         report.addResult(baseConfig2);
 
         final Optional<String> jsonOptional = report.generateReport(MOCK_RUN_CONTEXT, MOCK_OUTPUT_DIR);
@@ -53,10 +53,10 @@ public class ReportTest {
     public void generateReportMetadataIOException() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.MAPPING);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
         report.addResult(baseConfig1);
 
-        final BaseResult baseConfig2 = new TestResult(CheckType.PRESTATS);
+        final BaseResult baseConfig2 = new TestResult(CheckType.KINSHIP);
         report.addResult(baseConfig2);
 
         final Optional<String> jsonOptional = report.generateReport(MOCK_RUN_CONTEXT, MOCK_OUTPUT_DIR);
@@ -71,10 +71,10 @@ public class ReportTest {
     public void generateReportMetadataHealthCheckException() throws IOException, HartwigException {
         final Report report = StandardOutputReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.MAPPING);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
         report.addResult(baseConfig1);
 
-        final BaseResult baseConfig2 = new TestResult(CheckType.PRESTATS);
+        final BaseResult baseConfig2 = new TestResult(CheckType.KINSHIP);
         report.addResult(baseConfig2);
 
         final Optional<String> jsonOptional = report.generateReport(MOCK_RUN_CONTEXT, MOCK_OUTPUT_DIR);
@@ -100,7 +100,7 @@ public class ReportTest {
         };
         final Report report = JsonReport.getInstance();
 
-        final BaseResult baseConfig1 = new TestResult(CheckType.MAPPING);
+        final BaseResult baseConfig1 = new TestResult(CheckType.SOMATIC);
         report.addResult(baseConfig1);
 
         final Optional<String> result = report.generateReport(MOCK_RUN_CONTEXT, MOCK_OUTPUT_DIR);
