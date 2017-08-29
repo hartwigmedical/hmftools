@@ -26,7 +26,7 @@ For more information on how to run COBALT please refer to the [readme](https://g
 
 ### AMBER
 
-We use AMBER to calculate the allelic frequency in the tumor from a set of high confidence heterozygous SNPs in the normal sample
+We use AMBER to calculate the allelic frequency in the tumor from a set of high confidence heterozygous SNPs in the reference sample.
 
 For more information on how to run AMBER please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/amber).
 
@@ -37,6 +37,7 @@ Argument | Default | Description
 -ref_sample | None | Name of reference sample.
 -tumor_sample | None | Name of tumor sample.
 -run_dir | None | Base directory of run. Default values of output_dir, amber and cobalt will be relative to this.
+-gc_profile | None | Location of GC profile.
 -output_dir |  <run_dir>/purple | Output directory.
 -baf | <amber_dir>/<tumor_sample>.amber.baf | Location of baf file. By default will look in the amber directory.
 -amber | <run_dir>/amber | Location of amber directory.
@@ -45,12 +46,26 @@ Argument | Default | Description
 -somatic_vcf | None | Optional location of somatic variants vcf. Sample name should match <tumor_sample>. GZ files supported.
 -structural_vcf | None | Optional location of structural variants vcf. Sample name should match <tumor_sample>. GZ files supported.
 -circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
--db_enabled | None | Optionally include if you wish to persist results to a database.
+-db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
 -db_user | None | Database username. Mandatory if db_enabled.
 -db_pass | None | Database password. Mandatory if db_enabled.
 -db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
 
-Arguments without default values are mandatory.
+### Example Usage
+
+```
+java -jar purple.jar \
+   -run_dir "/Users/jon/hmf/analyses/COLO829" \
+   -ref_sample COLO829BL \
+   -tumor_sample COLO829 \
+   -threads 6 \
+   -gc_profile /Users/jon/hmf/analyses/COLO829/GC_profile.1000bp.cnp \
+   -somatic_vcf /Users/jon/hmf/analyses/COLO829/COLO829_consensus_filtered.vcf \
+   -structural_vcf /Users/jon/hmf/analyses/COLO829/somaticSV.vcf.gz \
+   -circos /Users/jon/hmf/tools/circos-0.69-5/bin/circos \
+   -db_enabled -db_user build -db_pass build -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
+```
+
 
 ## Algorithm
 
