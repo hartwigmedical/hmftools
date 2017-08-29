@@ -222,8 +222,8 @@ class Analysis {
 
         // extract all interesting pairs
 
-        final PairedReads interesting = new PairedReads();
-        final PairedReads clipped_proper = new PairedReads();
+        final PairedReads interesting = new PairedReads(pairs.size() / 2);
+        final PairedReads clipped_proper = new PairedReads(pairs.size() / 2);
 
         for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
 
