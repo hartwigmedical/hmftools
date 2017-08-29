@@ -30,6 +30,8 @@ public class ConfigSupplier {
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
+    private static final String AMBER = "amber";
+    private static final String COBALT = "cobalt";
 
     private static final String STRUCTURAL_VARIANTS = "structural_vcf";
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
@@ -51,6 +53,8 @@ public class ConfigSupplier {
         options.addOption(BAF_VARIANTS, true, "Location of vcf to calculate BAF.");
         options.addOption(BAF, true, "Baf file location.");
         options.addOption(CIRCOS, true, "Location of circos binary.");
+        options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
+        options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
     }
 
     private final CommonConfig commonConfig;
@@ -79,7 +83,18 @@ public class ConfigSupplier {
 
         final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        commonConfig = new CommonConfig(refSample, tumorSample, outputDirectory, runDirectory, freecDirectory, cmd.hasOption(FORCE));
+        final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
+        final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
+
+        commonConfig = ImmutableCommonConfig.builder()
+                .refSample(refSample)
+                .tumorSample(tumorSample)
+                .outputDirectory(outputDirectory)
+                .freecDirectory(freecDirectory)
+                .amberDirectory(amberDirectory)
+                .cobaltDirectory(cobaltDirectory)
+                .forceSegmentation(cmd.hasOption(FORCE))
+                .build();
 
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
         LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());

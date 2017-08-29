@@ -66,7 +66,7 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
             @NotNull final String sample) throws IOException, InterruptedException {
         final String ratioFile = ReadRatioFile.generateFilename(config.outputDirectory(), sample);
         final String pcfFile = PCFFile.generateRatioFilename(config.outputDirectory(), sample);
-        if (config.forceRecalculate() || !new File(pcfFile).exists()) {
+        if (config.forceSegmentation() || !new File(pcfFile).exists()) {
             int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, pcfFile);
             if (result != 0) {
                 throw new IOException("R execution failed. Unable to complete segmentation.");
