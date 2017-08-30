@@ -19,7 +19,6 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
-import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -55,7 +54,6 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
-    private static final String FREEC = "freec";
     private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
 
@@ -108,9 +106,8 @@ public class PatientReporterApplication {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
-        final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer, cmd.hasOption(FREEC));
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer);
     }
 
     @NotNull
@@ -237,7 +234,6 @@ public class PatientReporterApplication {
         options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
-        options.addOption(FREEC, false, "Use freec copy numbers instead of purple.");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         return options;

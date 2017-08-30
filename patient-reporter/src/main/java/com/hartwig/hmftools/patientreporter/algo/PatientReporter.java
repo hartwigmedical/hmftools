@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -18,7 +17,6 @@ import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
@@ -39,18 +37,12 @@ public class PatientReporter {
     private final LimsJsonModel limsModel;
     @NotNull
     private final VariantAnalyzer variantAnalyzer;
-    @NotNull
-    private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
-    private final boolean useFreec;
 
     public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsJsonModel limsModel,
-            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer,
-            final boolean useFreec) {
+            @NotNull final VariantAnalyzer variantAnalyzer) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
         this.variantAnalyzer = variantAnalyzer;
-        this.copyNumberAnalyzer = copyNumberAnalyzer;
-        this.useFreec = useFreec;
     }
 
     @NotNull
@@ -106,6 +98,7 @@ public class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
+        LOGGER.info(" Analyzing purple somatic copy numbers...");
         final PurpleAnalysis purpleAnalysis =
                 ImmutablePurpleAnalysis.of(context.status(), purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
@@ -113,17 +106,7 @@ public class PatientReporter {
                     + ") range exceeds 5%. Proceed with caution.");
         }
 
-        final CopyNumberAnalysis copyNumberAnalysis;
-        if (useFreec) {
-            LOGGER.info(" Loading freec somatic copy numbers...");
-            final List<CopyNumber> copyNumbers = PatientReporterHelper.loadFreecCopyNumbers(runDirectory, sample);
-            LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
-            LOGGER.info(" Analyzing freec somatic copy numbers...");
-            copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
-        } else {
-            LOGGER.info(" Analyzing purple somatic copy numbers...");
-            copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
-        }
+        final CopyNumberAnalysis copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
 
         LOGGER.info(" Analyzing somatics....");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
