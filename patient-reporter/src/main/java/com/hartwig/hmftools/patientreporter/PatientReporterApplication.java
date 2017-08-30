@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.format.DateTimeFormatter;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -13,8 +12,7 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsModel;
+import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
@@ -49,7 +47,7 @@ public class PatientReporterApplication {
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String HMF_GENE_PANEL = "hmf_gene_panel";
     private static final String CPCT_ECRF = "cpct_ecrf";
-    private static final String LIMS_CSV = "lims_csv";
+    private static final String LIMS_JSON = "lims_json";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String NOT_SEQUENCEABLE = "not_sequenceable";
@@ -60,8 +58,6 @@ public class PatientReporterApplication {
     private static final String FREEC = "freec";
     private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
         final Options options = createOptions();
@@ -102,8 +98,8 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static LimsModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
-        return Lims.buildModelFromCsv(cmd.getOptionValue(LIMS_CSV), DATE_FORMATTER);
+    private static LimsJsonModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
+        return LimsJsonModel.readModelFromFile(cmd.getOptionValue(LIMS_JSON));
     }
 
     @NotNull
@@ -203,12 +199,12 @@ public class PatientReporterApplication {
 
     private static boolean validInputForEcrfAndTumorPercentages(@NotNull final CommandLine cmd) {
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
-        final String limsCsv = cmd.getOptionValue(LIMS_CSV);
+        final String limsJson = cmd.getOptionValue(LIMS_JSON);
 
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
-        } else if (limsCsv == null || !exists(limsCsv)) {
-            LOGGER.warn(LIMS_CSV + " has to be an existing file: " + limsCsv);
+        } else if (limsJson == null || !exists(limsJson)) {
+            LOGGER.warn(LIMS_JSON + " has to be an existing file: " + limsJson);
         } else {
             return true;
         }
@@ -232,7 +228,7 @@ public class PatientReporterApplication {
         options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
         options.addOption(HMF_GENE_PANEL, true, "Complete path towards the HMF gene panel csv.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
-        options.addOption(LIMS_CSV, true, "Complete path towards a CSV containing the LIMS data dump.");
+        options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
 

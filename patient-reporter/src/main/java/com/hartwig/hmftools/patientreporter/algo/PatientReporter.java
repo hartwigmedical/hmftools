@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.lims.LimsModel;
+import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -36,14 +36,14 @@ public class PatientReporter {
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
     @NotNull
-    private final LimsModel limsModel;
+    private final LimsJsonModel limsModel;
     @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
     private final boolean useFreec;
 
-    public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
+    public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsJsonModel limsModel,
             @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer,
             final boolean useFreec) {
         this.cpctEcrfModel = cpctEcrfModel;
@@ -82,7 +82,7 @@ public class PatientReporter {
                 + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
-        final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
+        final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
         return ImmutablePatientReport.of(sample, purpleEnrichedVariants, copyNumberAnalysis.findings(), mutationalLoad, tumorType,
                 tumorPercentage, purpleAnalysis.purityString());
