@@ -96,7 +96,7 @@ public class LimsTest {
         assertEquals("FC0000001", jsonLims.barcodeForSample("SAMP01010003T"));
         final Double tumorPercentage = jsonLims.tumorPercentageForSample("SAMP01010003T");
         assertNotNull(tumorPercentage);
-        assertEquals(30.0, tumorPercentage, 0.001);
+        assertEquals(.3, tumorPercentage, 0.001);
         assertEquals(LocalDate.parse("2016-02-05"), jsonLims.arrivalDateForSample("SAMP01010003T"));
         assertEquals(LocalDate.parse("2016-01-04"), jsonLims.samplingDateForSample("SAMP01010003T"));
         assertEquals(LocalDate.parse("2016-01-03"), jsonLims.bloodArrivalDateForSample("SAMP01010003T"));

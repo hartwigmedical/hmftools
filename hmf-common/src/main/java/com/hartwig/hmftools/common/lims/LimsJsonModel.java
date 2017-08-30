@@ -127,7 +127,7 @@ public abstract class LimsJsonModel {
                 if (data.sampleSource().equals("Blood")) {
                     return null;
                 } else {
-                    return Double.parseDouble(data.tumorPercentage());
+                    return Double.parseDouble(data.tumorPercentage()) / 100D;
                 }
             }
         }
