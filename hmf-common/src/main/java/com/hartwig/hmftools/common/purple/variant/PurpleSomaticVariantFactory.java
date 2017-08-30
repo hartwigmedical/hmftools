@@ -25,6 +25,7 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleSomaticVariantFactory {
 
+    @NotNull
     private final CompoundFilter filter;
 
     public PurpleSomaticVariantFactory() {
@@ -73,7 +74,7 @@ public class PurpleSomaticVariantFactory {
         return variants;
     }
 
-    private boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {
+    private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
     }
 
@@ -82,8 +83,7 @@ public class PurpleSomaticVariantFactory {
         return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
     }
 
-    private static double allelicFrequency(int[] afFields) {
-
+    private static double allelicFrequency(@NotNull final int[] afFields) {
         int totalReadCount = 0;
         final int alleleReadCount = afFields[1];
         for (final int afField : afFields) {
@@ -92,11 +92,11 @@ public class PurpleSomaticVariantFactory {
         return alleleReadCount / (double) totalReadCount;
     }
 
-    private static boolean ntFilter(final VariantContext record) {
+    private static boolean ntFilter(@NotNull final VariantContext record) {
         return !record.getCommonInfo().hasAttribute("NT") || record.getCommonInfo().getAttribute("NT").equals("ref");
     }
 
-    private static boolean sgtFilter(final VariantContext record) {
+    private static boolean sgtFilter(@NotNull final VariantContext record) {
         if (record.getCommonInfo().hasAttribute("SGT")) {
             final String[] sgt = record.getCommonInfo().getAttributeAsString("SGT", "GC->AT").split("->");
             if (sgt.length == 2 && sgt[0].equals(sgt[1])) {
