@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.healthchecker.runners.checks.SomaticVariantCheck;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;

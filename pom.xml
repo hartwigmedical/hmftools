@@ -23,6 +23,7 @@
         <module>rups-checker</module>
         <module>strelka-post-process</module>
         <module>patient-report-mailer</module>
+        <module>ensembl-db</module>
     </modules>
 
     <properties>
@@ -52,14 +53,12 @@
         <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
 
-        <!-- Used by health checker -->
-        <reactivex.version>1.1.5</reactivex.version>
-        <reflections.version>0.9.10</reflections.version>
-
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
         <!-- jmockit is used by health-checker (unfortunately...) -->
         <jmockit.version>1.8</jmockit.version>
+
+        <ensembl.version>89</ensembl.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -110,6 +109,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>ensembl-db</artifactId>
+                <version>${ensembl.version}</version>
             </dependency>
 
             <dependency>
@@ -182,36 +186,6 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysqlconnector.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>io.reactivex</groupId>
-                <artifactId>rxjava</artifactId>
-                <version>${reactivex.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.reflections</groupId>
-                <artifactId>reflections</artifactId>
-                <version>${reflections.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-all</artifactId>
-                <version>${mockito.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jmockit</groupId>
-                <artifactId>jmockit</artifactId>
-                <version>${jmockit.version}</version>
-                <scope>test</scope>
-            </dependency>
             <dependency>
                 <groupId>org.immutables</groupId>
                 <artifactId>value</artifactId>
@@ -233,6 +207,26 @@
                 <groupId>com.sun.mail</groupId>
                 <artifactId>javax.mail</artifactId>
                 <version>${javax.mail.version}</version>
+            </dependency>
+
+            <!-- KODU: Test dependencies -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jmockit</groupId>
+                <artifactId>jmockit</artifactId>
+                <version>${jmockit.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

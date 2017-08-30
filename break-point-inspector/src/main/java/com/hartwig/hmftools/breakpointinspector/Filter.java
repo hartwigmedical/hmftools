@@ -4,10 +4,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -16,7 +18,7 @@ import htsjdk.variant.vcf.VCFHeader;
 
 class Filter {
 
-    private enum Filters {
+    enum Filters {
         BreakpointError("BPI_BreakpointError", "BPI failed to determine breakpoints"),
         MinDepth("BPI_MinDepth", "The depth across one of the breakpoints is <10"),
         MinAnchorLength("BPI_MinAnchorLength", "There isn't at least one PR with >=30 bases matched in both alignments"),
@@ -131,7 +133,7 @@ class Filter {
             filters.add(Filters.ClippingConcordance);
         }
 
-        final List<String> merged = Lists.newArrayList(ctx.Filter);
+        final Set<String> merged = Sets.newHashSet(ctx.Filter);
         merged.addAll(filters.stream().map(Filters::toString).collect(Collectors.toList()));
         return merged;
     }

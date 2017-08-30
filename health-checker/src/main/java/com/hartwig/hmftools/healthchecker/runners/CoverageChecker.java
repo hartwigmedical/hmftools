@@ -14,19 +14,14 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.LineNotFoundException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
-import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
-import com.hartwig.hmftools.healthchecker.runners.checks.CoverageCheck;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("WeakerAccess")
-@ResourceWrapper(type = CheckType.COVERAGE)
 public class CoverageChecker extends ErrorHandlingChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(CoverageChecker.class);

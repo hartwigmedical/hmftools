@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
