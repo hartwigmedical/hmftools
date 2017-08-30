@@ -417,10 +417,11 @@ public class PDFWriter implements ReportWriter {
         return toList("Test details", Lists.newArrayList("This test is not certified for diagnostic purposes.",
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The data on which this report is based has passed all internal quality controls.",
-                "This test was performed on the tumor sample with barcode " +
-                        report.tumorBarcode() + " arrived on " + toFormattedDate(report.tumorArrivalDate()) ,
-                "This test was performed on the blood sample with barcode " +
-                        report.bloodBarcode() + " arrived on " + toFormattedDate(report.bloodArrivalDate()),
+// KODU: This information needs to be added but the LIMS is considered unreliable at this point.
+//                "This test was performed on the tumor sample with barcode " +
+//                        report.tumorBarcode() + " arrived on " + toFormattedDate(report.tumorArrivalDate()) ,
+//                "This test was performed on the blood sample with barcode " +
+//                        report.bloodBarcode() + " arrived on " + toFormattedDate(report.bloodArrivalDate()),
                 "The samples have been analysed by Next Generation Sequencing",
                 "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
