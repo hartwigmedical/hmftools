@@ -37,7 +37,6 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
-import net.sf.dynamicreports.report.constant.HorizontalImageAlignment;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
@@ -450,10 +449,10 @@ public class PDFWriter implements ReportWriter {
         // @formatter:off
         return cmp.horizontalList(
                 cmp.horizontalGap(370),
-                cmp.verticalList(
-                        cmp.text("Edwin Cuppen, "),
-                        cmp.text("Director Hartwig Medical Foundation"),
-                        cmp.image(signaturePath).setWidth(60).setHeight(50).setStyle(stl.style().setHorizontalImageAlignment(HorizontalImageAlignment.CENTER))),
+                cmp.xyList()
+                    .add(40, 8, cmp.image(signaturePath))
+                    .add(0, 0,cmp.text("Edwin Cuppen,"))
+                    .add(0, 15, cmp.text("Director Hartwig Medical Foundation").setWidth(190)),
                 cmp.horizontalGap(10));
         // @formatter:on
     }
