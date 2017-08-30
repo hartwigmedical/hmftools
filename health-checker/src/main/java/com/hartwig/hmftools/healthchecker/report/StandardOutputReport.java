@@ -4,8 +4,8 @@ import java.util.Optional;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.common.exception.GenerateReportException;
 import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.exception.GenerateReportException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +22,7 @@ final class StandardOutputReport extends AbstractJsonBaseReport {
 
     @NotNull
     @Override
-    public Optional<String> generateReport(@NotNull final RunContext runContext, @NotNull final String outputPath)
+    public Optional<String> generateReport(@NotNull final RunContext runContext, @NotNull final String fileName)
             throws GenerateReportException {
         final JsonArray reportArray = computeElements();
 

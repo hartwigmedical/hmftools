@@ -36,19 +36,20 @@ public final class HealthChecksApplication {
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String REPORT_TYPE = "report_type";
     private static final String REPORT_OUTPUT_PATH = "report_output_path";
+    private static final String REPORT_FILE_PATH = "report_file_path";
 
     @NotNull
     private final RunContext runContext;
     @NotNull
     private final String reportType;
     @NotNull
-    private final String reportOutputPath;
+    private final String reportFilePath;
 
     private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportType,
-            @NotNull final String reportOutputPath) {
+            @NotNull final String reportFilePath) {
         this.runContext = runContext;
         this.reportType = reportType;
-        this.reportOutputPath = reportOutputPath;
+        this.reportFilePath = reportFilePath;
     }
 
     public static void main(final String... args) throws ParseException {
@@ -57,9 +58,11 @@ public final class HealthChecksApplication {
 
         String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         final String reportType = cmd.getOptionValue(REPORT_TYPE);
-        final String reportOutputPath = cmd.getOptionValue(REPORT_OUTPUT_PATH);
+        final String reportOutputDir = cmd.getOptionValue(REPORT_OUTPUT_PATH);
+        final String reportFilePathParam = cmd.getOptionValue(REPORT_FILE_PATH);
+        final String reportFilePath;
 
-        if (runDirectory == null || reportType == null || reportOutputPath == null) {
+        if (runDirectory == null || reportType == null || (reportOutputDir == null && reportFilePathParam == null)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
@@ -74,17 +77,28 @@ public final class HealthChecksApplication {
             System.exit(1);
         }
 
-        new HealthChecksApplication(runContext, reportType, reportOutputPath).run();
+        if (reportFilePathParam != null) {
+            reportFilePath = reportFilePathParam;
+        } else {
+            reportFilePath = reportFileFromDir(runContext, reportOutputDir);
+        }
+
+        new HealthChecksApplication(runContext, reportType, reportFilePath).run();
+    }
+
+    @NotNull
+    private static String reportFileFromDir(@NotNull final RunContext runContext, @NotNull final String reportOutputDir) {
+        final String REPORT_FILE_PATTERN = "%s_health_checks.json";
+        return String.format("%s/%s", reportOutputDir, String.format(REPORT_FILE_PATTERN, runContext.setName()));
     }
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
         options.addOption(REPORT_TYPE, true, "The type of report to be generated: 'json' or 'stdout'.");
         options.addOption(REPORT_OUTPUT_PATH, true, "The path where reports are written to.");
-
+        options.addOption(REPORT_FILE_PATH, true, "The path to the report file.");
         return options;
     }
 
@@ -119,8 +133,7 @@ public final class HealthChecksApplication {
     private void generateReport() {
         try {
             final Report report = HealthCheckReportFactory.create(reportType);
-
-            final Optional<String> reportPath = report.generateReport(runContext, reportOutputPath);
+            final Optional<String> reportPath = report.generateReport(runContext, reportFilePath);
             reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
         } catch (final GenerateReportException e) {
             LOGGER.log(Level.ERROR, e.getMessage());

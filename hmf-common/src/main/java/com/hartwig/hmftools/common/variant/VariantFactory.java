@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import java.io.File;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,16 +35,7 @@ public final class VariantFactory {
         if (values.length <= sampleColumn) {
             return null;
         } else {
-            final String sample = values[sampleColumn];
-            // KODU: In v1.7, the sample would contain the whole path of the VCF.
-            if (sample.contains(File.separator)) {
-                final String[] parts = sample.split(File.separator);
-                final String[] subParts = parts[parts.length - 1].split("_");
-                // KODU: Assume last part starts with "R_T"
-                return subParts[1];
-            } else {
-                return sample;
-            }
+            return values[sampleColumn];
         }
     }
 }
