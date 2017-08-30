@@ -8,8 +8,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.copynumber.freec.FreecCopyNumberFactory;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -66,13 +64,6 @@ final class PatientReporterHelper {
     @NotNull
     static VCFSomaticFile loadVariantFile(@NotNull final String path) throws IOException, HartwigException {
         return VCFFileLoader.loadSomaticVCF(path, SOMATIC_EXTENSION);
-    }
-
-    @NotNull
-    static List<CopyNumber> loadFreecCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException, HartwigException {
-        final String cnvBasePath = guessCNVBasePath(runDirectory, sample) + File.separator + FREEC_DIRECTORY;
-        return FreecCopyNumberFactory.loadCNV(cnvBasePath, sample);
     }
 
     @NotNull
