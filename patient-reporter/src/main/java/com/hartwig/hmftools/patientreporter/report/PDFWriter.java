@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -46,6 +47,9 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
+
+    // KODU: This is commented out as long as LIMS provides unreliable results.
+    private static final boolean INCLUDE_SAMPLE_BARCODES_AND_DATES = false;
 
     // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
     private static final String FONT = "Times New Roman";
@@ -414,19 +418,26 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> testDetailsSection(@NotNull final PatientReport report, @Nullable final String recipientAddress) {
         //@formatter:off
-        return toList("Test details", Lists.newArrayList("This test is not certified for diagnostic purposes.",
+        final List<String> lines = Lists.newArrayList("This test is not certified for diagnostic purposes.",
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The data on which this report is based has passed all internal quality controls.",
-// KODU: This information needs to be added but the LIMS is considered unreliable at this point.
-//                "This test was performed on the tumor sample with barcode " +
-//                        report.tumorBarcode() + " arrived on " + toFormattedDate(report.tumorArrivalDate()) ,
-//                "This test was performed on the blood sample with barcode " +
-//                        report.bloodBarcode() + " arrived on " + toFormattedDate(report.bloodArrivalDate()),
                 "The samples have been analysed by Next Generation Sequencing",
                 "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
-                        + "findings using certified assays.", "This report is addressed at: " + recipientAddress));
+                        + "findings using certified assays.", "This report is addressed at: " + recipientAddress);
         //@formatter:on
+
+        if (INCLUDE_SAMPLE_BARCODES_AND_DATES) {
+            lines.add(
+                    "This test was performed on the tumor sample with barcode " + report.tumorBarcode() + " arrived on " + toFormattedDate(
+                            report.tumorArrivalDate()));
+            lines.add(
+                    "This test was performed on the blood sample with barcode " + report.bloodBarcode() + " arrived on " + toFormattedDate(
+                            report.bloodArrivalDate()));
+        }
+
+        return toList("Test details", lines);
+
     }
 
     private static String toFormattedDate(@Nullable final LocalDate date) {
