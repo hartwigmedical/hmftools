@@ -23,6 +23,7 @@
         <module>rups-checker</module>
         <module>strelka-post-process</module>
         <module>patient-report-mailer</module>
+        <module>ensembl-db</module>
     </modules>
 
     <properties>
@@ -63,6 +64,8 @@
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+
+        <ensembl.version>89</ensembl.version>
     </properties>
 
     <build>
@@ -110,6 +113,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>ensembl-db</artifactId>
+                <version>${ensembl.version}</version>
             </dependency>
 
             <dependency>
