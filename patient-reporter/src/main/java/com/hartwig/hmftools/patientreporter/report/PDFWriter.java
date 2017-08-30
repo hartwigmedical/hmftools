@@ -450,7 +450,7 @@ public class PDFWriter implements ReportWriter {
         return cmp.horizontalList(
                 cmp.horizontalGap(370),
                 cmp.xyList()
-                    .add(40, 8, cmp.image(signaturePath))
+                    .add(40, 5, cmp.image(signaturePath))
                     .add(0, 0,cmp.text("Edwin Cuppen,"))
                     .add(0, 15, cmp.text("Director Hartwig Medical Foundation").setWidth(190)),
                 cmp.horizontalGap(10));
