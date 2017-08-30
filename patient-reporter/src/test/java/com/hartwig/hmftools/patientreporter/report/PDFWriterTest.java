@@ -37,7 +37,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriterTest {
 
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
 
@@ -56,7 +56,7 @@ public class PDFWriterTest {
 
         final PatientReport patientReport =
                 ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%",
-                        "FC000001", "CSB000000", LocalDate.parse("2016-01-05"), LocalDate.parse("2016-01-01"));
+                        "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016"), LocalDate.parse("01-Jan-2016"));
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
