@@ -34,7 +34,6 @@ public final class HealthChecksApplication {
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String REPORT_OUTPUT_PATH = "report_output_path";
     private static final String REPORT_FILE_PATH = "report_file_path";
 
     @NotNull
@@ -54,11 +53,9 @@ public final class HealthChecksApplication {
         final CommandLine cmd = createCommandLine(options, args);
 
         String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String reportOutputDir = cmd.getOptionValue(REPORT_OUTPUT_PATH);
-        final String reportFilePathParam = cmd.getOptionValue(REPORT_FILE_PATH);
-        final String reportFilePath;
+        final String reportFilePath = cmd.getOptionValue(REPORT_FILE_PATH);
 
-        if (runDirectory == null || (reportOutputDir == null && reportFilePathParam == null)) {
+        if (runDirectory == null || reportFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
@@ -73,27 +70,14 @@ public final class HealthChecksApplication {
             System.exit(1);
         }
 
-        if (reportFilePathParam != null) {
-            reportFilePath = reportFilePathParam;
-        } else {
-            reportFilePath = reportFileFromDir(runContext, reportOutputDir);
-        }
-
         new HealthChecksApplication(runContext, reportFilePath).run();
-    }
-
-    @NotNull
-    private static String reportFileFromDir(@NotNull final RunContext runContext, @NotNull final String reportOutputDir) {
-        final String REPORT_FILE_PATTERN = "%s_health_checks.json";
-        return String.format("%s/%s", reportOutputDir, String.format(REPORT_FILE_PATTERN, runContext.setName()));
     }
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
-        options.addOption(REPORT_OUTPUT_PATH, true, "The path where reports are written to.");
-        options.addOption(REPORT_FILE_PATH, true, "The path to the report file.");
+        options.addOption(REPORT_FILE_PATH, true, "The path where the report will be written to.");
         return options;
     }
 
