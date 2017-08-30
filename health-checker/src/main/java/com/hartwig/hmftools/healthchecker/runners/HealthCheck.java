@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.runners.checks;
+package com.hartwig.hmftools.healthchecker.runners;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public class HealthCheck {
     @NotNull
     private final String value;
 
-    public HealthCheck(@NotNull final String sampleId, @NotNull final String checkName,
+    HealthCheck(@NotNull final String sampleId, @NotNull final String checkName,
             @NotNull final String value) {
         this.sampleId = sampleId;
         this.checkName = checkName;
@@ -24,26 +24,26 @@ public class HealthCheck {
     }
 
     @NotNull
-    public String getSampleId() {
+    String getSampleId() {
         return sampleId;
     }
 
     @NotNull
-    public String getCheckName() {
+    String getCheckName() {
         return checkName;
     }
 
     @NotNull
-    public String getValue() {
+    String getValue() {
         return value;
     }
 
-    public void log(@NotNull Logger logger) {
+    void log(@NotNull Logger logger) {
         logger.info(String.format(LOG_MSG, checkName, sampleId, value));
     }
 
-    public static void log(@NotNull Logger logger, @NotNull List<HealthCheck> reports) {
-        for (HealthCheck report : reports) {
+    static void log(@NotNull final Logger logger, @NotNull final List<HealthCheck> reports) {
+        for (final HealthCheck report : reports) {
             report.log(logger);
         }
     }

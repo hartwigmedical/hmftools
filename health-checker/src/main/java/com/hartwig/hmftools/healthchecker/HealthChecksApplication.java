@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.GenerateReportException;
@@ -11,7 +12,10 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.FolderChecker;
 import com.hartwig.hmftools.healthchecker.report.JsonReport;
 import com.hartwig.hmftools.healthchecker.report.Report;
+import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
+import com.hartwig.hmftools.healthchecker.runners.KinshipChecker;
+import com.hartwig.hmftools.healthchecker.runners.SomaticVariantsChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -24,11 +28,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import rx.Observable;
-import rx.functions.Action1;
-import rx.observables.BlockingObservable;
-import rx.schedulers.Schedulers;
-
 public final class HealthChecksApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
@@ -40,8 +39,6 @@ public final class HealthChecksApplication {
     private final RunContext runContext;
     @NotNull
     private final String reportFilePath;
-    @NotNull
-    private final Report report = new JsonReport();
 
     private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportFilePath) {
         this.runContext = runContext;
@@ -88,25 +85,14 @@ public final class HealthChecksApplication {
     }
 
     private void run() {
-        final HealthChecksFlyweight flyweight = HealthChecksFlyweight.getInstance();
-        final Collection<HealthChecker> checkers = flyweight.getAllCheckers();
+        final Report report = new JsonReport();
+        final Collection<HealthChecker> checkers =
+                Lists.newArrayList(new CoverageChecker(), new SomaticVariantsChecker(), new KinshipChecker());
 
-        final Observable<HealthChecker> checkerObservable = Observable.from(checkers).subscribeOn(Schedulers.io());
+        for (final HealthChecker checker : checkers) {
+            report.addResult(checker.run(runContext));
+        }
 
-        BlockingObservable.from(checkerObservable).subscribe(createHealthCheckerAction(), createErrorHandler(), this::generateReport);
-    }
-
-    @NotNull
-    private Action1<? super HealthChecker> createHealthCheckerAction() {
-        return (Action1<HealthChecker>) (HealthChecker healthChecker) -> report.addResult(healthChecker.run(runContext));
-    }
-
-    @NotNull
-    private static Action1<? super Throwable> createErrorHandler() {
-        return (Action1<Throwable>) throwable -> LOGGER.error(throwable.getMessage());
-    }
-
-    private void generateReport() {
         try {
             final Optional<String> reportPath = report.generateReport(runContext, reportFilePath);
             reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));

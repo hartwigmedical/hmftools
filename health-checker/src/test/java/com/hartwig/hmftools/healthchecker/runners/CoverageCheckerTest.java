@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.exception.LineNotFoundException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.PatientResult;
-import com.hartwig.hmftools.healthchecker.runners.checks.CoverageCheck;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

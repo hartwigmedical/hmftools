@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthchecker.runners.CheckType;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
+import com.hartwig.hmftools.healthchecker.runners.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
 

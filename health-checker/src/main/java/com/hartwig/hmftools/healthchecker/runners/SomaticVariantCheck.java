@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.runners.checks;
+package com.hartwig.hmftools.healthchecker.runners;
 
 public enum SomaticVariantCheck {
     SOMATIC_SNP_COUNT,

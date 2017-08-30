@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.runners.checks;
+package com.hartwig.hmftools.healthchecker.runners;
 
 import org.jetbrains.annotations.NotNull;
 

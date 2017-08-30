@@ -22,7 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class JsonReport implements Report {
+public class JsonReport implements Report {
 
     private static final Logger LOGGER = LogManager.getLogger(JsonReport.class);
 
