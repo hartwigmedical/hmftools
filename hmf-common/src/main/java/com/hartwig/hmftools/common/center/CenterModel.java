@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.center;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,7 +44,11 @@ public abstract class CenterModel {
             LOGGER.error("Center model does not contain id " + centerId);
             return null;
         }
-        return center.drupRecipients();
+        final String drupRecipients = center.drupRecipients();
+        if (drupRecipients.trim().equals("*")) {
+            return center.cpctRecipients();
+        }
+        return drupRecipients;
     }
 
     @Nullable
@@ -67,33 +72,48 @@ public abstract class CenterModel {
     }
 
     @Nullable
-    public String getAddressStringForSample(@NotNull final String sample) {
+    public String getAddresseeStringForSample(@NotNull final String sample) {
         final String centerId = getCenterIdFromSample(sample);
         final CenterData center = centerPerId(centerId);
         if (center == null) {
             LOGGER.error("Center model does not contain id " + centerId);
             return null;
         }
-        checkAddressFields(center);
-        return center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
+        checkAddresseeFields(sample, center);
+        return getPI(sample, center) + ", " + center.addressName() + ", " + center.addressZip() + " " + center.addressCity();
     }
 
-    private static void checkAddressFields(@NotNull final CenterData center) {
+    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final CenterData center) {
         final List<String> missingFields = Lists.newArrayList();
+        if (getPI(sample, center).isEmpty()) {
+            missingFields.add("PI");
+        }
         if (center.addressName().isEmpty()) {
             missingFields.add("name");
         }
-
         if (center.addressZip().isEmpty()) {
             missingFields.add("zip");
         }
-
         if (center.addressCity().isEmpty()) {
             missingFields.add("city");
         }
-
         if (!missingFields.isEmpty()) {
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
         }
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String getPI(@NotNull final String sample, @NotNull final CenterData center) {
+        if (sample.toUpperCase().startsWith("CPCT")) {
+            return center.cpctPI();
+        } else if (sample.toUpperCase().startsWith("DRUP")) {
+            final String drupPi = center.drupPI();
+            if (drupPi.trim().equals("*")) {
+                return center.cpctPI();
+            }
+            return center.drupPI();
+        }
+        return "";
     }
 }

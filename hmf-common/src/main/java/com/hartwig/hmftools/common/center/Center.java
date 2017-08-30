@@ -18,12 +18,15 @@ public final class Center {
     private static final Logger LOGGER = LogManager.getLogger(Center.class);
 
     private static final int ID_COLUMN = 0;
+    private static final int CPCT_PI_COLUMN = 3;
     private static final int CPCT_RECIPIENTS_COLUMN = 4;
+    private static final int DRUP_PI_COLUMN = 6;
     private static final int DRUP_RECIPIENTS_COLUMN = 7;
-    private static final int FIELD_COUNT = 13;
     private static final int ADDRESS_NAME_FIELD = 10;
     private static final int ADDRESS_ZIP_FIELD = 11;
     private static final int ADDRESS_CITY_FIELD = 12;
+
+    private static final int FIELD_COUNT = 13;
 
     private static final String FIELD_SEPARATOR = ",";
 
@@ -39,7 +42,7 @@ public final class Center {
             if (parts.length == FIELD_COUNT) {
                 centerPerId.put(parts[ID_COLUMN],
                         ImmutableCenterData.of(parts[CPCT_RECIPIENTS_COLUMN], parts[DRUP_RECIPIENTS_COLUMN], parts[ADDRESS_NAME_FIELD],
-                                parts[ADDRESS_ZIP_FIELD], parts[ADDRESS_CITY_FIELD]));
+                                parts[ADDRESS_ZIP_FIELD], parts[ADDRESS_CITY_FIELD], parts[CPCT_PI_COLUMN], parts[DRUP_PI_COLUMN]));
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in center csv: " + line);
             }

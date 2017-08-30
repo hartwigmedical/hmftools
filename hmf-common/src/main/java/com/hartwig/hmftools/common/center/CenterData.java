@@ -22,4 +22,10 @@ public abstract class CenterData {
 
     @NotNull
     public abstract String addressCity();
+
+    @NotNull
+    public abstract String cpctPI();
+
+    @NotNull
+    public abstract String drupPI();
 }
