@@ -13,6 +13,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -48,6 +50,7 @@ public class PDFWriter implements ReportWriter {
     // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
+    private static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
 
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
@@ -188,7 +191,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
                         cmp.text("Report Date").setStyle(tableHeaderStyle()),
-                        cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
+                        cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
                 cmp.verticalList(
                         cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
                         cmp.text(tumorType).setStyle(dataTableStyle())),
@@ -414,13 +417,20 @@ public class PDFWriter implements ReportWriter {
         return toList("Test details", Lists.newArrayList("This test is not certified for diagnostic purposes.",
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The data on which this report is based has passed all internal quality controls.",
-                "This test was performed on the tumor sample with barcode " + report.tumorBarcode() + " arrived on " + report.tumorArrivalDate(),
-                "This test was performed on the blood sample with barcode " + report.bloodBarcode() + " arrived on " + report.bloodArrivalDate(),
+                "This test was performed on the tumor sample with barcode " +
+                        report.tumorBarcode() + " arrived on " + toFormattedDate(report.tumorArrivalDate()) ,
+                "This test was performed on the blood sample with barcode " +
+                        report.bloodBarcode() + " arrived on " + toFormattedDate(report.bloodArrivalDate()),
                 "The samples have been analysed by Next Generation Sequencing",
                 "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
                         + "findings using certified assays.", "This report is addressed at: " + recipientAddress));
         //@formatter:on
+    }
+
+    private static String toFormattedDate(@Nullable final LocalDate date) {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+        return date != null ? formatter.format(date) : "?";
     }
 
     @NotNull
