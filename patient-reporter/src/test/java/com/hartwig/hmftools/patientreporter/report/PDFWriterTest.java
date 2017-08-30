@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -37,9 +38,10 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriterTest {
 
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = true;
+    private static final boolean WRITE_TO_PDF = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
     @Test
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
@@ -56,7 +58,7 @@ public class PDFWriterTest {
 
         final PatientReport patientReport =
                 ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%",
-                        "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016"), LocalDate.parse("01-Jan-2016"));
+                        "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER));
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
