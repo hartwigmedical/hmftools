@@ -31,7 +31,7 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticVariantsChecker.class);
 
-    private static final String SOMATICS_EXTENSION = "_melted.vcf";
+    private static final String SOMATICS_EXTENSION = "_post_processed.vcf";
 
     public SomaticVariantsChecker() {
     }
