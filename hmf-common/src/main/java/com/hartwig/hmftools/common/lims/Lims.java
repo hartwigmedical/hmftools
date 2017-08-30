@@ -97,7 +97,6 @@ public final class Lims {
         if (dateField == null) {
             return null;
         }
-
         try {
             return LocalDate.parse(dateField, dateFormatter);
         } catch (DateTimeParseException e) {

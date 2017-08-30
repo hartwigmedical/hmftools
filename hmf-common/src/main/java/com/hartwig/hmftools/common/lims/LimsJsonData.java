@@ -28,11 +28,11 @@ public abstract class LimsJsonData {
 
     @NotNull
     @SerializedName("arrival_date")
-    public abstract String arrivalDate();
+    public abstract String arrivalDateString();
 
     @NotNull
     @SerializedName("sampling_date")
-    public abstract String samplingDate();
+    public abstract String samplingDateString();
 
     @NotNull
     @SerializedName("tumor_perc")

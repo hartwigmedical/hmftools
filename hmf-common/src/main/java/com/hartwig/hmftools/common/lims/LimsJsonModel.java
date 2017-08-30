@@ -2,6 +2,9 @@ package com.hartwig.hmftools.common.lims;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class LimsJsonModel {
     private static final Logger LOGGER = LogManager.getLogger(LimsJsonModel.class);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public abstract Multimap<String, LimsJsonData> dataPerPatient();
 
@@ -51,6 +55,7 @@ public abstract class LimsJsonModel {
                 return data.sampleBarcode().toUpperCase();
             }
         }
+        LOGGER.warn("Could not find barcode for sample: " + sample + " in Lims");
         return null;
     }
 
@@ -62,28 +67,39 @@ public abstract class LimsJsonModel {
                 return data.sampleBarcode().toUpperCase();
             }
         }
+        LOGGER.warn("Could not find blood barcode for sample: " + sample + " in Lims");
         return null;
     }
 
     @Nullable
-    public String arrivalDateForSample(@NotNull final String sample) {
+    public LocalDate arrivalDateForSample(@NotNull final String sample) {
         final Collection<LimsJsonData> dataPerPatient = patientDataForSample(sample);
         for (final LimsJsonData data : dataPerPatient) {
             if (data.sampleName().equals(sample)) {
-                return data.arrivalDate();
+                final LocalDate arrivalDate = getNullableDate(data.arrivalDateString(), DATE_FORMATTER);
+                if (arrivalDate == null) {
+                    LOGGER.warn("Lims arrival date: " + data.arrivalDateString() + " is not a valid date.");
+                }
+                return arrivalDate;
             }
         }
+        LOGGER.warn("Could not find arrival date for sample: " + sample + " in Lims");
         return null;
     }
 
     @Nullable
-    public String samplingDateForSample(@NotNull final String sample) {
+    public LocalDate samplingDateForSample(@NotNull final String sample) {
         final Collection<LimsJsonData> dataPerPatient = patientDataForSample(sample);
         for (final LimsJsonData data : dataPerPatient) {
             if (data.sampleName().equals(sample)) {
-                return data.samplingDate();
+                final LocalDate samplingDate = getNullableDate(data.samplingDateString(), DATE_FORMATTER);
+                if (samplingDate == null) {
+                    LOGGER.warn("Lims sampling date: " + data.samplingDateString() + " is not a valid date.");
+                }
+                return samplingDate;
             }
         }
+        LOGGER.warn("Could not find sampling date for sample: " + sample + " in Lims");
         return null;
     }
 
@@ -99,6 +115,7 @@ public abstract class LimsJsonModel {
                 }
             }
         }
+        LOGGER.warn("Could not find tumor percentage for sample: " + sample + " in Lims");
         return null;
     }
 
@@ -119,5 +136,17 @@ public abstract class LimsJsonModel {
     @NotNull
     public static LimsJsonModel buildEmptyModel() {
         return ImmutableLimsJsonModel.of(ArrayListMultimap.create());
+    }
+
+    @Nullable
+    private static LocalDate getNullableDate(@Nullable final String dateString, @NotNull final DateTimeFormatter dateFormatter) {
+        if (dateString == null) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(dateString, dateFormatter);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 }
