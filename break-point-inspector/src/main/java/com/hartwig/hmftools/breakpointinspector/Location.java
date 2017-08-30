@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 
-class Location implements Comparable<Location> {
+public class Location implements Comparable<Location> {
     String ReferenceName;
     int ReferenceIndex = -1;
     int Position = -1;
@@ -51,7 +51,7 @@ class Location implements Comparable<Location> {
         return fromSAMRecord(record, true);
     }
 
-    static Location fromSAMRecord(final SAMRecord record, boolean alignmentStart) {
+    public static Location fromSAMRecord(final SAMRecord record, boolean alignmentStart) {
         final Location result = new Location();
         result.ReferenceName = record.getReferenceName();
         result.ReferenceIndex = record.getReferenceIndex();
@@ -59,7 +59,7 @@ class Location implements Comparable<Location> {
         return result;
     }
 
-    Location add(int delta) {
+    public Location add(int delta) {
         final Location result = new Location();
         result.ReferenceName = this.ReferenceName;
         result.ReferenceIndex = this.ReferenceIndex;
