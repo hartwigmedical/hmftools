@@ -90,6 +90,7 @@ public class LimsTest {
         assertNull(jsonLims.tumorPercentageForSample("SAMP01010003R"));
         assertEquals("CSB000000", jsonLims.bloodBarcodeForSample("SAMP01010003R"));
         assertEquals("CSB000000", jsonLims.barcodeForSample("SAMP01010003R"));
+        assertEquals(LocalDate.parse("2016-01-03"), jsonLims.bloodArrivalDateForSample("SAMP01010003R"));
 
         assertEquals("CSB000000", jsonLims.bloodBarcodeForSample("SAMP01010003T"));
         assertEquals("FC0000001", jsonLims.barcodeForSample("SAMP01010003T"));
@@ -98,5 +99,6 @@ public class LimsTest {
         assertEquals(30.0, tumorPercentage, 0.001);
         assertEquals(LocalDate.parse("2016-02-05"), jsonLims.arrivalDateForSample("SAMP01010003T"));
         assertEquals(LocalDate.parse("2016-01-04"), jsonLims.samplingDateForSample("SAMP01010003T"));
+        assertEquals(LocalDate.parse("2016-01-03"), jsonLims.bloodArrivalDateForSample("SAMP01010003T"));
     }
 }

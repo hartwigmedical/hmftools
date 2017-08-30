@@ -88,6 +88,22 @@ public abstract class LimsJsonModel {
     }
 
     @Nullable
+    public LocalDate bloodArrivalDateForSample(@NotNull final String sample) {
+        final Collection<LimsJsonData> dataPerPatient = patientDataForSample(sample);
+        for (final LimsJsonData data : dataPerPatient) {
+            if (data.sampleSource().toLowerCase().equals("blood")) {
+                final LocalDate arrivalDate = getNullableDate(data.arrivalDateString(), DATE_FORMATTER);
+                if (arrivalDate == null) {
+                    LOGGER.warn("Lims arrival date: " + data.arrivalDateString() + " is not a valid date.");
+                }
+                return arrivalDate;
+            }
+        }
+        LOGGER.warn("Could not find blood arrival date for sample: " + sample + " in Lims");
+        return null;
+    }
+
+    @Nullable
     public LocalDate samplingDateForSample(@NotNull final String sample) {
         final Collection<LimsJsonData> dataPerPatient = patientDataForSample(sample);
         for (final LimsJsonData data : dataPerPatient) {
