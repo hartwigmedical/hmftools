@@ -18,8 +18,7 @@ import org.junit.Test;
 
 public class LimsTest {
 
-    private static final String LIMS_EXAMPLE_FILE =
-            Resources.getResource("lims").getPath() + File.separator + "LimsExample.csv";
+    private static final String LIMS_EXAMPLE_FILE = Resources.getResource("lims").getPath() + File.separator + "LimsExample.csv";
     private static final double EPSILON = 1.0e-10;
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -80,5 +79,24 @@ public class LimsTest {
         assertNotNull(limsModelTumorPercentage5);
         assertEquals(0.3, sample5TumorPercentage, EPSILON);
         assertEquals(sample5TumorPercentage, limsModelTumorPercentage5, EPSILON);
+    }
+
+    @Test
+    public void canLoadJsonModel() throws IOException, EmptyFileException {
+        final String limsJson = Resources.getResource("lims").getPath() + File.separator + "lims.json";
+        final LimsJsonModel jsonLims = LimsJsonModel.readModelFromFile(limsJson);
+        assertEquals("2016-01-02", jsonLims.samplingDateForSample("SAMP01010003R"));
+        assertEquals("2016-01-03", jsonLims.arrivalDateForSample("SAMP01010003R"));
+        assertNull(jsonLims.tumorPercentageForSample("SAMP01010003R"));
+        assertEquals("CSB000000", jsonLims.bloodBarcodeForSample("SAMP01010003R"));
+        assertEquals("CSB000000", jsonLims.barcodeForSample("SAMP01010003R"));
+
+        assertEquals("CSB000000", jsonLims.bloodBarcodeForSample("SAMP01010003T"));
+        assertEquals("FC0000001", jsonLims.barcodeForSample("SAMP01010003T"));
+        final Double tumorPercentage = jsonLims.tumorPercentageForSample("SAMP01010003T");
+        assertNotNull(tumorPercentage);
+        assertEquals(30.0, tumorPercentage, 0.001);
+        assertEquals("2016-02-05", jsonLims.arrivalDateForSample("SAMP01010003T"));
+        assertEquals("2016-01-04", jsonLims.samplingDateForSample("SAMP01010003T"));
     }
 }
