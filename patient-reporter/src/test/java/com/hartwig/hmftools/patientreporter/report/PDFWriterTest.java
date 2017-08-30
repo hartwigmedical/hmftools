@@ -135,7 +135,7 @@ public class PDFWriterTest {
         return Lists.newArrayList(variant1, variant2, variant3);
     }
 
-    @Test
+    @NotNull
     private static List<CopyNumberReport> createTestCopyNumbers() {
         final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
                 .chromosome("2")
