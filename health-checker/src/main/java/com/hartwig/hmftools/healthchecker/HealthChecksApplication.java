@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.GenerateReportException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.FolderChecker;
-import com.hartwig.hmftools.healthchecker.report.HealthCheckReportFactory;
+import com.hartwig.hmftools.healthchecker.report.JsonReport;
 import com.hartwig.hmftools.healthchecker.report.Report;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
 
@@ -34,21 +34,18 @@ public final class HealthChecksApplication {
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String REPORT_TYPE = "report_type";
     private static final String REPORT_OUTPUT_PATH = "report_output_path";
     private static final String REPORT_FILE_PATH = "report_file_path";
 
     @NotNull
     private final RunContext runContext;
     @NotNull
-    private final String reportType;
-    @NotNull
     private final String reportFilePath;
+    @NotNull
+    private final Report report = new JsonReport();
 
-    private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportType,
-            @NotNull final String reportFilePath) {
+    private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportFilePath) {
         this.runContext = runContext;
-        this.reportType = reportType;
         this.reportFilePath = reportFilePath;
     }
 
@@ -57,12 +54,11 @@ public final class HealthChecksApplication {
         final CommandLine cmd = createCommandLine(options, args);
 
         String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String reportType = cmd.getOptionValue(REPORT_TYPE);
         final String reportOutputDir = cmd.getOptionValue(REPORT_OUTPUT_PATH);
         final String reportFilePathParam = cmd.getOptionValue(REPORT_FILE_PATH);
         final String reportFilePath;
 
-        if (runDirectory == null || reportType == null || (reportOutputDir == null && reportFilePathParam == null)) {
+        if (runDirectory == null || (reportOutputDir == null && reportFilePathParam == null)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
@@ -83,7 +79,7 @@ public final class HealthChecksApplication {
             reportFilePath = reportFileFromDir(runContext, reportOutputDir);
         }
 
-        new HealthChecksApplication(runContext, reportType, reportFilePath).run();
+        new HealthChecksApplication(runContext, reportFilePath).run();
     }
 
     @NotNull
@@ -96,7 +92,6 @@ public final class HealthChecksApplication {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
-        options.addOption(REPORT_TYPE, true, "The type of report to be generated: 'json' or 'stdout'.");
         options.addOption(REPORT_OUTPUT_PATH, true, "The path where reports are written to.");
         options.addOption(REPORT_FILE_PATH, true, "The path to the report file.");
         return options;
@@ -119,10 +114,7 @@ public final class HealthChecksApplication {
 
     @NotNull
     private Action1<? super HealthChecker> createHealthCheckerAction() {
-        return (Action1<HealthChecker>) healthChecker -> {
-            final Report report = HealthCheckReportFactory.create(reportType);
-            report.addResult(healthChecker.run(runContext));
-        };
+        return (Action1<HealthChecker>) (HealthChecker healthChecker) -> report.addResult(healthChecker.run(runContext));
     }
 
     @NotNull
@@ -132,7 +124,6 @@ public final class HealthChecksApplication {
 
     private void generateReport() {
         try {
-            final Report report = HealthCheckReportFactory.create(reportType);
             final Optional<String> reportPath = report.generateReport(runContext, reportFilePath);
             reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
         } catch (final GenerateReportException e) {
