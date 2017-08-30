@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -116,7 +117,8 @@ public class PDFWriterTest {
         final Double pathologyTumorPercentage = 0.6;
 
         final PatientReport patientReport =
-                ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%");
+                ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%",
+                        "FC000001", "CSB000000", LocalDate.parse("2016-01-05"), LocalDate.parse("2016-01-01"));
 
         final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";

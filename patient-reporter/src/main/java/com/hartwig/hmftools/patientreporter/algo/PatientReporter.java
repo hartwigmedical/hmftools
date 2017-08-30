@@ -77,7 +77,8 @@ public class PatientReporter {
         final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
         return ImmutablePatientReport.of(sample, purpleEnrichedVariants, copyNumberAnalysis.findings(), mutationalLoad, tumorType,
-                tumorPercentage, purpleAnalysis.purityString());
+                tumorPercentage, purpleAnalysis.purityString(), limsModel.barcodeForSample(sample), limsModel.bloodBarcodeForSample(sample),
+                limsModel.arrivalDateForSample(sample), limsModel.bloodArrivalDateForSample(sample));
     }
 
     @NotNull

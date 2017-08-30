@@ -155,7 +155,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        disclaimerSection(reporterData.centerModel().getAddressStringForSample(report.sample()))
+                        testDetailsSection(report, reporterData.centerModel().getAddressStringForSample(report.sample()))
                 );
 
         final ComponentBuilder<?, ?> totalReport =
@@ -409,14 +409,18 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> disclaimerSection(@Nullable final String recipientAddress) {
+    private static ComponentBuilder<?, ?> testDetailsSection(@NotNull final PatientReport report, @Nullable final String recipientAddress) {
+        //@formatter:off
         return toList("Test details", Lists.newArrayList("This test is not certified for diagnostic purposes.",
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The data on which this report is based has passed all internal quality controls.",
+                "This test was performed on the tumor sample with barcode " + report.tumorBarcode() + " arrived on " + report.tumorArrivalDate(),
+                "This test was performed on the blood sample with barcode " + report.bloodBarcode() + " arrived on " + report.bloodArrivalDate(),
                 "The samples have been analysed by Next Generation Sequencing",
                 "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
                         + "findings using certified assays.", "This report is addressed at: " + recipientAddress));
+        //@formatter:on
     }
 
     @NotNull

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
@@ -42,4 +43,16 @@ public abstract class PatientReport {
     public String impliedPurityString() {
         return purplePurity();
     }
+
+    @Nullable
+    public abstract String tumorBarcode();
+
+    @Nullable
+    public abstract String bloodBarcode();
+
+    @Nullable
+    public abstract LocalDate tumorArrivalDate();
+
+    @Nullable
+    public abstract LocalDate bloodArrivalDate();
 }
