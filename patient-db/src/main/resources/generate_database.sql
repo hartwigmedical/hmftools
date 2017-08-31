@@ -209,6 +209,8 @@ CREATE TABLE structuralVariant
     endOrientation tinyint not null,
     startHomologySequence varchar(255) not null,
     endHomologySequence varchar(255) not null,
+    startAF DOUBLE PRECISION,
+    endAF DOUBLE PRECISION,
     insertSequence varchar(255) not null,
     type varchar(255) NOT NULL,
     PRIMARY KEY (id),

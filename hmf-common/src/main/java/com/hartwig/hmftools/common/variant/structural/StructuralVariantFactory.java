@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.purple.structural;
+package com.hartwig.hmftools.common.variant.structural;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-class StructuralVariantFactory {
+public class StructuralVariantFactory {
 
     private final static String TYPE = "SVTYPE";
     private final static String MATE_ID = "MATEID";
@@ -26,21 +27,21 @@ class StructuralVariantFactory {
     private final static String HOM_SEQ = "HOMSEQ";
     private final static String BPI_START = "BPI_START";
     private final static String BPI_END = "BPI_END";
+    private final static String BPI_AF = "BPI_AF";
 
     private final Map<String, VariantContext> unmatched = new HashMap<>();
     private final List<StructuralVariant> results = Lists.newArrayList();
     private final VariantContextFilter filter;
     private final Set<String> samples = Sets.newHashSet();
 
-
-    StructuralVariantFactory() {
+    public StructuralVariantFactory() {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
         filter.add(new ChromosomeFilter());
         this.filter = filter;
     }
 
-    void addVariantContext(VariantContext context) {
+    public void addVariantContext(VariantContext context) {
         if (filter.test(context)) {
             samples.addAll(context.getSampleNames());
             final StructuralVariantType type = type(context);
@@ -75,6 +76,7 @@ class StructuralVariantFactory {
 
         final int start = context.hasAttribute(BPI_START) ? context.getAttributeAsInt(BPI_START, -1) : context.getStart();
         final int end = context.hasAttribute(BPI_END) ? context.getAttributeAsInt(BPI_END, -1) : context.getEnd();
+        final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
 
         byte startOrientation = 0, endOrientation = 0;
         switch (type) {
@@ -104,10 +106,12 @@ class StructuralVariantFactory {
                 .startPosition(start)
                 .startOrientation(startOrientation)
                 .startHomology(context.getAttributeAsString(HOM_SEQ, ""))
+                .startAF(af.size() == 2 ? af.get(0) : null)
                 .endChromosome(context.getContig())
                 .endPosition(end)
                 .endOrientation(endOrientation)
                 .endHomology("")
+                .endAF(af.size() == 2 ? af.get(1) : null)
                 .insertSequence(context.getAttributeAsString(INS_SEQ, ""))
                 .type(type)
                 .build();
@@ -119,6 +123,7 @@ class StructuralVariantFactory {
 
         final int start = first.hasAttribute(BPI_START) ? first.getAttributeAsInt(BPI_START, -1) : first.getStart();
         final int end = second.hasAttribute(BPI_START) ? second.getAttributeAsInt(BPI_START, -1) : second.getStart();
+        final List<Double> af = first.hasAttribute(BPI_AF) ? first.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
 
         byte startOrientation = 0, endOrientation = 0;
         final String alt = first.getAlternateAllele(0).getDisplayString();
@@ -145,10 +150,12 @@ class StructuralVariantFactory {
                 .startPosition(start)
                 .startOrientation(startOrientation)
                 .startHomology(first.getAttributeAsString(HOM_SEQ, ""))
+                .startAF(af.size() == 2 ? af.get(0) : null)
                 .endChromosome(second.getContig())
                 .endPosition(end)
                 .endOrientation(endOrientation)
                 .endHomology(second.getAttributeAsString(HOM_SEQ, ""))
+                .endAF(af.size() == 2 ? af.get(1) : null)
                 .insertSequence(first.getAttributeAsString(INS_SEQ, ""))
                 .type(StructuralVariantType.BND)
                 .build();
