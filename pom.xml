@@ -10,6 +10,7 @@
 
     <modules>
         <module>hmf-common</module>
+        <module>variant-annotator</module>
         <module>consensus-rule-filter</module>
         <module>health-checker</module>
         <module>patient-reporter</module>
@@ -52,6 +53,7 @@
 
         <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
+        <sv-annotation.version>1.0</sv-annotation.version>
 
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
@@ -104,6 +106,11 @@
                 <version>${hmf-common.version}</version>
                 <scope>test</scope>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>sv-annotation</artifactId>
+                <version>${sv-annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
