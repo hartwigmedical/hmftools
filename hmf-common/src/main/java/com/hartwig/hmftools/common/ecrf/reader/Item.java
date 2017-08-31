@@ -12,7 +12,7 @@ public abstract class Item implements OIDObject {
     @Override
     @Value.Parameter
     @NotNull
-    public abstract String OID();
+    public abstract String oid();
 
     @Override
     @Value.Parameter

@@ -9,9 +9,15 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantFactory {
 
@@ -25,8 +31,15 @@ public class StructuralVariantFactory {
 
     private final Map<String, VariantContext> unmatched = new HashMap<>();
     private final List<StructuralVariant> results = Lists.newArrayList();
-    private final PassingVariantFilter filter = new PassingVariantFilter();
+    private final VariantContextFilter filter;
     private final Set<String> samples = Sets.newHashSet();
+
+    public StructuralVariantFactory() {
+        final CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new PassingVariantFilter());
+        filter.add(new ChromosomeFilter());
+        this.filter = filter;
+    }
 
     public void addVariantContext(VariantContext context) {
         if (filter.test(context)) {

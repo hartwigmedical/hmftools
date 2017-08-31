@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-
 import org.junit.Test;
 
 public class SomaticVariantFactoryTest {
@@ -16,14 +14,6 @@ public class SomaticVariantFactoryTest {
     public void canReadSampleNameFromHeader() {
         final String header = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample";
         assertEquals("sample", SomaticVariantFactory.sampleFromHeaderLine(header));
-
-        // KODU: In v1.7 and earlier, the sample in the somatic VCF contains the whole path of the file.
-        final String weirdHeader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t"
-                + "/sample/output/160101_HMFregCPCT_FR10002000_FR20003000_CPCT12345678/somaticVariants/"
-                + "CPCT012345678R_CPCT012345678T/CPCT012345678R_CPCT012345678T_merged_somatics_snpEff_dbSNP_Cosmicv76".replaceAll(
-                "/", File.separator);
-
-        assertEquals("CPCT012345678T", SomaticVariantFactory.sampleFromHeaderLine(weirdHeader));
     }
 
     @Test

@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.hartwig.hmftools.common.copynumber.CopyNumber;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.lims.LimsModel;
+import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -18,9 +17,9 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
@@ -33,6 +32,7 @@ import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
@@ -40,26 +40,18 @@ public class PatientReporter {
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
     @NotNull
-    private final LimsModel limsModel;
+    private final LimsJsonModel limsModel;
     @NotNull
     private final VariantAnalyzer variantAnalyzer;
-    @NotNull
+    @Nullable
     private final StructuralVariantAnalyzer structuralVariantAnalyzer;
-    @NotNull
-    private final FreecCopyNumberAnalyzer copyNumberAnalyzer;
-    private final boolean useFreec;
-    private final boolean doSV;
 
-    public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
-            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final StructuralVariantAnalyzer structuralVariantAnalyzer,
-            @NotNull final FreecCopyNumberAnalyzer copyNumberAnalyzer, final boolean useFreec, final boolean doSV) {
+    public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsJsonModel limsModel,
+            @NotNull final VariantAnalyzer variantAnalyzer, @Nullable final StructuralVariantAnalyzer structuralVariantAnalyzer) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
         this.variantAnalyzer = variantAnalyzer;
         this.structuralVariantAnalyzer = structuralVariantAnalyzer;
-        this.copyNumberAnalyzer = copyNumberAnalyzer;
-        this.useFreec = useFreec;
-        this.doSV = doSV;
     }
 
     @NotNull
@@ -96,10 +88,12 @@ public class PatientReporter {
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(svAnalysis.getDisruptions().size()));
 
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
-        final Double tumorPercentage = limsModel.findTumorPercentageForSample(sample);
+        final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
-        return new PatientReport(sample, purpleEnrichedVariants, svAnalysis.getFusions(), svAnalysis.getDisruptions(), copyNumberAnalysis.findings(), mutationalLoad,
-                tumorType, tumorPercentage, purpleAnalysis.fittedPurity());
+        return ImmutablePatientReport.of(sample, purpleEnrichedVariants, svAnalysis.getFusions(), svAnalysis.getDisruptions(),
+                copyNumberAnalysis.findings(), mutationalLoad, tumorType, tumorPercentage, purpleAnalysis.purityString(),
+                limsModel.barcodeForSample(sample), limsModel.bloodBarcodeForSample(sample), limsModel.arrivalDateForSample(sample),
+                limsModel.bloodArrivalDateForSample(sample));
     }
 
     @NotNull
@@ -120,36 +114,28 @@ public class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
-        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.of(purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
+        LOGGER.info(" Analyzing purple somatic copy numbers...");
+        final PurpleAnalysis purpleAnalysis =
+                ImmutablePurpleAnalysis.of(context.status(), purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
                     + ") range exceeds 5%. Proceed with caution.");
         }
 
-        final CopyNumberAnalysis copyNumberAnalysis;
-        if (useFreec) {
-            LOGGER.info(" Loading freec somatic copy numbers...");
-            final List<CopyNumber> copyNumbers = PatientReporterHelper.loadFreecCopyNumbers(runDirectory, sample);
-            LOGGER.info("  " + copyNumbers.size() + " freec copy number regions loaded for sample " + sample);
-            LOGGER.info(" Analyzing freec somatic copy numbers...");
-            copyNumberAnalysis = copyNumberAnalyzer.run(copyNumbers);
-        } else {
-            LOGGER.info(" Analyzing purple somatic copy numbers...");
-            copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
-        }
+        final CopyNumberAnalysis copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
 
         LOGGER.info(" Analyzing somatics....");
         final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
 
         final Path mantaVcfPath = PatientReporterHelper.findMantaVCF(runDirectory);
         final StructuralVariantAnalysis svAnalysis;
-        if (doSV && mantaVcfPath != null) {
+        if (structuralVariantAnalyzer != null && mantaVcfPath != null) {
             LOGGER.info("Loading structural variants from VCF...");
             final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(mantaVcfPath.toString());
             LOGGER.info("Analysing structural variants...");
             svAnalysis = structuralVariantAnalyzer.run(structuralVariants);
         } else {
-            if (doSV) {
+            if (structuralVariantAnalyzer != null) {
                 LOGGER.warn("Could not find Manta VCF!");
             }
             svAnalysis = new StructuralVariantAnalysis();

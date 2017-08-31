@@ -18,8 +18,7 @@ import org.junit.Test;
 
 public class LimsTest {
 
-    private static final String LIMS_EXAMPLE_FILE =
-            Resources.getResource("lims").getPath() + File.separator + "LimsExample.csv";
+    private static final String LIMS_EXAMPLE_FILE = Resources.getResource("lims").getPath() + File.separator + "LimsExample.csv";
     private static final double EPSILON = 1.0e-10;
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 

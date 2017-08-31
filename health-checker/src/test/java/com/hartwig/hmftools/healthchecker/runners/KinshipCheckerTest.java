@@ -7,15 +7,15 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 
+import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.context.RunContext;
+import com.hartwig.hmftools.common.context.TestRunContextFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
-import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.context.TestRunContextFactory;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -23,12 +23,11 @@ import org.junit.Test;
 
 public class KinshipCheckerTest {
 
-    private static final String CORRECT_RUN =
-            RunnerTestFunctions.getRunnerResourcePath("kinship") + File.separator + "run";
-    private static final String MALFORMED_RUN =
-            RunnerTestFunctions.getRunnerResourcePath("kinship") + File.separator + "run2";
-    private static final String EMPTY_RUN =
-            RunnerTestFunctions.getRunnerResourcePath("kinship") + File.separator + "run3";
+    private static final String BASE_DIRECTORY = Resources.getResource("kinship").getPath();
+
+    private static final String CORRECT_RUN = BASE_DIRECTORY + File.separator + "run";
+    private static final String MALFORMED_RUN = BASE_DIRECTORY + File.separator + "run2";
+    private static final String EMPTY_RUN = BASE_DIRECTORY + File.separator + "run3";
 
     private static final String REF_SAMPLE = "sample1";
     private static final String TUMOR_SAMPLE = "sample2";

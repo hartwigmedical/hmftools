@@ -11,10 +11,9 @@ import com.hartwig.hmftools.common.cosmic.Cosmic;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
-import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.NullAnnotator;
@@ -34,17 +33,11 @@ public class PatientReporterTest {
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
         final String hmfSlicingBed = BED_DIRECTORY + File.separator + "hmf_gene_panel.tsv";
         final HmfSlicer hmfSlicingRegion = SlicerFactory.fromHmfGenePanelFile(hmfSlicingBed);
-
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion, hmfSlicingRegion);
-        final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
-
         final StructuralVariantAnalyzer structuralVariantAnalyzer =
                 new StructuralVariantAnalyzer(NullAnnotator.make(), hmfSlicingRegion, Cosmic.buildModelFromCsv(COSMIC_EXAMPLE_FILE));
-
         final PatientReporter algo =
-                new PatientReporter(buildTestCpctEcrfModel(), Lims.buildEmptyModel(), variantAnalyzer, structuralVariantAnalyzer,
-                        copyNumberAnalyzer, false, false);
-
+                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer, structuralVariantAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY));
     }
 

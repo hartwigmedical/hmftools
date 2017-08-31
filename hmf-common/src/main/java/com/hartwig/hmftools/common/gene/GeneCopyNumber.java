@@ -23,6 +23,6 @@ public interface GeneCopyNumber extends GeneRegion, CopyNumber {
 
     @Override
     default int value() {
-        return (int) Math.round(minCopyNumber());
+        return (int) Math.max(0, Math.round(minCopyNumber()));
     }
 }

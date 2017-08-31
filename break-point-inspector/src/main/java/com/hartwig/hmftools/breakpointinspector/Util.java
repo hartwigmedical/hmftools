@@ -42,6 +42,7 @@ class Range {
 }
 
 class HMFVariantContext {
+    String Id;
     Location MantaBP1;
     Range Uncertainty1;
     Location MantaBP2;
@@ -52,7 +53,8 @@ class HMFVariantContext {
     int OrientationBP1 = 0;
     int OrientationBP2 = 0;
 
-    HMFVariantContext(final Location bp1, final Location bp2, final HMFVariantType type) {
+    HMFVariantContext(final String id, final Location bp1, final Location bp2, final HMFVariantType type) {
+        Id = id;
         MantaBP1 = bp1;
         MantaBP2 = bp2;
         Type = type;

@@ -126,9 +126,10 @@
                         <database>
                             <name>org.jooq.util.mysql.MySQLDatabase</name>
                             <includes>.*</includes>
+                            <inputSchema>hmfpatients</inputSchema>
                         </database>
                         <target>
-                            <packageName>com.hartwig.hmftools.patientdb.database</packageName>
+                            <packageName>com.hartwig.hmftools.patientdb.database.hmfpatients</packageName>
                             <directory>target/generated-sources/jooq</directory>
                         </target>
                     </generator>

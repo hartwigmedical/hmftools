@@ -5,11 +5,11 @@ import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
 import java.io.File;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -30,6 +30,8 @@ public class ConfigSupplier {
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
+    private static final String AMBER = "amber";
+    private static final String COBALT = "cobalt";
 
     private static final String STRUCTURAL_VARIANTS = "structural_vcf";
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
@@ -51,6 +53,8 @@ public class ConfigSupplier {
         options.addOption(BAF_VARIANTS, true, "Location of vcf to calculate BAF.");
         options.addOption(BAF, true, "Baf file location.");
         options.addOption(CIRCOS, true, "Location of circos binary.");
+        options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
+        options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
     }
 
     private final CommonConfig commonConfig;
@@ -79,10 +83,20 @@ public class ConfigSupplier {
 
         final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
         final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
-        commonConfig = new CommonConfig(refSample, tumorSample, outputDirectory, runDirectory, freecDirectory, cmd.hasOption(FORCE));
+        final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
+        final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
+
+        commonConfig = ImmutableCommonConfig.builder()
+                .refSample(refSample)
+                .tumorSample(tumorSample)
+                .outputDirectory(outputDirectory)
+                .freecDirectory(freecDirectory)
+                .amberDirectory(amberDirectory)
+                .cobaltDirectory(cobaltDirectory)
+                .forceSegmentation(cmd.hasOption(FORCE))
+                .build();
 
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
-        LOGGER.info("Run Directory: {}", commonConfig.runDirectory());
         LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
 
         somaticConfig = createSomaticConfig(cmd, opt);
@@ -189,10 +203,16 @@ public class ConfigSupplier {
             return builder.bafFile(Optional.of(file)).build();
         }
 
-        final String cachedBafFilename = TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
-        final File cachedFile = new File(cachedBafFilename);
-        if (cachedFile.exists()) {
-            return builder.bafFile(Optional.of(cachedFile)).build();
+        final String amberBaf = TumorBAFFile.generateAmberFilename(config.amberDirectory(), config.tumorSample());
+        final File amberFile = new File(amberBaf);
+        if (amberFile.exists()) {
+            return builder.bafFile(Optional.of(amberFile)).build();
+        }
+
+        final String purpleBaf = TumorBAFFile.generatePurpleFilename(config.outputDirectory(), config.tumorSample());
+        final File purpleFile = new File(purpleBaf);
+        if (purpleFile.exists()) {
+            return builder.bafFile(Optional.of(purpleFile)).build();
         }
 
         if (cmd.hasOption(BAF_VARIANTS)) {
@@ -206,7 +226,7 @@ public class ConfigSupplier {
         }
 
         printHelp(opt);
-        throw new ParseException("Cached baf file " + cachedBafFilename + " not found. Please supply one of -baf or -baf_vcf arguments.");
+        throw new ParseException("Cached baf file " + purpleBaf + " not found. Please supply one of -baf or -baf_vcf arguments.");
     }
 
     private static void printHelp(Options opt) {

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,8 +39,8 @@ public class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeR
     }
 
     public static int compare(@NotNull final GenomePosition position, @NotNull final GenomeRegion region) {
-        int positionChromosome = Chromosomes.asInt(position.chromosome());
-        int regionChromosome = Chromosomes.asInt(region.chromosome());
+        int positionChromosome = HumanChromosome.fromString(position.chromosome()).intValue();
+        int regionChromosome = HumanChromosome.fromString(region.chromosome()).intValue();
         if (positionChromosome < regionChromosome) {
             return -1;
         }

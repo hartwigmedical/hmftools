@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.lims.LimsModel;
+import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 
@@ -16,11 +16,11 @@ public class NotSequenceableReporter {
     @NotNull
     private final CpctEcrfModel cpctEcrfModel;
     @NotNull
-    private final LimsModel limsModel;
+    private final LimsJsonModel limsModel;
     @NotNull
     private final ReportWriter reportWriter;
 
-    public NotSequenceableReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsModel limsModel,
+    public NotSequenceableReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsJsonModel limsModel,
             @NotNull final ReportWriter reportWriter) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
@@ -30,7 +30,7 @@ public class NotSequenceableReporter {
     public void run(@NotNull final String sample, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
             throws IOException, DRException {
         final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
-        final String tumorPercentageString = PatientReportFormat.formatNullablePercent(limsModel.findTumorPercentageForSample(sample));
+        final String tumorPercentageString = PatientReportFormat.formatNullablePercent(limsModel.tumorPercentageForSample(sample));
         reportWriter.writeNonSequenceableReport(sample, tumorType, tumorPercentageString, reason, study);
     }
 }

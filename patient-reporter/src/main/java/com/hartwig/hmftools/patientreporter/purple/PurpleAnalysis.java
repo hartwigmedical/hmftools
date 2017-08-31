@@ -10,10 +10,12 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -25,6 +27,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleAnalysis {
+
+    @NotNull
+    public abstract FittedPurityStatus status();
 
     @NotNull
     public abstract FittedPurity fittedPurity();
@@ -66,6 +71,12 @@ public abstract class PurpleAnalysis {
 
     public double purityUncertainty() {
         return fittedScorePurity().maxPurity() - fittedScorePurity().minPurity();
+    }
+
+    public String purityString() {
+        return status() == FittedPurityStatus.NO_TUMOR
+                ? "[below detection threshold]"
+                : PatientReportFormat.formatPercent(fittedPurity().purity());
     }
 
     @NotNull

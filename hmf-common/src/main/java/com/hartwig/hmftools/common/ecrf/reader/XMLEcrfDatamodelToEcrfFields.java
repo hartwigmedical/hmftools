@@ -33,7 +33,7 @@ public final class XMLEcrfDatamodelToEcrfFields {
                             codeList = codeListObj.values();
                         }
                         final EcrfDatamodelField field =
-                                new ImmutableEcrfDatamodelField(studyEvent.OID(), form.OID(), itemGroup.OID(), item.OID(), item.name(),
+                                new ImmutableEcrfDatamodelField(studyEvent.oid(), form.oid(), itemGroup.oid(), item.oid(), item.name(),
                                         codeList);
                         fields.add(field);
                     }
@@ -46,7 +46,7 @@ public final class XMLEcrfDatamodelToEcrfFields {
     @NotNull
     private static <X extends OIDObject> X findByOID(@NotNull final Collection<X> objects, @NotNull final String OID) {
         for (final X object : objects) {
-            if (object.OID().equals(OID)) {
+            if (object.oid().equals(OID)) {
                 return object;
             }
         }

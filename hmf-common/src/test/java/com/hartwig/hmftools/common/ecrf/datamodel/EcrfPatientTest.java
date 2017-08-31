@@ -37,6 +37,5 @@ public class EcrfPatientTest {
         final List<String> valuesByField = patient.fieldValuesByEcrfField(field);
         assertNotNull(valuesByField);
         assertEquals(2, valuesByField.size());
-        System.out.println(field.isRelevant());
     }
 }

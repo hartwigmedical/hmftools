@@ -6,7 +6,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class EnrichedSomaticVariant implements Variant {
+public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVariant {
+
+    public abstract static class Builder implements PurityAdjustedSomaticVariantBuilder {
+    }
 
     public abstract String trinucleotideContext();
 
@@ -32,8 +35,10 @@ public abstract class EnrichedSomaticVariant implements Variant {
 
     public abstract int repeatCount();
 
+    @Override
     public abstract double adjustedCopyNumber();
 
+    @Override
     public abstract double adjustedVAF();
 
     public double alleleFrequency() {

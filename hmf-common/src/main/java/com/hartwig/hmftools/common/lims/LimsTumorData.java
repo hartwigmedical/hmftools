@@ -2,40 +2,24 @@ package com.hartwig.hmftools.common.lims;
 
 import java.time.LocalDate;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class LimsTumorData implements LimsData {
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+abstract class LimsTumorData implements LimsData {
     @Nullable
-    private final LocalDate samplingDate;
-    @NotNull
-    private final LocalDate arrivalDate;
-    @Nullable
-    private final Double tumorPercentage;
-
-    LimsTumorData(@Nullable final LocalDate samplingDate, @NotNull final LocalDate arrivalDate,
-            @Nullable final Double tumorPercentage) {
-        this.samplingDate = samplingDate;
-        this.arrivalDate = arrivalDate;
-        this.tumorPercentage = tumorPercentage;
-    }
-
-    @Nullable
-    @Override
-    public LocalDate samplingDate() {
-        return samplingDate;
-    }
+    @Value.Parameter
+    public abstract LocalDate samplingDate();
 
     @NotNull
-    @Override
-    public LocalDate arrivalDate() {
-        return arrivalDate;
-    }
+    @Value.Parameter
+    public abstract LocalDate arrivalDate();
 
     @Nullable
-    public Double tumorPercentage() {
-        return tumorPercentage;
-    }
+    @Value.Parameter
+    public abstract Double tumorPercentage();
 
     @Override
     public boolean isTumor() {

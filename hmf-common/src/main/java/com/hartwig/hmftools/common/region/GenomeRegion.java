@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.region;
 
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
             return 1;
         }
 
-        return Integer.compare(Chromosomes.asInt(chromosome()), Chromosomes.asInt(other.chromosome()));
+        return HumanChromosome.fromString(chromosome()).compareTo(HumanChromosome.fromString(other.chromosome()));
     }
 
     default boolean overlaps(@NotNull final GenomeRegion other) {

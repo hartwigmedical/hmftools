@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.position;
 
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +21,6 @@ public interface GenomePosition extends Comparable<GenomePosition> {
         if (chromosome().equals(other.chromosome())) {
             return Long.compare(position(), other.position());
         }
-
-        return Integer.compare(Chromosomes.asInt(chromosome()), Chromosomes.asInt(other.chromosome()));
+        return HumanChromosome.fromString(chromosome()).compareTo(HumanChromosome.fromString(other.chromosome()));
     }
 }

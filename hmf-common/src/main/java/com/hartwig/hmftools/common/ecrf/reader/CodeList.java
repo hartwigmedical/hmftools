@@ -14,7 +14,7 @@ public abstract class CodeList implements OIDObject {
     @Override
     @Value.Parameter
     @NotNull
-    public abstract String OID();
+    public abstract String oid();
 
     @Override
     @Value.Parameter
@@ -27,6 +27,6 @@ public abstract class CodeList implements OIDObject {
 
     @Override
     public String toString() {
-        return "CodeList{" + "OID='" + OID() + '\'' + ", codeList=" + values() + '}';
+        return "CodeList{" + "OID='" + oid() + '\'' + ", codeList=" + values() + '}';
     }
 }

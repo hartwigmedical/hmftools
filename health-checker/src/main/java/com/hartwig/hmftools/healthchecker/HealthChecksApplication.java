@@ -4,14 +4,18 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.GenerateReportException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.FolderChecker;
-import com.hartwig.hmftools.healthchecker.report.HealthCheckReportFactory;
+import com.hartwig.hmftools.healthchecker.report.JsonReport;
 import com.hartwig.hmftools.healthchecker.report.Report;
+import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
+import com.hartwig.hmftools.healthchecker.runners.KinshipChecker;
+import com.hartwig.hmftools.healthchecker.runners.SomaticVariantsChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -24,31 +28,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import rx.Observable;
-import rx.functions.Action1;
-import rx.observables.BlockingObservable;
-import rx.schedulers.Schedulers;
-
 public final class HealthChecksApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
     private static final String RUN_DIRECTORY = "run_dir";
-    private static final String REPORT_TYPE = "report_type";
-    private static final String REPORT_OUTPUT_PATH = "report_output_path";
+    private static final String REPORT_FILE_PATH = "report_file_path";
 
     @NotNull
     private final RunContext runContext;
     @NotNull
-    private final String reportType;
-    @NotNull
-    private final String reportOutputPath;
+    private final String reportFilePath;
 
-    private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportType,
-            @NotNull final String reportOutputPath) {
+    private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportFilePath) {
         this.runContext = runContext;
-        this.reportType = reportType;
-        this.reportOutputPath = reportOutputPath;
+        this.reportFilePath = reportFilePath;
     }
 
     public static void main(final String... args) throws ParseException {
@@ -56,10 +50,9 @@ public final class HealthChecksApplication {
         final CommandLine cmd = createCommandLine(options, args);
 
         String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String reportType = cmd.getOptionValue(REPORT_TYPE);
-        final String reportOutputPath = cmd.getOptionValue(REPORT_OUTPUT_PATH);
+        final String reportFilePath = cmd.getOptionValue(REPORT_FILE_PATH);
 
-        if (runDirectory == null || reportType == null || reportOutputPath == null) {
+        if (runDirectory == null || reportFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
@@ -74,17 +67,14 @@ public final class HealthChecksApplication {
             System.exit(1);
         }
 
-        new HealthChecksApplication(runContext, reportType, reportOutputPath).run();
+        new HealthChecksApplication(runContext, reportFilePath).run();
     }
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
-        options.addOption(REPORT_TYPE, true, "The type of report to be generated: 'json' or 'stdout'.");
-        options.addOption(REPORT_OUTPUT_PATH, true, "The path where reports are written to.");
-
+        options.addOption(REPORT_FILE_PATH, true, "The path where the report will be written to.");
         return options;
     }
 
@@ -95,32 +85,16 @@ public final class HealthChecksApplication {
     }
 
     private void run() {
-        final HealthChecksFlyweight flyweight = HealthChecksFlyweight.getInstance();
-        final Collection<HealthChecker> checkers = flyweight.getAllCheckers();
+        final Report report = new JsonReport();
+        final Collection<HealthChecker> checkers =
+                Lists.newArrayList(new CoverageChecker(), new SomaticVariantsChecker(), new KinshipChecker());
 
-        final Observable<HealthChecker> checkerObservable = Observable.from(checkers).subscribeOn(Schedulers.io());
+        for (final HealthChecker checker : checkers) {
+            report.addResult(checker.run(runContext));
+        }
 
-        BlockingObservable.from(checkerObservable).subscribe(createHealthCheckerAction(), createErrorHandler(), this::generateReport);
-    }
-
-    @NotNull
-    private Action1<? super HealthChecker> createHealthCheckerAction() {
-        return (Action1<HealthChecker>) healthChecker -> {
-            final Report report = HealthCheckReportFactory.create(reportType);
-            report.addResult(healthChecker.run(runContext));
-        };
-    }
-
-    @NotNull
-    private static Action1<? super Throwable> createErrorHandler() {
-        return (Action1<Throwable>) throwable -> LOGGER.error(throwable.getMessage());
-    }
-
-    private void generateReport() {
         try {
-            final Report report = HealthCheckReportFactory.create(reportType);
-
-            final Optional<String> reportPath = report.generateReport(runContext, reportOutputPath);
+            final Optional<String> reportPath = report.generateReport(runContext, reportFilePath);
             reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
         } catch (final GenerateReportException e) {
             LOGGER.log(Level.ERROR, e.getMessage());

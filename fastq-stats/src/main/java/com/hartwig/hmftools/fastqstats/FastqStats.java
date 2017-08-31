@@ -155,7 +155,7 @@ class FastqStats {
             public void onFailure(@NotNull final Throwable throwable) {
                 onFailure.accept(throwable);
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     /**

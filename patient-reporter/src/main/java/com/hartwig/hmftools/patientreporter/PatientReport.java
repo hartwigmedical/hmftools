@@ -1,91 +1,65 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PatientReport {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class PatientReport {
+    @NotNull
+    public abstract String sample();
 
     @NotNull
-    private final String sample;
+    public abstract List<VariantReport> variants();
+
     @NotNull
-    private final List<VariantReport> variants;
+    public abstract List<StructuralVariantAnalysis.GeneFusion> geneFusions();
+
     @NotNull
-    private final List<StructuralVariantAnalysis.GeneFusion> geneFusions;
+    public abstract List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions();
+
     @NotNull
-    private final List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions;
+    public abstract List<CopyNumberReport> copyNumbers();
+
+    public abstract int mutationalLoad();
+
     @NotNull
-    private final List<CopyNumberReport> copyNumbers;
-    private final int mutationalLoad;
-    @NotNull
-    private final String tumorType;
+    public abstract String tumorType();
+
     @Nullable
-    private final Double tumorPercentage;
-    @NotNull
-    private final FittedPurity fittedPurity;
-
-    public PatientReport(@NotNull final String sample, @NotNull final List<VariantReport> variants,
-            @NotNull final List<StructuralVariantAnalysis.GeneFusion> geneFusions,
-            @NotNull final List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions,
-            @NotNull final List<CopyNumberReport> copyNumbers, final int mutationalLoad, @NotNull final String tumorType,
-            @Nullable final Double tumorPercentage, @NotNull final FittedPurity fittedPurity) {
-        this.sample = sample;
-        this.variants = variants;
-        this.geneFusions = geneFusions;
-        this.geneDisruptions = geneDisruptions;
-        this.copyNumbers = copyNumbers;
-        this.mutationalLoad = mutationalLoad;
-        this.tumorType = tumorType;
-        this.tumorPercentage = tumorPercentage;
-        this.fittedPurity = fittedPurity;
-    }
+    abstract Double tumorPercentage();
 
     @NotNull
-    public String sample() {
-        return sample;
-    }
-
-    @NotNull
-    public List<VariantReport> variants() {
-        return variants;
-    }
-
-    @NotNull
-    public List<StructuralVariantAnalysis.GeneFusion> geneFusions() {
-        return geneFusions;
-    }
-
-    @NotNull
-    public List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions() {
-        return geneDisruptions;
-    }
-
-    @NotNull
-    public List<CopyNumberReport> copyNumbers() {
-        return copyNumbers;
-    }
-
-    public int mutationalLoad() {
-        return mutationalLoad;
-    }
-
-    @NotNull
-    public String tumorType() {
-        return tumorType;
-    }
+    abstract String purplePurity();
 
     public String tumorPercentageString() {
-        return PatientReportFormat.formatNullablePercent(tumorPercentage);
+        return PatientReportFormat.formatNullablePercent(tumorPercentage());
     }
 
+    @NotNull
     public String impliedPurityString() {
-        return PatientReportFormat.formatPercent(fittedPurity.purity());
+        return purplePurity();
     }
+
+    @Nullable
+    public abstract String tumorBarcode();
+
+    @Nullable
+    public abstract String bloodBarcode();
+
+    @Nullable
+    public abstract LocalDate tumorArrivalDate();
+
+    @Nullable
+    public abstract LocalDate bloodArrivalDate();
 }

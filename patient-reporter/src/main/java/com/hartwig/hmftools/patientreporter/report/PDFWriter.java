@@ -13,6 +13,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -26,6 +29,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
@@ -35,6 +39,7 @@ import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
+import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 
@@ -42,9 +47,13 @@ public class PDFWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
 
+    // KODU: This is commented out as long as LIMS provides unreliable results.
+    private static final boolean INCLUDE_SAMPLE_BARCODES_AND_DATES = false;
+
     // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
+    private static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
 
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
@@ -55,10 +64,11 @@ public class PDFWriter implements ReportWriter {
     private static final int PADDING = 1;
 
     @NotNull
-    private final String reportDirectory;
-    @NotNull
     @VisibleForTesting
     static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
+
+    @NotNull
+    private final String reportDirectory;
 
     public PDFWriter(@NotNull final String reportDirectory) {
         this.reportDirectory = reportDirectory;
@@ -162,7 +172,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        disclaimerSection()
+                        testDetailsSection(report, reporterData.centerModel().getAddresseeStringForSample(report.sample()))
                 );
 
         final ComponentBuilder<?, ?> totalReport =
@@ -176,7 +186,23 @@ public class PDFWriter implements ReportWriter {
                         .add(additionalInfoPage);
         // @formatter:on
 
-        return report().noData(totalReport);
+        // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
+        //  - footerBand, detailBand, etc are shown when data source is not empty
+        //  - noData band is shown when data source is empty; intended to be used when there is no data to show in the report
+        //  (e.g. would be appropriate to be used for notSequenceableReport)
+        //
+        // more info: http://www.dynamicreports.org/examples/bandreport
+        //
+        // todo: fix when implementing new report layout
+
+        final DRDataSource singleItemDataSource = new DRDataSource("item");
+        singleItemDataSource.add(new Object());
+
+        return report().pageFooter(cmp.pageXslashY())
+                .lastPageFooter(cmp.verticalList(signatureFooter(reporterData.signaturePath()), cmp.pageXslashY(),
+                        cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
+                .addDetail(totalReport)
+                .setDataSource(singleItemDataSource);
     }
 
     @NotNull
@@ -186,7 +212,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
                         cmp.text("Report Date").setStyle(tableHeaderStyle()),
-                        cmp.currentDate().setPattern("dd-MMM-yyyy").setStyle(dataTableStyle())),
+                        cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
                 cmp.verticalList(
                         cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
                         cmp.text(tumorType).setStyle(dataTableStyle())),
@@ -463,11 +489,46 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> disclaimerSection() {
-        return toList("Disclaimer", Lists.newArrayList("This test is not certified for diagnostic purposes.",
+    private static ComponentBuilder<?, ?> testDetailsSection(@NotNull final PatientReport report, @Nullable final String recipientAddress) {
+        //@formatter:off
+        final List<String> lines = Lists.newArrayList("This test is not certified for diagnostic purposes.",
+                "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
+                "The data on which this report is based has passed all internal quality controls.",
+                "The samples have been analysed by Next Generation Sequencing",
+                "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
-                        + "findings using certified assays.",
-                "When no mutations are reported, the absence of mutations is not guaranteed."));
+                        + "findings using certified assays.", "This report is addressed at: " + recipientAddress);
+        //@formatter:on
+
+        if (INCLUDE_SAMPLE_BARCODES_AND_DATES) {
+            lines.add(
+                    "This test was performed on the tumor sample with barcode " + report.tumorBarcode() + " arrived on " + toFormattedDate(
+                            report.tumorArrivalDate()));
+            lines.add(
+                    "This test was performed on the blood sample with barcode " + report.bloodBarcode() + " arrived on " + toFormattedDate(
+                            report.bloodArrivalDate()));
+        }
+
+        return toList("Test details", lines);
+
+    }
+
+    private static String toFormattedDate(@Nullable final LocalDate date) {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+        return date != null ? formatter.format(date) : "?";
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> signatureFooter(@NotNull final String signaturePath) {
+        // @formatter:off
+        return cmp.horizontalList(
+                cmp.horizontalGap(370),
+                cmp.xyList()
+                    .add(40, 5, cmp.image(signaturePath))
+                    .add(0, 0,cmp.text("Edwin Cuppen,"))
+                    .add(0, 15, cmp.text("Director Hartwig Medical Foundation").setWidth(190)),
+                cmp.horizontalGap(10));
+        // @formatter:on
     }
 
     @NotNull

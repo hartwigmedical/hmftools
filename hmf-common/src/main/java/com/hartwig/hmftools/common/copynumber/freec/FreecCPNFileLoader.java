@@ -27,16 +27,19 @@ public enum FreecCPNFileLoader {
     private static final String NORMAL_READ_COUNT_REGEX = "%s.*_control.cpn$";
     private static final String TUMOR_RATIO_REGEX = "%s.*_sample.cpn$";
 
+    @NotNull
     public static Multimap<String, ReadCount> normalReadCountLines(@NotNull final String basePath, @NotNull final String normalSample)
             throws IOException, HartwigException {
         return loadCPNContent(readCounts(basePath, normalSample, NORMAL_READ_COUNT_REGEX));
     }
 
+    @NotNull
     public static Multimap<String, ReadCount> tumorReadCountLines(@NotNull final String basePath, @NotNull final String tumorSample)
             throws IOException, HartwigException {
         return loadCPNContent(readCounts(basePath, tumorSample, TUMOR_RATIO_REGEX));
     }
 
+    @NotNull
     private static List<String> readCounts(@NotNull final String basePath, @NotNull final String sample, @NotNull final String regex)
             throws HartwigException, IOException {
         final Path path = PathRegexFinder.build().findPath(basePath, String.format(regex, sample));
@@ -52,7 +55,6 @@ public enum FreecCPNFileLoader {
 
     @NotNull
     private static Multimap<String, ReadCount> loadCPNContent(@NotNull final List<String> lines) {
-
         final Multimap<String, ReadCount> result = ArrayListMultimap.create();
         for (String line : lines) {
             final ReadCount gcContent = fromLine(line);

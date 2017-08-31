@@ -10,6 +10,7 @@ public enum CopyNumberAlteration {
     public static final int NORMAL_HUMAN_COPY_NUMBER = 2;
     private static final String IDENTIFIER_ERROR = "Could not parse gain/loss/neutral identifier: %s";
 
+    @NotNull
     public static CopyNumberAlteration fromCopyNumber(final int value) {
         if (value == NORMAL_HUMAN_COPY_NUMBER) {
             return NEUTRAL;

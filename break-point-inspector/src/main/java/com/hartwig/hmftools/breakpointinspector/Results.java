@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -57,4 +58,5 @@ class StructuralVariantResult {
     SampleStats RefStats = new SampleStats();
     Collection<String> Filters;
     String FilterString = "";
+    int ExtraUncertainty = 0;
 }

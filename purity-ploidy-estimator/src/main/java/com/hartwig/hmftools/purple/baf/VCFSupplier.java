@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.baf.TumorBAF;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFactory;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
@@ -25,8 +24,8 @@ class VCFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     VCFSupplier(final File vcfFilename) throws IOException, HartwigException {
 
-        final TumorBAFFactory factory =
-                new TumorBAFFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
+        final VCFBAFFactory factory =
+                new VCFBAFFactory(MIN_REF_ALLELE_FREQUENCY, MAX_REF_ALLELE_FREQUENCY, MIN_COMBINED_DEPTH, MAX_COMBINED_DEPTH);
 
         final VCFGermlineFile vcfFile = VCFFileLoader.loadGermlineVCF(vcfFilename.toString());
         final List<GermlineVariant> variants = VariantFilter.passOnly(vcfFile.variants());
