@@ -10,9 +10,9 @@ import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
-import com.hartwig.hmftools.svannotation.Gene;
-import com.hartwig.hmftools.svannotation.StructuralVariantAnnotation;
-import com.hartwig.hmftools.svannotation.StructuralVariantAnnotator;
+import com.hartwig.hmftools.svannotation.GeneAnnotation;
+import com.hartwig.hmftools.svannotation.VariantAnnotation;
+import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.Transcript;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,28 +20,28 @@ import org.jetbrains.annotations.NotNull;
 
 public class StructuralVariantAnalyzer {
 
-    private final StructuralVariantAnnotator annotator;
+    private final VariantAnnotator annotator;
     private final HmfSlicer slicer;
     private final CosmicModel cosmicModel;
 
-    public StructuralVariantAnalyzer(final StructuralVariantAnnotator annotator, final HmfSlicer slicer, final CosmicModel cosmicModel) {
+    public StructuralVariantAnalyzer(final VariantAnnotator annotator, final HmfSlicer slicer, final CosmicModel cosmicModel) {
         this.annotator = annotator;
         this.slicer = slicer;
         this.cosmicModel = cosmicModel;
     }
 
-    private boolean inHmfPanel(final Gene g) {
+    private boolean inHmfPanel(final GeneAnnotation g) {
         return slicer.hmfRegions().stream().anyMatch(r -> r.gene().equals(g.getGeneName()));
     }
 
-    private boolean inCosmic(final Gene g) {
+    private boolean inCosmic(final GeneAnnotation g) {
         return cosmicModel.getEntrezMap().containsKey(g.getEntrezId());
     }
 
-    private boolean intronicDisruption(final StructuralVariantAnnotation sv) {
-        for (final Gene g : sv.getStart().getGenes()) {
+    private boolean intronicDisruption(final VariantAnnotation sv) {
+        for (final GeneAnnotation g : sv.getStart().getGeneAnnotations()) {
             if (sv.getEnd()
-                    .getGenes()
+                    .getGeneAnnotations()
                     .stream()
                     .filter(o -> o.getCanonical().isIntronic() && g.getCanonical().isIntronic()
                             && o.getCanonical().getExonUpstream() == g.getCanonical().getExonUpstream())
@@ -68,22 +68,22 @@ public class StructuralVariantAnalyzer {
                 : String.format("Downstream Exon %d / %d", t.getExonDownstream(), t.getExonMax());
     }
 
-    private List<StructuralVariantAnalysis.GeneFusion> processFusions(final List<StructuralVariantAnnotation> annotations) {
+    private List<StructuralVariantAnalysis.GeneFusion> processFusions(final List<VariantAnnotation> annotations) {
 
         final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
 
-        for (final StructuralVariantAnnotation sv : annotations) {
+        for (final VariantAnnotation sv : annotations) {
 
             final List<Pair<Transcript, Transcript>> svFusions = Lists.newArrayList();
 
-            for (final Gene g : sv.getStart().getGenes()) {
+            for (final GeneAnnotation g : sv.getStart().getGeneAnnotations()) {
 
                 final boolean g_upstream = g.getStrand() * g.getBreakend().getOrientation() > 0;
                 if (!inCosmic(g)) {
                     continue;
                 }
 
-                for (final Gene o : sv.getEnd().getGenes()) {
+                for (final GeneAnnotation o : sv.getEnd().getGeneAnnotations()) {
 
                     if (!inCosmic(o)) {
                         continue;
@@ -149,10 +149,10 @@ public class StructuralVariantAnalyzer {
         final List<StructuralVariantAnalysis.GeneFusion> result = Lists.newArrayList();
         for (final Pair<Transcript, Transcript> fusion : fusions) {
 
-            final boolean left_upstream = fusion.getLeft().getStrand() * fusion.getLeft().getGene().getBreakend().getOrientation() > 0;
+            final boolean left_upstream = fusion.getLeft().getStrand() * fusion.getLeft().getGeneAnnotation().getBreakend().getOrientation() > 0;
 
-            final Gene upstream = left_upstream ? fusion.getLeft().getGene() : fusion.getRight().getGene();
-            final Gene downstream = left_upstream ? fusion.getRight().getGene() : fusion.getLeft().getGene();
+            final GeneAnnotation upstream = left_upstream ? fusion.getLeft().getGeneAnnotation() : fusion.getRight().getGeneAnnotation();
+            final GeneAnnotation downstream = left_upstream ? fusion.getRight().getGeneAnnotation() : fusion.getLeft().getGeneAnnotation();
 
             final StructuralVariantAnalysis.GeneFusion details = new StructuralVariantAnalysis.GeneFusion();
             details.Type = upstream.getBreakend().getStructuralVariant().getVariant().type().toString();
@@ -166,27 +166,27 @@ public class StructuralVariantAnalyzer {
             details.GeneContextEnd = exonSelection(fusion.getRight(), false);
 
             result.add(details);
-            annotations.remove(fusion.getLeft().getGene().getBreakend().getStructuralVariant());
+            annotations.remove(fusion.getLeft().getGeneAnnotation().getBreakend().getStructuralVariant());
         }
 
         return result;
     }
 
-    private List<StructuralVariantAnalysis.GeneDisruption> processDisruptions(final List<StructuralVariantAnnotation> annotations) {
+    private List<StructuralVariantAnalysis.GeneDisruption> processDisruptions(final List<VariantAnnotation> annotations) {
 
-        final List<Gene> genes = Lists.newArrayList();
-        for (final StructuralVariantAnnotation sv : annotations) {
+        final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
+        for (final VariantAnnotation sv : annotations) {
 
             if (intronicDisruption(sv)) {
                 continue;
             }
 
-            genes.addAll(sv.getStart().getGenes());
-            genes.addAll(sv.getEnd().getGenes());
+            geneAnnotations.addAll(sv.getStart().getGeneAnnotations());
+            geneAnnotations.addAll(sv.getEnd().getGeneAnnotations());
         }
 
-        final ArrayListMultimap<String, Gene> geneMap = ArrayListMultimap.create();
-        for (final Gene g : genes) {
+        final ArrayListMultimap<String, GeneAnnotation> geneMap = ArrayListMultimap.create();
+        for (final GeneAnnotation g : geneAnnotations) {
             if (!inHmfPanel(g)) {
                 continue;
             }
@@ -195,7 +195,7 @@ public class StructuralVariantAnalyzer {
 
         final List<StructuralVariantAnalysis.GeneDisruption> disruptions = Lists.newArrayList();
         for (final String geneName : geneMap.keySet()) {
-            for (final Gene g : geneMap.get(geneName)) {
+            for (final GeneAnnotation g : geneMap.get(geneName)) {
 
                 final StructuralVariantAnalysis.GeneDisruption disruption = new StructuralVariantAnalysis.GeneDisruption();
                 disruption.GeneName = geneName;
@@ -218,7 +218,7 @@ public class StructuralVariantAnalyzer {
     @NotNull
     public StructuralVariantAnalysis run(@NotNull final List<StructuralVariant> variants) {
 
-        final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
+        final List<VariantAnnotation> annotations = annotator.annotateVariants(variants);
         final List<StructuralVariantAnalysis.GeneFusion> fusions = processFusions(annotations);
         final List<StructuralVariantAnalysis.GeneDisruption> disruptions = processDisruptions(annotations);
 

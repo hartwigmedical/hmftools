@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.hartwig.hmftools.svannotation.StructuralVariantAnnotation;
+import com.hartwig.hmftools.svannotation.VariantAnnotation;
 
 public class StructuralVariantAnalysis {
 
@@ -30,7 +30,7 @@ public class StructuralVariantAnalysis {
         public String TAF = "TODO";
     }
 
-    private final List<StructuralVariantAnnotation> annotations;
+    private final List<VariantAnnotation> annotations;
     private final List<GeneFusion> fusions;
     private final List<GeneDisruption> disruptions;
 
@@ -40,14 +40,14 @@ public class StructuralVariantAnalysis {
         this.disruptions = Collections.emptyList();
     }
 
-    public StructuralVariantAnalysis(final List<StructuralVariantAnnotation> annotations, final List<GeneFusion> fusions,
+    public StructuralVariantAnalysis(final List<VariantAnnotation> annotations, final List<GeneFusion> fusions,
             final List<GeneDisruption> disruptions) {
         this.annotations = annotations;
         this.fusions = fusions;
         this.disruptions = disruptions;
     }
 
-    public List<StructuralVariantAnnotation> getAnnotations() {
+    public List<VariantAnnotation> getAnnotations() {
         return ImmutableList.copyOf(annotations);
     }
 

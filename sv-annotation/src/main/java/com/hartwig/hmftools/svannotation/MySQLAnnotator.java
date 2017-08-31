@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.svannotation;
 
+import static org.ensembl.database.homo_sapiens_core.Tables.COORD_SYSTEM;
+import static org.ensembl.database.homo_sapiens_core.Tables.EXON;
+import static org.ensembl.database.homo_sapiens_core.Tables.EXON_TRANSCRIPT;
+import static org.ensembl.database.homo_sapiens_core.Tables.EXTERNAL_DB;
+import static org.ensembl.database.homo_sapiens_core.Tables.GENE;
+import static org.ensembl.database.homo_sapiens_core.Tables.OBJECT_XREF;
+import static org.ensembl.database.homo_sapiens_core.Tables.SEQ_REGION;
+import static org.ensembl.database.homo_sapiens_core.Tables.TRANSCRIPT;
+import static org.ensembl.database.homo_sapiens_core.Tables.XREF;
 import static org.jooq.impl.DSL.decode;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.DSL.table;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,19 +20,22 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
+import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
+import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
+import org.jooq.types.UInteger;
 
-public class MySQLAnnotator implements StructuralVariantAnnotator {
+public class MySQLAnnotator implements VariantAnnotator {
 
     private final DSLContext context;
-    private final int coord_system_id;
-    private final int entrez_db_id;
+    private final UInteger coord_system_id;
+    private final UInteger entrez_db_id;
 
-    public static StructuralVariantAnnotator make(final String url) throws SQLException {
+    public static VariantAnnotator make(final String url) throws SQLException {
         return new MySQLAnnotator(url);
     }
 
@@ -38,30 +47,32 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
         entrez_db_id = findEntrezDatabaeId();
     }
 
-    private int findCoordSystemId() {
-        return context.select(field(name("coord_system_id")))
-                .from(table(name("coord_system")))
-                .where(field(name("version")).eq("GRCh37"))
-                .orderBy(field(name("rank")))
+    private UInteger findCoordSystemId() {
+        return context.select(COORD_SYSTEM.COORD_SYSTEM_ID)
+                .from(COORD_SYSTEM)
+                .where(COORD_SYSTEM.VERSION.eq("GRCh37"))
+                .orderBy(COORD_SYSTEM.RANK)
                 .limit(1)
-                .fetchOne(0, Integer.class);
+                .fetchOne()
+                .value1();
     }
 
-    private int findEntrezDatabaeId() {
-        return context.select(field(name("external_db_id")))
-                .from(table(name("external_db")))
-                .where(field(name("db_name")).eq("EntrezGene"))
+    private UInteger findEntrezDatabaeId() {
+        return context.select(EXTERNAL_DB.EXTERNAL_DB_ID)
+                .from(EXTERNAL_DB)
+                .where(EXTERNAL_DB.DB_NAME.eq("EntrezGene"))
                 .limit(1)
-                .fetchOne(0, Integer.class);
+                .fetchOne()
+                .value1();
     }
 
     @Override
-    public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
+    public List<VariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
-    private StructuralVariantAnnotation annotateVariant(final StructuralVariant variant) {
-        final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(variant);
+    private VariantAnnotation annotateVariant(final StructuralVariant variant) {
+        final VariantAnnotation annotation = new VariantAnnotation(variant);
 
         annotation.setBreakendAnnotations(
                 annotateBreakend(annotation, variant.startChromosome(), variant.startPosition(), variant.startOrientation(),
@@ -72,8 +83,8 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
     }
 
     @Override
-    public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
-        final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(null);
+    public VariantAnnotation annotateRegion(final GenomeRegion region) {
+        final VariantAnnotation annotation = new VariantAnnotation(null);
 
         annotation.setBreakendAnnotations(annotateBreakend(annotation, region.chromosome(), region.start(), 1, 0.0),
                 annotateBreakend(annotation, region.chromosome(), region.end(), -1, 0.0));
@@ -81,92 +92,90 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
         return annotation;
     }
 
-    private Breakend annotateBreakend(final StructuralVariantAnnotation parent, String chromosome, final long position,
-            final int orientation, final Double alleleFrequency) {
+    private Breakend annotateBreakend(final VariantAnnotation parent, String chromosome, final long position, final int orientation,
+            final Double alleleFrequency) {
         final Breakend breakend = new Breakend(parent, chromosome, position, orientation, alleleFrequency);
 
         final int PROMOTER_DISTANCE = 10000;
+        final byte zero = 0;
 
         // start with the overlapping genes
         final Result<?> genes =
-                context.select(field(name("gene", "gene_id")), field(name("xref", "display_label")), field(name("gene", "stable_id")),
-                        field(name("gene", "canonical_transcript_id")), field(name("gene", "seq_region_strand")))
-                        .from(table(name("gene")))
-                        .innerJoin(table(name("seq_region")))
-                        .on(field(name("gene", "seq_region_id")).eq(field(name("seq_region", "seq_region_id"))))
-                        .and(field(name("seq_region", "name")).eq(chromosome))
-                        .and(field(name("seq_region", "coord_system_id")).eq(coord_system_id))
-                        .innerJoin(table(name("xref")))
-                        .on(field(name("xref", "xref_id")).eq(field(name("gene", "display_xref_id"))))
-                        .where(field(name("gene", "status")).eq("KNOWN"))
-                        .and(decode().when(field(name("gene", "seq_region_strand")).ge(0),
-                                field(name("gene", "seq_region_start")).sub(PROMOTER_DISTANCE))
-                                .otherwise(field(name("gene", "seq_region_start")))
-                                .le(position))
-                        .and(decode().when(field(name("gene", "seq_region_strand")).le(0),
-                                field(name("gene", "seq_region_end")).add(PROMOTER_DISTANCE))
-                                .otherwise(field(name("gene", "seq_region_end")))
-                                .ge(position))
+                context.select(GENE.GENE_ID, XREF.DISPLAY_LABEL, GENE.STABLE_ID, GENE.CANONICAL_TRANSCRIPT_ID, GENE.SEQ_REGION_STRAND)
+                        .from(GENE)
+                        .innerJoin(SEQ_REGION)
+                        .on(GENE.SEQ_REGION_ID.eq(SEQ_REGION.SEQ_REGION_ID))
+                        .and(SEQ_REGION.NAME.eq(chromosome))
+                        .and(SEQ_REGION.COORD_SYSTEM_ID.eq(coord_system_id))
+                        .innerJoin(XREF)
+                        .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
+                        .where(GENE.STATUS.eq(GeneStatus.KNOWN))
+                        .and(decode().when(GENE.SEQ_REGION_STRAND.gt(zero), GENE.SEQ_REGION_START.sub(PROMOTER_DISTANCE))
+                                .otherwise(GENE.SEQ_REGION_START)
+                                .le(UInteger.valueOf(position)))
+                        .and(decode().when(GENE.SEQ_REGION_STRAND.lt(zero), GENE.SEQ_REGION_END.add(PROMOTER_DISTANCE))
+                                .otherwise(GENE.SEQ_REGION_END)
+                                .ge(UInteger.valueOf(position)))
                         .fetch();
 
         for (final Record g : genes) {
-            final int gene_id = g.get(0, Integer.class);
-            final String gene_name = g.get(1, String.class);
-            final String gene_stable_id = g.get(2, String.class);
-            final int canonical_transcript_id = g.get(3, Integer.class);
-            final int gene_strand = g.get(4, Integer.class);
+            final UInteger gene_id = g.get(GENE.GENE_ID);
+            final String gene_name = g.get(XREF.DISPLAY_LABEL);
+            final String gene_stable_id = g.get(GENE.STABLE_ID);
+            final UInteger canonical_transcript_id = g.get(GENE.CANONICAL_TRANSCRIPT_ID);
+            final int gene_strand = g.get(GENE.SEQ_REGION_STRAND);
 
-            final String entrez_id = context.select(field(name("xref", "dbprimary_acc")))
-                    .from(table(name("xref")))
-                    .innerJoin(table(name("object_xref")))
-                    .on(field(name("object_xref", "xref_id")).eq(field(name("xref", "xref_id"))))
-                    .where(field(name("xref", "external_db_id")).eq(entrez_db_id))
-                    .and(field(name("object_xref", "ensembl_id")).eq(gene_id))
-                    .and(field(name("object_xref", "ensembl_object_type")).eq("gene"))
+            final String entrez_id = context.select(XREF.DBPRIMARY_ACC)
+                    .from(XREF)
+                    .innerJoin(OBJECT_XREF)
+                    .on(OBJECT_XREF.XREF_ID.eq(XREF.XREF_ID))
+                    .where(XREF.EXTERNAL_DB_ID.eq(entrez_db_id))
+                    .and(OBJECT_XREF.ENSEMBL_ID.eq(gene_id))
+                    .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
                     .limit(1)
-                    .fetchOne(0, String.class);
+                    .fetchOne()
+                    .value1();
 
-            final Gene gene = new Gene(breakend, gene_name, gene_stable_id, entrez_id, gene_strand);
-            breakend.addGeneAnnotation(gene);
+            final GeneAnnotation geneAnnotation = new GeneAnnotation(breakend, gene_name, gene_stable_id, entrez_id, gene_strand);
+            breakend.addGeneAnnotation(geneAnnotation);
 
-            final Result<?> transcripts = context.select(field(name("transcript_id")), field(name("stable_id")))
-                    .from(table(name("transcript")))
-                    .where(field(name("gene_id")).eq(gene_id))
+            final Result<?> transcripts = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID)
+                    .from(TRANSCRIPT)
+                    .where(TRANSCRIPT.GENE_ID.eq(gene_id))
                     .fetch();
 
             for (final Record t : transcripts) {
-                final int transcript_id = t.get(0, Integer.class);
-                final boolean canonical = transcript_id == canonical_transcript_id;
-                final String transcript_stable_id = t.get(1, String.class);
+                final UInteger transcript_id = t.get(TRANSCRIPT.TRANSCRIPT_ID);
+                final boolean canonical = transcript_id.equals(canonical_transcript_id);
+                final String transcript_stable_id = t.get(TRANSCRIPT.STABLE_ID);
 
-                final Record exonLeft = context.select(field(name("exon_transcript", "rank")), field(name("exon", "phase")),
-                        field(name("exon", "end_phase")))
-                        .from(table(name("exon_transcript")))
-                        .innerJoin(table(name("exon")))
-                        .on(field(name("exon", "exon_id")).eq(field(name("exon_transcript", "exon_id"))))
-                        .where(field(name("exon_transcript", "transcript_id")).eq(transcript_id))
-                        .and(field(name("exon", "seq_region_start")).le(position))
-                        .orderBy(field(name("exon", "seq_region_start")).desc())
+                final Record exonLeft = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE)
+                        .from(EXON_TRANSCRIPT)
+                        .innerJoin(EXON)
+                        .on(EXON.EXON_ID.eq(EXON_TRANSCRIPT.EXON_ID))
+                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcript_id))
+                        .and(EXON.SEQ_REGION_START.le(UInteger.valueOf(position)))
+                        .orderBy(EXON.SEQ_REGION_START.desc())
                         .limit(1)
                         .fetchOne();
 
-                final Record exonRight = context.select(field(name("exon_transcript", "rank")), field(name("exon", "phase")),
-                        field(name("exon", "end_phase")))
-                        .from(table(name("exon_transcript")))
-                        .innerJoin(table(name("exon")))
-                        .on(field(name("exon", "exon_id")).eq(field(name("exon_transcript", "exon_id"))))
-                        .where(field(name("exon_transcript", "transcript_id")).eq(transcript_id))
-                        .and(field(name("exon", "seq_region_end")).ge(position))
-                        .orderBy(field(name("exon", "seq_region_end")).asc())
+                final Record exonRight = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE)
+                        .from(EXON_TRANSCRIPT)
+                        .innerJoin(EXON)
+                        .on(EXON.EXON_ID.eq(EXON_TRANSCRIPT.EXON_ID))
+                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcript_id))
+                        .and(EXON.SEQ_REGION_END.ge(UInteger.valueOf(position)))
+                        .orderBy(EXON.SEQ_REGION_END.asc())
                         .limit(1)
                         .fetchOne();
 
-                final int exon_max = context.select(field(name("rank")))
-                        .from(table(name("exon_transcript")))
-                        .where(field(name("transcript_id")).eq(transcript_id))
-                        .orderBy(field(name("rank")).desc())
+                final int exon_max = context.select(EXON_TRANSCRIPT.RANK)
+                        .from(EXON_TRANSCRIPT)
+                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcript_id))
+                        .orderBy(EXON_TRANSCRIPT.RANK.desc())
                         .limit(1)
-                        .fetchOne(0, Integer.class);
+                        .fetchOne()
+                        .value1();
 
                 final int exon_upstream;
                 final int exon_upstream_phase;
@@ -175,22 +184,22 @@ public class MySQLAnnotator implements StructuralVariantAnnotator {
 
                 if (gene_strand > 0) {
                     // forward strand
-                    exon_upstream = exonLeft == null ? 0 : exonLeft.get(0, Integer.class);
-                    exon_upstream_phase = exonLeft == null ? 0 : exonLeft.get(2, Integer.class);
-                    exon_downstream = exonRight == null ? 0 : exonRight.get(0, Integer.class);
-                    exon_downstream_phase = exonRight == null ? 0 : exonRight.get(1, Integer.class);
+                    exon_upstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
+                    exon_upstream_phase = exonLeft == null ? 0 : exonLeft.get(EXON.END_PHASE);
+                    exon_downstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
+                    exon_downstream_phase = exonRight == null ? 0 : exonRight.get(EXON.PHASE);
                 } else {
                     // reverse strand
-                    exon_downstream = exonLeft == null ? 0 : exonLeft.get(0, Integer.class);
-                    exon_downstream_phase = exonLeft == null ? 0 : exonLeft.get(1, Integer.class);
-                    exon_upstream = exonRight == null ? 0 : exonRight.get(0, Integer.class);
-                    exon_upstream_phase = exonRight == null ? 0 : exonRight.get(2, Integer.class);
+                    exon_downstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
+                    exon_downstream_phase = exonLeft == null ? 0 : exonLeft.get(EXON.PHASE);
+                    exon_upstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
+                    exon_upstream_phase = exonRight == null ? 0 : exonRight.get(EXON.END_PHASE);
                 }
 
                 final Transcript transcript =
-                        new Transcript(gene, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
+                        new Transcript(geneAnnotation, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
                                 exon_downstream_phase, exon_max, canonical);
-                gene.addTranscriptAnnotation(transcript);
+                geneAnnotation.addTranscriptAnnotation(transcript);
             }
         }
 

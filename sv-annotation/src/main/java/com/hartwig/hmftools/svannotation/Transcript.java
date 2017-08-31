@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svannotation;
 
 public class Transcript {
 
-    private final Gene gene;
+    private final GeneAnnotation geneAnnotation;
     private final String transcriptId;
     private final int exonUpstream;
     private final int exonUpstreamPhase;
@@ -11,9 +11,9 @@ public class Transcript {
     private final int exonMax;
     private final boolean canonical;
 
-    Transcript(final Gene gene, final String transcriptId, final int exonUpstream, final int exonUpstreamPhase,
+    Transcript(final GeneAnnotation geneAnnotation, final String transcriptId, final int exonUpstream, final int exonUpstreamPhase,
             final int exonDownstream, final int exonDownstreamPhase, final int exonMax, final boolean canonical) {
-        this.gene = gene;
+        this.geneAnnotation = geneAnnotation;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
         this.exonUpstreamPhase = exonUpstreamPhase;
@@ -43,12 +43,12 @@ public class Transcript {
         return canonical;
     }
 
-    public Gene getGene() {
-        return gene;
+    public GeneAnnotation getGeneAnnotation() {
+        return geneAnnotation;
     }
 
     public int getStrand() {
-        return gene.getStrand();
+        return geneAnnotation.getStrand();
     }
 
     public int getExonUpstream() {

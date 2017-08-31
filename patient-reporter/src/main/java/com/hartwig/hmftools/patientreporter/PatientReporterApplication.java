@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -28,7 +27,7 @@ import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
 import com.hartwig.hmftools.svannotation.NullAnnotator;
-import com.hartwig.hmftools.svannotation.StructuralVariantAnnotator;
+import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -117,7 +116,7 @@ public class PatientReporterApplication {
                 VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
 
-        final StructuralVariantAnnotator annotator;
+        final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {
             final String url = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
             LOGGER.info("connecting to: {}", url);
@@ -126,8 +125,8 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, hmfSlicingRegion, cosmic);
-        
-	return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer);
+
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer);
     }
 
     @NotNull

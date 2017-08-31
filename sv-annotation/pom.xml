@@ -27,6 +27,10 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>ensembl-db</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class Gene {
+public class GeneAnnotation {
 
     private final Breakend breakend;
     private final String geneName;
@@ -14,7 +14,7 @@ public class Gene {
     private final int strand;
     private final List<Transcript> transcripts = Lists.newArrayList();
 
-    Gene(final Breakend breakend, final String geneName, final String stableId, final String entrezId, final int strand) {
+    GeneAnnotation(final Breakend breakend, final String geneName, final String stableId, final String entrezId, final int strand) {
         this.breakend = breakend;
         this.geneName = geneName;
         this.stableId = stableId;
