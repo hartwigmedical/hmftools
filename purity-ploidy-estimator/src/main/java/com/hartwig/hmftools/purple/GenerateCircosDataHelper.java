@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
+import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -106,9 +107,7 @@ class GenerateCircosDataHelper {
 
     private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
         final List<PurityAdjustedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
-        CircosFileWriter.writePositions(baseCircosSample + ".snp.circos",
-                downsampledSomaticVariants,
-                PurityAdjustedSomaticVariant::adjustedVAF);
+        CircosSNPWriter.writePositions(baseCircosSample + ".snp.circos", downsampledSomaticVariants);
     }
 
     private double minorAllelePloidy(@NotNull final PurpleCopyNumber copyNumber) {
