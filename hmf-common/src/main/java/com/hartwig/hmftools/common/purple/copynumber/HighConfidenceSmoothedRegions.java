@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -69,16 +71,34 @@ class HighConfidenceSmoothedRegions {
     }
 
     private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull CombinedFittedRegion builder) {
+
+        final List<FittedRegion> buffer = Lists.newArrayList();
+
         for (int i = startIndex; i <= endIndex; i++) {
-            FittedRegion copyNumber = fittedRegions.get(i);
-            if (isSimilar(copyNumber, builder.region())) {
-                builder.combine(copyNumber);
+            FittedRegion region = fittedRegions.get(i);
+            boolean isGermline = isGermline(region);
+            boolean isSVSupported = region.structuralVariantSupport() != StructuralVariantSupport.NONE;
+            if (isGermline && (isSVSupported || !buffer.isEmpty())) {
+                buffer.add(region);
             } else {
-                return i - 1;
+                boolean isSimilar = isSimilar(region, builder.region());
+                if (isSimilar) {
+                    // Flush buffer
+                    Iterator<FittedRegion> iterator = buffer.iterator();
+                    while (iterator.hasNext()) {
+                        FittedRegion next = iterator.next();
+                        builder.combine(next);
+                        iterator.remove();
+                    }
+
+                    builder.combine(region);
+                } else {
+                    return i - 1 - buffer.size();
+                }
             }
         }
 
-        return endIndex;
+        return endIndex - buffer.size();
     }
 
     @NotNull
@@ -122,9 +142,13 @@ class HighConfidenceSmoothedRegions {
         return forwardBuilder;
     }
 
+    private boolean isGermline(@NotNull final FittedRegion newRegion) {
+        return !newRegion.status().equals(FreecStatus.SOMATIC);
+    }
+
     private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final FittedRegion combinedRegion) {
         int bafCount = Math.min(newRegion.bafCount(), combinedRegion.bafCount());
-        if (!newRegion.status().equals(FreecStatus.SOMATIC)) {
+        if (isGermline(newRegion)) {
             return true;
         }
 

@@ -10,10 +10,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.junit.Test;
 
@@ -89,12 +91,8 @@ public class HighConfidenceSmoothedRegionsTest {
         final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, baseCopyNumber));
 
         final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1001, 1110, baseCopyNumber),
-                createFittedCopyNumber(1111,
-                        1220,
-                        baseCopyNumber + CopyNumberDeviation.MIN_COPY_NUMBER_TOLERANCE + 0.1),
-                createFittedCopyNumber(1221,
-                        2000,
-                        baseCopyNumber + CopyNumberDeviation.MIN_COPY_NUMBER_TOLERANCE - 0.1));
+                createFittedCopyNumber(1111, 1220, baseCopyNumber + CopyNumberDeviation.MIN_COPY_NUMBER_TOLERANCE + 0.1),
+                createFittedCopyNumber(1221, 2000, baseCopyNumber + CopyNumberDeviation.MIN_COPY_NUMBER_TOLERANCE - 0.1));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
         final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
@@ -118,6 +116,41 @@ public class HighConfidenceSmoothedRegionsTest {
         assertRegion(results.get(1), 3001, 5000, 5);
     }
 
+    @Test
+    public void testFavourStructuralSupportInGermlineEarly() {
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2), createRegion(3001, 4000, 3));
+
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1001, 2000, 2),
+                createGermlineRegion(2001, 2500, 2.5, StructuralVariantSupport.DEL),
+                createGermlineRegion(2501, 3000, 2.5,StructuralVariantSupport.NONE),
+                createFittedCopyNumber(3001, 4000, 3));
+
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
+        final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
+        assertEquals(2, results.size());
+
+        assertRegion(results.get(0), 1001, 2000, 2);
+        assertRegion(results.get(1), 2001, 4000, 3);
+    }
+
+    @Test
+    public void testFavourStructuralSupportInGermlineLate() {
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2), createRegion(3001, 4000, 3));
+
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1001, 2000, 2),
+                createGermlineRegion(2001, 2500, 2.5, StructuralVariantSupport.DEL),
+                createFittedCopyNumber(2501, 3000, 3),
+                createFittedCopyNumber(3001, 4000, 3));
+
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
+        final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
+        assertEquals(2, results.size());
+
+        assertRegion(results.get(0), 1001, 2000, 2);
+        assertRegion(results.get(1), 2001, 4000, 3);
+    }
+
+
     private void assertRegion(FittedRegion victim, long expectedStart, long expectedEnd, double expectedCopyNumber) {
         assertEquals(expectedStart, victim.start());
         assertEquals(expectedEnd, victim.end());
@@ -127,6 +160,17 @@ public class HighConfidenceSmoothedRegionsTest {
     private FittedRegion createFittedCopyNumber(long start, long end, double copyNumber) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
                 .bafCount(CopyNumberDeviation.MAX_BAF_COUNT)
+                .observedBAF(0.5)
+                .tumorCopyNumber(copyNumber)
+                .refNormalisedCopyNumber(copyNumber)
+                .build();
+    }
+
+    private FittedRegion createGermlineRegion(long start, long end, double copyNumber, StructuralVariantSupport sv) {
+        return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
+                .bafCount(CopyNumberDeviation.MAX_BAF_COUNT)
+                .status(FreecStatus.GERMLINE)
+                .structuralVariantSupport(sv)
                 .observedBAF(0.5)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
