@@ -469,7 +469,6 @@ class Analysis {
 
         // perform query for reads
 
-        // TODO: can we query a tighter range?
         QueryInterval[] queryIntervals =
                 { new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position + ctx.Uncertainty1.Start - range),
                         ctx.MantaBP1.Position + ctx.Uncertainty1.End + range),
@@ -477,11 +476,13 @@ class Analysis {
                                 ctx.MantaBP2.Position + ctx.Uncertainty2.End + range) };
         queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
 
+        // TODO: instead of loading reads into memory, we should instead stream the query to file, sort the file by read name, then stream them in
         final List<SAMRecord> tumorReads = performQuery(tumorReader, queryIntervals);
         final List<SAMRecord> refReads = performQuery(refReader, queryIntervals);
 
         // write evidence
 
+        // TODO: we should blindly write reads to file, and deduplicate and sort in a later step at the file level
         if (tumorWriter != null) {
             for (final SAMRecord read : tumorReads) {
                 final int hash = read.getSAMString().hashCode();
