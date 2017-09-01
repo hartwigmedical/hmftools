@@ -16,8 +16,7 @@ import org.junit.Test;
 
 public class MetaDataResolverTest {
 
-    private static final String RESOURCE_DIR = Resources.getResource(
-            "context" + File.separator + "MetaDataResolver").getPath();
+    private static final String RESOURCE_DIR = Resources.getResource("context").getPath();
 
     @Test
     public void noMetaDataReturnsNull() {
