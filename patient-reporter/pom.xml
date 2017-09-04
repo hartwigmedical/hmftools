@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>civic-api-client</artifactId>
+            <artifactId>api-clients</artifactId>
         </dependency>
     </dependencies>
 

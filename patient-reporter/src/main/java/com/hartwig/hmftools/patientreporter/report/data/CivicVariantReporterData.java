@@ -5,8 +5,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.civic.data.CivicVariant;
-import com.hartwig.hmftools.civic.data.CivicVariantType;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;

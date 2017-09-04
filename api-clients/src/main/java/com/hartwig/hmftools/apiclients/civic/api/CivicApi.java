@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.civic.api;
+package com.hartwig.hmftools.apiclients.civic.api;
 
-import com.hartwig.hmftools.civic.data.CivicEvidenceItem;
-import com.hartwig.hmftools.civic.data.CivicGene;
-import com.hartwig.hmftools.civic.data.CivicIndexResult;
-import com.hartwig.hmftools.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
+import com.hartwig.hmftools.apiclients.civic.data.CivicGene;
+import com.hartwig.hmftools.apiclients.civic.data.CivicIndexResult;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 
 import org.jetbrains.annotations.NotNull;
 

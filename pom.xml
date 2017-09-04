@@ -24,7 +24,7 @@
         <module>rups-checker</module>
         <module>strelka-post-process</module>
         <module>patient-report-mailer</module>
-        <module>civic-api-client</module>
+        <module>api-clients</module>
     </modules>
 
     <properties>
@@ -55,7 +55,7 @@
 
         <hmf-common.version>1</hmf-common.version>
         <patient-db.version>1.0</patient-db.version>
-        <civic-api.version>1.0</civic-api.version>
+        <apiclients.version>1.0</apiclients.version>
 
 
         <!-- Used by health checker -->
@@ -262,8 +262,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>civic-api-client</artifactId>
-                <version>${civic-api.version}</version>
+                <artifactId>api-clients</artifactId>
+                <version>${apiclients.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

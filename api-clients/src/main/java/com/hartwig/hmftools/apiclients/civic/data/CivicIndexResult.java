@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.civic.data;
+package com.hartwig.hmftools.apiclients.civic.data;
+
+import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -10,11 +12,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicVariantType {
-    public abstract int id();
+public abstract class CivicIndexResult<T> {
 
-    public abstract String name();
+    @SerializedName("_meta")
+    public abstract CivicApiMetadata meta();
 
-    @SerializedName("display_name")
-    public abstract String displayName();
+    public abstract List<T> records();
 }

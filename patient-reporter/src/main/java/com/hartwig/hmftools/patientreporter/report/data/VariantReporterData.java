@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.civic.api.CivicApiWrapper;
-import com.hartwig.hmftools.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;

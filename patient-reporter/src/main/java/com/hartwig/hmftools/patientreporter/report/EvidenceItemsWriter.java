@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.civic.api.CivicApiWrapper;
-import com.hartwig.hmftools.civic.data.CivicEvidenceItem;
-import com.hartwig.hmftools.civic.data.CivicVariant;
-import com.hartwig.hmftools.civic.data.CivicVariantType;
+import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
+import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantType;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;

@@ -4,8 +4,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.civic.data.CivicDrug;
-import com.hartwig.hmftools.civic.data.CivicEvidenceItem;
+import com.hartwig.hmftools.apiclients.civic.data.CivicDrug;
+import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.civic.data;
+package com.hartwig.hmftools.apiclients.civic.data;
 
 import java.util.List;
 
@@ -12,10 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicIndexResult<T> {
-
-    @SerializedName("_meta")
-    public abstract CivicApiMetadata meta();
-
-    public abstract List<T> records();
+public abstract class CivicGene {
+    @SerializedName("variants")
+    public abstract List<CivicVariantMetadata> variantMetadatas();
 }

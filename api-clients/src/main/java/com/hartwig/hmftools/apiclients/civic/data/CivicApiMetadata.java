@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.civic.data;
+package com.hartwig.hmftools.apiclients.civic.data;
 
 import com.google.gson.annotations.SerializedName;
 

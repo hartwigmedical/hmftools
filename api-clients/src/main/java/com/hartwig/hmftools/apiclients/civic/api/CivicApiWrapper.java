@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.civic.api;
+package com.hartwig.hmftools.apiclients.civic.api;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import com.google.gson.Gson;
-import com.hartwig.hmftools.civic.data.CivicApiDataGson;
-import com.hartwig.hmftools.civic.data.CivicApiMetadata;
-import com.hartwig.hmftools.civic.data.CivicEvidenceItem;
-import com.hartwig.hmftools.civic.data.CivicGene;
-import com.hartwig.hmftools.civic.data.CivicIndexResult;
-import com.hartwig.hmftools.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicApiDataGson;
+import com.hartwig.hmftools.apiclients.civic.data.CivicApiMetadata;
+import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
+import com.hartwig.hmftools.apiclients.civic.data.CivicGene;
+import com.hartwig.hmftools.apiclients.civic.data.CivicIndexResult;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;

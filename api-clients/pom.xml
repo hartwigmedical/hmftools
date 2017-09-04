@@ -8,10 +8,10 @@
         <version>1</version>
     </parent>
 
-    <artifactId>civic-api-client</artifactId>
+    <artifactId>api-clients</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - Civic API Client</name>
+    <name>HMF Tools - API Clients</name>
 
     <dependencies>
         <dependency>

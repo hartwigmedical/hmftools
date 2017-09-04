@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.civic;
+package com.hartwig.hmftools.apiclients.civic;
 
-import com.hartwig.hmftools.civic.api.CivicApiWrapper;
+import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
