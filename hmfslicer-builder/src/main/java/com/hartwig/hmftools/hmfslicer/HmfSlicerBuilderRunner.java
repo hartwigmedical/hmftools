@@ -8,14 +8,12 @@ import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -42,8 +40,7 @@ public final class HmfSlicerBuilderRunner {
     private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
     private static final String DB_USER = "anonymous";
 
-    public static void main(String[] args)
-            throws ParseException, IOException, InterruptedException, SQLException, EmptyFileException {
+    public static void main(String[] args) throws ParseException, IOException, InterruptedException, SQLException, EmptyFileException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String outputFilePath = cmd.getOptionValue(OUT_PATH);
@@ -52,8 +49,6 @@ public final class HmfSlicerBuilderRunner {
             formatter.printHelp("HmfSlicerBuilder", options);
         } else {
             final Result<Record> queryResults = queryEnsembldb();
-            // MIVO: check if query results can be mapped to the data model and sort based on chromosome and transcriptStart
-            queryResults.sort(Comparator.comparing(record -> record.into(ImmutableHmfGenomeRegion.class)));
             writeFile(cmd, queryResults);
             LOGGER.info("Written output to " + new File(outputFilePath).getAbsolutePath());
         }
@@ -67,32 +62,38 @@ public final class HmfSlicerBuilderRunner {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @NotNull
-    private static String readGeneList() throws IOException, EmptyFileException {
-        final List<String> lines = Resources.readLines(Resources.getResource("gene_panel"),
-                Charset.defaultCharset()).stream().map(gene -> "\"" + gene + "\"").collect(Collectors.toList());
-        return StringUtils.join(lines.toArray(), ",");
+    static List<String> readGeneList() throws IOException, EmptyFileException {
+        return Resources.readLines(Resources.getResource("gene_panel"), Charset.defaultCharset())
+                .stream()
+                .map(gene -> "\"" + gene + "\"")
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static String geneList() throws IOException, EmptyFileException {
+        return StringUtils.join(readGeneList().toArray(), ",");
     }
 
     @NotNull
     private static String readEnsemblQuery() throws IOException, EmptyFileException {
-        final List<String> lines = Resources.readLines(Resources.getResource("ensembl_query.sql"),
-                Charset.defaultCharset());
+        final List<String> lines = Resources.readLines(Resources.getResource("ensembl_query.sql"), Charset.defaultCharset());
         return StringUtils.join(lines.toArray(), "\n");
     }
 
     @NotNull
     private static String generateQuery() throws IOException, EmptyFileException {
         final String baseQuery = readEnsemblQuery();
-        final String genes = readGeneList();
-        final String groupByClause = "group by gene_name";
-        return baseQuery + " and display_label in (" + genes + ") " + groupByClause + ";";
+        final String genes = geneList();
+        final String groupByClause = "group by gene_name, exon_start";
+        final String orderByClause =
+                "order by if(cast(chromosome as SIGNED) = 0, ascii(chromosome), cast(chromosome as SIGNED)), exon_start";
+        return baseQuery + " and display_label in (" + genes + ") " + groupByClause + " " + orderByClause + ";";
     }
 
     @NotNull
@@ -106,8 +107,7 @@ public final class HmfSlicerBuilderRunner {
         return context.fetch(query);
     }
 
-    private static void writeFile(@NotNull final CommandLine cmd, @NotNull final Result<Record> records)
-            throws IOException {
+    private static void writeFile(@NotNull final CommandLine cmd, @NotNull final Result<Record> records) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(OUT_PATH), false));
         // MIVO: format as csv without header containing column names
         writer.write(records.formatCSV(false, '\t', ""));
