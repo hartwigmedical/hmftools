@@ -3,11 +3,9 @@ package com.hartwig.hmftools.patientreporter.report.data;
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
-import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -42,18 +40,18 @@ public abstract class VariantReporterData {
                     final String variantName =
                             entrezId + "(" + variantReport.gene() + ")" + "\t" + variantReport.chromosomePosition() + "\t"
                                     + variantReport.variantField();
-                    final List<CivicVariant> civicVariants = CivicApiWrapper.getVariantsContaining(entrezId, variant)
+                    final List<CivicVariantReporterData> civicVariantReporterData = CivicApiWrapper.getVariantsContaining(entrezId, variant)
                             .filter(civicVariant -> !civicVariant.evidenceItemsWithDrugs().isEmpty())
+                            .map(CivicVariantReporterData::of)
                             .toList()
                             .blockingGet();
-                    final List<CivicVariantReporterData> civicVariantReporterData =
-                            civicVariants.stream().map(CivicVariantReporterData::of).collect(Collectors.toList());
                     if (!civicVariantReporterData.isEmpty()) {
                         variantReporterData.add(ImmutableVariantReporterData.of(variantName, civicVariantReporterData));
                     }
                 }
             }
         }
+        CivicApiWrapper.releaseResources();
         return variantReporterData;
     }
 

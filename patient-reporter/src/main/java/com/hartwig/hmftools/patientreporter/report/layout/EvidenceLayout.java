@@ -115,8 +115,8 @@ public class EvidenceLayout {
                 cmp.subreport(
                     baseTable().setColumnStyle(dataStyle().setFontSize(fontSize))
                         .columns(
-                            col.column("Level", EvidenceItemReporterData.LEVEL_FIELD).setFixedWidth(50),
                             col.column("Tumor Type", EvidenceItemReporterData.TUMOR_TYPE_FIELD).setFixedWidth(100),
+                            col.column("Level", EvidenceItemReporterData.LEVEL_FIELD).setFixedWidth(50),
                             col.column("Direction", EvidenceItemReporterData.DIRECTION_FIELD).setFixedWidth(100),
                             col.column("Significance", EvidenceItemReporterData.SIGNIFICANCE_FIELD).setFixedWidth(100),
                             col.column("Drugs", EvidenceItemReporterData.DRUGS_FIELD)))

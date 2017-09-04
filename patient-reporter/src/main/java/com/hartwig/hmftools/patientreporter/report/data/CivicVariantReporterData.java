@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
+import static java.util.Comparator.comparing;
+
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
@@ -24,9 +26,12 @@ public abstract class CivicVariantReporterData {
     public abstract List<EvidenceItemReporterData> getEvidenceItems();
 
     public static CivicVariantReporterData of(@NotNull final CivicVariant civicVariant) {
-        final String variant = "Exact match: " + civicVariant.name() + " " + civicVariant.coordinates() + " (" + Strings.join(
+        final String variant = civicVariant.name() + " " + civicVariant.coordinates() + " (" + Strings.join(
                 civicVariant.variantTypes().stream().map(CivicVariantType::name).collect(Collectors.toList()), ',') + ")";
-        return ImmutableCivicVariantReporterData.of(variant,
-                civicVariant.evidenceItemsWithDrugs().stream().map(EvidenceItemReporterData::of).collect(Collectors.toList()));
+        final List<EvidenceItemReporterData> evidenceItems =
+                civicVariant.evidenceItemsWithDrugs().stream().map(EvidenceItemReporterData::of).collect(Collectors.toList());
+        evidenceItems.sort(comparing(EvidenceItemReporterData::getTumorType).thenComparing(EvidenceItemReporterData::getLevel)
+                .thenComparing(EvidenceItemReporterData::getDirection));
+        return ImmutableCivicVariantReporterData.of(variant, evidenceItems);
     }
 }
