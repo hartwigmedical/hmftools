@@ -28,8 +28,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +44,7 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
 
-public class EvidenceItemsWriter implements ReportWriter {
+public class EvidenceItemsWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(EvidenceItemsWriter.class);
 
@@ -68,17 +66,11 @@ public class EvidenceItemsWriter implements ReportWriter {
         this.reportDirectory = reportDirectory;
     }
 
-    @Override
+    //    @Override
     public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
         writeReport(report.sample(), reportBuilder);
-    }
-
-    @Override
-    public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
-            throws IOException, DRException {
     }
 
     private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
@@ -126,42 +118,8 @@ public class EvidenceItemsWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> evidenceSection(final int entrezId, @NotNull final VariantReport variantReport) {
         final VerticalListBuilder section = toList("Civic evidence for variant: " + entrezId + "(" + variantReport.gene() + ")" + "\t"
                 + variantReport.chromosomePosition() + "\t" + variantReport.variantField(), Lists.newArrayList());
-        final Variant variant = new Variant() {
-            @NotNull
-            @Override
-            public String ref() {
-                return variantReport.ref();
-            }
 
-            @NotNull
-            @Override
-            public String alt() {
-                return variantReport.alt();
-            }
-
-            @NotNull
-            @Override
-            public VariantType type() {
-                return null;
-            }
-
-            @NotNull
-            @Override
-            public String filter() {
-                return null;
-            }
-
-            @NotNull
-            @Override
-            public String chromosome() {
-                return variantReport.chromosome();
-            }
-
-            @Override
-            public long position() {
-                return variantReport.position();
-            }
-        };
+        final Variant variant = variantReportToVariant(variantReport);
         final List<CivicVariant> civicVariants = CivicApiWrapper.getVariantsContaining(entrezId, variant).toList().blockingGet();
 
         final List<CivicVariant> exactMatchVariants = civicVariants.stream()
@@ -278,6 +236,45 @@ public class EvidenceItemsWriter implements ReportWriter {
     @NotNull
     private static StyleBuilder fontStyle() {
         return stl.style().setFontName(FONT);
+    }
+
+    private static Variant variantReportToVariant(@NotNull final VariantReport variantReport) {
+        return new Variant() {
+            @NotNull
+            @Override
+            public String ref() {
+                return variantReport.ref();
+            }
+
+            @NotNull
+            @Override
+            public String alt() {
+                return variantReport.alt();
+            }
+
+            @NotNull
+            @Override
+            public VariantType type() {
+                return null;
+            }
+
+            @NotNull
+            @Override
+            public String filter() {
+                return null;
+            }
+
+            @NotNull
+            @Override
+            public String chromosome() {
+                return variantReport.chromosome();
+            }
+
+            @Override
+            public long position() {
+                return variantReport.position();
+            }
+        };
     }
 
 }
