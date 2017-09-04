@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -17,6 +19,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
+import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
@@ -26,6 +29,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -37,14 +41,54 @@ public class PDFWriterTest {
     private static final boolean WRITE_TO_PDF = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
     @Test
     public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
+        final String tumorType = "Melanoma";
+        final Double pathologyTumorPercentage = 0.6;
+
         final FittedPurity fittedPurity =
                 ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
 
+        final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
+        final int mutationalLoad = 361;
+        final List<CopyNumberReport> copyNumbers = createTestCopyNumbers();
+
+        final PatientReport patientReport =
+                ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%",
+                        "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER));
+
+        final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
+        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
+        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
+        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
+        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+
+        final HmfReporterData reporterData =
+                HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath, cosmicPath, centerPath, signaturePath);
+
+        final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
+        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
+        final JasperReportBuilder evidenceReport = EvidenceItemsWriter.generatePatientReport(patientReport, reporterData);
+
+        assertNotNull(report);
+        assertNotNull(evidenceReport);
+
+        if (SHOW_AND_PRINT) {
+            report.show().print();
+        }
+
+        if (WRITE_TO_PDF) {
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
+            evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_evidence_report.pdf"));
+        }
+        logoStream.close();
+    }
+
+    @NotNull
+    private static List<VariantReport> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
         final VariantReport variant1 = ImmutableVariantReport.builder()
                 .gene("BRAF")
                 .chromosome("7")
@@ -61,6 +105,7 @@ public class PDFWriterTest {
                 .baf("AAAB")
                 .impliedVAF(purityAdjuster.purityAdjustedVAF(4, 0.18 / 0.99))
                 .build();
+
         final VariantReport variant2 = ImmutableVariantReport.builder()
                 .gene("MYC")
                 .chromosome("8")
@@ -77,6 +122,7 @@ public class PDFWriterTest {
                 .impliedVAF(purityAdjuster.purityAdjustedVAF(2, 0.2 / 0.88))
                 .baf("AB")
                 .build();
+
         final VariantReport variant3 = ImmutableVariantReport.builder()
                 .gene("TP53")
                 .chromosome("17")
@@ -92,8 +138,11 @@ public class PDFWriterTest {
                 .impliedVAF(purityAdjuster.purityAdjustedVAF(3, 0.20 / 0.87))
                 .baf("AAA")
                 .build();
-        final List<VariantReport> variants = Lists.newArrayList(variant1, variant2, variant3);
+        return Lists.newArrayList(variant1, variant2, variant3);
+    }
 
+    @NotNull
+    private static List<CopyNumberReport> createTestCopyNumbers() {
         final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
                 .chromosome("2")
                 .chromosomeBand("p23.1-p23.2")
@@ -108,38 +157,7 @@ public class PDFWriterTest {
                 .copyNumber(9)
                 .type(CopyNumberReportType.GAIN)
                 .build();
-        final List<CopyNumberReport> copyNumbers = Lists.newArrayList(copyNumber1, copyNumber2);
-
-        final int mutationalLoad = 361;
-        final String tumorType = "Melanoma";
-        final Double pathologyTumorPercentage = 0.6;
-
-        final PatientReport patientReport =
-                new PatientReport(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, fittedPurity);
-
-        final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
-        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
-
-        // KODU: Refers to the actual cosmic path on datastore:
-        // final String cosmicPath = REPORT_BASE_DIR + "/hmf/tmp/170529_grch37_cosmic_census.csv";
-        final HmfReporterData reporterData = HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath, cosmicPath);
-
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
-        final JasperReportBuilder evidenceReport = EvidenceItemsWriter.generatePatientReport(patientReport, reporterData);
-        assertNotNull(report);
-        assertNotNull(evidenceReport);
-
-        if (SHOW_AND_PRINT) {
-            report.show().print();
-        }
-
-        if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
-            evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_evidence_report.pdf"));
-        }
-        logoStream.close();
+        return Lists.newArrayList(copyNumber1, copyNumber2);
     }
 
     @Test

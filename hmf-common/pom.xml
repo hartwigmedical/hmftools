@@ -38,6 +38,11 @@
             <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>gson</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- KODU: JMockit dependency should precede junit because of initialization order -->
         <dependency>

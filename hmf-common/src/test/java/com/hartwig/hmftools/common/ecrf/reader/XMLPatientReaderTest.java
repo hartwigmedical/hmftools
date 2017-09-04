@@ -62,9 +62,10 @@ public class XMLPatientReaderTest {
                         Lists.newArrayList(item1, item2, birthDate), Lists.newArrayList(codeList)),
                 new ImmutableFormStatusModel(Maps.newHashMap()));
 
-        final EcrfDatamodelField
-                field1 = new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field1", "", codeListValues);
-        final EcrfDatamodelField field2 = new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field2", "", Maps.newHashMap());
+        final EcrfDatamodelField field1 =
+                new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field1", "", codeListValues);
+        final EcrfDatamodelField field2 =
+                new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.field2", "", Maps.newHashMap());
         final EcrfDatamodelField birthDateField =
                 new ImmutableEcrfDatamodelField(studyOID, formOID, itemGroupOID, "FLD.ItemGroup.BIRTHDTC", "", Maps.newHashMap());
 
@@ -137,8 +138,6 @@ public class XMLPatientReaderTest {
                 1).itemGroupsPerOID().get(itemGroupOID).size());
         assertEquals(true, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
                 1).itemGroupsPerOID().get(itemGroupOID).get(0).isEmpty());
-        System.out.println(patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
-                1).itemGroupsPerOID().get(itemGroupOID).get(1));
         assertEquals(false, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
                 1).itemGroupsPerOID().get(itemGroupOID).get(1).isEmpty());
         assertEquals(false,

@@ -11,7 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
@@ -107,7 +107,7 @@ class CopyNumberCharts {
         return chart;
     }
 
-    static JFreeChart somaticPloidyPDF(@NotNull final List<EnrichedSomaticVariant> variants) {
+    static JFreeChart somaticPloidyPDF(@NotNull final List<PurityAdjustedSomaticVariant> variants) {
         final CategoryTableXYDataset dataset = variants(variants);
         final JFreeChart chart = ChartFactory.createXYBarChart("Somatic Variant Ploidy PDF",
                 "Ploidy",
@@ -165,13 +165,13 @@ class CopyNumberCharts {
         return new XYSeriesCollection(series);
     }
 
-    private static CategoryTableXYDataset variants(@NotNull final List<EnrichedSomaticVariant> variants) {
+    private static CategoryTableXYDataset variants(@NotNull final List<PurityAdjustedSomaticVariant> variants) {
 
         int maxPloidy = 6;
         int maxBuckets = maxPloidy * 10;
 
         double[][] buckets = new double[MAX_COPY_NUMBER_SERIES + 1][maxBuckets];
-        for (final EnrichedSomaticVariant variant : variants) {
+        for (final PurityAdjustedSomaticVariant variant : variants) {
             double value = variant.adjustedVAF() * variant.adjustedCopyNumber();
 
             int series = (int) Math.max(0, Math.min(MAX_COPY_NUMBER_SERIES, Math.round(variant.adjustedCopyNumber())));

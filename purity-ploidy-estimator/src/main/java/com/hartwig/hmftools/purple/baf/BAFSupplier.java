@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.baf.TumorBAF;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
 import com.hartwig.hmftools.purple.config.BAFConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 
@@ -24,12 +24,13 @@ public class BAFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     public BAFSupplier(@NotNull final CommonConfig config, @NotNull final BAFConfig bafConfig)
             throws ParseException, IOException, HartwigException {
-        final String bafFile = TumorBAFFile.generateFilename(config.outputDirectory(), config.tumorSample());
 
         if (bafConfig.bafFile().isPresent()) {
+            final String bafFile = bafConfig.bafFile().get().toString();
             LOGGER.info("Reading BAFs from {}", bafFile);
-            supplier = new FileSupplier(bafConfig.bafFile().get().toString());
+            supplier = new FileSupplier(bafFile);
         } else {
+            final String bafFile = TumorBAFFile.generatePurpleFilename(config.outputDirectory(), config.tumorSample());
             LOGGER.info("Generating BAFs from germline VCF");
             supplier = new VCFSupplier(bafConfig.bafVCFFile().get());
 

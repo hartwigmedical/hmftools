@@ -11,6 +11,16 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleSegment implements GenomeRegion {
 
+    @NotNull
+    @Override
+    public abstract String chromosome();
+
+    @Override
+    public abstract long start();
+
+    @Override
+    public abstract long end();
+
     public abstract boolean ratioSupport();
 
     public abstract StructuralVariantSupport structuralVariantSupport();

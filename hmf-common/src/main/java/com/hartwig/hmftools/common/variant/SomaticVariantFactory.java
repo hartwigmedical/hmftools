@@ -1,17 +1,21 @@
 package com.hartwig.hmftools.common.variant;
 
-import com.google.common.collect.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import static com.hartwig.hmftools.common.variant.VariantFactory.FILTER_COLUMN;
+import static com.hartwig.hmftools.common.variant.VariantFactory.ID_COLUMN;
+import static com.hartwig.hmftools.common.variant.VariantFactory.INFO_COLUMN;
+import static com.hartwig.hmftools.common.variant.VariantFactory.VCF_COLUMN_SEPARATOR;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.hartwig.hmftools.common.variant.VariantFactory.*;
+import com.google.common.collect.Lists;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantFactory {
 
@@ -36,7 +40,10 @@ public final class SomaticVariantFactory {
 
     @NotNull
     public static String sampleFromHeaderLine(@NotNull final String headerLine) {
-        return VariantFactory.sampleFromHeaderLine(headerLine, SAMPLE_DATA_COLUMN);
+        final String sample = VariantFactory.sampleFromHeaderLine(headerLine, SAMPLE_DATA_COLUMN);
+        // KODU: Not sure why below assert is valid...
+        assert sample != null;
+        return sample;
     }
 
     @NotNull
@@ -46,11 +53,11 @@ public final class SomaticVariantFactory {
         if (!values[FILTER_COLUMN].trim().equals(variant.filter())) {
             values[FILTER_COLUMN] = variant.filter();
         }
-        String reassembledLine = values[0];
+        final StringBuilder reassembledLine = new StringBuilder(values[0]);
         for (int i = 1; i < values.length; i++) {
-            reassembledLine += (VCF_COLUMN_SEPARATOR + values[i]);
+            reassembledLine.append(VCF_COLUMN_SEPARATOR).append(values[i]);
         }
-        return reassembledLine;
+        return reassembledLine.toString();
     }
 
     @NotNull

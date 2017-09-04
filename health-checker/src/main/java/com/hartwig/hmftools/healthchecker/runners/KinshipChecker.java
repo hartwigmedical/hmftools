@@ -5,24 +5,19 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
-import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.healthchecker.resource.ResourceWrapper;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
 import com.hartwig.hmftools.healthchecker.result.SingleValueResult;
-import com.hartwig.hmftools.healthchecker.runners.checks.HealthCheck;
-import com.hartwig.hmftools.healthchecker.runners.checks.KinshipCheck;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("WeakerAccess")
-@ResourceWrapper(type = CheckType.KINSHIP)
 public class KinshipChecker extends ErrorHandlingChecker implements HealthChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(KinshipChecker.class);

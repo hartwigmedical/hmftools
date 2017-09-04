@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple.gender;
 import java.util.Collection;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.purple.baf.TumorBAF;
+import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 

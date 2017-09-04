@@ -38,8 +38,8 @@ public final class HmfSlicerBuilderRunner {
     private static final Logger LOGGER = LogManager.getLogger(HmfSlicerBuilderRunner.class);
 
     private static final String OUT_PATH = "out";
-    private static final String DATABASE = "homo_sapiens_core_75_37";
-    private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org/" + DATABASE;
+    private static final String DATABASE = "homo_sapiens_core_89_37";
+    private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
     private static final String DB_USER = "anonymous";
 
     public static void main(String[] args)

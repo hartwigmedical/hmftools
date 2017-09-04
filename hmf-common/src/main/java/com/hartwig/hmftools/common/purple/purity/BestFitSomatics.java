@@ -3,14 +3,14 @@ package com.hartwig.hmftools.common.purple.purity;
 import java.util.List;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
 class BestFitSomatics {
 
     @NotNull
-    static FittedPurity bestSomaticFit(@NotNull List<SomaticVariant> somatics, @NotNull List<FittedPurity> candidates) {
+    static FittedPurity bestSomaticFit(@NotNull List<PurpleSomaticVariant> somatics, @NotNull List<FittedPurity> candidates) {
         assert (!candidates.isEmpty());
 
         FittedPurity result = candidates.get(0);
@@ -27,13 +27,13 @@ class BestFitSomatics {
         return result;
     }
 
-    private static int count(@NotNull List<SomaticVariant> somatics, @NotNull FittedPurity purity) {
+    private static int count(@NotNull List<PurpleSomaticVariant> somatics, @NotNull FittedPurity purity) {
 
         double minVaf = purity.purity() / 2.0 - 0.01;
         double maxVaf = purity.purity() / 2.0 + 0.01;
 
         int count = 0;
-        for (SomaticVariant somatic : somatics) {
+        for (PurpleSomaticVariant somatic : somatics) {
             double vaf = somatic.alleleFrequency();
             if (Doubles.greaterOrEqual(vaf, minVaf) && Doubles.lessOrEqual(vaf, maxVaf)) {
                 count++;

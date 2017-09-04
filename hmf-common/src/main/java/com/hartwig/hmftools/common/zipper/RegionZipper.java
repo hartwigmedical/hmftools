@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.zipper;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 public class RegionZipper {
@@ -37,8 +37,8 @@ public class RegionZipper {
     }
 
     private static int compare(GenomeRegion position, GenomeRegion region) {
-        int positionChromosome = Chromosomes.asInt(position.chromosome());
-        int regionChromosome = Chromosomes.asInt(region.chromosome());
+        int positionChromosome = HumanChromosome.fromString(position.chromosome()).intValue();
+        int regionChromosome = HumanChromosome.fromString(region.chromosome()).intValue();
         if (positionChromosome < regionChromosome) {
             return -1;
         }

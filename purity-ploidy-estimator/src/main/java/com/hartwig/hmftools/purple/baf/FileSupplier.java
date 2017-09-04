@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.purple.baf.TumorBAF;
-import com.hartwig.hmftools.common.purple.baf.TumorBAFFile;
+import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.baf.TumorBAFFile;
 
 class FileSupplier implements Supplier<Multimap<String, TumorBAF>> {
 

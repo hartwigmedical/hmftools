@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep14;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -46,6 +46,8 @@ class StructuralVariantDAO {
                     .endHomology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .startAF(record.getValue(STRUCTURALVARIANT.STARTAF))
+                    .endAF(record.getValue(STRUCTURALVARIANT.ENDAF))
                     .build();
 
             regions.add(variant);
@@ -59,20 +61,20 @@ class StructuralVariantDAO {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<StructuralVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter =
+            InsertValuesStep14 inserter =
                     context.insertInto(STRUCTURALVARIANT, STRUCTURALVARIANT.SAMPLEID, STRUCTURALVARIANT.STARTCHROMOSOME,
                             STRUCTURALVARIANT.ENDCHROMOSOME, STRUCTURALVARIANT.STARTPOSITION, STRUCTURALVARIANT.ENDPOSITION,
                             STRUCTURALVARIANT.STARTORIENTATION, STRUCTURALVARIANT.ENDORIENTATION, STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE,
                             STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE, STRUCTURALVARIANT.INSERTSEQUENCE, STRUCTURALVARIANT.TYPE,
-                            STRUCTURALVARIANT.MODIFIED);
+                            STRUCTURALVARIANT.STARTAF, STRUCTURALVARIANT.ENDAF, STRUCTURALVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep12 inserter, String sample, StructuralVariant region) {
+    private void addRecord(Timestamp timestamp, InsertValuesStep14 inserter, String sample, StructuralVariant region) {
         inserter.values(sample, region.startChromosome(), region.endChromosome(), region.startPosition(), region.endPosition(),
                 region.startOrientation(), region.endOrientation(), region.startHomology(), region.endHomology(), region.insertSequence(),
-                region.type(), timestamp);
+                region.type(), region.startAF(), region.endAF(), timestamp);
     }
 }

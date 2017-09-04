@@ -13,9 +13,9 @@ import org.junit.Test;
 
 public class PathsExtensionFinderTest {
 
-    private static final String TEST_DIRECTORY = Resources.getResource("zipfiles").getPath();
+    private static final String TEST_DIRECTORY = Resources.getResource("io").getPath();
 
-    private static final String EXISTING_EXTENSION = ".zip";
+    private static final String EXISTING_EXTENSION = ".file";
     private static final String NON_EXISTING_EXTENSION = ".bla";
 
     @Test

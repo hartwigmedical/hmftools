@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -20,7 +17,6 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.SomaticVariantData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +38,7 @@ public class DatabaseAccess {
     @NotNull
     private final GeneCopyNumberDAO geneCopyNumberDAO;
     @NotNull
-    private final ComprehensiveSomaticVariantDAO somaticVariantDAO;
+    private final SomaticVariantDAO somaticVariantDAO;
     @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
     @NotNull
@@ -60,7 +56,7 @@ public class DatabaseAccess {
         purityDAO = new PurityDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
-        somaticVariantDAO = new ComprehensiveSomaticVariantDAO(context);
+        somaticVariantDAO = new SomaticVariantDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
@@ -87,7 +83,7 @@ public class DatabaseAccess {
         return somaticVariantDAO.read(sampleId, true);
     }
 
-    public void writeComprehensiveSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
+    public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
     }
 
@@ -126,31 +122,8 @@ public class DatabaseAccess {
         clinicalDAO.clear();
     }
 
-    public void clearSomaticTables() {
-        context.truncate(SOMATICVARIANT).execute();
-    }
-
     public void writeClinicalData(@NotNull final Patient patient) {
         clinicalDAO.writeClinicalData(patient);
-    }
-
-    public void writeSomaticVariants(@NotNull final String sampleId, @NotNull final List<SomaticVariantData> somaticVariants) {
-        try {
-            context.batch(somaticVariants.stream()
-                    .map(somaticVariant -> context.insertInto(SOMATICVARIANT, SOMATICVARIANT.SAMPLEID, SOMATICVARIANT.GENE,
-                            SOMATICVARIANT.POSITION, SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.COSMICID,
-                            SOMATICVARIANT.TOTALREADCOUNT, SOMATICVARIANT.ALLELEREADCOUNT)
-                            .values(sampleId, somaticVariant.gene(), somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt(),
-                                    somaticVariant.cosmicID(), somaticVariant.totalReadCount(), somaticVariant.alleleReadCount()))
-                    .collect(Collectors.toList())).execute();
-        } catch (final Exception e) {
-            LOGGER.error("Could not write somatic variants for sample: " + sampleId);
-            LOGGER.error(e.getMessage());
-        }
-    }
-
-    public boolean containsVariantsForSample(@NotNull final String sampleId) {
-        return context.selectCount().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sampleId)).fetchOne(0, Integer.class) > 0;
     }
 
     public void writeEcrf(@NotNull final CpctEcrfModel model, @NotNull final Set<String> sequencedPatients) {

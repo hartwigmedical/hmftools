@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.patientdb.LoadSomaticVariants;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.LoadSomaticVariants;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -31,8 +32,7 @@ public class LoadStructuralVariants {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args)
-            throws ParseException, IOException, HartwigException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, IOException, HartwigException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
@@ -40,8 +40,8 @@ public class LoadStructuralVariants {
         final StructuralVariantFactory factory = new StructuralVariantFactory();
 
         LOGGER.info("Reading VCF File");
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                vcfFileLocation, new VCFCodec(), false)) {
+        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
+                new VCFCodec(), false)) {
             reader.iterator().forEach(factory::addVariantContext);
         }
 
@@ -63,8 +63,7 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }

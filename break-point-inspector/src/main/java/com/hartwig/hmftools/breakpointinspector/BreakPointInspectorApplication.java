@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,6 +20,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ObjectUtils;
@@ -49,16 +49,22 @@ public class BreakPointInspectorApplication {
     private static final String PROXIMITY = "proximity";
     private static final String VCF = "vcf";
     private static final String VCF_OUT = "output_vcf";
+    private static final String EXTRA_UNCERTAINTY = "extra_uncertainty";
 
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(REF_PATH, true, "the Reference BAM (indexed)");
-        options.addOption(REF_SLICE, true, "the sliced Reference BAM to output");
-        options.addOption(TUMOR_PATH, true, "the Tumor BAM (indexed)");
-        options.addOption(TUMOR_SLICE, true, "the sliced Tumor BAM to output");
-        options.addOption(PROXIMITY, true, "distance to scan around breakpoint");
-        options.addOption(VCF, true, "Manta VCF file to batch inspect (can be compressed)");
-        options.addOption(VCF_OUT, true, "VCF output file (annotated and filtered version of Manta VCF)");
+        options.addOption(Option.builder(REF_PATH).required().hasArg().desc("the Reference BAM (required)").build());
+        options.addOption(Option.builder(REF_SLICE).hasArg().desc("the sliced Reference BAM to output (optional)").build());
+        options.addOption(Option.builder(TUMOR_PATH).required().hasArg().desc("the Tumor BAM (required)").build());
+        options.addOption(Option.builder(TUMOR_SLICE).hasArg().desc("the sliced Tumor BAM to output (optional)").build());
+        options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to scan around breakpoint (optional, default=500)").build());
+        options.addOption(Option.builder(VCF).required().hasArg().desc("Manta VCF file to batch inspect (required)").build());
+        options.addOption(Option.builder(VCF_OUT).hasArg().desc("VCF output file (optional)").build());
+        options.addOption(Option.builder(EXTRA_UNCERTAINTY)
+                .hasArgs()
+                .valueSeparator(',')
+                .desc("extra bases to add to Manta uncertainty (optional, default=0,1,5,10,20)")
+                .build());
         return options;
     }
 
@@ -81,6 +87,7 @@ public class BreakPointInspectorApplication {
 
     public static void main(final String... args) throws ParseException, IOException {
 
+        final AnalysisBuilder analysisBuilder = new AnalysisBuilder();
         final Options options = createOptions();
         try {
             final CommandLine cmd = createCommandLine(options, args);
@@ -91,7 +98,15 @@ public class BreakPointInspectorApplication {
             final String tumorPath = cmd.getOptionValue(TUMOR_PATH);
             final String tumorSlicePath = cmd.getOptionValue(TUMOR_SLICE);
             final String vcfPath = cmd.getOptionValue(VCF);
-            final int range = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
+
+            if (cmd.hasOption(PROXIMITY)) {
+                analysisBuilder.setRange(Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500")));
+            }
+
+            if (cmd.hasOption(EXTRA_UNCERTAINTY)) {
+                int[] extraUncertainty = Arrays.stream(cmd.getOptionValues(EXTRA_UNCERTAINTY)).mapToInt(Integer::parseInt).toArray();
+                analysisBuilder.setExtraUncertainty(extraUncertainty);
+            }
 
             if (refPath == null || tumorPath == null || vcfPath == null) {
                 printHelpAndExit(options);
@@ -145,8 +160,15 @@ public class BreakPointInspectorApplication {
                 header.add("FILTER");
                 header.add("AF_BP1");
                 header.add("AF_BP2");
+                header.add("EXTRA_UNCERTAINTY");
                 System.out.println(String.join("\t", header));
             }
+
+            final Analysis analysis = analysisBuilder.setRefReader(refReader)
+                    .setRefWriter(refWriter)
+                    .setTumorReader(tumorReader)
+                    .setTumorWriter(tumorWriter)
+                    .createAnalysis();
 
             final Map<String, VariantContext> variantMap = new HashMap<>();
             final List<VariantContext> variants = Lists.newArrayList();
@@ -203,19 +225,20 @@ public class BreakPointInspectorApplication {
                         final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
                         uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : new Range(0, 0);
 
+                        location2 = Location.parseLocationString(mateVariant.getContig() + ":" + Integer.toString(mateVariant.getStart()),
+                                tumorReader.getFileHeader().getSequenceDictionary());
+
                         // process the breakend string
                         final String call = variant.getAlternateAllele(0).getDisplayString();
                         final String[] leftSplit = call.split("\\]");
                         final String[] rightSplit = call.split("\\[");
                         if (leftSplit.length >= 2) {
-                            location2 = Location.parseLocationString(leftSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
                             if (leftSplit[0].length() > 0) {
                                 svType = HMFVariantType.INV3;
                             } else {
                                 svType = HMFVariantType.DUP;
                             }
                         } else if (rightSplit.length >= 2) {
-                            location2 = Location.parseLocationString(rightSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
                             if (rightSplit[0].length() > 0) {
                                 svType = HMFVariantType.DEL;
                             } else {
@@ -241,8 +264,8 @@ public class BreakPointInspectorApplication {
                 fields.add(variant.getAttributeAsString("HOMSEQ", ""));
                 fields.add(variant.getAttributeAsString("SVINSSEQ", ""));
 
-                final HMFVariantContext ctx = new HMFVariantContext(location1, location2, svType);
-                ctx.Filter.addAll(variant.getFilters());
+                final HMFVariantContext ctx = new HMFVariantContext(variant.getID(), location1, location2, svType);
+                ctx.Filter.addAll(variant.getFilters().stream().filter(s -> !s.startsWith("BPI")).collect(Collectors.toSet()));
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
 
@@ -266,8 +289,7 @@ public class BreakPointInspectorApplication {
                         break;
                 }
 
-                final StructuralVariantResult result =
-                        Analysis.processStructuralVariant(refReader, refWriter, tumorReader, tumorWriter, ctx, range);
+                final StructuralVariantResult result = analysis.processStructuralVariant(ctx);
 
                 fields.addAll(result.RefStats.GetData());
                 fields.addAll(result.TumorStats.GetData());
@@ -277,6 +299,7 @@ public class BreakPointInspectorApplication {
 
                 fields.add(String.format("%.2f", result.AlleleFrequency.getLeft()));
                 fields.add(String.format("%.2f", result.AlleleFrequency.getRight()));
+                fields.add(Integer.toString(result.ExtraUncertainty));
 
                 System.out.println(String.join("\t", fields));
 
@@ -285,16 +308,21 @@ public class BreakPointInspectorApplication {
                     if (filters != null) {
                         filters.clear();
                     }
-                    v.getCommonInfo().addFilters(result.Filters);
+                    // we will map BreakpointError to a flag
+                    if (result.Filters.contains(Filter.Filters.BreakpointError.toString())) {
+                        v.getCommonInfo().putAttribute("BPI_AMBIGUOUS", true, true);
+                    } else {
+                        v.getCommonInfo().addFilters(result.Filters);
+                    }
                     if (result.Filters.isEmpty()) {
                         final List<Double> af = Arrays.asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight());
-                        v.getCommonInfo().putAttribute(AlleleFrequency.VCF_INFO_TAG, swap ? Lists.reverse(af) : af);
+                        v.getCommonInfo().putAttribute(AlleleFrequency.VCF_INFO_TAG, swap ? Lists.reverse(af) : af, true);
                     }
                     if (result.Breakpoints.getLeft() != null) {
-                        v.getCommonInfo().putAttribute(swap ? "BPI_END" : "BPI_START", result.Breakpoints.getLeft().Position);
+                        v.getCommonInfo().putAttribute(swap ? "BPI_END" : "BPI_START", result.Breakpoints.getLeft().Position, true);
                     }
                     if (result.Breakpoints.getRight() != null) {
-                        v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.Breakpoints.getRight().Position);
+                        v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.Breakpoints.getRight().Position, true);
                     }
                     variants.add(v);
                 };
@@ -305,12 +333,16 @@ public class BreakPointInspectorApplication {
                 }
             }
 
+            // TODO: update START, END with BPI values and save Manta values in new attributes
+
             final String vcfOutputPath = cmd.getOptionValue(VCF_OUT);
             if (vcfOutputPath != null) {
                 // update header
                 final VCFHeader header = vcfReader.getFileHeader();
                 header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
                 header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
+                header.addMetaDataLine(new VCFInfoHeaderLine("BPI_AMBIGUOUS", 0, VCFHeaderLineType.Flag,
+                        "BPI could not determine the breakends, inspect manually"));
                 Filter.updateHeader(header);
                 AlleleFrequency.updateHeader(header);
                 // setup VCF

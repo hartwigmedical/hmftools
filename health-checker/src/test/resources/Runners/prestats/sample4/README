@@ -1,7 +1,0 @@
-Incomplete summary.txt
-
-PASS	Basic Statistics	sample5_flowcell_S1_L001_R1_001.fastq.gz
-PASS	Per base sequence quality	sample5_flowcell_S1_L001_R1_001.fastq.gz
-PASS	Per tile sequence quality	sample5_flowcell_S1_L001_R1_001.fastq.gz
-PASS	Per sequence quality scores	sample5_flowcell_S1_L001_R1_001.fastq.gz
-WARN	Per base sequence content	sample5_flowcell_S1_L001_R1_001.fastq.gz

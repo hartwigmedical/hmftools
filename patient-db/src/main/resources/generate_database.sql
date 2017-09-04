@@ -16,7 +16,7 @@ CREATE TABLE patient
 
 DROP TABLE IF EXISTS sample;
 CREATE TABLE sample
-(   sampleId varchar(20) NOT NULL,
+(   sampleId varchar(255) NOT NULL,
     patientId int NOT NULL,
     arrivalDate DATE NOT NULL,
     PRIMARY KEY (sampleId),
@@ -26,7 +26,7 @@ CREATE TABLE sample
 DROP TABLE IF EXISTS biopsy;
 CREATE TABLE biopsy
 (   id int NOT NULL,
-    sampleId varchar(20),
+    sampleId varchar(255),
     patientId int NOT NULL,
     biopsyLocation varchar(255),
     biopsyDate DATE,
@@ -79,26 +79,12 @@ CREATE TABLE treatmentResponse
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
+DROP TABLE IF EXISTS comprehensiveSomaticVariant;
 DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id int NOT NULL AUTO_INCREMENT,
-    sampleId varchar(20) NOT NULL,
-    gene varchar(255) NOT NULL,
-    position varchar(255) NOT NULL,
-    ref varchar(255) NOT NULL,
-    alt varchar(255) NOT NULL,
-    cosmicId varchar(255),
-    alleleReadCount int NOT NULL,
-    totalReadCount int NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (sampleId) REFERENCES sample(sampleId)
-);
-
-DROP TABLE IF EXISTS comprehensiveSomaticVariant;
-CREATE TABLE comprehensiveSomaticVariant
-(   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     position int not null,
     filter varchar(255) NOT NULL,
@@ -127,7 +113,7 @@ DROP TABLE IF EXISTS copyNumber;
 CREATE TABLE copyNumber
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
@@ -145,7 +131,7 @@ DROP TABLE IF EXISTS purityRange;
 CREATE TABLE purityRange
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     purity DOUBLE PRECISION not null,
     normFactor DOUBLE PRECISION not null,
     score DOUBLE PRECISION not null,
@@ -161,7 +147,7 @@ DROP TABLE IF EXISTS purity;
 CREATE TABLE purity
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     gender varchar(255) NOT NULL,
     status varchar(255) NOT NULL,
     purity DOUBLE PRECISION not null,
@@ -185,7 +171,7 @@ DROP TABLE IF EXISTS copyNumberRegion;
 CREATE TABLE copyNumberRegion
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
@@ -214,7 +200,7 @@ DROP TABLE IF EXISTS structuralVariant;
 CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     startChromosome varchar(255) NOT NULL,
     endChromosome varchar(255) NOT NULL,
     startPosition int not null,
@@ -223,6 +209,8 @@ CREATE TABLE structuralVariant
     endOrientation tinyint not null,
     startHomologySequence varchar(255) not null,
     endHomologySequence varchar(255) not null,
+    startAF DOUBLE PRECISION,
+    endAF DOUBLE PRECISION,
     insertSequence varchar(255) not null,
     type varchar(255) NOT NULL,
     PRIMARY KEY (id),
@@ -233,7 +221,7 @@ DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
+    sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,

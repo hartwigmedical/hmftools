@@ -38,7 +38,7 @@ public class ReadCountRatioSupplier implements RatioSupplier {
         final String tumorRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
         final String referenceRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.refSample());
 
-        if (!config.forceRecalculate() && new File(tumorRatioFile).exists() && new File(referenceRatioFile).exists()) {
+        if (!config.forceSegmentation() && new File(tumorRatioFile).exists() && new File(referenceRatioFile).exists()) {
             LOGGER.info("Loading reference ratios from {}", referenceRatioFile);
             referenceRatios = ReadRatioFile.read(referenceRatioFile);
 

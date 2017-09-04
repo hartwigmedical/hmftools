@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.format.DateTimeFormatter;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -13,15 +12,13 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsModel;
+import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
-import com.hartwig.hmftools.patientreporter.copynumber.FreecCopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.EvidenceItemsWriter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
@@ -44,13 +41,13 @@ public class PatientReporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
     // KODU: There is probably a better way to do this...
-    public static final String VERSION = "3.2";
+    public static final String VERSION = "3.5";
 
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String HMF_GENE_PANEL = "hmf_gene_panel";
     private static final String CPCT_ECRF = "cpct_ecrf";
-    private static final String LIMS_CSV = "lims_csv";
+    private static final String LIMS_JSON = "lims_json";
     private static final String REPORT_DIRECTORY = "report_dir";
     private static final String RUN_DIRECTORY = "run_dir";
     private static final String NOT_SEQUENCEABLE = "not_sequenceable";
@@ -58,9 +55,8 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
-    private static final String FREEC = "freec";
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String CENTER_CSV = "center_csv";
+    private static final String SIGNATURE = "signature";
 
     public static void main(final String... args) throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
         final Options options = createOptions();
@@ -98,12 +94,12 @@ public class PatientReporterApplication {
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL), cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(COSMIC_CSV));
+                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE));
     }
 
     @NotNull
-    private static LimsModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
-        return Lims.buildModelFromCsv(cmd.getOptionValue(LIMS_CSV), DATE_FORMATTER);
+    private static LimsJsonModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
+        return LimsJsonModel.readModelFromFile(cmd.getOptionValue(LIMS_JSON));
     }
 
     @NotNull
@@ -112,9 +108,8 @@ public class PatientReporterApplication {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
-        final FreecCopyNumberAnalyzer copyNumberAnalyzer = FreecCopyNumberAnalyzer.fromHmfSlicingRegion(hmfSlicingRegion);
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, copyNumberAnalyzer, cmd.hasOption(FREEC));
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer);
     }
 
     @NotNull
@@ -144,7 +139,9 @@ public class PatientReporterApplication {
             final String hmfGenePanel = cmd.getOptionValue(HMF_GENE_PANEL);
             final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
+            final String centerCsv = cmd.getOptionValue(CENTER_CSV);
             final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
+            final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
             if (cpctSlicingBed == null || !exists(cpctSlicingBed)) {
                 LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
@@ -156,6 +153,10 @@ public class PatientReporterApplication {
                 LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
             } else if (cosmicCsv == null || !exists(cosmicCsv)) {
                 LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
+            } else if (centerCsv == null || !exists(centerCsv)) {
+                LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
+            } else if (signaturePath == null || !exists(signaturePath)) {
+                LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
             } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
                 LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
             } else {
@@ -197,12 +198,12 @@ public class PatientReporterApplication {
 
     private static boolean validInputForEcrfAndTumorPercentages(@NotNull final CommandLine cmd) {
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
-        final String limsCsv = cmd.getOptionValue(LIMS_CSV);
+        final String limsJson = cmd.getOptionValue(LIMS_JSON);
 
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
-        } else if (limsCsv == null || !exists(limsCsv)) {
-            LOGGER.warn(LIMS_CSV + " has to be an existing file: " + limsCsv);
+        } else if (limsJson == null || !exists(limsJson)) {
+            LOGGER.warn(LIMS_JSON + " has to be an existing file: " + limsJson);
         } else {
             return true;
         }
@@ -226,7 +227,7 @@ public class PatientReporterApplication {
         options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
         options.addOption(HMF_GENE_PANEL, true, "Complete path towards the HMF gene panel csv.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
-        options.addOption(LIMS_CSV, true, "Complete path towards a CSV containing the LIMS data dump.");
+        options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
 
@@ -235,7 +236,8 @@ public class PatientReporterApplication {
         options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
-        options.addOption(FREEC, false, "Use freec copy numbers instead of purple.");
+        options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
+        options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         return options;
     }
 

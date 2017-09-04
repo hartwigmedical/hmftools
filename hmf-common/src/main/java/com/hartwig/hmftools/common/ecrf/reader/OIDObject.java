@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 public interface OIDObject {
 
     @NotNull
-    String OID();
+    String oid();
 
     @NotNull
     String name();

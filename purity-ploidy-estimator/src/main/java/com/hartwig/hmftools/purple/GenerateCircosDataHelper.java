@@ -13,12 +13,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosomes;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
+import com.hartwig.hmftools.common.circos.CircosSNPWriter;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -34,7 +36,7 @@ class GenerateCircosDataHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateCircosDataHelper.class);
 
-    private static final int MAX_SOMATIC_VARIANTS = 40000;
+    private static final int MAX_SOMATIC_VARIANTS = 25000;
     private final String sample;
     private final CircosConfig config;
     private final String baseCircosSample;
@@ -55,7 +57,7 @@ class GenerateCircosDataHelper {
     }
 
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
-            @NotNull final List<EnrichedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants)
+            @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants)
             throws IOException, InterruptedException {
 
         createDirectory(config.plotDirectory());
@@ -97,14 +99,21 @@ class GenerateCircosDataHelper {
         CircosLinkWriter.writeVariants(baseCircosSample + ".link.circos", structuralVariants);
     }
 
-    private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumber) throws IOException {
-        CircosFileWriter.writeRegions(baseCircosSample + ".cnv.circos", copyNumber, x -> x.averageTumorCopyNumber() - 2);
-        CircosFileWriter.writeRegions(baseCircosSample + ".baf.circos", copyNumber, PurpleCopyNumber::averageActualBAF);
+    private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+        CircosFileWriter.writeRegions(baseCircosSample + ".map.circos", copyNumbers, x -> minorAllelePloidy(x) - 1);
+        CircosFileWriter.writeRegions(baseCircosSample + ".cnv.circos", copyNumbers, x -> x.averageTumorCopyNumber() - 2);
+        CircosFileWriter.writeRegions(baseCircosSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
     }
 
-    private void writeEnrichedSomatics(@NotNull final List<EnrichedSomaticVariant> somaticVariants) throws IOException {
-        final List<EnrichedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
-        CircosFileWriter.writePositions(baseCircosSample + ".snp.circos", downsampledSomaticVariants, EnrichedSomaticVariant::adjustedVAF);
+    private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
+        final List<PurityAdjustedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
+        CircosSNPWriter.writePositions(baseCircosSample + ".snp.circos", downsampledSomaticVariants);
+    }
+
+    private double minorAllelePloidy(@NotNull final PurpleCopyNumber copyNumber) {
+        return Doubles.lessThan(copyNumber.averageActualBAF(), 0.50)
+                ? 0
+                : Math.max(0, (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber());
     }
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {
@@ -133,20 +142,20 @@ class GenerateCircosDataHelper {
     }
 
     @NotNull
-    private List<EnrichedSomaticVariant> filter(@NotNull final List<EnrichedSomaticVariant> somaticVariants) {
+    private List<PurityAdjustedSomaticVariant> filter(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.SNP)
-                .filter(x -> Chromosomes.asInt(x.chromosome()) <= 25)
+                .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
                 .collect(Collectors.toList());
     }
 
-    private List<EnrichedSomaticVariant> downsample(List<EnrichedSomaticVariant> variants) {
+    private List<PurityAdjustedSomaticVariant> downsample(List<PurityAdjustedSomaticVariant> variants) {
         if (variants.size() <= MAX_SOMATIC_VARIANTS) {
             return variants;
         }
 
         long scale = Math.round(Math.ceil(1.0 * variants.size() / MAX_SOMATIC_VARIANTS));
-        final List<EnrichedSomaticVariant> result = Lists.newArrayList();
+        final List<PurityAdjustedSomaticVariant> result = Lists.newArrayList();
         for (int i = 0; i < variants.size(); i++) {
             if (i % scale == 0) {
                 result.add(variants.get(i));

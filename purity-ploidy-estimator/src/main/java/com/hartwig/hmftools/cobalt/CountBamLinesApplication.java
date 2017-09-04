@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
-import com.hartwig.hmftools.purple.LoadSomaticVariants;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,7 +31,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 public class CountBamLinesApplication {
-    private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
+    private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
     private static final String THREADS = "threads";
     private static final String INPUT_FILE = "input";
