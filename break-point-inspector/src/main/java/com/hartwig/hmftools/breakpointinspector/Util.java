@@ -48,16 +48,18 @@ class HMFVariantContext {
     Location MantaBP2;
     Range Uncertainty2;
     HMFVariantType Type;
+    boolean Imprecise;
     HashSet<String> Filter = Sets.newHashSet();
 
     int OrientationBP1 = 0;
     int OrientationBP2 = 0;
 
-    HMFVariantContext(final String id, final Location bp1, final Location bp2, final HMFVariantType type) {
+    HMFVariantContext(final String id, final Location bp1, final Location bp2, final HMFVariantType type, final boolean imprecise) {
         Id = id;
         MantaBP1 = bp1;
         MantaBP2 = bp2;
         Type = type;
+        Imprecise = imprecise;
     }
 
     boolean isShortDelete() {
