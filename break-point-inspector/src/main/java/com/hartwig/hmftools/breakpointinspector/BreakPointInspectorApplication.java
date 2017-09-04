@@ -192,6 +192,7 @@ public class BreakPointInspectorApplication {
                 final Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
                 final List<Integer> CIEND = variant.getAttributeAsIntList("CIEND", 0);
                 Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
+                final boolean IMPRECISE = variant.hasAttribute("IMPRECISE");
 
                 HMFVariantType svType;
                 Location location2;
@@ -264,7 +265,7 @@ public class BreakPointInspectorApplication {
                 fields.add(variant.getAttributeAsString("HOMSEQ", ""));
                 fields.add(variant.getAttributeAsString("SVINSSEQ", ""));
 
-                final HMFVariantContext ctx = new HMFVariantContext(variant.getID(), location1, location2, svType);
+                final HMFVariantContext ctx = new HMFVariantContext(variant.getID(), location1, location2, svType, IMPRECISE);
                 ctx.Filter.addAll(variant.getFilters().stream().filter(s -> !s.startsWith("BPI")).collect(Collectors.toSet()));
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
