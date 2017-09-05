@@ -541,6 +541,9 @@ class Analysis {
         SORTED_REF_READER.close();
         SORTED_TUMOR_READER.close();
 
+        TEMP_REF_BAM.delete();
+        TEMP_TUMOR_BAM.delete();
+
         return result;
     }
 }
