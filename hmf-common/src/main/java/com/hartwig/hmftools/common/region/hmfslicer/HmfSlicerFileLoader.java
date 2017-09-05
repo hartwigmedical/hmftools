@@ -74,7 +74,8 @@ public abstract class HmfSlicerFileLoader {
             } else {
                 if (builder == null || !gene.equals(values[GENE_COLUMN])) {
                     if (builder != null) {
-                        regionMap.put(chromosome, builder.build());
+                        HmfGenomeRegion region = builder.build();
+                        regionMap.put(region.chromosome(), region);
                     }
 
                     gene = values[GENE_COLUMN];
@@ -102,7 +103,8 @@ public abstract class HmfSlicerFileLoader {
         }
 
         if (builder != null) {
-            regionMap.put(chromosome, builder.build());
+            HmfGenomeRegion region = builder.build();
+            regionMap.put(region.chromosome(), region);
         }
 
         return regionMap;
