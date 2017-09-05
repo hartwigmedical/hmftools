@@ -1,69 +1,45 @@
 package com.hartwig.hmftools.common.gene;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.zipper.RegionZipper;
 import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class GeneCopyNumberFactory implements RegionZipperHandler<PurpleCopyNumber, HmfGenomeRegion> {
+public class GeneCopyNumberFactory implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion> {
+
+    private GeneCopyNumberBuilder builder;
 
     public static List<GeneCopyNumber> geneCopyNumbers(List<HmfGenomeRegion> genes, List<PurpleCopyNumber> copyNumbers) {
-        GeneCopyNumberFactory handler = new GeneCopyNumberFactory();
-        RegionZipper.zip(copyNumbers, genes, handler);
-        return handler.geneCopyNumbers();
+        return genes.stream().map(x -> new GeneCopyNumberFactory(x, copyNumbers).geneCopyNumber()).collect(Collectors.toList());
     }
 
-    @Nullable
-    private PurpleCopyNumber current;
-    @Nullable
-    private GeneCopyNumberBuilder builder;
-    @NotNull
-    private final List<GeneCopyNumber> geneCopyNumbers;
-
-    private GeneCopyNumberFactory() {
-        geneCopyNumbers = Lists.newArrayList();
+    GeneCopyNumberFactory(@NotNull final HmfGenomeRegion gene, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+        builder = new GeneCopyNumberBuilder(gene);
+        RegionZipper.zip(copyNumbers, gene.exome(), this);
     }
 
-    private List<GeneCopyNumber> geneCopyNumbers() {
-        if (builder != null) {
-            finialiseBuilder();
-        }
-        return geneCopyNumbers;
+    GeneCopyNumber geneCopyNumber() {
+        return builder.build();
     }
 
     @Override
     public void enterChromosome(@NotNull final String chromosome) {
-        finialiseBuilder();
-        current = null;
+        // IGNORE
     }
 
     @Override
-    public void primary(@NotNull final PurpleCopyNumber region) {
-        current = region;
-        if (builder != null) {
-            builder.addCopyNumber(region);
-        }
+    public void primary(@NotNull final PurpleCopyNumber copyNumber) {
+        builder.addCopyNumber(copyNumber);
     }
 
     @Override
-    public void secondary(@NotNull final HmfGenomeRegion region) {
-        finialiseBuilder();
-        builder = new GeneCopyNumberBuilder(region);
-        if (current != null) {
-            builder.addCopyNumber(current);
-        }
-    }
-
-    private void finialiseBuilder() {
-        if (builder != null) {
-            geneCopyNumbers.add(builder.build());
-            builder = null;
-        }
+    public void secondary(@NotNull final HmfExonRegion exon) {
+        builder.addExon(exon);
     }
 }
