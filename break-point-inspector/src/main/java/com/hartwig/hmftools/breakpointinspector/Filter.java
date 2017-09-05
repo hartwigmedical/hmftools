@@ -66,12 +66,6 @@ class Filter {
             filters.add(Filters.MinDepth);
         }
 
-        final boolean anchorLengthOkay = tumorStats.PR_Evidence.stream()
-                .anyMatch(p -> Stream.of(p.getLeft(), p.getRight()).allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= 30));
-        if (!anchorLengthOkay) {
-            filters.add(Filters.MinAnchorLength);
-        }
-
         // short variant logic
         if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
             // must have SR support
@@ -91,10 +85,16 @@ class Filter {
             if (refStats.BP1_Stats.PR_Only_Support + refStats.BP1_Stats.PR_SR_Support > 0) {
                 filters.add(Filters.PRNormalSupport);
             }
-        }
 
-        if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_Only_Support + s.PR_SR_Support).sum() == 0) {
-            filters.add(Filters.PRSupportZero);
+            final boolean anchorLengthOkay = tumorStats.PR_Evidence.stream()
+                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight()).allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= 30));
+
+            // only applicable for longer variants
+            if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_Only_Support + s.PR_SR_Support).sum() == 0) {
+                filters.add(Filters.PRSupportZero);
+            } else if (!anchorLengthOkay) {
+                filters.add(Filters.MinAnchorLength);
+            }
         }
 
         // we must adjust from Manta breakpoint convention to our clipping position convention
