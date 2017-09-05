@@ -47,7 +47,7 @@ class Filter {
         }
     }
 
-    static void updateHeader(final VCFHeader header) {
+    static void UpdateVCFHeader(final VCFHeader header) {
         Arrays.stream(Filters.values()).forEach(f -> header.addMetaDataLine(f.toHeaderLine()));
     }
 
