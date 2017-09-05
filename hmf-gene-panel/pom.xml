@@ -8,9 +8,9 @@
         <version>1</version>
     </parent>
 
-    <artifactId>hmfslicer-builder</artifactId>
+    <artifactId>hmf-gene-panel</artifactId>
     <packaging>jar</packaging>
-    <name>HMF Tools - HMF Slicer Builder</name>
+    <name>HMF Tools - HMF Gene Panel</name>
 
     <dependencies>
         <dependency>
@@ -62,7 +62,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.hmfslicer.HmfSlicerBuilderRunner</mainClass>
+                            <mainClass>com.hartwig.hmftools.hmfslicer.HmfGenePanelBuilder</mainClass>
                         </manifest>
                     </archive>
 

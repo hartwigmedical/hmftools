@@ -14,12 +14,12 @@ import org.jooq.Record;
 import org.jooq.Result;
 import org.junit.Test;
 
-public class HmfSlicerBuilderTest {
+public class HmfGenePanelBuilderTest {
     @Test
     public void canGenerateGeneRegionsFromDB() throws IOException, HartwigException, SQLException {
-        final Result<Record> queryResults = HmfSlicerBuilderRunner.queryEnsembldb();
+        final Result<Record> queryResults = HmfGenePanelBuilder.queryEnsembldb();
         final Set<Object> gene_names = queryResults.stream().map(x -> x.get("gene_name")).collect(Collectors.toSet());
-        final List<String> genes = HmfSlicerBuilderRunner.readGeneList();
+        final List<String> genes = HmfGenePanelBuilder.readGeneList();
         assertEquals(genes.size(), gene_names.size());
     }
 }

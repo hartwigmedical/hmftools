@@ -48,7 +48,7 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
-import com.hartwig.hmftools.hmfslicer.HmfGeneRegionSupplier;
+import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -242,7 +242,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     private List<GeneCopyNumber> geneCopyNumbers(List<PurpleCopyNumber> copyNumbers) throws IOException, EmptyFileException {
-        final List<HmfGenomeRegion> hmgGenomeRegions = HmfGeneRegionSupplier.asList();
+        final List<HmfGenomeRegion> hmgGenomeRegions = HmfGenePanelSupplier.asList();
         return GeneCopyNumberFactory.geneCopyNumbers(hmgGenomeRegions, copyNumbers);
     }
 

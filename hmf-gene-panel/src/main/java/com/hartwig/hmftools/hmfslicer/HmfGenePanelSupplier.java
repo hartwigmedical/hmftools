@@ -11,10 +11,10 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 
-public class HmfGeneRegionSupplier {
+public class HmfGenePanelSupplier {
 
     public static SortedSetMultimap<String, HmfGenomeRegion> asMap() throws IOException, EmptyFileException {
-        final InputStream inputStream = HmfGeneRegionSupplier.class.getResourceAsStream("/hmf_gene_panel.tsv");
+        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/hmf_gene_panel.tsv");
         return HmfSlicerFileLoader.fromInputStream(inputStream);
     }
 

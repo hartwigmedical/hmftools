@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>hmfslicer-builder</artifactId>
+            <artifactId>hmf-gene-panel</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

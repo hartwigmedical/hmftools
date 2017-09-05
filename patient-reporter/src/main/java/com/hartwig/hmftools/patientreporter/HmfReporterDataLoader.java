@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.cosmic.Cosmic;
 import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.hmfslicer.HmfGeneRegionSupplier;
+import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,7 @@ public final class HmfReporterDataLoader {
     @NotNull
     public static HmfReporterData buildFromFiles(@NotNull final String drupFilterFile, @NotNull final String cosmicFile,
             @NotNull final String centerFile, @NotNull final String signaturePath) throws IOException, HartwigException {
-        final GeneModel geneModel = new GeneModel(HmfGeneRegionSupplier.asMap());
+        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
         final CenterModel centerModel = Center.readFromCSV(centerFile);

@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
-import com.hartwig.hmftools.hmfslicer.HmfGeneRegionSupplier;
+import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final GeneModel geneModel = new GeneModel(HmfGeneRegionSupplier.asMap());
+        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel, geneModel.slicer(), geneModel.slicer());
         final PatientReporter algo = new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY));

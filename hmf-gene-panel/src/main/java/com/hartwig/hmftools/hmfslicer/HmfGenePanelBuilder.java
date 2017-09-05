@@ -31,9 +31,9 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.StringUtils;
 
-public final class HmfSlicerBuilderRunner {
+public final class HmfGenePanelBuilder {
 
-    private static final Logger LOGGER = LogManager.getLogger(HmfSlicerBuilderRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
 
     private static final String OUT_PATH = "out";
     private static final String DATABASE = "homo_sapiens_core_89_37";
@@ -46,7 +46,7 @@ public final class HmfSlicerBuilderRunner {
         final String outputFilePath = cmd.getOptionValue(OUT_PATH);
         if (outputFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HmfSlicerBuilder", options);
+            formatter.printHelp("HmfGenePanelBuilder", options);
         } else {
             final Result<Record> queryResults = queryEnsembldb();
             writeFile(cmd, queryResults);
