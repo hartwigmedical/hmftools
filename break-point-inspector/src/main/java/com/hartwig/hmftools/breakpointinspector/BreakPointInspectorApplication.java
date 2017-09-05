@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.breakpointinspector;
 
+import static java.util.Arrays.asList;
+
 import static com.hartwig.hmftools.breakpointinspector.Util.prefixList;
 
 import java.io.File;
@@ -26,8 +28,10 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
@@ -119,20 +123,6 @@ public class BreakPointInspectorApplication {
             final File refBAM = new File(refPath);
             final SamReader refReader = SamReaderFactory.makeDefault().open(refBAM);
 
-            final File tumorSliceBAM;
-            SAMFileWriter tumorWriter = null;
-            if (tumorSlicePath != null) {
-                tumorSliceBAM = new File(tumorSlicePath);
-                tumorWriter = new SAMFileWriterFactory().makeBAMWriter(tumorReader.getFileHeader(), false, tumorSliceBAM);
-            }
-
-            final File refSliceBAM;
-            SAMFileWriter refWriter = null;
-            if (refSlicePath != null) {
-                refSliceBAM = new File(refSlicePath);
-                refWriter = new SAMFileWriterFactory().makeBAMWriter(refReader.getFileHeader(), false, refSliceBAM);
-            }
-
             final File vcfFile = new File(vcfPath);
             final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
 
@@ -164,11 +154,9 @@ public class BreakPointInspectorApplication {
                 System.out.println(String.join("\t", header));
             }
 
-            final Analysis analysis = analysisBuilder.setRefReader(refReader)
-                    .setRefWriter(refWriter)
-                    .setTumorReader(tumorReader)
-                    .setTumorWriter(tumorWriter)
-                    .createAnalysis();
+            final Analysis analysis = analysisBuilder.setRefReader(refReader).setTumorReader(tumorReader).createAnalysis();
+
+            final List<QueryInterval> combinedQueryIntervals = Lists.newArrayList();
 
             final Map<String, VariantContext> variantMap = new HashMap<>();
             final List<VariantContext> variants = Lists.newArrayList();
@@ -291,6 +279,7 @@ public class BreakPointInspectorApplication {
                 }
 
                 final StructuralVariantResult result = analysis.processStructuralVariant(ctx);
+                combinedQueryIntervals.addAll(asList(result.QueryIntervals));
 
                 fields.addAll(result.RefStats.GetData());
                 fields.addAll(result.TumorStats.GetData());
@@ -316,7 +305,7 @@ public class BreakPointInspectorApplication {
                         v.getCommonInfo().addFilters(result.Filters);
                     }
                     if (result.Filters.isEmpty()) {
-                        final List<Double> af = Arrays.asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight());
+                        final List<Double> af = asList(result.AlleleFrequency.getLeft(), result.AlleleFrequency.getRight());
                         v.getCommonInfo().putAttribute(AlleleFrequency.VCF_INFO_TAG, swap ? Lists.reverse(af) : af, true);
                     }
                     if (result.Breakpoints.getLeft() != null) {
@@ -358,18 +347,36 @@ public class BreakPointInspectorApplication {
                 writer.close();
             }
 
-            // close all the files
+            // do a final slice pass
+
+            final QueryInterval[] optimizedIntervals =
+                    QueryInterval.optimizeIntervals(combinedQueryIntervals.toArray(new QueryInterval[combinedQueryIntervals.size()]));
+
+            if (tumorSlicePath != null) {
+                writeToSlice(tumorSlicePath, tumorReader, optimizedIntervals);
+            }
+
+            if (refSlicePath != null) {
+                writeToSlice(refSlicePath, refReader, optimizedIntervals);
+            }
+
             refReader.close();
             tumorReader.close();
-            if (refWriter != null) {
-                refWriter.close();
-            }
-            if (tumorWriter != null) {
-                tumorWriter.close();
-            }
+
         } catch (ParseException e) {
             printHelpAndExit(options);
             System.exit(1);
         }
+    }
+
+    private static void writeToSlice(final String path, final SamReader reader, final QueryInterval[] intervals) {
+        final File tumorSliceBAM = new File(path);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(reader.getFileHeader(), true, tumorSliceBAM);
+        final SAMRecordIterator iterator = reader.queryOverlapping(intervals);
+        while (iterator.hasNext()) {
+            writer.addAlignment(iterator.next());
+        }
+        iterator.close();
+        writer.close();
     }
 }
