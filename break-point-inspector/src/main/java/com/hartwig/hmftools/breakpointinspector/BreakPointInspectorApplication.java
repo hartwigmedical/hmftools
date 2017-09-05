@@ -61,7 +61,7 @@ public class BreakPointInspectorApplication {
         options.addOption(Option.builder(EXTRA_UNCERTAINTY)
                 .hasArgs()
                 .valueSeparator(',')
-                .desc("extra bases to add to Manta uncertainty (optional, default=0,1,5,10,20)")
+                .desc("extra bases to add to Manta uncertainty (optional, default=1,5,10,20)")
                 .build());
         return options;
     }
