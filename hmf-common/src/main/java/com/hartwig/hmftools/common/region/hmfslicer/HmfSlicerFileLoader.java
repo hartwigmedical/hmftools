@@ -49,7 +49,8 @@ public abstract class HmfSlicerFileLoader {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull InputStream inputStream) throws IOException, EmptyFileException {
+    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull InputStream inputStream)
+            throws IOException, EmptyFileException {
         return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
     }
 
@@ -65,8 +66,7 @@ public abstract class HmfSlicerFileLoader {
             final String[] values = line.split(FIELD_SEPARATOR);
             chromosome = values[CHROMOSOME_COLUMN].trim();
 
-            // KODU: Positions from BED files are 0-based start and 1-based end, to make length simply "end - start".
-            final long start = Long.valueOf(values[START_COLUMN].trim()) + 1;
+            final long start = Long.valueOf(values[START_COLUMN].trim());
             final long end = Long.valueOf(values[END_COLUMN].trim());
 
             if (end < start) {
@@ -98,7 +98,6 @@ public abstract class HmfSlicerFileLoader {
                         .start(Long.valueOf(values[EXON_START_COLUMN]))
                         .end(Long.valueOf(values[EXON_END_COLUMN]))
                         .build());
-
             }
         }
 
