@@ -52,6 +52,7 @@
         <javax.mail.version>1.6.0</javax.mail.version>
 
         <hmf-common.version>1</hmf-common.version>
+        <hmfslicer-builder.version>1</hmfslicer-builder.version>
         <patient-db.version>1.0</patient-db.version>
         <sv-annotation.version>1.0</sv-annotation.version>
 
@@ -95,6 +96,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>hmfslicer-builder</artifactId>
+                <version>${hmfslicer-builder.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>

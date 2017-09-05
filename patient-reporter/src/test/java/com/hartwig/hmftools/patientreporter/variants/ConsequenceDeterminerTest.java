@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ConsequenceDeterminerTest {
@@ -51,9 +52,7 @@ public class ConsequenceDeterminerTest {
         final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(
                 ImmutableBEDGenomeRegion.of(CHROMOSOME, POSITION - 10, POSITION + 10));
         final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
-        transcriptMap.put(TRANSCRIPT,
-                new ImmutableHmfGenomeRegion(CHROMOSOME, POSITION - 10, POSITION + 10, TRANSCRIPT, TRANSCRIPT_VERSION,
-                        GENE, GENE_ID, GENE_START, GENE_END, CHROMOSOME_BAND, ENTREZ_ID));
+        transcriptMap.put(TRANSCRIPT, hmfRegion());
 
         final ConsequenceDeterminer determiner = new ConsequenceDeterminer(slicer, transcriptMap);
 
@@ -95,5 +94,22 @@ public class ConsequenceDeterminerTest {
         assertEquals(COSMIC_ID, report.cosmicID());
         assertEquals(TOTAL_READ_COUNT, report.totalReadCount());
         assertEquals(ALLELE_READ_COUNT, report.alleleReadCount());
+    }
+
+    @NotNull
+    private static HmfGenomeRegion hmfRegion() {
+        return ImmutableHmfGenomeRegion.builder()
+                .chromosome(CHROMOSOME)
+                .start(POSITION - 10)
+                .end(POSITION + 10)
+                .gene(GENE)
+                .transcriptID(TRANSCRIPT)
+                .transcriptVersion(TRANSCRIPT_VERSION)
+                .chromosomeBand(CHROMOSOME_BAND)
+                .entrezId(ENTREZ_ID)
+                .geneID(GENE_ID)
+                .geneStart(GENE_START)
+                .geneEnd(GENE_END)
+                .build();
     }
 }

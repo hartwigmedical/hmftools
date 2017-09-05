@@ -90,7 +90,18 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static HmfGenomeRegion hmfRegion() {
-        return new ImmutableHmfGenomeRegion(CHROMOSOME, 350, 450, RIGHT_TRANSCRIPT, TRANSCRIPT_VERSION, GENE, GENE_ID, GENE_START, GENE_END,
-                CHROMOSOME_BAND, ENTREZ_ID);
+        return ImmutableHmfGenomeRegion.builder()
+                .chromosome(CHROMOSOME)
+                .start(350)
+                .end(450)
+                .gene(GENE)
+                .transcriptID(RIGHT_TRANSCRIPT)
+                .transcriptVersion(TRANSCRIPT_VERSION)
+                .chromosomeBand(CHROMOSOME_BAND)
+                .entrezId(ENTREZ_ID)
+                .geneID(GENE_ID)
+                .geneStart(GENE_START)
+                .geneEnd(GENE_END)
+                .build();
     }
 }

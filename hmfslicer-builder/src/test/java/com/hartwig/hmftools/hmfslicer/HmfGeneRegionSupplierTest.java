@@ -13,9 +13,10 @@ import org.junit.Test;
 public class HmfGeneRegionSupplierTest {
 
     @Test
-    public void testGeneRegionsMatchGenes() throws IOException, EmptyFileException {
+    public void canLoadGeneRegionsFromFile() throws IOException, EmptyFileException {
         final List<String> genes = HmfSlicerBuilderRunner.readGeneList();
-        final List<HmfGenomeRegion> geneRegions = HmfGeneRegionSupplier.get();
+        final List<HmfGenomeRegion> geneRegions = HmfGeneRegionSupplier.asList();
         assertEquals(genes.size(), geneRegions.size());
     }
+
 }

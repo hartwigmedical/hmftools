@@ -88,7 +88,19 @@ public class GeneCopyNumberFactoryTest {
     }
 
     private static HmfGenomeRegion create(String chromosome, long start, long end, String name) {
-        return new ImmutableHmfGenomeRegion(chromosome, start, end, name, 1, name, name, start, end, chromosome, name);
+        return ImmutableHmfGenomeRegion.builder()
+                .chromosome(chromosome)
+                .start(start)
+                .end(end)
+                .gene(name)
+                .transcriptID("ID")
+                .transcriptVersion(1)
+                .chromosomeBand("BAND")
+                .entrezId("ID")
+                .geneID("ID")
+                .geneStart(start)
+                .geneEnd(end)
+                .build();
     }
 
     @NotNull

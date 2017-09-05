@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -46,11 +45,10 @@ import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
+import com.hartwig.hmftools.hmfslicer.HmfGeneRegionSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CircosConfig;
@@ -244,8 +242,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     private List<GeneCopyNumber> geneCopyNumbers(List<PurpleCopyNumber> copyNumbers) throws IOException, EmptyFileException {
-        final InputStream inputStream = getClass().getResourceAsStream("/bed/hmf_gene_panel.tsv");
-        final List<HmfGenomeRegion> hmgGenomeRegions = HmfSlicerFileLoader.fromInputStream(inputStream);
+        final List<HmfGenomeRegion> hmgGenomeRegions = HmfGeneRegionSupplier.asList();
         return GeneCopyNumberFactory.geneCopyNumbers(hmgGenomeRegions, copyNumbers);
     }
 

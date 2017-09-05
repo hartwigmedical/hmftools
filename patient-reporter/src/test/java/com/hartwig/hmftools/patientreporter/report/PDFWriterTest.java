@@ -67,7 +67,7 @@ public class PDFWriterTest {
         final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
 
         final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(genePanelPath, drupFilterPath, cosmicPath, centerPath, signaturePath);
+                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath);
 
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
