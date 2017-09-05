@@ -9,9 +9,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
-import com.hartwig.hmftools.common.slicing.HmfSlicer;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.hmfslicer.HmfGeneRegionSupplier;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 
@@ -26,8 +25,8 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final HmfSlicer hmfSlicingRegion = SlicerFactory.fromHmfGenePanelFile(HmfGeneRegionSupplier.asMap());
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, hmfSlicingRegion, hmfSlicingRegion);
+        final GeneModel geneModel = new GeneModel(HmfGeneRegionSupplier.asMap());
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel, geneModel.slicer(), geneModel.slicer());
         final PatientReporter algo = new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY));
     }

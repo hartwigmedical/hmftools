@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
-import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
@@ -80,7 +80,7 @@ public class PatientReporterApplication {
             LOGGER.info("Running patient reporter v" + VERSION);
 
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(reporterData.slicer(), cmd);
+            final PatientReporter reporter = buildReporter(reporterData.geneModel(), cmd);
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
@@ -100,10 +100,10 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CommandLine cmd)
+    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull final CommandLine cmd)
             throws IOException, EmptyFileException, XMLStreamException {
         final VariantAnalyzer variantAnalyzer =
-                VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
+                VariantAnalyzer.fromSlicingRegions(geneModel, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
 
         return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer);

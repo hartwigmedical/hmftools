@@ -344,10 +344,10 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> genePanelSection(@NotNull final HmfReporterData reporterData) {
-        final long coverage = Math.round(reporterData.slicer().numberOfBases() / 1E6);
+        final long coverage = Math.round(reporterData.geneModel().slicer().numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "Findings are reported for the set of " + Integer.toString(reporterData.slicer().numberOfRegions())
+                        "Findings are reported for the set of " + Integer.toString(reporterData.geneModel().slicer().numberOfRegions())
                                 + " genes (canonical transcripts) indicated below (covering " + coverage + " MBases)"));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), createGenePanel(reporterData));

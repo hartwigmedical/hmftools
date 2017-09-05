@@ -7,11 +7,11 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
-import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -41,11 +41,11 @@ public class VariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final HmfSlicer hmfSlicingRegion = SlicerFactory.hmfSlicerFromSingleGenomeRegion(hmfRegion());
+        final GeneModel geneModel = new GeneModel(hmfRegion());
         final Slicer giabHighConfidenceRegion = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
         final Slicer cpctSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(400, 500));
 
-        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, giabHighConfidenceRegion, cpctSlicingRegion);
+        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(geneModel, giabHighConfidenceRegion, cpctSlicingRegion);
 
         final VariantAnnotation rightAnnotation =
                 createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE).
