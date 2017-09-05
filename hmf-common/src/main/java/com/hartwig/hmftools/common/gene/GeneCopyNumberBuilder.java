@@ -12,7 +12,7 @@ class GeneCopyNumberBuilder {
     private final ImmutableGeneCopyNumber.Builder builder;
 
     private double minCopyNumber = Double.MAX_VALUE;
-    private double maxCopyNumber = Double.MIN_VALUE;
+    private double maxCopyNumber = -Double.MAX_VALUE;
     private int count;
     private double cumulativeCopyNumber;
 
