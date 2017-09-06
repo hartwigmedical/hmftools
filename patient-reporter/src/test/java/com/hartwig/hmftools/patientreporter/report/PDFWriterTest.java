@@ -60,7 +60,6 @@ public class PDFWriterTest {
                 ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%",
                         "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER));
 
-        final String genePanelPath = Resources.getResource("bed").getPath() + File.separator + "hmf_gene_panel.tsv";
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
