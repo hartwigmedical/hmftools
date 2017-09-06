@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.region.hmfslicer;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,14 +10,13 @@ import java.util.stream.Collectors;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class HmfSlicerFileLoader {
+public final class HmfSlicerFileLoader {
     private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
 
     private static final String FIELD_SEPARATOR = "\t";
@@ -42,29 +40,22 @@ public abstract class HmfSlicerFileLoader {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromHmfGenePanelFile(@NotNull String genePanelFile)
-            throws IOException, EmptyFileException {
-        final List<String> lines = FileReader.build().readLines(new File(genePanelFile).toPath());
-        return fromLines(lines);
-    }
-
-    @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull InputStream inputStream)
+    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream inputStream)
             throws IOException, EmptyFileException {
         return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
     }
 
-    private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull List<String> lines)
+    @NotNull
+    private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull final List<String> lines)
             throws IOException, EmptyFileException {
         final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
 
         String gene = "";
-        String chromosome = "";
         ImmutableHmfGenomeRegion.Builder builder = null;
 
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
-            chromosome = values[CHROMOSOME_COLUMN].trim();
+            final String chromosome = values[CHROMOSOME_COLUMN].trim();
 
             final long start = Long.valueOf(values[START_COLUMN].trim());
             final long end = Long.valueOf(values[END_COLUMN].trim());
@@ -103,7 +94,7 @@ public abstract class HmfSlicerFileLoader {
         }
 
         if (builder != null) {
-            HmfGenomeRegion region = builder.build();
+            final HmfGenomeRegion region = builder.build();
             regionMap.put(region.chromosome(), region);
         }
 

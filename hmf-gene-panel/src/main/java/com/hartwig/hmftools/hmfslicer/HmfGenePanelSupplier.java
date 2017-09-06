@@ -11,17 +11,21 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 
-public class HmfGenePanelSupplier {
+import org.jetbrains.annotations.NotNull;
 
+public enum HmfGenePanelSupplier {
+    ;
+
+    @NotNull
     public static SortedSetMultimap<String, HmfGenomeRegion> asMap() throws IOException, EmptyFileException {
         final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/hmf_gene_panel.tsv");
         return HmfSlicerFileLoader.fromInputStream(inputStream);
     }
 
+    @NotNull
     public static List<HmfGenomeRegion> asList() throws IOException, EmptyFileException {
         final List<HmfGenomeRegion> result = Lists.newArrayList(asMap().values());
         Collections.sort(result);
         return result;
     }
-
 }

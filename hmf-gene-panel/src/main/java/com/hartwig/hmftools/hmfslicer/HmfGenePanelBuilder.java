@@ -31,7 +31,7 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.StringUtils;
 
-public final class HmfGenePanelBuilder {
+public class HmfGenePanelBuilder {
 
     private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
 
