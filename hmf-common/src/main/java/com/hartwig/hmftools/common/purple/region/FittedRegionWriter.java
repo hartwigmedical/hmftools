@@ -39,7 +39,7 @@ public enum FittedRegionWriter {
     @NotNull
     private static String transform(@NotNull final FittedRegion copyNumber) {
         return copyNumber.chromosome() + '\t' + copyNumber.start() + '\t' + copyNumber.end() + '\t'
-                + copyNumber.status().toString().toLowerCase() + '\t' + copyNumber.fittedPloidy() + '\t'
+                + copyNumber.status().toString().toLowerCase() + '\t' + copyNumber.modelPloidy() + '\t'
                 + copyNumber.bafCount() + '\t' + copyNumber.observedBAF()
                 + '\t' + copyNumber.modelBAF() + '\t' + copyNumber.bafDeviation() + '\t'
                 + copyNumber.observedTumorRatio() + '\t' + copyNumber.observedNormalRatio() + '\t'

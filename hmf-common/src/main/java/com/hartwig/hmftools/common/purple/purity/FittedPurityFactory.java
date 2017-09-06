@@ -127,7 +127,7 @@ public class FittedPurityFactory {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
             modelDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.deviation();
             averagePloidy += fittedRegion.tumorCopyNumber() * fittedRegion.bafCount() / totalBafCount;
-            if (fittedRegion.fittedPloidy() == 2) {
+            if (fittedRegion.modelPloidy() == 2) {
                 diploidProportion += enrichedRegion.bafCount() / totalBafCount;
             }
         }

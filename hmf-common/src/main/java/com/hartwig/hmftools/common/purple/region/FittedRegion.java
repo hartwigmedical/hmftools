@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class})
 public abstract class FittedRegion implements ObservedRegion {
 
-    public abstract int fittedPloidy();
+    public abstract int modelPloidy();
 
     public abstract double deviation();
 

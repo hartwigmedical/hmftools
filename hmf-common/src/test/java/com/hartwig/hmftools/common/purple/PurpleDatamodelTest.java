@@ -86,7 +86,7 @@ public class PurpleDatamodelTest {
                 .segmentTumorCopyNumber(0)
                 .cnvDeviation(0)
                 .deviation(0)
-                .fittedPloidy(0)
+                .modelPloidy(0)
                 .modelBAF(0)
                 .modelTumorRatio(0)
                 .refNormalisedCopyNumber(2)

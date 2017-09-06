@@ -23,7 +23,7 @@ public class FittedRegionFactoryTest {
     public void expectedFit() {
         final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, false, 1);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));
-        assertEquals(3, result.fittedPloidy());
+        assertEquals(3, result.modelPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
         assertEquals(0.015668571428571587, result.deviation(), EPSILON);
