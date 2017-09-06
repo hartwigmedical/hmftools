@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.AlleleFrequencyData;
 import com.hartwig.hmftools.common.variant.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.VariantFactoryFunctions;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -57,12 +59,15 @@ public class PurpleSomaticVariantFactory {
                 if (filter.test(context)) {
                     final Genotype genotype = context.getGenotype(sample);
                     if (genotype.hasAD()) {
+                        final AlleleFrequencyData frequencyData = VariantFactoryFunctions.determineAlleleFrequencies(genotype);
                         variants.add(ImmutablePurpleSomaticVariant.builder()
                                 .chromosome(context.getContig())
                                 .position(context.getStart())
                                 .ref(context.getReference().getBaseString())
                                 .alt(alt(context))
-                                .alleleFrequency(allelicFrequency(genotype.getAD()))
+                                .alleleReadCount(frequencyData.alleleReadCount())
+                                .totalReadCount(frequencyData.totalReadCount())
+                                .alleleFrequency(frequencyData.alleleFrequency())
                                 .filter("PASS")
                                 .type(VariantType.SNP)
                                 .build());
@@ -81,15 +86,6 @@ public class PurpleSomaticVariantFactory {
     @NotNull
     private static String alt(@NotNull final VariantContext context) {
         return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
-    }
-
-    private static double allelicFrequency(@NotNull final int[] afFields) {
-        int totalReadCount = 0;
-        final int alleleReadCount = afFields[1];
-        for (final int afField : afFields) {
-            totalReadCount += afField;
-        }
-        return alleleReadCount / (double) totalReadCount;
     }
 
     private static boolean ntFilter(@NotNull final VariantContext record) {

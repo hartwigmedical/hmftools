@@ -10,6 +10,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
@@ -33,16 +34,21 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
     @NotNull
+    private final GenomeRegionSelector<FittedRegion> copyNumberRegionSelector;
+    @NotNull
     private final IndexedFastaSequenceFile reference;
 
     private int unmatchedAnnotations;
 
     public EnrichedSomaticVariantFactory(double purity, double normFactor,
-            @NotNull  final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull  final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
+            @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers,
+            @NotNull final Multimap<String, FittedRegion> copyNumberRegions,
+            @NotNull final IndexedFastaSequenceFile reference) {
         purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        copyNumberRegionSelector = GenomeRegionSelectorFactory.create(copyNumberRegions);
         this.reference = reference;
     }
 
@@ -60,6 +66,7 @@ public class EnrichedSomaticVariantFactory {
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         copyNumberSelector.select(variant).ifPresent(x -> builder.purityAdjustment(purityAdjuster, x, variant));
+        copyNumberRegionSelector.select(variant).ifPresent(x -> builder.purityAdjustment(purityAdjuster, x, variant));
         addAnnotations(builder, variant);
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);

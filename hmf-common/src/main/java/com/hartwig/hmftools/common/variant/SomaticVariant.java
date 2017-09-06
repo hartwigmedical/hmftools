@@ -139,10 +139,12 @@ public class SomaticVariant implements Variant, AllelicDepth {
         return callers.size();
     }
 
+    @Override
     public int totalReadCount() {
         return totalReadCount;
     }
 
+    @Override
     public int alleleReadCount() {
         return alleleReadCount;
     }
