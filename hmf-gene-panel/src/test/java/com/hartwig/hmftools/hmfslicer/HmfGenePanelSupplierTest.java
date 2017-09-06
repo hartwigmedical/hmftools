@@ -24,13 +24,12 @@ public class HmfGenePanelSupplierTest {
     @Test
     public void loadedRegionsAreSortedCorrectly() throws IOException, EmptyFileException {
         final SortedSetMultimap<String, HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.asMap();
-        for (String chromosome : geneRegions.keySet()) {
+        for (final String chromosome : geneRegions.keySet()) {
             long start = 0;
-            for (HmfGenomeRegion hmfGenomeRegion : geneRegions.get(chromosome)) {
+            for (final HmfGenomeRegion hmfGenomeRegion : geneRegions.get(chromosome)) {
                 assertTrue(hmfGenomeRegion.start() >= start);
                 start = hmfGenomeRegion.start();
             }
         }
     }
-
 }
