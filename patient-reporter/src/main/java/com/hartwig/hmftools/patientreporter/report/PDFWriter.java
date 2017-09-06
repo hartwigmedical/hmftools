@@ -347,7 +347,7 @@ public class PDFWriter implements ReportWriter {
         final long coverage = Math.round(reporterData.geneModel().slicer().numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "Findings are reported for the exonic regions of " + Integer.toString(reporterData.geneModel().slicer().numberOfRegions())
+                        "Findings are reported for the " + Integer.toString(reporterData.geneModel().slicer().numberOfRegions())
                                 + " genes (canonical transcripts) indicated below, covering " + coverage + " MBases."));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), createGenePanel(reporterData));
@@ -407,7 +407,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
         return toList("Details on reported copy numbers", Lists.newArrayList(
-                "The lowest copy number value along the region of the canonical transcript is determined as "
+                "The lowest copy number value along the exonic regions of the canonical transcript is determined as "
                         + "a measure for the gene's copy number.",
                 "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
                 "Any gene with no copies is reported as loss.", "Any gene with at least 8 copies is reported as a gain.",
