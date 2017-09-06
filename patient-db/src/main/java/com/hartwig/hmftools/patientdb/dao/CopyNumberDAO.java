@@ -11,15 +11,17 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep11;
-import org.jooq.InsertValuesStep22;
+import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -45,7 +47,7 @@ class CopyNumberDAO {
                     .end(record.getValue(COPYNUMBER.END))
                     .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
                     .ratioSupport(true)
-                    .structuralVariantSupport(StructuralVariantSupport.NONE)
+                    .structuralVariantSupport(StructuralVariantSupport.valueOf(record.getValue(COPYNUMBER.STRUCTURALVARIANTSUPPORT)))
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
@@ -54,6 +56,44 @@ class CopyNumberDAO {
 
         Collections.sort(copyNumbers);
         return copyNumbers;
+    }
+
+    @NotNull
+    public List<FittedRegion> readCopyNumberRegions(@NotNull final String sample) {
+        List<FittedRegion> results = Lists.newArrayList();
+
+        Result<Record> query = context.select().from(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : query) {
+            results.add(ImmutableFittedRegion.builder()
+                    .chromosome(record.getValue(COPYNUMBERREGION.CHROMOSOME))
+                    .start(record.getValue(COPYNUMBERREGION.START))
+                    .end(record.getValue(COPYNUMBERREGION.END))
+                    .status(FreecStatus.valueOf(record.getValue(COPYNUMBERREGION.STATUS)))
+                    .ratioSupport(true)
+                    .structuralVariantSupport(StructuralVariantSupport.valueOf(record.getValue(COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT)))
+                    .bafCount(record.getValue(COPYNUMBERREGION.BAFCOUNT))
+                    .observedBAF(record.getValue(COPYNUMBERREGION.OBSERVEDBAF))
+                    .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
+                    .observedNormalRatio(record.getValue(COPYNUMBERREGION.OBSERVEDNORMALRATIO))
+                    .observedTumorRatioCount(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT))
+                    .modelPloidy(record.getValue(COPYNUMBERREGION.MODELPLOIDY))
+                    .modelBAF(record.getValue(COPYNUMBERREGION.MODELBAF))
+                    .modelTumorRatio(record.getValue(COPYNUMBERREGION.MODELTUMORRATIO))
+                    .tumorCopyNumber(record.getValue(COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER))
+                    .refNormalisedCopyNumber(record.getValue(COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER))
+                    .cnvDeviation(record.getValue(COPYNUMBERREGION.CNVDEVIATION))
+                    .deviation(record.getValue(COPYNUMBERREGION.TOTALDEVIATION))
+                    .bafDeviation(record.getValue(COPYNUMBERREGION.BAFDEVIATION))
+                    .broadBAF(record.getValue(COPYNUMBERREGION.HIGHCONFIDENCEBAF))
+                    .broadTumorCopyNumber(record.getValue(COPYNUMBERREGION.HIGHCONFIDENCECOPYNUMBER))
+                    .segmentBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
+                    .segmentTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
+                    .build());
+        }
+
+        Collections.sort(results);
+        return results;
     }
 
     void writeCopyNumber(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
@@ -98,11 +138,12 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();
 
         for (List<FittedRegion> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep22 inserter = context.insertInto(COPYNUMBERREGION,
+            InsertValuesStepN inserter = context.insertInto(COPYNUMBERREGION,
                     COPYNUMBERREGION.SAMPLEID,
                     COPYNUMBERREGION.CHROMOSOME,
                     COPYNUMBERREGION.START,
                     COPYNUMBERREGION.END,
+                    COPYNUMBERREGION.STATUS,
                     COPYNUMBERREGION.RATIOSUPPORT,
                     COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT,
                     COPYNUMBERREGION.BAFCOUNT,
@@ -114,8 +155,10 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.MODELBAF,
                     COPYNUMBERREGION.MODELTUMORRATIO,
                     COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER,
+                    COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER,
                     COPYNUMBERREGION.CNVDEVIATION,
                     COPYNUMBERREGION.BAFDEVIATION,
+                    COPYNUMBERREGION.TOTALDEVIATION,
                     COPYNUMBERREGION.HIGHCONFIDENCEBAF,
                     COPYNUMBERREGION.HIGHCONFIDENCECOPYNUMBER,
                     COPYNUMBERREGION.FITTEDBAF,
@@ -126,11 +169,12 @@ class CopyNumberDAO {
         }
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep22 inserter, String sample, FittedRegion region) {
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStepN inserter, String sample, FittedRegion region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.start(),
                 region.end(),
+                region.status(),
                 region.ratioSupport(),
                 region.structuralVariantSupport(),
                 region.bafCount(),
@@ -138,12 +182,14 @@ class CopyNumberDAO {
                 region.observedTumorRatio(),
                 region.observedNormalRatio(),
                 region.observedTumorRatioCount(),
-                region.fittedPloidy(),
+                region.modelPloidy(),
                 region.modelBAF(),
                 region.modelTumorRatio(),
                 region.tumorCopyNumber(),
+                region.refNormalisedCopyNumber(),
                 region.cnvDeviation(),
                 region.bafDeviation(),
+                region.deviation(),
                 region.broadBAF(),
                 region.broadTumorCopyNumber(),
                 region.segmentBAF(),
