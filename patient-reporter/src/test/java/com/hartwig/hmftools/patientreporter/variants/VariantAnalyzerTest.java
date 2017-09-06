@@ -7,6 +7,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
@@ -41,7 +43,7 @@ public class VariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final GeneModel geneModel = new GeneModel(hmfRegion());
+        final GeneModel geneModel = new GeneModel(hmfRegions());
         final Slicer giabHighConfidenceRegion = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
         final Slicer cpctSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(400, 500));
 
@@ -89,8 +91,9 @@ public class VariantAnalyzerTest {
     }
 
     @NotNull
-    private static HmfGenomeRegion hmfRegion() {
-        return ImmutableHmfGenomeRegion.builder()
+    private static SortedSetMultimap<String, HmfGenomeRegion> hmfRegions() {
+        final SortedSetMultimap<String, HmfGenomeRegion> hmfRegions = TreeMultimap.create();
+        hmfRegions.put(CHROMOSOME, ImmutableHmfGenomeRegion.builder()
                 .chromosome(CHROMOSOME)
                 .start(350)
                 .end(450)
@@ -101,7 +104,7 @@ public class VariantAnalyzerTest {
                 .entrezId(ENTREZ_ID)
                 .geneID(GENE_ID)
                 .geneStart(GENE_START)
-                .geneEnd(GENE_END)
-                .build();
+                .geneEnd(GENE_END).build());
+        return hmfRegions;
     }
 }

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.gene;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
@@ -18,11 +17,6 @@ public class GeneModel {
     public GeneModel(@NotNull final SortedSetMultimap<String, HmfGenomeRegion> regions) {
         this.regions = regions.values();
         slicer = SlicerFactory.fromRegions(regions);
-    }
-
-    public GeneModel(@NotNull final HmfGenomeRegion region) {
-        this.regions = Collections.singletonList(region);
-        slicer = SlicerFactory.fromSingleGenomeRegion(region);
     }
 
     public Collection<HmfGenomeRegion> hmfRegions() {
