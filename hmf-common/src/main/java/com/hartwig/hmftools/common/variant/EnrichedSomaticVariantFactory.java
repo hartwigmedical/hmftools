@@ -103,6 +103,8 @@ public class EnrichedSomaticVariantFactory {
                 .alleleReadCount(variant.alleleReadCount())
                 .highConfidenceRegion(false)
                 .adjustedCopyNumber(0)
+                .clonality(Clonality.UNKNOWN)
+                .lossOfHeterozygosity(false)
                 .adjustedVAF(0);
     }
 
