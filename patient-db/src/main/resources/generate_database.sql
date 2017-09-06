@@ -104,6 +104,8 @@ CREATE TABLE somaticVariant
     adjustedCopyNumber DOUBLE PRECISION NOT NULL,
     highConfidence BOOLEAN NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
+    clonality varchar(455) NOT NULL,
+    loh BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter)
