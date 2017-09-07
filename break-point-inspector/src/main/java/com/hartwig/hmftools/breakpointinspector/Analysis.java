@@ -292,7 +292,7 @@ class Analysis {
         BreakpointError Error = BreakpointError.NONE;
     }
 
-    private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final SamReader reader, final int extraUncertainty) {
+    private BreakpointResult determineBreakpointsImprecise(final HMFVariantContext ctx, final SamReader reader, final int extraUncertainty) {
 
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
@@ -471,6 +471,14 @@ class Analysis {
         final Location breakpoint2 = bp2_candidates.get(0).add(ctx.OrientationBP2 > 0 ? -1 : 0);
 
         return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
+    }
+
+    private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final SamReader reader, final int extraUncertainty) {
+        if (ctx.Imprecise) {
+            return determineBreakpointsImprecise(ctx, reader, extraUncertainty);
+        } else {
+            return BreakpointResult.from(BreakpointError.ALGO_ERROR);
+        }
     }
 
     private static File queryNameSortedBAM(final SamReader reader, final QueryInterval[] intervals, final String name) throws IOException {
