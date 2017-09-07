@@ -149,7 +149,7 @@ public class BreakPointInspectorApplication {
                 final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
                 final Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
                 final List<Integer> CIEND = variant.getAttributeAsIntList("CIEND", 0);
-                Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
+                final Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
                 final boolean IMPRECISE = variant.hasAttribute("IMPRECISE");
 
                 HMFVariantType svType;
@@ -182,7 +182,7 @@ public class BreakPointInspectorApplication {
 
                         // get the CIPOS from the mate
                         final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
-                        uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : new Range(0, 0);
+                        // TODO: uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : new Range(0, 0);
 
                         location2 = Location.parseLocationString(mateVariant.getContig() + ":" + Integer.toString(mateVariant.getStart()),
                                 tumorReader.getFileHeader().getSequenceDictionary());
@@ -217,6 +217,8 @@ public class BreakPointInspectorApplication {
                 ctx.Filter.addAll(variant.getFilters().stream().filter(s -> !s.startsWith("BPI")).collect(Collectors.toSet()));
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
+                ctx.HomologySequence = variant.getAttributeAsString("HOMSEQ", "");
+                ctx.InsertSequence = variant.getAttributeAsString("SVINSSEQ", "");
 
                 switch (ctx.Type) {
                     case INS:

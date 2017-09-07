@@ -292,7 +292,8 @@ class Analysis {
         BreakpointError Error = BreakpointError.NONE;
     }
 
-    private BreakpointResult determineBreakpointsImprecise(final HMFVariantContext ctx, final SamReader reader, final int extraUncertainty) {
+    private BreakpointResult determineBreakpointsImprecise(final HMFVariantContext ctx, final SamReader reader,
+            final int extraUncertainty) {
 
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
@@ -476,8 +477,14 @@ class Analysis {
     private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final SamReader reader, final int extraUncertainty) {
         if (ctx.Imprecise) {
             return determineBreakpointsImprecise(ctx, reader, extraUncertainty);
+        } else if (ctx.InsertSequence.isEmpty()) {
+            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? ctx.HomologySequence.length() + 1 : 0);
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End + 1 : ctx.Uncertainty2.Start);
+            return BreakpointResult.from(Pair.of(bp1, bp2));
         } else {
-            return BreakpointResult.from(BreakpointError.ALGO_ERROR);
+            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? 1 : 0);
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End + 1 : ctx.Uncertainty2.Start);
+            return BreakpointResult.from(Pair.of(bp1, bp2));
         }
     }
 

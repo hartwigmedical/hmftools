@@ -50,6 +50,8 @@ class HMFVariantContext {
     HMFVariantType Type;
     boolean Imprecise;
     HashSet<String> Filter = Sets.newHashSet();
+    String InsertSequence;
+    String HomologySequence;
 
     int OrientationBP1 = 0;
     int OrientationBP2 = 0;
