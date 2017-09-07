@@ -541,8 +541,12 @@ class Analysis {
         SORTED_REF_READER.close();
         SORTED_TUMOR_READER.close();
 
-        TEMP_REF_BAM.delete();
-        TEMP_TUMOR_BAM.delete();
+        if (!TEMP_REF_BAM.delete()) {
+            LOGGER.error("couldn't delete {}", TEMP_REF_BAM);
+        }
+        if (!TEMP_TUMOR_BAM.delete()) {
+            LOGGER.error("couldn't delete {}", TEMP_TUMOR_BAM);
+        }
 
         return result;
     }
