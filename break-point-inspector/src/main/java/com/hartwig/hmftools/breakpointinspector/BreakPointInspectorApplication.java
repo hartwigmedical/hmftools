@@ -172,6 +172,7 @@ public class BreakPointInspectorApplication {
                         final String call = variant.getAlternateAllele(0).getDisplayString();
                         final String[] leftSplit = call.split("\\]");
                         final String[] rightSplit = call.split("\\[");
+
                         if (leftSplit.length >= 2) {
                             location2 = Location.parseLocationString(leftSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
                             if (leftSplit[0].length() > 0) {
@@ -194,6 +195,12 @@ public class BreakPointInspectorApplication {
                             System.err.println(variant.getID() + " : could not parse breakpoint");
                             continue;
                         }
+
+                        if (IMPRECISE) {
+                            final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
+                            uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : new Range(0, 0);
+                        }
+
                         break;
                     default:
                         System.err.println(variant.getID() + " : UNEXPECTED SVTYPE=" + variant.getStructuralVariantType());
