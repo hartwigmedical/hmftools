@@ -9,17 +9,24 @@ class GCMedianFactory {
     private static final int MIN_BUCKET = 20;
     private static final int MAX_BUCKET = 60;
 
+    private final IntegerMedian global;
     private final Map<Integer, IntegerMedian> gcContentMedian;
 
     GCMedianFactory() {
         gcContentMedian = Maps.newHashMap();
+        global = new IntegerMedian();
     }
 
     void addReadCount(int gcBucket, int readCount) {
         assert (gcBucket <= 100);
         if (gcBucket >= MIN_BUCKET && gcBucket <= MAX_BUCKET) {
+            global.addRead(readCount);
             gcContentMedian.computeIfAbsent(gcBucket, integer -> new IntegerMedian()).addRead(readCount);
         }
+    }
+
+    double globalNormalFactor() {
+        return 1.0 * global.median() / global.mean();
     }
 
     Map<Integer, GCMedian> medianCountPerGCBucket() {

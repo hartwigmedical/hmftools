@@ -10,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 
 class IntegerMedian {
 
+    private long sum;
+    private int count;
     private final Map<Integer, InnerReadCount> readCount;
 
     IntegerMedian() {
@@ -18,6 +20,12 @@ class IntegerMedian {
 
     void addRead(int read) {
         readCount.computeIfAbsent(read, InnerReadCount::new).increment();
+        count++;
+        sum += read;
+    }
+
+    int mean() {
+        return (int) (sum / count);
     }
 
     int median() {
