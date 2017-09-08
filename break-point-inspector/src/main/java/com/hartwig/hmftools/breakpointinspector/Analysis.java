@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,15 +33,13 @@ class Analysis {
     private final SamReader tumorReader;
 
     private final int range;
-    private final int[] extraUncertainties;
 
     private static final SAMRecordCoordinateComparator comparator = new SAMRecordCoordinateComparator();
 
-    Analysis(final SamReader refReader, final SamReader tumorReader, final int range, final int[] extraUncertainties) {
+    Analysis(final SamReader refReader, final SamReader tumorReader, final int range) {
         this.refReader = refReader;
         this.tumorReader = tumorReader;
         this.range = range;
-        this.extraUncertainties = extraUncertainties;
     }
 
     private static class PairedReads extends ArrayList<Pair<SAMRecord, SAMRecord>> {
@@ -77,7 +76,12 @@ class Analysis {
         return (orientation > 0 ? record.getCigar().isRightClipped() : record.getCigar().isLeftClipped());
     }
 
-    private boolean withinRange(final Location a, final Location b, final Range range, final int extraUncertainty) {
+    private static boolean exactlyClipsBreakpoint(final SAMRecord record, final Location breakpoint, final int orientation) {
+        return Location.fromSAMRecord(record, orientation < 0).compareTo(breakpoint) == 0 && clippedOnCorrectSide(record, orientation);
+    }
+
+    private boolean withinRange(final Location a, final Location b, final Range range) {
+        final int extraUncertainty = 1;
         return a.ReferenceIndex == b.ReferenceIndex && (a.Position >= b.Position + range.Start - extraUncertainty) && (a.Position
                 <= b.Position + range.End + extraUncertainty);
     }
@@ -191,13 +195,8 @@ class Analysis {
 
                 if (support) {
 
-                    final boolean clip_bp1 = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 < 0)
-                            .add(ctx.OrientationBP1 < 0 ? -1 : 0)
-                            .compareTo(breakpoints.getLeft()) == 0 && clippedOnCorrectSide(pair.getLeft(), ctx.OrientationBP1);
-
-                    final boolean clip_bp2 = Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 < 0)
-                            .add(ctx.OrientationBP2 < 0 ? -1 : 0)
-                            .compareTo(breakpoints.getRight()) == 0 && clippedOnCorrectSide(pair.getRight(), ctx.OrientationBP2);
+                    final boolean clip_bp1 = exactlyClipsBreakpoint(pair.getLeft(), breakpoints.getLeft(), ctx.OrientationBP1);
+                    final boolean clip_bp2 = exactlyClipsBreakpoint(pair.getRight(), breakpoints.getRight(), ctx.OrientationBP2);
 
                     if (clip_bp1) {
                         result.BP1_Stats.PR_SR_Support++;
@@ -216,15 +215,11 @@ class Analysis {
                 } else if (proper || secondary) {
 
                     final boolean clip_bp1 =
-                            Location.fromSAMRecord(ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP1 < 0)
-                                    .add(ctx.OrientationBP1 > 0 ? 0 : -1)
-                                    .compareTo(breakpoints.getLeft()) == 0 && clippedOnCorrectSide(
-                                    ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP1);
+                            exactlyClipsBreakpoint(ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), breakpoints.getLeft(),
+                                    ctx.OrientationBP1);
                     final boolean clip_bp2 =
-                            Location.fromSAMRecord(ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP2 < 0)
-                                    .add(ctx.OrientationBP2 > 0 ? 0 : -1)
-                                    .compareTo(breakpoints.getRight()) == 0 && clippedOnCorrectSide(
-                                    ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP2);
+                            exactlyClipsBreakpoint(ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), breakpoints.getRight(),
+                                    ctx.OrientationBP2);
 
                     final boolean span_bp1 = span(pair, breakpoints.getLeft());
                     final boolean span_bp2 = span(pair, breakpoints.getRight());
@@ -266,13 +261,15 @@ class Analysis {
     enum BreakpointError {
         NONE,
         ALGO_ERROR,
-        NO_EVIDENCE,
         UNINITIALIZED
     }
 
     private static class BreakpointResult {
         private BreakpointResult(final Pair<Location, Location> breakpoints) {
             Breakpoints = breakpoints;
+            if (stream(breakpoints).anyMatch(Objects::isNull)) {
+                Error = BreakpointError.ALGO_ERROR;
+            }
         }
 
         private BreakpointResult(final BreakpointError error) {
@@ -284,16 +281,11 @@ class Analysis {
             return new BreakpointResult(breakpoints);
         }
 
-        static BreakpointResult from(final BreakpointError error) {
-            return new BreakpointResult(error);
-        }
-
         Pair<Location, Location> Breakpoints;
         BreakpointError Error = BreakpointError.NONE;
     }
 
-    private BreakpointResult determineBreakpointsImprecise(final HMFVariantContext ctx, final SamReader reader,
-            final int extraUncertainty) {
+    private BreakpointResult determineBreakpointsImprecise(final HMFVariantContext ctx, final SamReader reader) {
 
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
@@ -419,71 +411,60 @@ class Analysis {
 
         // determinate candidates based on clipping info
 
-        final List<Location> bp1_candidates = bp1_clipping.getSequences()
-                .stream()
+        final List<Location> bp1_candidates = bp1_clipping.getSequences().stream()
                 //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
-                .filter(c -> withinRange(c, ctx.MantaBP1, ctx.Uncertainty1, extraUncertainty))
-                .collect(Collectors.toList());
+                .map(c -> c.Alignment).filter(c -> withinRange(c, ctx.MantaBP1, ctx.Uncertainty1)).collect(Collectors.toList());
 
         if (bp1_candidates.isEmpty()) {
             final Location candidate = interesting.stream()
                     .map(Pair::getLeft)
                     .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP1 < 0).add(ctx.OrientationBP1 > 0 ? 0 : -1))
-                    .filter(l -> withinRange(l, ctx.MantaBP1, ctx.Uncertainty1, extraUncertainty))
+                    .filter(l -> withinRange(l, ctx.MantaBP1, ctx.Uncertainty1))
                     .max((a, b) -> ctx.OrientationBP1 > 0 ? a.compareTo(b) : b.compareTo(a))
                     .orElse(null);
 
-            if (candidate == null) {
-                return BreakpointResult.from(BreakpointError.NO_EVIDENCE);
+            if (candidate != null) {
+                bp1_candidates.add(candidate);
             }
 
-            bp1_candidates.add(candidate);
         }
 
-        final List<Location> bp2_candidates = bp2_clipping.getSequences()
-                .stream()
+        final List<Location> bp2_candidates = bp2_clipping.getSequences().stream()
                 //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
-                .filter(c -> withinRange(c, ctx.MantaBP2, ctx.Uncertainty2, extraUncertainty))
-                .collect(Collectors.toList());
+                .map(c -> c.Alignment).filter(c -> withinRange(c, ctx.MantaBP2, ctx.Uncertainty2)).collect(Collectors.toList());
 
         if (bp2_candidates.isEmpty()) {
             final Location candidate = interesting.stream()
                     .map(Pair::getRight)
                     .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP2 < 0).add(ctx.OrientationBP2 > 0 ? 0 : -1))
-                    .filter(l -> withinRange(l, ctx.MantaBP2, ctx.Uncertainty2, extraUncertainty))
+                    .filter(l -> withinRange(l, ctx.MantaBP2, ctx.Uncertainty2))
                     .max((a, b) -> ctx.OrientationBP2 > 0 ? a.compareTo(b) : b.compareTo(a))
                     .orElse(null);
 
-            if (candidate == null) {
-                return BreakpointResult.from(BreakpointError.NO_EVIDENCE);
+            if (candidate != null) {
+                bp2_candidates.add(candidate);
             }
-
-            bp2_candidates.add(candidate);
         }
 
-        if (bp1_candidates.isEmpty() || bp2_candidates.isEmpty()) {
-            return BreakpointResult.from(BreakpointError.ALGO_ERROR);
-        }
-
+        // NOTE: we include homology on both sides here and take it out later
         LOGGER.trace("bp1_candidates={} bp2_candidates={}", bp1_candidates, bp2_candidates);
-        final Location breakpoint1 = bp1_candidates.get(0).add(ctx.OrientationBP1 > 0 ? -1 : 0);
-        final Location breakpoint2 = bp2_candidates.get(0).add(ctx.OrientationBP2 > 0 ? -1 : 0);
+        final Location breakpoint1 = bp1_candidates.isEmpty() ? null : bp1_candidates.get(0).add(-ctx.OrientationBP1);
+        final Location breakpoint2 = bp2_candidates.isEmpty() ? null : bp2_candidates.get(0).add(-ctx.OrientationBP2);
 
         return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
     }
 
-    private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final SamReader reader, final int extraUncertainty) {
+    private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final SamReader reader) {
+        final int adj = ctx.BND ? 0 : 1;
         if (ctx.Imprecise) {
-            return determineBreakpointsImprecise(ctx, reader, extraUncertainty);
+            return determineBreakpointsImprecise(ctx, reader);
         } else if (ctx.InsertSequence.isEmpty()) {
-            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? ctx.HomologySequence.length() + 1 : 0);
-            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End + 1 : ctx.Uncertainty2.Start);
+            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? ctx.HomologySequence.length() : adj);
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
             return BreakpointResult.from(Pair.of(bp1, bp2));
         } else {
-            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? 1 : 0);
-            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End + 1 : ctx.Uncertainty2.Start);
+            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? 0 : adj); // ignore homology when we have an insert
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
             return BreakpointResult.from(Pair.of(bp1, bp2));
         }
     }
@@ -521,19 +502,10 @@ class Analysis {
         final SamReader SORTED_REF_READER = SamReaderFactory.makeDefault().open(TEMP_REF_BAM);
         final SamReader SORTED_TUMOR_READER = SamReaderFactory.makeDefault().open(TEMP_TUMOR_BAM);
 
-        int extraUncertainty = 0;
-        BreakpointResult breakpoints = new BreakpointResult(BreakpointError.UNINITIALIZED);
-        for (final int u : extraUncertainties) {
-            extraUncertainty = u;
-            breakpoints = determineBreakpoints(ctx, SORTED_TUMOR_READER, u);
-            if (breakpoints.Error == BreakpointError.NONE) {
-                break;
-            }
-        }
+        BreakpointResult breakpoints = determineBreakpoints(ctx, SORTED_TUMOR_READER);
 
         final StructuralVariantResult result = new StructuralVariantResult();
         result.Breakpoints = breakpoints.Breakpoints;
-        result.ExtraUncertainty = extraUncertainty;
         result.QueryIntervals = intervals;
 
         if (breakpoints.Error != BreakpointError.NONE) {
@@ -548,6 +520,18 @@ class Analysis {
             SORTED_REF_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.RefStats.Sample_Clipping.add(c)));
 
             result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
+
+            // adjust for homology
+            final Location bp1 = result.Breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 0 : -1);
+            final Location bp2;
+            if (ctx.InsertSequence.isEmpty()) {
+                bp2 = result.Breakpoints.getRight()
+                        .add(-ctx.OrientationBP2 * ctx.HomologySequence.length())
+                        .add(ctx.OrientationBP2 > 0 ? 0 : -1);
+            } else {
+                bp2 = result.Breakpoints.getRight().add(ctx.OrientationBP2 > 0 ? 0 : -1);
+            }
+            result.Breakpoints = Pair.of(bp1, bp2);
         }
 
         result.FilterString = result.Filters.isEmpty() ? "PASS" : String.join(";", result.Filters);

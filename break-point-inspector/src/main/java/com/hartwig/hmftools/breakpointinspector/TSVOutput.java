@@ -35,7 +35,6 @@ class TSVOutput {
         header.add("FILTER");
         header.add("AF_BP1");
         header.add("AF_BP2");
-        header.add("EXTRA_UNCERTAINTY");
         System.out.println(String.join("\t", header));
     }
 
@@ -58,7 +57,6 @@ class TSVOutput {
 
         fields.add(String.format("%.2f", result.AlleleFrequency.getLeft()));
         fields.add(String.format("%.2f", result.AlleleFrequency.getRight()));
-        fields.add(Integer.toString(result.ExtraUncertainty));
 
         System.out.println(String.join("\t", fields));
     }

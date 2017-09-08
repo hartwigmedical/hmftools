@@ -59,6 +59,5 @@ class StructuralVariantResult {
     SampleStats RefStats = new SampleStats();
     Collection<String> Filters;
     String FilterString = "";
-    int ExtraUncertainty = 0;
     QueryInterval[] QueryIntervals;
 }

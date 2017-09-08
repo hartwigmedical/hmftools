@@ -98,8 +98,8 @@ class Filter {
         }
 
         // we must adjust from Manta breakpoint convention to our clipping position convention
-        final List<Location> adjusted_bp = Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 1 : 0),
-                breakpoints.getRight().add(ctx.OrientationBP2 > 0 ? 1 : 0));
+        final List<Location> adjusted_bp =
+                Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1), breakpoints.getRight().add(ctx.OrientationBP2));
 
         boolean concordance = false;
         for (final Location bp : adjusted_bp) {

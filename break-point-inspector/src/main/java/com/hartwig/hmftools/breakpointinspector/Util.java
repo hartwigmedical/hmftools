@@ -39,6 +39,10 @@ class Range {
         Start = start;
         End = end;
     }
+
+    static Range invert(final Range r) {
+        return new Range(-r.End, r.Start);
+    }
 }
 
 class HMFVariantContext {
@@ -49,6 +53,7 @@ class HMFVariantContext {
     Range Uncertainty2;
     HMFVariantType Type;
     boolean Imprecise;
+    boolean BND;
     HashSet<String> Filter = Sets.newHashSet();
     String InsertSequence;
     String HomologySequence;

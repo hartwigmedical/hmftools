@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +28,7 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -47,7 +47,6 @@ public class BreakPointInspectorApplication {
     private static final String PROXIMITY = "proximity";
     private static final String VCF = "vcf";
     private static final String VCF_OUT = "output_vcf";
-    private static final String EXTRA_UNCERTAINTY = "extra_uncertainty";
 
     private static Options createOptions() {
         final Options options = new Options();
@@ -58,11 +57,6 @@ public class BreakPointInspectorApplication {
         options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to scan around breakpoint (optional, default=500)").build());
         options.addOption(Option.builder(VCF).required().hasArg().desc("Manta VCF file to batch inspect (required)").build());
         options.addOption(Option.builder(VCF_OUT).hasArg().desc("VCF output file (optional)").build());
-        options.addOption(Option.builder(EXTRA_UNCERTAINTY)
-                .hasArgs()
-                .valueSeparator(',')
-                .desc("extra bases to add to Manta uncertainty (optional, default=1,5,10,20)")
-                .build());
         return options;
     }
 
@@ -93,11 +87,6 @@ public class BreakPointInspectorApplication {
 
             if (cmd.hasOption(PROXIMITY)) {
                 analysisBuilder.setRange(Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500")));
-            }
-
-            if (cmd.hasOption(EXTRA_UNCERTAINTY)) {
-                int[] extraUncertainty = Arrays.stream(cmd.getOptionValues(EXTRA_UNCERTAINTY)).mapToInt(Integer::parseInt).toArray();
-                analysisBuilder.setExtraUncertainty(extraUncertainty);
             }
 
             if (refPath == null || tumorPath == null || vcfPath == null) {
@@ -149,7 +138,7 @@ public class BreakPointInspectorApplication {
                 final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
                 final Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
                 final List<Integer> CIEND = variant.getAttributeAsIntList("CIEND", 0);
-                final Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
+                Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
                 final boolean IMPRECISE = variant.hasAttribute("IMPRECISE");
 
                 HMFVariantType svType;
@@ -179,29 +168,27 @@ public class BreakPointInspectorApplication {
                         location2 = location1.add(Math.abs(variant.getAttributeAsInt("SVLEN", 0)));
                         break;
                     case BND:
-
-                        // get the CIPOS from the mate
-                        final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
-                        // TODO: uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : new Range(0, 0);
-
-                        location2 = Location.parseLocationString(mateVariant.getContig() + ":" + Integer.toString(mateVariant.getStart()),
-                                tumorReader.getFileHeader().getSequenceDictionary());
-
                         // process the breakend string
                         final String call = variant.getAlternateAllele(0).getDisplayString();
                         final String[] leftSplit = call.split("\\]");
                         final String[] rightSplit = call.split("\\[");
                         if (leftSplit.length >= 2) {
+                            location2 = Location.parseLocationString(leftSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
                             if (leftSplit[0].length() > 0) {
                                 svType = HMFVariantType.INV3;
+                                uncertainty2 = Range.invert(uncertainty1);
                             } else {
                                 svType = HMFVariantType.DUP;
+                                uncertainty2 = uncertainty1;
                             }
                         } else if (rightSplit.length >= 2) {
+                            location2 = Location.parseLocationString(rightSplit[1], tumorReader.getFileHeader().getSequenceDictionary());
                             if (rightSplit[0].length() > 0) {
                                 svType = HMFVariantType.DEL;
+                                uncertainty2 = uncertainty1;
                             } else {
                                 svType = HMFVariantType.INV5;
+                                uncertainty2 = Range.invert(uncertainty1);
                             }
                         } else {
                             System.err.println(variant.getID() + " : could not parse breakpoint");
@@ -219,6 +206,7 @@ public class BreakPointInspectorApplication {
                 ctx.Uncertainty2 = uncertainty2;
                 ctx.HomologySequence = variant.getAttributeAsString("HOMSEQ", "");
                 ctx.InsertSequence = variant.getAttributeAsString("SVINSSEQ", "");
+                ctx.BND = variant.getStructuralVariantType() == StructuralVariantType.BND;
 
                 switch (ctx.Type) {
                     case INS:
