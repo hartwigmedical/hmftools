@@ -326,7 +326,8 @@ class Analysis {
                         clippedOnCorrectSide(pair.getLeft(), ctx.OrientationBP1) || clippedOnCorrectSide(pair.getRight(),
                                 ctx.OrientationBP2);
 
-                final boolean potentialSROnly = Stream.of(ctx.OrientationBP1, ctx.OrientationBP2)
+                final boolean sameChromosome = pair.getLeft().getReferenceIndex().equals(pair.getRight().getReferenceIndex());
+                final boolean potentialSROnly = sameChromosome && Stream.of(ctx.OrientationBP1, ctx.OrientationBP2)
                         .anyMatch(orientation -> clippedOnCorrectSide(orientation > 0 ? pair.getRight() : pair.getLeft(), orientation));
 
                 final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
