@@ -254,6 +254,11 @@ public class BreakPointInspectorApplication {
                     if (result.Breakpoints.getRight() != null) {
                         v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.Breakpoints.getRight().Position, true);
                     }
+                    // remove CIPOS / CIEND when we have an insert sequence
+                    if (!v.hasAttribute("IMPRECISE") && v.hasAttribute("SVINSSEQ")) {
+                        v.getCommonInfo().removeAttribute("CIPOS");
+                        v.getCommonInfo().removeAttribute("CIEND");
+                    }
                     variants.add(v);
                 };
 
