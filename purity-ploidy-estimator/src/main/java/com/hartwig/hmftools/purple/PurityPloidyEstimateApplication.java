@@ -182,7 +182,6 @@ public class PurityPloidyEstimateApplication {
                     .build();
 
             if (cmd.hasOption(DB_ENABLED)) {
-                LOGGER.info("Persisting to database");
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
                 dbAccess.writePurity(tumorSample, purityContext);
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
