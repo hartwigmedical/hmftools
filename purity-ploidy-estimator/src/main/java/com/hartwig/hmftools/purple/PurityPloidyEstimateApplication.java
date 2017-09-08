@@ -15,9 +15,10 @@ import java.util.concurrent.Executors;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCProfile;
+import com.hartwig.hmftools.common.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
@@ -32,7 +33,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
@@ -133,7 +133,7 @@ public class PurityPloidyEstimateApplication {
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
 
             // JOBA: Ratio Segmentation
-            final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
+            final Multimap<String, GCProfile> gcContent = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
             final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
             final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();

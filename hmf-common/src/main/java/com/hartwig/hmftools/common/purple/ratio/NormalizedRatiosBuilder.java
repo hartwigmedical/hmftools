@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
@@ -23,13 +24,13 @@ public class NormalizedRatiosBuilder {
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
 
-    public void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCContent gcContent, @NotNull final ReadCount readCount) {
-        if (gcContent.compareTo(readCount) != 0) {
+    public void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, @NotNull final ReadCount readCount) {
+        if (gcProfile.compareTo(readCount) != 0) {
             throw new IllegalArgumentException();
         }
 
-        final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcContent);
-        entries.put(gcContent.chromosome(), readCountWithGCContent);
+        final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
+        entries.put(gcProfile.chromosome(), readCountWithGCContent);
 
         // TODO: TEST With/without ismappable
         if (chromosome.isAutosome() && readCountWithGCContent.isMappable() && readCount.readCount() > 0) {
@@ -71,12 +72,12 @@ public class NormalizedRatiosBuilder {
 
     private class ReadCountWithGCContent implements GenomePosition {
 
-        private final GCContent gcContent;
+        private final GCProfile gcProfile;
         private final ReadCount readCount;
 
-        private ReadCountWithGCContent(@NotNull final ReadCount readCount, @NotNull final GCContent gcContent) {
+        private ReadCountWithGCContent(@NotNull final ReadCount readCount, @NotNull final GCProfile gcProfile) {
             this.readCount = readCount;
-            this.gcContent = gcContent;
+            this.gcProfile = gcProfile;
         }
 
         @NotNull
@@ -95,11 +96,11 @@ public class NormalizedRatiosBuilder {
         }
 
         private int gcContent() {
-            return (int) Math.round(gcContent.gcContent() * 100);
+            return (int) Math.round(gcProfile.gcContent() * 100);
         }
 
         private boolean isMappable() {
-            return Doubles.greaterOrEqual(gcContent.mappablePercentage(), MIN_MAPPABLE_PERCENTAGE);
+            return Doubles.greaterOrEqual(gcProfile.mappablePercentage(), MIN_MAPPABLE_PERCENTAGE);
         }
     }
 }

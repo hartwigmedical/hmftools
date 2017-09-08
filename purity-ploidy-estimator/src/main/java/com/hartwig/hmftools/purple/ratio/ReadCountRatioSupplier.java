@@ -10,10 +10,10 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.ratio.GCMedianFile;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatios;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatiosBuilder;
@@ -32,7 +32,7 @@ public class ReadCountRatioSupplier implements RatioSupplier {
     private final Multimap<String, ReadRatio> referenceRatios;
     private final Multimap<String, ReadRatio> tumorRatios;
 
-    public ReadCountRatioSupplier(final CommonConfig config, final Multimap<String, GCContent> gcContent)
+    public ReadCountRatioSupplier(final CommonConfig config, final Multimap<String, GCProfile> gcContent)
             throws IOException, HartwigException {
 
         final String tumorRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
@@ -59,15 +59,15 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             for (String chromosomeName : normalReadCount.keySet()) {
                 if (HumanChromosome.contains(chromosomeName)) {
                     final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-                    List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosomeName);
-                    for (GCContent windowGCContent : chromosomeGCContent) {
+                    List<GCProfile> chromosomeGCProfile = (List<GCProfile>) gcContent.get(chromosomeName);
+                    for (GCProfile windowGCProfile : chromosomeGCProfile) {
 
                         final ReadCount referenceCount =
-                                referenceReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
-                        normalRatiosBuilder.addPosition(chromosome, windowGCContent, referenceCount);
+                                referenceReadCountSelector.select(windowGCProfile).orElseGet(() -> empty(windowGCProfile));
+                        normalRatiosBuilder.addPosition(chromosome, windowGCProfile, referenceCount);
 
-                        final ReadCount tumorCount = tumorReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
-                        tumorRatiosBuilder.addPosition(chromosome, windowGCContent, tumorCount);
+                        final ReadCount tumorCount = tumorReadCountSelector.select(windowGCProfile).orElseGet(() -> empty(windowGCProfile));
+                        tumorRatiosBuilder.addPosition(chromosome, windowGCProfile, tumorCount);
                     }
                 } else {
                     LOGGER.info("Excluding unsupported {} chromosome from read ratios", chromosomeName);

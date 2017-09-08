@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.copynumber.freec;
+package com.hartwig.hmftools.common.gc;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,12 +9,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.LineReader;
-import com.hartwig.hmftools.common.purple.ratio.GCContent;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableGCContent;
+import com.hartwig.hmftools.common.purple.ratio.ImmutableGCProfile;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum FreecGCContentFactory {
+public enum GCProfileFactory {
     ;
 
     private static final String RATIO_COLUMN_SEPARATOR = "\t";
@@ -25,17 +24,17 @@ public enum FreecGCContentFactory {
     private static final int MAPPABLE_PERCENTAGE_COLUMN = 4;
 
     @NotNull
-    public static Multimap<String, GCContent> loadGCContent(@NotNull final String fileName) throws IOException, HartwigException {
+    public static Multimap<String, GCProfile> loadGCContent(@NotNull final String fileName) throws IOException, HartwigException {
         return loadGCContent(LineReader.build().readLines(new File(fileName).toPath(), x -> true));
     }
 
     @NotNull
-    private static Multimap<String, GCContent> loadGCContent(@NotNull final List<String> lines) {
+    private static Multimap<String, GCProfile> loadGCContent(@NotNull final List<String> lines) {
 
-        final Multimap<String, GCContent> result = ArrayListMultimap.create();
+        final Multimap<String, GCProfile> result = ArrayListMultimap.create();
         for (String line : lines) {
-            final GCContent gcContent = fromLine(line);
-            result.put(gcContent.chromosome(), gcContent);
+            final GCProfile gcProfile = fromLine(line);
+            result.put(gcProfile.chromosome(), gcProfile);
         }
 
         return result;
@@ -43,7 +42,7 @@ public enum FreecGCContentFactory {
 
     @NotNull
     @VisibleForTesting
-    static GCContent fromLine(@NotNull final String ratioLine) {
+    static GCProfile fromLine(@NotNull final String ratioLine) {
         final String[] values = ratioLine.split(RATIO_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
@@ -52,7 +51,7 @@ public enum FreecGCContentFactory {
         final double nonNPercentage = Double.valueOf(values[NON_N_PERCENTAGE_COLUMN].trim());
         final double mappablePercentage = Double.valueOf(values[MAPPABLE_PERCENTAGE_COLUMN].trim());
 
-        return ImmutableGCContent.builder()
+        return ImmutableGCProfile.builder()
                 .chromosome(chromosome)
                 .position(position)
                 .gcContent(gcContent)
