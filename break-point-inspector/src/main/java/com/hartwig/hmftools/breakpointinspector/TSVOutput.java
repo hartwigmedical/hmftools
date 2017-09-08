@@ -38,7 +38,7 @@ class TSVOutput {
         System.out.println(String.join("\t", header));
     }
 
-    static void PrintVariant(final VariantContext variant, final HMFVariantContext context, final StructuralVariantResult result) {
+    static void print(final VariantContext variant, final HMFVariantContext context, final StructuralVariantResult result) {
         final List<String> fields = Lists.newArrayList(variant.getID(), variant.getStructuralVariantType().toString(),
                 HMFVariantType.getOrientation(context.Type), context.MantaBP1.toString(), context.MantaBP2.toString(),
                 variant.getAttributeAsString("SVLEN", ""));

@@ -132,7 +132,7 @@ public class BreakPointInspectorApplication {
                 }
 
                 final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
-                Location location1 = Location.parseLocationString(location, tumorReader.getFileHeader().getSequenceDictionary());
+                final Location location1 = Location.parseLocationString(location, tumorReader.getFileHeader().getSequenceDictionary());
 
                 // uncertainty
                 final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
@@ -142,7 +142,7 @@ public class BreakPointInspectorApplication {
                 final boolean IMPRECISE = variant.hasAttribute("IMPRECISE");
 
                 HMFVariantType svType;
-                Location location2;
+                final Location location2;
                 switch (variant.getStructuralVariantType()) {
                     case INS:
                         svType = HMFVariantType.INS;
@@ -238,7 +238,9 @@ public class BreakPointInspectorApplication {
                 final StructuralVariantResult result = analysis.processStructuralVariant(ctx);
                 combinedQueryIntervals.addAll(asList(result.QueryIntervals));
 
-                TSVOutput.PrintVariant(variant, ctx, result);
+                // begin output logic
+
+                TSVOutput.print(variant, ctx, result);
 
                 final BiConsumer<VariantContext, Boolean> vcfUpdater = (v, swap) -> {
                     final Set<String> filters = v.getCommonInfo().getFiltersMaybeNull();
@@ -261,6 +263,7 @@ public class BreakPointInspectorApplication {
                     if (result.Breakpoints.getRight() != null) {
                         v.getCommonInfo().putAttribute(swap ? "BPI_START" : "BPI_END", result.Breakpoints.getRight().Position, true);
                     }
+
                     // remove CIPOS / CIEND when we have an insert sequence
                     if (!v.hasAttribute("IMPRECISE") && v.hasAttribute("SVINSSEQ")) {
                         v.getCommonInfo().removeAttribute("CIPOS");
