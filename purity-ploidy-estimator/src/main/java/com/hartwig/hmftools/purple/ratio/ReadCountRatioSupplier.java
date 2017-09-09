@@ -10,11 +10,11 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCMedianReadCountFile;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.purple.ratio.GCMedianFile;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatios;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatiosBuilder;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
@@ -80,13 +80,13 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             referenceRatios = normalizedReferenceRatios.normalisedRatios();
             tumorRatios = normalizedTumorRatios.normalisedRatios();
 
-            final String tumorGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.tumorSample());
+            final String tumorGCMedianFileName = GCMedianReadCountFile.generateFilename(config.outputDirectory(), config.tumorSample());
             LOGGER.info("Persisting read count medians to {}", tumorGCMedianFileName);
-            GCMedianFile.write(tumorGCMedianFileName, normalizedTumorRatios.medianReadCount());
+            GCMedianReadCountFile.write(tumorGCMedianFileName, normalizedTumorRatios.medianReadCount());
 
-            final String referenceGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.refSample());
+            final String referenceGCMedianFileName = GCMedianReadCountFile.generateFilename(config.outputDirectory(), config.refSample());
             LOGGER.info("Persisting read count medians to {}", referenceGCMedianFileName);
-            GCMedianFile.write(referenceGCMedianFileName, normalizedReferenceRatios.medianReadCount());
+            GCMedianReadCountFile.write(referenceGCMedianFileName, normalizedReferenceRatios.medianReadCount());
 
             LOGGER.info("Persisting gc normalized read ratios to file");
             ReadRatioFile.write(config.outputDirectory(), config.refSample(), referenceRatios);

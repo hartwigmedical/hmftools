@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.ratio;
+package com.hartwig.hmftools.common.gc;
 
 import java.util.Map;
 import java.util.TreeSet;
@@ -8,27 +8,27 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-class IntegerMedian {
+public class ReadCountMedian {
 
     private long sum;
     private int count;
     private final Map<Integer, InnerReadCount> readCount;
 
-    IntegerMedian() {
+    public ReadCountMedian() {
         this.readCount = Maps.newHashMap();
     }
 
-    void addRead(int read) {
+    public void addRead(int read) {
         readCount.computeIfAbsent(read, InnerReadCount::new).increment();
         count++;
         sum += read;
     }
 
-    int mean() {
+    public int mean() {
         return (int) (sum / count);
     }
 
-    int median() {
+    public int median() {
 
         TreeSet<InnerReadCount> sortedSet = Sets.newTreeSet(readCount.values());
         if (sortedSet.isEmpty()) {

@@ -9,7 +9,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.LineReader;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableGCProfile;
 
 import org.jetbrains.annotations.NotNull;
 
