@@ -1,0 +1,71 @@
+<<include etc/colors_fonts_patterns.conf>>
+<<include ideogram.conf>>
+<<include ticks.conf>>
+
+<image>
+	<<include etc/image.conf>>
+</image>
+
+karyotype = data/karyotype/karyotype.human.txt
+
+chromosomes_units           = 1000000
+chromosomes_display_default = yes
+chromosomes                 = -EXCLUDE
+
+<highlights>
+
+	<highlight>
+		file       = gaps.txt
+		ideogram   = yes
+		fill_color = black_a3
+		z = 5
+	</highlight>
+
+</highlights>
+
+# Default is to clip the data to range min/max.
+<plots>
+
+	# -----------------------------------------------------------
+	# Tumor (Blue)
+	<plot>
+		type = scatter
+		file = SAMPLE.ratio.circos
+		r0   = 0.475r
+		r1   = 0.975r
+		min  = 0
+		max  = 2
+		color = purple
+		glyph = circle
+
+		<axes>
+			<axis>
+				color     = lpurple
+				thickness = 1
+				spacing   = 0.25r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlpurple_a5
+			</background>
+		</backgrounds>
+	</plot>
+
+	# -----------------------------------------------------------
+	# Reference (Orange)
+	<plot>
+		type = scatter
+		file = REFERENCE.ratio.circos
+		r0   = 0.475r
+		r1   = 0.975r
+		min  = 0
+		max  = 2
+		color = orange
+		glyph = circle
+	</plot>
+
+</plots>
+
+<<include etc/housekeeping.conf>>

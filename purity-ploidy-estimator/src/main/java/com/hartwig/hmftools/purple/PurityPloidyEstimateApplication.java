@@ -157,9 +157,16 @@ public class PurityPloidyEstimateApplication {
             final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
             final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
             final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
-            final FittedPurityFactory fittedPurityFactory =
-                    new FittedPurityFactory(executorService, MAX_PLOIDY, minPurity, maxPurity, PURITY_INCREMENTS, minNormFactor,
-                            maxNormFactor, NORM_FACTOR_INCREMENTS, fittedRegionFactory, observedRegions);
+            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                    MAX_PLOIDY,
+                    minPurity,
+                    maxPurity,
+                    PURITY_INCREMENTS,
+                    minNormFactor,
+                    maxNormFactor,
+                    NORM_FACTOR_INCREMENTS,
+                    fittedRegionFactory,
+                    observedRegions);
 
             final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity(), somaticVariants);
             final FittedPurity bestFit = bestFitFactory.bestFit();
@@ -201,12 +208,13 @@ public class PurityPloidyEstimateApplication {
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
-            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(), purityContext.score(), smoothRegions,
+            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(),
+                    purityContext.score(),
+                    smoothRegions,
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
-            new GenerateCircosDataHelper(tumorSample, configSupplier.circosConfig()).write(gender, smoothRegions, enrichedSomatics,
-                    structuralVariants);
+            new GenerateCircosData(configSupplier).write(gender, smoothRegions, enrichedSomatics, structuralVariants, fittedRegions);
 
         } finally {
             executorService.shutdown();
