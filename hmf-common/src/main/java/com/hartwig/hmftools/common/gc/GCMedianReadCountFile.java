@@ -23,8 +23,8 @@ public enum GCMedianReadCountFile {
     }
 
     @NotNull
-    public static GCMedianReadCount read(@NotNull final String filename) throws IOException {
-        return fromLines(Files.readAllLines(new File(filename).toPath()));
+    public static GCMedianReadCount read(boolean extendRange, @NotNull final String filename) throws IOException {
+        return fromLines(extendRange, Files.readAllLines(new File(filename).toPath()));
     }
 
     public static void write(@NotNull final String fileName, @NotNull final GCMedianReadCount gcMedianReadCount) throws IOException {
@@ -32,7 +32,7 @@ public enum GCMedianReadCountFile {
     }
 
     @NotNull
-    static GCMedianReadCount fromLines(@NotNull final List<String> lines) throws IOException {
+    static GCMedianReadCount fromLines(boolean extendRange, @NotNull final List<String> lines) throws IOException {
 
         int mean = 0;
         int median = 0;
@@ -43,6 +43,22 @@ public enum GCMedianReadCountFile {
         }
 
         final Map<GCBucket, Integer> medianPerBucket = Maps.newHashMap();
+        if (extendRange) {
+            if (lines.size() > 3) {
+                String[] minLine = lines.get(3).split(DELIMITER);
+                int minMedian = Integer.valueOf(minLine[1]);
+                for (int i = 0; i < Integer.valueOf(minLine[0]); i++) {
+                    medianPerBucket.put(new ImmutableGCBucket(i), minMedian);
+                }
+
+                String[] maxLine = lines.get(lines.size() - 1).split(DELIMITER);
+                int maxMedian = Integer.valueOf(maxLine[1]);
+                for (int i = Integer.valueOf(maxLine[0]) + 1; i <= 100; i++) {
+                    medianPerBucket.put(new ImmutableGCBucket(i), maxMedian);
+                }
+            }
+        }
+
         for (int i = 3; i < lines.size(); i++) {
             String[] line = lines.get(i).split(DELIMITER);
             if (line.length == 2) {

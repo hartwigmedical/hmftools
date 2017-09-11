@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class GCProfileFactoryTest {
 
-    private static final String BASE_PATH = Resources.getResource("gcprofile").getPath() + File.separator;
+    private static final String BASE_PATH = Resources.getResource("gc").getPath() + File.separator;
 
     @Test
     public void canLoadNormalFile() throws IOException, HartwigException {
