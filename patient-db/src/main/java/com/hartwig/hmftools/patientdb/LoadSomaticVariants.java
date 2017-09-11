@@ -3,18 +3,24 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCMedianReadCount;
+import com.hartwig.hmftools.common.gc.GCMedianReadCountFile;
+import com.hartwig.hmftools.common.gc.GCProfile;
+import com.hartwig.hmftools.common.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.gc.ReadCountMedian;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -37,6 +43,8 @@ public class LoadSomaticVariants {
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
+    private static final String GC_PROFILE = "gc_profile";
+    private static final String GC_MEDIAN = "gc_median";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -63,6 +71,12 @@ public class LoadSomaticVariants {
         LOGGER.info("Querying purple database");
         final FittedPurity fittedPurity = dbAccess.readFittedPurity(sample);
 
+        LOGGER.info("Loading GC Profile");
+        final Multimap<String, GCProfile> gcContent = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
+
+        LOGGER.info("Loading GC Median Read Counts");
+        GCMedianReadCount gcMedianReadCount = GCMedianReadCountFile.read(true, cmd.getOptionValue(GC_MEDIAN));
+
         if (fittedPurity == null) {
             LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }
@@ -71,15 +85,15 @@ public class LoadSomaticVariants {
 
         final Multimap<String, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
-        final Multimap<String, FittedRegion> copyNumberRegions =
-                Multimaps.index(dbAccess.readCopynumberRegions(sample), FittedRegion::chromosome);
 
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(purity,
                 normFactor,
+                medianTotalReadCount(vcfFile.variants()),
                 highConfidenceRegions,
                 copyNumbers,
-                copyNumberRegions,
+                gcContent,
+                gcMedianReadCount,
                 indexedFastaSequenceFile);
         final List<EnrichedSomaticVariant> variants = enrichedSomaticVariantFactory.enrich(vcfFile.variants());
 
@@ -98,6 +112,8 @@ public class LoadSomaticVariants {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(GC_PROFILE, true, "Location of GC Profile.");
+        options.addOption(GC_MEDIAN, true, "Location of GC Median Read Count.");
         return options;
     }
 
@@ -114,4 +130,11 @@ public class LoadSomaticVariants {
         final String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
+
+    private static int medianTotalReadCount(@NotNull final Collection<SomaticVariant> variants) {
+        final ReadCountMedian variantTotalReadCountMedian = new ReadCountMedian();
+        variants.forEach(x -> variantTotalReadCountMedian.addRead(x.totalReadCount()));
+        return variantTotalReadCountMedian.median();
+    }
+
 }

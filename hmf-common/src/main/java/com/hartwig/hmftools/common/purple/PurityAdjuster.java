@@ -44,6 +44,10 @@ public class PurityAdjuster {
         return normFactor;
     }
 
+    public double impliedPloidy() {
+        return (1 - normFactor()) / purity() / normFactor() * 2 + 2;
+    }
+
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
         final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
         final double typicalRatio = chromosome.isHomologous(gender) ? 1 : 0.5;

@@ -26,7 +26,7 @@ public class GCMedianReadCountBuilder {
         add(profile, readCount.readCount());
     }
 
-    public void add(@NotNull final GCProfile profile, int readCount) {
+    private void add(@NotNull final GCProfile profile, int readCount) {
         final GCBucket gcBucket = GCBucket.create(profile);
 
         if (gcBucket.bucket() >= MIN_BUCKET && gcBucket.bucket() <= MAX_BUCKET) {
