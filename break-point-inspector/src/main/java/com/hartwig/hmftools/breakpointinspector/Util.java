@@ -82,6 +82,10 @@ class HMFVariantContext {
         b &= (MantaBP2.Position - MantaBP1.Position) < 1000;
         return b;
     }
+
+    boolean isInsert() {
+        return Type == HMFVariantType.INS;
+    }
 }
 
 class Util {

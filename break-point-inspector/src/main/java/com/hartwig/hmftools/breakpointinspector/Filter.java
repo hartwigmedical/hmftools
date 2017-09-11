@@ -67,7 +67,7 @@ class Filter {
         }
 
         // short variant logic
-        if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
+        if (ctx.isShortDelete() || ctx.isShortDuplicate() || ctx.isInsert()) {
             // must have SR support
             final int tumor_SR =
                     Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();

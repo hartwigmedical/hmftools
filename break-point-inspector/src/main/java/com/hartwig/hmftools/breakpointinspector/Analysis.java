@@ -148,20 +148,19 @@ class Analysis {
                         Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(ctx.MantaBP1) && Location.fromSAMRecord(pair.getRight())
                                 .sameChromosomeAs(ctx.MantaBP2);
 
-                final int breakProximity = 200;
-                final boolean leftCorrectPosition = ctx.OrientationBP1 > 0
-                        ? breakpoints.getLeft().Position - pair.getLeft().getAlignmentEnd() < breakProximity
-                        : pair.getLeft().getAlignmentStart() - breakpoints.getLeft().Position < breakProximity;
-                final boolean rightCorrectPosition = ctx.OrientationBP2 > 0
-                        ? breakpoints.getRight().Position - pair.getRight().getAlignmentEnd() < breakProximity
-                        : pair.getRight().getAlignmentStart() - breakpoints.getRight().Position < breakProximity;
+                final int MAX_INTRA_PAIR_LENGTH = 400;
+                final boolean intraPairLength = (ctx.OrientationBP1 > 0
+                        ? breakpoints.getLeft().Position - pair.getLeft().getAlignmentEnd()
+                        : pair.getLeft().getAlignmentStart() - breakpoints.getLeft().Position) + (ctx.OrientationBP2 > 0
+                        ? breakpoints.getRight().Position - pair.getRight().getAlignmentEnd()
+                        : pair.getRight().getAlignmentStart() - breakpoints.getRight().Position) < MAX_INTRA_PAIR_LENGTH;
 
-                LOGGER.trace("collectEvidence {} {}->{} {} {}->{} correctOrientation({}) correctChromosome({}) correctPosition({} {})",
+                LOGGER.trace("collectEvidence {} {}->{} {} {}->{} correctOrientation({}) correctChromosome({}) correctPosition({})",
                         pair.getLeft().getReadName(), pair.getLeft().getAlignmentStart(), pair.getLeft().getMateAlignmentStart(),
                         pair.getRight().getReadName(), pair.getRight().getAlignmentStart(), pair.getRight().getMateAlignmentStart(),
-                        correctOrientation, correctChromosome, leftCorrectPosition, rightCorrectPosition);
+                        correctOrientation, correctChromosome, intraPairLength);
 
-                boolean support = correctOrientation && correctChromosome && leftCorrectPosition && rightCorrectPosition;
+                boolean support = correctOrientation && correctChromosome && intraPairLength;
                 if (support) {
 
                     final int left_outer = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 > 0).compareTo(breakpoints.getLeft());
@@ -178,17 +177,17 @@ class Analysis {
 
                     if (ctx.OrientationBP1 > 0) {
                         support &= left_outer < 0;
-                        support &= left_inner <= 0;
+                        //support &= left_inner <= 0;
                     } else {
                         support &= left_outer > 0;
-                        support &= left_inner >= 0;
+                        //support &= left_inner >= 0;
                     }
                     if (ctx.OrientationBP2 > 0) {
                         support &= right_outer < 0;
-                        support &= right_inner <= 0;
+                        //support &= right_inner <= 0;
                     } else {
                         support &= right_outer > 0;
-                        support &= right_inner >= 0;
+                        //support &= right_inner >= 0;
                     }
 
                 }
