@@ -36,6 +36,7 @@ class SampleStats {
     BreakpointStats BP2_Stats = new BreakpointStats();
     Clipping Sample_Clipping = new Clipping();
     List<Pair<SAMRecord, SAMRecord>> PR_Evidence = Lists.newArrayList();
+    List<Pair<SAMRecord, SAMRecord>> SR_Evidence = Lists.newArrayList();
 
     static List<String> GetHeader() {
         final List<String> header = Lists.newArrayList();

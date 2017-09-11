@@ -58,6 +58,8 @@ class Filter {
     static Collection<String> getFilters(final HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,
             final Pair<Location, Location> breakpoints) {
 
+        final int MIN_ANCHOR_LENGTH = 30;
+
         final List<Filters> filters = Lists.newArrayList();
 
         if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats)
@@ -80,6 +82,14 @@ class Filter {
             if (ref_SR > 0) {
                 filters.add(Filters.SRNormalSupport);
             }
+
+            final boolean anchorLengthOkay = tumorStats.SR_Evidence.stream()
+                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
+                            .allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
+
+            if (!anchorLengthOkay) {
+                filters.add(Filters.MinAnchorLength);
+            }
         } else {
             // we only need to check BP1 as BP1 PR+PRSR == BP2 PR+PRSR
             if (refStats.BP1_Stats.PR_Only_Support + refStats.BP1_Stats.PR_SR_Support > 0) {
@@ -87,7 +97,8 @@ class Filter {
             }
 
             final boolean anchorLengthOkay = tumorStats.PR_Evidence.stream()
-                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight()).allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= 30));
+                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
+                            .allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
 
             // only applicable for longer variants
             if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_Only_Support + s.PR_SR_Support).sum() == 0) {

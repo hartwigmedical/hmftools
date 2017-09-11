@@ -227,10 +227,12 @@ class Analysis {
 
                     if (clip_bp1) {
                         result.BP1_Stats.SR_Only_Support++;
+                        result.SR_Evidence.add(pair);
                         continue;
                     }
                     if (clip_bp2) {
                         result.BP2_Stats.SR_Only_Support++;
+                        result.SR_Evidence.add(pair);
                         continue;
                     }
 
@@ -259,8 +261,7 @@ class Analysis {
 
     enum BreakpointError {
         NONE,
-        ALGO_ERROR,
-        UNINITIALIZED
+        ALGO_ERROR
     }
 
     private static class BreakpointResult {
@@ -269,11 +270,6 @@ class Analysis {
             if (stream(breakpoints).anyMatch(Objects::isNull)) {
                 Error = BreakpointError.ALGO_ERROR;
             }
-        }
-
-        private BreakpointResult(final BreakpointError error) {
-            Breakpoints = Pair.of(null, null);
-            Error = error;
         }
 
         static BreakpointResult from(final Pair<Location, Location> breakpoints) {
