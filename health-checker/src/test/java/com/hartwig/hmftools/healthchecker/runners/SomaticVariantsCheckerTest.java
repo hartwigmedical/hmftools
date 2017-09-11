@@ -47,8 +47,8 @@ public class SomaticVariantsCheckerTest {
         Assert.assertEquals(CheckType.SOMATIC_VARIANTS, result.getCheckType());
         assertEquals(EXPECTED_NUM_CHECKS, checks.size());
 
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(), 987);
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(), 819);
+        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(), 991);
+        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(), 820);
 
         assertCheck(checks, SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(), 67);
         assertCheck(checks, SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(), 42);
