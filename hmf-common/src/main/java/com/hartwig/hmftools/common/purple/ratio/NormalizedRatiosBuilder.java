@@ -56,7 +56,7 @@ public class NormalizedRatiosBuilder {
         if (gcMedianCount == -1 || !readCount.isMappable() || gcMedianCount == 0) {
             ratio = -1;
         } else {
-            ratio = 1.0 * readCount.readCount() / gcMedianCount;
+            ratio = medianNormalisation * readCount.readCount() / gcMedianCount;
         }
 
         return ImmutableReadRatio.builder().from(readCount).ratio(ratio).build();
