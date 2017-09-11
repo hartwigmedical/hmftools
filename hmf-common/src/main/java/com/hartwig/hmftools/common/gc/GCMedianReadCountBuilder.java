@@ -22,12 +22,16 @@ public class GCMedianReadCountBuilder {
     }
 
     public void add(@NotNull final GCProfile profile, @NotNull final ReadCount readCount) {
-        Preconditions.checkArgument(profile.compareTo(readCount) == 0);
+        Preconditions.checkArgument(profile.contains(readCount));
+        add(profile, readCount.readCount());
+    }
+
+    public void add(@NotNull final GCProfile profile, int readCount) {
         final GCBucket gcBucket = GCBucket.create(profile);
 
         if (gcBucket.bucket() >= MIN_BUCKET && gcBucket.bucket() <= MAX_BUCKET) {
-            medianSample.addRead(readCount.readCount());
-            medianPerGCBucket.computeIfAbsent(gcBucket, integer -> new ReadCountMedian()).addRead(readCount.readCount());
+            medianSample.addRead(readCount);
+            medianPerGCBucket.computeIfAbsent(gcBucket, integer -> new ReadCountMedian()).addRead(readCount);
         }
     }
 

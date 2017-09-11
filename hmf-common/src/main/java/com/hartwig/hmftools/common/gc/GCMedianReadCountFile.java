@@ -34,8 +34,13 @@ public enum GCMedianReadCountFile {
     @NotNull
     static GCMedianReadCount fromLines(@NotNull final List<String> lines) throws IOException {
 
-        final int mean = 0;
-        final int median = 0;
+        int mean = 0;
+        int median = 0;
+        if (lines.size() >= 2) {
+            String[] line = lines.get(1).split(DELIMITER);
+            mean = Integer.valueOf(line[0]);
+            median = Integer.valueOf(line[1]);
+        }
 
         final Map<GCBucket, Integer> medianPerBucket = Maps.newHashMap();
         for (int i = 3; i < lines.size(); i++) {
@@ -57,7 +62,9 @@ public enum GCMedianReadCountFile {
         for (int i = 0; i <= 100; i++) {
             final GCBucket bucket = new ImmutableGCBucket(i);
             int readCount = gcMedianReadCount.medianReadCount(bucket);
-            lines.add(i + "\t" + readCount);
+            if (readCount > 0) {
+                lines.add(i + "\t" + readCount);
+            }
         }
         return lines;
     }

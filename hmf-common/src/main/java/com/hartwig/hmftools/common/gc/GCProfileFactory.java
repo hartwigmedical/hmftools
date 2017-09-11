@@ -45,14 +45,15 @@ public enum GCProfileFactory {
         final String[] values = ratioLine.split(RATIO_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
-        final long position = 1 + Long.valueOf(values[START_FIELD_COLUMN].trim());
+        final long position = Long.valueOf(values[START_FIELD_COLUMN].trim());
         final double gcContent = Double.valueOf(values[GC_CONTENT_COLUMN].trim());
         final double nonNPercentage = Double.valueOf(values[NON_N_PERCENTAGE_COLUMN].trim());
         final double mappablePercentage = Double.valueOf(values[MAPPABLE_PERCENTAGE_COLUMN].trim());
 
         return ImmutableGCProfile.builder()
                 .chromosome(chromosome)
-                .position(position)
+                .start(position + 1)
+                .end(position + 1000)
                 .gcContent(gcContent)
                 .nonNPercentage(nonNPercentage)
                 .mappablePercentage(mappablePercentage)

@@ -24,10 +24,6 @@ public class NormalizedRatiosBuilder {
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
     public void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, @NotNull final ReadCount readCount) {
-        if (gcProfile.compareTo(readCount) != 0) {
-            throw new IllegalArgumentException();
-        }
-
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
         entries.put(gcProfile.chromosome(), readCountWithGCContent);
 
@@ -55,7 +51,7 @@ public class NormalizedRatiosBuilder {
         int gcMedianCount = medians.medianReadCount(readCount.gcProfile());
         final double ratio;
 
-        double medianNormalisation = (double) medians.medianReadCount() / (double) medians.meanReadCount();
+        double medianNormalisation = 1.0 * medians.medianReadCount() / medians.meanReadCount();
 
         if (gcMedianCount == -1 || !readCount.isMappable() || gcMedianCount == 0) {
             ratio = -1;
