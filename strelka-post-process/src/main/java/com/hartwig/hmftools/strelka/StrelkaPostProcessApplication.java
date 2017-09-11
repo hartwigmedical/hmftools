@@ -69,6 +69,7 @@ public class StrelkaPostProcessApplication {
             System.exit(1);
         }
         final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
+        LOGGER.info("Starting strelka post process on " + inputVcf);
         processVariants(inputVcf, highConfidenceSlicer, outputVcf, sampleName);
     }
 
@@ -104,7 +105,7 @@ public class StrelkaPostProcessApplication {
         linesToWrite.add(transformHeader(strelkaFile.originalHeaderLine(), sampleName));
         linesToWrite.addAll(newVariantLines);
         Files.write(new File(outputVcf).toPath(), linesToWrite);
-        LOGGER.info("Written  output variants to " + outputVcf);
+        LOGGER.info("Written output variants to " + outputVcf);
     }
 
     @VisibleForTesting
