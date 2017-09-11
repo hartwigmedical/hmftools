@@ -169,17 +169,48 @@ chromosomes                 = -EXCLUDE
 
 
 	# -----------------------------------------------------------
-	# BAF Backgound and axis
+	# Minor Allele - 2+ interesting data points
+	<plot>
+		type = scatter
+		file = SAMPLE.map.circos
+		r0   = 0.525r
+		r1   = 0.525r
+		glyph = circle
+		glyph_size = 8
+		color = blue
+
+		<rules>
+			<rule>
+				condition = var(value) < 2
+				show = no
+				flow = continue
+			</rule>
+			<rule>
+				condition = var(value) > 2
+				glyph_size = eval(int(remap_int(var(value),4,12,15,30)))
+			</rule>
+		</rules>
+	</plot>
+
+	# -----------------------------------------------------------
+	# Minor Allele Gain (Green)
 	<plot>
 		type = histogram
-		r0   = 0.425r
+		file = SAMPLE.map.circos
+		r0   = 0.45r
 		r1   = 0.525r
+		min  = 0
+		max  = 2
+		glyph = circle
+		glyph_size = 8
+		color = blue
+		fill_color = blue
 
 		<axes>
 			<axis>
 				color     = lblue
 				thickness = 2
-				spacing   = 0.25r
+				spacing   = 0.5r
 			</axis>
 		</axes>
 
@@ -188,47 +219,49 @@ chromosomes                 = -EXCLUDE
 				color = vlblue_a5
 			</background>
 		</backgrounds>
+
+		<rules>
+			<rule>
+				condition = var(value) < 0.001
+				#show = no
+			</rule>
+		</rules>
+
 	</plot>
 
 
 	# -----------------------------------------------------------
-	# scatter plot for values [0,5]
+	# Minor Allele Loss (Red)
 	<plot>
 		type = histogram
-		file = SAMPLE.baf.circos
-		r0   = 0.475r
-		r1   = 0.525r
-		min  = 0.533
-		max  = 1
-		color = vdblue
-		fill_color = vdblue
-		thickness = 4
-
-
-		<rules>
-			<rule>
-				condition = var(value) <= 0
-				show = no
-			</rule>
-		</rules>
-	</plot>
-
-	<plot>
-		orientation = in
-		type = histogram
-		file = SAMPLE.baf.circos
+		file = SAMPLE.map.circos
 		r0   = 0.425r
-		r1   = 0.475r
-		min  = 0.533
-		max  = 1
-		color = vdblue
-		fill_color = vdblue
-		thickness = 4
+		r1   = 0.45r
+		min  = -1
+		max  = 0
+		glyph = circle
+		glyph_size = 8
+		color = orange
+		fill_color = orange
+
+		<axes>
+			<axis>
+				color     = lorange
+				thickness = 1
+				spacing   = 1r
+			</axis>
+		</axes>
+
+		<backgrounds>
+			<background>
+				color = vlorange_a5
+			</background>
+		</backgrounds>
 
 		<rules>
 			<rule>
-				condition = var(value) <= 0
-				show = no
+				condition = var(value) > 0.001
+				#show = no
 			</rule>
 		</rules>
 	</plot>

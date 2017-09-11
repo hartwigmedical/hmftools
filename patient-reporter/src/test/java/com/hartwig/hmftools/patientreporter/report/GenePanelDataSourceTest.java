@@ -24,7 +24,7 @@ public class GenePanelDataSourceTest {
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
         final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(slicerPath, drupFilterPath, cosmicPath, centerPath, signaturePath);
+                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath);
         final JRDataSource dataSource = GenePanelDataSource.fromHmfReporterData(reporterData);
         assertNotNull(dataSource);
     }

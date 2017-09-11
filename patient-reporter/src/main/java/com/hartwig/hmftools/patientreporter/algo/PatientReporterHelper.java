@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -33,7 +31,6 @@ final class PatientReporterHelper {
 
     private static final String SOMATIC_EXTENSION = "_melted.vcf";
     private static final String COPYNUMBER_DIRECTORY = "copyNumber";
-    private static final String FREEC_DIRECTORY = "freec";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String MANTA_BPI_FILENAME = "_somaticSV_bpi.vcf";
     private static final String MANTA_FILENAME = "somaticSV.vcf.gz";
@@ -116,18 +113,5 @@ final class PatientReporterHelper {
     @Nullable
     private static String toPatientId(@NotNull final String sample) {
         return sample.length() >= 12 ? sample.substring(0, 12) : null;
-    }
-
-    @NotNull
-    private static String guessCNVBasePath(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
-        final String basePath = runDirectory + File.separator + COPYNUMBER_DIRECTORY;
-
-        for (final Path path : Files.list(new File(basePath).toPath()).collect(Collectors.toList())) {
-            if (path.toFile().isDirectory() && path.getFileName().toFile().getName().contains(sample)) {
-                return path.toString();
-            }
-        }
-
-        throw new FileNotFoundException("Could not determine CNV location in " + runDirectory + " using sample " + sample);
     }
 }

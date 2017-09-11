@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -7,13 +9,14 @@ import java.util.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cosmic.CosmicModel;
-import com.hartwig.hmftools.common.slicing.HmfSlicer;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.svannotation.GeneAnnotation;
+import com.hartwig.hmftools.svannotation.Transcript;
 import com.hartwig.hmftools.svannotation.VariantAnnotation;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
-import com.hartwig.hmftools.svannotation.Transcript;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -21,17 +24,17 @@ import org.jetbrains.annotations.NotNull;
 public class StructuralVariantAnalyzer {
 
     private final VariantAnnotator annotator;
-    private final HmfSlicer slicer;
+    private final Collection<HmfGenomeRegion> regions;
     private final CosmicModel cosmicModel;
 
-    public StructuralVariantAnalyzer(final VariantAnnotator annotator, final HmfSlicer slicer, final CosmicModel cosmicModel) {
+    public StructuralVariantAnalyzer(final VariantAnnotator annotator, final Collection<HmfGenomeRegion> regions, final CosmicModel cosmicModel) {
         this.annotator = annotator;
-        this.slicer = slicer;
+        this.regions = regions;
         this.cosmicModel = cosmicModel;
     }
 
     private boolean inHmfPanel(final GeneAnnotation g) {
-        return slicer.hmfRegions().stream().anyMatch(r -> r.gene().equals(g.getGeneName()));
+        return regions.stream().anyMatch(r -> r.geneID().equals(g.getGeneName()));
     }
 
     private boolean inCosmic(final GeneAnnotation g) {
@@ -149,7 +152,8 @@ public class StructuralVariantAnalyzer {
         final List<StructuralVariantAnalysis.GeneFusion> result = Lists.newArrayList();
         for (final Pair<Transcript, Transcript> fusion : fusions) {
 
-            final boolean left_upstream = fusion.getLeft().getStrand() * fusion.getLeft().getGeneAnnotation().getBreakend().getOrientation() > 0;
+            final boolean left_upstream =
+                    fusion.getLeft().getStrand() * fusion.getLeft().getGeneAnnotation().getBreakend().getOrientation() > 0;
 
             final GeneAnnotation upstream = left_upstream ? fusion.getLeft().getGeneAnnotation() : fusion.getRight().getGeneAnnotation();
             final GeneAnnotation downstream = left_upstream ? fusion.getRight().getGeneAnnotation() : fusion.getLeft().getGeneAnnotation();

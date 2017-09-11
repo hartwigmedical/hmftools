@@ -11,15 +11,15 @@ import org.jetbrains.annotations.NotNull;
 class BidirectionalSlicer implements Slicer {
 
     @NotNull
-    private final Multimap<String, GenomeRegion> regions;
+    private final Multimap<String, ? extends GenomeRegion> regions;
 
-    BidirectionalSlicer(@NotNull final Multimap<String, GenomeRegion> regions) {
+    BidirectionalSlicer(@NotNull final Multimap<String, ? extends GenomeRegion> regions) {
         this.regions = regions;
     }
 
     @Override
     public boolean test(@NotNull GenomePosition variant) {
-        final Collection<GenomeRegion> regionsForChrom = regions.get(variant.chromosome());
+        final Collection<? extends GenomeRegion> regionsForChrom = regions.get(variant.chromosome());
         if (regionsForChrom == null) {
             return false;
         } else {
@@ -37,7 +37,7 @@ class BidirectionalSlicer implements Slicer {
 
     @NotNull
     @Override
-    public Collection<GenomeRegion> regions() {
+    public Collection<? extends GenomeRegion> regions() {
         return regions.values();
     }
 }

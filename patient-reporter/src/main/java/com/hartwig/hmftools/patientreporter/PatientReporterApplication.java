@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
-import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
@@ -46,11 +46,10 @@ public class PatientReporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
     // KODU: There is probably a better way to do this...
-    public static final String VERSION = "3.5";
+    public static final String VERSION = "3.8";
 
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String HMF_GENE_PANEL = "hmf_gene_panel";
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_JSON = "lims_json";
     private static final String REPORT_DIRECTORY = "report_dir";
@@ -90,7 +89,7 @@ public class PatientReporterApplication {
             LOGGER.info("Running patient reporter v" + VERSION);
 
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(reporterData.slicer(), reporterData.cosmicModel(), cmd);
+            final PatientReporter reporter = buildReporter(reporterData.geneModel(), reporterData.cosmicModel(), cmd);
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
@@ -100,8 +99,8 @@ public class PatientReporterApplication {
     }
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(HMF_GENE_PANEL), cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE));
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV),
+                cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE));
     }
 
     @NotNull
@@ -110,10 +109,10 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final HmfSlicer hmfSlicingRegion, @NotNull final CosmicModel cosmic,
-            @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException, SQLException {
+    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull CosmicModel cosmic, @NotNull final CommandLine cmd)
+            throws IOException, EmptyFileException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer =
-                VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
+                VariantAnalyzer.fromSlicingRegions(geneModel, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
 
         final VariantAnnotator annotator;
@@ -124,7 +123,7 @@ public class PatientReporterApplication {
         } else {
             annotator = NullAnnotator.make();
         }
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, hmfSlicingRegion, cosmic);
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, geneModel.hmfRegions(), cosmic);
 
         return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer);
     }
@@ -153,7 +152,6 @@ public class PatientReporterApplication {
         if (validInputForEcrfAndTumorPercentages(cmd) && validInputForReportWriter(cmd)) {
             final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
             final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-            final String hmfGenePanel = cmd.getOptionValue(HMF_GENE_PANEL);
             final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
             final String centerCsv = cmd.getOptionValue(CENTER_CSV);
@@ -164,8 +162,6 @@ public class PatientReporterApplication {
                 LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
             } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
                 LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
-            } else if (hmfGenePanel == null || !exists(hmfGenePanel)) {
-                LOGGER.warn(HMF_GENE_PANEL + " has to be an existing file: " + hmfGenePanel);
             } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
                 LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
             } else if (cosmicCsv == null || !exists(cosmicCsv)) {
@@ -242,7 +238,6 @@ public class PatientReporterApplication {
 
         options.addOption(CPCT_SLICING_BED, true, "Complete path towards the CPCT slicing bed.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
-        options.addOption(HMF_GENE_PANEL, true, "Complete path towards the HMF gene panel csv.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
         options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");

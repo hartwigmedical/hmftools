@@ -39,6 +39,10 @@ class Range {
         Start = start;
         End = end;
     }
+
+    static Range invert(final Range r) {
+        return new Range(-r.End, r.Start);
+    }
 }
 
 class HMFVariantContext {
@@ -48,16 +52,21 @@ class HMFVariantContext {
     Location MantaBP2;
     Range Uncertainty2;
     HMFVariantType Type;
+    boolean Imprecise;
+    boolean BND;
     HashSet<String> Filter = Sets.newHashSet();
+    String InsertSequence;
+    String HomologySequence;
 
     int OrientationBP1 = 0;
     int OrientationBP2 = 0;
 
-    HMFVariantContext(final String id, final Location bp1, final Location bp2, final HMFVariantType type) {
+    HMFVariantContext(final String id, final Location bp1, final Location bp2, final HMFVariantType type, final boolean imprecise) {
         Id = id;
         MantaBP1 = bp1;
         MantaBP2 = bp2;
         Type = type;
+        Imprecise = imprecise;
     }
 
     boolean isShortDelete() {
@@ -72,6 +81,10 @@ class HMFVariantContext {
         b &= MantaBP1.ReferenceIndex == MantaBP2.ReferenceIndex;
         b &= (MantaBP2.Position - MantaBP1.Position) < 1000;
         return b;
+    }
+
+    boolean isInsert() {
+        return Type == HMFVariantType.INS;
     }
 }
 

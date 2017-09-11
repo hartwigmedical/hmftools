@@ -113,6 +113,11 @@ public class DatabaseAccess {
         return copyNumberDAO.read(sample);
     }
 
+    @NotNull
+    public List<FittedRegion> readCopynumberRegions(@NotNull final String sample) {
+        return copyNumberDAO.readCopyNumberRegions(sample);
+    }
+
     public void clearEcrf() {
         ecrfDAO.clear();
     }

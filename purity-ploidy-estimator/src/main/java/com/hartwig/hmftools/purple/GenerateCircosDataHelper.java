@@ -16,6 +16,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
+import com.hartwig.hmftools.common.circos.CircosSNPWriter;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
@@ -97,14 +99,21 @@ class GenerateCircosDataHelper {
         CircosLinkWriter.writeVariants(baseCircosSample + ".link.circos", structuralVariants);
     }
 
-    private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumber) throws IOException {
-        CircosFileWriter.writeRegions(baseCircosSample + ".cnv.circos", copyNumber, x -> x.averageTumorCopyNumber() - 2);
-        CircosFileWriter.writeRegions(baseCircosSample + ".baf.circos", copyNumber, PurpleCopyNumber::averageActualBAF);
+    private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
+        CircosFileWriter.writeRegions(baseCircosSample + ".map.circos", copyNumbers, x -> minorAllelePloidy(x) - 1);
+        CircosFileWriter.writeRegions(baseCircosSample + ".cnv.circos", copyNumbers, x -> x.averageTumorCopyNumber() - 2);
+        CircosFileWriter.writeRegions(baseCircosSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
     }
 
     private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
         final List<PurityAdjustedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
-        CircosFileWriter.writePositions(baseCircosSample + ".snp.circos", downsampledSomaticVariants, PurityAdjustedSomaticVariant::adjustedVAF);
+        CircosSNPWriter.writePositions(baseCircosSample + ".snp.circos", downsampledSomaticVariants);
+    }
+
+    private double minorAllelePloidy(@NotNull final PurpleCopyNumber copyNumber) {
+        return Doubles.lessThan(copyNumber.averageActualBAF(), 0.50)
+                ? 0
+                : Math.max(0, (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber());
     }
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {

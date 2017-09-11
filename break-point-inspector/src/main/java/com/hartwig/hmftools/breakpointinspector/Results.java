@@ -12,6 +12,7 @@ import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
 
 class BreakpointStats {
@@ -35,6 +36,7 @@ class SampleStats {
     BreakpointStats BP2_Stats = new BreakpointStats();
     Clipping Sample_Clipping = new Clipping();
     List<Pair<SAMRecord, SAMRecord>> PR_Evidence = Lists.newArrayList();
+    List<Pair<SAMRecord, SAMRecord>> SR_Evidence = Lists.newArrayList();
 
     static List<String> GetHeader() {
         final List<String> header = Lists.newArrayList();
@@ -58,5 +60,5 @@ class StructuralVariantResult {
     SampleStats RefStats = new SampleStats();
     Collection<String> Filters;
     String FilterString = "";
-    int ExtraUncertainty = 0;
+    QueryInterval[] QueryIntervals;
 }

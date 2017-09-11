@@ -1,24 +1,29 @@
 package com.hartwig.hmftools.breakpointinspector;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.breakpointinspector.clipping.Clipping;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.QueryInterval;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordCoordinateComparator;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 class Analysis {
 
@@ -27,40 +32,17 @@ class Analysis {
     private final SamReader refReader;
     private final SamReader tumorReader;
 
-    @Nullable
-    private final SAMFileWriter refWriter;
-    @Nullable
-    private final SAMFileWriter tumorWriter;
-
     private final int range;
-    private final int[] extraUncertainties;
 
-    private final Set<Integer> tumorWrittenReads = new HashSet<>();
-    private final Set<Integer> refWrittenReads = new HashSet<>();
+    private static final SAMRecordCoordinateComparator comparator = new SAMRecordCoordinateComparator();
 
-    Analysis(final SamReader refReader, @Nullable final SAMFileWriter refWriter, final SamReader tumorReader,
-            @Nullable final SAMFileWriter tumorWriter, final int range, final int[] extraUncertainties) {
+    Analysis(final SamReader refReader, final SamReader tumorReader, final int range) {
         this.refReader = refReader;
-        this.refWriter = refWriter;
         this.tumorReader = tumorReader;
-        this.tumorWriter = tumorWriter;
         this.range = range;
-        this.extraUncertainties = extraUncertainties;
-    }
-
-    private static class AlignmentList extends ArrayList<SAMRecord> {
-    }
-
-    private static class AlignmentMap extends HashMap<String, AlignmentList> {
-        AlignmentMap(int initialSize) {
-            super(initialSize);
-        }
     }
 
     private static class PairedReads extends ArrayList<Pair<SAMRecord, SAMRecord>> {
-        PairedReads(int initialSize) {
-            super(initialSize);
-        }
     }
 
     private static int orientation(final SAMRecord record) {
@@ -94,201 +76,278 @@ class Analysis {
         return (orientation > 0 ? record.getCigar().isRightClipped() : record.getCigar().isLeftClipped());
     }
 
-    private boolean withinRange(final Location a, final Location b, final Range range, final int extraUncertainty) {
+    private static boolean exactlyClipsBreakpoint(final SAMRecord record, final Location breakpoint, final int orientation) {
+        return Location.fromSAMRecord(record, orientation < 0).compareTo(breakpoint) == 0 && clippedOnCorrectSide(record, orientation);
+    }
+
+    private boolean withinRange(final Location a, final Location b, final Range range) {
+        final int extraUncertainty = 1;
         return a.ReferenceIndex == b.ReferenceIndex && (a.Position >= b.Position + range.Start - extraUncertainty) && (a.Position
                 <= b.Position + range.End + extraUncertainty);
     }
 
-    private SampleStats collectEvidence(final HMFVariantContext ctx, final PairedReads pairs, final Pair<Location, Location> breakpoints) {
+    private static PairedReads pairs(final List<SAMRecord> list) {
+        final PairedReads pairs = new PairedReads();
+        for (int i = 0; i < list.size(); ++i) {
+
+            final SAMRecord r0 = list.get(i);
+            if (r0.getReadUnmappedFlag()) {
+                continue;
+            }
+
+            for (int j = i + 1; j < list.size(); ++j) {
+
+                final SAMRecord r1 = list.get(j);
+                if (r1.getReadUnmappedFlag()) {
+                    continue;
+                }
+
+                // check both directions due to secondary alignments
+                if (isMate(r0, r1) || isMate(r1, r0)) {
+                    pairs.add(Pair.of(r0, r1));
+                }
+
+            }
+
+        }
+        return pairs;
+    }
+
+    private SampleStats collectEvidence(final HMFVariantContext ctx, final SamReader reader, final Pair<Location, Location> breakpoints) {
 
         final SampleStats result = new SampleStats();
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
-        for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
+        final List<SAMRecord> currentReads = Lists.newArrayList();
+        final SAMRecordIterator iterator = reader.iterator();
 
-            final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
-            final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
-            final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
-            final boolean correctChromosome =
-                    Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(ctx.MantaBP1) && Location.fromSAMRecord(pair.getRight())
-                            .sameChromosomeAs(ctx.MantaBP2);
+        while (iterator.hasNext() || !currentReads.isEmpty()) {
 
-            final int breakProximity = 200;
-            final boolean leftCorrectPosition = ctx.OrientationBP1 > 0
-                    ? breakpoints.getLeft().Position - pair.getLeft().getAlignmentEnd() < breakProximity
-                    : pair.getLeft().getAlignmentStart() - breakpoints.getLeft().Position < breakProximity;
-            final boolean rightCorrectPosition = ctx.OrientationBP2 > 0
-                    ? breakpoints.getRight().Position - pair.getRight().getAlignmentEnd() < breakProximity
-                    : pair.getRight().getAlignmentStart() - breakpoints.getRight().Position < breakProximity;
-
-            boolean support = correctOrientation && correctChromosome && leftCorrectPosition && rightCorrectPosition;
-            if (support) {
-
-                final int left_outer = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 > 0).compareTo(breakpoints.getLeft());
-                final int left_inner = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 < 0).compareTo(breakpoints.getLeft());
-                final int right_outer = Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 > 0).compareTo(breakpoints.getRight());
-                final int right_inner = Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 < 0).compareTo(breakpoints.getRight());
-
-                if (ctx.OrientationBP1 > 0) {
-                    support &= left_outer < 0;
-                    support &= left_inner <= 0;
-                } else {
-                    support &= left_outer > 0;
-                    support &= left_inner >= 0;
+            final SAMRecord record = iterator.hasNext() ? iterator.next() : null;
+            if (record != null) {
+                if (currentReads.isEmpty() || record.getReadName().equals(currentReads.get(0).getReadName())) {
+                    currentReads.add(record);
+                    continue;
                 }
-                if (ctx.OrientationBP2 > 0) {
-                    support &= right_outer < 0;
-                    support &= right_inner <= 0;
-                } else {
-                    support &= right_outer > 0;
-                    support &= right_inner >= 0;
-                }
-
             }
 
-            if (support) {
+            currentReads.sort(comparator);
+            final PairedReads pairs = pairs(currentReads);
 
-                final boolean clip_bp1 = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 < 0)
-                        .add(ctx.OrientationBP1 < 0 ? -1 : 0)
-                        .compareTo(breakpoints.getLeft()) == 0 && clippedOnCorrectSide(pair.getLeft(), ctx.OrientationBP1);
+            currentReads.clear();
+            if (record != null) {
+                currentReads.add(record);
+            }
 
-                final boolean clip_bp2 = Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 < 0)
-                        .add(ctx.OrientationBP2 < 0 ? -1 : 0)
-                        .compareTo(breakpoints.getRight()) == 0 && clippedOnCorrectSide(pair.getRight(), ctx.OrientationBP2);
+            for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
 
-                if (clip_bp1) {
-                    result.BP1_Stats.PR_SR_Support++;
-                } else {
-                    result.BP1_Stats.PR_Only_Support++;
-                }
+                final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
+                final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
+                final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
+                final boolean correctChromosome =
+                        Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(ctx.MantaBP1) && Location.fromSAMRecord(pair.getRight())
+                                .sameChromosomeAs(ctx.MantaBP2);
 
-                if (clip_bp2) {
-                    result.BP2_Stats.PR_SR_Support++;
-                } else {
-                    result.BP2_Stats.PR_Only_Support++;
-                }
+                final int MAX_INTRA_PAIR_LENGTH = 400;
+                final boolean intraPairLength = (ctx.OrientationBP1 > 0
+                        ? breakpoints.getLeft().Position - pair.getLeft().getAlignmentEnd()
+                        : pair.getLeft().getAlignmentStart() - breakpoints.getLeft().Position) + (ctx.OrientationBP2 > 0
+                        ? breakpoints.getRight().Position - pair.getRight().getAlignmentEnd()
+                        : pair.getRight().getAlignmentStart() - breakpoints.getRight().Position) < MAX_INTRA_PAIR_LENGTH;
 
-                result.PR_Evidence.add(pair);
+                LOGGER.trace("collectEvidence {} {}->{} {} {}->{} correctOrientation({}) correctChromosome({}) correctPosition({})",
+                        pair.getLeft().getReadName(), pair.getLeft().getAlignmentStart(), pair.getLeft().getMateAlignmentStart(),
+                        pair.getRight().getReadName(), pair.getRight().getAlignmentStart(), pair.getRight().getMateAlignmentStart(),
+                        correctOrientation, correctChromosome, intraPairLength);
 
-            } else if (proper || secondary) {
+                boolean support = correctOrientation && correctChromosome && intraPairLength;
+                if (support) {
 
-                final boolean clip_bp1 =
-                        Location.fromSAMRecord(ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP1 < 0)
-                                .add(ctx.OrientationBP1 > 0 ? 0 : -1)
-                                .compareTo(breakpoints.getLeft()) == 0 && clippedOnCorrectSide(
-                                ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP1);
-                final boolean clip_bp2 =
-                        Location.fromSAMRecord(ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP2 < 0)
-                                .add(ctx.OrientationBP2 > 0 ? 0 : -1)
-                                .compareTo(breakpoints.getRight()) == 0 && clippedOnCorrectSide(
-                                ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), ctx.OrientationBP2);
+                    final int left_outer = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 > 0).compareTo(breakpoints.getLeft());
+                    final int left_inner = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 < 0).compareTo(breakpoints.getLeft());
+                    final int right_outer =
+                            Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 > 0).compareTo(breakpoints.getRight());
+                    final int right_inner =
+                            Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 < 0).compareTo(breakpoints.getRight());
 
-                final boolean span_bp1 = span(pair, breakpoints.getLeft());
-                final boolean span_bp2 = span(pair, breakpoints.getRight());
-                final boolean overlap_bp1 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getLeft()));
-                final boolean overlap_bp2 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getRight()));
+                    LOGGER.trace("collectEvidence {} {}->{} {} {}->{} leftOuter({}) leftInner({}) rightInner({}) rightOuter({})",
+                            pair.getLeft().getReadName(), pair.getLeft().getAlignmentStart(), pair.getLeft().getMateAlignmentStart(),
+                            pair.getRight().getReadName(), pair.getRight().getAlignmentStart(), pair.getRight().getMateAlignmentStart(),
+                            left_outer, left_inner, right_inner, right_outer);
 
-                if (clip_bp1) {
-                    result.BP1_Stats.SR_Only_Support++;
-                    continue;
-                }
-                if (clip_bp2) {
-                    result.BP2_Stats.SR_Only_Support++;
-                    continue;
-                }
-
-                if (span_bp1) {
-                    if (overlap_bp1) {
-                        result.BP1_Stats.PR_SR_Normal++;
+                    if (ctx.OrientationBP1 > 0) {
+                        support &= left_outer < 0;
+                        //support &= left_inner <= 0;
                     } else {
-                        result.BP1_Stats.PR_Only_Normal++;
+                        support &= left_outer > 0;
+                        //support &= left_inner >= 0;
                     }
-                }
-                if (span_bp2) {
-                    if (overlap_bp2) {
-                        result.BP2_Stats.PR_SR_Normal++;
+                    if (ctx.OrientationBP2 > 0) {
+                        support &= right_outer < 0;
+                        //support &= right_inner <= 0;
                     } else {
-                        result.BP2_Stats.PR_Only_Normal++;
+                        support &= right_outer > 0;
+                        //support &= right_inner >= 0;
                     }
+
                 }
 
+                if (support) {
+
+                    final boolean clip_bp1 = exactlyClipsBreakpoint(pair.getLeft(), breakpoints.getLeft(), ctx.OrientationBP1);
+                    final boolean clip_bp2 = exactlyClipsBreakpoint(pair.getRight(), breakpoints.getRight(), ctx.OrientationBP2);
+
+                    if (clip_bp1) {
+                        result.BP1_Stats.PR_SR_Support++;
+                    } else {
+                        result.BP1_Stats.PR_Only_Support++;
+                    }
+
+                    if (clip_bp2) {
+                        result.BP2_Stats.PR_SR_Support++;
+                    } else {
+                        result.BP2_Stats.PR_Only_Support++;
+                    }
+
+                    result.PR_Evidence.add(pair);
+
+                } else if (proper || secondary) {
+
+                    final boolean clip_bp1 =
+                            exactlyClipsBreakpoint(ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), breakpoints.getLeft(),
+                                    ctx.OrientationBP1);
+                    final boolean clip_bp2 =
+                            exactlyClipsBreakpoint(ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), breakpoints.getRight(),
+                                    ctx.OrientationBP2);
+
+                    final boolean span_bp1 = span(pair, breakpoints.getLeft());
+                    final boolean span_bp2 = span(pair, breakpoints.getRight());
+                    final boolean overlap_bp1 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getLeft()));
+                    final boolean overlap_bp2 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getRight()));
+
+                    if (clip_bp1) {
+                        result.BP1_Stats.SR_Only_Support++;
+                        result.SR_Evidence.add(pair);
+                        continue;
+                    }
+                    if (clip_bp2) {
+                        result.BP2_Stats.SR_Only_Support++;
+                        result.SR_Evidence.add(pair);
+                        continue;
+                    }
+
+                    if (span_bp1) {
+                        if (overlap_bp1) {
+                            result.BP1_Stats.PR_SR_Normal++;
+                        } else {
+                            result.BP1_Stats.PR_Only_Normal++;
+                        }
+                    }
+                    if (span_bp2) {
+                        if (overlap_bp2) {
+                            result.BP2_Stats.PR_SR_Normal++;
+                        } else {
+                            result.BP2_Stats.PR_Only_Normal++;
+                        }
+                    }
+
+                }
             }
         }
 
+        iterator.close();
         return result;
     }
 
     enum BreakpointError {
         NONE,
-        ALGO_ERROR,
-        NO_EVIDENCE,
-        UNINITIALIZED
+        ALGO_ERROR
     }
 
     private static class BreakpointResult {
         private BreakpointResult(final Pair<Location, Location> breakpoints) {
             Breakpoints = breakpoints;
-        }
-
-        private BreakpointResult(final BreakpointError error) {
-            Breakpoints = Pair.of(null, null);
-            Error = error;
+            if (stream(breakpoints).anyMatch(Objects::isNull)) {
+                Error = BreakpointError.ALGO_ERROR;
+            }
         }
 
         static BreakpointResult from(final Pair<Location, Location> breakpoints) {
             return new BreakpointResult(breakpoints);
         }
 
-        static BreakpointResult from(final BreakpointError error) {
-            return new BreakpointResult(error);
-        }
-
         Pair<Location, Location> Breakpoints;
         BreakpointError Error = BreakpointError.NONE;
     }
 
-    private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final PairedReads pairs, final int extraUncertainty) {
+    private BreakpointResult determineBreakpointsImprecise(final HMFVariantContext ctx, final SamReader reader) {
 
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
-        // extract all interesting pairs
+        final PairedReads interesting = new PairedReads();
+        final PairedReads clipped_proper = new PairedReads();
+        final PairedReads secondary_pairs = new PairedReads();
 
-        final PairedReads interesting = new PairedReads(pairs.size() / 2);
-        final PairedReads clipped_proper = new PairedReads(pairs.size() / 2);
-        final PairedReads secondary_pairs = new PairedReads(pairs.size() / 2);
+        final List<SAMRecord> currentReads = Lists.newArrayList();
+        final SAMRecordIterator iterator = reader.iterator();
 
-        for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
+        while (iterator.hasNext() || !currentReads.isEmpty()) {
 
-            final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
-            final boolean correctChromosome =
-                    Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(ctx.MantaBP1) && Location.fromSAMRecord(pair.getRight())
-                            .sameChromosomeAs(ctx.MantaBP2);
-            final boolean hasExpectedClipping =
-                    clippedOnCorrectSide(pair.getLeft(), ctx.OrientationBP1) || clippedOnCorrectSide(pair.getRight(), ctx.OrientationBP2);
+            final SAMRecord record = iterator.hasNext() ? iterator.next() : null;
+            if (record != null) {
+                if (currentReads.isEmpty() || record.getReadName().equals(currentReads.get(0).getReadName())) {
+                    currentReads.add(record);
+                    continue;
+                }
+            }
 
-            final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
-            final boolean potentialSROnly = Stream.of(ctx.OrientationBP1, ctx.OrientationBP2)
-                    .anyMatch(orientation -> clippedOnCorrectSide(orientation > 0 ? pair.getRight() : pair.getLeft(), orientation));
+            currentReads.sort(comparator);
+            final PairedReads pairs = pairs(currentReads);
 
-            final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
+            currentReads.clear();
+            if (record != null) {
+                currentReads.add(record);
+            }
 
-            LOGGER.debug(
-                    "{} {}->{} {} {}->{} correctOrientation({}) correctChromosome({}) hasExpectedClipping({}) proper({}) potentialSROnly({}) secondary({})",
-                    pair.getLeft().getReadName(), pair.getLeft().getAlignmentStart(), pair.getLeft().getMateAlignmentStart(),
-                    pair.getRight().getReadName(), pair.getRight().getAlignmentStart(), pair.getRight().getMateAlignmentStart(),
-                    correctOrientation, correctChromosome, hasExpectedClipping, proper, potentialSROnly, secondary);
+            // extract all interesting pairs
 
-            // TODO: check insert size?
+            for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
 
-            if (secondary && potentialSROnly) {
-                secondary_pairs.add(pair);
-            } else if ((!proper || hasExpectedClipping) && correctChromosome && correctOrientation) {
-                interesting.add(pair);
-            } else if (proper && potentialSROnly) {
-                clipped_proper.add(pair);
+                final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
+                final boolean correctChromosome =
+                        Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(ctx.MantaBP1) && Location.fromSAMRecord(pair.getRight())
+                                .sameChromosomeAs(ctx.MantaBP2);
+                final boolean hasExpectedClipping =
+                        clippedOnCorrectSide(pair.getLeft(), ctx.OrientationBP1) || clippedOnCorrectSide(pair.getRight(),
+                                ctx.OrientationBP2);
+
+                final boolean sameChromosome = pair.getLeft().getReferenceIndex().equals(pair.getRight().getReferenceIndex());
+                final boolean potentialSROnly = sameChromosome && Stream.of(ctx.OrientationBP1, ctx.OrientationBP2)
+                        .anyMatch(orientation -> clippedOnCorrectSide(orientation > 0 ? pair.getRight() : pair.getLeft(), orientation));
+
+                final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
+                final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag) && !secondary;
+
+                LOGGER.trace(
+                        "determineBreakpoints {} {}->{} {} {}->{} correctOrientation({}) correctChromosome({}) hasExpectedClipping({}) proper({}) potentialSROnly({}) secondary({})",
+                        pair.getLeft().getReadName(), pair.getLeft().getAlignmentStart(), pair.getLeft().getMateAlignmentStart(),
+                        pair.getRight().getReadName(), pair.getRight().getAlignmentStart(), pair.getRight().getMateAlignmentStart(),
+                        correctOrientation, correctChromosome, hasExpectedClipping, proper, potentialSROnly, secondary);
+
+                // TODO: check insert size?
+
+                if (secondary && potentialSROnly) {
+                    secondary_pairs.add(pair);
+                } else if ((!proper || hasExpectedClipping) && correctChromosome && correctOrientation) {
+                    interesting.add(pair);
+                } else if (proper && potentialSROnly) {
+                    clipped_proper.add(pair);
+                }
             }
 
         }
+
+        iterator.close();
 
         // load clipping info
 
@@ -348,194 +407,141 @@ class Analysis {
 
         // determinate candidates based on clipping info
 
-        final List<Location> bp1_candidates = bp1_clipping.getSequences()
-                .stream()
+        final List<Location> bp1_candidates = bp1_clipping.getSequences().stream()
                 //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
-                .filter(c -> withinRange(c, ctx.MantaBP1, ctx.Uncertainty1, extraUncertainty))
-                .collect(Collectors.toList());
+                .map(c -> c.Alignment).filter(c -> withinRange(c, ctx.MantaBP1, ctx.Uncertainty1)).collect(Collectors.toList());
 
         if (bp1_candidates.isEmpty()) {
             final Location candidate = interesting.stream()
                     .map(Pair::getLeft)
                     .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP1 < 0).add(ctx.OrientationBP1 > 0 ? 0 : -1))
-                    .filter(l -> withinRange(l, ctx.MantaBP1, ctx.Uncertainty1, extraUncertainty))
+                    .filter(l -> withinRange(l, ctx.MantaBP1, ctx.Uncertainty1))
                     .max((a, b) -> ctx.OrientationBP1 > 0 ? a.compareTo(b) : b.compareTo(a))
                     .orElse(null);
 
-            if (candidate == null) {
-                return BreakpointResult.from(BreakpointError.NO_EVIDENCE);
+            if (candidate != null) {
+                bp1_candidates.add(candidate);
             }
 
-            bp1_candidates.add(candidate);
         }
 
-        final List<Location> bp2_candidates = bp2_clipping.getSequences()
-                .stream()
+        final List<Location> bp2_candidates = bp2_clipping.getSequences().stream()
                 //.filter(c -> c.LongestClipSequence.length() >= 5)
-                .map(c -> c.Alignment)
-                .filter(c -> withinRange(c, ctx.MantaBP2, ctx.Uncertainty2, extraUncertainty))
-                .collect(Collectors.toList());
+                .map(c -> c.Alignment).filter(c -> withinRange(c, ctx.MantaBP2, ctx.Uncertainty2)).collect(Collectors.toList());
 
         if (bp2_candidates.isEmpty()) {
             final Location candidate = interesting.stream()
                     .map(Pair::getRight)
                     .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP2 < 0).add(ctx.OrientationBP2 > 0 ? 0 : -1))
-                    .filter(l -> withinRange(l, ctx.MantaBP2, ctx.Uncertainty2, extraUncertainty))
+                    .filter(l -> withinRange(l, ctx.MantaBP2, ctx.Uncertainty2))
                     .max((a, b) -> ctx.OrientationBP2 > 0 ? a.compareTo(b) : b.compareTo(a))
                     .orElse(null);
 
-            if (candidate == null) {
-                return BreakpointResult.from(BreakpointError.NO_EVIDENCE);
-            }
-
-            bp2_candidates.add(candidate);
-        }
-
-        Location breakpoint1 = null;
-        Location breakpoint2 = null;
-        long max_count = 0;
-
-        for (final Location candidate1 : bp1_candidates) {
-            for (final Location candidate2 : bp2_candidates) {
-
-                if (candidate1.compareTo(candidate2) >= 0) {
-                    continue;
-                }
-
-                final long count = interesting.stream().
-                        filter(p -> ctx.OrientationBP1 > 0
-                                ? Location.fromSAMRecord(p.getLeft(), true).compareTo(candidate1) <= 0
-                                : Location.fromSAMRecord(p.getLeft(), false).compareTo(candidate1) >= 0).
-                        filter(p -> ctx.OrientationBP2 > 0
-                                ? Location.fromSAMRecord(p.getRight(), true).compareTo(candidate2) <= 0
-                                : Location.fromSAMRecord(p.getRight(), false).compareTo(candidate2) >= 0).count();
-
-                if (count > max_count) {
-                    breakpoint1 = ctx.OrientationBP1 > 0 ? candidate1.add(-1) : candidate1;
-                    breakpoint2 = ctx.OrientationBP2 > 0 ? candidate2.add(-1) : candidate2;
-                    max_count = count;
-                }
-
+            if (candidate != null) {
+                bp2_candidates.add(candidate);
             }
         }
 
-        if (breakpoint1 == null || breakpoint2 == null) {
-            return BreakpointResult.from(BreakpointError.ALGO_ERROR);
-        }
+        // NOTE: we include homology on both sides here and take it out later
+        LOGGER.trace("bp1_candidates={} bp2_candidates={}", bp1_candidates, bp2_candidates);
+        final Location breakpoint1 = bp1_candidates.isEmpty() ? null : bp1_candidates.get(0).add(-ctx.OrientationBP1);
+        final Location breakpoint2 = bp2_candidates.isEmpty() ? null : bp2_candidates.get(0).add(-ctx.OrientationBP2);
 
         return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
     }
 
-    private static PairedReads pairs(final AlignmentMap alignments) {
-        final PairedReads pairs = new PairedReads(alignments.size());
-        for (final AlignmentList list : alignments.values()) {
-            for (int i = 0; i < list.size(); ++i) {
-
-                final SAMRecord r0 = list.get(i);
-                if (r0.getReadUnmappedFlag()) {
-                    continue;
-                }
-
-                for (int j = i + 1; j < list.size(); ++j) {
-
-                    final SAMRecord r1 = list.get(j);
-                    if (r1.getReadUnmappedFlag()) {
-                        continue;
-                    }
-
-                    if (isMate(r0, r1) || isMate(r1, r0)) {
-                        pairs.add(Pair.of(r0, r1));
-                    }
-
-                }
-
-            }
+    private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final SamReader reader) {
+        final int adj = ctx.BND ? 0 : 1;
+        if (ctx.Imprecise) {
+            return determineBreakpointsImprecise(ctx, reader);
+        } else if (ctx.InsertSequence.isEmpty()) {
+            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? ctx.HomologySequence.length() : adj);
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
+            return BreakpointResult.from(Pair.of(bp1, bp2));
+        } else {
+            final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? 0 : adj); // ignore homology when we have an insert
+            final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
+            return BreakpointResult.from(Pair.of(bp1, bp2));
         }
-        return pairs;
     }
 
-    private static AlignmentMap readsByName(final List<SAMRecord> alignments) {
-        final AlignmentMap result = new AlignmentMap(alignments.size());
-        alignments.forEach(a -> result.computeIfAbsent(a.getReadName(), k -> new AlignmentList()).add(a));
-        return result;
+    private static File queryNameSortedBAM(final SamReader reader, final QueryInterval[] intervals, final String name) throws IOException {
+
+        final SAMFileHeader header = reader.getFileHeader().clone();
+        header.setSortOrder(SAMFileHeader.SortOrder.queryname);
+
+        final File file = File.createTempFile(name, ".bam");
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, false, file);
+
+        final SAMRecordIterator iterator = reader.queryOverlapping(intervals);
+        while (iterator.hasNext()) {
+            writer.addAlignment(iterator.next());
+        }
+
+        iterator.close();
+        writer.close();
+
+        return file;
     }
 
-    private static List<SAMRecord> performQuery(final SamReader reader, final QueryInterval[] intervals) {
-        return reader.queryOverlapping(intervals).toList();
-    }
+    StructuralVariantResult processStructuralVariant(final HMFVariantContext ctx) throws IOException {
 
-    StructuralVariantResult processStructuralVariant(final HMFVariantContext ctx) {
-
-        // perform query for reads
-
-        // TODO: can we query a tighter range?
-        QueryInterval[] queryIntervals =
-                { new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position + ctx.Uncertainty1.Start - range),
+        final QueryInterval[] intervals = QueryInterval.optimizeIntervals(new QueryInterval[] {
+                new QueryInterval(ctx.MantaBP1.ReferenceIndex, Math.max(0, ctx.MantaBP1.Position + ctx.Uncertainty1.Start - range),
                         ctx.MantaBP1.Position + ctx.Uncertainty1.End + range),
-                        new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position + ctx.Uncertainty2.Start - range),
-                                ctx.MantaBP2.Position + ctx.Uncertainty2.End + range) };
-        queryIntervals = QueryInterval.optimizeIntervals(queryIntervals);
+                new QueryInterval(ctx.MantaBP2.ReferenceIndex, Math.max(0, ctx.MantaBP2.Position + ctx.Uncertainty2.Start - range),
+                        ctx.MantaBP2.Position + ctx.Uncertainty2.End + range) });
 
-        final List<SAMRecord> tumorReads = performQuery(tumorReader, queryIntervals);
-        final List<SAMRecord> refReads = performQuery(refReader, queryIntervals);
+        final File TEMP_REF_BAM = queryNameSortedBAM(refReader, intervals, "ref");
+        final File TEMP_TUMOR_BAM = queryNameSortedBAM(tumorReader, intervals, "tumor");
 
-        // write evidence
+        final SamReader SORTED_REF_READER = SamReaderFactory.makeDefault().open(TEMP_REF_BAM);
+        final SamReader SORTED_TUMOR_READER = SamReaderFactory.makeDefault().open(TEMP_TUMOR_BAM);
 
-        if (tumorWriter != null) {
-            for (final SAMRecord read : tumorReads) {
-                final int hash = read.getSAMString().hashCode();
-                if (!tumorWrittenReads.contains(hash)) {
-                    tumorWriter.addAlignment(read);
-                    tumorWrittenReads.add(hash);
-                }
-            }
-        }
-        if (refWriter != null) {
-            for (final SAMRecord read : refReads) {
-                final int hash = read.getSAMString().hashCode();
-                if (!refWrittenReads.contains(hash)) {
-                    refWriter.addAlignment(read);
-                    refWrittenReads.add(hash);
-                }
-            }
-        }
-
-        // process reads
-
-        final PairedReads tumorPairedReads = pairs(readsByName(tumorReads));
-        final PairedReads refPairedReads = pairs(readsByName(refReads));
-
-        int extraUncertainty = 0;
-        BreakpointResult breakpoints = new BreakpointResult(BreakpointError.UNINITIALIZED);
-        for (final int u : extraUncertainties) {
-            extraUncertainty = u;
-            breakpoints = determineBreakpoints(ctx, tumorPairedReads, u);
-            if (breakpoints.Error == BreakpointError.NONE) {
-                break;
-            }
-        }
+        BreakpointResult breakpoints = determineBreakpoints(ctx, SORTED_TUMOR_READER);
 
         final StructuralVariantResult result = new StructuralVariantResult();
         result.Breakpoints = breakpoints.Breakpoints;
-        result.ExtraUncertainty = extraUncertainty;
+        result.QueryIntervals = intervals;
 
         if (breakpoints.Error != BreakpointError.NONE) {
-            LOGGER.error("breakpoint error : {}", ctx.Id);
             result.Filters = Filter.getErrorFilter();
         } else {
-            result.TumorStats = collectEvidence(ctx, tumorPairedReads, result.Breakpoints);
-            result.RefStats = collectEvidence(ctx, refPairedReads, result.Breakpoints);
+            result.TumorStats = collectEvidence(ctx, SORTED_TUMOR_READER, result.Breakpoints);
+            result.RefStats = collectEvidence(ctx, SORTED_REF_READER, result.Breakpoints);
             result.AlleleFrequency = AlleleFrequency.calculate(ctx, result.TumorStats);
 
             // load sample clipping
-            tumorReads.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));
-            refReads.forEach(r -> Clipping.getClips(r).forEach(c -> result.RefStats.Sample_Clipping.add(c)));
+            SORTED_TUMOR_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));
+            SORTED_REF_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.RefStats.Sample_Clipping.add(c)));
 
             result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
+
+            // adjust for homology
+            final Location bp1 = result.Breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 0 : -1);
+            final Location bp2;
+            if (ctx.InsertSequence.isEmpty()) {
+                bp2 = result.Breakpoints.getRight()
+                        .add(-ctx.OrientationBP2 * ctx.HomologySequence.length())
+                        .add(ctx.OrientationBP2 > 0 ? 0 : -1);
+            } else {
+                bp2 = result.Breakpoints.getRight().add(ctx.OrientationBP2 > 0 ? 0 : -1);
+            }
+            result.Breakpoints = Pair.of(bp1, bp2);
         }
 
         result.FilterString = result.Filters.isEmpty() ? "PASS" : String.join(";", result.Filters);
+
+        // clean up
+        SORTED_REF_READER.close();
+        SORTED_TUMOR_READER.close();
+
+        if (!TEMP_REF_BAM.delete()) {
+            LOGGER.error("couldn't delete {}", TEMP_REF_BAM);
+        }
+        if (!TEMP_TUMOR_BAM.delete()) {
+            LOGGER.error("couldn't delete {}", TEMP_TUMOR_BAM);
+        }
 
         return result;
     }

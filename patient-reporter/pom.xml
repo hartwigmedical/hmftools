@@ -20,7 +20,11 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>sv-annotation</artifactId>
+            <artifactId>hmf-gene-panel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>variant-annotator</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>

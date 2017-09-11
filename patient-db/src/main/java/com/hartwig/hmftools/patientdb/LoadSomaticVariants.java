@@ -10,6 +10,7 @@ import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -61,6 +62,7 @@ public class LoadSomaticVariants {
 
         LOGGER.info("Querying purple database");
         final FittedPurity fittedPurity = dbAccess.readFittedPurity(sample);
+
         if (fittedPurity == null) {
             LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }
@@ -69,10 +71,16 @@ public class LoadSomaticVariants {
 
         final Multimap<String, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
+        final Multimap<String, FittedRegion> copyNumberRegions =
+                Multimaps.index(dbAccess.readCopynumberRegions(sample), FittedRegion::chromosome);
 
         LOGGER.info("Enriching variants");
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
-                new EnrichedSomaticVariantFactory(purity, normFactor, highConfidenceRegions, copyNumbers, indexedFastaSequenceFile);
+        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(purity,
+                normFactor,
+                highConfidenceRegions,
+                copyNumbers,
+                copyNumberRegions,
+                indexedFastaSequenceFile);
         final List<EnrichedSomaticVariant> variants = enrichedSomaticVariantFactory.enrich(vcfFile.variants());
 
         LOGGER.info("Persisting variants to database");

@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -17,7 +18,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep21;
+import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -65,6 +66,8 @@ class SomaticVariantDAO {
                     .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
                     .refGenomeContext(record.getValue(SOMATICVARIANT.REFGENOMECONTEXT))
                     .type(VariantType.fromRefAlt(ref, alt))
+                    .clonality(Clonality.valueOf(record.getValue(SOMATICVARIANT.CLONALITY)))
+                    .lossOfHeterozygosity(record.getValue(SOMATICVARIANT.LOH, Boolean.class))
                     .build();
 
             regions.add(variant);
@@ -79,7 +82,7 @@ class SomaticVariantDAO {
         context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter = context.insertInto(SOMATICVARIANT,
+            InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
                     SOMATICVARIANT.SAMPLEID,
                     SOMATICVARIANT.CHROMOSOME,
                     SOMATICVARIANT.POSITION,
@@ -100,13 +103,15 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.REPEATSEQUENCE,
                     SOMATICVARIANT.REPEATCOUNT,
                     SOMATICVARIANT.REFGENOMECONTEXT,
+                    SOMATICVARIANT.CLONALITY,
+                    SOMATICVARIANT.LOH,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep21 inserter, String sample, EnrichedSomaticVariant region) {
+    private void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String sample, EnrichedSomaticVariant region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.position(),
@@ -127,6 +132,8 @@ class SomaticVariantDAO {
                 region.repeatSequence(),
                 region.repeatCount(),
                 region.refGenomeContext(),
+                region.clonality(),
+                region.lossOfHeterozygosity(),
                 timestamp);
     }
 
