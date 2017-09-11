@@ -414,7 +414,7 @@ class Analysis {
         if (bp1_candidates.isEmpty()) {
             final Location candidate = interesting.stream()
                     .map(Pair::getLeft)
-                    .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP1 < 0).add(ctx.OrientationBP1 > 0 ? 0 : -1))
+                    .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP1 < 0).add(ctx.OrientationBP1 > 0 ? 1 : -1))
                     .filter(l -> withinRange(l, ctx.MantaBP1, ctx.Uncertainty1))
                     .max((a, b) -> ctx.OrientationBP1 > 0 ? a.compareTo(b) : b.compareTo(a))
                     .orElse(null);
@@ -422,7 +422,6 @@ class Analysis {
             if (candidate != null) {
                 bp1_candidates.add(candidate);
             }
-
         }
 
         final List<Location> bp2_candidates = bp2_clipping.getSequences().stream()
@@ -432,7 +431,7 @@ class Analysis {
         if (bp2_candidates.isEmpty()) {
             final Location candidate = interesting.stream()
                     .map(Pair::getRight)
-                    .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP2 < 0).add(ctx.OrientationBP2 > 0 ? 0 : -1))
+                    .map(r -> Location.fromSAMRecord(r, ctx.OrientationBP2 < 0).add(ctx.OrientationBP2 > 0 ? 1 : -1))
                     .filter(l -> withinRange(l, ctx.MantaBP2, ctx.Uncertainty2))
                     .max((a, b) -> ctx.OrientationBP2 > 0 ? a.compareTo(b) : b.compareTo(a))
                     .orElse(null);
@@ -454,6 +453,8 @@ class Analysis {
         final int adj = ctx.BND ? 0 : 1;
         if (ctx.Imprecise) {
             return determineBreakpointsImprecise(ctx, reader);
+        } else if (ctx.isInsert()) {
+            return BreakpointResult.from(Pair.of(ctx.MantaBP1, ctx.MantaBP2.add(1))); // we want last match base at this stage
         } else if (ctx.InsertSequence.isEmpty()) {
             final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? ctx.HomologySequence.length() : adj);
             final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
@@ -520,7 +521,7 @@ class Analysis {
             // adjust for homology
             final Location bp1 = result.Breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 0 : -1);
             final Location bp2;
-            if (ctx.InsertSequence.isEmpty()) {
+            if (!ctx.isInsert() && ctx.InsertSequence.isEmpty()) {
                 bp2 = result.Breakpoints.getRight()
                         .add(-ctx.OrientationBP2 * ctx.HomologySequence.length())
                         .add(ctx.OrientationBP2 > 0 ? 0 : -1);

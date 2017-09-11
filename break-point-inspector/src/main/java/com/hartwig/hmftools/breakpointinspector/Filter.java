@@ -68,27 +68,29 @@ class Filter {
             filters.add(Filters.MinDepth);
         }
 
-        // short variant logic
-        if (ctx.isShortDelete() || ctx.isShortDuplicate() || ctx.isInsert()) {
-            // must have SR support
-            final int tumor_SR =
-                    Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();
-            if (tumor_SR == 0) {
+        if (ctx.isInsert()) {
+
+            // no PR/SR checks
+
+        } else if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
+            // short variant logic
+
+            final boolean bothSidesHaveSR =
+                    Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).allMatch(s -> s.PR_SR_Support + s.SR_Only_Support > 0);
+            final boolean anchorLengthOkay = tumorStats.SR_Evidence.stream()
+                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
+                            .anyMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
+
+            if (!bothSidesHaveSR) {
                 filters.add(Filters.SRSupportZero);
+            } else if (!anchorLengthOkay) {
+                filters.add(Filters.MinAnchorLength);
             }
 
             // must not have SR support in normal
             final int ref_SR = Stream.of(refStats.BP1_Stats, refStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();
             if (ref_SR > 0) {
                 filters.add(Filters.SRNormalSupport);
-            }
-
-            final boolean anchorLengthOkay = tumorStats.SR_Evidence.stream()
-                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
-                            .allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
-
-            if (!anchorLengthOkay) {
-                filters.add(Filters.MinAnchorLength);
             }
         } else {
             // we only need to check BP1 as BP1 PR+PRSR == BP2 PR+PRSR
