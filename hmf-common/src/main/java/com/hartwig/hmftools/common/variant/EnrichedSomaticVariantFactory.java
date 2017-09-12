@@ -30,7 +30,7 @@ public class EnrichedSomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
 
-    private static final int TRIALS = 1_000_000;
+    private static final int TRIALS = 100_000;
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -86,10 +86,9 @@ public class EnrichedSomaticVariantFactory {
             builder.purityAdjustment(purityAdjuster, copyNumber, variant);
 
             BinomialDistribution inconsistentDistribution =
-                    new BinomialDistribution(TRIALS, copyNumber.averageTumorCopyNumber() * monoploidProbability / TRIALS);
+                    new BinomialDistribution(TRIALS, Math.max(0, copyNumber.averageTumorCopyNumber()) * monoploidProbability / TRIALS);
 
-            double scalingFactor =
-                    optionalGCProfile.map(x -> 1d * medianReadCount.medianReadCount(x) / medianReadCount.medianReadCount()).orElse(1d);
+            double scalingFactor = optionalGCProfile.map(x -> 1d * medianReadCount.medianReadCount(x) / medianReadCount.medianReadCount()).orElse(1d);
             long adjustedAlleleCount = Math.round(variant.alleleReadCount() * scalingFactor);
 
             builder.clonality(adjustedAlleleCount, monoploidDistribution, inconsistentDistribution);
