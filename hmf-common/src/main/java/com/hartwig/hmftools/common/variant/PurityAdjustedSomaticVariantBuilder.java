@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;
 
 public interface PurityAdjustedSomaticVariantBuilder {
@@ -25,9 +24,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
         return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(false);
     }
 
-    default PurityAdjustedSomaticVariantBuilder clonality(long alleleCount, @NotNull final BinomialDistribution monoploidDistribution,
-            @NotNull final BinomialDistribution inconsistentDistribution) {
-        return clonality(Clonality.fromSample(alleleCount, monoploidDistribution, inconsistentDistribution));
+    default PurityAdjustedSomaticVariantBuilder clonality(double copyNumber, double purity, @NotNull final AllelicDepth depth) {
+        return clonality(Clonality.fromSample(copyNumber, purity, depth));
     }
-
 }

@@ -8,8 +8,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.gc.GCMedianReadCount;
-import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -18,7 +16,6 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +27,6 @@ public class EnrichedSomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
 
-    private static final int TRIALS = 100_000;
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -39,29 +35,17 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
     @NotNull
-    private final GenomeRegionSelector<GCProfile> gcProfileSelector;
-    @NotNull
-    private final GCMedianReadCount medianReadCount;
-    @NotNull
     private final IndexedFastaSequenceFile reference;
 
-    private final double monoploidProbability;
-    private final BinomialDistribution monoploidDistribution;
     private int unmatchedAnnotations;
 
-    public EnrichedSomaticVariantFactory(double purity, double normFactor, int medianVariantTotalReadCount,
-            @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final Multimap<String, GCProfile> gcProfiles,
-            @NotNull final GCMedianReadCount medianReadCount, @NotNull final IndexedFastaSequenceFile reference) {
+    public EnrichedSomaticVariantFactory(double purity, double normFactor, @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
         purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        gcProfileSelector = GenomeRegionSelectorFactory.create(gcProfiles);
-        this.medianReadCount = medianReadCount;
         this.reference = reference;
 
-        this.monoploidProbability = medianVariantTotalReadCount * purity / (purity * purityAdjuster.impliedPloidy() + 2 * (1 - purity));
-        this.monoploidDistribution = new BinomialDistribution(TRIALS, monoploidProbability / TRIALS);
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<SomaticVariant> variants) {
@@ -79,19 +63,11 @@ public class EnrichedSomaticVariantFactory {
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
 
-        final Optional<GCProfile> optionalGCProfile = gcProfileSelector.select(variant);
         final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variant);
         if (optionalCopyNumber.isPresent()) {
             final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
             builder.purityAdjustment(purityAdjuster, copyNumber, variant);
-
-            BinomialDistribution inconsistentDistribution =
-                    new BinomialDistribution(TRIALS, Math.max(0, copyNumber.averageTumorCopyNumber()) * monoploidProbability / TRIALS);
-
-            double scalingFactor = optionalGCProfile.map(x -> 1d * medianReadCount.medianReadCount(x) / medianReadCount.medianReadCount()).orElse(1d);
-            long adjustedAlleleCount = Math.round(variant.alleleReadCount() * scalingFactor);
-
-            builder.clonality(adjustedAlleleCount, monoploidDistribution, inconsistentDistribution);
+            builder.clonality(copyNumber.averageTumorCopyNumber(), purityAdjuster.purity(), variant);
         }
 
         addAnnotations(builder, variant);

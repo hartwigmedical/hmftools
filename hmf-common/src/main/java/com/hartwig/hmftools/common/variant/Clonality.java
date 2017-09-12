@@ -9,18 +9,24 @@ public enum Clonality {
     INCONSISTENT,
     UNKNOWN;
 
-    public static Clonality fromSample(long alleleCount, @NotNull final BinomialDistribution monoploidDistribution,
-            @NotNull final BinomialDistribution inconsistentDistribution) {
+    private static final int TRIALS = 100_000;
 
-        if (alleleCount < monoploidDistribution.inverseCumulativeProbability(0.01)) {
+    public static Clonality fromSample(double copyNumber, double purity, @NotNull final AllelicDepth depth) {
+
+        // Note: this assume normal is diploid
+        double monoploidProbability = depth.totalReadCount() * purity / (purity * copyNumber + 2 * (1 - purity));
+        double inconsistentProbability = Math.max(copyNumber, 0) * monoploidProbability;
+
+        final BinomialDistribution monoploidDistribution = new BinomialDistribution(TRIALS, monoploidProbability / TRIALS);
+        if (depth.alleleReadCount() < monoploidDistribution.inverseCumulativeProbability(0.01)) {
             return SUBCLONAL;
         }
 
-        if (alleleCount > inconsistentDistribution.inverseCumulativeProbability(0.999)) {
+        final BinomialDistribution inconsistentDistribution = new BinomialDistribution(TRIALS, inconsistentProbability / TRIALS);
+        if (depth.alleleReadCount() > inconsistentDistribution.inverseCumulativeProbability(0.999)) {
             return INCONSISTENT;
         }
 
         return Clonality.CLONAL;
     }
-
 }
