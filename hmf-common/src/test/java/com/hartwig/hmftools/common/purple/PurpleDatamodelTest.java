@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple;
 
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.ratio.ImmutableReadRatio;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
@@ -75,6 +76,11 @@ public class PurpleDatamodelTest {
                 .ratioSupport(true)
                 .structuralVariantSupport(StructuralVariantSupport.NONE)
                 .bafDeviation(0);
+    }
+
+    @NotNull
+    public static ImmutableReadRatio.Builder createReadRatio(@NotNull final String chromosome, final long position, final double ratio) {
+        return ImmutableReadRatio.builder().chromosome(chromosome).position(position).ratio(ratio);
     }
 
 }
