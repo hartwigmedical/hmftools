@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
@@ -63,7 +64,7 @@ class GenerateCircosData {
 
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
             @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<FittedRegion> regions) throws IOException, InterruptedException {
+            @NotNull final List<FittedRegion> regions, @NotNull final List<TumorBAF> bafs) throws IOException, InterruptedException {
 
         createDirectory(config.plotDirectory());
         createDirectory(config.circosDirectory());
@@ -73,6 +74,7 @@ class GenerateCircosData {
         writeEnrichedSomatics(somaticVariants);
         writeStructualVariants(structuralVariants);
         writeFittedRegions(downsample(regions));
+        writeBafs(downsample(bafs));
 
         if (config.circosBinary().isPresent()) {
             generateCircos(config.circosBinary().get(), "ratio");
@@ -120,6 +122,9 @@ class GenerateCircosData {
     private void writeFittedRegions(@NotNull final List<FittedRegion> fittedRegions) throws IOException {
         CircosFileWriter.writeRegions(baseCircosReferenceSample + ".ratio.circos", fittedRegions, ObservedRegion::observedNormalRatio);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".ratio.circos", fittedRegions, ObservedRegion::observedTumorRatio);
+    }
+    private void writeBafs(@NotNull final List<TumorBAF> bafs) throws IOException {
+        CircosFileWriter.writePositions(baseCircosTumorSample + ".baf.circos", bafs, TumorBAF::baf);
     }
 
     private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {

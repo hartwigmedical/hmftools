@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
@@ -214,7 +215,12 @@ public class PurityPloidyEstimateApplication {
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
-            new GenerateCircosData(configSupplier).write(gender, smoothRegions, enrichedSomatics, structuralVariants, fittedRegions);
+            new GenerateCircosData(configSupplier).write(gender,
+                    smoothRegions,
+                    enrichedSomatics,
+                    structuralVariants,
+                    fittedRegions,
+                    Lists.newArrayList(bafs.values()));
 
         } finally {
             executorService.shutdown();

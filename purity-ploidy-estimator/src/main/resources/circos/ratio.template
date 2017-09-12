@@ -27,15 +27,15 @@ chromosomes                 = -EXCLUDE
 <plots>
 
 	# -----------------------------------------------------------
-	# Tumor (Blue)
+	# Tumor Ratio (Blue)
 	<plot>
 		type = scatter
 		file = SAMPLE.ratio.circos
-		r0   = 0.475r
+		r0   = 0.575r
 		r1   = 0.975r
 		min  = 0
 		max  = 2
-		color = blue
+		color = purple
 		glyph = circle
 
 		<axes>
@@ -54,16 +54,43 @@ chromosomes                 = -EXCLUDE
 	</plot>
 
 	# -----------------------------------------------------------
-	# Reference (Orange)
+	# Reference Ratio (Orange)
 	<plot>
 		type = scatter
 		file = REFERENCE.ratio.circos
-		r0   = 0.475r
+		r0   = 0.575r
 		r1   = 0.975r
 		min  = 0
 		max  = 2
 		color = orange
 		glyph = circle
+	</plot>
+
+	# -----------------------------------------------------------
+	# BAF (Blue)
+	<plot>
+		type = scatter
+		file = SAMPLE.baf.circos
+		r0   = 0.300r
+		r1   = 0.550r
+		min  = 0
+		max  = 1
+		color = vdblue
+		glyph = circle
+
+        <axes>
+            <axis>
+                color     = lblue
+                thickness = 1
+                spacing   = 0.25r
+            </axis>
+        </axes>
+
+        <backgrounds>
+            <background>
+                color = vlblue_a5
+            </background>
+        </backgrounds>
 	</plot>
 
 </plots>
