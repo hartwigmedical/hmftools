@@ -35,7 +35,7 @@ chromosomes                 = -EXCLUDE
 		r1   = 0.975r
 		min  = 0
 		max  = 2
-		color = purple
+		color = blue
 		glyph = circle
 
 		<axes>
