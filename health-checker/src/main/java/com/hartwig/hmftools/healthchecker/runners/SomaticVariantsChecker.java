@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -49,10 +47,8 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
             LOGGER.warn("Sample name in VCF (" + variantFile.sample() + ") does not match with name (" + runContext.tumorSample()
                     + ") from run context!");
         }
-        final List<SomaticVariant> variants = passOnly(variantFile.variants());
-
-        final List<SomaticVariant> snps = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.SNP));
-        final List<SomaticVariant> indels = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.INDEL));
+        final List<SomaticVariant> snps = VariantFilter.filter(variantFile.variants(), VariantPredicates.withType(VariantType.SNP));
+        final List<SomaticVariant> indels = VariantFilter.filter(variantFile.variants(), VariantPredicates.withType(VariantType.INDEL));
 
         final List<SomaticVariant> snpsWithDBSNPAndNotCOSMIC = VariantFilter.filter(snps, VariantPredicates.inDBSNPAndNotInCOSMIC());
         final List<SomaticVariant> indelsWithDBSNPAndNotCOSMIC = VariantFilter.filter(indels, VariantPredicates.inDBSNPAndNotInCOSMIC());
