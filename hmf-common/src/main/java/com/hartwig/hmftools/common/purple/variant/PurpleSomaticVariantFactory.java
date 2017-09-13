@@ -67,7 +67,6 @@ public class PurpleSomaticVariantFactory {
                                 .alt(alt(context))
                                 .alleleReadCount(frequencyData.alleleReadCount())
                                 .totalReadCount(frequencyData.totalReadCount())
-                                .alleleFrequency(frequencyData.alleleFrequency())
                                 .filter("PASS")
                                 .type(VariantType.SNP)
                                 .build());

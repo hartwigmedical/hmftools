@@ -150,11 +150,6 @@ public class SomaticVariant implements Variant, AllelicDepth {
     }
 
     @Override
-    public double alleleFrequency() {
-        return (double) alleleReadCount / totalReadCount;
-    }
-
-    @Override
     public String toString() {
         return "SomaticVariant{" + "chromosome='" + chromosome + '\'' + ", position=" + position + '}';
     }
