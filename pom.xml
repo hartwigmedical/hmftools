@@ -25,6 +25,7 @@
         <module>strelka-post-process</module>
         <module>patient-report-mailer</module>
         <module>ensembl-db</module>
+        <module>bam-slicer</module>
     </modules>
 
     <properties>
