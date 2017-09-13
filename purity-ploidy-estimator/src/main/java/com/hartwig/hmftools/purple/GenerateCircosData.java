@@ -77,7 +77,7 @@ class GenerateCircosData {
         writeBafs(downsample(bafs));
 
         if (config.circosBinary().isPresent()) {
-            generateCircos(config.circosBinary().get(), "ratio");
+            generateCircos(config.circosBinary().get(), "input");
             generateCircos(config.circosBinary().get(), "circos");
         }
     }
@@ -146,7 +146,7 @@ class GenerateCircosData {
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {
         writeConfig(gender, "circos");
-        writeConfig(gender, "ratio");
+        writeConfig(gender, "input");
 
         copyResourceToCircos("gaps.txt");
         copyResourceToCircos("ideogram.conf");
