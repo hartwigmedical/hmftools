@@ -76,14 +76,6 @@ public class BamSlicerApplication {
             final File vcfFile = new File(vcfPath);
             final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
 
-            // get the sample names -- turns out Manta puts Ref first, then Tumor
-            final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
-            if (samples.size() != 2) {
-                System.err.println("could not determine tumor and sample from VCF");
-                System.exit(1);
-                return;
-            }
-
             final List<QueryInterval> queryIntervals = Lists.newArrayList();
 
             for (VariantContext variant : vcfReader) {
