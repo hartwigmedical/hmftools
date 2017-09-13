@@ -81,7 +81,7 @@ public class BamSlicerApplication {
             for (VariantContext variant : vcfReader) {
 
                 queryIntervals.add(new QueryInterval(reader.getFileHeader().getSequenceIndex(variant.getContig()),
-                        Math.min(0, variant.getStart() - proximity), variant.getStart() + proximity));
+                        Math.max(0, variant.getStart() - proximity), variant.getStart() + proximity));
 
                 if (variant.getStructuralVariantType() == StructuralVariantType.BND) {
 
@@ -104,11 +104,11 @@ public class BamSlicerApplication {
                         continue;
                     }
 
-                    queryIntervals.add(new QueryInterval(reader.getFileHeader().getSequenceIndex(contig), Math.min(0, position - proximity),
+                    queryIntervals.add(new QueryInterval(reader.getFileHeader().getSequenceIndex(contig), Math.max(0, position - proximity),
                             position + proximity));
                 } else {
                     queryIntervals.add(new QueryInterval(reader.getFileHeader().getSequenceIndex(variant.getContig()),
-                            Math.min(0, variant.getEnd() - proximity), variant.getEnd() + proximity));
+                            Math.max(0, variant.getEnd() - proximity), variant.getEnd() + proximity));
                 }
             }
 
