@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatios;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatiosBuilder;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
@@ -35,7 +36,7 @@ public class ReadCountRatioSupplier implements RatioSupplier {
     private final Multimap<String, ReadRatio> referenceRatios;
     private final Multimap<String, ReadRatio> tumorRatios;
 
-    public ReadCountRatioSupplier(final CommonConfig config, final Multimap<String, GCProfile> gcContent)
+    public ReadCountRatioSupplier(final CommonConfig config, final Multimap<String, GCProfile> gcContent, final Gender gender)
             throws IOException, HartwigException {
 
         final String tumorRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
@@ -57,8 +58,8 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             final GenomePositionSelector<ReadCount> tumorReadCountSelector = GenomePositionSelectorFactory.create(tumorReadCount);
 
             LOGGER.info("Generating gc normalized read ratios");
-            final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
-            final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
+            final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder(true, gender);
+            final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder(false, gender);
             for (String chromosomeName : normalReadCount.keySet()) {
                 if (HumanChromosome.contains(chromosomeName)) {
                     final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);

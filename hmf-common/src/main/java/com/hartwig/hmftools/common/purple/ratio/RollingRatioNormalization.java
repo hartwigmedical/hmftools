@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +17,7 @@ class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
     private final List<ReadRatio> result = Lists.newArrayList();
     private final RollingMedian rollingMedian = new RollingMedian();
 
-    RollingRatioNormalization(final long distance, final List<ReadRatio> ratios) {
+    RollingRatioNormalization(final double expectedRatio, final long distance, final List<ReadRatio> ratios) {
         this.distance = distance;
 
         initializeRollingMedian(ratios);
@@ -26,10 +27,14 @@ class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
             addNewRatios(current, ratios);
 
             double medianRatio = rollingMedian.medianRatio();
-            double correctedRatio = current.ratio() / medianRatio;
+            double correctedRatio = isValid(current) ? expectedRatio * current.ratio() / medianRatio : -1;
 
             result.add(ImmutableReadRatio.builder().from(current).ratio(correctedRatio).build());
         }
+    }
+
+    private boolean isValid(@NotNull final ReadRatio ratio) {
+        return !Doubles.equal(ratio.ratio(), -1);
     }
 
     @Override
@@ -41,8 +46,7 @@ class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
         startIndex = 0;
         for (ReadRatio ratio : ratios) {
             if (ratio.position() <= distance) {
-                endIndex++;
-                rollingMedian.add(ratio.ratio());
+                addToMedian(ratio);
             } else {
                 return;
             }
@@ -54,7 +58,9 @@ class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
             final ReadRatio earlier = ratios.get(earlierIndex);
 
             if (distance(current, earlier) > distance) {
-                rollingMedian.remove(earlier.ratio());
+                if (isValid(earlier)) {
+                    rollingMedian.remove(earlier.ratio());
+                }
                 startIndex++;
             } else {
                 return;
@@ -67,12 +73,18 @@ class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
             final ReadRatio later = ratios.get(i);
 
             if (distance(current, later) <= distance) {
-                rollingMedian.add(later.ratio());
-                endIndex++;
+                addToMedian(later);
             } else {
                 return;
             }
         }
+    }
+
+    private void addToMedian(@NotNull final ReadRatio current) {
+        if (isValid(current)) {
+            rollingMedian.add(current.ratio());
+        }
+        endIndex++;
     }
 
     private long distance(@NotNull final ReadRatio first, @NotNull final ReadRatio second) {

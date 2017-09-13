@@ -6,22 +6,31 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.gc.GCMedianReadCountBuilder;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
 public class NormalizedRatiosBuilder {
 
+    private static final long ROLLING_MEDIAN_DISTANCE = 5_000_000;
     private static final double MIN_MAPPABLE_PERCENTAGE = 0.85;
 
+    private final Gender gender;
+    private final boolean applyRollingMedianNormalization;
     private final GCMedianReadCountBuilder medianReadCountBuilder = new GCMedianReadCountBuilder();
-
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
+
+    public NormalizedRatiosBuilder(final boolean applyRollingMedianNormalization, final Gender gender) {
+        this.applyRollingMedianNormalization = applyRollingMedianNormalization;
+        this.gender = gender;
+    }
 
     public void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, @NotNull final ReadCount readCount) {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
@@ -41,7 +50,14 @@ public class NormalizedRatiosBuilder {
         for (String chromosome : entries.keySet()) {
             final List<ReadRatio> normalisedRatio =
                     entries.get(chromosome).stream().map(x -> create(gcMedianReadCount, x)).collect(Collectors.toList());
-            builder.putAllNormalisedRatios(chromosome, normalisedRatio);
+
+            if (applyRollingMedianNormalization) {
+                double expectedRatio = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 1 : 0.5;
+                builder.putAllNormalisedRatios(chromosome, new RollingRatioNormalization(expectedRatio, ROLLING_MEDIAN_DISTANCE, normalisedRatio).get());
+            } else {
+                builder.putAllNormalisedRatios(chromosome, normalisedRatio);
+            }
+
         }
 
         return builder.build();

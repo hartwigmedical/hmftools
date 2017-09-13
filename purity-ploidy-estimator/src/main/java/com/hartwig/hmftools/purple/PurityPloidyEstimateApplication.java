@@ -135,7 +135,7 @@ public class PurityPloidyEstimateApplication {
 
             // JOBA: Ratio Segmentation
             final Multimap<String, GCProfile> gcContent = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
-            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
+            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config, gcContent, gender);
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
             final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
 
