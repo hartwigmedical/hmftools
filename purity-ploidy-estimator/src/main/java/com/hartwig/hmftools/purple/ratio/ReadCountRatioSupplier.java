@@ -2,7 +2,8 @@ package com.hartwig.hmftools.purple.ratio;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
+import java.util.Optional;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -10,15 +11,18 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCMedianReadCountFile;
+import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.purple.ratio.GCContent;
-import com.hartwig.hmftools.common.purple.ratio.GCMedianFile;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatios;
 import com.hartwig.hmftools.common.purple.ratio.NormalizedRatiosBuilder;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatioFile;
+import com.hartwig.hmftools.common.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +36,7 @@ public class ReadCountRatioSupplier implements RatioSupplier {
     private final Multimap<String, ReadRatio> referenceRatios;
     private final Multimap<String, ReadRatio> tumorRatios;
 
-    public ReadCountRatioSupplier(final CommonConfig config, final Multimap<String, GCContent> gcContent)
+    public ReadCountRatioSupplier(final CommonConfig config, final Multimap<String, GCProfile> gcContent, final Gender gender)
             throws IOException, HartwigException {
 
         final String tumorRatioFile = ReadRatioFile.generateFilename(config.outputDirectory(), config.tumorSample());
@@ -50,25 +54,29 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             final Multimap<String, ReadCount> tumorReadCount = readCountSupplier.tumorReadCount();
             final Multimap<String, ReadCount> normalReadCount = readCountSupplier.referenceReadCount();
 
-            final GenomePositionSelector<ReadCount> referenceReadCountSelector = GenomePositionSelectorFactory.create(normalReadCount);
+            final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.create(gcContent);
             final GenomePositionSelector<ReadCount> tumorReadCountSelector = GenomePositionSelectorFactory.create(tumorReadCount);
 
             LOGGER.info("Generating gc normalized read ratios");
-            final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder();
-            final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder();
+            final NormalizedRatiosBuilder normalRatiosBuilder = new NormalizedRatiosBuilder(true, gender);
+            final NormalizedRatiosBuilder tumorRatiosBuilder = new NormalizedRatiosBuilder(false, gender);
             for (String chromosomeName : normalReadCount.keySet()) {
                 if (HumanChromosome.contains(chromosomeName)) {
                     final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-                    List<GCContent> chromosomeGCContent = (List<GCContent>) gcContent.get(chromosomeName);
-                    for (GCContent windowGCContent : chromosomeGCContent) {
+                    final Collection<ReadCount> referenceReadCount = normalReadCount.get(chromosomeName);
+                    for (final ReadCount referenceCount : referenceReadCount) {
 
-                        final ReadCount referenceCount =
-                                referenceReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
-                        normalRatiosBuilder.addPosition(chromosome, windowGCContent, referenceCount);
+                        final Optional<GCProfile> optionalGCProfile = gcProfileSelector.select(referenceCount);
+                        if (optionalGCProfile.isPresent()) {
+                            final GCProfile gcProfile = optionalGCProfile.get();
+                            normalRatiosBuilder.addPosition(chromosome, gcProfile, referenceCount);
 
-                        final ReadCount tumorCount = tumorReadCountSelector.select(windowGCContent).orElseGet(() -> empty(windowGCContent));
-                        tumorRatiosBuilder.addPosition(chromosome, windowGCContent, tumorCount);
+                            final ReadCount tumorCount =
+                                    tumorReadCountSelector.select(referenceCount).orElseGet(() -> empty(referenceCount));
+                            tumorRatiosBuilder.addPosition(chromosome, gcProfile, tumorCount);
+                        }
                     }
+
                 } else {
                     LOGGER.info("Excluding unsupported {} chromosome from read ratios", chromosomeName);
                 }
@@ -80,13 +88,13 @@ public class ReadCountRatioSupplier implements RatioSupplier {
             referenceRatios = normalizedReferenceRatios.normalisedRatios();
             tumorRatios = normalizedTumorRatios.normalisedRatios();
 
-            final String tumorGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.tumorSample());
+            final String tumorGCMedianFileName = GCMedianReadCountFile.generateFilename(config.outputDirectory(), config.tumorSample());
             LOGGER.info("Persisting read count medians to {}", tumorGCMedianFileName);
-            GCMedianFile.write(tumorGCMedianFileName, normalizedTumorRatios.medianReadCount());
+            GCMedianReadCountFile.write(tumorGCMedianFileName, normalizedTumorRatios.medianReadCount());
 
-            final String referenceGCMedianFileName = GCMedianFile.generateFilename(config.outputDirectory(), config.refSample());
+            final String referenceGCMedianFileName = GCMedianReadCountFile.generateFilename(config.outputDirectory(), config.refSample());
             LOGGER.info("Persisting read count medians to {}", referenceGCMedianFileName);
-            GCMedianFile.write(referenceGCMedianFileName, normalizedReferenceRatios.medianReadCount());
+            GCMedianReadCountFile.write(referenceGCMedianFileName, normalizedReferenceRatios.medianReadCount());
 
             LOGGER.info("Persisting gc normalized read ratios to file");
             ReadRatioFile.write(config.outputDirectory(), config.refSample(), referenceRatios);

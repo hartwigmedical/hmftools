@@ -12,12 +12,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.copynumber.freec.FreecGCContentFactory;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCProfile;
+import com.hartwig.hmftools.common.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
@@ -32,7 +34,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
@@ -133,8 +134,8 @@ public class PurityPloidyEstimateApplication {
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
 
             // JOBA: Ratio Segmentation
-            final Multimap<String, GCContent> gcContent = FreecGCContentFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
-            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config, gcContent);
+            final Multimap<String, GCProfile> gcContent = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
+            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config, gcContent, gender);
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
             final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
 
@@ -157,9 +158,16 @@ public class PurityPloidyEstimateApplication {
             final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
             final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
             final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
-            final FittedPurityFactory fittedPurityFactory =
-                    new FittedPurityFactory(executorService, MAX_PLOIDY, minPurity, maxPurity, PURITY_INCREMENTS, minNormFactor,
-                            maxNormFactor, NORM_FACTOR_INCREMENTS, fittedRegionFactory, observedRegions);
+            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                    MAX_PLOIDY,
+                    minPurity,
+                    maxPurity,
+                    PURITY_INCREMENTS,
+                    minNormFactor,
+                    maxNormFactor,
+                    NORM_FACTOR_INCREMENTS,
+                    fittedRegionFactory,
+                    observedRegions);
 
             final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity(), somaticVariants);
             final FittedPurity bestFit = bestFitFactory.bestFit();
@@ -182,7 +190,6 @@ public class PurityPloidyEstimateApplication {
                     .build();
 
             if (cmd.hasOption(DB_ENABLED)) {
-                LOGGER.info("Persisting to database");
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
                 dbAccess.writePurity(tumorSample, purityContext);
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
@@ -202,12 +209,18 @@ public class PurityPloidyEstimateApplication {
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
-            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(), purityContext.score(), smoothRegions,
+            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(),
+                    purityContext.score(),
+                    smoothRegions,
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
-            new GenerateCircosDataHelper(tumorSample, configSupplier.circosConfig()).write(gender, smoothRegions, enrichedSomatics,
-                    structuralVariants);
+            new GenerateCircosData(configSupplier).write(gender,
+                    smoothRegions,
+                    enrichedSomatics,
+                    structuralVariants,
+                    fittedRegions,
+                    Lists.newArrayList(bafs.values()));
 
         } finally {
             executorService.shutdown();

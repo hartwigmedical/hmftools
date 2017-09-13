@@ -6,5 +6,7 @@ public interface AllelicDepth {
 
     int alleleReadCount();
 
-    double alleleFrequency();
+    default double alleleFrequency() {
+        return (double) alleleReadCount() / totalReadCount();
+    }
 }

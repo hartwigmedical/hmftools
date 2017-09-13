@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.purple.ratio;
+package com.hartwig.hmftools.common.gc;
 
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GCContent extends GenomePosition {
+public interface GCProfile extends GenomeRegion {
 
     double gcContent();
 

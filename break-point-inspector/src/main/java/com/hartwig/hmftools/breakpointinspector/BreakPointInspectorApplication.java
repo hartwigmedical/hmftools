@@ -325,8 +325,8 @@ public class BreakPointInspectorApplication {
     }
 
     private static void writeToSlice(final String path, final SamReader reader, final QueryInterval[] intervals) {
-        final File tumorSliceBAM = new File(path);
-        final SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(reader.getFileHeader(), true, tumorSliceBAM);
+        final File outputBAM = new File(path);
+        final SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(reader.getFileHeader(), true, outputBAM);
         final SAMRecordIterator iterator = reader.queryOverlapping(intervals);
         while (iterator.hasNext()) {
             writer.addAlignment(iterator.next());

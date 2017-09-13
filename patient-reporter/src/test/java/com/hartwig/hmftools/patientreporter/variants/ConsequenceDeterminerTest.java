@@ -49,6 +49,7 @@ public class ConsequenceDeterminerTest {
 
     @Test
     public void worksAsExpected() {
+
         final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(
                 ImmutableBEDGenomeRegion.of(CHROMOSOME, POSITION - 10, POSITION + 10));
         final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();

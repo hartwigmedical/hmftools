@@ -51,7 +51,7 @@ public class ChartWriter {
         somaticPloidyPDF(subtitle, filteredSomaticVariants);
     }
 
-    static String subtitle(@NotNull final String sample, @NotNull final FittedPurity purity, @NotNull final FittedPurityScore score) {
+    private static String subtitle(@NotNull final String sample, @NotNull final FittedPurity purity, @NotNull final FittedPurityScore score) {
         return String.format("%s PUR:%.0f%% (%.0f%%-%.0f%%) PLE:%.2f (%.2f-%.2f)",
                 sample,
                 purity.purity() * 100,

@@ -3,14 +3,10 @@ package com.hartwig.hmftools.patientreporter.variants;
 import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
 import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -34,16 +30,7 @@ public class VariantAnalyzer {
 
     @NotNull
     private static ConsequenceDeterminer fromHmfSlicingRegion(@NotNull final GeneModel geneModel) {
-        return new ConsequenceDeterminer(geneModel.slicer(), extractTranscriptMap(geneModel.hmfRegions()));
-    }
-
-    @NotNull
-    private static Map<String, HmfGenomeRegion> extractTranscriptMap(final @NotNull Collection<HmfGenomeRegion> regions) {
-        final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
-        for (final HmfGenomeRegion region : regions) {
-            transcriptMap.put(region.transcriptID(), region);
-        }
-        return transcriptMap;
+        return new ConsequenceDeterminer(geneModel);
     }
 
     private VariantAnalyzer(@NotNull final ConsensusRule consensusRule,

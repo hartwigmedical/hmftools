@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.variant;
 
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,13 +24,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
         return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(false);
     }
 
-    default PurityAdjustedSomaticVariantBuilder purityAdjustment(@NotNull PurityAdjuster purityAdjuster,
-            @NotNull final FittedRegion copyNumberRegion, @NotNull final AllelicDepth depth) {
-        return clonality(Clonality.fromSample(purityAdjuster.purity(),
-                purityAdjuster.normFactor(),
-                copyNumberRegion.observedNormalRatio(),
-                copyNumberRegion.observedTumorRatio(),
-                depth)).lossOfHeterozygosity(false);
+    default PurityAdjustedSomaticVariantBuilder clonality(double copyNumber, double purity, @NotNull final AllelicDepth depth) {
+        return clonality(Clonality.fromSample(copyNumber, purity, depth));
     }
-
 }
