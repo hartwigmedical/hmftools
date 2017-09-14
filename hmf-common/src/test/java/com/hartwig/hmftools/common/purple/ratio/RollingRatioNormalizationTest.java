@@ -16,6 +16,25 @@ public class RollingRatioNormalizationTest {
     private static final double EPSILON = 1e-10;
 
     @Test
+    public void testCloseToZero() {
+        final List<ReadRatio> input = Lists.newArrayList(
+                create(1, 0),
+                create(50, 0),
+                create(100, 0.002),
+                create(120, 0),
+                create(200, 0));
+
+        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 100, 10, input).get();
+        assertEquals(input.size(), output.size());
+        assertRatio(input.get(0), output.get(0), 1);
+        assertRatio(input.get(1), output.get(1), 1);
+        assertRatio(input.get(2), output.get(2), 1);
+        assertRatio(input.get(3), output.get(3), 1);
+        assertRatio(input.get(4), output.get(4), 1);
+    }
+
+
+    @Test
     public void testUsage() {
         final List<ReadRatio> input = Lists.newArrayList(
                 create(1, 1.0),
@@ -24,13 +43,31 @@ public class RollingRatioNormalizationTest {
                 create(120, 1.1),
                 create(200, 1.2));
 
-        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 100, input).get();
+        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 100, 10, input).get();
         assertEquals(input.size(), output.size());
         assertRatio(input.get(0), output.get(0), 1.25);
         assertRatio(input.get(1), output.get(1), 1.1);
         assertRatio(input.get(2), output.get(2), 1.0);
         assertRatio(input.get(3), output.get(3), 1.2);
         assertRatio(input.get(4), output.get(4), 1.15);
+    }
+
+    @Test
+    public void testMinCoverage() {
+        final List<ReadRatio> input = Lists.newArrayList(
+                create(1, 1.0),
+                create(50, 1.5),
+                create(200, -1),
+                create(210, 1.9),
+                create(215, 1.8));
+
+        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 50, 20, input).get();
+        assertEquals(input.size(), output.size());
+        assertRatio(input.get(0), output.get(0), 1.25);
+        assertRatio(input.get(1), output.get(1), 1.25);
+        assertRatio(input.get(2), output.get(2), 1.0);
+        assertRatio(input.get(3), output.get(3), 1.0);
+        assertRatio(input.get(4), output.get(4), 1.0);
     }
 
     private void assertRatio(@NotNull final ReadRatio input, @NotNull final ReadRatio output, double median) {
