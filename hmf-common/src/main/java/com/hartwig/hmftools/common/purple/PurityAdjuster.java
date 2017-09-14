@@ -40,6 +40,13 @@ public class PurityAdjuster {
         return purity;
     }
 
+    public double normFactor() {
+        return normFactor;
+    }
+
+    public double impliedPloidy() {
+        return (1 - normFactor()) / purity() / normFactor() * 2 + 2;
+    }
 
     public double purityAdjustedCopyNumber(final String chromosomeName, final double ratio) {
         final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);

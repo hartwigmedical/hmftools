@@ -13,10 +13,18 @@ public interface PurityAdjustedSomaticVariantBuilder {
 
     PurityAdjustedSomaticVariantBuilder adjustedCopyNumber(double adjustedVAF);
 
+    PurityAdjustedSomaticVariantBuilder clonality(Clonality clonality);
+
+    PurityAdjustedSomaticVariantBuilder lossOfHeterozygosity(boolean lossOfHeterozygosity);
+
     default PurityAdjustedSomaticVariantBuilder purityAdjustment(@NotNull PurityAdjuster purityAdjuster,
             @NotNull final PurpleCopyNumber copyNumber, @NotNull final AllelicDepth depth) {
         double adjustedCopyNumber = copyNumber.averageTumorCopyNumber();
         double adjustedVAF = purityAdjuster.purityAdjustedVAF(Math.max(0.001, adjustedCopyNumber), depth.alleleFrequency());
-        return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF);
+        return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(false);
+    }
+
+    default PurityAdjustedSomaticVariantBuilder clonality(double copyNumber, double purity, @NotNull final AllelicDepth depth) {
+        return clonality(Clonality.fromSample(copyNumber, purity, depth));
     }
 }

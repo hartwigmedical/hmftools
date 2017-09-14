@@ -7,11 +7,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
-import com.hartwig.hmftools.common.slicing.HmfSlicer;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -41,11 +43,11 @@ public class VariantAnalyzerTest {
 
     @Test
     public void realCaseWorks() {
-        final HmfSlicer hmfSlicingRegion = SlicerFactory.hmfSlicerFromSingleGenomeRegion(hmfRegion());
+        final GeneModel geneModel = new GeneModel(hmfRegions());
         final Slicer giabHighConfidenceRegion = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
         final Slicer cpctSlicingRegion = SlicerFactory.fromSingleGenomeRegion(region(400, 500));
 
-        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(hmfSlicingRegion, giabHighConfidenceRegion, cpctSlicingRegion);
+        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(geneModel, giabHighConfidenceRegion, cpctSlicingRegion);
 
         final VariantAnnotation rightAnnotation =
                 createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE).
@@ -89,8 +91,20 @@ public class VariantAnalyzerTest {
     }
 
     @NotNull
-    private static HmfGenomeRegion hmfRegion() {
-        return new ImmutableHmfGenomeRegion(CHROMOSOME, 350, 450, RIGHT_TRANSCRIPT, TRANSCRIPT_VERSION, GENE, GENE_ID, GENE_START, GENE_END,
-                CHROMOSOME_BAND, ENTREZ_ID);
+    private static SortedSetMultimap<String, HmfGenomeRegion> hmfRegions() {
+        final SortedSetMultimap<String, HmfGenomeRegion> hmfRegions = TreeMultimap.create();
+        hmfRegions.put(CHROMOSOME, ImmutableHmfGenomeRegion.builder()
+                .chromosome(CHROMOSOME)
+                .start(350)
+                .end(450)
+                .gene(GENE)
+                .transcriptID(RIGHT_TRANSCRIPT)
+                .transcriptVersion(TRANSCRIPT_VERSION)
+                .chromosomeBand(CHROMOSOME_BAND)
+                .entrezId(ENTREZ_ID)
+                .geneID(GENE_ID)
+                .geneStart(GENE_START)
+                .geneEnd(GENE_END).build());
+        return hmfRegions;
     }
 }

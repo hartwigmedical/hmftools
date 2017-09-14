@@ -39,6 +39,7 @@ final class MetaDataResolver {
         try {
             json = GSON.fromJson(new FileReader(metaDataFilePath), JsonObject.class);
         } catch (FileNotFoundException exception) {
+            LOGGER.warn("Could not find meta data file: " + metaDataFilePath);
             return null;
         }
 

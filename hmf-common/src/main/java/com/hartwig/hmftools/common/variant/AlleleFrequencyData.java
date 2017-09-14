@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-class AlleleFrequencyData {
+public class AlleleFrequencyData {
 
     private final int alleleReadCount;
     private final int totalReadCount;
@@ -16,5 +16,9 @@ class AlleleFrequencyData {
 
     public int totalReadCount() {
         return totalReadCount;
+    }
+
+    public double alleleFrequency() {
+        return (double) alleleReadCount() / totalReadCount();
     }
 }

@@ -24,10 +24,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.conf.MappedSchema;
+import org.jooq.conf.RenderMapping;
+import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LogManager.getLogger(DatabaseAccess.class);
+    private static final String DEV_CATALOG = "hmfpatients";
 
     @NotNull
     private final DSLContext context;
@@ -52,7 +56,10 @@ public class DatabaseAccess {
         // MIVO: disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(url, userName, password);
-        this.context = DSL.using(conn, SQLDialect.MYSQL);
+        final String catalog = conn.getCatalog();
+        LOGGER.info("Connecting to database {}", catalog);
+        this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
+
         purityDAO = new PurityDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
@@ -61,6 +68,14 @@ public class DatabaseAccess {
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
+    }
+
+    @Nullable
+    private Settings settings(final String catalog) {
+        return !catalog.equals(DEV_CATALOG)
+                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput("hmfpatients")
+                .withOutput(catalog)))
+                : null;
     }
 
     public void writePurity(@NotNull final String sampleId, @NotNull final PurityContext context) {
@@ -111,6 +126,11 @@ public class DatabaseAccess {
     @NotNull
     public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
         return copyNumberDAO.read(sample);
+    }
+
+    @NotNull
+    public List<FittedRegion> readCopynumberRegions(@NotNull final String sample) {
+        return copyNumberDAO.readCopyNumberRegions(sample);
     }
 
     public void clearEcrf() {

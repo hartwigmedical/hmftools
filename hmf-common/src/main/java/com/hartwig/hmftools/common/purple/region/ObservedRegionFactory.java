@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
@@ -14,7 +13,6 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.ratio.GCContent;
 import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 
@@ -109,37 +107,6 @@ public class ObservedRegionFactory {
                 count++;
                 sumRatio += ratio.ratio();
             }
-        }
-    }
-
-    @VisibleForTesting
-    static class GCContentAccumulator implements Consumer<GCContent> {
-
-        private int count;
-        private double sumGCContent;
-        private double sumNonNPercentage;
-        private double sumMappablePercentage;
-
-        @Override
-        public void accept(final GCContent GCContent) {
-            count++;
-            if (Doubles.positiveOrZero(GCContent.gcContent())) {
-                sumGCContent += GCContent.gcContent() * GCContent.nonNPercentage();
-                sumNonNPercentage += GCContent.nonNPercentage();
-                sumMappablePercentage += GCContent.mappablePercentage();
-            }
-        }
-
-        double getAverageGCContent() {
-            return Doubles.isZero(sumNonNPercentage) ? 0 : sumGCContent / sumNonNPercentage;
-        }
-
-        double getAverageNonNPercentage() {
-            return count == 0 ? 0 : sumNonNPercentage / count;
-        }
-
-        double getAverageMappablePercentage() {
-            return count == 0 ? 0 : sumMappablePercentage / count;
         }
     }
 }

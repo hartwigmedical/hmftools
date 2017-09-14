@@ -4,12 +4,9 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter
 import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.slicing.HmfSlicer;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
@@ -24,25 +21,16 @@ public class VariantAnalyzer {
     @NotNull
     private final ConsequenceDeterminer determiner;
 
-    public static VariantAnalyzer fromSlicingRegions(@NotNull final HmfSlicer hmfSlicingRegion,
+    public static VariantAnalyzer fromSlicingRegions(@NotNull final GeneModel geneModel,
             @NotNull final Slicer giabHighConfidenceRegion, @NotNull final Slicer cpctSlicingRegion) {
         final ConsensusRule consensusRule = ConsensusRule.fromSlicers(giabHighConfidenceRegion, cpctSlicingRegion);
-        final ConsequenceDeterminer determiner = fromHmfSlicingRegion(hmfSlicingRegion);
+        final ConsequenceDeterminer determiner = fromHmfSlicingRegion(geneModel);
         return new VariantAnalyzer(consensusRule, determiner);
     }
 
     @NotNull
-    private static ConsequenceDeterminer fromHmfSlicingRegion(@NotNull final HmfSlicer hmfSlicingRegion) {
-        return new ConsequenceDeterminer(hmfSlicingRegion, extractTranscriptMap(hmfSlicingRegion));
-    }
-
-    @NotNull
-    private static Map<String, HmfGenomeRegion> extractTranscriptMap(final @NotNull HmfSlicer hmfSlicingRegion) {
-        final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
-        for (final HmfGenomeRegion region : hmfSlicingRegion.hmfRegions()) {
-            transcriptMap.put(region.transcriptID(), region);
-        }
-        return transcriptMap;
+    private static ConsequenceDeterminer fromHmfSlicingRegion(@NotNull final GeneModel geneModel) {
+        return new ConsequenceDeterminer(geneModel);
     }
 
     private VariantAnalyzer(@NotNull final ConsensusRule consensusRule,

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -33,6 +34,10 @@ class ConsequenceDeterminer {
     private final Slicer hmfSlicingRegion;
     @NotNull
     private final Map<String, HmfGenomeRegion> relevantTranscriptMap;
+
+    ConsequenceDeterminer(@NotNull final GeneModel geneModel) {
+        this(geneModel.slicer(), geneModel.transcriptMap());
+    }
 
     ConsequenceDeterminer(@NotNull final Slicer hmfSlicingRegion, @NotNull final Map<String, HmfGenomeRegion> relevantTranscriptMap) {
         this.hmfSlicingRegion = hmfSlicingRegion;

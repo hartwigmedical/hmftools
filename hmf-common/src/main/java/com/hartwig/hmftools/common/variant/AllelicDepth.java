@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.common.variant;
 
 public interface AllelicDepth {
-    double alleleFrequency();
+
+    int totalReadCount();
+
+    int alleleReadCount();
+
+    default double alleleFrequency() {
+        return (double) alleleReadCount() / totalReadCount();
+    }
 }

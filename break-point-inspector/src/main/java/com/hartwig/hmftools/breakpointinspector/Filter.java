@@ -47,7 +47,7 @@ class Filter {
         }
     }
 
-    static void updateHeader(final VCFHeader header) {
+    static void UpdateVCFHeader(final VCFHeader header) {
         Arrays.stream(Filters.values()).forEach(f -> header.addMetaDataLine(f.toHeaderLine()));
     }
 
@@ -58,6 +58,8 @@ class Filter {
     static Collection<String> getFilters(final HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,
             final Pair<Location, Location> breakpoints) {
 
+        final int MIN_ANCHOR_LENGTH = 30;
+
         final List<Filters> filters = Lists.newArrayList();
 
         if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats)
@@ -66,19 +68,23 @@ class Filter {
             filters.add(Filters.MinDepth);
         }
 
-        final boolean anchorLengthOkay = tumorStats.PR_Evidence.stream()
-                .anyMatch(p -> Stream.of(p.getLeft(), p.getRight()).allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= 30));
-        if (!anchorLengthOkay) {
-            filters.add(Filters.MinAnchorLength);
-        }
+        if (ctx.isInsert()) {
 
-        // short variant logic
-        if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
-            // must have SR support
-            final int tumor_SR =
-                    Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();
-            if (tumor_SR == 0) {
+            // no PR/SR checks
+
+        } else if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
+            // short variant logic
+
+            final boolean bothSidesHaveSR =
+                    Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).allMatch(s -> s.PR_SR_Support + s.SR_Only_Support > 0);
+            final boolean anchorLengthOkay = tumorStats.SR_Evidence.stream()
+                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
+                            .anyMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
+
+            if (!bothSidesHaveSR) {
                 filters.add(Filters.SRSupportZero);
+            } else if (!anchorLengthOkay) {
+                filters.add(Filters.MinAnchorLength);
             }
 
             // must not have SR support in normal
@@ -91,15 +97,22 @@ class Filter {
             if (refStats.BP1_Stats.PR_Only_Support + refStats.BP1_Stats.PR_SR_Support > 0) {
                 filters.add(Filters.PRNormalSupport);
             }
-        }
 
-        if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_Only_Support + s.PR_SR_Support).sum() == 0) {
-            filters.add(Filters.PRSupportZero);
+            final boolean anchorLengthOkay = tumorStats.PR_Evidence.stream()
+                    .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
+                            .allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
+
+            // only applicable for longer variants
+            if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_Only_Support + s.PR_SR_Support).sum() == 0) {
+                filters.add(Filters.PRSupportZero);
+            } else if (!anchorLengthOkay) {
+                filters.add(Filters.MinAnchorLength);
+            }
         }
 
         // we must adjust from Manta breakpoint convention to our clipping position convention
-        final List<Location> adjusted_bp = Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 1 : 0),
-                breakpoints.getRight().add(ctx.OrientationBP2 > 0 ? 1 : 0));
+        final List<Location> adjusted_bp =
+                Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1), breakpoints.getRight().add(ctx.OrientationBP2));
 
         boolean concordance = false;
         for (final Location bp : adjusted_bp) {

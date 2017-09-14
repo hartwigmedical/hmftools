@@ -61,6 +61,7 @@ public class LoadSomaticVariants {
 
         LOGGER.info("Querying purple database");
         final FittedPurity fittedPurity = dbAccess.readFittedPurity(sample);
+
         if (fittedPurity == null) {
             LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }

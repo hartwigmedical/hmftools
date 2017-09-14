@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVarian
 import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.builder;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
@@ -26,6 +27,7 @@ public class EnrichedSomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
 
+
     @NotNull
     private final PurityAdjuster purityAdjuster;
     @NotNull
@@ -37,16 +39,17 @@ public class EnrichedSomaticVariantFactory {
 
     private int unmatchedAnnotations;
 
-    public EnrichedSomaticVariantFactory(double purity, double normFactor,
-            @NotNull  final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull  final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
+    public EnrichedSomaticVariantFactory(double purity, double normFactor, @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
         purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
         this.reference = reference;
+
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<SomaticVariant> variants) {
+
         final List<EnrichedSomaticVariant> result = variants.stream().map(this::enrich).collect(Collectors.toList());
         if (unmatchedAnnotations > 0) {
             LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
@@ -59,7 +62,14 @@ public class EnrichedSomaticVariantFactory {
         final Builder builder = createBuilder(variant);
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
-        copyNumberSelector.select(variant).ifPresent(x -> builder.purityAdjustment(purityAdjuster, x, variant));
+
+        final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variant);
+        if (optionalCopyNumber.isPresent()) {
+            final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
+            builder.purityAdjustment(purityAdjuster, copyNumber, variant);
+            builder.clonality(copyNumber.averageTumorCopyNumber(), purityAdjuster.purity(), variant);
+        }
+
         addAnnotations(builder, variant);
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);
@@ -103,6 +113,8 @@ public class EnrichedSomaticVariantFactory {
                 .alleleReadCount(variant.alleleReadCount())
                 .highConfidenceRegion(false)
                 .adjustedCopyNumber(0)
+                .clonality(Clonality.UNKNOWN)
+                .lossOfHeterozygosity(false)
                 .adjustedVAF(0);
     }
 
