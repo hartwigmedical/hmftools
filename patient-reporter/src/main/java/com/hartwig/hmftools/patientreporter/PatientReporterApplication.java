@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -61,6 +60,7 @@ public class PatientReporterApplication {
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
+    private static final String FUSION_CSV = "fusion_csv";
 
     private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
@@ -101,7 +101,7 @@ public class PatientReporterApplication {
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV),
-                cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE));
+                cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE), cmd.getOptionValue(FUSION_CSV));
     }
 
     @NotNull
@@ -110,8 +110,8 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull COSMICGeneFusionModel cosmic, @NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException, XMLStreamException, SQLException {
+    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull COSMICGeneFusionModel cosmic,
+            @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(geneModel, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
@@ -252,6 +252,7 @@ public class PatientReporterApplication {
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
+        options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
         return options;
     }
 

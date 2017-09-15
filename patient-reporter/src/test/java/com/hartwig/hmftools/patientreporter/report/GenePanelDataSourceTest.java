@@ -23,8 +23,9 @@ public class GenePanelDataSourceTest {
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
         final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath);
+                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
         final JRDataSource dataSource = GenePanelDataSource.fromHmfReporterData(reporterData);
         assertNotNull(dataSource);
     }

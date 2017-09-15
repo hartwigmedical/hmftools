@@ -21,12 +21,13 @@ public final class HmfReporterDataLoader {
 
     @NotNull
     public static HmfReporterData buildFromFiles(@NotNull final String drupFilterFile, @NotNull final String cosmicFile,
-            @NotNull final String centerFile, @NotNull final String signaturePath) throws IOException, HartwigException {
+            @NotNull final String centerFile, @NotNull final String signaturePath, @NotNull final String fusionFile)
+            throws IOException, HartwigException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
         final CenterModel centerModel = Center.readFromCSV(centerFile);
-        final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromResource();
+        final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromCSV(fusionFile);
         return new ImmutableHmfReporterData(geneModel, cosmicModel, drupFilter, centerModel, signaturePath, fusionModel);
     }
 }

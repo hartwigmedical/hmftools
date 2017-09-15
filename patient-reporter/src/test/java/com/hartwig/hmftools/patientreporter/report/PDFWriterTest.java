@@ -70,9 +70,10 @@ public class PDFWriterTest {
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
 
         final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath);
+                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
 
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);

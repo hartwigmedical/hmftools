@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.patientreporter.data;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,9 +43,9 @@ public class COSMICGeneFusions {
     }
 
     @NotNull
-    public static COSMICGeneFusionModel readFromResource() throws IOException {
+    public static COSMICGeneFusionModel readFromCSV(@NotNull final String pathToCSV) throws IOException, EmptyFileException {
         final List<COSMICGeneFusionData> items = Lists.newArrayList();
-        final List<String> lines = Resources.readLines(Resources.getResource("cosmic_gene_fusions.csv"), Charset.defaultCharset());
+        final List<String> lines = FileReader.build().readLines(new File(pathToCSV).toPath());
         lines.remove(0); // delete header
 
         final Map<String, Integer> countThree = Maps.newHashMap();
