@@ -40,10 +40,10 @@ public class StructuralVariantAnalyzer {
 
     private boolean transcriptsMatchKnownFusion(final COSMICGeneFusionData fusion, final Transcript five, final Transcript three) {
         final boolean fiveValid = fusion.fiveTranscript() == null
-                ? fusion.fiveGene().equals(five.getGeneAnnotation().getGeneName())
+                ? five.getGeneAnnotation().getSynonyms().stream().anyMatch(s -> s.equals(fusion.fiveGene()))
                 : fusion.fiveTranscript().equals(five.getTranscriptId());
         final boolean threeValid = fusion.threeTranscript() == null
-                ? fusion.threeGene().equals(three.getGeneAnnotation().getGeneName())
+                ? three.getGeneAnnotation().getSynonyms().stream().anyMatch(s -> s.equals(fusion.threeGene()))
                 : fusion.threeTranscript().equals(three.getTranscriptId());
         return fiveValid && threeValid;
     }
