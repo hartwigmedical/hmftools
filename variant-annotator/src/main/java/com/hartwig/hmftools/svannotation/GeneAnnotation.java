@@ -13,10 +13,13 @@ public class GeneAnnotation {
     private final String entrezId;
     private final int strand;
     private final List<Transcript> transcripts = Lists.newArrayList();
+    private final List<String> synonyms;
 
-    GeneAnnotation(final Breakend breakend, final String geneName, final String stableId, final String entrezId, final int strand) {
+    GeneAnnotation(final Breakend breakend, final String geneName, final List<String> synonyms, final String stableId,
+            final String entrezId, final int strand) {
         this.breakend = breakend;
         this.geneName = geneName;
+        this.synonyms = synonyms;
         this.stableId = stableId;
         this.entrezId = entrezId;
         this.strand = strand;
@@ -39,7 +42,9 @@ public class GeneAnnotation {
         return stableId;
     }
 
-    public String getEntrezId() { return entrezId; }
+    public String getEntrezId() {
+        return entrezId;
+    }
 
     public int getStrand() {
         return strand;
@@ -55,5 +60,9 @@ public class GeneAnnotation {
 
     public Transcript getCanonical() {
         return transcripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
+    }
+
+    public List<String> getSynonyms() {
+        return ImmutableList.copyOf(synonyms);
     }
 }

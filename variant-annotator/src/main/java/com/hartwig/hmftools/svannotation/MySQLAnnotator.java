@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
 import org.jooq.DSLContext;
@@ -125,20 +126,23 @@ public class MySQLAnnotator implements VariantAnnotator {
             final UInteger canonical_transcript_id = g.get(GENE.CANONICAL_TRANSCRIPT_ID);
             final int gene_strand = g.get(GENE.SEQ_REGION_STRAND);
 
-            final String entrez_id = context.select(XREF.DBPRIMARY_ACC)
+            final List<Pair<String, UInteger>> synonym_db = context.select(XREF.DBPRIMARY_ACC, XREF.EXTERNAL_DB_ID)
                     .from(XREF)
                     .innerJoin(OBJECT_XREF)
                     .on(OBJECT_XREF.XREF_ID.eq(XREF.XREF_ID))
-                    .where(XREF.EXTERNAL_DB_ID.eq(entrez_db_id))
                     .and(OBJECT_XREF.ENSEMBL_ID.eq(gene_id))
                     .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
                     .fetch()
                     .stream()
-                    .map(r -> r.get(XREF.DBPRIMARY_ACC))
-                    .findFirst()
-                    .orElse("");
+                    .map(r -> Pair.of(r.get(XREF.DBPRIMARY_ACC), r.get(XREF.EXTERNAL_DB_ID)))
+                    .collect(Collectors.toList());
 
-            final GeneAnnotation geneAnnotation = new GeneAnnotation(breakend, gene_name, gene_stable_id, entrez_id, gene_strand);
+            final String entrez_id =
+                    synonym_db.stream().filter(i -> i.getRight().equals(entrez_db_id)).map(Pair::getKey).findFirst().orElse("");
+
+            final List<String> synonyms = synonym_db.stream().map(Pair::getKey).collect(Collectors.toList());
+
+            final GeneAnnotation geneAnnotation = new GeneAnnotation(breakend, gene_name, synonyms, gene_stable_id, entrez_id, gene_strand);
             breakend.addGeneAnnotation(geneAnnotation);
 
             final Result<?> transcripts = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID)
