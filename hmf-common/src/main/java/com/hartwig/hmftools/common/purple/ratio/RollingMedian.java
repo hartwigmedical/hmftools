@@ -12,7 +12,7 @@ class RollingMedian {
         if (isEmpty()) {
             minheap.add(n);
         } else {
-            if (Double.compare(n, medianRatio()) <= 0) {
+            if (Double.compare(n, median()) <= 0) {
                 maxheap.add(n);
             } else {
                 minheap.add(n);
@@ -23,7 +23,7 @@ class RollingMedian {
 
     public void remove(double n) {
         if (!isEmpty()) {
-            if (Double.compare(n, medianRatio()) <= 0) {
+            if (Double.compare(n, median()) <= 0) {
                 maxheap.remove(n);
             } else {
                 minheap.remove(n);
@@ -32,7 +32,7 @@ class RollingMedian {
         fixChaos();
     }
 
-    private boolean isEmpty() {
+    public boolean isEmpty() {
         return maxheap.size() == 0 && minheap.size() == 0;
     }
 
@@ -48,9 +48,9 @@ class RollingMedian {
         }
     }
 
-    public double medianRatio() {
+    public double median() {
         if (isEmpty()) {
-            return -1;
+            return 0;
         }
         if (maxheap.size() == minheap.size()) {
             return (maxheap.peek() + minheap.peek()) / 2;

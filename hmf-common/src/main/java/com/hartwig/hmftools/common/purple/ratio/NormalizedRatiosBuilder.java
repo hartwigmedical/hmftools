@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.ratio;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -19,7 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class NormalizedRatiosBuilder {
 
-    private static final long ROLLING_MEDIAN_DISTANCE = 5_000_000;
+    private static final long ROLLING_MEDIAN_MAX_DISTANCE = 5_000_000;
+    private static final long ROLLING_MEDIAN_MIN_COVERAGE = 2_000_000;
     private static final double MIN_MAPPABLE_PERCENTAGE = 0.85;
 
     private final Gender gender;
@@ -53,7 +55,11 @@ public class NormalizedRatiosBuilder {
 
             if (applyRollingMedianNormalization) {
                 double expectedRatio = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 1 : 0.5;
-                builder.putAllNormalisedRatios(chromosome, new RollingRatioNormalization(expectedRatio, ROLLING_MEDIAN_DISTANCE, normalisedRatio).get());
+                final Supplier<List<ReadRatio>> diploidNormalization = new RollingRatioNormalization(expectedRatio,
+                        ROLLING_MEDIAN_MAX_DISTANCE,
+                        ROLLING_MEDIAN_MIN_COVERAGE,
+                        normalisedRatio);
+                builder.putAllNormalisedRatios(chromosome, diploidNormalization.get());
             } else {
                 builder.putAllNormalisedRatios(chromosome, normalisedRatio);
             }
