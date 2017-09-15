@@ -25,6 +25,7 @@ public class StructuralVariantAnalysis {
         public String GeneName;
         public String Location;
         public String GeneContext;
+        public String Transcript;
         public String Partner;
         public String HGVS;
         public String Type;

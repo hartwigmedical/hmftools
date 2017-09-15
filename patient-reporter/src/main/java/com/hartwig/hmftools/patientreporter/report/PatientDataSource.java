@@ -99,12 +99,14 @@ class PatientDataSource {
     @NotNull
     static JRDataSource fromGeneDisruptions(@NotNull List<StructuralVariantAnalysis.GeneDisruption> disruptions) {
 
-        final DRDataSource dataSource = new DRDataSource(GENE_FIELD.getName(), POSITION_FIELD.getName(), SV_TYPE_FIELD.getName(),
-                SV_PARTNER_POSITION_FIELD.getName(), SV_HGVS_FIELD.getName(), SV_ORIENTATION_FIELD.getName(), SV_GENE_CONTEXT.getName(),
-                SV_VAF.getName(), SV_TAF.getName());
+        final DRDataSource dataSource =
+                new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), POSITION_FIELD.getName(), SV_TYPE_FIELD.getName(),
+                        SV_PARTNER_POSITION_FIELD.getName(), SV_HGVS_FIELD.getName(), SV_ORIENTATION_FIELD.getName(),
+                        SV_GENE_CONTEXT.getName(), SV_VAF.getName(), SV_TAF.getName());
 
         disruptions.forEach(
-                g -> dataSource.add(g.GeneName, g.Location, g.Type, g.Partner, g.HGVS, g.Orientation, g.GeneContext, g.VAF, g.TAF));
+                g -> dataSource.add(g.GeneName, g.Transcript, g.Location, g.Type, g.Partner, g.HGVS, g.Orientation, g.GeneContext, g.VAF,
+                        g.TAF));
 
         return dataSource;
     }
@@ -138,7 +140,7 @@ class PatientDataSource {
 
     @NotNull
     static FieldBuilder<?>[] geneDisruptionFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, SV_TYPE_FIELD, SV_PARTNER_POSITION_FIELD, SV_HGVS_FIELD,
-                SV_ORIENTATION_FIELD, SV_GENE_CONTEXT, SV_VAF, SV_TAF };
+        return new FieldBuilder<?>[] { GENE_FIELD, TRANSCRIPT_FIELD, POSITION_FIELD, SV_TYPE_FIELD, SV_PARTNER_POSITION_FIELD,
+                SV_HGVS_FIELD, SV_ORIENTATION_FIELD, SV_GENE_CONTEXT, SV_VAF, SV_TAF };
     }
 }

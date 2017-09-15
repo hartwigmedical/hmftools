@@ -35,13 +35,10 @@ public class StructuralVariantAnalyzer {
     }
 
     private boolean inHmfPanel(final GeneAnnotation g) {
-        return regions.stream()
-                .anyMatch(r -> !r.entrezId().isEmpty() && !g.getEntrezId().isEmpty()
-                        ? r.entrezId().equals(g.getEntrezId())
-                        : r.geneID().equals(g.getGeneName()));
+        return regions.stream().anyMatch(r -> g.getSynonyms().contains(r.geneID()));
     }
 
-    private boolean inCOSMIC(final COSMICGeneFusionData fusion, final Transcript five, final Transcript three) {
+    private boolean transcriptsMatchKnownFusion(final COSMICGeneFusionData fusion, final Transcript five, final Transcript three) {
         final boolean fiveValid = fusion.fiveTranscript() == null
                 ? fusion.fiveGene().equals(five.getGeneAnnotation().getGeneName())
                 : fusion.fiveTranscript().equals(five.getTranscriptId());
@@ -51,16 +48,16 @@ public class StructuralVariantAnalyzer {
         return fiveValid && threeValid;
     }
 
-    private boolean inCOSMIC(final Transcript five, final Transcript three) {
-        return fusionModel.fusions().stream().anyMatch(f -> inCOSMIC(f, five, three));
+    private boolean transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
+        return fusionModel.fusions().stream().anyMatch(f -> transcriptsMatchKnownFusion(f, five, three));
     }
 
-    private boolean inCOSMIC(final String gene) {
+    private boolean isPromiscuous(final GeneAnnotation gene) {
         return Stream.of(fusionModel.promiscuousFivePrime(), fusionModel.promiscuousThreePrime())
-                .anyMatch(l -> l.stream().anyMatch(g -> g.GeneName().equals(gene)));
+                .anyMatch(l -> l.stream().anyMatch(g -> gene.getSynonyms().contains(g.GeneName())));
     }
 
-    private boolean isPromiscuous(final Transcript five, final Transcript three) {
+    private boolean oneEndPromiscuous(final Transcript five, final Transcript three) {
         final boolean promiscuousFive = fusionModel.promiscuousFivePrime()
                 .stream()
                 .anyMatch(p -> p.Transcript() != null
@@ -173,11 +170,11 @@ public class StructuralVariantAnalyzer {
             final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
             final boolean sameGene = upstream.getGeneName().equals(downstream.getGeneName());
 
-            if (sameGene && !intronicDisruption(upstream, downstream) && inCOSMIC(upstream.getGeneName())) {
+            if (sameGene && !intronicDisruption(upstream, downstream) && isPromiscuous(upstream.getGeneAnnotation())) {
                 // okay
-            } else if (inCOSMIC(upstream, downstream)) {
+            } else if (transcriptsMatchKnownFusion(upstream, downstream)) {
                 // in cosmic fusion list
-            } else if (isPromiscuous(upstream, downstream)) {
+            } else if (oneEndPromiscuous(upstream, downstream)) {
                 // one end is promiscuous
             } else {
                 continue;
@@ -198,15 +195,7 @@ public class StructuralVariantAnalyzer {
 
             final Double fiveAF = upstream.getBreakend().getAlleleFrequency();
             final Double threeAF = downstream.getBreakend().getAlleleFrequency();
-            if (fiveAF == null && threeAF == null) {
-                details.VAF = PatientReportFormat.formatNullablePercent(null);
-            } else if (threeAF == null) {
-                details.VAF = PatientReportFormat.formatNullablePercent(fiveAF);
-            } else if (fiveAF == null) {
-                details.VAF = PatientReportFormat.formatNullablePercent(threeAF);
-            } else {
-                details.VAF = PatientReportFormat.formatNullablePercent(Math.max(fiveAF, threeAF));
-            }
+            details.VAF = PatientReportFormat.formatNullablePercent(fiveAF) + " " + PatientReportFormat.formatNullablePercent(threeAF);
 
             result.add(details);
             annotations.remove(upstream.getBreakend().getStructuralVariant());
@@ -251,6 +240,7 @@ public class StructuralVariantAnalyzer {
                 disruption.GeneName = geneName;
                 disruption.Location = g.getBreakend().getPositionString();
                 disruption.GeneContext = exonDescription(g.getCanonical());
+                disruption.Transcript = g.getCanonical().getTranscriptId();
                 disruption.Orientation = g.getBreakend().getOrientation() > 0 ? "5'" : "3'";
                 disruption.Partner = g.getOtherBreakend().getPositionString();
                 disruption.HGVS = "TODO";

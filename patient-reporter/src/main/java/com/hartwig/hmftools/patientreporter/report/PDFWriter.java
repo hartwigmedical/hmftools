@@ -423,6 +423,9 @@ public class PDFWriter implements ReportWriter {
                             .fields(PatientDataSource.geneDisruptionFields())
                             .columns(
                                 col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(fieldTranscriptLink(PatientDataSource.TRANSCRIPT_FIELD)))
+                                        .setStyle(linkStyle().setFontSize(fontSize)),
                                 col.column("Position", PatientDataSource.POSITION_FIELD),
                                 col.column("Gene Context", PatientDataSource.SV_GENE_CONTEXT),
                                 col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD),
