@@ -9,6 +9,8 @@ import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
+import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionModel;
+import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusions;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,7 @@ public final class HmfReporterDataLoader {
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
         final CenterModel centerModel = Center.readFromCSV(centerFile);
-        return new ImmutableHmfReporterData(geneModel, cosmicModel, drupFilter, centerModel, signaturePath);
+        final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromResource();
+        return new ImmutableHmfReporterData(geneModel, cosmicModel, drupFilter, centerModel, signaturePath, fusionModel);
     }
 }

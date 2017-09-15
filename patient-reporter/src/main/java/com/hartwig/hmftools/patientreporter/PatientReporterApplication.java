@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
+import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionModel;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
@@ -89,7 +90,7 @@ public class PatientReporterApplication {
             LOGGER.info("Running patient reporter v" + VERSION);
 
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(reporterData.geneModel(), reporterData.cosmicModel(), cmd);
+            final PatientReporter reporter = buildReporter(reporterData.geneModel(), reporterData.fusionModel(), cmd);
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
@@ -109,7 +110,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull CosmicModel cosmic, @NotNull final CommandLine cmd)
+    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull COSMICGeneFusionModel cosmic, @NotNull final CommandLine cmd)
             throws IOException, EmptyFileException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(geneModel, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),

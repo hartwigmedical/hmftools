@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svannotation;
 
+import org.jetbrains.annotations.NotNull;
+
 public class Transcript {
 
     private final GeneAnnotation geneAnnotation;
@@ -11,7 +13,7 @@ public class Transcript {
     private final int exonMax;
     private final boolean canonical;
 
-    Transcript(final GeneAnnotation geneAnnotation, final String transcriptId, final int exonUpstream, final int exonUpstreamPhase,
+    Transcript(final GeneAnnotation geneAnnotation, @NotNull final String transcriptId, final int exonUpstream, final int exonUpstreamPhase,
             final int exonDownstream, final int exonDownstreamPhase, final int exonMax, final boolean canonical) {
         this.geneAnnotation = geneAnnotation;
         this.transcriptId = transcriptId;
@@ -23,6 +25,7 @@ public class Transcript {
         this.canonical = canonical;
     }
 
+    @NotNull
     public String getTranscriptId() {
         return transcriptId;
     }
@@ -46,6 +49,10 @@ public class Transcript {
     public GeneAnnotation getGeneAnnotation() {
         return geneAnnotation;
     }
+
+    public String getGeneName() { return geneAnnotation.getGeneName(); }
+
+    public Breakend getBreakend() { return geneAnnotation.getBreakend(); }
 
     public int getStrand() {
         return geneAnnotation.getStrand();

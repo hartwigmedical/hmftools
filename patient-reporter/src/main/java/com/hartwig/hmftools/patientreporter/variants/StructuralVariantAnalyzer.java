@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionData;
+import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionModel;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.svannotation.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.Transcript;
@@ -25,34 +25,60 @@ public class StructuralVariantAnalyzer {
 
     private final VariantAnnotator annotator;
     private final Collection<HmfGenomeRegion> regions;
-    private final CosmicModel cosmicModel;
+    private final COSMICGeneFusionModel fusionModel;
 
-    public StructuralVariantAnalyzer(final VariantAnnotator annotator, final Collection<HmfGenomeRegion> regions, final CosmicModel cosmicModel) {
+    public StructuralVariantAnalyzer(final VariantAnnotator annotator, final Collection<HmfGenomeRegion> regions,
+            final COSMICGeneFusionModel fusionModel) {
         this.annotator = annotator;
         this.regions = regions;
-        this.cosmicModel = cosmicModel;
+        this.fusionModel = fusionModel;
     }
 
     private boolean inHmfPanel(final GeneAnnotation g) {
-        return regions.stream().anyMatch(r -> r.geneID().equals(g.getGeneName()));
+        return regions.stream()
+                .anyMatch(r -> !r.entrezId().isEmpty() && !g.getEntrezId().isEmpty()
+                        ? r.entrezId().equals(g.getEntrezId())
+                        : r.geneID().equals(g.getGeneName()));
     }
 
-    private boolean inCosmic(final GeneAnnotation g) {
-        return cosmicModel.getEntrezMap().containsKey(g.getEntrezId());
+    private boolean inCOSMIC(final COSMICGeneFusionData fusion, final Transcript five, final Transcript three) {
+        final boolean fiveValid = fusion.fiveTranscript() == null
+                ? fusion.fiveGene().equals(five.getGeneAnnotation().getGeneName())
+                : fusion.fiveTranscript().equals(five.getTranscriptId());
+        final boolean threeValid = fusion.threeTranscript() == null
+                ? fusion.threeGene().equals(three.getGeneAnnotation().getGeneName())
+                : fusion.threeTranscript().equals(three.getTranscriptId());
+        return fiveValid && threeValid;
     }
 
-    private boolean intronicDisruption(final VariantAnnotation sv) {
-        for (final GeneAnnotation g : sv.getStart().getGeneAnnotations()) {
-            if (sv.getEnd()
-                    .getGeneAnnotations()
-                    .stream()
-                    .filter(o -> o.getCanonical().isIntronic() && g.getCanonical().isIntronic()
-                            && o.getCanonical().getExonUpstream() == g.getCanonical().getExonUpstream())
-                    .count() > 0) {
-                return true;
-            }
-        }
-        return false;
+    private boolean inCOSMIC(final Transcript five, final Transcript three) {
+        return fusionModel.fusions().stream().anyMatch(f -> inCOSMIC(f, five, three));
+    }
+
+    private boolean inCOSMIC(final String gene) {
+        return Stream.of(fusionModel.promiscuousFivePrime(), fusionModel.promiscuousThreePrime())
+                .anyMatch(l -> l.stream().anyMatch(g -> g.GeneName().equals(gene)));
+    }
+
+    private boolean isPromiscuous(final Transcript five, final Transcript three) {
+        final boolean promiscuousFive = fusionModel.promiscuousFivePrime()
+                .stream()
+                .anyMatch(p -> p.Transcript() != null
+                        ? p.Transcript().equals(five.getTranscriptId())
+                        : p.GeneName().equals(five.getGeneName()));
+        final boolean promiscuousThree = fusionModel.promiscuousThreePrime()
+                .stream()
+                .anyMatch(p -> p.Transcript() != null
+                        ? p.Transcript().equals(three.getTranscriptId())
+                        : p.GeneName().equals(three.getGeneName()));
+        return promiscuousFive || promiscuousThree;
+    }
+
+    private boolean intronicDisruption(final Transcript a, final Transcript b) {
+        final boolean sameTranscript = a.getTranscriptId().equals(b.getTranscriptId());
+        final boolean bothIntronic = a.isIntronic() && b.isIntronic();
+        final boolean sameExonUpstream = a.getExonUpstream() == b.getExonUpstream();
+        return sameTranscript && bothIntronic && sameExonUpstream;
     }
 
     private String exonDescription(final Transcript t) {
@@ -67,12 +93,13 @@ public class StructuralVariantAnalyzer {
 
     private String exonSelection(final Transcript t, final boolean upstream) {
         return upstream
-                ? String.format("Upstream Exon %d / %d", t.getExonUpstream(), t.getExonMax())
-                : String.format("Downstream Exon %d / %d", t.getExonDownstream(), t.getExonMax());
+                ? String.format("Exon %d / %d", t.getExonUpstream(), t.getExonMax())
+                : String.format("Exon %d / %d", t.getExonDownstream(), t.getExonMax());
     }
 
     private List<StructuralVariantAnalysis.GeneFusion> processFusions(final List<VariantAnnotation> annotations) {
 
+        // left is upstream, right is downstream
         final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
 
         for (final VariantAnnotation sv : annotations) {
@@ -82,22 +109,10 @@ public class StructuralVariantAnalyzer {
             for (final GeneAnnotation g : sv.getStart().getGeneAnnotations()) {
 
                 final boolean g_upstream = g.getStrand() * g.getBreakend().getOrientation() > 0;
-                if (!inCosmic(g)) {
-                    continue;
-                }
 
                 for (final GeneAnnotation o : sv.getEnd().getGeneAnnotations()) {
 
-                    if (!inCosmic(o)) {
-                        continue;
-                    }
-                    if (g.getGeneName().equals(o.getGeneName())) {
-                        continue;
-                    }
-
                     final boolean o_upstream = o.getStrand() * o.getBreakend().getOrientation() > 0;
-
-                    // can't both be upstream
                     if (g_upstream == o_upstream) {
                         continue;
                     }
@@ -112,16 +127,20 @@ public class StructuralVariantAnalyzer {
                                 continue;
                             }
 
-                            if (g_upstream
-                                    ? t1.getExonUpstreamPhase() == t2.getExonDownstreamPhase()
-                                    : t1.getExonDownstreamPhase() == t2.getExonUpstreamPhase()) {
+                            if (g_upstream && t1.getExonUpstreamPhase() == t2.getExonDownstreamPhase()) {
                                 svFusions.add(Pair.of(t1, t2));
+                            } else if (!g_upstream && t2.getExonUpstreamPhase() == t1.getExonDownstreamPhase()) {
+                                svFusions.add(Pair.of(t2, t1));
                             }
 
                         }
                     }
                 }
             }
+
+            // from here, select either the canonical -> canonical transcript fusion
+            // then the longest where one end is canonical
+            // then the longest combined transcript
 
             Optional<Pair<Transcript, Transcript>> fusion =
                     svFusions.stream().filter(p -> p.getLeft().isCanonical() && p.getRight().isCanonical()).findFirst();
@@ -151,26 +170,46 @@ public class StructuralVariantAnalyzer {
 
         final List<StructuralVariantAnalysis.GeneFusion> result = Lists.newArrayList();
         for (final Pair<Transcript, Transcript> fusion : fusions) {
+            final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
+            final boolean sameGene = upstream.getGeneName().equals(downstream.getGeneName());
 
-            final boolean left_upstream =
-                    fusion.getLeft().getStrand() * fusion.getLeft().getGeneAnnotation().getBreakend().getOrientation() > 0;
-
-            final GeneAnnotation upstream = left_upstream ? fusion.getLeft().getGeneAnnotation() : fusion.getRight().getGeneAnnotation();
-            final GeneAnnotation downstream = left_upstream ? fusion.getRight().getGeneAnnotation() : fusion.getLeft().getGeneAnnotation();
+            if (sameGene && !intronicDisruption(upstream, downstream) && inCOSMIC(upstream.getGeneName())) {
+                // okay
+            } else if (inCOSMIC(upstream, downstream)) {
+                // in cosmic fusion list
+            } else if (isPromiscuous(upstream, downstream)) {
+                // one end is promiscuous
+            } else {
+                continue;
+            }
 
             final StructuralVariantAnalysis.GeneFusion details = new StructuralVariantAnalysis.GeneFusion();
             details.Type = upstream.getBreakend().getStructuralVariant().getVariant().type().toString();
 
             details.GeneStart = upstream.getGeneName();
             details.Start = upstream.getBreakend().getPositionString();
-            details.GeneContextStart = exonSelection(fusion.getLeft(), true);
+            details.GeneContextStart = exonSelection(upstream, true);
+            details.TranscriptStart = upstream.getTranscriptId();
 
             details.GeneEnd = downstream.getGeneName();
             details.End = downstream.getBreakend().getPositionString();
-            details.GeneContextEnd = exonSelection(fusion.getRight(), false);
+            details.GeneContextEnd = exonSelection(downstream, false);
+            details.TranscriptEnd = downstream.getTranscriptId();
+
+            final Double fiveAF = upstream.getBreakend().getAlleleFrequency();
+            final Double threeAF = downstream.getBreakend().getAlleleFrequency();
+            if (fiveAF == null && threeAF == null) {
+                details.VAF = PatientReportFormat.formatNullablePercent(null);
+            } else if (threeAF == null) {
+                details.VAF = PatientReportFormat.formatNullablePercent(fiveAF);
+            } else if (fiveAF == null) {
+                details.VAF = PatientReportFormat.formatNullablePercent(threeAF);
+            } else {
+                details.VAF = PatientReportFormat.formatNullablePercent(Math.max(fiveAF, threeAF));
+            }
 
             result.add(details);
-            annotations.remove(fusion.getLeft().getGeneAnnotation().getBreakend().getStructuralVariant());
+            annotations.remove(upstream.getBreakend().getStructuralVariant());
         }
 
         return result;
@@ -181,7 +220,14 @@ public class StructuralVariantAnalyzer {
         final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
         for (final VariantAnnotation sv : annotations) {
 
-            if (intronicDisruption(sv)) {
+            final boolean intronicExists = sv.getStart()
+                    .getGeneAnnotations()
+                    .stream()
+                    .anyMatch(g -> sv.getEnd()
+                            .getGeneAnnotations()
+                            .stream()
+                            .anyMatch(o -> intronicDisruption(g.getCanonical(), o.getCanonical())));
+            if (intronicExists) {
                 continue;
             }
 
@@ -205,7 +251,7 @@ public class StructuralVariantAnalyzer {
                 disruption.GeneName = geneName;
                 disruption.Location = g.getBreakend().getPositionString();
                 disruption.GeneContext = exonDescription(g.getCanonical());
-                disruption.Orientation = g.getBreakend().getOrientation() > 0 ? "5\"" : "3\"";
+                disruption.Orientation = g.getBreakend().getOrientation() > 0 ? "5'" : "3'";
                 disruption.Partner = g.getOtherBreakend().getPositionString();
                 disruption.HGVS = "TODO";
                 disruption.Type = g.getBreakend().getStructuralVariant().getVariant().type().toString();

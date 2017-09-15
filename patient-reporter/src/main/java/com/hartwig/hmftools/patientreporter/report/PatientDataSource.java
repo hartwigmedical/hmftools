@@ -20,6 +20,7 @@ class PatientDataSource {
     private static final String COSMIC_IDENTIFIER = "COSM";
 
     static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
+    static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
 
     static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
     static final FieldBuilder<?> VARIANT_FIELD = field("variant", String.class);
@@ -39,6 +40,7 @@ class PatientDataSource {
     static final FieldBuilder<?> SV_TYPE_FIELD = field("type", String.class);
 
     static final FieldBuilder<?> SV_PARTNER_GENE_FIELD = field("partner_gene", String.class);
+    static final FieldBuilder<?> SV_PARTNER_TRANSCRIPT_FIELD = field("partner_transcript", String.class);
     static final FieldBuilder<?> SV_PARTNER_POSITION_FIELD = field("partner", String.class);
     static final FieldBuilder<?> SV_PARTNER_CONTEXT_FIELD = field("partner_context", String.class);
     static final FieldBuilder<?> SV_HGVS_FIELD = field("hgvs", String.class);
@@ -84,10 +86,12 @@ class PatientDataSource {
     static JRDataSource fromGeneFusions(@NotNull List<StructuralVariantAnalysis.GeneFusion> fusions) {
 
         final DRDataSource dataSource =
-                new DRDataSource(GENE_FIELD.getName(), POSITION_FIELD.getName(), SV_GENE_CONTEXT.getName(), SV_PARTNER_GENE_FIELD.getName(),
-                        SV_PARTNER_POSITION_FIELD.getName(), SV_PARTNER_CONTEXT_FIELD.getName(), SV_TYPE_FIELD.getName());
+                new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), POSITION_FIELD.getName(), SV_GENE_CONTEXT.getName(),
+                        SV_PARTNER_GENE_FIELD.getName(), SV_PARTNER_TRANSCRIPT_FIELD.getName(), SV_PARTNER_POSITION_FIELD.getName(),
+                        SV_PARTNER_CONTEXT_FIELD.getName(), SV_TYPE_FIELD.getName(), SV_VAF.getName());
 
-        fusions.forEach(g -> dataSource.add(g.GeneStart, g.Start, g.GeneContextStart, g.GeneEnd, g.End, g.GeneContextEnd, g.Type));
+        fusions.forEach(g -> dataSource.add(g.GeneStart, g.TranscriptStart, g.Start, g.GeneContextStart, g.GeneEnd, g.TranscriptEnd, g.End,
+                g.GeneContextEnd, g.Type, g.VAF));
 
         return dataSource;
     }
@@ -128,8 +132,8 @@ class PatientDataSource {
 
     @NotNull
     static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, SV_GENE_CONTEXT, SV_PARTNER_GENE_FIELD, SV_PARTNER_POSITION_FIELD,
-                SV_PARTNER_CONTEXT_FIELD, SV_TYPE_FIELD };
+        return new FieldBuilder<?>[] { GENE_FIELD, TRANSCRIPT_FIELD, POSITION_FIELD, SV_GENE_CONTEXT, SV_PARTNER_GENE_FIELD,
+                SV_PARTNER_TRANSCRIPT_FIELD, SV_PARTNER_POSITION_FIELD, SV_PARTNER_CONTEXT_FIELD, SV_TYPE_FIELD, SV_VAF };
     }
 
     @NotNull

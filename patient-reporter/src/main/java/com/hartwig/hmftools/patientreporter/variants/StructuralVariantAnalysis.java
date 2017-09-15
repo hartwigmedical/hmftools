@@ -13,9 +13,12 @@ public class StructuralVariantAnalysis {
         public String Start;
         public String GeneStart;
         public String GeneContextStart;
+        public String TranscriptStart;
         public String End;
         public String GeneEnd;
         public String GeneContextEnd;
+        public String TranscriptEnd;
+        public String VAF;
     }
 
     public static class GeneDisruption {

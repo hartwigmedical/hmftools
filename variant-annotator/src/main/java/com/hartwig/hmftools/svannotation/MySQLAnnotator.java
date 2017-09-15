@@ -132,9 +132,11 @@ public class MySQLAnnotator implements VariantAnnotator {
                     .where(XREF.EXTERNAL_DB_ID.eq(entrez_db_id))
                     .and(OBJECT_XREF.ENSEMBL_ID.eq(gene_id))
                     .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
-                    .limit(1)
-                    .fetchOne()
-                    .value1();
+                    .fetch()
+                    .stream()
+                    .map(r -> r.get(XREF.DBPRIMARY_ACC))
+                    .findFirst()
+                    .orElse("");
 
             final GeneAnnotation geneAnnotation = new GeneAnnotation(breakend, gene_name, gene_stable_id, entrez_id, gene_strand);
             breakend.addGeneAnnotation(geneAnnotation);
@@ -185,15 +187,15 @@ public class MySQLAnnotator implements VariantAnnotator {
                 if (gene_strand > 0) {
                     // forward strand
                     exon_upstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
-                    exon_upstream_phase = exonLeft == null ? 0 : exonLeft.get(EXON.END_PHASE);
+                    exon_upstream_phase = exonLeft == null ? -1 : exonLeft.get(EXON.END_PHASE);
                     exon_downstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
-                    exon_downstream_phase = exonRight == null ? 0 : exonRight.get(EXON.PHASE);
+                    exon_downstream_phase = exonRight == null ? -1 : exonRight.get(EXON.PHASE);
                 } else {
                     // reverse strand
                     exon_downstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
-                    exon_downstream_phase = exonLeft == null ? 0 : exonLeft.get(EXON.PHASE);
+                    exon_downstream_phase = exonLeft == null ? -1 : exonLeft.get(EXON.PHASE);
                     exon_upstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
-                    exon_upstream_phase = exonRight == null ? 0 : exonRight.get(EXON.END_PHASE);
+                    exon_upstream_phase = exonRight == null ? -1 : exonRight.get(EXON.END_PHASE);
                 }
 
                 final Transcript transcript =
