@@ -41,15 +41,15 @@ public class VariantAnalyzer {
     @NotNull
     public VariantAnalysis run(@NotNull final List<SomaticVariant> variants) {
         final List<SomaticVariant> passedVariants = passOnly(variants);
-        final List<SomaticVariant> consensusPassedVariants = confidenceRegionsRule.removeUnreliableVariants(passedVariants);
-        final List<SomaticVariant> missenseVariants = filter(consensusPassedVariants, isMissense());
+        final List<SomaticVariant> confidencePassedVariants = confidenceRegionsRule.removeUnreliableVariants(passedVariants);
+        final List<SomaticVariant> missenseVariants = filter(confidencePassedVariants, isMissense());
 
-        final ConsequenceOutput consequenceOutput = determiner.run(consensusPassedVariants);
+        final ConsequenceOutput consequenceOutput = determiner.run(confidencePassedVariants);
 
         final List<SomaticVariant> potentialConsequentialMNVs =
-                MNVDetector.locatePotentialMNVs(consensusPassedVariants, consequenceOutput.consequentialVariants());
+                MNVDetector.locatePotentialMNVs(confidencePassedVariants, consequenceOutput.consequentialVariants());
 
-        return new VariantAnalysis(variants, passedVariants, consensusPassedVariants, missenseVariants,
+        return ImmutableVariantAnalysis.of(variants, passedVariants, confidencePassedVariants, missenseVariants,
                 consequenceOutput.consequentialVariants(), potentialConsequentialMNVs, consequenceOutput.findings());
     }
 

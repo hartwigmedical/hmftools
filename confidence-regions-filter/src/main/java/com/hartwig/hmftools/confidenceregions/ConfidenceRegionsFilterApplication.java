@@ -132,7 +132,7 @@ public class ConfidenceRegionsFilterApplication {
 
     private void runOnRunDirectory(@NotNull final String runDirectory, @NotNull final String outputVcf)
             throws IOException, HartwigException {
-        LOGGER.info("Loading melted input from " + runDirectory);
+        LOGGER.info("Loading post processed input from " + runDirectory);
         processVariants(VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION), outputVcf);
     }
 
