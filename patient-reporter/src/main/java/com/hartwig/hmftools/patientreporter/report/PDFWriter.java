@@ -229,7 +229,9 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         geneFusionExplanation(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        geneDisruptionExplanation()
+                        geneDisruptionExplanation(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        testDetailsSection(report, reporterData.centerModel().getAddresseeStringForSample(report.sample()))
                 );
         // @formatter:on
 
