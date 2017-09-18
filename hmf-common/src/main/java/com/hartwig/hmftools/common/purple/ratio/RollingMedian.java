@@ -32,8 +32,12 @@ class RollingMedian {
         fixChaos();
     }
 
+    public int size() {
+        return maxheap.size() + minheap.size();
+    }
+
     public boolean isEmpty() {
-        return maxheap.size() == 0 && minheap.size() == 0;
+        return size() == 0;
     }
 
     private void fixChaos() {
