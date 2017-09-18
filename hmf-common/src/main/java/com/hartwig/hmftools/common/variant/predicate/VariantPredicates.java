@@ -62,9 +62,4 @@ public final class VariantPredicates {
     public static Predicate<SomaticVariant> inDBSNPAndNotInCOSMIC() {
         return and(inDBSNP(), not(inCOSMIC()));
     }
-
-    @NotNull
-    public static Predicate<SomaticVariant> withMinCallers(final int count) {
-        return variant -> variant.callerCount() >= count;
-    }
 }

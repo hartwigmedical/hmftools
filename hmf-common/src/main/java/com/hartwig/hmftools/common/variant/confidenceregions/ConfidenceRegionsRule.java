@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.consensus;
+package com.hartwig.hmftools.common.variant.confidenceregions;
 
 import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.filter;
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.and;
@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.in
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.inDBSNP;
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.not;
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.or;
-import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.withMinCallers;
 import static com.hartwig.hmftools.common.variant.predicate.VariantPredicates.withType;
 
 import java.util.List;
@@ -21,34 +20,33 @@ import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ConsensusRule {
+public class ConfidenceRegionsRule {
 
     @VisibleForTesting
-    static final String CONSENSUS_FILTERED = "CALLER_CONSENSUS";
+    public static final String FILTER = "CONFIDENCE_REGIONS";
 
     @NotNull
-    private final Predicate<SomaticVariant> consensusRuleFilter;
+    private final Predicate<SomaticVariant> confidenceRegionsFilter;
 
     @NotNull
-    public static ConsensusRule fromSlicers(@NotNull final Slicer highConfidenceRegion,
+    public static ConfidenceRegionsRule fromSlicers(@NotNull final Slicer highConfidenceRegion,
             @NotNull final Slicer extremeConfidenceRegion) {
         final Predicate<SomaticVariant> snpRule = and(withType(VariantType.SNP),
-                or(withMinCallers(3), isIncludedIn(extremeConfidenceRegion),
-                        and(withMinCallers(2), isIncludedIn(highConfidenceRegion), or(inCOSMIC(), not(inDBSNP())))));
-        final Predicate<SomaticVariant> indelRule = and(withType(VariantType.INDEL),
-                or(withMinCallers(2), isIncludedIn(extremeConfidenceRegion)));
+                or(isIncludedIn(extremeConfidenceRegion), and(isIncludedIn(highConfidenceRegion), or(inCOSMIC(), not(inDBSNP())))));
 
-        return new ConsensusRule(or(snpRule, indelRule));
+        final Predicate<SomaticVariant> indelRule = and(withType(VariantType.INDEL), isIncludedIn(extremeConfidenceRegion));
+
+        return new ConfidenceRegionsRule(or(snpRule, indelRule));
     }
 
     @VisibleForTesting
-    ConsensusRule(@NotNull final Predicate<SomaticVariant> consensusRuleFilter) {
-        this.consensusRuleFilter = consensusRuleFilter;
+    ConfidenceRegionsRule(@NotNull final Predicate<SomaticVariant> confidenceRegionsFilter) {
+        this.confidenceRegionsFilter = confidenceRegionsFilter;
     }
 
     @NotNull
     public List<SomaticVariant> removeUnreliableVariants(@NotNull final List<SomaticVariant> variants) {
-        return filter(variants, consensusRuleFilter);
+        return filter(variants, confidenceRegionsFilter);
     }
 
     @NotNull
@@ -56,11 +54,11 @@ public class ConsensusRule {
         final List<SomaticVariant> updatedVariants = Lists.newArrayList();
         for (final SomaticVariant variant : variants) {
             final SomaticVariant.Builder newVariantBuilder = SomaticVariant.Builder.fromVariant(variant);
-            if (!consensusRuleFilter.test(variant)) {
+            if (!confidenceRegionsFilter.test(variant)) {
                 if (VariantFilter.isPass(variant)) {
-                    newVariantBuilder.filter(CONSENSUS_FILTERED);
+                    newVariantBuilder.filter(FILTER);
                 } else {
-                    newVariantBuilder.filter(variant.filter() + ";" + CONSENSUS_FILTERED);
+                    newVariantBuilder.filter(variant.filter() + ";" + FILTER);
                 }
             }
             updatedVariants.add(newVariantBuilder.build());
