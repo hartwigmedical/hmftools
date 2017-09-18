@@ -29,7 +29,7 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_EXTENSION = "_melted.vcf";
+    private static final String SOMATIC_EXTENSION = "_post_processed.vcf";
     private static final String COPYNUMBER_DIRECTORY = "copyNumber";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String MANTA_BPI_FILENAME = "_somaticSV_bpi.vcf";
