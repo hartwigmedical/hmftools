@@ -11,7 +11,7 @@
     <modules>
         <module>hmf-common</module>
         <module>variant-annotator</module>
-        <!--<module>consensus-rule-filter</module>-->
+        <module>confidence-regions-filter</module>
         <module>health-checker</module>
         <module>patient-reporter</module>
         <module>fastq-stats</module>
