@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 
@@ -25,6 +26,29 @@ public class CombinedFittedRegionTest {
 
         region.combine(create(200_000_011, 300_000_000, 3, 1, 4d));
         assertAverages(region, 0.875, 3.75);
+    }
+
+    @Test
+    public void testObservedTumorRatioCountSummationOnlyAppliesToSomatic() {
+        final FittedRegion startRegion =
+                PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).observedTumorRatioCount(2).status(FreecStatus.GERMLINE).build();
+
+        final CombinedFittedRegion region = new CombinedFittedRegion(true, startRegion);
+        assertEquals(0, region.region().observedTumorRatioCount());
+
+        final FittedRegion germlineRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1001, 2000)
+                .observedTumorRatioCount(2)
+                .status(FreecStatus.GERMLINE)
+                .build();
+        region.combine(germlineRegion);
+        assertEquals(0, region.region().observedTumorRatioCount());
+
+        final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
+                .observedTumorRatioCount(2)
+                .status(FreecStatus.SOMATIC)
+                .build();
+        region.combine(somaticRegion);
+        assertEquals(2, region.region().observedTumorRatioCount());
     }
 
     @Test
