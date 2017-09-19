@@ -20,9 +20,6 @@ public abstract class VariantAnalysis {
     public abstract List<SomaticVariant> passedVariants();
 
     @NotNull
-    public abstract List<SomaticVariant> confidencePassedVariants();
-
-    @NotNull
     public abstract List<SomaticVariant> missenseVariants();
 
     @NotNull
