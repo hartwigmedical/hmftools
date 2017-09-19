@@ -42,9 +42,10 @@ public class StructuralVariantAnalyzer {
         final boolean fiveValid = fusion.fiveTranscript() == null
                 ? five.getGeneAnnotation().getSynonyms().stream().anyMatch(s -> s.equals(fusion.fiveGene()))
                 : fusion.fiveTranscript().equals(five.getTranscriptId());
-        final boolean threeValid = fusion.threeTranscript() == null
-                ? three.getGeneAnnotation().getSynonyms().stream().anyMatch(s -> s.equals(fusion.threeGene()))
-                : fusion.threeTranscript().equals(three.getTranscriptId());
+        final boolean threeValid = fusion.threeTranscript() == null ? three.getGeneAnnotation()
+                .getSynonyms()
+                .stream()
+                .anyMatch(s -> s.equals(fusion.threeGene())) : fusion.threeTranscript().equals(three.getTranscriptId());
         return fiveValid && threeValid;
     }
 
@@ -170,8 +171,12 @@ public class StructuralVariantAnalyzer {
             final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
             final boolean sameGene = upstream.getGeneName().equals(downstream.getGeneName());
 
-            if (sameGene && !intronicDisruption(upstream, downstream) && isPromiscuous(upstream.getGeneAnnotation())) {
-                // okay
+            if (sameGene) {
+                if (!intronicDisruption(upstream, downstream) && isPromiscuous(upstream.getGeneAnnotation())) {
+                    // okay
+                } else {
+                    continue;
+                }
             } else if (transcriptsMatchKnownFusion(upstream, downstream)) {
                 // in cosmic fusion list
             } else if (oneEndPromiscuous(upstream, downstream)) {
