@@ -19,8 +19,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
+import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidenceReporterData;
+import com.hartwig.hmftools.patientreporter.report.data.AlterationReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.CivicVariantReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemReporterData;
+import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationEvidenceReporterData;
+import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.VariantReporterData;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.MultiPageListBuilder;
+import net.sf.dynamicreports.report.builder.component.SubreportBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
@@ -42,14 +47,8 @@ public class EvidenceLayout {
 
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
-
-    private static final int TEXT_HEADER_INDENT = 30;
-    private static final int TEXT_DETAIL_INDENT = 40;
-    private static final int LIST_INDENT = 5;
-    private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
-    private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 4;
     private static final int SECTION_VERTICAL_GAP = 25;
-    private static final int PADDING = 1;
+    private static final int PADDING = 3;
 
     @NotNull
     private final String reportDirectory;
@@ -84,36 +83,45 @@ public class EvidenceLayout {
     @VisibleForTesting
     @NotNull
     public static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final HmfReporterData reporterData) {
-        // @formatter:off
+            @NotNull final HmfReporterData reporterData) throws IOException, DRException {
 
+        final List<VariantReporterData> variantReporterData = VariantReporterData.of(report, reporterData.geneModel());
+
+        //TODO: get actual data
+        final List<Object> conciseReporterData = Lists.newArrayList(new Object());
+        final ComponentBuilder<?, ?> alterationsReport = cmp.subreport(report().addDetail(conciseEvidenceSection())
+                .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(conciseReporterData))));
+
+        final ComponentBuilder<?, ?> evidenceItemsReport = cmp.subreport(report().addDetail(evidenceSection())
+                .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(variantReporterData))));
+
+        // @formatter:off
         final MultiPageListBuilder totalReport = cmp.multiPageList().add(
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Civic Evidence Items").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP));
-
-        final ComponentBuilder<?, ?> evidenceItemsPage = cmp.verticalList(evidenceSection());
+                cmp.verticalGap(SECTION_VERTICAL_GAP))
+                .add(alterationsReport)
+                .newPage()
+                .add(evidenceItemsReport);
         // @formatter:on
 
-        final List<VariantReporterData> variantReporterData = VariantReporterData.of(report, reporterData);
-
-        return report().addDetail(evidenceItemsPage).setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(variantReporterData)));
+        return report().addDetail(totalReport).setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(variantReporterData)));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceSection() {
-        return cmp.verticalList(cmp.text(VariantReporterData.VARIANT_NAME),
-                cmp.subreport(report().detail(evidenceTable())).setDataSource(exp.subDatasourceBeanCollection("variants")));
+        return cmp.horizontalList(cmp.horizontalGap(20), cmp.verticalList(cmp.text(VariantReporterData.VARIANT_NAME),
+                cmp.subreport(report().detail(evidenceTable())).setDataSource(exp.subDatasourceBeanCollection("variants"))),
+                cmp.horizontalGap(20));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> evidenceTable() {
         //@formatter:off
-        final int fontSize = 7;
         return cmp.verticalList(
                 cmp.text(CivicVariantReporterData.VARIANT).setStyle(tableHeaderStyle()),
                 cmp.subreport(
-                    baseTable().setColumnStyle(dataStyle().setFontSize(fontSize))
+                    baseTable().setColumnStyle(dataStyle())
                         .columns(
                             col.column("Tumor Type", EvidenceItemReporterData.TUMOR_TYPE_FIELD).setFixedWidth(100),
                             col.column("Level", EvidenceItemReporterData.LEVEL_FIELD).setFixedWidth(50),
@@ -126,27 +134,40 @@ public class EvidenceLayout {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> conciseEvidenceSection() {
-        return cmp.verticalList(cmp.text(CivicVariantReporterData.VARIANT), conciseEvidenceTable());
+    private static ComponentBuilder<?, ?> conciseEvidenceSection() throws IOException, DRException {
+        return cmp.horizontalList(cmp.horizontalGap(20), alterationEvidenceTable(), cmp.horizontalGap(20));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> conciseEvidenceTable() {
+    private static ComponentBuilder<?, ?> alterationEvidenceTable() throws IOException, DRException {
         //@formatter:off
-        final int fontSize = 7;
+        final List<AlterationReporterData> alterationReporterData = Lists.newArrayList(
+                ImmutableAlterationReporterData.of("EGFR", "p.Glu746_Ala750del", "", "", Lists.newArrayList(ImmutableAlterationEvidenceReporterData.of("sensitive", "erlotinib(A), afatinib(B), gefitinib(A), dacomitinib(B)", "CIViC"))),
+                ImmutableAlterationReporterData.of("EGFR", "p.Thr790Met", "", "yes", Lists.newArrayList(
+                        ImmutableAlterationEvidenceReporterData.of("resistant", "erlotinib(B), afatinib(B), gefitinib(B), dacomitinib(B)", "CIViC"),
+                        ImmutableAlterationEvidenceReporterData.of("sensitive", "osimertinib(A)", "CIViC"))));
+
+        final SubreportBuilder significanceSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.SIGNIFICANCE).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
+        final SubreportBuilder drugsSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.DRUGS).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
+        final SubreportBuilder sourceSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.SOURCE).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
+
         return cmp.subreport(
-                baseTable().setColumnStyle(dataStyle().setFontSize(fontSize))
-                    .title(cmp.text(CivicVariantReporterData.VARIANT))
+                baseTable().setColumnStyle(dataStyle())
                     .columns(
-                        col.column("Significance", EvidenceItemReporterData.SIGNIFICANCE_FIELD).setFixedWidth(100),
-                        col.column("Drugs", EvidenceItemReporterData.DRUGS_FIELD).setFixedWidth(400)))
-                .setDataSource(exp.subDatasourceBeanCollection("evidenceItems"));
+                        col.column("Alteration", AlterationReporterData.ALTERATION).setFixedWidth(135),
+                        col.componentColumn("Significance", significanceSubreport).setStyle(dataStyle()).setFixedWidth(70),
+                        col.componentColumn("Association(Lv)", drugsSubreport).setFixedWidth(170),
+                        col.componentColumn("Source", sourceSubreport).setFixedWidth(60),
+                        col.column("LOH", AlterationReporterData.LOH).setFixedWidth(40),
+                        col.column("Subclonal", AlterationReporterData.SUBCLONAL).setFixedWidth(60)))
+                .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(alterationReporterData)));
+//                .setDataSource(exp.subDatasourceBeanCollection("conciseEvidenceItems"));
         // @formatter:on
     }
 
     @NotNull
     private static JasperReportBuilder baseTable() {
-        return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
+        return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle());
     }
 
     @NotNull
@@ -159,7 +180,7 @@ public class EvidenceLayout {
         return fontStyle().bold()
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                 .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setFontSize(10)
+                .setFontSize(9)
                 .setBorder(stl.pen1Point())
                 .setBackgroundColor(BORKIE_COLOR)
                 .setPadding(PADDING);
@@ -167,20 +188,15 @@ public class EvidenceLayout {
 
     @NotNull
     private static StyleBuilder dataStyle() {
-        return fontStyle().setFontSize(8)
+        return fontStyle().setFontSize(7)
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                 .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
+                .setBorder(stl.penThin())
                 .setPadding(PADDING);
-    }
-
-    @NotNull
-    private static StyleBuilder linkStyle() {
-        return dataStyle().setForegroundColor(Color.BLUE);
     }
 
     @NotNull
     private static StyleBuilder fontStyle() {
         return stl.style().setFontName(FONT);
     }
-
 }

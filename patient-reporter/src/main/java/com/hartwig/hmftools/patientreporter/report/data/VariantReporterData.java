@@ -6,10 +6,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
+import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -30,10 +30,10 @@ public abstract class VariantReporterData {
     @NotNull
     public abstract List<CivicVariantReporterData> getVariants();
 
-    public static List<VariantReporterData> of(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData) {
+    public static List<VariantReporterData> of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel) {
         final List<VariantReporterData> variantReporterData = Lists.newArrayList();
         for (final VariantReport variantReport : report.variants()) {
-            for (final HmfGenomeRegion region : reporterData.slicer().hmfRegions()) {
+            for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
                 if (region.gene().equals(variantReport.gene())) {
                     final int entrezId = Integer.parseInt(region.entrezId());
                     final Variant variant = variantReportToVariant(variantReport);

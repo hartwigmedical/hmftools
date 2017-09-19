@@ -99,7 +99,7 @@ public class EvidenceItemsWriter {
                 cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Civic Evidence Items").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP));
         for(final VariantReport variantReport : report.variants()){
-            for(final HmfGenomeRegion region: reporterData.slicer().hmfRegions()){
+            for(final HmfGenomeRegion region: reporterData.geneModel().hmfRegions()){
                 if(region.gene().equals(variantReport.gene())){
                     final int entrezId = Integer.parseInt(region.entrezId());
                     final ComponentBuilder<?, ?> evidenceItemsPage =

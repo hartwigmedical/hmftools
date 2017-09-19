@@ -19,7 +19,7 @@ public abstract class EvidenceItemReporterData {
     public static final FieldBuilder<?> LEVEL_FIELD = field("level", Character.class);
     public static final FieldBuilder<?> TUMOR_TYPE_FIELD = field("tumorType", String.class);
     public static final FieldBuilder<?> DIRECTION_FIELD = field("direction", String.class);
-    public static final FieldBuilder<?> SIGNIFICANCE_FIELD = field("significance", String.class);
+    public static final FieldBuilder<String> SIGNIFICANCE_FIELD = field("significance", String.class);
     public static final FieldBuilder<?> DRUGS_FIELD = field("drugs", String.class);
 
     public abstract Character getLevel();
