@@ -15,7 +15,7 @@ class AlleleFrequency {
     }
 
     private static Double calculate(final HMFVariantContext ctx, final BreakpointStats bp) {
-        if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
+        if (ctx.isShortDelete() || ctx.isShortDuplicate() || ctx.isInsert()) {
             final double support = bp.SR_Only_Support + bp.PR_SR_Support;
             final double total = bp.PR_SR_Normal + support;
             return total > 0 ? support / total : 0.0;
