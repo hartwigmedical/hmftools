@@ -54,6 +54,8 @@
                             <addClasspath>true</addClasspath>
                             <mainClass>com.hartwig.hmftools.breakpointinspector.BreakPointInspectorApplication
                             </mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                     </archive>
 

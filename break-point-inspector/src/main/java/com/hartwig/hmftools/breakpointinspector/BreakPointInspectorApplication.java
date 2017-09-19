@@ -35,6 +35,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
@@ -287,7 +288,9 @@ public class BreakPointInspectorApplication {
                 header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
                 header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
                 header.addMetaDataLine(new VCFInfoHeaderLine("BPI_AMBIGUOUS", 0, VCFHeaderLineType.Flag,
-                        "BPI could not determine the breakends, inspect manually"));
+                        "BPI could not determine the breakpoints, inspect manually"));
+                header.addMetaDataLine(
+                        new VCFHeaderLine("bpiVersion", BreakPointInspectorApplication.class.getPackage().getImplementationVersion()));
                 Filter.UpdateVCFHeader(header);
                 AlleleFrequency.UpdateVCFHeader(header);
                 // setup VCF
