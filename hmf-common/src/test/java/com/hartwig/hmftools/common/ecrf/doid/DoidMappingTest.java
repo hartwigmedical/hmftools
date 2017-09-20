@@ -5,8 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -21,14 +19,12 @@ public class DoidMappingTest {
 
     @Test
     public void canLoadFromCsv() throws IOException, EmptyFileException {
-
-        final Map<String, Set<String>> doidMapping = TumorLocationDoidMapping.readMappingFromCSV(TEST_FILE);
-        assertEquals(72, doidMapping.size());
-        assertEquals(2, doidMapping.get("Breast Cancer: ER-negative/HER2-positive").size());
-        assertTrue(doidMapping.get("Breast Cancer: ER-negative/HER2-positive").contains("DOID:0060076"));
-        assertTrue(doidMapping.get("Breast Cancer: ER-negative/HER2-positive").contains("DOID:0060079"));
-        assertEquals(1, doidMapping.get("Eye cancer").size());
-        assertTrue(doidMapping.get("Eye cancer").contains("DOID:2174"));
-        assertEquals(0, doidMapping.get("Breast Cancer: subtype unknown").size());
+        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.readMappingFromCSV(TEST_FILE);
+        assertEquals(2, doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").size());
+        assertTrue(doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").contains("DOID:0060076"));
+        assertTrue(doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").contains("DOID:0060079"));
+        assertEquals(1, doidMapping.doidsForTumorType("Eye cancer").size());
+        assertTrue(doidMapping.doidsForTumorType("Eye cancer").contains("DOID:2174"));
+        assertEquals(0, doidMapping.doidsForTumorType("Breast Cancer: subtype unknown").size());
     }
 }

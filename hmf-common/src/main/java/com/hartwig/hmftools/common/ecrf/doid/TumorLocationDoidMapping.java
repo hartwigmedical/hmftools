@@ -15,9 +15,14 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class TumorLocationDoidMapping {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class TumorLocationDoidMapping {
 
     private static final Logger LOGGER = LogManager.getLogger(TumorLocationDoidMapping.class);
 
@@ -29,22 +34,28 @@ public final class TumorLocationDoidMapping {
 
     private static final Pattern DOID_PATTERN = Pattern.compile("DOID:[0-9]+");
 
-    private TumorLocationDoidMapping() {
+    @NotNull
+    protected abstract Map<String, Set<String>> doidsPerTumorType();
+
+    @NotNull
+    public Set<String> doidsForTumorType(@NotNull final String tumorType) {
+        final Set<String> result = doidsPerTumorType().get(tumorType);
+        return result == null ? Sets.newHashSet() : result;
     }
 
     @NotNull
-    public static Map<String, Set<String>> readMappingFromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
-        final Map<String, Set<String>> recipientsPerCentra = Maps.newHashMap();
+    public static TumorLocationDoidMapping readMappingFromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+        final Map<String, Set<String>> doidsPerTumorType = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
-                recipientsPerCentra.put(parts[TUMOR_TYPE_COLUMN], extractDoids(parts[DOID_COLUMN]));
+                doidsPerTumorType.put(parts[TUMOR_TYPE_COLUMN], extractDoids(parts[DOID_COLUMN]));
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line: " + line);
             }
         }
-        return recipientsPerCentra;
+        return ImmutableTumorLocationDoidMapping.of(doidsPerTumorType);
     }
 
     @NotNull
