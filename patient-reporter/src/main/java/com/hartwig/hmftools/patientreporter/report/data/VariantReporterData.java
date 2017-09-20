@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static net.sf.dynamicreports.report.builder.DynamicReports.field;
-
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.ImmutableCivicVariant;
+import com.hartwig.hmftools.apiclients.diseaseontology.api.DiseaseOntologyApiWrapper;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.Variant;
@@ -13,46 +17,88 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
-import net.sf.dynamicreports.report.builder.FieldBuilder;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Value.Immutable
 @Value.Style(allParameters = true)
 public abstract class VariantReporterData {
-    public static final FieldBuilder<?> VARIANT_NAME = field("variantName", String.class);
-    public static final FieldBuilder<?> EVIDENCE_LINK = field("evidence_link", String.class);
+    private static final Logger LOGGER = LogManager.getLogger(VariantReporterData.class);
 
     @NotNull
-    public abstract String getVariantName();
+    public abstract List<AlterationReporterData> getAlterations();
 
-    @NotNull
-    public abstract List<CivicVariantReporterData> getVariants();
-
-    public static List<VariantReporterData> of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel) {
-        final List<VariantReporterData> variantReporterData = Lists.newArrayList();
+    public static VariantReporterData of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel,
+            @NotNull final Set<String> tumorDoids) {
+        final List<AlterationReporterData> alterations = Lists.newArrayList();
+        final Set<String> tumorChildrenDoids = getTumorChildrenDoids(tumorDoids);
         for (final VariantReport variantReport : report.variants()) {
             for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
                 if (region.gene().equals(variantReport.gene())) {
                     final int entrezId = Integer.parseInt(region.entrezId());
-                    final Variant variant = variantReportToVariant(variantReport);
-                    final String variantName =
-                            entrezId + "(" + variantReport.gene() + ")" + "\t" + variantReport.chromosomePosition() + "\t"
-                                    + variantReport.variantField();
-                    final List<CivicVariantReporterData> civicVariantReporterData = CivicApiWrapper.getVariantsContaining(entrezId, variant)
-                            .filter(civicVariant -> !civicVariant.evidenceItemsWithDrugs().isEmpty())
-                            .map(CivicVariantReporterData::of)
-                            .toList()
-                            .blockingGet();
-                    if (!civicVariantReporterData.isEmpty()) {
-                        variantReporterData.add(ImmutableVariantReporterData.of(variantName, civicVariantReporterData));
+                    final List<CivicVariant> civicVariants = getCivicVariants(entrezId, variantReport, tumorChildrenDoids);
+                    final AlterationReporterData alteration =
+                            AlterationReporterData.from(variantReport.gene(), variantReport.hgvsProtein(), "", "", civicVariants);
+                    if (alteration.getEvidence().size() > 0) {
+                        alterations.add(alteration);
                     }
                 }
             }
         }
         CivicApiWrapper.releaseResources();
-        return variantReporterData;
+        DiseaseOntologyApiWrapper.releaseResources();
+        return ImmutableVariantReporterData.of(alterations);
+    }
+
+    private static Set<String> getTumorChildrenDoids(@NotNull final Set<String> tumorDoids) {
+        final Set<String> tumorChildrenDoids = Sets.newHashSet();
+        tumorChildrenDoids.addAll(tumorDoids);
+        for (final String tumorDoid : tumorDoids) {
+            try {
+                final List<String> childrenDoid = DiseaseOntologyApiWrapper.getAllChildrenDoids(tumorDoid).toList().blockingGet();
+                tumorChildrenDoids.addAll(childrenDoid);
+            } catch (final Throwable throwable) {
+                LOGGER.error("Failed to get children doids for tumor doid: " + tumorDoid + ". error message: " + throwable.getMessage());
+            }
+        }
+        return tumorChildrenDoids;
+    }
+
+    @NotNull
+    private static List<CivicVariant> getCivicVariants(final int entrezId, @NotNull final VariantReport variantReport,
+            @NotNull final Set<String> tumorChildrenDoids) {
+        final Variant variant = variantReportToVariant(variantReport);
+        try {
+            //MIVO: get exact matches only for now (will not work for indels)
+            return CivicApiWrapper.getVariantMatches(entrezId, variant)
+                    .map(civicVariant -> (CivicVariant) ImmutableCivicVariant.builder()
+                            .from(civicVariant)
+                            .evidenceItems(civicVariant.evidenceItemsWithDrugs()
+                                    .stream()
+                                    .filter(evidenceItem -> tumorChildrenDoids.contains(evidenceItem.disease().doidString()))
+                                    .collect(Collectors.toList()))
+                            .build())
+                    .filter(civicVariant -> !civicVariant.groupedEvidenceItems().isEmpty())
+                    .toList()
+                    .blockingGet();
+        } catch (final Throwable throwable) {
+            LOGGER.error("Failed to get civic variants for variant: " + variant.chromosomePosition() + ". error message: "
+                    + throwable.getMessage());
+            return Lists.newArrayList();
+        }
+    }
+
+    @NotNull
+    public JRBeanCollectionDataSource toDataSource() {
+        if (getAlterations().size() > 0) {
+            return new JRBeanCollectionDataSource(Lists.newArrayList(this));
+        } else {
+            return new JRBeanCollectionDataSource(Lists.newArrayList());
+        }
     }
 
     public static Variant variantReportToVariant(@NotNull final VariantReport variantReport) {

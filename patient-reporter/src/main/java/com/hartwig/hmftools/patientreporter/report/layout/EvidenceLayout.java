@@ -12,17 +12,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidenceReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationReporterData;
-import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationEvidenceReporterData;
-import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.VariantReporterData;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,7 +33,6 @@ import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 public class EvidenceLayout {
 
@@ -69,7 +64,7 @@ public class EvidenceLayout {
             LOGGER.warn(" Could not write report as it already exists: " + fileName);
         } else {
             report.toPdf(new FileOutputStream(fileName));
-            LOGGER.info(" Created patient report at " + fileName);
+            LOGGER.info(" Created evidence report at " + fileName);
         }
     }
 
@@ -83,22 +78,24 @@ public class EvidenceLayout {
     public static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
             @NotNull final HmfReporterData reporterData) throws IOException, DRException {
 
-        final List<VariantReporterData> variantReporterData = VariantReporterData.of(report, reporterData.geneModel());
-
-        //TODO: get actual data
-        final List<Object> conciseReporterData = Lists.newArrayList(new Object());
-        final ComponentBuilder<?, ?> alterationsReport = cmp.subreport(report().addDetail(conciseEvidenceSection())
-                .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(conciseReporterData))));
+        final VariantReporterData variantReporterData =
+                VariantReporterData.of(report, reporterData.geneModel(), reporterData.doidMapping().doidsForTumorType(report.tumorType()));
 
         // @formatter:off
         final MultiPageListBuilder totalReport = cmp.multiPageList().add(
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Civic Evidence Items").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP))
-                .add(alterationsReport);
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Civic Evidence Items").setStyle(sectionHeaderStyle()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP))
+                .add(conciseEvidenceSection());
+
+        final MultiPageListBuilder noDataReport = cmp.multiPageList()
+                .add(cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Could not find any civic evidence items").setStyle(sectionHeaderStyle()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP))
+                .newPage();
         // @formatter:on
 
-        return report().addDetail(totalReport).setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(variantReporterData)));
+        return report().addDetail(conciseEvidenceSection()).setDataSource(variantReporterData.toDataSource()).noData(noDataReport);
     }
 
     @NotNull
@@ -109,12 +106,6 @@ public class EvidenceLayout {
     @NotNull
     private static ComponentBuilder<?, ?> alterationEvidenceTable() throws IOException, DRException {
         //@formatter:off
-        final List<AlterationReporterData> alterationReporterData = Lists.newArrayList(
-                ImmutableAlterationReporterData.of("EGFR", "p.Glu746_Ala750del", "", "", Lists.newArrayList(ImmutableAlterationEvidenceReporterData.of("sensitive", "erlotinib(A), afatinib(B), gefitinib(A), dacomitinib(B)", "CIViC"))),
-                ImmutableAlterationReporterData.of("EGFR", "p.Thr790Met", "", "yes", Lists.newArrayList(
-                        ImmutableAlterationEvidenceReporterData.of("resistant", "erlotinib(B), afatinib(B), gefitinib(B), dacomitinib(B)", "CIViC"),
-                        ImmutableAlterationEvidenceReporterData.of("sensitive", "osimertinib(A)", "CIViC"))));
-
         final SubreportBuilder significanceSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.SIGNIFICANCE).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
         final SubreportBuilder drugsSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.DRUGS).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
         final SubreportBuilder sourceSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.SOURCE).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
@@ -128,8 +119,7 @@ public class EvidenceLayout {
                         col.componentColumn("Source", sourceSubreport).setFixedWidth(60),
                         col.column("LOH", AlterationReporterData.LOH).setFixedWidth(40),
                         col.column("Subclonal", AlterationReporterData.SUBCLONAL).setFixedWidth(60)))
-                .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(alterationReporterData)));
-//                .setDataSource(exp.subDatasourceBeanCollection("alterations"));
+                .setDataSource(exp.subDatasourceBeanCollection("alterations"));
         // @formatter:on
     }
 
