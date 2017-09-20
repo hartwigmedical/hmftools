@@ -128,7 +128,7 @@ public class PatientReporter {
         final Path mantaVcfPath = PatientReporterHelper.findMantaVCF(runDirectory);
         final StructuralVariantAnalysis svAnalysis;
         if (structuralVariantAnalyzer != null && mantaVcfPath != null) {
-            LOGGER.info("Loading structural variants from VCF...");
+            LOGGER.info("Loading structural variants from VCF: {}", mantaVcfPath);
             final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(mantaVcfPath.toString());
             LOGGER.info("Analysing structural variants...");
             svAnalysis = structuralVariantAnalyzer.run(structuralVariants);
