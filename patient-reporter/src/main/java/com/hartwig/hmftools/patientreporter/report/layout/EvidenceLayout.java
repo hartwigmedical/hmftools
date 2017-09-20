@@ -21,8 +21,6 @@ import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidenceReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationReporterData;
-import com.hartwig.hmftools.patientreporter.report.data.CivicVariantReporterData;
-import com.hartwig.hmftools.patientreporter.report.data.EvidenceItemReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationEvidenceReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.VariantReporterData;
@@ -92,45 +90,15 @@ public class EvidenceLayout {
         final ComponentBuilder<?, ?> alterationsReport = cmp.subreport(report().addDetail(conciseEvidenceSection())
                 .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(conciseReporterData))));
 
-        final ComponentBuilder<?, ?> evidenceItemsReport = cmp.subreport(report().addDetail(evidenceSection())
-                .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(variantReporterData))));
-
         // @formatter:off
         final MultiPageListBuilder totalReport = cmp.multiPageList().add(
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Civic Evidence Items").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP))
-                .add(alterationsReport)
-                .newPage()
-                .add(evidenceItemsReport);
+                .add(alterationsReport);
         // @formatter:on
 
         return report().addDetail(totalReport).setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(variantReporterData)));
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> evidenceSection() {
-        return cmp.horizontalList(cmp.horizontalGap(20), cmp.verticalList(cmp.text(VariantReporterData.VARIANT_NAME),
-                cmp.subreport(report().detail(evidenceTable())).setDataSource(exp.subDatasourceBeanCollection("variants"))),
-                cmp.horizontalGap(20));
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> evidenceTable() {
-        //@formatter:off
-        return cmp.verticalList(
-                cmp.text(CivicVariantReporterData.VARIANT).setStyle(tableHeaderStyle()),
-                cmp.subreport(
-                    baseTable().setColumnStyle(dataStyle())
-                        .columns(
-                            col.column("Tumor Type", EvidenceItemReporterData.TUMOR_TYPE_FIELD).setFixedWidth(100),
-                            col.column("Level", EvidenceItemReporterData.LEVEL_FIELD).setFixedWidth(50),
-                            col.column("Direction", EvidenceItemReporterData.DIRECTION_FIELD).setFixedWidth(100),
-                            col.column("Significance", EvidenceItemReporterData.SIGNIFICANCE_FIELD).setFixedWidth(100),
-                            col.column("Drugs", EvidenceItemReporterData.DRUGS_FIELD)))
-                    .setDataSource(exp.subDatasourceBeanCollection("evidenceItems")),
-                cmp.verticalGap(10));
-        // @formatter:on
     }
 
     @NotNull
@@ -161,7 +129,7 @@ public class EvidenceLayout {
                         col.column("LOH", AlterationReporterData.LOH).setFixedWidth(40),
                         col.column("Subclonal", AlterationReporterData.SUBCLONAL).setFixedWidth(60)))
                 .setDataSource(new JRBeanCollectionDataSource(Lists.newArrayList(alterationReporterData)));
-//                .setDataSource(exp.subDatasourceBeanCollection("conciseEvidenceItems"));
+//                .setDataSource(exp.subDatasourceBeanCollection("alterations"));
         // @formatter:on
     }
 
