@@ -105,21 +105,40 @@ public class EvidenceLayout {
 
     @NotNull
     private static ComponentBuilder<?, ?> alterationEvidenceTable() throws IOException, DRException {
-        //@formatter:off
-        final SubreportBuilder significanceSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.SIGNIFICANCE).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
-        final SubreportBuilder drugsSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.DRUGS).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
-        final SubreportBuilder sourceSubreport = cmp.subreport(report().setColumnStyle(dataStyle()).columns(col.column(AlterationEvidenceReporterData.SOURCE).setMinHeight(25))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
+        final int ALTERATION_WIDTH = 135;
+        final int SIGNIFICANCE_WIDTH = 70;
+        final int DRUGS_WIDTH = 170;
+        final int SOURCE_WIDTH = 60;
+        final int LOH_WIDTH = 40;
+        final int SUBCLONAL_WIDTH = 60;
 
-        return cmp.subreport(
+        //@formatter:off
+        final SubreportBuilder subtable = cmp.subreport(
                 baseTable().setColumnStyle(dataStyle())
                     .columns(
-                        col.column("Alteration", AlterationReporterData.ALTERATION).setFixedWidth(135),
-                        col.componentColumn("Significance", significanceSubreport).setStyle(dataStyle()).setFixedWidth(70),
-                        col.componentColumn("Association(Lv)", drugsSubreport).setFixedWidth(170),
-                        col.componentColumn("Source", sourceSubreport).setFixedWidth(60),
-                        col.column("LOH", AlterationReporterData.LOH).setFixedWidth(40),
-                        col.column("Subclonal", AlterationReporterData.SUBCLONAL).setFixedWidth(60)))
-                .setDataSource(exp.subDatasourceBeanCollection("alterations"));
+                        col.column(AlterationEvidenceReporterData.SIGNIFICANCE).setFixedWidth(SIGNIFICANCE_WIDTH).setMinHeight(25),
+                        col.column(AlterationEvidenceReporterData.DRUGS).setFixedWidth(DRUGS_WIDTH),
+                        col.column(AlterationEvidenceReporterData.SOURCE).setFixedWidth(SOURCE_WIDTH)))
+                .setDataSource(exp.subDatasourceBeanCollection("evidence"));
+
+        final ComponentBuilder<?, ?> tableHeader = cmp.horizontalList(
+                cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
+                cmp.text("Significance").setStyle(tableHeaderStyle()).setFixedWidth(SIGNIFICANCE_WIDTH),
+                cmp.text("Association(Lv)").setStyle(tableHeaderStyle()).setFixedWidth(DRUGS_WIDTH),
+                cmp.text("Source").setStyle(tableHeaderStyle()).setFixedWidth(SOURCE_WIDTH),
+                cmp.text("LOH").setStyle(tableHeaderStyle()).setFixedWidth(LOH_WIDTH),
+                cmp.text("Subclonal").setStyle(tableHeaderStyle()).setFixedWidth(SUBCLONAL_WIDTH));
+
+        return cmp.verticalList(
+                tableHeader,
+                cmp.subreport(
+                baseTable().setColumnStyle(dataStyle())
+                    .columns(
+                        col.column(AlterationReporterData.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
+                        col.componentColumn(subtable),
+                        col.column(AlterationReporterData.LOH).setFixedWidth(LOH_WIDTH),
+                        col.column(AlterationReporterData.SUBCLONAL).setFixedWidth(SUBCLONAL_WIDTH)))
+                .setDataSource(exp.subDatasourceBeanCollection("alterations")));
         // @formatter:on
     }
 
