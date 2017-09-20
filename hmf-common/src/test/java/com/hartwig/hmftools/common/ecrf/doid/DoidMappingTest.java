@@ -19,7 +19,7 @@ public class DoidMappingTest {
 
     @Test
     public void canLoadFromCsv() throws IOException, EmptyFileException {
-        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.readMappingFromCSV(TEST_FILE);
+        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromCSV(TEST_FILE);
         assertEquals(2, doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").size());
         assertTrue(doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").contains("DOID:0060076"));
         assertTrue(doidMapping.doidsForTumorType("Breast Cancer: ER-negative/HER2-positive").contains("DOID:0060079"));

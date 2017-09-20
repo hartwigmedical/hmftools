@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.common.ecrf.doid;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -44,9 +48,19 @@ public abstract class TumorLocationDoidMapping {
     }
 
     @NotNull
-    public static TumorLocationDoidMapping readMappingFromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+    public static TumorLocationDoidMapping fromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+        return fromLines(FileReader.build().readLines(new File(pathToCsv).toPath()));
+    }
+
+    @NotNull
+    public static TumorLocationDoidMapping fromResource(@NotNull final String name) throws IOException, EmptyFileException {
+        final InputStream inputStream = TumorLocationDoidMapping.class.getResourceAsStream(name);
+        return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
+    }
+
+    @NotNull
+    private static TumorLocationDoidMapping fromLines(@NotNull final List<String> lines) {
         final Map<String, Set<String>> doidsPerTumorType = Maps.newHashMap();
-        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
