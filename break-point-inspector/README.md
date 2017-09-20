@@ -19,10 +19,11 @@ BPI uses Manta’s variant calls to re-analyse BAM files and precisely determine
 We also calculate an Allele Frequency which provides an input to determining the ploidy of the variant (when combined with purity).
 
 For convenience, we also output a BAM which has been filtered +/- 500 bp around each breakpoint.
-See Also
-[Illumina Manta](https://github.com/Illumina/manta)
-[Papenfuss Lab Gridss](https://github.com/PapenfussLab/gridss)
-[Nature Methods - CONSERTING: integrating copy-number analysis with structural-variation detection](http://www.nature.com/nmeth/journal/v12/n6/full/nmeth.3394.html)
+
+See Also:
+* [Illumina Manta](https://github.com/Illumina/manta)
+* [Papenfuss Lab Gridss](https://github.com/PapenfussLab/gridss)
+* [Nature Methods - CONSERTING: integrating copy-number analysis with structural-variation detection](http://www.nature.com/nmeth/journal/v12/n6/full/nmeth.3394.html)
 
 ## Method
 
@@ -105,4 +106,4 @@ We must determine an AF at each breakpoint, as structural variants occur in addi
 
 ### Future Work
 
-[ ] We will perform a basic local re-assembly in order to validate the variant call.
+- [ ] We will perform a basic local re-assembly in order to validate the variant call.
