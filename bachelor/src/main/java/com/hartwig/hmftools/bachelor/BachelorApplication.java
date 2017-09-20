@@ -89,13 +89,16 @@ public class BachelorApplication {
 
             final List<File> vcfFiles =
                     Arrays.stream(cmd.getOptionValues(VCF)).map(s -> Paths.get(s).toFile()).collect(Collectors.toList());
+
+            final Map<String, Integer> merged = Maps.newHashMap();
             for (final File vcf : vcfFiles) {
                 LOGGER.info("process vcf: {}", vcf.getPath());
                 final VCFFileReader reader = new VCFFileReader(vcf, false);
                 final Map<String, Integer> result = eligibility.processVCF(reader);
-                LOGGER.info(result.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getValue)).collect(Collectors.toList()));
+                result.forEach((k, v) -> merged.merge(k, v, (a, b) -> a + b));
                 reader.close();
             }
+            LOGGER.info(merged.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getValue)).collect(Collectors.toList()));
         } catch (final ParseException e) {
             printHelpAndExit(options);
         } catch (final Exception e) {

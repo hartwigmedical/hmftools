@@ -6,7 +6,7 @@
     </Panel>
     <Blacklist>
         <Exclusion>
-            <Gene name="BRCA1"/>
+            <Gene name="BRCA2"/>
             <MinCodon>3326</MinCodon>
         </Exclusion>
     </Blacklist>
