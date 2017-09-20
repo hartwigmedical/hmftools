@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<Program name="TestStudy">
+    <Panel>
+        <AllGene/>
+        <SnpEffect>stop_gained</SnpEffect>
+    </Panel>
+</Program>

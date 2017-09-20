@@ -25,6 +25,7 @@
         <module>patient-report-mailer</module>
         <module>ensembl-db</module>
         <module>bam-slicer</module>
+        <module>bachelor</module>
     </modules>
 
     <properties>
@@ -51,6 +52,7 @@
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
         <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
         <javax.mail.version>1.6.0</javax.mail.version>
+        <jaxb2.plugin.version>0.13.1</jaxb2.plugin.version>
 
         <hmf-common.version>1</hmf-common.version>
         <hmf-gene-panel.version>1</hmf-gene-panel.version>
@@ -90,6 +92,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven.jar.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jvnet.jaxb2.maven2</groupId>
+                    <artifactId>maven-jaxb2-plugin</artifactId>
+                    <version>${jaxb2.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -226,6 +233,11 @@
                 <groupId>com.sun.mail</groupId>
                 <artifactId>javax.mail</artifactId>
                 <version>${javax.mail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <version>${jaxb2.plugin.version}</version>
             </dependency>
 
             <!-- KODU: Test dependencies -->
