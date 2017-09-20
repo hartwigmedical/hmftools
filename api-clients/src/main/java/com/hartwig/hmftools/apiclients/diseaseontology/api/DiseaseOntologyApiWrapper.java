@@ -54,6 +54,11 @@ public class DiseaseOntologyApiWrapper {
         return getAllParentDoids("DOID:" + doid);
     }
 
+    public static Observable<String> getAllChildrenDoids(@NotNull final String doid) {
+        return getMetadata(doid).flatMap(metadata -> Observable.fromIterable(metadata.childrenDoids())
+                .mergeWith(Observable.fromIterable(metadata.childrenDoids()).flatMap(DiseaseOntologyApiWrapper::getAllChildrenDoids)));
+    }
+
     public static void releaseResources() {
         httpClient.dispatcher().executorService().shutdown();
     }

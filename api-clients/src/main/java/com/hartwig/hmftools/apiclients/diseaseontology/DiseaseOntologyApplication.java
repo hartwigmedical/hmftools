@@ -19,7 +19,8 @@ public class DiseaseOntologyApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        DiseaseOntologyApiWrapper.getAllParentDoids(13774).blockingSubscribe(LOGGER::info, LOGGER::error, () -> LOGGER.info("completed"));
+        DiseaseOntologyApiWrapper.getAllChildrenDoids("DOID:" + 1909)
+                .blockingSubscribe(LOGGER::info, LOGGER::error, () -> LOGGER.info("completed"));
         DiseaseOntologyApiWrapper.releaseResources();
     }
 

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.apiclients.diseaseontology.data;
 
 import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.immutables.gson.Gson;
@@ -27,17 +26,20 @@ public abstract class DiseaseOntologyMetadata {
     public abstract List<String> xrefs();
 
     @NotNull
-    public abstract List<DiseaseOntologyList> children();
+    public abstract List<List<String>> children();
 
     @NotNull
-    public abstract List<DiseaseOntologyList> parents();
+    public abstract List<List<String>> parents();
 
     @NotNull
     @Value.Lazy
     public List<String> parentDoids() {
-        return parents().stream().flatMap(DiseaseOntologyList::stream).filter(string -> string.startsWith("DOID:")).collect(toList());
+        return parents().stream().flatMap(List::stream).filter(string -> string.startsWith("DOID:")).collect(toList());
     }
 
-    static class DiseaseOntologyList extends ArrayList<String> {
+    @NotNull
+    @Value.Lazy
+    public List<String> childrenDoids() {
+        return children().stream().flatMap(List::stream).filter(string -> string.startsWith("DOID:")).collect(toList());
     }
 }
