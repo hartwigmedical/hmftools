@@ -65,7 +65,6 @@ public class PatientReporter {
         final StructuralVariantAnalysis svAnalysis = genomeAnalysis.structuralVariantAnalysis();
 
         final int passedCount = variantAnalysis.passedVariants().size();
-        final int confidencePassedCount = variantAnalysis.confidencePassedVariants().size();
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int potentialMNVCount = variantAnalysis.potentialConsequentialMNVs().size();
@@ -73,8 +72,7 @@ public class PatientReporter {
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants after applying pass-only filter : " + Integer.toString(passedCount));
-        LOGGER.info("  Number of variants after applying confidence regions rule : " + Integer.toString(confidencePassedCount));
-        LOGGER.info("  Number of missense variants in confidence regions rule (mutational load) : " + Integer.toString(mutationalLoad));
+        LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
         LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
         if (potentialMNVCount > 0) {

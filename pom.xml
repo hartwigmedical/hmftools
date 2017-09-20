@@ -11,7 +11,6 @@
     <modules>
         <module>hmf-common</module>
         <module>variant-annotator</module>
-        <module>confidence-regions-filter</module>
         <module>health-checker</module>
         <module>patient-reporter</module>
         <module>fastq-stats</module>
@@ -27,6 +26,7 @@
         <module>api-clients</module>
         <module>ensembl-db</module>
         <module>bam-slicer</module>
+        <module>bachelor</module>
     </modules>
 
     <properties>
@@ -53,6 +53,7 @@
         <mysqlconnector.version>6.0.6</mysqlconnector.version>
         <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
         <javax.mail.version>1.6.0</javax.mail.version>
+        <jaxb2.plugin.version>0.13.1</jaxb2.plugin.version>
         <rxjava2.version>2.1.2</rxjava2.version>
         <retrofit.version>2.3.0</retrofit.version>
 
@@ -95,6 +96,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven.jar.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jvnet.jaxb2.maven2</groupId>
+                    <artifactId>maven-jaxb2-plugin</artifactId>
+                    <version>${jaxb2.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -236,6 +242,11 @@
                 <groupId>com.sun.mail</groupId>
                 <artifactId>javax.mail</artifactId>
                 <version>${javax.mail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <version>${jaxb2.plugin.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.reactivex.rxjava2</groupId>

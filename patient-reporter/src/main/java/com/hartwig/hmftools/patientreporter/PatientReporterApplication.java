@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
@@ -46,11 +45,8 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
-    // KODU: There is probably a better way to do this...
     public static final String VERSION = "3.10";
 
-    private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_JSON = "lims_json";
     private static final String REPORT_DIRECTORY = "report_dir";
@@ -114,9 +110,7 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull COSMICGeneFusionModel cosmic,
             @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException, SQLException {
-        final VariantAnalyzer variantAnalyzer =
-                VariantAnalyzer.fromSlicingRegions(geneModel, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
-                        SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
 
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {
@@ -153,19 +147,13 @@ public class PatientReporterApplication {
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
         if (validInputForEcrfAndTumorPercentages(cmd) && validInputForReportWriter(cmd)) {
-            final String cpctSlicingBed = cmd.getOptionValue(CPCT_SLICING_BED);
-            final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
             final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
             final String centerCsv = cmd.getOptionValue(CENTER_CSV);
             final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
             final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
-            if (cpctSlicingBed == null || !exists(cpctSlicingBed)) {
-                LOGGER.warn(CPCT_SLICING_BED + " has to be an existing file: " + cpctSlicingBed);
-            } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
-                LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
-            } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
+            if (drupGenesCsv == null || !exists(drupGenesCsv)) {
                 LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
             } else if (cosmicCsv == null || !exists(cosmicCsv)) {
                 LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
@@ -238,8 +226,6 @@ public class PatientReporterApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(CPCT_SLICING_BED, true, "Complete path towards the CPCT slicing bed.");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
         options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");

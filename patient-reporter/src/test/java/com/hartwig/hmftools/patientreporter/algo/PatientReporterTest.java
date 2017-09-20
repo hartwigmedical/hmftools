@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.google.common.collect.Lists;
@@ -25,14 +26,14 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PatientReporterTest {
 
     private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
-    private static final String COSMIC_CSV = Resources.getResource("csv/cosmic_gene_fusions.csv").getPath();
+    private static final String FUSIONS_CSV = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel, geneModel.slicer(), geneModel.slicer());
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
         final StructuralVariantAnalyzer structuralVariantAnalyzer =
-                new StructuralVariantAnalyzer(NullAnnotator.make(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(COSMIC_CSV));
+                new StructuralVariantAnalyzer(NullAnnotator.make(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo =
                 new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer, structuralVariantAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY));
