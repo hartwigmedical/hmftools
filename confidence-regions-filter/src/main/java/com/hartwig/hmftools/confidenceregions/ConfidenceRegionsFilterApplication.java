@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.consensusrule;
+package com.hartwig.hmftools.confidenceregions;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.consensus.ConsensusRule;
+import com.hartwig.hmftools.common.variant.confidenceregions.ConfidenceRegionsRule;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileWriter;
@@ -30,11 +30,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ConsensusRuleFilterApplication {
+public class ConfidenceRegionsFilterApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(ConsensusRuleFilterApplication.class);
-    private static final String SOMATIC_EXTENSION = "_melted.vcf";
-    private static final String FLAG_HEADER = "##FILTER=<ID=CALLER_CONSENSUS,Description=\"HMF-filter: Not enough support from the various somatic callers\">";
+    private static final Logger LOGGER = LogManager.getLogger(ConfidenceRegionsFilterApplication.class);
+    private static final String SOMATIC_EXTENSION = "_post_processed.vcf";
+    private static final String FLAG_HEADER =
+            "##FILTER=<ID=" + ConfidenceRegionsRule.FILTER + ",Description=\"HMF-filter: Not included in confidence regions\">";
 
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String EXTREME_CONFIDENCE_BED = "extreme_confidence_bed";
@@ -46,8 +47,7 @@ public class ConsensusRuleFilterApplication {
     private static final String BATCH_MODE_IN_DIRECTORY = "batch_mode_in_dir";
     private static final String BATCH_MODE_OUT_DIRECTORY = "batch_mode_out_dir";
 
-    public static void main(final String... args)
-            throws ParseException, IOException, XMLStreamException, HartwigException {
+    public static void main(final String... args) throws ParseException, IOException, XMLStreamException, HartwigException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -65,19 +65,19 @@ public class ConsensusRuleFilterApplication {
         final boolean validSingleMode = !batchMode && outputVcf != null && (inputVcf != null || runDirectory != null);
         if (highConfidenceBed == null || extremeConfidenceBed == null || !(validBatchMode || validSingleMode)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Consensus-Rule-Filter", options);
+            formatter.printHelp("Confidence-Regions-Rule-Filter", options);
             System.exit(1);
         }
 
         final Slicer highConfidenceSlicer = SlicerFactory.fromBedFile(highConfidenceBed);
         final Slicer extremeConfidenceSlicer = SlicerFactory.fromBedFile(extremeConfidenceBed);
-        final ConsensusRule consensusRule = ConsensusRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
+        final ConfidenceRegionsRule confidenceRegionsRule =
+                ConfidenceRegionsRule.fromSlicers(highConfidenceSlicer, extremeConfidenceSlicer);
 
-        final ConsensusRuleFilterApplication application = new ConsensusRuleFilterApplication(consensusRule,
-                useFilterFlag);
+        final ConfidenceRegionsFilterApplication application = new ConfidenceRegionsFilterApplication(confidenceRegionsRule, useFilterFlag);
 
         if (batchMode) {
-            LOGGER.info("Running consensus rule filter in batch mode");
+            LOGGER.info("Running confidence regions rule filter in batch mode");
             application.runBatchModeOnDirectory(batchModeInDirectory, batchModeOutDirectory);
         } else if (inputVcf == null) {
             application.runOnRunDirectory(runDirectory, outputVcf);
@@ -93,32 +93,29 @@ public class ConsensusRuleFilterApplication {
         options.addOption(HIGH_CONFIDENCE_BED, true, "The full path towards the high confidence bed");
         options.addOption(EXTREME_CONFIDENCE_BED, true, "The full path towards the extreme confidence bed");
         options.addOption(RUN_DIRECTORY, true, "The full path towards the run directory");
-        options.addOption(INPUT_VCF, true, "The full path towards the input VCF to apply consensus rule to");
+        options.addOption(INPUT_VCF, true, "The full path towards the input VCF to apply confidence regions rule to");
         options.addOption(OUTPUT_VCF, true, "The full path where the filtered VCF will be written to");
         options.addOption(USE_FILTER_FLAG, false,
-                "If set, updates the filter flag rather than removing the variants that dont pass consensus rule");
-        options.addOption(BATCH_MODE, false,
-                "If set, runs the consensus filter in batch mode on " + BATCH_MODE_IN_DIRECTORY);
-        options.addOption(BATCH_MODE_IN_DIRECTORY, true,
-                "When in batch mode, assumes this folder contains individual runs");
+                "If set, updates the filter flag rather than removing the variants that dont pass confidence regions rule");
+        options.addOption(BATCH_MODE, false, "If set, runs the confidence regions filter in batch mode on " + BATCH_MODE_IN_DIRECTORY);
+        options.addOption(BATCH_MODE_IN_DIRECTORY, true, "When in batch mode, assumes this folder contains individual runs");
         options.addOption(BATCH_MODE_OUT_DIRECTORY, true, "When in batch mode, writes files to this directory");
 
         return options;
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args)
-            throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @NotNull
-    private final ConsensusRule consensusRule;
+    private final ConfidenceRegionsRule confidenceRegionsRule;
     private final boolean useFilterFlag;
 
-    private ConsensusRuleFilterApplication(@NotNull final ConsensusRule consensusRule, final boolean useFilterFlag) {
-        this.consensusRule = consensusRule;
+    private ConfidenceRegionsFilterApplication(@NotNull final ConfidenceRegionsRule confidenceRegionsRule, final boolean useFilterFlag) {
+        this.confidenceRegionsRule = confidenceRegionsRule;
         this.useFilterFlag = useFilterFlag;
     }
 
@@ -127,7 +124,7 @@ public class ConsensusRuleFilterApplication {
         for (final Path run : Files.list(new File(runDirectory).toPath()).collect(Collectors.toList())) {
             LOGGER.info("Processing " + run.toFile().getName());
             final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(run.toFile().getPath(), SOMATIC_EXTENSION);
-            final String extension = useFilterFlag ? "_consensus_flagged.vcf" : "_consensus_filtered.vcf";
+            final String extension = useFilterFlag ? "_confidenceregions_flagged.vcf" : "_confidenceregions_filtered.vcf";
             final String outputVcf = outputDirectory + File.separator + variantFile.sample() + extension;
             processVariants(variantFile, outputVcf);
         }
@@ -135,30 +132,26 @@ public class ConsensusRuleFilterApplication {
 
     private void runOnRunDirectory(@NotNull final String runDirectory, @NotNull final String outputVcf)
             throws IOException, HartwigException {
-        LOGGER.info("Loading melted input from " + runDirectory);
+        LOGGER.info("Loading post processed input from " + runDirectory);
         processVariants(VCFFileLoader.loadSomaticVCF(runDirectory, SOMATIC_EXTENSION), outputVcf);
     }
 
-    private void runOnInputVcf(@NotNull final String inputVcf, @NotNull final String outputVcf)
-            throws IOException, HartwigException {
+    private void runOnInputVcf(@NotNull final String inputVcf, @NotNull final String outputVcf) throws IOException, HartwigException {
         LOGGER.info("Loading explicit vcf input from " + inputVcf);
         processVariants(VCFFileLoader.loadSomaticVCF(inputVcf), outputVcf);
     }
 
-    private void processVariants(@NotNull final VCFSomaticFile inputFile, @NotNull final String outputVcf)
-            throws IOException {
+    private void processVariants(@NotNull final VCFSomaticFile inputFile, @NotNull final String outputVcf) throws IOException {
         final List<SomaticVariant> variants = inputFile.variants();
-        LOGGER.info("Processing " + variants.size() + " variants in consensus rule for " + inputFile.sample());
+        LOGGER.info("Processing " + variants.size() + " variants in confidence regions rule for " + inputFile.sample());
 
-        final List<SomaticVariant> filteredVariants = useFilterFlag ?
-                consensusRule.updateFilterFlagForUnreliableVariants(variants) :
-                consensusRule.removeUnreliableVariants(variants);
-        LOGGER.info("Filtered variants on consensus rule: " + VariantFilter.passOnly(filteredVariants).size()
+        final List<SomaticVariant> filteredVariants = useFilterFlag
+                ? confidenceRegionsRule.updateFilterFlagForUnreliableVariants(variants)
+                : confidenceRegionsRule.removeUnreliableVariants(variants);
+        LOGGER.info("Filtered variants on confidence regions rule: " + VariantFilter.passOnly(filteredVariants).size()
                 + " variants remaining.");
 
-        final List<String> additionalMetaInformation = useFilterFlag ?
-                Lists.newArrayList(FLAG_HEADER) :
-                Lists.newArrayList();
+        final List<String> additionalMetaInformation = useFilterFlag ? Lists.newArrayList(FLAG_HEADER) : Lists.newArrayList();
         VCFFileWriter.writeSomaticVCF(outputVcf, inputFile, filteredVariants, additionalMetaInformation);
         LOGGER.info("Written filtered variants to " + outputVcf);
     }

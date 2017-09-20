@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
+import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -56,17 +58,22 @@ public class PDFWriterTest {
         final int mutationalLoad = 361;
         final List<CopyNumberReport> copyNumbers = createTestCopyNumbers();
 
+        final List<StructuralVariantAnalysis.GeneFusion> fusions = Collections.emptyList();
+        final List<StructuralVariantAnalysis.GeneDisruption> disruptions = Collections.emptyList();
+
         final PatientReport patientReport =
-                ImmutablePatientReport.of(sample, variants, copyNumbers, mutationalLoad, tumorType, pathologyTumorPercentage, "58%",
-                        "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER));
+                ImmutablePatientReport.of(sample, variants, fusions, disruptions, copyNumbers, mutationalLoad, tumorType,
+                        pathologyTumorPercentage, "58%", "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER),
+                        LocalDate.parse("01-Jan-2016", FORMATTER));
 
         final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
         final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
 
         final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath);
+                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
 
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);

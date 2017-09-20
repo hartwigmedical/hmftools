@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.purple.structural;
+package com.hartwig.hmftools.patientdb;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
-import com.hartwig.hmftools.patientdb.LoadSomaticVariants;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -26,6 +25,7 @@ public class LoadStructuralVariants {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
+    private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
 
     private static final String DB_USER = "db_user";
@@ -38,16 +38,17 @@ public class LoadStructuralVariants {
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
         final StructuralVariantFactory factory = new StructuralVariantFactory();
+        final String tumorSample = cmd.getOptionValue(SAMPLE);
 
         LOGGER.info("Reading VCF File");
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
-                new VCFCodec(), false)) {
+                new VCFCodec(),
+                false)) {
             reader.iterator().forEach(factory::addVariantContext);
         }
 
         LOGGER.info("Persisting variants to database");
-        final SampleNames names = new SampleNames(factory.sampleNames());
-        dbAccess.writeStructuralVariants(names.tumor(), factory.results());
+        dbAccess.writeStructuralVariants(tumorSample, factory.results());
 
         LOGGER.info("Complete");
     }
@@ -56,6 +57,7 @@ public class LoadStructuralVariants {
     private static Options createBasicOptions() {
         final Options options = new Options();
         options.addOption(VCF_FILE, true, "Path to the vcf file.");
+        options.addOption(SAMPLE, true, "Tumor sample.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.SQLException;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -19,10 +20,15 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
+import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionModel;
 import com.hartwig.hmftools.patientreporter.report.EvidenceItemsWriter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
+import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
+import com.hartwig.hmftools.svannotation.MySQLAnnotator;
+import com.hartwig.hmftools.svannotation.NullAnnotator;
+import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,7 +47,7 @@ public class PatientReporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
     // KODU: There is probably a better way to do this...
-    public static final String VERSION = "3.8";
+    public static final String VERSION = "3.10";
 
     private static final String CPCT_SLICING_BED = "cpct_slicing_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
@@ -54,10 +60,14 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
+    private static final String ENSEMBL_DB = "ensembl_db";
+    private static final String FUSION_CSV = "fusion_csv";
+
     private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
 
-    public static void main(final String... args) throws ParseException, IOException, HartwigException, DRException, XMLStreamException {
+    public static void main(final String... args)
+            throws ParseException, IOException, HartwigException, DRException, XMLStreamException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
@@ -81,7 +91,7 @@ public class PatientReporterApplication {
             LOGGER.info("Running patient reporter v" + VERSION);
 
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(reporterData.geneModel(), cmd);
+            final PatientReporter reporter = buildReporter(reporterData.geneModel(), reporterData.fusionModel(), cmd);
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
@@ -92,8 +102,8 @@ public class PatientReporterApplication {
     }
 
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(COSMIC_CSV), cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE));
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV),
+                cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE), cmd.getOptionValue(FUSION_CSV));
     }
 
     @NotNull
@@ -102,13 +112,23 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException, XMLStreamException {
+    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull COSMICGeneFusionModel cosmic,
+            @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer =
                 VariantAnalyzer.fromSlicingRegions(geneModel, SlicerFactory.fromBedFile(cmd.getOptionValue(HIGH_CONFIDENCE_BED)),
                         SlicerFactory.fromBedFile(cmd.getOptionValue(CPCT_SLICING_BED)));
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer);
+        final VariantAnnotator annotator;
+        if (cmd.hasOption(ENSEMBL_DB)) {
+            final String url = "jdbc:" + cmd.getOptionValue(ENSEMBL_DB);
+            LOGGER.info("connecting to: {}", url);
+            annotator = MySQLAnnotator.make(url);
+        } else {
+            annotator = NullAnnotator.make();
+        }
+        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, geneModel.hmfRegions(), cosmic);
+
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer);
     }
 
     @NotNull
@@ -218,21 +238,21 @@ public class PatientReporterApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-
         options.addOption(CPCT_SLICING_BED, true, "Complete path towards the CPCT slicing bed.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Complete path towards the high confidence bed.");
         options.addOption(CPCT_ECRF, true, "Complete path towards the cpct ecrf xml database.");
         options.addOption(LIMS_JSON, true, "Complete path towards a JSON containing the LIMS data dump.");
         options.addOption(REPORT_DIRECTORY, true, "Complete path to where the PDF reports have to be saved.");
         options.addOption(RUN_DIRECTORY, true, "Complete path towards a single run dir where patient reporter will run on.");
-
         options.addOption(NOT_SEQUENCEABLE, false, "If set, generates a non-sequenceable report.");
         options.addOption(NOT_SEQUENCEABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
         options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
+        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
+        options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
         return options;
     }
 

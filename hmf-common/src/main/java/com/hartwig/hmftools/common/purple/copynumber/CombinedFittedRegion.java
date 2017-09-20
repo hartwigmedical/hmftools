@@ -16,6 +16,7 @@ class CombinedFittedRegion {
         if (region.status() != FreecStatus.SOMATIC) {
             combined.setRefNormalisedCopyNumber(0);
             combined.setObservedBAF(0);
+            combined.setObservedTumorRatioCount(0);
             combined.setTumorCopyNumber(0);
             combined.setBafCount(0);
         }
@@ -30,7 +31,6 @@ class CombinedFittedRegion {
 
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));
-        combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
         if (region.start() <= combined.start()) {
             combined.setStructuralVariantSupport(region.structuralVariantSupport());
@@ -39,6 +39,7 @@ class CombinedFittedRegion {
 
         if (region.status() == FreecStatus.SOMATIC) {
             combined.setStatus(FreecStatus.SOMATIC);
+            combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
             final long currentWeight;
             final long newWeight;

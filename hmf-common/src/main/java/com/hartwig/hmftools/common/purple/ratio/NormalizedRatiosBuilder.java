@@ -20,8 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class NormalizedRatiosBuilder {
 
-    private static final long ROLLING_MEDIAN_MAX_DISTANCE = 5_000_000;
-    private static final long ROLLING_MEDIAN_MIN_COVERAGE = 2_000_000;
+    private static final long ROLLING_MEDIAN_MAX_DISTANCE = 5_000;
+    private static final long ROLLING_MEDIAN_MIN_COVERAGE = 1_000;
     private static final double MIN_MAPPABLE_PERCENTAGE = 0.85;
 
     private final Gender gender;

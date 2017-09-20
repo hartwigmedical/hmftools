@@ -90,8 +90,8 @@ public enum PurpleCopyNumberFile {
                 .bafCount(Integer.valueOf(values[4]))
                 .averageObservedBAF(Double.valueOf(values[5]))
                 .averageActualBAF(Double.valueOf(values[6]))
-                .ratioSupport(true)
-                .structuralVariantSupport(StructuralVariantSupport.NONE)
+                .ratioSupport(Boolean.valueOf(values[7]))
+                .structuralVariantSupport(StructuralVariantSupport.valueOf(values[8]))
                 .build();
     }
 }

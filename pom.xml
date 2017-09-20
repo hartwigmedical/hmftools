@@ -11,7 +11,7 @@
     <modules>
         <module>hmf-common</module>
         <module>variant-annotator</module>
-        <module>consensus-rule-filter</module>
+        <module>confidence-regions-filter</module>
         <module>health-checker</module>
         <module>patient-reporter</module>
         <module>fastq-stats</module>
@@ -60,12 +60,7 @@
         <hmf-gene-panel.version>1</hmf-gene-panel.version>
         <patient-db.version>1.0</patient-db.version>
         <apiclients.version>1.0</apiclients.version>
-
-
-        <!-- Used by health checker -->
-        <reactivex.version>1.1.5</reactivex.version>
-        <reflections.version>0.9.10</reflections.version>
-        <sv-annotation.version>1.0</sv-annotation.version>
+        <variant-annotation.version>1.0</variant-annotation.version>
 
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
@@ -126,8 +121,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>sv-annotation</artifactId>
-                <version>${sv-annotation.version}</version>
+                <artifactId>variant-annotator</artifactId>
+                <version>${variant-annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

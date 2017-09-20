@@ -80,6 +80,8 @@ public class PDFWriter implements ReportWriter {
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
         final JasperReportBuilder reportBuilder = generatePatientReport(report, logoStream, reporterData);
         writeReport(report.sample(), reportBuilder);
+        final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report, logoStream, reporterData);
+        writeSupplementary(report.sample(), supplementaryBuilder);
         logoStream.close();
     }
 
@@ -105,9 +107,25 @@ public class PDFWriter implements ReportWriter {
         }
     }
 
+    private void writeSupplementary(@NotNull final String sample, @NotNull final JasperReportBuilder report)
+            throws FileNotFoundException, DRException {
+        final String fileName = fileNameSupplementary(sample);
+        if (Files.exists(new File(fileName).toPath())) {
+            LOGGER.warn(" Could not write supplementary report as it already exists: " + fileName);
+        } else {
+            report.toPdf(new FileOutputStream(fileName));
+            LOGGER.info(" Created supplementary patient report at " + fileName);
+        }
+    }
+
     @NotNull
     private String fileName(@NotNull final String sample) {
         return reportDirectory + File.separator + sample + "_hmf_report.pdf";
+    }
+
+    @NotNull
+    private String fileNameSupplementary(@NotNull final String sample) {
+        return reportDirectory + File.separator + sample + "_hmf_report_supplementary.pdf";
     }
 
     @VisibleForTesting
@@ -165,7 +183,12 @@ public class PDFWriter implements ReportWriter {
                 );
 
         final ComponentBuilder<?, ?> totalReport =
-                cmp.multiPageList().add(reportMainPage).newPage().add(genePanelPage).newPage().add(additionalInfoPage);
+                cmp.multiPageList()
+                        .add(reportMainPage)
+                        .newPage()
+                        .add(genePanelPage)
+                        .newPage()
+                        .add(additionalInfoPage);
         // @formatter:on
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
@@ -184,6 +207,41 @@ public class PDFWriter implements ReportWriter {
                 .lastPageFooter(cmp.verticalList(signatureFooter(reporterData.signaturePath()), cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .addDetail(totalReport)
+                .setDataSource(singleItemDataSource);
+    }
+
+    @VisibleForTesting
+    @NotNull
+    private static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report,
+            @NotNull final InputStream logoStream, @NotNull final HmfReporterData reporterData) {
+        // @formatter:off
+        final ComponentBuilder<?, ?> structuralVariantPage =
+                cmp.verticalList(
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text("HMF Supplementary Report v" + PatientReporterApplication.VERSION + " - Structural Variant Information")
+                                .setStyle(sectionHeaderStyle()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneFusionReport(report),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneDisruptionReport(report),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        svDisclaimer(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneFusionExplanation(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneDisruptionExplanation(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        testDetailsSection(report, reporterData.centerModel().getAddresseeStringForSample(report.sample()))
+                );
+        // @formatter:on
+
+        final DRDataSource singleItemDataSource = new DRDataSource("item");
+        singleItemDataSource.add(new Object());
+
+        return report().pageFooter(cmp.pageXslashY())
+                .lastPageFooter(cmp.verticalList(cmp.pageXslashY(), cmp.text("End of supplementary report.")
+                        .setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
+                .addDetail(structuralVariantPage)
                 .setDataSource(singleItemDataSource);
     }
 
@@ -319,6 +377,98 @@ public class PDFWriter implements ReportWriter {
                         cmp.text(mutationalLoadAddition).setStyle(fontStyle()))
         );
         // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final PatientReport report) {
+        // @formatter:off
+        final int fontSize = 6;
+        final ComponentBuilder<?, ?> table;
+        if (report.geneFusions().size() > 0) {
+            table = cmp.subreport(
+                         baseTable().setColumnStyle(dataStyle().setFontSize(fontSize))
+                            .fields(PatientDataSource.geneFusionFields())
+                            .columns(
+                                col.column("5' Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("5' Transcript", PatientDataSource.TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(fieldTranscriptLink(PatientDataSource.TRANSCRIPT_FIELD)))
+                                        .setStyle(linkStyle().setFontSize(fontSize)),
+                                col.column("5' Position", PatientDataSource.POSITION_FIELD),
+                                col.column("5' Gene Context", PatientDataSource.SV_GENE_CONTEXT),
+                                col.column("3' Gene", PatientDataSource.SV_PARTNER_GENE_FIELD).setFixedWidth(50),
+                                col.column("3' Transcript", PatientDataSource.SV_PARTNER_TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(fieldTranscriptLink(PatientDataSource.SV_PARTNER_TRANSCRIPT_FIELD)))
+                                        .setStyle(linkStyle().setFontSize(fontSize)),
+                                col.column("3' Position", PatientDataSource.SV_PARTNER_POSITION_FIELD),
+                                col.column("3' Gene Context", PatientDataSource.SV_PARTNER_CONTEXT_FIELD),
+                                col.column("SV Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30),
+                                col.column("VAF", PatientDataSource.SV_VAF).setFixedWidth(30)
+                            )
+                            .setDataSource(PatientDataSource.fromGeneFusions(report.geneFusions()))
+                    );
+        } else {
+            table = cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        }
+        // @formatter:on
+
+        return cmp.verticalList(cmp.text("Gene Fusions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final PatientReport report) {
+        // @formatter:off
+        final int fontSize = 6;
+        final ComponentBuilder<?, ?> table;
+        if (report.geneDisruptions().size() > 0) {
+            table = cmp.subreport(
+                        baseTable().setColumnStyle(dataStyle().setFontSize(fontSize))
+                            .fields(PatientDataSource.geneDisruptionFields())
+                            .columns(
+                                col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("Transcript", PatientDataSource.TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(fieldTranscriptLink(PatientDataSource.TRANSCRIPT_FIELD)))
+                                        .setStyle(linkStyle().setFontSize(fontSize)),
+                                col.column("Position", PatientDataSource.POSITION_FIELD),
+                                col.column("Gene Context", PatientDataSource.SV_GENE_CONTEXT),
+                                col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD),
+                                col.column("Partner", PatientDataSource.SV_PARTNER_POSITION_FIELD),
+                                //col.column("HGVS", PatientDataSource.SV_HGVS_FIELD),
+                                col.column("Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30),
+                                col.column("VAF", PatientDataSource.SV_VAF).setFixedWidth(30)
+                                //col.column("TAF", PatientDataSource.SV_TAF).setFixedWidth(30)
+                            )
+                            .setDataSource(PatientDataSource.fromGeneDisruptions(report.geneDisruptions()))
+                    );
+        } else {
+            table = cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        }
+        // @formatter:on
+
+        return cmp.verticalList(cmp.text("Gene Disruptions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> svDisclaimer() {
+        return toList("Details on structural variants", Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
+                "Reported variants are only indicative and have NOT been verified via RNA sequencing."));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneFusionExplanation() {
+        return toList("Details on reported gene fusions",
+                Lists.newArrayList("Only intronic in-frame fusions or whole exon deletions are reported.",
+                        "The canonical, or otherwise longest transcript validly fused is reported.",
+                        "Fusions are restricted to those in the Fusion Gene list curated by COSMIC.",
+                        "We additionally select fusions where one partner occurs in the 5' or 3' position in COSMIC >3 times.",
+                        "Whole exon deletions are also restricted to this list.",
+                        "See http://cancer.sanger.ac.uk/cosmic/fusion for more information."));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneDisruptionExplanation() {
+        return toList("Details on reported gene disruptions",
+                Lists.newArrayList("Only the canonical transcript of disrupted genes are reported.",
+                        "Reported gene disruptions are restricted to those that occur in the HMF Panel."));
     }
 
     @NotNull
@@ -478,6 +628,11 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static JasperReportBuilder baseTable() {
         return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
+    }
+
+    @NotNull
+    private static JasperReportBuilder smallTable() {
+        return report().setColumnStyle(dataStyle().setFontSize(6)).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
     }
 
     @NotNull

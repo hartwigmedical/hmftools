@@ -36,7 +36,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
-import com.hartwig.hmftools.common.purple.region.FittedRegionWriter;
+import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
@@ -201,7 +201,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Writing purple data to: {}", outputDirectory);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
-            FittedRegionWriter.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
+            FittedRegionFile.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
 
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =

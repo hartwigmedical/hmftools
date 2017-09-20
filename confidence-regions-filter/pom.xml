@@ -3,15 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>hmftools</artifactId>
         <groupId>com.hartwig</groupId>
+        <artifactId>hmftools</artifactId>
         <version>1</version>
     </parent>
 
-    <artifactId>consensus-rule-filter</artifactId>
+    <artifactId>confidence-regions-filter</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - Consensus Rule Filter</name>
+    <name>HMF Tools - Confidence Regions Filter</name>
 
     <dependencies>
         <dependency>
@@ -42,7 +42,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.consensusrule.ConsensusRuleFilterApplication
+                            <mainClass>com.hartwig.hmftools.confidenceregions.ConfidenceRegionsFilterApplication
                             </mainClass>
                         </manifest>
                     </archive>

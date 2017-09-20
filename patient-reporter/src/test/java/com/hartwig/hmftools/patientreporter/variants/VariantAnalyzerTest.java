@@ -75,7 +75,7 @@ public class VariantAnalyzerTest {
 
         assertEquals(4, analysis.allVariants().size());
         assertEquals(4, analysis.passedVariants().size());
-        assertEquals(4, analysis.consensusPassedVariants().size());
+        assertEquals(4, analysis.confidencePassedVariants().size());
         assertEquals(3, analysis.mutationalLoad());
         assertEquals(1, analysis.findings().size());
     }
@@ -104,7 +104,8 @@ public class VariantAnalyzerTest {
                 .entrezId(ENTREZ_ID)
                 .geneID(GENE_ID)
                 .geneStart(GENE_START)
-                .geneEnd(GENE_END).build());
+                .geneEnd(GENE_END)
+                .build());
         return hmfRegions;
     }
 }

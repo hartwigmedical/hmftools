@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.consensus;
+package com.hartwig.hmftools.common.variant.confidenceregions;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,29 +16,31 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ConsensusRuleTest {
+public class ConfidenceRegionsRuleTest {
 
     private static final String CHROMOSOME = "1";
 
     @Test
-    public void consensusRuleWorks() {
+    public void confidenceRegionsRuleWorks() {
         final Slicer highConfidence = SlicerFactory.fromSingleGenomeRegion(region(100, 1000));
         final Slicer extremeConfidence = SlicerFactory.fromSingleGenomeRegion(region(500, 600));
 
-        final ConsensusRule rule = ConsensusRule.fromSlicers(highConfidence, extremeConfidence);
+        final ConfidenceRegionsRule rule = ConfidenceRegionsRule.fromSlicers(highConfidence, extremeConfidence);
 
-        final List<SomaticVariant> variants = Lists.newArrayList(cosmicSNPVariantOnPositionWithCallers(300, 2),
-                // KODU: Include
-                dbsnpSNPVariantOnPositionWithCallers(400, 2), // KODU: Exclude
-                dbsnpSNPVariantOnPositionWithCallers(550, 2), // KODU: Include
-                dbsnpSNPVariantOnPositionWithCallers(2000, 4), // KODU: Include
-                indelVariantOnPositionWithCallers(550, 1), // KODU: Include
-                indelVariantOnPositionWithCallers(200, 1), // KODU: Exclude
-                indelVariantOnPositionWithCallers(250, 2) // KODU: Include
+        final List<SomaticVariant> variants = Lists.newArrayList(
+                // @formatter:off
+                cosmicSNPVariantOnPositionWithCallers(300, 2),// MIVO: high-conf, cosmic => include
+                dbsnpSNPVariantOnPositionWithCallers(400, 2), // MIVO: high-conf, dbsnp => exclude
+                dbsnpSNPVariantOnPositionWithCallers(550, 2), // MIVO: extreme-conf => include
+                dbsnpSNPVariantOnPositionWithCallers(2000, 4), // MIVO: low-conf => exclude
+                indelVariantOnPositionWithCallers(550, 1), // MIVO: extreme-conf => include
+                indelVariantOnPositionWithCallers(200, 1), // MIVO: high-conf => exclude
+                indelVariantOnPositionWithCallers(250, 2) // MIVO: high-conf => exclude
+                // @formatter:on
         );
 
         final List<SomaticVariant> filtered = rule.removeUnreliableVariants(variants);
-        assertEquals(5, filtered.size());
+        assertEquals(3, filtered.size());
     }
 
     @Test
@@ -52,13 +54,13 @@ public class ConsensusRuleTest {
 
         final Predicate<SomaticVariant> filter = variant -> variant.chromosome().equals("2");
 
-        final ConsensusRule consensusRule = new ConsensusRule(filter);
+        final ConfidenceRegionsRule confidenceRegionsRule = new ConfidenceRegionsRule(filter);
 
-        final List<SomaticVariant> adjustedVariants = consensusRule.updateFilterFlagForUnreliableVariants(
-                Lists.newArrayList(variant1, variant2, variant3));
+        final List<SomaticVariant> adjustedVariants =
+                confidenceRegionsRule.updateFilterFlagForUnreliableVariants(Lists.newArrayList(variant1, variant2, variant3));
 
-        assertEquals(ConsensusRule.CONSENSUS_FILTERED, adjustedVariants.get(0).filter());
-        assertEquals(filtered + ";" + ConsensusRule.CONSENSUS_FILTERED, adjustedVariants.get(1).filter());
+        assertEquals(ConfidenceRegionsRule.FILTER, adjustedVariants.get(0).filter());
+        assertEquals(filtered + ";" + ConfidenceRegionsRule.FILTER, adjustedVariants.get(1).filter());
         assertEquals(pass, adjustedVariants.get(2).filter());
     }
 
@@ -73,8 +75,12 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
-                callers).cosmicID("any_id").build();
+        return new SomaticVariant.Builder().type(VariantType.SNP)
+                .chromosome(CHROMOSOME)
+                .position(position)
+                .callers(callers)
+                .cosmicID("any_id")
+                .build();
     }
 
     @NotNull
@@ -83,8 +89,12 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).position(position).callers(
-                callers).dnsnpID("any_id").build();
+        return new SomaticVariant.Builder().type(VariantType.SNP)
+                .chromosome(CHROMOSOME)
+                .position(position)
+                .callers(callers)
+                .dnsnpID("any_id")
+                .build();
     }
 
     @NotNull
@@ -93,7 +103,6 @@ public class ConsensusRuleTest {
         for (int i = 0; i < numCallers; i++) {
             callers.add("any");
         }
-        return new SomaticVariant.Builder().type(VariantType.INDEL).chromosome(CHROMOSOME).position(position).callers(
-                callers).build();
+        return new SomaticVariant.Builder().type(VariantType.INDEL).chromosome(CHROMOSOME).position(position).callers(callers).build();
     }
 }

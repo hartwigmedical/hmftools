@@ -2,6 +2,9 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
@@ -26,9 +29,11 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_EXTENSION = "_melted.vcf";
+    private static final String SOMATIC_EXTENSION = "_post_processed.vcf";
     private static final String COPYNUMBER_DIRECTORY = "copyNumber";
     private static final String PURPLE_DIRECTORY = "purple";
+    private static final String MANTA_BPI_FILENAME = "_somaticSV_bpi.vcf";
+    private static final String MANTA_FILENAME = "somaticSV.vcf.gz";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
 
@@ -54,6 +59,20 @@ final class PatientReporterHelper {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
         return GeneCopyNumberFile.read(fileName);
+    }
+
+    @Nullable
+    static Path findMantaVCF(@NotNull final String runDirectory) {
+        try {
+            final Path vanilla_manta =
+                    Files.walk(Paths.get(runDirectory)).filter(p -> p.getFileName().endsWith(MANTA_FILENAME)).findFirst().orElse(null);
+            return Files.walk(Paths.get(runDirectory))
+                    .filter(p -> p.getFileName().endsWith(MANTA_BPI_FILENAME))
+                    .findFirst()
+                    .orElse(vanilla_manta);
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
     @NotNull

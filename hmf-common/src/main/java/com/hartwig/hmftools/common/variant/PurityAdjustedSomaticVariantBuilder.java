@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
@@ -21,7 +22,9 @@ public interface PurityAdjustedSomaticVariantBuilder {
             @NotNull final PurpleCopyNumber copyNumber, @NotNull final AllelicDepth depth) {
         double adjustedCopyNumber = copyNumber.averageTumorCopyNumber();
         double adjustedVAF = purityAdjuster.purityAdjustedVAF(Math.max(0.001, adjustedCopyNumber), depth.alleleFrequency());
-        return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(false);
+        double variantPloidy = adjustedCopyNumber * adjustedVAF;
+        boolean loh = Doubles.lessOrEqual(adjustedCopyNumber, 0) || Doubles.greaterOrEqual(variantPloidy, adjustedCopyNumber - 0.5);
+        return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(loh);
     }
 
     default PurityAdjustedSomaticVariantBuilder clonality(double copyNumber, double purity, @NotNull final AllelicDepth depth) {

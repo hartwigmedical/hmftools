@@ -18,13 +18,13 @@ public class RollingRatioNormalizationTest {
     @Test
     public void testCloseToZero() {
         final List<ReadRatio> input = Lists.newArrayList(
-                create(1, 0),
+                create(0, 0),
                 create(50, 0),
                 create(100, 0.002),
-                create(120, 0),
+                create(150, 0),
                 create(200, 0));
 
-        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 100, 10, input).get();
+        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 5, 5, input).get();
         assertEquals(input.size(), output.size());
         assertRatio(input.get(0), output.get(0), 1);
         assertRatio(input.get(1), output.get(1), 1);
@@ -33,17 +33,16 @@ public class RollingRatioNormalizationTest {
         assertRatio(input.get(4), output.get(4), 1);
     }
 
-
     @Test
-    public void testUsage() {
+    public void testMaxWindowDistance() {
         final List<ReadRatio> input = Lists.newArrayList(
-                create(1, 1.0),
+                create(0, 1.0),
                 create(50, 1.5),
                 create(100, -1),
-                create(120, 1.1),
+                create(150, 1.1),
                 create(200, 1.2));
 
-        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 100, 10, input).get();
+        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 2, 1, input).get();
         assertEquals(input.size(), output.size());
         assertRatio(input.get(0), output.get(0), 1.25);
         assertRatio(input.get(1), output.get(1), 1.1);
@@ -55,16 +54,16 @@ public class RollingRatioNormalizationTest {
     @Test
     public void testMinCoverage() {
         final List<ReadRatio> input = Lists.newArrayList(
-                create(1, 1.0),
+                create(0, 1.0),
                 create(50, 1.5),
-                create(200, -1),
-                create(210, 1.9),
-                create(215, 1.8));
+                create(100, 2.0),
+                create(150, -1),
+                create(200, -1));
 
-        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 50, 20, input).get();
+        final List<ReadRatio> output = new RollingRatioNormalization(1.0, 1, 3, input).get();
         assertEquals(input.size(), output.size());
-        assertRatio(input.get(0), output.get(0), 1.25);
-        assertRatio(input.get(1), output.get(1), 1.25);
+        assertRatio(input.get(0), output.get(0), 1.0);
+        assertRatio(input.get(1), output.get(1), 1.5);
         assertRatio(input.get(2), output.get(2), 1.0);
         assertRatio(input.get(3), output.get(3), 1.0);
         assertRatio(input.get(4), output.get(4), 1.0);

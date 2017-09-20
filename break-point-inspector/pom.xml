@@ -12,7 +12,7 @@
 
     <artifactId>break-point-inspector</artifactId>
     <packaging>jar</packaging>
-    <version>1.1</version>
+    <version>1.2</version>
     <name>HMF Tools - Break Point Inspector</name>
 
     <dependencies>
@@ -54,6 +54,8 @@
                             <addClasspath>true</addClasspath>
                             <mainClass>com.hartwig.hmftools.breakpointinspector.BreakPointInspectorApplication
                             </mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                     </archive>
 

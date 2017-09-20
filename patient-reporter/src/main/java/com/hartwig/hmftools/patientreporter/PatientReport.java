@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
+import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.immutables.value.Value;
@@ -20,6 +21,12 @@ public abstract class PatientReport {
 
     @NotNull
     public abstract List<VariantReport> variants();
+
+    @NotNull
+    public abstract List<StructuralVariantAnalysis.GeneFusion> geneFusions();
+
+    @NotNull
+    public abstract List<StructuralVariantAnalysis.GeneDisruption> geneDisruptions();
 
     @NotNull
     public abstract List<CopyNumberReport> copyNumbers();
