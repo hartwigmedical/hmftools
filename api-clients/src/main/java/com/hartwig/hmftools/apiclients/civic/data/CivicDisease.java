@@ -22,6 +22,12 @@ public abstract class CivicDisease implements Comparable<CivicDisease> {
     @SerializedName("doid")
     public abstract String ontologyId();
 
+    @NotNull
+    @Value.Derived
+    public String doidString() {
+        return "DOID:" + ontologyId();
+    }
+
     @Override
     public int compareTo(@NotNull final CivicDisease other) {
         return Integer.compare(id(), other.id());

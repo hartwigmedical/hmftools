@@ -4,13 +4,14 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
-import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +44,7 @@ public abstract class CivicVariant {
     @SerializedName("evidence_items")
     public abstract List<CivicEvidenceItem> evidenceItems();
 
+    @Value.Lazy
     public List<CivicEvidenceItem> evidenceItemsWithDrugs() {
         return evidenceItems().stream()
                 .filter(evidenceItem -> !evidenceItem.drugs().isEmpty())
@@ -51,6 +53,7 @@ public abstract class CivicVariant {
     }
 
     @NotNull
+    @Value.Lazy
     public Map<String, Map<String, List<CivicEvidenceItem>>> groupedEvidenceItems() {
         return evidenceItemsWithDrugs().stream()
                 .filter(evidenceItem -> {
@@ -60,11 +63,8 @@ public abstract class CivicVariant {
                             && evidenceSignificance != null && !evidenceSignificance.isEmpty() && !evidenceSignificance.toLowerCase()
                             .equals("n/a");
                 })
-                .flatMap(evidenceItem -> evidenceItem.drugs()
-                        .stream()
-                        .map(drug -> new AbstractMap.SimpleImmutableEntry<>(drug.name(), evidenceItem)))
-                .collect(groupingBy(pair -> pair.getValue().significance(),
-                        groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList()))));
+                .flatMap(evidenceItem -> evidenceItem.drugs().stream().map(drug -> ImmutablePair.of(drug.name(), evidenceItem)))
+                .collect(groupingBy(pair -> pair.getRight().significance(), groupingBy(Pair::getLeft, mapping(Pair::getRight, toList()))));
     }
 
     public String summaryUrl() {
