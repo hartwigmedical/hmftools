@@ -28,7 +28,7 @@ See Also:
 ## Usage
 
 ```
-java -jar break-point-inspector-1.x-with-dependencies.jar
+java -jar break-point-inspector-x.y-with-dependencies.jar
     -vcf manta.vcf
     -ref blood.bam
     -tumor tumor.bam
