@@ -86,7 +86,7 @@ public class EvidenceItemsWriter {
 
     @NotNull
     private String fileName(@NotNull final String sample) {
-        return reportDirectory + File.separator + sample + "_evidence_report.pdf";
+        return reportDirectory + File.separator + sample + "_evidence_report_detailed.pdf";
     }
 
     @VisibleForTesting

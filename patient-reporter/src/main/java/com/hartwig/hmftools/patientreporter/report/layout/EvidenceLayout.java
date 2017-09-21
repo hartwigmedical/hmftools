@@ -84,7 +84,7 @@ public class EvidenceLayout {
         // @formatter:off
         final VerticalListBuilder totalReport = cmp.verticalList(
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Civic Evidence Items").setStyle(sectionHeaderStyle()),
+                    cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle().setFontSize(15)),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     conciseEvidenceSection());
 
@@ -94,7 +94,7 @@ public class EvidenceLayout {
                     cmp.verticalGap(SECTION_VERTICAL_GAP));
         // @formatter:on
 
-        return report().detail(totalReport).noData(noDataReport).setDataSource(variantReporterData.toDataSource());
+        return report().addDetail(totalReport).noData(noDataReport).setDataSource(variantReporterData.toDataSource());
     }
 
     @NotNull
