@@ -10,7 +10,7 @@
 
     <artifactId>patient-reporter</artifactId>
     <packaging>jar</packaging>
-    <version>3</version>
+    <version>3.11</version>
     <name>HMF Tools - Patient Reporter</name>
 
     <dependencies>
@@ -80,7 +80,12 @@
                                 </transformer>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.hartwig.hmftools.patientreporter.PatientReporterApplication</mainClass>
+                                    <manifestEntries>
+                                        <Main-Class>com.hartwig.hmftools.patientreporter.PatientReporterApplication</Main-Class>
+                                        <!-- KODU: Below lines do not work but can't find how to make it work either! -->
+                                        <!--<addDefaultImplementationEntries>true</addDefaultImplementationEntries>-->
+                                        <!--<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>-->
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                             <filters>
