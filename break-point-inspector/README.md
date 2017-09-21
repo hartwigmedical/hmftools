@@ -25,6 +25,22 @@ See Also:
 * [Papenfuss Lab Gridss](https://github.com/PapenfussLab/gridss)
 * [Nature Methods - CONSERTING: integrating copy-number analysis with structural-variation detection](http://www.nature.com/nmeth/journal/v12/n6/full/nmeth.3394.html)
 
+## Usage
+
+```
+java -jar break-point-inspector-1.x-with-dependencies.jar
+    -vcf manta.vcf
+    -ref blood.bam
+    -tumor tumor.bam
+    -output_vcf bpi.vcf
+> bpi_stats.tsv
+``` 
+
+### Notes
+* BPI makes use of the temp directory, this can be modified with **-Djava.io.tmpdir=/path/to/tmp**
+* You can slice the BAM files with **-tumor_slice tumor_slice.bam** **-ref_slice ref_slice.bam**
+* BPI outputs tab seperated statistics to STDOUT
+
 ## Method
 
 ### Temporary BAM Creation
