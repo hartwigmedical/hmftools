@@ -27,8 +27,8 @@ import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
-import net.sf.dynamicreports.report.builder.component.MultiPageListBuilder;
 import net.sf.dynamicreports.report.builder.component.SubreportBuilder;
+import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
@@ -82,20 +82,19 @@ public class EvidenceLayout {
                 VariantReporterData.of(report, reporterData.geneModel(), reporterData.doidMapping().doidsForTumorType(report.tumorType()));
 
         // @formatter:off
-        final MultiPageListBuilder totalReport = cmp.multiPageList().add(
+        final VerticalListBuilder totalReport = cmp.verticalList(
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Civic Evidence Items").setStyle(sectionHeaderStyle()),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP))
-                .add(conciseEvidenceSection());
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    conciseEvidenceSection());
 
-        final MultiPageListBuilder noDataReport = cmp.multiPageList()
+        final VerticalListBuilder noDataReport = cmp.verticalList()
                 .add(cmp.verticalGap(SECTION_VERTICAL_GAP),
                     cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Could not find any civic evidence items").setStyle(sectionHeaderStyle()),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP))
-                .newPage();
+                    cmp.verticalGap(SECTION_VERTICAL_GAP));
         // @formatter:on
 
-        return report().addDetail(conciseEvidenceSection()).setDataSource(variantReporterData.toDataSource()).noData(noDataReport);
+        return report().detail(totalReport).noData(noDataReport).setDataSource(variantReporterData.toDataSource());
     }
 
     @NotNull
@@ -129,16 +128,14 @@ public class EvidenceLayout {
                 cmp.text("LOH").setStyle(tableHeaderStyle()).setFixedWidth(LOH_WIDTH),
                 cmp.text("Subclonal").setStyle(tableHeaderStyle()).setFixedWidth(SUBCLONAL_WIDTH));
 
-        return cmp.verticalList(
-                tableHeader,
-                cmp.subreport(
-                baseTable().setColumnStyle(dataStyle())
+        return cmp.subreport(
+                baseTable().setColumnStyle(dataStyle()).title(tableHeader)
                     .columns(
                         col.column(AlterationReporterData.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
                         col.componentColumn(subtable),
                         col.column(AlterationReporterData.LOH).setFixedWidth(LOH_WIDTH),
                         col.column(AlterationReporterData.SUBCLONAL).setFixedWidth(SUBCLONAL_WIDTH)))
-                .setDataSource(exp.subDatasourceBeanCollection("alterations")));
+                .setDataSource(exp.subDatasourceBeanCollection("alterations"));
         // @formatter:on
     }
 
