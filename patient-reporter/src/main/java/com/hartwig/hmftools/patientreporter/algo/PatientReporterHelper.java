@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -32,7 +33,6 @@ final class PatientReporterHelper {
     private static final String SOMATIC_EXTENSION = "_post_processed.vcf";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String MANTA_BPI_FILENAME = "_somaticSV_bpi.vcf";
-    private static final String MANTA_FILENAME = "somaticSV.vcf.gz";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
 
@@ -63,13 +63,11 @@ final class PatientReporterHelper {
     @Nullable
     static Path findMantaVCF(@NotNull final String runDirectory) {
         try {
-            final Path vanilla_manta =
-                    Files.walk(Paths.get(runDirectory)).filter(p -> p.getFileName().endsWith(MANTA_FILENAME)).findFirst().orElse(null);
-            return Files.walk(Paths.get(runDirectory))
-                    .filter(p -> p.toString().endsWith(MANTA_BPI_FILENAME))
-                    .findFirst()
-                    .orElse(vanilla_manta);
-        } catch (final Exception e) {
+            Optional<Path> path = Files.walk(Paths.get(runDirectory))
+                    .filter(p -> p.toString().endsWith(MANTA_BPI_FILENAME)).findFirst();
+            return path.orElse(null);
+        } catch (IOException e) {
+            LOGGER.warn("Could not find structural variant vcf file path on " + MANTA_BPI_FILENAME);
             return null;
         }
     }

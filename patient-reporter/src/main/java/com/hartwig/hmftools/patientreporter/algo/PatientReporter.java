@@ -133,9 +133,6 @@ public class PatientReporter {
             LOGGER.info("Analysing structural variants...");
             svAnalysis = structuralVariantAnalyzer.run(structuralVariants);
         } else {
-            if (structuralVariantAnalyzer != null) {
-                LOGGER.warn("Could not find Manta VCF!");
-            }
             svAnalysis = new StructuralVariantAnalysis();
         }
 
