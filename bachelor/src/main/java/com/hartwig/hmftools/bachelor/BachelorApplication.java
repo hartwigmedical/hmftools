@@ -98,7 +98,14 @@ public class BachelorApplication {
                 result.forEach((k, v) -> merged.merge(k, v, (a, b) -> a + b));
                 reader.close();
             }
-            LOGGER.info(merged.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getValue)).collect(Collectors.toList()));
+
+            // output results
+
+            merged.entrySet()
+                    .stream()
+                    .sorted(Comparator.comparingInt(Map.Entry::getValue))
+                    .forEach(e -> LOGGER.info("{} = {} variants", e.getKey(), e.getValue()));
+
         } catch (final ParseException e) {
             printHelpAndExit(options);
         } catch (SAXException | IOException e) {
