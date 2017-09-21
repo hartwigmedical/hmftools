@@ -39,7 +39,7 @@ java -jar break-point-inspector-x.y-with-dependencies.jar
 ### Notes
 * BPI makes use of the temp directory, this can be modified with **-Djava.io.tmpdir=/path/to/tmp**
 * You can slice the BAM files with **-tumor_slice tumor_slice.bam** **-ref_slice ref_slice.bam**
-* BPI outputs tab seperated statistics to STDOUT
+* BPI outputs tab separated statistics to STDOUT
 
 ## Method
 
