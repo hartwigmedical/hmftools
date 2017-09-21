@@ -10,7 +10,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>bam-slicer</artifactId>
+    <packaging>jar</packaging>
     <version>1.0</version>
+    <name>HMF Tools - BAM Slicer</name>
 
     <dependencies>
         <dependency>
