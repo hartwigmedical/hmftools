@@ -66,7 +66,7 @@ final class PatientReporterHelper {
             final Path vanilla_manta =
                     Files.walk(Paths.get(runDirectory)).filter(p -> p.getFileName().endsWith(MANTA_FILENAME)).findFirst().orElse(null);
             return Files.walk(Paths.get(runDirectory))
-                    .filter(p -> p.getFileName().endsWith(MANTA_BPI_FILENAME))
+                    .filter(p -> p.toString().endsWith(MANTA_BPI_FILENAME))
                     .findFirst()
                     .orElse(vanilla_manta);
         } catch (final Exception e) {
