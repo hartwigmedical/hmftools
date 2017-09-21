@@ -40,7 +40,7 @@ public class BachelorApplication {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(Option.builder(CONFIG_DIRECTORY).required().hasArg().desc("folder to find program XMLs").build());
-        options.addOption(Option.builder(VCF).numberOfArgs(Option.UNLIMITED_VALUES).desc("vcf to process").build());
+        options.addOption(Option.builder(VCF).required().numberOfArgs(Option.UNLIMITED_VALUES).desc("vcf to process").build());
         return options;
     }
 
@@ -101,9 +101,8 @@ public class BachelorApplication {
             LOGGER.info(merged.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getValue)).collect(Collectors.toList()));
         } catch (final ParseException e) {
             printHelpAndExit(options);
-        } catch (final Exception e) {
-            LOGGER.error(e);
-            System.exit(2);
+        } catch (SAXException | IOException e) {
+            e.printStackTrace();
         }
     }
 }

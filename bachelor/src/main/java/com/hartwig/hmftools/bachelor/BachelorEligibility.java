@@ -85,6 +85,8 @@ class BachelorEligibility {
                     if (transcriptMatches && !annotation.HGVSp.isEmpty()) {
                         if (b.getHGVSP() != null && b.getHGVSP().equals(annotation.HGVSp)) {
                             return true;
+                        } else if (b.getHGVSC() != null && b.getHGVSC().equals(annotation.HGVSc)) {
+                            return true;
                         } else if (b.getMinCodon() != null && b.getMinCodon().intValue() <= annotation.ProteinPosition.get(0)) {
                             return true;
                         }
