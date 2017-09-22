@@ -82,13 +82,15 @@ public class PurityPloidyEstimateApplication {
     static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
 
     private static final int MAX_PLOIDY = 20;
-    private static final double PURITY_INCREMENTS = 0.01;
+
+    private static final double PURITY_INCREMENT_DEFAULT = 0.01;
     private static final double NORM_FACTOR_INCREMENTS = 0.01;
     private static final int THREADS_DEFAULT = 2;
 
     private static final String THREADS = "threads";
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
+    private static final String PURITY_INCREMENT = "purity_increment";
     private static final String MIN_NORM_FACTOR = "min_norm_factor";
     private static final String MAX_NORM_FACTOR = "max_norm_factor";
     private static final String DB_ENABLED = "db_enabled";
@@ -156,13 +158,14 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Fitting purity");
             final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
             final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
+            final double purityIncrement = defaultValue(cmd, PURITY_INCREMENT, PURITY_INCREMENT_DEFAULT);
             final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
             final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     MAX_PLOIDY,
                     minPurity,
                     maxPurity,
-                    PURITY_INCREMENTS,
+                    purityIncrement,
                     minNormFactor,
                     maxNormFactor,
                     NORM_FACTOR_INCREMENTS,
@@ -280,6 +283,7 @@ public class PurityPloidyEstimateApplication {
 
         options.addOption(MIN_PURITY, true, "Minimum purity (default 0.05)");
         options.addOption(MAX_PURITY, true, "Maximum purity (default 1.0)");
+        options.addOption(PURITY_INCREMENT, true, "Purity increment (default 0.01)");
 
         options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
         options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
