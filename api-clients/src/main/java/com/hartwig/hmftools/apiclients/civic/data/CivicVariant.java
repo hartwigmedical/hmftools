@@ -44,6 +44,9 @@ public abstract class CivicVariant {
     @SerializedName("evidence_items")
     public abstract List<CivicEvidenceItem> evidenceItems();
 
+    @SerializedName("hgvs_expressions")
+    public abstract List<String> hgvsExpressions();
+
     @Value.Lazy
     public List<CivicEvidenceItem> evidenceItemsWithDrugs() {
         return evidenceItems().stream()
@@ -54,6 +57,7 @@ public abstract class CivicVariant {
 
     @NotNull
     @Value.Lazy
+    //MIVO: evidence items grouped by significance (sensitivity/resistance) and by drug.
     public Map<String, Map<String, List<CivicEvidenceItem>>> groupedEvidenceItems() {
         return evidenceItemsWithDrugs().stream()
                 .filter(evidenceItem -> {
