@@ -81,6 +81,7 @@ public class MetadataCreator {
                 if (runDirectory != null) {
                     try {
                         ProductionRunContextFactory.fromRunDirectory(runDirectory);
+                        LOGGER.info("Skipping " + runDirectory + ": can already generate run context.");
                     } catch (HartwigException e) {
                         LOGGER.info("Generating meta data for " + runDirectory);
                         final List<String> metaData = Lists.newArrayList(makeMetaDataStringForRun(runDirectory));
