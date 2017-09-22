@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -94,8 +95,8 @@ public class BachelorApplication {
             for (final File vcf : vcfFiles) {
                 LOGGER.info("process vcf: {}", vcf.getPath());
                 final VCFFileReader reader = new VCFFileReader(vcf, false);
-                final Map<String, Integer> result = eligibility.processVCF(reader);
-                result.forEach((k, v) -> merged.merge(k, v, (a, b) -> a + b));
+                final Collection<EligibilityReport> result = eligibility.processVCF(reader);
+                result.forEach(report -> merged.merge(report.program(), report.variants().size(), (a, b) -> a + b));
                 reader.close();
             }
 
