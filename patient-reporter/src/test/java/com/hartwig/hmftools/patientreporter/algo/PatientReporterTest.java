@@ -32,10 +32,10 @@ public class PatientReporterTest {
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
-        final StructuralVariantAnalyzer structuralVariantAnalyzer =
+        final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(NullAnnotator.make(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo =
-                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer, structuralVariantAnalyzer);
+                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY));
     }
 
