@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
+import static com.hartwig.hmftools.patientreporter.report.data.VariantReporterData.variantReportToVariant;
+
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,47 +27,46 @@ public abstract class AlterationReporterData {
     private static final Logger LOGGER = LogManager.getLogger(AlterationReporterData.class);
 
     public static final FieldBuilder<?> ALTERATION = field("alteration", String.class);
-    public static final FieldBuilder<?> LOH = field("loh", String.class);
-    public static final FieldBuilder<?> SUBCLONAL = field("subclonal", String.class);
 
     public abstract String getGene();
 
     public abstract String getPredictedEffect();
 
-    public abstract String getLoh();
-
-    public abstract String getSubclonal();
-
     public abstract List<AlterationEvidenceReporterData> getEvidence();
+
+    public abstract List<AlterationMatch> getMatches();
 
     public String getAlteration() {
         return getGene() + "\n" + getPredictedEffect();
     }
 
-    public static AlterationReporterData from(@NotNull final String gene, @NotNull final String predictedEffect, @NotNull final String loh,
-            @NotNull final String subclonal, @NotNull final List<CivicVariant> civicVariants) {
-        if (civicVariants.size() > 1) {
-            LOGGER.warn("found more than one civic variant for: " + gene + "(" + predictedEffect + ")");
-        }
-        final List<AlterationEvidenceReporterData> alterationEvidence = Lists.newArrayList();
+    public static AlterationReporterData from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants) {
+        final String gene = variantReport.gene();
+        final String predictedEffect = variantReport.hgvsProtein();
+        final List<AlterationEvidenceReporterData> exactMatchEvidence = Lists.newArrayList();
+        final List<AlterationMatch> matchingVariants = Lists.newArrayList();
+
         civicVariants.forEach(civicVariant -> {
-            for (final String significance : civicVariant.groupedEvidenceItems().keySet()) {
-                final List<String> drugs = civicVariant.groupedEvidenceItems()
-                        .get(significance)
-                        .keySet()
-                        .stream()
-                        .map(drug -> drug + "(" + Strings.join(civicVariant.groupedEvidenceItems()
-                                .get(significance)
-                                .get(drug)
-                                .stream()
-                                .map(CivicEvidenceItem::level)
-                                .distinct()
-                                .collect(Collectors.toList()), ',') + ")")
-                        .collect(Collectors.toList());
-                final String drugsString = Strings.join(drugs, '\n');
-                alterationEvidence.add(ImmutableAlterationEvidenceReporterData.of(significance, drugsString, "CIViC"));
+            if (civicVariant.coordinates().equals(variantReportToVariant(variantReport))) {
+                for (final String significance : civicVariant.groupedEvidenceItems().keySet()) {
+                    final String drugsString = getDrugsWithEvidenceLevel(civicVariant.groupedEvidenceItems().get(significance));
+                    exactMatchEvidence.add(ImmutableAlterationEvidenceReporterData.of(significance, drugsString, "CIViC"));
+                }
+                matchingVariants.add(AlterationMatch.of("exact", civicVariant));
+            } else {
+                matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
             }
         });
-        return ImmutableAlterationReporterData.of(gene, predictedEffect, loh, subclonal, alterationEvidence);
+        return ImmutableAlterationReporterData.of(gene, predictedEffect, exactMatchEvidence, matchingVariants);
+    }
+
+    @NotNull
+    private static String getDrugsWithEvidenceLevel(@NotNull final Map<String, List<CivicEvidenceItem>> drugToEvidenceItems) {
+        final List<String> drugs = drugToEvidenceItems.entrySet()
+                .stream()
+                .map(entry -> entry.getKey() + "(" + Strings.join(
+                        entry.getValue().stream().map(CivicEvidenceItem::level).distinct().collect(Collectors.toList()), ',') + ")")
+                .collect(Collectors.toList());
+        return Strings.join(drugs, '\n');
     }
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.report.layout;
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.exp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidenceReporterData;
+import com.hartwig.hmftools.patientreporter.report.data.AlterationMatch;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationReporterData;
 import com.hartwig.hmftools.patientreporter.report.data.VariantReporterData;
 
@@ -86,7 +88,11 @@ public class EvidenceLayout {
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle().setFontSize(15)),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    conciseEvidenceSection());
+                    conciseEvidenceSection(),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
+                    cmp.text("Civic matching variants"),
+                    civicMatchingVariantsTable(),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP));
 
         final VerticalListBuilder noDataReport = cmp.verticalList()
                 .add(cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -108,8 +114,6 @@ public class EvidenceLayout {
         final int SIGNIFICANCE_WIDTH = 70;
         final int DRUGS_WIDTH = 170;
         final int SOURCE_WIDTH = 60;
-        final int LOH_WIDTH = 40;
-        final int SUBCLONAL_WIDTH = 60;
 
         //@formatter:off
         final SubreportBuilder subtable = cmp.subreport(
@@ -124,17 +128,56 @@ public class EvidenceLayout {
                 cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
                 cmp.text("Significance").setStyle(tableHeaderStyle()).setFixedWidth(SIGNIFICANCE_WIDTH),
                 cmp.text("Association(Lv)").setStyle(tableHeaderStyle()).setFixedWidth(DRUGS_WIDTH),
-                cmp.text("Source").setStyle(tableHeaderStyle()).setFixedWidth(SOURCE_WIDTH),
-                cmp.text("LOH").setStyle(tableHeaderStyle()).setFixedWidth(LOH_WIDTH),
-                cmp.text("Subclonal").setStyle(tableHeaderStyle()).setFixedWidth(SUBCLONAL_WIDTH));
+                cmp.text("Source").setStyle(tableHeaderStyle()).setFixedWidth(SOURCE_WIDTH));
 
         return cmp.subreport(
                 baseTable().setColumnStyle(dataStyle()).title(tableHeader)
                     .columns(
                         col.column(AlterationReporterData.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
-                        col.componentColumn(subtable),
-                        col.column(AlterationReporterData.LOH).setFixedWidth(LOH_WIDTH),
-                        col.column(AlterationReporterData.SUBCLONAL).setFixedWidth(SUBCLONAL_WIDTH)))
+                        col.componentColumn(subtable)))
+                .setDataSource(exp.subDatasourceBeanCollection("alterations"));
+        // @formatter:on
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> civicMatchingVariantsTable() throws IOException, DRException {
+        final int ALTERATION_WIDTH = 75;
+
+        //@formatter:off
+        final SubreportBuilder subtable = cmp.subreport(
+                baseTable().setColumnStyle(dataStyle()).fields(AlterationMatch.SUMMARY_URL)
+                    .columns(
+                        col.column(AlterationMatch.MATCH_TYPE).setFixedWidth(40).setMinHeight(25),
+                        col.column(AlterationMatch.NAME).setHyperLink(hyperLink(AlterationMatch.civicSummaryHyperlink()))
+                                .setStyle(linkStyle()).setFixedWidth(80),
+                        col.column(AlterationMatch.VARIANT_TYPE).setFixedWidth(80),
+                        col.column(AlterationMatch.CHROMOSOME).setFixedWidth(30),
+                        col.column(AlterationMatch.START).setFixedWidth(45),
+                        col.column(AlterationMatch.STOP).setFixedWidth(45),
+                        col.column(AlterationMatch.CHROMOSOME2).setFixedWidth(30),
+                        col.column(AlterationMatch.START2).setFixedWidth(30),
+                        col.column(AlterationMatch.STOP2).setFixedWidth(30),
+                        col.column(AlterationMatch.HGVS_EXPRESSIONS)))
+                .setDataSource(exp.subDatasourceBeanCollection("matches"));
+
+        final ComponentBuilder<?, ?> tableHeader = cmp.horizontalList(
+                cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
+                cmp.text("Match").setStyle(tableHeaderStyle()).setFixedWidth(40),
+                cmp.text("Name").setStyle(tableHeaderStyle()).setFixedWidth(80),
+                cmp.text("Type").setStyle(tableHeaderStyle()).setFixedWidth(80),
+                cmp.text("Chr").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                cmp.text("Start").setStyle(tableHeaderStyle()).setFixedWidth(45),
+                cmp.text("Stop").setStyle(tableHeaderStyle()).setFixedWidth(45),
+                cmp.text("Chr2").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                cmp.text("Start2").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                cmp.text("Stop2").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                cmp.text("Hgvs Expressions").setStyle(tableHeaderStyle()));
+
+        return cmp.subreport(
+                baseTable().setColumnStyle(dataStyle()).title(tableHeader)
+                    .columns(
+                        col.column(AlterationReporterData.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
+                        col.componentColumn(subtable)))
                 .setDataSource(exp.subDatasourceBeanCollection("alterations"));
         // @formatter:on
     }
@@ -165,8 +208,13 @@ public class EvidenceLayout {
         return fontStyle().setFontSize(7)
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                 .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setBorder(stl.penThin())
+                .setBorder(stl.penThin().setLineColor(Color.black))
                 .setPadding(PADDING);
+    }
+
+    @NotNull
+    private static StyleBuilder linkStyle() {
+        return dataStyle().setForegroundColor(Color.BLUE);
     }
 
     @NotNull

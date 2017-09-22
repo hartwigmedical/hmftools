@@ -41,8 +41,7 @@ public abstract class VariantReporterData {
                 if (region.gene().equals(variantReport.gene())) {
                     final int entrezId = Integer.parseInt(region.entrezId());
                     final List<CivicVariant> civicVariants = getCivicVariants(entrezId, variantReport, tumorChildrenDoids);
-                    final AlterationReporterData alteration =
-                            AlterationReporterData.from(variantReport.gene(), variantReport.hgvsProtein(), "", "", civicVariants);
+                    final AlterationReporterData alteration = AlterationReporterData.from(variantReport, civicVariants);
                     if (alteration.getEvidence().size() > 0) {
                         alterations.add(alteration);
                     }
@@ -73,8 +72,7 @@ public abstract class VariantReporterData {
             @NotNull final Set<String> tumorChildrenDoids) {
         final Variant variant = variantReportToVariant(variantReport);
         try {
-            //MIVO: get exact matches only for now (will not work for indels)
-            return CivicApiWrapper.getVariantMatches(entrezId, variant)
+            return CivicApiWrapper.getVariantsContaining(entrezId, variant)
                     .map(civicVariant -> (CivicVariant) ImmutableCivicVariant.builder()
                             .from(civicVariant)
                             .evidenceItems(civicVariant.evidenceItemsWithDrugs()
