@@ -18,7 +18,8 @@ public class Commons {
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
     public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
     private static final int TABLE_PADDING = 1;
-    public static final int SECTION_VERTICAL_GAP = 25;
+    static final int SECTION_VERTICAL_GAP = 25;
+    public static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
 
     @NotNull
     public static StyleBuilder tableHeaderStyle() {
@@ -32,7 +33,7 @@ public class Commons {
     }
 
     @NotNull
-    static StyleBuilder dataStyle() {
+    public static StyleBuilder dataStyle() {
         return fontStyle().setFontSize(8)
                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
                 .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
@@ -45,12 +46,17 @@ public class Commons {
     }
 
     @NotNull
+    static StyleBuilder smallDataTableStyle() {
+        return dataStyle().setFontSize(7).setBorder(stl.penThin().setLineColor(Color.black));
+    }
+
+    @NotNull
     public static StyleBuilder fontStyle() {
         return stl.style().setFontName(FONT);
     }
 
     @NotNull
-    static JasperReportBuilder baseTable() {
+    public static JasperReportBuilder baseTable() {
         return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
     }
 
@@ -65,7 +71,7 @@ public class Commons {
     }
 
     @NotNull
-    static StyleBuilder linkStyle() {
+    public static StyleBuilder linkStyle() {
         return dataStyle().setForegroundColor(Color.BLUE);
     }
 }

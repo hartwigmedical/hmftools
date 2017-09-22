@@ -9,6 +9,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
+import com.hartwig.hmftools.patientreporter.report.data.GenePanelDataSource;
 
 import org.junit.Test;
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report;
 
 import static com.hartwig.hmftools.patientreporter.report.Commons.DATE_TIME_FORMAT;
+import static com.hartwig.hmftools.patientreporter.report.Commons.HEADER_TO_DETAIL_VERTICAL_GAP;
 import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
 import static com.hartwig.hmftools.patientreporter.report.Commons.baseTable;
 import static com.hartwig.hmftools.patientreporter.report.Commons.dataStyle;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
+import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
 import org.apache.logging.log4j.LogManager;
@@ -59,7 +61,6 @@ public class PDFWriter implements ReportWriter {
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
     private static final int LIST_INDENT = 5;
-    private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
     private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 4;
 
     @NotNull
@@ -141,7 +142,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Gene Panel Information")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        genePanelSection(reporterData)
+                        GenePanelSection.build(reporterData)
                 );
 
         final ComponentBuilder<?, ?> additionalInfoPage =
@@ -433,42 +434,6 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> genePanelSection(@NotNull final HmfReporterData reporterData) {
-        final long coverage = Math.round(reporterData.geneModel().slicer().numberOfBases() / 1E6);
-        final VerticalListBuilder section = toList("Details on the reported gene panel",
-                Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "Findings are reported for the " + Integer.toString(reporterData.geneModel().slicer().numberOfRegions())
-                                + " genes (canonical transcripts) indicated below, covering " + coverage + " MBases."));
-
-        return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), createGenePanel(reporterData));
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> createGenePanel(@NotNull final HmfReporterData reporterData) {
-        //@formatter:off
-        // KODU: Overwrite default font size to make the panel fit on one page.
-        final int fontSize = 7;
-        return cmp.subreport(
-                baseTable().setColumnStyle(dataStyle().setFontSize(fontSize)).fields(GenePanelDataSource.genePanelFields())
-                    .columns(
-                        col.emptyColumn().setFixedWidth(40),
-                        col.column("Gene", GenePanelDataSource.GENE_FIELD).setFixedWidth(50),
-                        col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
-                                .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT_FIELD)))
-                                .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
-                        col.column("Cosmic Type", GenePanelDataSource.TYPE_FIELD).setFixedWidth(75),
-                        col.emptyColumn(),
-                        col.column("Gene", GenePanelDataSource.GENE2_FIELD).setFixedWidth(50),
-                        col.column("Transcript", GenePanelDataSource.TRANSCRIPT2_FIELD)
-                                .setHyperLink(hyperLink(fieldTranscriptLink(GenePanelDataSource.TRANSCRIPT2_FIELD)))
-                                .setStyle(linkStyle().setFontSize(fontSize)).setFixedWidth(100),
-                        col.column("Cosmic Type", GenePanelDataSource.TYPE2_FIELD).setFixedWidth(75),
-                        col.emptyColumn().setFixedWidth(40)))
-                    .setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
-        // @formatter:on
-    }
-
-    @NotNull
     private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
         return toList("Details on reported genomic variant fields",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
@@ -564,7 +529,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static VerticalListBuilder toList(@NotNull final String title, @NotNull final Iterable<String> lines) {
+    public static VerticalListBuilder toList(@NotNull final String title, @NotNull final Iterable<String> lines) {
         final VerticalListBuilder list = cmp.verticalList();
         list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_HEADER_INDENT), cmp.text(title).setStyle(fontStyle().bold().setFontSize(11))),
                 cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP));
