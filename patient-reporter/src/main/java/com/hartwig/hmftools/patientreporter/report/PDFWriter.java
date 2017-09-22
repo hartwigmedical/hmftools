@@ -136,7 +136,7 @@ public class PDFWriter implements ReportWriter {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, tumorPercentageString, logoStream),
+                        mainPageTopSection(sample, tumorType, tumorPercentageString, logoStream, false),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason, study));
         // @formatter:on
@@ -152,7 +152,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
                         mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(),
-                                logoStream),
+                                logoStream, false),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -212,42 +212,39 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report,
-            @NotNull final InputStream logoStream, @NotNull final HmfReporterData reporterData) {
+    static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report, @NotNull final InputStream logoStream,
+            @NotNull final HmfReporterData reporterData) {
         // @formatter:off
         final ComponentBuilder<?, ?> structuralVariantPage =
                 cmp.verticalList(
+                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), logoStream, true),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Supplementary Report v" + PatientReporterApplication.VERSION + " - Structural Variant Information")
-                                .setStyle(sectionHeaderStyle()),
+                        supplementDisclaimerSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         geneFusionReport(report),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         geneDisruptionReport(report),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        svDisclaimer(),
+                        svExplanation(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         geneFusionExplanation(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        geneDisruptionExplanation(),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        testDetailsSection(report, reporterData.centerModel().getAddresseeStringForSample(report.sample()))
+                        geneDisruptionExplanation()
                 );
         // @formatter:on
 
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
 
-        return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(cmp.pageXslashY(), cmp.text("End of supplementary report.")
-                        .setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
+        return report()
                 .addDetail(structuralVariantPage)
                 .setDataSource(singleItemDataSource);
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, @NotNull final InputStream logoStream) {
+            @NotNull final String tumorPercentage, @NotNull final InputStream logoStream, boolean isSupplement) {
+        final String title = isSupplement ? "HMF Supplement" : "HMF Sequencing Report";
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
@@ -263,7 +260,7 @@ public class PDFWriter implements ReportWriter {
         return cmp.horizontalList(
                 cmp.image(logoStream),
                 cmp.verticalList(
-                        cmp.text("HMF Sequencing Report - " + sample)
+                        cmp.text(title + " - " + sample)
                                 .setStyle(fontStyle().bold().setFontSize(14)
                                     .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
@@ -448,7 +445,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> svDisclaimer() {
+    private static ComponentBuilder<?, ?> svExplanation() {
         return toList("Details on structural variants", Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
                 "Reported variants are only indicative and have NOT been verified via RNA sequencing."));
     }
@@ -565,6 +562,19 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
+    private static ComponentBuilder<?, ?> supplementDisclaimerSection() {
+        //@formatter:off
+        final List<String> lines = Lists.newArrayList("This supplement is a prototype for new types of reporting that " +
+                        "may or may not eventually end up in the actual sequencing report",
+                "Findings should be considered suspicious and should not be used for clinical decision making without " +
+                        "validation using certified assays"
+                );
+        //@formatter:on
+
+        return toList("Disclaimer", lines);
+    }
+
+    @NotNull
     private static ComponentBuilder<?, ?> testDetailsSection(@NotNull final PatientReport report, @Nullable final String recipientAddress) {
         //@formatter:off
         final List<String> lines = Lists.newArrayList("This test is not certified for diagnostic purposes.",
@@ -586,7 +596,6 @@ public class PDFWriter implements ReportWriter {
         }
 
         return toList("Test details", lines);
-
     }
 
     private static String toFormattedDate(@Nullable final LocalDate date) {

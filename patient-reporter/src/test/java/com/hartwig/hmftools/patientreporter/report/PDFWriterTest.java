@@ -79,7 +79,8 @@ public class PDFWriterTest {
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
         assertNotNull(mainReport);
 
-        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport, logoStream, reporterData);
+        final InputStream logoStream2 = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
+        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport, logoStream2, reporterData);
         assertNotNull(supplement);
 
         if (SHOW_AND_PRINT) {
@@ -91,6 +92,7 @@ public class PDFWriterTest {
             supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_supplement.pdf"));
         }
         logoStream.close();
+        logoStream2.close();
     }
 
     @NotNull
