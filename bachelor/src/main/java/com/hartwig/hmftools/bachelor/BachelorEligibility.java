@@ -23,6 +23,7 @@ import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -121,9 +122,13 @@ class BachelorEligibility {
         return result;
     }
 
+    @NotNull
     Collection<EligibilityReport> processVCF(final VCFFileReader reader) {
         final Map<String, ImmutableEligibilityReport.Builder> results = Maps.newHashMap();
         for (final VariantContext variant : reader) {
+            if (variant.isFiltered()) {
+                continue;
+            }
             final List<String> matchingPrograms = programs.entrySet()
                     .stream()
                     .filter(program -> program.getValue().test(ExtractedVariantInfo.from(variant)))
