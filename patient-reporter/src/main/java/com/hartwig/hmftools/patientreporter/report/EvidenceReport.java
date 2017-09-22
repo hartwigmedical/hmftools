@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.report.layout;
+package com.hartwig.hmftools.patientreporter.report;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
@@ -18,10 +18,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
-import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidenceReporterData;
+import com.hartwig.hmftools.patientreporter.report.data.Alteration;
+import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidence;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationMatch;
-import com.hartwig.hmftools.patientreporter.report.data.AlterationReporterData;
-import com.hartwig.hmftools.patientreporter.report.data.VariantReporterData;
+import com.hartwig.hmftools.patientreporter.report.data.EvidenceReportData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,9 +36,9 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
 
-public class EvidenceLayout {
+public class EvidenceReport {
 
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceLayout.class);
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceReport.class);
 
     private static final String FONT = "Times New Roman";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
@@ -48,7 +48,7 @@ public class EvidenceLayout {
     @NotNull
     private final String reportDirectory;
 
-    public EvidenceLayout(@NotNull final String reportDirectory) {
+    public EvidenceReport(@NotNull final String reportDirectory) {
         this.reportDirectory = reportDirectory;
     }
 
@@ -80,8 +80,8 @@ public class EvidenceLayout {
     public static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
             @NotNull final HmfReporterData reporterData) throws IOException, DRException {
 
-        final VariantReporterData variantReporterData =
-                VariantReporterData.of(report, reporterData.geneModel(), reporterData.doidMapping().doidsForTumorType(report.tumorType()));
+        final EvidenceReportData evidenceReportData =
+                EvidenceReportData.of(report, reporterData.geneModel(), reporterData.doidMapping().doidsForTumorType(report.tumorType()));
 
         // @formatter:off
         final VerticalListBuilder totalReport = cmp.verticalList(
@@ -100,7 +100,7 @@ public class EvidenceLayout {
                     cmp.verticalGap(SECTION_VERTICAL_GAP));
         // @formatter:on
 
-        return report().addDetail(totalReport).noData(noDataReport).setDataSource(variantReporterData.toDataSource());
+        return report().addDetail(totalReport).noData(noDataReport).setDataSource(evidenceReportData.toDataSource());
     }
 
     @NotNull
@@ -119,9 +119,9 @@ public class EvidenceLayout {
         final SubreportBuilder subtable = cmp.subreport(
                 baseTable().setColumnStyle(dataStyle())
                     .columns(
-                        col.column(AlterationEvidenceReporterData.SIGNIFICANCE).setFixedWidth(SIGNIFICANCE_WIDTH).setMinHeight(25),
-                        col.column(AlterationEvidenceReporterData.DRUGS).setFixedWidth(DRUGS_WIDTH),
-                        col.column(AlterationEvidenceReporterData.SOURCE).setFixedWidth(SOURCE_WIDTH)))
+                        col.column(AlterationEvidence.SIGNIFICANCE).setFixedWidth(SIGNIFICANCE_WIDTH).setMinHeight(25),
+                        col.column(AlterationEvidence.DRUGS).setFixedWidth(DRUGS_WIDTH),
+                        col.column(AlterationEvidence.SOURCE).setFixedWidth(SOURCE_WIDTH)))
                 .setDataSource(exp.subDatasourceBeanCollection("evidence"));
 
         final ComponentBuilder<?, ?> tableHeader = cmp.horizontalList(
@@ -133,7 +133,7 @@ public class EvidenceLayout {
         return cmp.subreport(
                 baseTable().setColumnStyle(dataStyle()).title(tableHeader)
                     .columns(
-                        col.column(AlterationReporterData.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
+                        col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
                         col.componentColumn(subtable)))
                 .setDataSource(exp.subDatasourceBeanCollection("alterations"));
         // @formatter:on
@@ -176,7 +176,7 @@ public class EvidenceLayout {
         return cmp.subreport(
                 baseTable().setColumnStyle(dataStyle()).title(tableHeader)
                     .columns(
-                        col.column(AlterationReporterData.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
+                        col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
                         col.componentColumn(subtable)))
                 .setDataSource(exp.subDatasourceBeanCollection("alterations"));
         // @formatter:on

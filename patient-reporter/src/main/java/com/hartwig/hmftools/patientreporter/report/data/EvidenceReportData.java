@@ -26,22 +26,22 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Value.Immutable
 @Value.Style(allParameters = true)
-public abstract class VariantReporterData {
-    private static final Logger LOGGER = LogManager.getLogger(VariantReporterData.class);
+public abstract class EvidenceReportData {
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceReportData.class);
 
     @NotNull
-    public abstract List<AlterationReporterData> getAlterations();
+    public abstract List<Alteration> getAlterations();
 
-    public static VariantReporterData of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel,
+    public static EvidenceReportData of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel,
             @NotNull final Set<String> tumorDoids) {
-        final List<AlterationReporterData> alterations = Lists.newArrayList();
+        final List<Alteration> alterations = Lists.newArrayList();
         final Set<String> tumorChildrenDoids = getTumorChildrenDoids(tumorDoids);
         for (final VariantReport variantReport : report.variants()) {
             for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
                 if (region.gene().equals(variantReport.gene())) {
                     final int entrezId = Integer.parseInt(region.entrezId());
                     final List<CivicVariant> civicVariants = getCivicVariants(entrezId, variantReport, tumorChildrenDoids);
-                    final AlterationReporterData alteration = AlterationReporterData.from(variantReport, civicVariants);
+                    final Alteration alteration = Alteration.from(variantReport, civicVariants);
                     if (alteration.getEvidence().size() > 0) {
                         alterations.add(alteration);
                     }
@@ -50,7 +50,7 @@ public abstract class VariantReporterData {
         }
         CivicApiWrapper.releaseResources();
         DiseaseOntologyApiWrapper.releaseResources();
-        return ImmutableVariantReporterData.of(alterations);
+        return ImmutableEvidenceReportData.of(alterations);
     }
 
     private static Set<String> getTumorChildrenDoids(@NotNull final Set<String> tumorDoids) {

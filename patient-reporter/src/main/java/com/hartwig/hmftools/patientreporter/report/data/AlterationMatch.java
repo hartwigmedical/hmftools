@@ -35,6 +35,7 @@ public abstract class AlterationMatch {
 
     public abstract String getMatchType();
 
+    @Nullable
     public abstract String getName();
 
     @Nullable

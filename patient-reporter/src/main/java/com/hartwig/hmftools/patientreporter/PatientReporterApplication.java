@@ -22,7 +22,7 @@ import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionModel;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
-import com.hartwig.hmftools.patientreporter.report.layout.EvidenceLayout;
+import com.hartwig.hmftools.patientreporter.report.EvidenceReport;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
@@ -91,7 +91,7 @@ public class PatientReporterApplication {
 
             final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
-            new EvidenceLayout(cmd.getOptionValue(REPORT_DIRECTORY)).writeSequenceReport(report, reporterData);
+            new EvidenceReport(cmd.getOptionValue(REPORT_DIRECTORY)).writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);
         }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.hartwig.hmftools.patientreporter.report.data.VariantReporterData.variantReportToVariant;
+import static com.hartwig.hmftools.patientreporter.report.data.EvidenceReportData.variantReportToVariant;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
@@ -23,8 +23,8 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 
 @Value.Immutable
 @Value.Style(allParameters = true)
-public abstract class AlterationReporterData {
-    private static final Logger LOGGER = LogManager.getLogger(AlterationReporterData.class);
+public abstract class Alteration {
+    private static final Logger LOGGER = LogManager.getLogger(Alteration.class);
 
     public static final FieldBuilder<?> ALTERATION = field("alteration", String.class);
 
@@ -32,7 +32,7 @@ public abstract class AlterationReporterData {
 
     public abstract String getPredictedEffect();
 
-    public abstract List<AlterationEvidenceReporterData> getEvidence();
+    public abstract List<AlterationEvidence> getEvidence();
 
     public abstract List<AlterationMatch> getMatches();
 
@@ -40,24 +40,24 @@ public abstract class AlterationReporterData {
         return getGene() + "\n" + getPredictedEffect();
     }
 
-    public static AlterationReporterData from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants) {
+    public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants) {
         final String gene = variantReport.gene();
         final String predictedEffect = variantReport.hgvsProtein();
-        final List<AlterationEvidenceReporterData> exactMatchEvidence = Lists.newArrayList();
+        final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
 
         civicVariants.forEach(civicVariant -> {
             if (civicVariant.coordinates().equals(variantReportToVariant(variantReport))) {
                 for (final String significance : civicVariant.groupedEvidenceItems().keySet()) {
                     final String drugsString = getDrugsWithEvidenceLevel(civicVariant.groupedEvidenceItems().get(significance));
-                    exactMatchEvidence.add(ImmutableAlterationEvidenceReporterData.of(significance, drugsString, "CIViC"));
+                    exactMatchEvidence.add(ImmutableAlterationEvidence.of(significance, drugsString, "CIViC"));
                 }
                 matchingVariants.add(AlterationMatch.of("exact", civicVariant));
             } else {
                 matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
             }
         });
-        return ImmutableAlterationReporterData.of(gene, predictedEffect, exactMatchEvidence, matchingVariants);
+        return ImmutableAlteration.of(gene, predictedEffect, exactMatchEvidence, matchingVariants);
     }
 
     @NotNull
