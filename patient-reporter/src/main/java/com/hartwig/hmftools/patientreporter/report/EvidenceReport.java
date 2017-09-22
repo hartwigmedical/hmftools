@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
+import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
+
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.exp;
@@ -14,13 +17,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
+import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidence;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationMatch;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceReportData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -29,21 +31,14 @@ import net.sf.dynamicreports.report.builder.component.SubreportBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
-import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
 
 class EvidenceReport {
-
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceReport.class);
-
-    private static final String FONT = "Times New Roman";
-    private static final Color BORKIE_COLOR = new Color(221, 235, 247);
-    private static final int SECTION_VERTICAL_GAP = 25;
     private static final int PADDING = 3;
 
     @VisibleForTesting
     @NotNull
-    public static JasperReportBuilder generate(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+    static JasperReportBuilder generate(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
 
         final EvidenceReportData evidenceReportData =
@@ -51,6 +46,7 @@ class EvidenceReport {
 
         // @formatter:off
         final VerticalListBuilder totalReport = cmp.verticalList(
+                    MainPageTopSection.build("HMF Civic Evidence Supplement", report),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle().setFontSize(15)),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -115,7 +111,7 @@ class EvidenceReport {
                     .columns(
                         col.column(AlterationMatch.MATCH_TYPE).setFixedWidth(40).setMinHeight(25),
                         col.column(AlterationMatch.NAME).setHyperLink(hyperLink(AlterationMatch.civicSummaryHyperlink()))
-                                .setStyle(linkStyle()).setFixedWidth(80),
+                                .setStyle(dataLinkStyle()).setFixedWidth(80),
                         col.column(AlterationMatch.VARIANT_TYPE).setFixedWidth(80),
                         col.column(AlterationMatch.CHROMOSOME).setFixedWidth(30),
                         col.column(AlterationMatch.START).setFixedWidth(45),
@@ -160,31 +156,16 @@ class EvidenceReport {
 
     @NotNull
     private static StyleBuilder tableHeaderStyle() {
-        return fontStyle().bold()
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setFontSize(9)
-                .setBorder(stl.pen1Point())
-                .setBackgroundColor(BORKIE_COLOR)
-                .setPadding(PADDING);
+        return Commons.tableHeaderStyle().setFontSize(9).setPadding(PADDING);
     }
 
     @NotNull
     private static StyleBuilder dataStyle() {
-        return fontStyle().setFontSize(7)
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setBorder(stl.penThin().setLineColor(Color.black))
-                .setPadding(PADDING);
+        return Commons.dataStyle().setFontSize(7).setBorder(stl.penThin().setLineColor(Color.black)).setPadding(PADDING);
     }
 
     @NotNull
-    private static StyleBuilder linkStyle() {
+    private static StyleBuilder dataLinkStyle() {
         return dataStyle().setForegroundColor(Color.BLUE);
-    }
-
-    @NotNull
-    private static StyleBuilder fontStyle() {
-        return stl.style().setFontName(FONT);
     }
 }

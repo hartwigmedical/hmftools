@@ -1,12 +1,21 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.hartwig.hmftools.patientreporter.report.Commons.DATE_TIME_FORMAT;
+import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
+import static com.hartwig.hmftools.patientreporter.report.Commons.baseTable;
+import static com.hartwig.hmftools.patientreporter.report.Commons.dataStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.dataTableStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderStyle;
+
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -23,6 +32,7 @@ import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
+import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,11 +43,8 @@ import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
-import net.sf.dynamicreports.report.builder.component.ImageBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
-import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
-import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
@@ -49,21 +56,11 @@ public class PDFWriter implements ReportWriter {
     // KODU: This is commented out as long as LIMS provides unreliable results.
     private static final boolean INCLUDE_SAMPLE_BARCODES_AND_DATES = false;
 
-    // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
-    private static final String FONT = "Times New Roman";
-    private static final Color BORKIE_COLOR = new Color(221, 235, 247);
-    private static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
-
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
     private static final int LIST_INDENT = 5;
     private static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
     private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 4;
-    private static final int SECTION_VERTICAL_GAP = 25;
-    private static final int PADDING = 1;
-
-    @NotNull
-    private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
     @NotNull
     private final String reportDirectory;
@@ -108,13 +105,14 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
+
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentageString, @NotNull final NotSequenceableReason reason,
             @NotNull final NotSequenceableStudy study) throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, tumorPercentageString, false),
+                        MainPageTopSection.build("HMF Sequencing Report", sample, tumorType, tumorPercentageString),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason, study));
         // @formatter:on
@@ -129,7 +127,7 @@ public class PDFWriter implements ReportWriter {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
-                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), false),
+                        MainPageTopSection.build("HMF Sequencing Report", report),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -193,7 +191,7 @@ public class PDFWriter implements ReportWriter {
         // @formatter:off
         final ComponentBuilder<?, ?> structuralVariantPage =
                 cmp.verticalList(
-                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), true),
+                        MainPageTopSection.build("HMF Supplement", report),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         supplementDisclaimerSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -213,35 +211,6 @@ public class PDFWriter implements ReportWriter {
         singleItemDataSource.add(new Object());
 
         return report().addDetail(structuralVariantPage).setDataSource(singleItemDataSource);
-    }
-
-    @NotNull
-    static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, boolean isSupplement) throws IOException {
-        final String title = isSupplement ? "HMF Supplement" : "HMF Sequencing Report";
-        // @formatter:off
-        final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
-                cmp.verticalList(
-                        cmp.text("Report Date").setStyle(tableHeaderStyle()),
-                        cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
-                cmp.verticalList(
-                        cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
-                        cmp.text(tumorType).setStyle(dataTableStyle())),
-                cmp.verticalList(
-                        cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
-                        cmp.text(tumorPercentage).setStyle(dataTableStyle()))
-        );
-        return cmp.horizontalList(
-                hartwigLogo(),
-                cmp.verticalList(
-                        cmp.text(title + " - " + sample)
-                                .setStyle(fontStyle().bold().setFontSize(14)
-                                    .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
-                                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                                .setHeight(50),
-                        mainDiagnosisInfo)
-        );
-        // @formatter:on
     }
 
     @NotNull
@@ -613,55 +582,6 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static JasperReportBuilder baseTable() {
-        return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
-    }
-
-    @NotNull
-    private static JasperReportBuilder smallTable() {
-        return report().setColumnStyle(dataStyle().setFontSize(6)).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
-    }
-
-    @NotNull
-    private static StyleBuilder sectionHeaderStyle() {
-        return fontStyle().bold().setFontSize(12).setHorizontalTextAlignment(HorizontalTextAlignment.CENTER);
-    }
-
-    @NotNull
-    private static StyleBuilder tableHeaderStyle() {
-        return fontStyle().bold()
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setFontSize(10)
-                .setBorder(stl.pen1Point())
-                .setBackgroundColor(BORKIE_COLOR)
-                .setPadding(PADDING);
-    }
-
-    @NotNull
-    private static StyleBuilder dataStyle() {
-        return fontStyle().setFontSize(8)
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE)
-                .setPadding(PADDING);
-    }
-
-    @NotNull
-    private static StyleBuilder dataTableStyle() {
-        return dataStyle().setBorder(stl.pen1Point());
-    }
-
-    @NotNull
-    private static StyleBuilder linkStyle() {
-        return dataStyle().setForegroundColor(Color.BLUE);
-    }
-
-    @NotNull
-    private static StyleBuilder fontStyle() {
-        return stl.style().setFontName(FONT);
-    }
-
-    @NotNull
     private static AbstractSimpleExpression<String> fieldTranscriptLink(@NotNull final FieldBuilder<?> field) {
         return new AbstractSimpleExpression<String>() {
             @Override
@@ -676,10 +596,5 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                 cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
                 cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
-    }
-
-    @NotNull
-    private static ImageBuilder hartwigLogo() throws IOException {
-        return cmp.image(REPORT_LOGO_PATH);
     }
 }
