@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -64,36 +63,13 @@ public class BachelorApplication {
         System.exit(1);
     }
 
-    @NotNull
-    private static Map<String, Program> loadXML(final Path path) throws IOException, SAXException {
-        final BachelorSchema schema = BachelorSchema.make();
-
-        final List<Program> programs = Files.walk(path)
-                .filter(p -> p.toString().endsWith(".xml"))
-                .map(schema::processXML)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        final Map<String, Program> result = Maps.newHashMap();
-        for (final Program p : programs) {
-            if (result.containsKey(p.getName())) {
-                LOGGER.error("duplicate programs detected: {}", p.getName());
-                System.exit(1);
-            } else {
-                result.put(p.getName(), p);
-            }
-        }
-
-        return result;
-    }
-
     public static void main(final String... args) {
         final Options options = createOptions();
         try {
             final CommandLine cmd = createCommandLine(options, args);
 
             final Path configPath = Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY));
-            final Map<String, Program> map = loadXML(configPath);
+            final Map<String, Program> map = BachelorHelper.loadXML(configPath);
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
             final List<File> vcfFiles =
