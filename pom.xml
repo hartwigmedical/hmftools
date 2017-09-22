@@ -10,7 +10,6 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>metadata-creator</module>
         <module>variant-annotator</module>
         <module>health-checker</module>
         <module>patient-reporter</module>
