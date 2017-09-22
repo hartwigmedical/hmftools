@@ -8,11 +8,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
 import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
@@ -36,7 +32,7 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
 
-public class EvidenceReport {
+class EvidenceReport {
 
     private static final Logger LOGGER = LogManager.getLogger(EvidenceReport.class);
 
@@ -45,40 +41,10 @@ public class EvidenceReport {
     private static final int SECTION_VERTICAL_GAP = 25;
     private static final int PADDING = 3;
 
-    @NotNull
-    private final String reportDirectory;
-
-    public EvidenceReport(@NotNull final String reportDirectory) {
-        this.reportDirectory = reportDirectory;
-    }
-
-    //    @Override
-    public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
-            throws IOException, DRException {
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
-        writeReport(report.sample(), reportBuilder);
-    }
-
-    private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
-            throws FileNotFoundException, DRException {
-        final String fileName = fileName(sample);
-        if (Files.exists(new File(fileName).toPath())) {
-            LOGGER.warn(" Could not write report as it already exists: " + fileName);
-        } else {
-            report.toPdf(new FileOutputStream(fileName));
-            LOGGER.info(" Created evidence report at " + fileName);
-        }
-    }
-
-    @NotNull
-    private String fileName(@NotNull final String sample) {
-        return reportDirectory + File.separator + sample + "_evidence_report.pdf";
-    }
-
     @VisibleForTesting
     @NotNull
-    public static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report,
-            @NotNull final HmfReporterData reporterData) throws IOException, DRException {
+    public static JasperReportBuilder generate(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+            throws IOException, DRException {
 
         final EvidenceReportData evidenceReportData =
                 EvidenceReportData.of(report, reporterData.geneModel(), reporterData.doidMapping().doidsForTumorType(report.tumorType()));
@@ -110,10 +76,10 @@ public class EvidenceReport {
 
     @NotNull
     private static ComponentBuilder<?, ?> alterationEvidenceTable() throws IOException, DRException {
-        final int ALTERATION_WIDTH = 135;
-        final int SIGNIFICANCE_WIDTH = 70;
-        final int DRUGS_WIDTH = 170;
-        final int SOURCE_WIDTH = 60;
+        final int ALTERATION_WIDTH = 150;
+        final int SIGNIFICANCE_WIDTH = 100;
+        final int DRUGS_WIDTH = 200;
+        final int SOURCE_WIDTH = 70;
 
         //@formatter:off
         final SubreportBuilder subtable = cmp.subreport(

@@ -80,7 +80,7 @@ public class PDFWriterTest {
         final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport);
         assertNotNull(supplement);
 
-        final JasperReportBuilder evidenceReport = EvidenceItemsWriter.generatePatientReport(patientReport, reporterData);
+        final JasperReportBuilder evidenceReport = EvidenceReport.generate(patientReport, reporterData);
         assertNotNull(evidenceReport);
 
         if (SHOW_AND_PRINT) {

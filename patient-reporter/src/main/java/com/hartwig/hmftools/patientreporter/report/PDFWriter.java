@@ -76,9 +76,11 @@ public class PDFWriter implements ReportWriter {
     public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
-        writeReport(report.sample(), reportBuilder);
+        writeReport(fileName(report.sample(), "_hmf_report.pdf"), reportBuilder);
         final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report);
-        writeSupplementary(report.sample(), supplementaryBuilder);
+        writeReport(fileName(report.sample(), "_hmf_report_supplementary.pdf"), supplementaryBuilder);
+        final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report, reporterData);
+        writeReport(fileName(report.sample(), "_evidence_items.pdf"), evidenceReportBuilder);
     }
 
     @Override
@@ -89,36 +91,19 @@ public class PDFWriter implements ReportWriter {
         writeReport(sample, reportBuilder);
     }
 
-    private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
+    private void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
             throws FileNotFoundException, DRException {
-        final String fileName = fileName(sample);
         if (Files.exists(new File(fileName).toPath())) {
-            LOGGER.warn(" Could not write report as it already exists: " + fileName);
+            LOGGER.warn(" Could not write " + fileName + " as it already exists.");
         } else {
             report.toPdf(new FileOutputStream(fileName));
             LOGGER.info(" Created patient report at " + fileName);
         }
     }
 
-    private void writeSupplementary(@NotNull final String sample, @NotNull final JasperReportBuilder report)
-            throws FileNotFoundException, DRException {
-        final String fileName = fileNameSupplementary(sample);
-        if (Files.exists(new File(fileName).toPath())) {
-            LOGGER.warn(" Could not write supplementary report as it already exists: " + fileName);
-        } else {
-            report.toPdf(new FileOutputStream(fileName));
-            LOGGER.info(" Created supplementary patient report at " + fileName);
-        }
-    }
-
     @NotNull
-    private String fileName(@NotNull final String sample) {
-        return reportDirectory + File.separator + sample + "_hmf_report.pdf";
-    }
-
-    @NotNull
-    private String fileNameSupplementary(@NotNull final String sample) {
-        return reportDirectory + File.separator + sample + "_hmf_report_supplementary.pdf";
+    private String fileName(@NotNull final String sample, @NotNull final String suffix) {
+        return reportDirectory + File.separator + sample + suffix;
     }
 
     @VisibleForTesting
@@ -231,7 +216,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample, @NotNull final String tumorType,
+    static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, boolean isSupplement) throws IOException {
         final String title = isSupplement ? "HMF Supplement" : "HMF Sequencing Report";
         // @formatter:off
