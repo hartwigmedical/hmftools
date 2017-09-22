@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -19,7 +18,6 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
@@ -65,8 +63,7 @@ public class PDFWriter implements ReportWriter {
     private static final int PADDING = 1;
 
     @NotNull
-    @VisibleForTesting
-    static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
+    private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
     @NotNull
     private final String reportDirectory;
@@ -698,8 +695,6 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ImageBuilder hartwigLogo() throws IOException {
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
-        //MIVO: figure out how to properly close the stream
-        return cmp.image(logoStream).setUsingCache(true);
+        return cmp.image(REPORT_LOGO_PATH);
     }
 }
