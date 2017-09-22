@@ -576,6 +576,10 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> testDetailsSection(@NotNull final PatientReport report, @Nullable final String recipientAddress) {
+        if (recipientAddress == null) {
+            throw new IllegalStateException("No recipient address present for sample " + report.sample());
+        }
+
         //@formatter:off
         final List<String> lines = Lists.newArrayList("This test is not certified for diagnostic purposes.",
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
