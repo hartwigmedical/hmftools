@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -75,12 +74,10 @@ public class PDFWriterTest {
         final HmfReporterData reporterData =
                 HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
 
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
+        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
 
-        final InputStream logoStream2 = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport, logoStream2, reporterData);
+        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport);
         assertNotNull(supplement);
 
         if (SHOW_AND_PRINT) {
@@ -91,8 +88,6 @@ public class PDFWriterTest {
             mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
             supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_supplement.pdf"));
         }
-        logoStream.close();
-        logoStream2.close();
     }
 
     @NotNull
@@ -174,11 +169,9 @@ public class PDFWriterTest {
         final String tumorType = "Melanoma";
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
         final String tumorPercentageString = "10%";
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final NotSequenceableStudy study = NotSequenceableStudy.CPCT;
 
-        final JasperReportBuilder report =
-                PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentageString, reason, study, logoStream);
+        final JasperReportBuilder report = PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentageString, reason, study);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -188,6 +181,5 @@ public class PDFWriterTest {
         if (WRITE_TO_PDF) {
             report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
-        logoStream.close();
     }
 }

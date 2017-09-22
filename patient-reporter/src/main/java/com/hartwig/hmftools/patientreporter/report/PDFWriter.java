@@ -35,6 +35,7 @@ import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
+import net.sf.dynamicreports.report.builder.component.ImageBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
@@ -77,23 +78,18 @@ public class PDFWriter implements ReportWriter {
     @Override
     public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, logoStream, reporterData);
+        final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
         writeReport(report.sample(), reportBuilder);
-        final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report, logoStream, reporterData);
+        final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report);
         writeSupplementary(report.sample(), supplementaryBuilder);
-        logoStream.close();
     }
 
     @Override
     public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
             throws IOException, DRException {
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder reportBuilder =
-                generateNotSequenceableReport(sample, tumorType, tumorPercentage, reason, study, logoStream);
+        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage, reason, study);
         writeReport(sample, reportBuilder);
-        logoStream.close();
     }
 
     private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
@@ -132,11 +128,11 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentageString, @NotNull final NotSequenceableReason reason,
-            @NotNull final NotSequenceableStudy study, @NotNull final InputStream logoStream) {
+            @NotNull final NotSequenceableStudy study) throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, tumorPercentageString, logoStream, false),
+                        mainPageTopSection(sample, tumorType, tumorPercentageString, false),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason, study));
         // @formatter:on
@@ -146,13 +142,12 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report, @NotNull final InputStream logoStream,
-            @NotNull final HmfReporterData reporterData) {
+    static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+            throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
-                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(),
-                                logoStream, false),
+                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), false),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -212,12 +207,11 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report, @NotNull final InputStream logoStream,
-            @NotNull final HmfReporterData reporterData) {
+    static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report) throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> structuralVariantPage =
                 cmp.verticalList(
-                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), logoStream, true),
+                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), true),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         supplementDisclaimerSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -236,14 +230,12 @@ public class PDFWriter implements ReportWriter {
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
 
-        return report()
-                .addDetail(structuralVariantPage)
-                .setDataSource(singleItemDataSource);
+        return report().addDetail(structuralVariantPage).setDataSource(singleItemDataSource);
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, @NotNull final InputStream logoStream, boolean isSupplement) {
+            @NotNull final String tumorPercentage, boolean isSupplement) throws IOException {
         final String title = isSupplement ? "HMF Supplement" : "HMF Sequencing Report";
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
@@ -258,7 +250,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.text(tumorPercentage).setStyle(dataTableStyle()))
         );
         return cmp.horizontalList(
-                cmp.image(logoStream),
+                hartwigLogo(),
                 cmp.verticalList(
                         cmp.text(title + " - " + sample)
                                 .setStyle(fontStyle().bold().setFontSize(14)
@@ -702,5 +694,12 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                 cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
                 cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
+    }
+
+    @NotNull
+    private static ImageBuilder hartwigLogo() throws IOException {
+        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
+        //MIVO: figure out how to properly close the stream
+        return cmp.image(logoStream).setUsingCache(true);
     }
 }
