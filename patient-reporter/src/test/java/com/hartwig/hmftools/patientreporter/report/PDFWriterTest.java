@@ -46,7 +46,7 @@ public class PDFWriterTest {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
     @Test
-    public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
+    public void canGenerateReports() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
         final Double pathologyTumorPercentage = 0.6;
@@ -76,15 +76,19 @@ public class PDFWriterTest {
                 HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
 
         final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
-        assertNotNull(report);
+        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
+        assertNotNull(mainReport);
+
+        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport, logoStream, reporterData);
+        assertNotNull(supplement);
 
         if (SHOW_AND_PRINT) {
-            report.show().print();
+            mainReport.show().print();
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
+            mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
+            supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_supplement.pdf"));
         }
         logoStream.close();
     }

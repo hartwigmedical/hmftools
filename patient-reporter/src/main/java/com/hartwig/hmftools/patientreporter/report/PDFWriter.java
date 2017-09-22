@@ -212,7 +212,7 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    private static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report,
+    static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report,
             @NotNull final InputStream logoStream, @NotNull final HmfReporterData reporterData) {
         // @formatter:off
         final ComponentBuilder<?, ?> structuralVariantPage =
