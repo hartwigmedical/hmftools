@@ -95,8 +95,7 @@ public class BachelorApplication {
 
             if (cmd.hasOption(OUTPUT)) {
                 final BufferedWriter writer =
-                        Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)), StandardOpenOption.WRITE, StandardOpenOption.CREATE,
-                                StandardOpenOption.TRUNCATE_EXISTING);
+                        Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)));
                 for (final EligibilityReport report : reports) {
                     for (final VariantContext v : report.variants()) {
                         writer.write(String.format("%s,%s,%d,%s,%s" + System.lineSeparator(), report.program(), v.getContig(), v.getStart(),
