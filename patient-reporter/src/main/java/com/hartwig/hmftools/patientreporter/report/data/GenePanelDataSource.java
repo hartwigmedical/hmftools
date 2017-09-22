@@ -22,15 +22,13 @@ public class GenePanelDataSource {
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
     public static final FieldBuilder<?> TYPE_FIELD = field("type", String.class);
-    private static final FieldBuilder<?> TRANSCRIPT_URL = field("transcriptUrl", String.class);
 
     private GenePanelDataSource() {
     }
 
     @NotNull
     public static JRDataSource fromHmfReporterData(@NotNull final HmfReporterData reporterData) {
-        final DRDataSource genePanelDataSource =
-                new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), TYPE_FIELD.getName(), TRANSCRIPT_URL.getName());
+        final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), TYPE_FIELD.getName());
         final List<HmfGenomeRegion> regions = Lists.newArrayList(reporterData.geneModel().hmfRegions());
         regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
 
@@ -38,7 +36,6 @@ public class GenePanelDataSource {
             final String role = reporterData.cosmicModel().getRoleForGene(region.gene());
             genePanelDataSource.add(region.gene(), region.transcript(), role);
         }
-
         return genePanelDataSource;
     }
 
