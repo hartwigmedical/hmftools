@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.svannotation.VariantAnnotation;
+
+import org.jetbrains.annotations.NotNull;
 
 public class StructuralVariantAnalysis {
 
@@ -34,32 +35,32 @@ public class StructuralVariantAnalysis {
         public String TAF = "TODO";
     }
 
+    @NotNull
     private final List<VariantAnnotation> annotations;
+    @NotNull
     private final List<GeneFusion> fusions;
+    @NotNull
     private final List<GeneDisruption> disruptions;
 
-    public StructuralVariantAnalysis() {
-        this.annotations = Collections.emptyList();
-        this.fusions = Collections.emptyList();
-        this.disruptions = Collections.emptyList();
-    }
-
-    public StructuralVariantAnalysis(final List<VariantAnnotation> annotations, final List<GeneFusion> fusions,
-            final List<GeneDisruption> disruptions) {
+    StructuralVariantAnalysis(@NotNull final List<VariantAnnotation> annotations, @NotNull final List<GeneFusion> fusions,
+            @NotNull final List<GeneDisruption> disruptions) {
         this.annotations = annotations;
         this.fusions = fusions;
         this.disruptions = disruptions;
     }
 
-    public List<VariantAnnotation> getAnnotations() {
+    @NotNull
+    public List<VariantAnnotation> annotations() {
         return ImmutableList.copyOf(annotations);
     }
 
-    public List<GeneFusion> getFusions() {
+    @NotNull
+    public List<GeneFusion> fusions() {
         return ImmutableList.copyOf(fusions);
     }
 
-    public List<GeneDisruption> getDisruptions() {
+    @NotNull
+    public List<GeneDisruption> disruptions() {
         return ImmutableList.copyOf(disruptions);
     }
 }

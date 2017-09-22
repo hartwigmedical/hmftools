@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -19,7 +18,6 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
@@ -35,6 +33,7 @@ import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
+import net.sf.dynamicreports.report.builder.component.ImageBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
@@ -64,8 +63,7 @@ public class PDFWriter implements ReportWriter {
     private static final int PADDING = 1;
 
     @NotNull
-    @VisibleForTesting
-    static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
+    private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
     @NotNull
     private final String reportDirectory;
@@ -77,23 +75,18 @@ public class PDFWriter implements ReportWriter {
     @Override
     public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder reportBuilder = generatePatientReport(report, logoStream, reporterData);
+        final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
         writeReport(report.sample(), reportBuilder);
-        final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report, logoStream, reporterData);
+        final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report);
         writeSupplementary(report.sample(), supplementaryBuilder);
-        logoStream.close();
     }
 
     @Override
     public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
             throws IOException, DRException {
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder reportBuilder =
-                generateNotSequenceableReport(sample, tumorType, tumorPercentage, reason, study, logoStream);
+        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage, reason, study);
         writeReport(sample, reportBuilder);
-        logoStream.close();
     }
 
     private void writeReport(@NotNull final String sample, @NotNull final JasperReportBuilder report)
@@ -132,11 +125,11 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
             @NotNull final String tumorPercentageString, @NotNull final NotSequenceableReason reason,
-            @NotNull final NotSequenceableStudy study, @NotNull final InputStream logoStream) {
+            @NotNull final NotSequenceableStudy study) throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> report =
                 cmp.verticalList(
-                        mainPageTopSection(sample, tumorType, tumorPercentageString, logoStream),
+                        mainPageTopSection(sample, tumorType, tumorPercentageString, false),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(reason, study));
         // @formatter:on
@@ -146,13 +139,12 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report, @NotNull final InputStream logoStream,
-            @NotNull final HmfReporterData reporterData) {
+    static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+            throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
-                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(),
-                                logoStream),
+                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), false),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -212,42 +204,36 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    private static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report,
-            @NotNull final InputStream logoStream, @NotNull final HmfReporterData reporterData) {
+    static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report) throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> structuralVariantPage =
                 cmp.verticalList(
+                        mainPageTopSection(report.sample(), report.tumorType(), report.tumorPercentageString(), true),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Supplementary Report v" + PatientReporterApplication.VERSION + " - Structural Variant Information")
-                                .setStyle(sectionHeaderStyle()),
+                        supplementDisclaimerSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         geneFusionReport(report),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         geneDisruptionReport(report),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        svDisclaimer(),
+                        svExplanation(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         geneFusionExplanation(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        geneDisruptionExplanation(),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        testDetailsSection(report, reporterData.centerModel().getAddresseeStringForSample(report.sample()))
+                        geneDisruptionExplanation()
                 );
         // @formatter:on
 
         final DRDataSource singleItemDataSource = new DRDataSource("item");
         singleItemDataSource.add(new Object());
 
-        return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(cmp.pageXslashY(), cmp.text("End of supplementary report.")
-                        .setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
-                .addDetail(structuralVariantPage)
-                .setDataSource(singleItemDataSource);
+        return report().addDetail(structuralVariantPage).setDataSource(singleItemDataSource);
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> mainPageTopSection(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, @NotNull final InputStream logoStream) {
+            @NotNull final String tumorPercentage, boolean isSupplement) throws IOException {
+        final String title = isSupplement ? "HMF Supplement" : "HMF Sequencing Report";
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(
@@ -261,9 +247,9 @@ public class PDFWriter implements ReportWriter {
                         cmp.text(tumorPercentage).setStyle(dataTableStyle()))
         );
         return cmp.horizontalList(
-                cmp.image(logoStream),
+                hartwigLogo(),
                 cmp.verticalList(
-                        cmp.text("HMF Sequencing Report - " + sample)
+                        cmp.text(title + " - " + sample)
                                 .setStyle(fontStyle().bold().setFontSize(14)
                                     .setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
                                 .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
@@ -448,7 +434,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> svDisclaimer() {
+    private static ComponentBuilder<?, ?> svExplanation() {
         return toList("Details on structural variants", Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
                 "Reported variants are only indicative and have NOT been verified via RNA sequencing."));
     }
@@ -565,7 +551,24 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
+    private static ComponentBuilder<?, ?> supplementDisclaimerSection() {
+        //@formatter:off
+        final List<String> lines = Lists.newArrayList("This supplement is a prototype for new types of reporting that " +
+                        "may or may not eventually end up in the actual sequencing report",
+                "Findings should be considered suspicious and should not be used for clinical decision making without " +
+                        "validation using certified assays"
+                );
+        //@formatter:on
+
+        return toList("Disclaimer", lines);
+    }
+
+    @NotNull
     private static ComponentBuilder<?, ?> testDetailsSection(@NotNull final PatientReport report, @Nullable final String recipientAddress) {
+        if (recipientAddress == null) {
+            throw new IllegalStateException("No recipient address present for sample " + report.sample());
+        }
+
         //@formatter:off
         final List<String> lines = Lists.newArrayList("This test is not certified for diagnostic purposes.",
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
@@ -586,7 +589,6 @@ public class PDFWriter implements ReportWriter {
         }
 
         return toList("Test details", lines);
-
     }
 
     private static String toFormattedDate(@Nullable final LocalDate date) {
@@ -689,5 +691,10 @@ public class PDFWriter implements ReportWriter {
         return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(PatientDataSource.HGVS_CODING_FIELD)),
                 cmp.text(DataExpression.fromField(PatientDataSource.HGVS_PROTEIN_FIELD))),
                 cmp.text(DataExpression.fromField(PatientDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
+    }
+
+    @NotNull
+    private static ImageBuilder hartwigLogo() throws IOException {
+        return cmp.image(REPORT_LOGO_PATH);
     }
 }

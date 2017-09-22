@@ -47,6 +47,7 @@
                         <xsd:element name="Gene" type="geneName"/>
                         <xsd:choice>
                             <xsd:element name="HGVS.p" type="xsd:string"/>
+                            <xsd:element name="HGVS.c" type="xsd:string"/>
                             <xsd:element name="MinCodon" type="xsd:positiveInteger"/>
                         </xsd:choice>
                     </xsd:sequence>

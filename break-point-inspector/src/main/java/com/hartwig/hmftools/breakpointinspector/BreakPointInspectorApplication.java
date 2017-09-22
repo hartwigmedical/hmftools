@@ -79,7 +79,6 @@ public class BreakPointInspectorApplication {
         try {
             final CommandLine cmd = createCommandLine(options, args);
 
-            // grab arguments
             final String refPath = cmd.getOptionValue(REF_PATH);
             final String refSlicePath = cmd.getOptionValue(REF_SLICE);
             final String tumorPath = cmd.getOptionValue(TUMOR_PATH);
@@ -95,7 +94,6 @@ public class BreakPointInspectorApplication {
                 return;
             }
 
-            // load the files
             final File tumorBAM = new File(tumorPath);
             final SamReader tumorReader = SamReaderFactory.makeDefault().open(tumorBAM);
             final File refBAM = new File(refPath);
@@ -104,7 +102,6 @@ public class BreakPointInspectorApplication {
             final File vcfFile = new File(vcfPath);
             final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
 
-            // get the sample names -- turns out Manta puts Ref first, then Tumor
             final List<String> samples = vcfReader.getFileHeader().getGenotypeSamples();
             if (samples.size() != 2) {
                 System.err.println("could not determine tumor and sample from VCF");
@@ -135,7 +132,6 @@ public class BreakPointInspectorApplication {
                 final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
                 final Location location1 = Location.parseLocationString(location, tumorReader.getFileHeader().getSequenceDictionary());
 
-                // uncertainty
                 final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
                 final Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
                 final List<Integer> CIEND = variant.getAttributeAsIntList("CIEND", 0);
@@ -239,8 +235,6 @@ public class BreakPointInspectorApplication {
                 final StructuralVariantResult result = analysis.processStructuralVariant(ctx);
                 combinedQueryIntervals.addAll(asList(result.QueryIntervals));
 
-                // begin output logic
-
                 TSVOutput.print(variant, ctx, result);
 
                 final BiConsumer<VariantContext, Boolean> vcfUpdater = (v, swap) -> {
@@ -283,7 +277,6 @@ public class BreakPointInspectorApplication {
 
             final String vcfOutputPath = cmd.getOptionValue(VCF_OUT);
             if (vcfOutputPath != null) {
-                // update header
                 final VCFHeader header = vcfReader.getFileHeader();
                 header.addMetaDataLine(new VCFInfoHeaderLine("BPI_START", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
                 header.addMetaDataLine(new VCFInfoHeaderLine("BPI_END", 1, VCFHeaderLineType.Integer, "BPI adjusted breakend location"));
@@ -301,11 +294,8 @@ public class BreakPointInspectorApplication {
                 // write variants
                 variants.sort(new VariantContextComparator(header.getSequenceDictionary()));
                 variants.forEach(writer::add);
-                // clean up
                 writer.close();
             }
-
-            // do a final slice pass
 
             final QueryInterval[] optimizedIntervals =
                     QueryInterval.optimizeIntervals(combinedQueryIntervals.toArray(new QueryInterval[combinedQueryIntervals.size()]));

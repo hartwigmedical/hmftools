@@ -10,7 +10,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>bachelor</artifactId>
+    <packaging>jar</packaging>
     <version>1</version>
+    <name>HMF Tools - Bachelor</name>
 
     <dependencies>
         <dependency>
@@ -24,6 +26,11 @@
         <dependency>
             <groupId>com.github.samtools</groupId>
             <artifactId>htsjdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>value</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

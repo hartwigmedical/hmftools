@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -46,7 +45,7 @@ public class PDFWriterTest {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
     @Test
-    public void canGeneratePatientReport() throws DRException, IOException, HartwigException {
+    public void canGenerateReports() throws DRException, IOException, HartwigException {
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
         final Double pathologyTumorPercentage = 0.6;
@@ -75,22 +74,24 @@ public class PDFWriterTest {
         final HmfReporterData reporterData =
                 HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
 
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
-        final JasperReportBuilder report = PDFWriter.generatePatientReport(patientReport, logoStream, reporterData);
-        final JasperReportBuilder evidenceReport = EvidenceItemsWriter.generatePatientReport(patientReport, reporterData);
+        final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
+        assertNotNull(mainReport);
 
-        assertNotNull(report);
+        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport);
+        assertNotNull(supplement);
+
+        final JasperReportBuilder evidenceReport = EvidenceItemsWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(evidenceReport);
 
         if (SHOW_AND_PRINT) {
-            report.show().print();
+            mainReport.show().print();
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
+            mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
+            supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_supplement.pdf"));
             evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_evidence_report.pdf"));
         }
-        logoStream.close();
     }
 
     @NotNull
@@ -172,11 +173,9 @@ public class PDFWriterTest {
         final String tumorType = "Melanoma";
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
         final String tumorPercentageString = "10%";
-        final InputStream logoStream = Resources.asByteSource(Resources.getResource(PDFWriter.REPORT_LOGO_PATH)).openStream();
         final NotSequenceableStudy study = NotSequenceableStudy.CPCT;
 
-        final JasperReportBuilder report =
-                PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentageString, reason, study, logoStream);
+        final JasperReportBuilder report = PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentageString, reason, study);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -186,6 +185,5 @@ public class PDFWriterTest {
         if (WRITE_TO_PDF) {
             report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
-        logoStream.close();
     }
 }

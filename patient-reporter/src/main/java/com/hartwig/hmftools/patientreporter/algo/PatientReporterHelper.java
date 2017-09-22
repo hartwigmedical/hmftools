@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -29,10 +30,9 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_EXTENSION = "_post_processed.vcf";
+    private static final String SOMATIC_SNV_EXTENSION = "_post_processed.vcf";
     private static final String PURPLE_DIRECTORY = "purple";
-    private static final String MANTA_BPI_FILENAME = "_somaticSV_bpi.vcf";
-    private static final String MANTA_FILENAME = "somaticSV.vcf.gz";
+    private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
 
@@ -60,23 +60,16 @@ final class PatientReporterHelper {
         return GeneCopyNumberFile.read(fileName);
     }
 
-    @Nullable
-    static Path findMantaVCF(@NotNull final String runDirectory) {
-        try {
-            final Path vanilla_manta =
-                    Files.walk(Paths.get(runDirectory)).filter(p -> p.getFileName().endsWith(MANTA_FILENAME)).findFirst().orElse(null);
-            return Files.walk(Paths.get(runDirectory))
-                    .filter(p -> p.getFileName().endsWith(MANTA_BPI_FILENAME))
-                    .findFirst()
-                    .orElse(vanilla_manta);
-        } catch (final Exception e) {
-            return null;
-        }
+    @NotNull
+    static Path findStructuralVariantVCF(@NotNull final String runDirectory) throws IOException {
+        final Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION)).findFirst();
+        assert path.isPresent();
+        return path.get();
     }
 
     @NotNull
-    static VCFSomaticFile loadVariantFile(@NotNull final String path) throws IOException, HartwigException {
-        return VCFFileLoader.loadSomaticVCF(path, SOMATIC_EXTENSION);
+    static VCFSomaticFile loadSomaticSNVFile(@NotNull final String path) throws IOException, HartwigException {
+        return VCFFileLoader.loadSomaticVCF(path, SOMATIC_SNV_EXTENSION);
     }
 
     @NotNull

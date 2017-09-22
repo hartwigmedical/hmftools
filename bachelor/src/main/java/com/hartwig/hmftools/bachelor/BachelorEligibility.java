@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,6 +23,7 @@ import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -49,7 +51,7 @@ class BachelorEligibility {
         }
     }
 
-    private final Map<String, Predicate<ExtractedVariantInfo>> predicates = Maps.newHashMap();
+    private final Map<String, Predicate<ExtractedVariantInfo>> programs = Maps.newHashMap();
 
     private BachelorEligibility() {
     }
@@ -85,6 +87,8 @@ class BachelorEligibility {
                     if (transcriptMatches && !annotation.HGVSp.isEmpty()) {
                         if (b.getHGVSP() != null && b.getHGVSP().equals(annotation.HGVSp)) {
                             return true;
+                        } else if (b.getHGVSC() != null && b.getHGVSC().equals(annotation.HGVSc)) {
+                            return true;
                         } else if (b.getMinCodon() != null && b.getMinCodon().intValue() <= annotation.ProteinPosition.get(0)) {
                             return true;
                         }
@@ -112,23 +116,28 @@ class BachelorEligibility {
                     .anyMatch(a -> !a.HGVSp.isEmpty() && whitelist.get(a.Transcript).contains(a.HGVSp));
 
             final Predicate<ExtractedVariantInfo> predicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
-            result.predicates.put(program.getName(), predicate);
+            result.programs.put(program.getName(), predicate);
         }
 
         return result;
     }
 
-    Map<String, Integer> processVCF(final VCFFileReader reader) {
-        final Map<String, Integer> counts = Maps.newHashMap();
+    @NotNull
+    Collection<EligibilityReport> processVCF(final VCFFileReader reader) {
+        final Map<String, ImmutableEligibilityReport.Builder> results = Maps.newHashMap();
         for (final VariantContext variant : reader) {
-            final List<String> matchingPrograms = predicates.entrySet()
+            if (variant.isFiltered()) {
+                continue;
+            }
+            final List<String> matchingPrograms = programs.entrySet()
                     .stream()
                     .filter(program -> program.getValue().test(ExtractedVariantInfo.from(variant)))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
-            matchingPrograms.forEach(s -> counts.compute(s, (k, v) -> v == null ? 1 : v + 1));
+            for (final String p : matchingPrograms) {
+                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().program(p)).addVariants(variant);
+            }
         }
-        return counts;
+        return results.values().stream().map(ImmutableEligibilityReport.Builder::build).collect(Collectors.toList());
     }
-
 }
