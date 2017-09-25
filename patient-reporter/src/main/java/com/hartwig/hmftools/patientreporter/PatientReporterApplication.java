@@ -44,11 +44,7 @@ public class PatientReporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
 
-    public static final String VERSION = "3.14";
-
-    // TODO (KODU): Make version read from POM
-    //    public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
-
+    public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_JSON = "lims_json";
     private static final String REPORT_DIRECTORY = "report_dir";

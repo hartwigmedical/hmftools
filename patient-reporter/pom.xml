@@ -86,9 +86,7 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>com.hartwig.hmftools.patientreporter.PatientReporterApplication</Main-Class>
-                                        <!-- KODU: Below lines do not work but can't find how to make it work either! -->
-                                        <!--<addDefaultImplementationEntries>true</addDefaultImplementationEntries>-->
-                                        <!--<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>-->
+                                        <Implementation-Version>${project.version}</Implementation-Version>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
