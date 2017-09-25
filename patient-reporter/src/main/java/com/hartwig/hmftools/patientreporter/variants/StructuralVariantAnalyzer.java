@@ -83,16 +83,16 @@ public class StructuralVariantAnalyzer {
         if (t.isPromoter()) {
             return "Promoter Region";
         } else if (t.isExonic()) {
-            return String.format("Exon %d / %d", t.getExonUpstream(), t.getExonMax());
+            return String.format("Exon %d", t.getExonUpstream());
+        } else if (t.isIntronic()) {
+            return String.format("Intron %d", t.getExonUpstream());
         } else {
-            return String.format("Intron %d / %d", t.getExonUpstream(), t.getExonMax() - 1);
+            return String.format("Error up(%d) down(%d)", t.getExonUpstream(), t.getExonDownstream());
         }
     }
 
     private String exonSelection(final Transcript t, final boolean upstream) {
-        return upstream
-                ? String.format("Exon %d / %d", t.getExonUpstream(), t.getExonMax())
-                : String.format("Exon %d / %d", t.getExonDownstream(), t.getExonMax());
+        return String.format("Exon %d", upstream ? t.getExonUpstream() : t.getExonDownstream());
     }
 
     private List<StructuralVariantAnalysis.GeneFusion> processFusions(final List<VariantAnnotation> annotations) {
@@ -217,9 +217,11 @@ public class StructuralVariantAnalyzer {
             final boolean intronicExists = sv.getStart()
                     .getGeneAnnotations()
                     .stream()
+                    .filter(g -> g.getCanonical() != null)
                     .anyMatch(g -> sv.getEnd()
                             .getGeneAnnotations()
                             .stream()
+                            .filter(o -> o.getCanonical() != null)
                             .anyMatch(o -> intronicDisruption(g.getCanonical(), o.getCanonical())));
             if (intronicExists) {
                 continue;
@@ -240,6 +242,11 @@ public class StructuralVariantAnalyzer {
         final List<StructuralVariantAnalysis.GeneDisruption> disruptions = Lists.newArrayList();
         for (final String geneName : geneMap.keySet()) {
             for (final GeneAnnotation g : geneMap.get(geneName)) {
+
+                // don't care if we aren't in the canonical transcript
+                if (g.getCanonical() == null) {
+                    continue;
+                }
 
                 final StructuralVariantAnalysis.GeneDisruption disruption = new StructuralVariantAnalysis.GeneDisruption();
                 disruption.GeneName = geneName;
