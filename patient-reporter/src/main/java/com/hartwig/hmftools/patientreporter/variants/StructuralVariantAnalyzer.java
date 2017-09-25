@@ -185,22 +185,21 @@ public class StructuralVariantAnalyzer {
                 continue;
             }
 
-            final StructuralVariantAnalysis.GeneFusion details = new StructuralVariantAnalysis.GeneFusion();
-            details.Type = upstream.getBreakend().getStructuralVariant().getVariant().type().toString();
-
-            details.GeneStart = upstream.getGeneName();
-            details.Start = upstream.getBreakend().getPositionString();
-            details.GeneContextStart = exonSelection(upstream, true);
-            details.TranscriptStart = upstream.getTranscriptId();
-
-            details.GeneEnd = downstream.getGeneName();
-            details.End = downstream.getBreakend().getPositionString();
-            details.GeneContextEnd = exonSelection(downstream, false);
-            details.TranscriptEnd = downstream.getTranscriptId();
-
             final Double fiveAF = upstream.getBreakend().getAlleleFrequency();
             final Double threeAF = downstream.getBreakend().getAlleleFrequency();
-            details.VAF = PatientReportFormat.formatNullablePercent(fiveAF) + " " + PatientReportFormat.formatNullablePercent(threeAF);
+
+            final StructuralVariantAnalysis.GeneFusion details = ImmutableGeneFusion.builder()
+                    .Type(upstream.getBreakend().getStructuralVariant().getVariant().type().toString())
+                    .Start(upstream.getBreakend().getPositionString())
+                    .GeneStart(upstream.getGeneName())
+                    .GeneContextStart(exonSelection(upstream, true))
+                    .TranscriptStart(upstream.getTranscriptId())
+                    .End(downstream.getBreakend().getPositionString())
+                    .GeneEnd(downstream.getGeneName())
+                    .GeneContextEnd(exonSelection(downstream, false))
+                    .TranscriptEnd(downstream.getTranscriptId())
+                    .VAF(PatientReportFormat.formatNullablePercent(fiveAF) + " " + PatientReportFormat.formatNullablePercent(threeAF))
+                    .build();
 
             result.add(details);
             annotations.remove(upstream.getBreakend().getStructuralVariant());
@@ -248,16 +247,16 @@ public class StructuralVariantAnalyzer {
                     continue;
                 }
 
-                final StructuralVariantAnalysis.GeneDisruption disruption = new StructuralVariantAnalysis.GeneDisruption();
-                disruption.GeneName = geneName;
-                disruption.Location = g.getBreakend().getPositionString();
-                disruption.GeneContext = exonDescription(g.getCanonical());
-                disruption.Transcript = g.getCanonical().getTranscriptId();
-                disruption.Orientation = g.getBreakend().getOrientation() > 0 ? "5'" : "3'";
-                disruption.Partner = g.getOtherBreakend().getPositionString();
-                disruption.HGVS = "TODO";
-                disruption.Type = g.getBreakend().getStructuralVariant().getVariant().type().toString();
-                disruption.VAF = PatientReportFormat.formatNullablePercent(g.getBreakend().getAlleleFrequency());
+                final StructuralVariantAnalysis.GeneDisruption disruption = ImmutableGeneDisruption.builder()
+                        .GeneName(geneName)
+                        .Location(g.getBreakend().getPositionString())
+                        .GeneContext(exonDescription(g.getCanonical()))
+                        .Transcript(g.getCanonical().getTranscriptId())
+                        .Partner(g.getOtherBreakend().getPositionString())
+                        .Type(g.getBreakend().getStructuralVariant().getVariant().type().toString())
+                        .Orientation(g.getBreakend().getOrientation() > 0 ? "5'" : "3'")
+                        .VAF(PatientReportFormat.formatNullablePercent(g.getBreakend().getAlleleFrequency()))
+                        .build();
 
                 disruptions.add(disruption);
                 annotations.remove(g.getBreakend().getStructuralVariant());
@@ -274,6 +273,6 @@ public class StructuralVariantAnalyzer {
         final List<StructuralVariantAnalysis.GeneFusion> fusions = processFusions(annotations);
         final List<StructuralVariantAnalysis.GeneDisruption> disruptions = processDisruptions(annotations);
 
-        return new StructuralVariantAnalysis(annotations, fusions, disruptions);
+        return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
     }
 }

@@ -2,65 +2,49 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.svannotation.VariantAnnotation;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class StructuralVariantAnalysis {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class StructuralVariantAnalysis {
 
-    public static class GeneFusion {
-        public String Type;
-        public String Start;
-        public String GeneStart;
-        public String GeneContextStart;
-        public String TranscriptStart;
-        public String End;
-        public String GeneEnd;
-        public String GeneContextEnd;
-        public String TranscriptEnd;
-        public String VAF;
+    @Value.Immutable
+    public static abstract class GeneFusion {
+        public abstract String Type();
+        public abstract String Start();
+        public abstract String GeneStart();
+        public abstract String GeneContextStart();
+        public abstract String TranscriptStart();
+        public abstract String End();
+        public abstract String GeneEnd();
+        public abstract String GeneContextEnd();
+        public abstract String TranscriptEnd();
+        public abstract String VAF();
     }
 
-    public static class GeneDisruption {
-        public String GeneName;
-        public String Location;
-        public String GeneContext;
-        public String Transcript;
-        public String Partner;
-        public String HGVS;
-        public String Type;
-        public String Orientation;
-        public String VAF;
-        public String TAF = "TODO";
-    }
-
-    @NotNull
-    private final List<VariantAnnotation> annotations;
-    @NotNull
-    private final List<GeneFusion> fusions;
-    @NotNull
-    private final List<GeneDisruption> disruptions;
-
-    StructuralVariantAnalysis(@NotNull final List<VariantAnnotation> annotations, @NotNull final List<GeneFusion> fusions,
-            @NotNull final List<GeneDisruption> disruptions) {
-        this.annotations = annotations;
-        this.fusions = fusions;
-        this.disruptions = disruptions;
+    @Value.Immutable
+    public static abstract class GeneDisruption {
+        public abstract String GeneName();
+        public abstract String Location();
+        public abstract String GeneContext();
+        public abstract String Transcript();
+        public abstract String Partner();
+        public abstract String Type();
+        public abstract String Orientation();
+        public abstract String VAF();
     }
 
     @NotNull
-    public List<VariantAnnotation> annotations() {
-        return ImmutableList.copyOf(annotations);
-    }
+    public abstract List<VariantAnnotation> annotations();
 
     @NotNull
-    public List<GeneFusion> fusions() {
-        return ImmutableList.copyOf(fusions);
-    }
+    public abstract List<GeneFusion> fusions();
 
     @NotNull
-    public List<GeneDisruption> disruptions() {
-        return ImmutableList.copyOf(disruptions);
-    }
+    public abstract List<GeneDisruption> disruptions();
 }
