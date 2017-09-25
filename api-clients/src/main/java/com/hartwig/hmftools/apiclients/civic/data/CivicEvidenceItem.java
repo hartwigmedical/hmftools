@@ -21,8 +21,13 @@ public abstract class CivicEvidenceItem {
 
     public abstract CivicDisease disease();
 
+    public abstract List<CivicDrug> drugs();
+
     @SerializedName("evidence_level")
     public abstract Character level();
+
+    @SerializedName("evidence_type")
+    public abstract String evidenceType();
 
     @Nullable
     @SerializedName("clinical_significance")
@@ -32,7 +37,13 @@ public abstract class CivicEvidenceItem {
     @SerializedName("evidence_direction")
     public abstract String direction();
 
-    public abstract List<CivicDrug> drugs();
+    @Nullable
+    @SerializedName("variant_origin")
+    public abstract String variantOrigin();
+
+    @Nullable
+    @SerializedName("drug_interaction_type")
+    public abstract String drugInteractionType();
 
     public abstract String status();
 

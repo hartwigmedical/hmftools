@@ -27,14 +27,19 @@ public abstract class CivicVariant {
     @SerializedName("entrez_name")
     public abstract String gene();
 
-    @SerializedName("gene_id")
-    public abstract int geneId();
+    @SerializedName("entrez_id")
+    public abstract String entrezId();
 
     @Nullable
     public abstract String name();
 
     @Nullable
     public abstract String description();
+
+    @SerializedName("gene_id")
+    public abstract int geneId();
+
+    public abstract String type();
 
     @SerializedName("variant_types")
     public abstract List<CivicVariantType> variantTypes();
@@ -44,7 +49,11 @@ public abstract class CivicVariant {
     @SerializedName("evidence_items")
     public abstract List<CivicEvidenceItem> evidenceItems();
 
+    @SerializedName("variant_aliases")
+    public abstract List<String> variantAliases();
+
     @SerializedName("hgvs_expressions")
+
     public abstract List<String> hgvsExpressions();
 
     @Value.Lazy
