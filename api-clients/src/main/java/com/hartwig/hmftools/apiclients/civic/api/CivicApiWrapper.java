@@ -46,9 +46,7 @@ public class CivicApiWrapper {
     public static Observable<CivicVariant> getVariantsForGene(final int entrezId) {
         return civicApi.getGene(entrezId)
                 .flatMapIterable(CivicGene::variantMetadatas)
-                .filter(variantMetadata -> variantMetadata.acceptedEvidenceItems() > 0)
-                .flatMap(variantMetadata -> civicApi.getVariant(variantMetadata.id()))
-                .filter(civicVariant -> !civicVariant.evidenceItemsWithDrugs().isEmpty());
+                .flatMap(variantMetadata -> civicApi.getVariant(variantMetadata.id()));
     }
 
     public static Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final Variant variant) {

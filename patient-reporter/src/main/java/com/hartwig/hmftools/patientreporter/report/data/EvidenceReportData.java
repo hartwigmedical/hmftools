@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
-import com.hartwig.hmftools.apiclients.civic.data.ImmutableCivicVariant;
 import com.hartwig.hmftools.apiclients.diseaseontology.api.DiseaseOntologyApiWrapper;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
@@ -41,13 +40,13 @@ public abstract class EvidenceReportData {
     public static EvidenceReportData of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel,
             @NotNull final Set<String> tumorDoids) {
         final List<Alteration> alterations = Lists.newArrayList();
-        final Set<String> tumorChildrenDoids = getTumorChildrenDoids(tumorDoids);
+        final Set<String> tumorSubtypesDoids = getTumorChildrenDoids(tumorDoids);
         for (final VariantReport variantReport : report.variants()) {
             for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
                 if (region.gene().equals(variantReport.gene())) {
                     final int entrezId = Integer.parseInt(region.entrezId());
-                    final List<CivicVariant> civicVariants = getCivicVariants(entrezId, variantReport, tumorChildrenDoids);
-                    final Alteration alteration = Alteration.from(variantReport, civicVariants);
+                    final List<CivicVariant> civicVariants = getCivicVariants(entrezId, variantReport);
+                    final Alteration alteration = Alteration.from(variantReport, civicVariants, tumorSubtypesDoids);
                     if (alteration.getMatches().size() > 0) {
                         alterations.add(alteration);
                     }
@@ -74,21 +73,10 @@ public abstract class EvidenceReportData {
     }
 
     @NotNull
-    private static List<CivicVariant> getCivicVariants(final int entrezId, @NotNull final VariantReport variantReport,
-            @NotNull final Set<String> tumorChildrenDoids) {
+    private static List<CivicVariant> getCivicVariants(final int entrezId, @NotNull final VariantReport variantReport) {
         final Variant variant = variantReportToVariant(variantReport);
         try {
-            return CivicApiWrapper.getVariantsContaining(entrezId, variant)
-                    .map(civicVariant -> (CivicVariant) ImmutableCivicVariant.builder()
-                            .from(civicVariant)
-                            .evidenceItems(civicVariant.evidenceItemsWithDrugs()
-                                    .stream()
-                                    .filter(evidenceItem -> tumorChildrenDoids.contains(evidenceItem.disease().doidString()))
-                                    .collect(Collectors.toList()))
-                            .build())
-                    .filter(civicVariant -> !civicVariant.groupedEvidenceItems().isEmpty())
-                    .toList()
-                    .blockingGet();
+            return CivicApiWrapper.getVariantsContaining(entrezId, variant).toList().blockingGet();
         } catch (final Throwable throwable) {
             LOGGER.error("Failed to get civic variants for variant: " + variant.chromosomePosition() + ". error message: "
                     + throwable.getMessage());
