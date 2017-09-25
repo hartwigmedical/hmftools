@@ -373,10 +373,8 @@ public class PDFWriter implements ReportWriter {
                                 col.column("Gene Context", PatientDataSource.SV_GENE_CONTEXT),
                                 col.column("Orientation", PatientDataSource.SV_ORIENTATION_FIELD),
                                 col.column("Partner", PatientDataSource.SV_PARTNER_POSITION_FIELD),
-                                //col.column("HGVS", PatientDataSource.SV_HGVS_FIELD),
                                 col.column("Type", PatientDataSource.SV_TYPE_FIELD).setFixedWidth(30),
                                 col.column("VAF", PatientDataSource.SV_VAF).setFixedWidth(30)
-                                //col.column("TAF", PatientDataSource.SV_TAF).setFixedWidth(30)
                             )
                             .setDataSource(PatientDataSource.fromGeneDisruptions(report.geneDisruptions()))
                     );

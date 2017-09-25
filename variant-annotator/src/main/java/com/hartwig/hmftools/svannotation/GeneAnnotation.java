@@ -5,6 +5,8 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.jetbrains.annotations.Nullable;
+
 public class GeneAnnotation {
 
     private final Breakend breakend;
@@ -51,6 +53,7 @@ public class GeneAnnotation {
         return ImmutableList.copyOf(transcripts);
     }
 
+    @Nullable
     public Transcript getCanonical() {
         return transcripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
     }

@@ -137,7 +137,6 @@ public class MySQLAnnotator implements VariantAnnotator {
                     .collect(Collectors.toList());
 
             final GeneAnnotation geneAnnotation = new GeneAnnotation(breakend, gene_name, synonyms, gene_stable_id, gene_strand);
-            breakend.addGeneAnnotation(geneAnnotation);
 
             final Result<?> transcripts = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID)
                     .from(TRANSCRIPT)
@@ -196,10 +195,19 @@ public class MySQLAnnotator implements VariantAnnotator {
                     exon_upstream_phase = exonRight == null ? -1 : exonRight.get(EXON.END_PHASE);
                 }
 
+                if (exon_upstream > 0 && exon_downstream == 0) {
+                    // past the last exon
+                    continue;
+                }
+
                 final Transcript transcript =
                         new Transcript(geneAnnotation, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
                                 exon_downstream_phase, exon_max, canonical);
                 geneAnnotation.addTranscriptAnnotation(transcript);
+            }
+
+            if (!geneAnnotation.getTranscripts().isEmpty()) {
+                breakend.addGeneAnnotation(geneAnnotation);
             }
         }
 
