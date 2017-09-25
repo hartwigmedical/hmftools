@@ -32,6 +32,12 @@ public abstract class EvidenceReportData {
     @NotNull
     public abstract List<Alteration> getAlterations();
 
+    @NotNull
+    @Value.Derived
+    public List<Alteration> getAlterationsWithEvidence() {
+        return getAlterations().stream().filter(alteration -> alteration.getEvidence().size() > 0).collect(Collectors.toList());
+    }
+
     public static EvidenceReportData of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel,
             @NotNull final Set<String> tumorDoids) {
         final List<Alteration> alterations = Lists.newArrayList();
@@ -42,7 +48,7 @@ public abstract class EvidenceReportData {
                     final int entrezId = Integer.parseInt(region.entrezId());
                     final List<CivicVariant> civicVariants = getCivicVariants(entrezId, variantReport, tumorChildrenDoids);
                     final Alteration alteration = Alteration.from(variantReport, civicVariants);
-                    if (alteration.getEvidence().size() > 0) {
+                    if (alteration.getMatches().size() > 0) {
                         alterations.add(alteration);
                     }
                 }

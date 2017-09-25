@@ -96,7 +96,7 @@ class EvidenceReport {
                     .columns(
                         col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
                         col.componentColumn(subtable)))
-                .setDataSource(exp.subDatasourceBeanCollection("alterations"));
+                .setDataSource(exp.subDatasourceBeanCollection("alterationsWithEvidence"));
         // @formatter:on
     }
 
