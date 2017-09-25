@@ -98,11 +98,7 @@ public abstract class EvidenceReportData {
 
     @NotNull
     public JRBeanCollectionDataSource toDataSource() {
-        if (getAlterations().size() > 0) {
-            return new JRBeanCollectionDataSource(Lists.newArrayList(this));
-        } else {
-            return new JRBeanCollectionDataSource(Lists.newArrayList());
-        }
+        return new JRBeanCollectionDataSource(Lists.newArrayList(this));
     }
 
     public static Variant variantReportToVariant(@NotNull final VariantReport variantReport) {

@@ -15,7 +15,6 @@ import java.io.IOException;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidence;
@@ -51,17 +50,13 @@ class EvidenceReport {
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     conciseEvidenceSection(),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    cmp.text("Civic matching variants"),
+                    cmp.text("Civic matching variants").setStyle(sectionHeaderStyle()),
+                    cmp.verticalGap(SECTION_VERTICAL_GAP),
                     civicMatchingVariantsTable(),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP));
-
-        final VerticalListBuilder noDataReport = cmp.verticalList()
-                .add(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Could not find any civic evidence items").setStyle(sectionHeaderStyle()),
                     cmp.verticalGap(SECTION_VERTICAL_GAP));
         // @formatter:on
 
-        return report().addDetail(totalReport).noData(noDataReport).setDataSource(evidenceReportData.toDataSource());
+        return report().addDetail(totalReport).setDataSource(evidenceReportData.toDataSource());
     }
 
     @NotNull
@@ -95,7 +90,8 @@ class EvidenceReport {
                 baseTable().setColumnStyle(dataStyle()).title(tableHeader)
                     .columns(
                         col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
-                        col.componentColumn(subtable)))
+                        col.componentColumn(subtable))
+                .noData(cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .setDataSource(exp.subDatasourceBeanCollection("alterationsWithEvidence"));
         // @formatter:on
     }
@@ -138,7 +134,8 @@ class EvidenceReport {
                 baseTable().setColumnStyle(dataStyle()).title(tableHeader)
                     .columns(
                         col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
-                        col.componentColumn(subtable)))
+                        col.componentColumn(subtable))
+                .noData(cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .setDataSource(exp.subDatasourceBeanCollection("alterations"));
         // @formatter:on
     }
