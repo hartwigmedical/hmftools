@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.variants;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.formatPercent;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.variant.Variant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -12,16 +12,13 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface VariantReport extends GenomePosition {
+public interface VariantReport {
 
     @NotNull
     String gene();
 
     @NotNull
-    String ref();
-
-    @NotNull
-    String alt();
+    Variant variant();
 
     @NotNull
     String transcript();
@@ -62,8 +59,8 @@ public interface VariantReport extends GenomePosition {
 
     @NotNull
     default String depthVafField() {
-        return Integer.toString(alleleReadCount()) + " / " + Integer.toString(totalReadCount()) + " (" + formatPercent(
-                alleleFrequency()) + ")";
+        return Integer.toString(alleleReadCount()) + " / " + Integer.toString(totalReadCount()) + " (" + formatPercent(alleleFrequency())
+                + ")";
     }
 
     @NotNull
@@ -73,6 +70,6 @@ public interface VariantReport extends GenomePosition {
 
     @NotNull
     default String variantField() {
-        return ref() + " > " + alt();
+        return variant().ref() + " > " + variant().alt();
     }
 }

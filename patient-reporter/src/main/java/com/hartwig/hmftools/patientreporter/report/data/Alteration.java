@@ -4,8 +4,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.patientreporter.report.data.EvidenceReportData.variantReportToVariant;
-
 import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.Comparator;
@@ -57,7 +55,7 @@ public abstract class Alteration {
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
 
         civicVariants.forEach(civicVariant -> {
-            if (civicVariant.coordinates().equals(variantReportToVariant(variantReport))) {
+            if (civicVariant.coordinates().equals(variantReport.variant())) {
                 final List<CivicEvidenceItem> relevantEvidence = relevantEvidenceForTumor(civicVariant.evidenceItems(), tumorSubtypesDoids);
                 final Map<String, Map<String, List<CivicEvidenceItem>>> groupedEvidenceItems = groupEvidenceItems(relevantEvidence);
                 for (final String significance : groupedEvidenceItems.keySet()) {

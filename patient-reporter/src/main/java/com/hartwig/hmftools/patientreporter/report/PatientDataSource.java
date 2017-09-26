@@ -51,17 +51,17 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromVariants(@NotNull final List<VariantReport> variants, @NotNull final HmfReporterData reporterData) {
+    static JRDataSource fromVariants(@NotNull final List<VariantReport> variantReports, @NotNull final HmfReporterData reporterData) {
         final DRDataSource variantDataSource =
                 new DRDataSource(GENE_FIELD.getName(), POSITION_FIELD.getName(), VARIANT_FIELD.getName(), DEPTH_VAF_FIELD.getName(),
                         COSMIC_FIELD.getName(), COSMIC_NR_FIELD.getName(), HGVS_CODING_FIELD.getName(), HGVS_PROTEIN_FIELD.getName(),
                         CONSEQUENCE_FIELD.getName(), PLOIDY_TAF_FIELD.getName());
 
-        for (final VariantReport variant : variants) {
-            final String displayGene = reporterData.drupFilter().test(variant) ? variant.gene() + " *" : variant.gene();
-            variantDataSource.add(displayGene, variant.chromosomePosition(), variant.variantField(), variant.depthVafField(),
-                    variant.cosmicID(), stripCosmicIdentifier(variant.cosmicID()), variant.hgvsCoding(), variant.hgvsProtein(),
-                    variant.consequence(), variant.ploidyTafField());
+        for (final VariantReport variantReport : variantReports) {
+            final String displayGene = reporterData.drupFilter().test(variantReport) ? variantReport.gene() + " *" : variantReport.gene();
+            variantDataSource.add(displayGene, variantReport.variant().chromosomePosition(), variantReport.variantField(),
+                    variantReport.depthVafField(), variantReport.cosmicID(), stripCosmicIdentifier(variantReport.cosmicID()),
+                    variantReport.hgvsCoding(), variantReport.hgvsProtein(), variantReport.consequence(), variantReport.ploidyTafField());
         }
 
         return variantDataSource;

@@ -11,8 +11,6 @@ import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.apiclients.diseaseontology.api.DiseaseOntologyApiWrapper;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -74,11 +72,10 @@ public abstract class EvidenceReportData {
 
     @NotNull
     private static List<CivicVariant> getCivicVariants(final int entrezId, @NotNull final VariantReport variantReport) {
-        final Variant variant = variantReportToVariant(variantReport);
         try {
-            return CivicApiWrapper.getVariantsContaining(entrezId, variant).toList().blockingGet();
+            return CivicApiWrapper.getVariantsContaining(entrezId, variantReport.variant()).toList().blockingGet();
         } catch (final Throwable throwable) {
-            LOGGER.error("Failed to get civic variants for variant: " + variant.chromosomePosition() + ". error message: "
+            LOGGER.error("Failed to get civic variants for variant: " + variantReport.variant().chromosomePosition() + ". error message: "
                     + throwable.getMessage());
             return Lists.newArrayList();
         }
@@ -87,44 +84,5 @@ public abstract class EvidenceReportData {
     @NotNull
     public JRBeanCollectionDataSource toDataSource() {
         return new JRBeanCollectionDataSource(Lists.newArrayList(this));
-    }
-
-    public static Variant variantReportToVariant(@NotNull final VariantReport variantReport) {
-        return new Variant() {
-            @NotNull
-            @Override
-            public String ref() {
-                return variantReport.ref();
-            }
-
-            @NotNull
-            @Override
-            public String alt() {
-                return variantReport.alt();
-            }
-
-            @NotNull
-            @Override
-            public VariantType type() {
-                return null;
-            }
-
-            @NotNull
-            @Override
-            public String filter() {
-                return null;
-            }
-
-            @NotNull
-            @Override
-            public String chromosome() {
-                return variantReport.chromosome();
-            }
-
-            @Override
-            public long position() {
-                return variantReport.position();
-            }
-        };
     }
 }

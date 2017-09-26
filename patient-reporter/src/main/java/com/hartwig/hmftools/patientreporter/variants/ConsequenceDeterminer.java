@@ -84,11 +84,8 @@ class ConsequenceDeterminer {
                 LOGGER.warn("Annotated allele does not match alt from variant for " + variant);
             }
 
+            builder.variant(variant);
             builder.gene(variantAnnotation.gene());
-            builder.chromosome(variant.chromosome());
-            builder.position(variant.position());
-            builder.ref(variant.ref());
-            builder.alt(variant.alt());
             builder.transcript(hmfGenomeRegion.transcript());
             builder.hgvsCoding(variantAnnotation.hgvsCoding());
             builder.hgvsProtein(variantAnnotation.hgvsProtein());

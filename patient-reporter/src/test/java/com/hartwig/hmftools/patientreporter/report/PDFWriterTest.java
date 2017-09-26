@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
 import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
@@ -100,10 +102,7 @@ public class PDFWriterTest {
     private static List<VariantReport> createTestVariants(@NotNull final PurityAdjuster purityAdjuster) {
         final VariantReport variant1 = ImmutableVariantReport.builder()
                 .gene("BRAF")
-                .chromosome("7")
-                .position(140453136)
-                .ref("A")
-                .alt("T")
+                .variant(createTestVariant("7", 140453136, "A", "T"))
                 .transcript("ENST00000377970.6")
                 .hgvsCoding("c.1799T>A")
                 .hgvsProtein("p.Val600Glu")
@@ -117,10 +116,7 @@ public class PDFWriterTest {
 
         final VariantReport variant2 = ImmutableVariantReport.builder()
                 .gene("MYC")
-                .chromosome("8")
-                .position(128748854)
-                .ref("GG")
-                .alt("CA")
+                .variant(createTestVariant("8", 128748854, "GG", "CA"))
                 .transcript("ENST00000377970.2")
                 .hgvsCoding("c.15_16delinsCA")
                 .hgvsProtein("p.Val6Ile")
@@ -134,10 +130,7 @@ public class PDFWriterTest {
 
         final VariantReport variant3 = ImmutableVariantReport.builder()
                 .gene("TP53")
-                .chromosome("17")
-                .position(7577111)
-                .ref("GCACAAA")
-                .alt("G")
+                .variant(createTestVariant("17", 7577111, "GCACAAA", "G"))
                 .transcript("ENST00000269305.4")
                 .hgvsCoding("c.821_826delTTTGTG")
                 .hgvsProtein("p.Val274_Cys275del")
@@ -148,6 +141,11 @@ public class PDFWriterTest {
                 .baf("AAA")
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3);
+    }
+
+    private static Variant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
+            @NotNull final String alt) {
+        return new SomaticVariant.Builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
     }
 
     @NotNull

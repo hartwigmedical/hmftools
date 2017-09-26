@@ -49,20 +49,24 @@ public abstract class PurpleAnalysis {
     }
 
     @NotNull
-    public List<VariantReport> enrich(@NotNull final List<VariantReport> variants) {
+    public List<VariantReport> enrich(@NotNull final List<VariantReport> variantReports) {
         final List<VariantReport> result = Lists.newArrayList();
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity());
         final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
 
-        for (final VariantReport variant : variants) {
-            final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variant);
+        for (final VariantReport variantReport : variantReports) {
+            final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
             if (optionalCopyNumber.isPresent()) {
                 final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
                 double adjustedVAF =
-                        Math.min(1, purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), variant.alleleFrequency()));
-                result.add(ImmutableVariantReport.builder().from(variant).baf(copyNumber.descriptiveBAF()).impliedVAF(adjustedVAF).build());
+                        Math.min(1, purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), variantReport.alleleFrequency()));
+                result.add(ImmutableVariantReport.builder()
+                        .from(variantReport)
+                        .baf(copyNumber.descriptiveBAF())
+                        .impliedVAF(adjustedVAF)
+                        .build());
             } else {
-                result.add(variant);
+                result.add(variantReport);
             }
         }
 

@@ -50,8 +50,7 @@ public class ConsequenceDeterminerTest {
     @Test
     public void worksAsExpected() {
 
-        final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(
-                ImmutableBEDGenomeRegion.of(CHROMOSOME, POSITION - 10, POSITION + 10));
+        final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(ImmutableBEDGenomeRegion.of(CHROMOSOME, POSITION - 10, POSITION + 10));
         final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT, hmfRegion());
 
@@ -63,10 +62,8 @@ public class ConsequenceDeterminerTest {
         final ImmutableVariantAnnotation.Builder annotationBuilder = createVariantAnnotationBuilder().featureID(TRANSCRIPT).
                 featureType(ConsequenceDeterminer.FEATURE_TYPE_TRANSCRIPT).gene(GENE).hgvsCoding(HGVS_CODING).
                 hgvsProtein(HGVS_PROTEIN);
-        final VariantAnnotation rightAnnotation = annotationBuilder.consequences(
-                Lists.newArrayList(rightConsequence)).build();
-        final VariantAnnotation wrongAnnotation = annotationBuilder.consequences(
-                Lists.newArrayList(wrongConsequence)).build();
+        final VariantAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
+        final VariantAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
         final SomaticVariant.Builder variantBuilder = new SomaticVariant.Builder().
                 chromosome(CHROMOSOME).ref(REF).alt(ALT).cosmicID(COSMIC_ID).
@@ -79,15 +76,15 @@ public class ConsequenceDeterminerTest {
         final SomaticVariant wrongPositionVariant = variantBuilder.position(WRONG_POSITION).
                 annotations(Lists.newArrayList(rightAnnotation)).build();
 
-        final List<VariantReport> findings = determiner.run(
-                Lists.newArrayList(rightVariant, wrongConsequenceVariant, wrongPositionVariant)).findings();
+        final List<VariantReport> findings =
+                determiner.run(Lists.newArrayList(rightVariant, wrongConsequenceVariant, wrongPositionVariant)).findings();
         assertEquals(1, findings.size());
 
         final VariantReport report = findings.get(0);
         assertEquals(GENE, report.gene());
-        assertEquals(CHROMOSOME + ":" + POSITION, report.chromosomePosition());
-        assertEquals(REF, report.ref());
-        assertEquals(ALT, report.alt());
+        assertEquals(CHROMOSOME + ":" + POSITION, report.variant().chromosomePosition());
+        assertEquals(REF, report.variant().ref());
+        assertEquals(ALT, report.variant().alt());
         assertEquals(TRANSCRIPT + "." + TRANSCRIPT_VERSION, report.transcript());
         assertEquals(HGVS_CODING, report.hgvsCoding());
         assertEquals(HGVS_PROTEIN, report.hgvsProtein());
