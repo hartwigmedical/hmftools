@@ -20,7 +20,7 @@ public class BachelorTest {
 
     private final static String TEST_XML = Resources.getResource("valid.xml").getPath();
     private final static String TEST_INVALID_XML = Resources.getResource("missing_namespace.xml").getPath();
-    private final static String TEST_DBSNP_XML = Resources.getResource("missing_namespace.xml").getPath();
+    private final static String TEST_DBSNP_XML = Resources.getResource("invalid_dbsnp.xml").getPath();
 
     @Nullable
     private static Program testFile(final String path) throws JAXBException, SAXException {
