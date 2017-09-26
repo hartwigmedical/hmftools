@@ -16,7 +16,7 @@ public class GeneAnnotation {
     private final List<Transcript> transcripts = Lists.newArrayList();
     private final List<String> synonyms;
 
-    GeneAnnotation(final Breakend breakend, final String geneName, final List<String> synonyms, final String stableId, final int strand) {
+    public GeneAnnotation(final Breakend breakend, final String geneName, final List<String> synonyms, final String stableId, final int strand) {
         this.breakend = breakend;
         this.geneName = geneName;
         this.synonyms = synonyms;
@@ -45,7 +45,7 @@ public class GeneAnnotation {
         return strand;
     }
 
-    void addTranscriptAnnotation(final Transcript a) {
+    public void addTranscriptAnnotation(final Transcript a) {
         transcripts.add(a);
     }
 

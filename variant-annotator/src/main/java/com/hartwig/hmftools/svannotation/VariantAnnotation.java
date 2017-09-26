@@ -8,13 +8,13 @@ public class VariantAnnotation {
     private Breakend StartAnnotations;
     private Breakend EndAnnotations;
 
-    VariantAnnotation(final StructuralVariant variant) {
+    public VariantAnnotation(final StructuralVariant variant) {
         Variant = variant;
         StartAnnotations = new Breakend(this);
         EndAnnotations = new Breakend(this);
     }
 
-    void setBreakendAnnotations(final Breakend start, final Breakend end) {
+    public void setBreakendAnnotations(final Breakend start, final Breakend end) {
         StartAnnotations = start;
         EndAnnotations = end;
     }

@@ -100,6 +100,7 @@ public class StructuralVariantAnalyzer {
         // left is upstream, right is downstream
         final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
 
+
         for (final VariantAnnotation sv : annotations) {
 
             final List<Pair<Transcript, Transcript>> svFusions = Lists.newArrayList();

@@ -14,7 +14,7 @@ public class Breakend {
     private final Double alleleFrequency;
     private final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
-    Breakend(final VariantAnnotation parent) {
+    public Breakend(final VariantAnnotation parent) {
         this.parent = parent;
         this.chromosome = "ERR";
         this.position = 0;
@@ -22,7 +22,7 @@ public class Breakend {
         this.alleleFrequency = null;
     }
 
-    Breakend(final VariantAnnotation parent, final String chromosome, final long position, final int orientation,
+    public Breakend(final VariantAnnotation parent, final String chromosome, final long position, final int orientation,
             final Double alleleFrequency) {
         this.parent = parent;
         this.chromosome = chromosome;
@@ -31,7 +31,7 @@ public class Breakend {
         this.alleleFrequency = alleleFrequency;
     }
 
-    void addGeneAnnotation(final GeneAnnotation geneAnnotation) {
+    public void addGeneAnnotation(final GeneAnnotation geneAnnotation) {
         geneAnnotations.add(geneAnnotation);
     }
 

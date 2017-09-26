@@ -13,8 +13,9 @@ public class Transcript {
     private final int exonMax;
     private final boolean canonical;
 
-    Transcript(final GeneAnnotation geneAnnotation, @NotNull final String transcriptId, final int exonUpstream, final int exonUpstreamPhase,
-            final int exonDownstream, final int exonDownstreamPhase, final int exonMax, final boolean canonical) {
+    public Transcript(final GeneAnnotation geneAnnotation, @NotNull final String transcriptId, final int exonUpstream,
+            final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase, final int exonMax,
+            final boolean canonical) {
         this.geneAnnotation = geneAnnotation;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
@@ -50,9 +51,13 @@ public class Transcript {
         return geneAnnotation;
     }
 
-    public String getGeneName() { return geneAnnotation.getGeneName(); }
+    public String getGeneName() {
+        return geneAnnotation.getGeneName();
+    }
 
-    public Breakend getBreakend() { return geneAnnotation.getBreakend(); }
+    public Breakend getBreakend() {
+        return geneAnnotation.getBreakend();
+    }
 
     public int getStrand() {
         return geneAnnotation.getStrand();
