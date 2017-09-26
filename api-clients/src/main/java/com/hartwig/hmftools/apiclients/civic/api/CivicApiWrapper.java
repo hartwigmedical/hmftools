@@ -58,7 +58,7 @@ public class CivicApiWrapper {
     }
 
     public static Observable<CivicVariant> getAllVariants() {
-        return getAllFromPaginatedEndpoint(civicApi::getVariants);
+        return getAllFromPaginatedEndpoint(civicApi::getVariants).flatMap(variant -> civicApi.getVariant(variant.id()));
     }
 
     public static Observable<CivicEvidenceItem> getAllEvidenceItems() {
