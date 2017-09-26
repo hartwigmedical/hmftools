@@ -51,7 +51,7 @@ class ConsequenceDeterminer {
 
         final List<SomaticVariant> consequentialVariants = filter(variants, consequenceRule);
 
-        return new ConsequenceOutput(consequentialVariants, toVariantReport(consequentialVariants));
+        return ImmutableConsequenceOutput.of(consequentialVariants, toVariantReport(consequentialVariants));
     }
 
     @NotNull
