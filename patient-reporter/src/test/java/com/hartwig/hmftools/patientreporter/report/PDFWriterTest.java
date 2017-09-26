@@ -26,6 +26,8 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -57,8 +59,8 @@ public class PDFWriterTest {
         final int mutationalLoad = 361;
         final List<CopyNumberReport> copyNumbers = createTestCopyNumbers();
 
-        final List<StructuralVariantAnalysis.GeneFusion> fusions = Collections.emptyList();
-        final List<StructuralVariantAnalysis.GeneDisruption> disruptions = Collections.emptyList();
+        final List<StructuralVariantAnalysis.GeneFusion> fusions = createTestFusions();
+        final List<StructuralVariantAnalysis.GeneDisruption> disruptions = createTestDisruptions();
 
         final PatientReport patientReport =
                 ImmutablePatientReport.of(sample, variants, fusions, disruptions, copyNumbers, mutationalLoad, tumorType,
@@ -165,6 +167,36 @@ public class PDFWriterTest {
                 .type(CopyNumberReportType.GAIN)
                 .build();
         return Lists.newArrayList(copyNumber1, copyNumber2);
+    }
+
+    @NotNull
+    private static List<StructuralVariantAnalysis.GeneFusion> createTestFusions() {
+        return Collections.singletonList(ImmutableGeneFusion.builder()
+                .Start("chr21:42872140")
+                .GeneStart("TMPRSS2")
+                .GeneContextStart("Exon 1")
+                .TranscriptStart("ENST00000398585")
+                .End("chr9:140404459")
+                .GeneEnd("PNPLA7")
+                .GeneContextEnd("Exon 13")
+                .TranscriptEnd("ENST00000406427")
+                .Type("BND")
+                .VAF("38% 40%")
+                .build());
+    }
+
+    @NotNull
+    private static List<StructuralVariantAnalysis.GeneDisruption> createTestDisruptions() {
+        return Collections.singletonList(ImmutableGeneDisruption.builder()
+                .GeneName("BRAF")
+                .Transcript("ENST00000288602")
+                .Location("chr7:140568805")
+                .GeneContext("Intron 1")
+                .Orientation("5'")
+                .Partner("chr17:50158907")
+                .Type("BND")
+                .VAF("29%")
+                .build());
     }
 
     @Test
