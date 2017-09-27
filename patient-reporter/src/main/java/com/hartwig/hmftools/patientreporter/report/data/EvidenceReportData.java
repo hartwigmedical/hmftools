@@ -38,7 +38,7 @@ public abstract class EvidenceReportData {
     public static EvidenceReportData of(@NotNull final PatientReport report, @NotNull final GeneModel geneModel,
             @NotNull final Set<String> tumorDoids) {
         final List<Alteration> alterations = Lists.newArrayList();
-        final Set<String> tumorSubtypesDoids = getTumorChildrenDoids(tumorDoids);
+        final Set<String> tumorSubtypesDoids = getTumorSubtypesDoids(tumorDoids);
         for (final VariantReport variantReport : report.variants()) {
             for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
                 if (region.gene().equals(variantReport.gene())) {
@@ -56,18 +56,18 @@ public abstract class EvidenceReportData {
         return ImmutableEvidenceReportData.of(alterations);
     }
 
-    private static Set<String> getTumorChildrenDoids(@NotNull final Set<String> tumorDoids) {
-        final Set<String> tumorChildrenDoids = Sets.newHashSet();
-        tumorChildrenDoids.addAll(tumorDoids);
+    private static Set<String> getTumorSubtypesDoids(@NotNull final Set<String> tumorDoids) {
+        final Set<String> tumorSubtypesDoids = Sets.newHashSet();
+        tumorSubtypesDoids.addAll(tumorDoids);
         for (final String tumorDoid : tumorDoids) {
             try {
                 final List<String> childrenDoid = DiseaseOntologyApiWrapper.getAllChildrenDoids(tumorDoid).toList().blockingGet();
-                tumorChildrenDoids.addAll(childrenDoid);
+                tumorSubtypesDoids.addAll(childrenDoid);
             } catch (final Throwable throwable) {
                 LOGGER.error("Failed to get children doids for tumor doid: " + tumorDoid + ". error message: " + throwable.getMessage());
             }
         }
-        return tumorChildrenDoids;
+        return tumorSubtypesDoids;
     }
 
     @NotNull
