@@ -73,7 +73,7 @@ public abstract class EvidenceReportData {
     @NotNull
     private static List<CivicVariant> getCivicVariants(final int entrezId, @NotNull final VariantReport variantReport) {
         try {
-            return CivicApiWrapper.getVariantsContaining(entrezId, variantReport.variant()).toList().blockingGet();
+            return CivicApiWrapper.getVariantsForGene(entrezId).toList().blockingGet();
         } catch (final Throwable throwable) {
             LOGGER.error("Failed to get civic variants for variant: " + variantReport.variant().chromosomePosition() + ". error message: "
                     + throwable.getMessage());
