@@ -73,11 +73,12 @@ class EvidenceReport {
 
         //@formatter:off
         final SubreportBuilder subtable = cmp.subreport(
-                baseTable().setColumnStyle(dataStyle())
+                baseTable().setColumnStyle(dataStyle()).fields(AlterationEvidence.SOURCE_URL)
                     .columns(
                         col.column(AlterationEvidence.SIGNIFICANCE).setFixedWidth(SIGNIFICANCE_WIDTH).setMinHeight(25),
                         col.column(AlterationEvidence.DRUGS).setFixedWidth(DRUGS_WIDTH),
-                        col.column(AlterationEvidence.SOURCE).setFixedWidth(SOURCE_WIDTH)))
+                        col.column(AlterationEvidence.SOURCE).setHyperLink(hyperLink(AlterationEvidence.sourceHyperlink()))
+                                .setStyle(dataLinkStyle()).setFixedWidth(SOURCE_WIDTH)))
                 .setDataSource(exp.subDatasourceBeanCollection("evidence"));
 
         final ComponentBuilder<?, ?> tableHeader = cmp.horizontalList(
