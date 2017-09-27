@@ -79,20 +79,16 @@ public class StructuralVariantAnalyzer {
         return sameTranscript && bothIntronic && sameExonUpstream;
     }
 
-    private String exonDescription(final Transcript t) {
+    private String exonDescription(final Transcript t, final boolean upstream) {
         if (t.isPromoter()) {
             return "Promoter Region";
         } else if (t.isExonic()) {
-            return String.format("Exon %d", t.getExonUpstream());
+            return String.format("Exon %d", upstream ? t.getExonUpstream() : t.getExonDownstream());
         } else if (t.isIntronic()) {
             return String.format("Intron %d", t.getExonUpstream());
         } else {
             return String.format("Error up(%d) down(%d)", t.getExonUpstream(), t.getExonDownstream());
         }
-    }
-
-    private String exonSelection(final Transcript t, final boolean upstream) {
-        return String.format("Exon %d", upstream ? t.getExonUpstream() : t.getExonDownstream());
     }
 
     private List<StructuralVariantAnalysis.GeneFusion> processFusions(final List<VariantAnnotation> annotations) {
@@ -193,11 +189,11 @@ public class StructuralVariantAnalyzer {
                     .Type(upstream.getBreakend().getStructuralVariant().getVariant().type().toString())
                     .Start(upstream.getBreakend().getPositionString())
                     .GeneStart(upstream.getGeneName())
-                    .GeneContextStart(exonSelection(upstream, true))
+                    .GeneContextStart(exonDescription(upstream, true))
                     .TranscriptStart(upstream.getTranscriptId())
                     .End(downstream.getBreakend().getPositionString())
                     .GeneEnd(downstream.getGeneName())
-                    .GeneContextEnd(exonSelection(downstream, false))
+                    .GeneContextEnd(exonDescription(downstream, false))
                     .TranscriptEnd(downstream.getTranscriptId())
                     .VAF(PatientReportFormat.formatNullablePercent(fiveAF) + " " + PatientReportFormat.formatNullablePercent(threeAF))
                     .build();
@@ -251,7 +247,7 @@ public class StructuralVariantAnalyzer {
                 final StructuralVariantAnalysis.GeneDisruption disruption = ImmutableGeneDisruption.builder()
                         .GeneName(geneName)
                         .Location(g.getBreakend().getPositionString())
-                        .GeneContext(exonDescription(g.getCanonical()))
+                        .GeneContext(exonDescription(g.getCanonical(), true))
                         .Transcript(g.getCanonical().getTranscriptId())
                         .Partner(g.getOtherBreakend().getPositionString())
                         .Type(g.getBreakend().getStructuralVariant().getVariant().type().toString())
