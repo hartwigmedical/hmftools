@@ -68,4 +68,15 @@ public abstract class CivicVariant {
     public String toString() {
         return "Civic Variant: " + name() + ": " + summaryUrl();
     }
+
+    public boolean containsHgvsExpression(@NotNull final String hgvsExpression) {
+        if (!hgvsExpression.isEmpty()) {
+            for (final String variantExpression : hgvsExpressions()) {
+                if (variantExpression.toLowerCase().contains(hgvsExpression.toLowerCase())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
