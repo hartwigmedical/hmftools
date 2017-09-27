@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.apiclients.civic.data;
 
-import java.util.List;
+import static java.util.stream.Collectors.joining;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 import com.google.gson.annotations.SerializedName;
 
 import org.immutables.gson.Gson;
@@ -61,5 +65,16 @@ public abstract class CivicEvidenceItem {
             return other.id() == id();
         }
         return false;
+    }
+
+    @NotNull
+    @Value.Derived
+    public List<String> drugNames() {
+        final String drugInteractionType = drugInteractionType();
+        if (drugInteractionType != null && drugInteractionType.toLowerCase().equals("combination")) {
+            return Lists.newArrayList(drugs().stream().map(CivicDrug::name).collect(joining(", ")) + " (Combination)");
+        } else {
+            return drugs().stream().map(CivicDrug::name).collect(Collectors.toList());
+        }
     }
 }

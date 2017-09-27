@@ -66,9 +66,8 @@ class EvidenceReport {
 
     @NotNull
     private static ComponentBuilder<?, ?> alterationEvidenceTable() throws IOException, DRException {
-        final int ALTERATION_WIDTH = 150;
+        final int ALTERATION_WIDTH = 130;
         final int SIGNIFICANCE_WIDTH = 100;
-        final int DRUGS_WIDTH = 200;
         final int SOURCE_WIDTH = 70;
 
         //@formatter:off
@@ -76,7 +75,7 @@ class EvidenceReport {
                 baseTable().setColumnStyle(dataStyle()).fields(AlterationEvidence.SOURCE_URL)
                     .columns(
                         col.column(AlterationEvidence.SIGNIFICANCE).setFixedWidth(SIGNIFICANCE_WIDTH).setMinHeight(25),
-                        col.column(AlterationEvidence.DRUGS).setFixedWidth(DRUGS_WIDTH),
+                        col.column(AlterationEvidence.DRUGS),
                         col.column(AlterationEvidence.SOURCE).setHyperLink(hyperLink(AlterationEvidence.sourceHyperlink()))
                                 .setStyle(dataLinkStyle()).setFixedWidth(SOURCE_WIDTH)))
                 .setDataSource(exp.subDatasourceBeanCollection("evidence"));
@@ -84,7 +83,7 @@ class EvidenceReport {
         final ComponentBuilder<?, ?> tableHeader = cmp.horizontalList(
                 cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
                 cmp.text("Significance").setStyle(tableHeaderStyle()).setFixedWidth(SIGNIFICANCE_WIDTH),
-                cmp.text("Association(Lv)").setStyle(tableHeaderStyle()).setFixedWidth(DRUGS_WIDTH),
+                cmp.text("Association(Lv)").setStyle(tableHeaderStyle()),
                 cmp.text("Source").setStyle(tableHeaderStyle()).setFixedWidth(SOURCE_WIDTH));
 
         return cmp.subreport(

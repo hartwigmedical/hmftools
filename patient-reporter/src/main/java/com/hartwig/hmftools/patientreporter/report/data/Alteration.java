@@ -16,7 +16,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.apiclients.civic.data.CivicDrug;
 import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -50,6 +49,7 @@ public abstract class Alteration {
         return getGene() + "\n" + getPredictedEffect();
     }
 
+    @NotNull
     public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants,
             @NotNull final Set<String> tumorSubtypesDoids) {
         final String gene = variantReport.gene();
@@ -82,6 +82,7 @@ public abstract class Alteration {
                 .collect(toList());
     }
 
+    @NotNull
     private static List<CivicEvidenceItem> offLabelEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
             @NotNull Set<String> tumorSubtypesDoids) {
         return evidenceItems.stream()
@@ -107,7 +108,7 @@ public abstract class Alteration {
     @NotNull
     private static Map<String, Map<String, String>> groupOnLabelEvidenceLevels(@NotNull final List<CivicEvidenceItem> evidenceItems) {
         return evidenceItems.stream()
-                .flatMap(evidenceItem -> evidenceItem.drugs().stream().map(drug -> ImmutablePair.of(drug.name(), evidenceItem)))
+                .flatMap(evidenceItem -> evidenceItem.drugNames().stream().map(drug -> ImmutablePair.of(drug, evidenceItem)))
                 .collect(groupingBy(pair -> pair.getRight().significance(), groupingBy(Pair::getLeft,
                         mapping(pair -> pair.getRight().level(), collectingAndThen(toList(), Alteration::flattenOnLabelEvidenceLevels)))));
     }
@@ -116,13 +117,13 @@ public abstract class Alteration {
     @NotNull
     private static Map<String, Map<String, String>> groupOffLabelEvidenceLevels(@NotNull final List<CivicEvidenceItem> onLabelEvidenceItems,
             @NotNull final List<CivicEvidenceItem> offLabelEvidenceItems) {
-        final Set<CivicDrug> onLabelDrugs =
-                onLabelEvidenceItems.stream().flatMap(evidenceItem -> evidenceItem.drugs().stream()).collect(toSet());
+        final Set<String> onLabelDrugs =
+                onLabelEvidenceItems.stream().flatMap(evidenceItem -> evidenceItem.drugNames().stream()).collect(toSet());
         return offLabelEvidenceItems.stream()
-                .flatMap(evidenceItem -> evidenceItem.drugs()
+                .flatMap(evidenceItem -> evidenceItem.drugNames()
                         .stream()
                         .filter(drug -> !onLabelDrugs.contains(drug))
-                        .map(drug -> ImmutablePair.of(drug.name(), evidenceItem)))
+                        .map(drug -> ImmutablePair.of(drug, evidenceItem)))
                 .collect(groupingBy(pair -> pair.getRight().significance(), groupingBy(Pair::getLeft,
                         mapping(pair -> pair.getRight().level(), collectingAndThen(toList(), Alteration::flattenOffLabelEvidenceLevels)))));
     }
