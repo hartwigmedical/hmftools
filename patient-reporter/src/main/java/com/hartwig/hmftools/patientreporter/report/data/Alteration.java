@@ -58,7 +58,8 @@ public abstract class Alteration {
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
 
         civicVariants.forEach(civicVariant -> {
-            if (civicVariant.coordinates().equals(variantReport.variant())) {
+            if (civicVariant.containsHgvsExpression(variantReport.hgvsProtein()) || civicVariant.coordinates()
+                    .equals(variantReport.variant())) {
                 final Map<String, String> associationsPerSignificance =
                         drugAssociationsPerSignificance(civicVariant.evidenceItems(), tumorSubtypesDoids);
                 for (final String significance : associationsPerSignificance.keySet()) {
@@ -66,7 +67,7 @@ public abstract class Alteration {
                     exactMatchEvidence.add(ImmutableAlterationEvidence.of(significance, associations, "CIViC", civicVariant.summaryUrl()));
                 }
                 matchingVariants.add(AlterationMatch.of("exact", civicVariant));
-            } else {
+            } else if (civicVariant.coordinates().containsVariant(variantReport.variant())) {
                 matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
             }
         });
