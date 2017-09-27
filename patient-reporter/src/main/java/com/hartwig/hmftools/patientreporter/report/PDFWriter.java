@@ -77,7 +77,7 @@ public class PDFWriter implements ReportWriter {
         writeReport(fileName(report.sample(), "_hmf_report.pdf"), reportBuilder);
         final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report);
         writeReport(fileName(report.sample(), "_hmf_report_supplementary.pdf"), supplementaryBuilder);
-        final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report, reporterData);
+        final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report);
         writeReport(fileName(report.sample(), "_evidence_items.pdf"), evidenceReportBuilder);
     }
 

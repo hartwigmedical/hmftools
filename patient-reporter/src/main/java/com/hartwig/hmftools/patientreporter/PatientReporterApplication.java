@@ -119,7 +119,7 @@ public class PatientReporterApplication {
         }
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, geneModel.hmfRegions(), cosmic);
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer);
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), geneModel, variantAnalyzer, svAnalyzer);
     }
 
     @NotNull

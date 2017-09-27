@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -25,9 +26,11 @@ import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
+import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
+import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
@@ -50,6 +53,15 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateReports() throws DRException, IOException, HartwigException {
+        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
+        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
+        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
+        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
+        final HmfReporterData reporterData =
+                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
+        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
+
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
         final Double pathologyTumorPercentage = 0.6;
@@ -63,20 +75,13 @@ public class PDFWriterTest {
 
         final List<StructuralVariantAnalysis.GeneFusion> fusions = createTestFusions();
         final List<StructuralVariantAnalysis.GeneDisruption> disruptions = createTestDisruptions();
+        final List<Alteration> alterations =
+                CivicAnalysis.run(variants, reporterData.geneModel(), doidMapping.doidsForTumorType(tumorType));
 
         final PatientReport patientReport =
                 ImmutablePatientReport.of(sample, variants, fusions, disruptions, copyNumbers, mutationalLoad, tumorType,
                         pathologyTumorPercentage, "58%", "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER),
-                        LocalDate.parse("01-Jan-2016", FORMATTER));
-
-        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
-        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
-        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
-
-        final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
+                        LocalDate.parse("01-Jan-2016", FORMATTER), alterations);
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
@@ -84,7 +89,7 @@ public class PDFWriterTest {
         final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport);
         assertNotNull(supplement);
 
-        final JasperReportBuilder evidenceReport = EvidenceReport.generate(patientReport, reporterData);
+        final JasperReportBuilder evidenceReport = EvidenceReport.generate(patientReport);
         assertNotNull(evidenceReport);
 
         if (SHOW_AND_PRINT) {

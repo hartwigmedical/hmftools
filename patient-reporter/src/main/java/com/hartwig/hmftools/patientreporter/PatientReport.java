@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -62,4 +63,7 @@ public abstract class PatientReport {
 
     @Nullable
     public abstract LocalDate bloodArrivalDate();
+
+    @NotNull
+    public abstract List<Alteration> civicAlterations();
 }

@@ -13,13 +13,13 @@ import java.awt.Color;
 import java.io.IOException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidence;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationMatch;
 import com.hartwig.hmftools.patientreporter.report.data.EvidenceReportData;
+import com.hartwig.hmftools.patientreporter.report.data.ImmutableEvidenceReportData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,11 +36,9 @@ class EvidenceReport {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generate(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
-            throws IOException, DRException {
+    static JasperReportBuilder generate(@NotNull final PatientReport report) throws IOException, DRException {
 
-        final EvidenceReportData evidenceReportData =
-                EvidenceReportData.of(report, reporterData.geneModel(), reporterData.doidMapping().doidsForTumorType(report.tumorType()));
+        final EvidenceReportData evidenceReportData = ImmutableEvidenceReportData.of(report.civicAlterations());
 
         // @formatter:off
         final VerticalListBuilder totalReport = cmp.verticalList(

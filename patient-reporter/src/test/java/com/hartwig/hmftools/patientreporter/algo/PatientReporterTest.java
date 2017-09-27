@@ -74,7 +74,7 @@ public class PatientReporterTest {
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo =
-                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer, svAnalyzer);
+                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), geneModel, variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY));
     }
 

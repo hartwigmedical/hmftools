@@ -22,8 +22,6 @@ import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,8 +31,6 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 @Value.Immutable
 @Value.Style(allParameters = true)
 public abstract class Alteration {
-    private static final Logger LOGGER = LogManager.getLogger(Alteration.class);
-
     public static final FieldBuilder<?> ALTERATION = field("alteration", String.class);
 
     public abstract String getGene();
@@ -52,8 +48,6 @@ public abstract class Alteration {
     @NotNull
     public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants,
             @NotNull final Set<String> tumorSubtypesDoids) {
-        final String gene = variantReport.gene();
-        final String predictedEffect = variantReport.hgvsProtein();
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
 
@@ -71,7 +65,7 @@ public abstract class Alteration {
                 matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
             }
         });
-        return ImmutableAlteration.of(gene, predictedEffect, exactMatchEvidence, matchingVariants);
+        return ImmutableAlteration.of(variantReport.gene(), variantReport.hgvsProtein(), exactMatchEvidence, matchingVariants);
     }
 
     @NotNull

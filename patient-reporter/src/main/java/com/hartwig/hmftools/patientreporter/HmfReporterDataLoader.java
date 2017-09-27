@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.cosmic.Cosmic;
 import com.hartwig.hmftools.common.cosmic.CosmicModel;
-import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
@@ -29,7 +28,6 @@ public final class HmfReporterDataLoader {
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
         final CenterModel centerModel = Center.readFromCSV(centerFile);
         final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromCSV(fusionFile);
-        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-        return new ImmutableHmfReporterData(geneModel, cosmicModel, drupFilter, centerModel, signaturePath, fusionModel, doidMapping);
+        return new ImmutableHmfReporterData(geneModel, cosmicModel, drupFilter, centerModel, signaturePath, fusionModel);
     }
 }
