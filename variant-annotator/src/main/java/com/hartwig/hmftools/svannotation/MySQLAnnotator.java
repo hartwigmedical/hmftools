@@ -98,6 +98,7 @@ public class MySQLAnnotator implements VariantAnnotator {
 
         final int PROMOTER_DISTANCE = 10000;
         final byte zero = 0;
+        final UInteger uzero = UInteger.valueOf(0);
 
         // start with the overlapping genes
         final Result<?> genes =
@@ -110,7 +111,9 @@ public class MySQLAnnotator implements VariantAnnotator {
                         .innerJoin(XREF)
                         .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
                         .where(GENE.STATUS.eq(GeneStatus.KNOWN))
-                        .and(decode().when(GENE.SEQ_REGION_STRAND.gt(zero), GENE.SEQ_REGION_START.sub(PROMOTER_DISTANCE))
+                        .and(decode().when(GENE.SEQ_REGION_STRAND.gt(zero),
+                                decode().when(GENE.SEQ_REGION_START.ge(UInteger.valueOf(PROMOTER_DISTANCE)),
+                                        GENE.SEQ_REGION_START.sub(PROMOTER_DISTANCE)).otherwise(GENE.SEQ_REGION_START))
                                 .otherwise(GENE.SEQ_REGION_START)
                                 .le(UInteger.valueOf(position)))
                         .and(decode().when(GENE.SEQ_REGION_STRAND.lt(zero), GENE.SEQ_REGION_END.add(PROMOTER_DISTANCE))
