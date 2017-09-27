@@ -19,8 +19,9 @@ public class CivicClientApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        CivicApiWrapper.getAllEvidenceItems().blockingSubscribe(LOGGER::info, LOGGER::error, () -> LOGGER.info("completed"));
-        CivicApiWrapper.releaseResources();
+        final CivicApiWrapper civic = new CivicApiWrapper();
+        civic.getAllEvidenceItems().blockingSubscribe(LOGGER::info, LOGGER::error, () -> LOGGER.info("completed"));
+        civic.releaseResources();
     }
 
     @NotNull

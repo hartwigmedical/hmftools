@@ -19,9 +19,9 @@ public class DiseaseOntologyApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        DiseaseOntologyApiWrapper.getAllChildrenDoids("DOID:" + 1909)
-                .blockingSubscribe(LOGGER::info, LOGGER::error, () -> LOGGER.info("completed"));
-        DiseaseOntologyApiWrapper.releaseResources();
+        final DiseaseOntologyApiWrapper diseaseOntoloy = new DiseaseOntologyApiWrapper();
+        diseaseOntoloy.getAllChildrenDoids("DOID:" + 1909).blockingSubscribe(LOGGER::info, LOGGER::error, () -> LOGGER.info("completed"));
+        diseaseOntoloy.releaseResources();
     }
 
     @NotNull

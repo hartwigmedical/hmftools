@@ -18,10 +18,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class DiseaseOntologyApiWrapper {
     private static final String ENDPOINT = "http://www.disease-ontology.org/api/";
-    private static final DiseaseOntologyApi api;
-    private static final OkHttpClient httpClient;
+    private final DiseaseOntologyApi api;
+    private final OkHttpClient httpClient;
 
-    static {
+    public DiseaseOntologyApiWrapper() {
         final Dispatcher requestDispatcher = new Dispatcher();
         requestDispatcher.setMaxRequests(100);
         requestDispatcher.setMaxRequestsPerHost(100);
@@ -38,29 +38,35 @@ public class DiseaseOntologyApiWrapper {
         api = retrofit.create(DiseaseOntologyApi.class);
     }
 
-    public static Observable<DiseaseOntologyMetadata> getMetadata(@NotNull final String doid) {
+    @NotNull
+    public Observable<DiseaseOntologyMetadata> getMetadata(@NotNull final String doid) {
         return api.getMetadata(doid);
     }
 
-    public static Observable<DiseaseOntologyMetadata> getMetadata(final int doid) {
+    @NotNull
+    public Observable<DiseaseOntologyMetadata> getMetadata(final int doid) {
         return getMetadata("DOID:" + doid);
     }
 
-    public static Observable<String> getAllParentDoids(final String doid) {
+    @NotNull
+    public Observable<String> getAllParentDoids(final String doid) {
         return getMetadata(doid).flatMap(metadata -> Observable.fromIterable(metadata.parentDoids())
-                .mergeWith(Observable.fromIterable(metadata.parentDoids()).flatMap(DiseaseOntologyApiWrapper::getAllParentDoids)));
+                .mergeWith(Observable.fromIterable(metadata.parentDoids()).flatMap(this::getAllParentDoids)));
     }
 
-    public static Observable<String> getAllParentDoids(final int doid) {
+    @NotNull
+    public Observable<String> getAllParentDoids(final int doid) {
         return getAllParentDoids("DOID:" + doid);
     }
 
-    public static Observable<String> getAllChildrenDoids(@NotNull final String doid) {
+    @NotNull
+    public Observable<String> getAllChildrenDoids(@NotNull final String doid) {
         return getMetadata(doid).flatMap(metadata -> Observable.fromIterable(metadata.childrenDoids())
-                .mergeWith(Observable.fromIterable(metadata.childrenDoids()).flatMap(DiseaseOntologyApiWrapper::getAllChildrenDoids)));
+                .mergeWith(Observable.fromIterable(metadata.childrenDoids()).flatMap(this::getAllChildrenDoids)));
     }
 
-    public static void releaseResources() {
+    @NotNull
+    public void releaseResources() {
         httpClient.dispatcher().executorService().shutdown();
     }
 }

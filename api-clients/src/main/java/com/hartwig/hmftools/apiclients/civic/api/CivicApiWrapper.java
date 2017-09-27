@@ -24,10 +24,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CivicApiWrapper {
     private static final String CIVIC_API_ENDPOINT = "https://civic.genome.wustl.edu/api/";
-    private static final CivicApi civicApi;
-    private static final OkHttpClient httpClient;
+    private final CivicApi api;
+    private final OkHttpClient httpClient;
 
-    static {
+    public CivicApiWrapper() {
         final Dispatcher requestDispatcher = new Dispatcher();
         requestDispatcher.setMaxRequests(100);
         requestDispatcher.setMaxRequestsPerHost(100);
@@ -40,36 +40,43 @@ public class CivicApiWrapper {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .client(httpClient)
                 .build();
-        civicApi = retrofit.create(CivicApi.class);
+        api = retrofit.create(CivicApi.class);
     }
 
-    public static Observable<CivicVariant> getVariantsForGene(final int entrezId) {
-        return civicApi.getGene(entrezId)
+    @NotNull
+    public Observable<CivicVariant> getVariantsForGene(final int entrezId) {
+        return api.getGene(entrezId)
                 .flatMapIterable(CivicGene::variantMetadatas)
-                .flatMap(variantMetadata -> civicApi.getVariant(variantMetadata.id()));
+                .flatMap(variantMetadata -> api.getVariant(variantMetadata.id()));
     }
 
-    public static Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final Variant variant) {
+    @NotNull
+    public Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final Variant variant) {
         return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().containsVariant(variant));
     }
 
-    public static Observable<CivicVariant> getVariantMatches(final int entrezId, @NotNull final Variant variant) {
+    @NotNull
+    public Observable<CivicVariant> getVariantMatches(final int entrezId, @NotNull final Variant variant) {
         return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().equals(variant));
     }
 
-    public static Observable<CivicVariant> getAllVariants() {
-        return getAllFromPaginatedEndpoint(civicApi::getVariants).flatMap(variant -> civicApi.getVariant(variant.id()));
+    @NotNull
+    public Observable<CivicVariant> getAllVariants() {
+        return getAllFromPaginatedEndpoint(api::getVariants).flatMap(variant -> api.getVariant(variant.id()));
     }
 
-    public static Observable<CivicEvidenceItem> getAllEvidenceItems() {
-        return getAllFromPaginatedEndpoint(civicApi::getEvidenceItems);
+    @NotNull
+    public Observable<CivicEvidenceItem> getAllEvidenceItems() {
+        return getAllFromPaginatedEndpoint(api::getEvidenceItems);
     }
 
-    public static Observable<CivicGene> getAllGenes() {
-        return getAllFromPaginatedEndpoint(civicApi::getGenes);
+    @NotNull
+    public Observable<CivicGene> getAllGenes() {
+        return getAllFromPaginatedEndpoint(api::getGenes);
     }
 
-    private static <T> Observable<T> getAllFromPaginatedEndpoint(@NotNull final Function<Long, Observable<CivicIndexResult<T>>> endpoint) {
+    @NotNull
+    private <T> Observable<T> getAllFromPaginatedEndpoint(@NotNull final Function<Long, Observable<CivicIndexResult<T>>> endpoint) {
         return endpoint.apply(1L).flatMap(indexResult -> {
             final CivicApiMetadata metadata = indexResult.meta();
             final Observable<T> firstPageResults = Observable.fromIterable(indexResult.records());
@@ -79,7 +86,7 @@ public class CivicApiWrapper {
         });
     }
 
-    public static void releaseResources() {
+    public void releaseResources() {
         httpClient.dispatcher().executorService().shutdown();
     }
 }
