@@ -105,7 +105,7 @@ public class PatientReporter {
         return ImmutablePatientReport.of(sample, purpleEnrichedVariants, svAnalysis.fusions(), svAnalysis.disruptions(),
                 copyNumberAnalysis.findings(), mutationalLoad, tumorType, tumorPercentage, purpleAnalysis.purityString(),
                 limsModel.barcodeForSample(sample), limsModel.bloodBarcodeForSample(sample), limsModel.arrivalDateForSample(sample),
-                limsModel.bloodArrivalDateForSample(sample), alterations);
+                limsModel.bloodArrivalDateForSample(sample), alterations, limsModel.labProceduresForSample(sample));
     }
 
     @NotNull

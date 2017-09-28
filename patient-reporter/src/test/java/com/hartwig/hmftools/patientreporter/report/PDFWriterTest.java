@@ -81,7 +81,7 @@ public class PDFWriterTest {
         final PatientReport patientReport =
                 ImmutablePatientReport.of(sample, variants, fusions, disruptions, copyNumbers, mutationalLoad, tumorType,
                         pathologyTumorPercentage, "58%", "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER),
-                        LocalDate.parse("01-Jan-2016", FORMATTER), alterations);
+                        LocalDate.parse("01-Jan-2016", FORMATTER), alterations, "PREP013V23-QC037V20-SEQ008V25");
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);

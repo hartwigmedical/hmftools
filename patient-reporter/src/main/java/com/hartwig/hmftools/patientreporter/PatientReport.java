@@ -66,4 +66,7 @@ public abstract class PatientReport {
 
     @NotNull
     public abstract List<Alteration> civicAlterations();
+
+    @NotNull
+    public abstract String labProcedures();
 }

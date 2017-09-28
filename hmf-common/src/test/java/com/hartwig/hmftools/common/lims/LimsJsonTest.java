@@ -25,6 +25,7 @@ public class LimsJsonTest {
         assertEquals("CSB000000", jsonLims.bloodBarcodeForSample("SAMP01010003R"));
         assertEquals("CSB000000", jsonLims.barcodeForSample("SAMP01010003R"));
         assertEquals(LocalDate.parse("2016-01-03"), jsonLims.bloodArrivalDateForSample("SAMP01010003R"));
+        assertEquals("PREP013V23-QC037V20-SEQ008V25", jsonLims.labProceduresForSample("SAMP01010003R"));
 
         assertEquals("CSB000000", jsonLims.bloodBarcodeForSample("SAMP01010003T"));
         assertEquals("FC0000001", jsonLims.barcodeForSample("SAMP01010003T"));
@@ -34,5 +35,6 @@ public class LimsJsonTest {
         assertEquals(LocalDate.parse("2016-02-05"), jsonLims.arrivalDateForSample("SAMP01010003T"));
         assertEquals(LocalDate.parse("2016-01-04"), jsonLims.samplingDateForSample("SAMP01010003T"));
         assertEquals(LocalDate.parse("2016-01-03"), jsonLims.bloodArrivalDateForSample("SAMP01010003T"));
+        assertEquals("N/A", jsonLims.labProceduresForSample("SAMP01010003T"));
     }
 }

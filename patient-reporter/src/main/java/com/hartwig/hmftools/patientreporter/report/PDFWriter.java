@@ -493,7 +493,9 @@ public class PDFWriter implements ReportWriter {
                 "The samples have been analysed by Next Generation Sequencing",
                 "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
-                        + "findings using certified assays.", "This report is addressed at: " + recipientAddress);
+                        + "findings using certified assays.",
+                "This test was performed according to lab procedures: " + report.labProcedures(),
+                "This report is addressed at: " + recipientAddress);
         //@formatter:on
 
         if (INCLUDE_SAMPLE_BARCODES_AND_DATES) {

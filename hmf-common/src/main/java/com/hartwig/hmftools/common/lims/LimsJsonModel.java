@@ -136,6 +136,18 @@ public abstract class LimsJsonModel {
     }
 
     @NotNull
+    public String labProceduresForSample(@NotNull final String sample) {
+        final Collection<LimsJsonData> dataPerPatient = patientDataForSample(sample);
+        for (final LimsJsonData data : dataPerPatient) {
+            if (data.sampleName().equals(sample)) {
+                return data.labProcedures();
+            }
+        }
+        LOGGER.warn("Could not find lab SOP versions for sample: " + sample + " in Lims");
+        return "N/A";
+    }
+
+    @NotNull
     private Collection<LimsJsonData> patientDataForSample(@NotNull final String sample) {
         final String patientId = getPatientIdFromSample(sample);
         if (patientId == null) {
