@@ -70,7 +70,7 @@ public class ObservedRegionFactory {
 
         @Override
         public void accept(final TumorBAF baf) {
-            if (HumanChromosome.valueOf(baf).isHomologous(gender)) {
+            if (HumanChromosome.valueOf(baf).isHomologous(gender) && !Double.isNaN(baf.mBaf())) {
                 count++;
                 bafs.add(baf.mBaf());
             }
