@@ -86,7 +86,7 @@ public class PDFWriter implements ReportWriter {
             @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage, reason, study);
-        writeReport(sample, reportBuilder);
+        writeReport(fileName(sample, "_hmf_report.pdf"), reportBuilder);
     }
 
     private void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
