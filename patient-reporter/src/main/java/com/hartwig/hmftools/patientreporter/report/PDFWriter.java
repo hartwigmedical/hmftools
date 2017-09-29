@@ -125,6 +125,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException {
+        final String additionalPagesTitleStart = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
@@ -139,7 +140,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> genePanelPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Gene Panel Information")
+                        cmp.text(additionalPagesTitleStart + " - Gene Panel Information")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         GenePanelSection.build(reporterData)
@@ -148,7 +149,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> additionalInfoPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - Additional Information")
+                        cmp.text(additionalPagesTitleStart + " - Additional Information")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
