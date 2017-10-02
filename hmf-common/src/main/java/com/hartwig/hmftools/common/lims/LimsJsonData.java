@@ -43,7 +43,7 @@ public abstract class LimsJsonData {
 
     @NotNull
     @SerializedName("lab_sop_versions")
-    protected abstract String labSopVersions();
+    abstract String labSopVersions();
 
     @NotNull
     @Value.Derived
