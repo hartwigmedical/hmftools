@@ -5,7 +5,6 @@ import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +21,7 @@ public interface Slicer extends Predicate<GenomePosition> {
         return regions().stream().mapToLong(GenomeRegion::bases).sum();
     }
 
-    default boolean includes(@NotNull Variant variant) {
+    default boolean includes(@NotNull GenomePosition variant) {
         return test(variant);
     }
 }
