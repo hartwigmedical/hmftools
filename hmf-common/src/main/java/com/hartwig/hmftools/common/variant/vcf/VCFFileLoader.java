@@ -19,8 +19,6 @@ import com.hartwig.hmftools.common.variant.SomaticTruthSetVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.strelka.StrelkaSomaticVariant;
-import com.hartwig.hmftools.common.variant.strelka.StrelkaSomaticVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,11 +41,6 @@ public final class VCFFileLoader {
     @NotNull
     public static VCFSomaticTruthSetFile loadSomaticTruthSetVCF(@NotNull final String file) throws IOException, HartwigException {
         return toVCFSomaticTruthSet(loadAllLinesFromVCF(file));
-    }
-
-    @NotNull
-    public static StrelkaVCFSomaticFile loadStrelkaVCF(@NotNull final String file) throws IOException, HartwigException {
-        return toStrelkaVCF(loadAllLinesFromVCF(file));
     }
 
     @NotNull
@@ -77,18 +70,6 @@ public final class VCFFileLoader {
         final List<SomaticTruthSetVariant> variants = variants(lines, SomaticVariantFactory::fromTruthSetVCFLine);
         return ImmutableVCFSomaticTruthSetFile.builder()
                 .sample(sample)
-                .originalMetaInformationLines(metaInformationLines)
-                .originalHeaderLine(header)
-                .variants(variants)
-                .build();
-    }
-
-    @NotNull
-    private static StrelkaVCFSomaticFile toStrelkaVCF(@NotNull final List<String> lines) {
-        final List<String> metaInformationLines = extractMetaInformation(lines);
-        final String header = extractHeader(lines);
-        final List<StrelkaSomaticVariant> variants = variants(lines, StrelkaSomaticVariantFactory::fromVCFLine);
-        return ImmutableStrelkaVCFSomaticFile.builder()
                 .originalMetaInformationLines(metaInformationLines)
                 .originalHeaderLine(header)
                 .variants(variants)
