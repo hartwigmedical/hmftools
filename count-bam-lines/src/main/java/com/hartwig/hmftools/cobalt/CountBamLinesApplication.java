@@ -3,20 +3,18 @@ package com.hartwig.hmftools.cobalt;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
+import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.cobalt.count.CountSupplier;
+import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
+import com.hartwig.hmftools.cobalt.segment.PCFSegment;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
+import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCProfile;
+import com.hartwig.hmftools.common.gc.GCProfileFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,31 +27,32 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-
 public class CountBamLinesApplication {
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
+    private static final String SAMPLE = "sample";
     private static final String THREADS = "threads";
+    private static final String DIPLOID = "diploid";
     private static final String INPUT_FILE = "input";
     private static final String OUTPUT_DIR = "output_dir";
+    private static final String GC_PROFILE = "gc_profile";
     private static final String WINDOW_SIZE = "window_size";
-    private static final String SAMPLE = "sample";
     private static final String MIN_QUALITY = "min_quality";
 
     private static final int WINDOW_SIZE_DEFAULT = 1000;
     private static final int MIN_QUALITY_DEFAULT = 10;
 
-    public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
+    public static void main(final String... args)
+            throws ParseException, IOException, ExecutionException, InterruptedException, HartwigException {
         new CountBamLinesApplication(args);
     }
 
-    private CountBamLinesApplication(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
+    private CountBamLinesApplication(final String... args)
+            throws ParseException, IOException, ExecutionException, InterruptedException, HartwigException {
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
-        if (!cmd.hasOption(INPUT_FILE) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE)) {
+        if (!cmd.hasOption(GC_PROFILE) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE)) {
             printUsageAndExit(options);
         }
 
@@ -63,45 +62,35 @@ public class CountBamLinesApplication {
             System.exit(1);
         }
 
-        final File inputFile = new File(cmd.getOptionValue(INPUT_FILE));
+        // Parameters
         final String outputCountFile = ReadCountFile.generateFilename(outputPath.toString(), sample);
         final String chromosomeLengthFile = ChromosomeLengthFile.generateFilename(outputPath.toString(), sample);
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
         final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
         final int minQuality = cmd.hasOption(MIN_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_QUALITY)) : MIN_QUALITY_DEFAULT;
-        LOGGER.info("Input File: {}", inputFile.toString());
-        LOGGER.info("Output Read Counts: {}", outputCountFile);
         LOGGER.info("Output Chromosome Lengths: {}", chromosomeLengthFile);
         LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minQuality);
 
-        final SamReaderFactory readerFactory = SamReaderFactory.make();
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
-        final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
+        // GC Profile
+        LOGGER.info("Reading GC Profile");
+        final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
 
-        final List<ChromosomeLength> lengths;
-        try (SamReader reader = readerFactory.open(inputFile)) {
-            lengths = ChromosomeLengthFactory.create(reader.getFileHeader());
-        }
-        ChromosomeLengthFile.write(chromosomeLengthFile, lengths);
-
-        final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
-        for (ChromosomeLength chromosome : lengths) {
-            final ChromosomeReadCount callable = new ChromosomeReadCount(inputFile,
-                    readerFactory,
-                    chromosome.chromosome(),
-                    chromosome.position(),
-                    windowSize,
-                    minQuality);
-            futures.add(executorService.submit(callable));
+        // Read Counts
+        final CountSupplier countSupplier = new CountSupplier(threadCount, windowSize, minQuality, chromosomeLengthFile, outputCountFile);
+        final Multimap<String, ReadCount> readCounts;
+        if (cmd.hasOption(INPUT_FILE)) {
+            final File inputFile = new File(cmd.getOptionValue(INPUT_FILE));
+            readCounts = countSupplier.fromBam(inputFile);
+        } else {
+            readCounts = countSupplier.fromFile();
         }
 
-        ReadCountFile.createFile(windowSize, outputCountFile);
-        for (Future<ChromosomeReadCount> future : futures) {
-            persist(outputCountFile, future.get());
-        }
+        // Ratios
+        final RatioSupplier ratioSupplier = new RatioSupplier(sample, outputPath.toString(), cmd.hasOption(DIPLOID));
+        ratioSupplier.generateRatios(gcProfiles, readCounts);
 
-        LOGGER.info("Complete");
-        executorService.shutdown();
+        // Segmentation
+        new PCFSegment(outputPath.toString()).ratioSegmentation(sample);
     }
 
     @Nullable
@@ -118,12 +107,6 @@ public class CountBamLinesApplication {
         }
 
         return outputFile.toPath();
-    }
-
-    private void persist(@NotNull final String filename, @NotNull ChromosomeReadCount counter) throws IOException {
-        final List<ReadCount> readCounts = counter.readCount();
-        LOGGER.info("Persisting {} windows from chromosome {}", readCounts.size(), counter.chromosome());
-        ReadCountFile.append(filename, readCounts);
     }
 
     private static void printUsageAndExit(@NotNull final Options options) {
@@ -150,7 +133,10 @@ public class CountBamLinesApplication {
         options.addOption(THREADS, true, "Number of threads. Default 4.");
         options.addOption(INPUT_FILE, true, "Input bam location/filename");
         options.addOption(OUTPUT_DIR, true, "Output directory");
+        options.addOption(MIN_QUALITY, true, "Min quality. Default 10.");
         options.addOption(SAMPLE, true, "Name of sample");
+        options.addOption(GC_PROFILE, true, "Location of GC Profile.");
+        options.addOption(DIPLOID, false, "Apply diploid normalization to ratios. Recommended for reference samples.");
 
         return options;
     }

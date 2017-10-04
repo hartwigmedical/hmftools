@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt;
+package com.hartwig.hmftools.cobalt.count;
 
 import java.io.File;
 import java.util.List;

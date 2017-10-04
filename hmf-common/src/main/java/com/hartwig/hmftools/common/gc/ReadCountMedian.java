@@ -25,7 +25,7 @@ public class ReadCountMedian {
     }
 
     public int mean() {
-        return (int) (sum / count);
+        return count == 0 ? 0 : (int) (sum / count);
     }
 
     public int median() {

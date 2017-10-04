@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt;
+package com.hartwig.hmftools.cobalt.count;
 
 import static org.junit.Assert.assertEquals;
 

@@ -31,12 +31,12 @@ public class RatioSupplier  {
     public void generateRatios(@NotNull final Multimap<String, GCProfile> gcProfiles, @NotNull final Multimap<String, ReadCount> readCounts)
             throws IOException {
 
-        LOGGER.info("Generating gc normalized read ratios");
+        LOGGER.info("Applying ratio gc normalization");
         final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
 
         final Multimap<String, ReadRatio> ratios;
         if (reference) {
-            LOGGER.info("Applying diploid normalization");
+            LOGGER.info("Applying ratio diploid normalization");
             ListMultimap<String, ReadRatio> intermediateRatios = gcRatioSupplier.ratios();
             ratios = new DiploidRatioSupplier(intermediateRatios).result();
 
@@ -49,11 +49,11 @@ public class RatioSupplier  {
         }
 
         final String ratioFileName = ReadRatioFile.generateFilename(outputDirectory, sample);
-        LOGGER.info("Persisting final read ratios to {}", ratioFileName);
+        LOGGER.info("Persisting read ratios to {}", ratioFileName);
         ReadRatioFile.write(ratioFileName, ratios);
 
         final String gcMedianFileName = GCMedianReadCountFile.generateFilename(outputDirectory, sample);
-        LOGGER.info("Persisting read count medians to {}", gcMedianFileName);
+        LOGGER.info("Persisting gc read count medians to {}", gcMedianFileName);
         GCMedianReadCountFile.write(gcMedianFileName, gcRatioSupplier.gcMedianReadCount());
     }
 }
