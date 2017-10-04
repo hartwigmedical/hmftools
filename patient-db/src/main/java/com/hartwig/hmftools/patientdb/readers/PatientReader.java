@@ -35,10 +35,10 @@ public class PatientReader {
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
     public PatientReader(@NotNull final CpctEcrfModel model, @NotNull final Map<String, String> treatmentToTypeMappings,
-            @NotNull final String limsCsv, @NotNull final String limsOldCsv, @NotNull final String umcuCsv)
+            @NotNull final String limsJson, @NotNull final String limsOldCsv, @NotNull final String umcuCsv)
             throws IOException, HartwigException {
         cpctPatientReader = new CpctPatientReader(model);
-        sampleReader = new SampleReader(limsCsv, limsOldCsv, umcuCsv);
+        sampleReader = new SampleReader(limsJson, limsOldCsv, umcuCsv);
         biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentToTypeMappings);
     }
 

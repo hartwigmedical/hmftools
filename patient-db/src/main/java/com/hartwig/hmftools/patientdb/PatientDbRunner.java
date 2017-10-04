@@ -48,7 +48,7 @@ public final class PatientDbRunner {
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String EXTREME_CONFIDENCE_BED = "extreme_confidence_bed";
     private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
-    private static final String LIMS_CSV = "lims_csv";
+    private static final String LIMS_JSON = "lims_json";
     private static final String LIMS_OLD_CSV = "lims_old_csv";
     private static final String LIMS_UMCU_CSV = "lims_umcu_csv";
     private static final String CLINICAL = "clinical";
@@ -103,12 +103,12 @@ public final class PatientDbRunner {
             HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String treatmentToTypeMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
-        final String limsCsv = cmd.getOptionValue(LIMS_CSV);
+        final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
         final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
         final String formStatusPath = cmd.getOptionValue(FORM_STATUS_FILE);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsCsv, limsOldCsv, limsUmcuCsv, formStatusPath)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsJson, limsOldCsv, limsUmcuCsv, formStatusPath)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db -" + CLINICAL, clinicalOptions);
         } else {
@@ -117,7 +117,7 @@ public final class PatientDbRunner {
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final PatientReader patientReader =
-                    new PatientReader(model, readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsCsv, limsOldCsv, limsUmcuCsv);
+                    new PatientReader(model, readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsJson, limsOldCsv, limsUmcuCsv);
             final Set<String> cpctPatientIds = runContexts.stream()
                     .map(runContext -> getPatientId(runContext.setName()))
                     .filter(patientId -> patientId.startsWith("CPCT"))
@@ -220,7 +220,7 @@ public final class PatientDbRunner {
         final Options options = new Options();
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(TREATMENT_TYPES_CSV, true, "Path towards the .csv file that maps treatment names to treatment types.");
-        options.addOption(LIMS_CSV, true, "Path towards the LIMS .csv file.");
+        options.addOption(LIMS_JSON, true, "Path towards the LIMS .json file.");
         options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file.");
         options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file.");
         options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
