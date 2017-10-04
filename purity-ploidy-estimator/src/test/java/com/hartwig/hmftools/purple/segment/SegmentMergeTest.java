@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.pcf.ImmutablePCFRegion;
+import com.hartwig.hmftools.common.pcf.ImmutablePCFRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.junit.Before;

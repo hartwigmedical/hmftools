@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.common.purple.gender;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 
@@ -21,6 +26,10 @@ public enum Gender {
                 : MALE;
     }
 
+    public static Gender fromReferenceReadRatios(@NotNull final Multimap<String, ReadRatio> readRatios) {
+        return Doubles.greaterThan(median(readRatios.get("X")), 0.75) ? Gender.FEMALE : Gender.MALE;
+    }
+
     public static Gender fromObservedRegions(Collection<ObservedRegion> regions) {
         return regions.stream()
                 .filter(x -> x.chromosome().equals("X"))
@@ -36,4 +45,12 @@ public enum Gender {
                 .mapToInt(PurpleCopyNumber::bafCount)
                 .sum() > MIN_BAF_COUNT ? FEMALE : MALE;
     }
+
+    private static double median(Collection<ReadRatio> readRatios) {
+        final List<Double> ratios = readRatios.stream().map(ReadRatio::ratio).filter(x -> !Doubles.equal(x, -1)).collect(Collectors.toList());
+        Collections.sort(ratios);
+        int count = ratios.size();
+        return ratios.size() % 2 == 0 ? (ratios.get(count / 2) + ratios.get(count / 2 - 1)) / 2 : ratios.get(count / 2);
+    }
+
 }

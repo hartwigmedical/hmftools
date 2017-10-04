@@ -10,8 +10,8 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 
 import org.apache.logging.log4j.LogManager;

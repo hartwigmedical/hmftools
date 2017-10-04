@@ -3,9 +3,9 @@ package com.hartwig.hmftools.cobalt.ratio;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableReadRatio;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 
 import org.jetbrains.annotations.NotNull;
 

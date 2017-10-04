@@ -2,8 +2,8 @@ package com.hartwig.hmftools.cobalt.segment;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.purple.pcf.PCFFile;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatioFile;
+import com.hartwig.hmftools.common.cobalt.ReadRatioFile;
+import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.r.RExecutor;
 
 import org.apache.logging.log4j.LogManager;

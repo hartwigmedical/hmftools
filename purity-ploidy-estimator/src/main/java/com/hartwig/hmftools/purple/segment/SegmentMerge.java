@@ -3,7 +3,7 @@ package com.hartwig.hmftools.purple.segment;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.pcf.ImmutablePCFRegion;
+import com.hartwig.hmftools.common.pcf.ImmutablePCFRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.zipper.RegionZipper;
 import com.hartwig.hmftools.common.zipper.RegionZipperHandler;

@@ -3,9 +3,9 @@ package com.hartwig.hmftools.purple.ratio;
 import java.io.IOException;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.common.cobalt.ReadRatioFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatioFile;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 
 import org.apache.logging.log4j.LogManager;

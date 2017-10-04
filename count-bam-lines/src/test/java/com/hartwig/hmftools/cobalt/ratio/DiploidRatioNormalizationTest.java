@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableReadRatio;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
+import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

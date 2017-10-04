@@ -7,14 +7,14 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.gc.GCMedianReadCountBuilder;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.purple.ratio.ImmutableReadRatio;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 
 import org.jetbrains.annotations.NotNull;
 

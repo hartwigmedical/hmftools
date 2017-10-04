@@ -8,9 +8,9 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.gc.GCProfile;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 

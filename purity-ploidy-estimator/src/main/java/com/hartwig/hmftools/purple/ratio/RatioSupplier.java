@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.ratio;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 
 import org.jetbrains.annotations.NotNull;
 

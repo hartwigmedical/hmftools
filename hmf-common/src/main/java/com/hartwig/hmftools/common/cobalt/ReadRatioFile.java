@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.ratio;
+package com.hartwig.hmftools.common.cobalt;
 
 import java.io.File;
 import java.io.IOException;
