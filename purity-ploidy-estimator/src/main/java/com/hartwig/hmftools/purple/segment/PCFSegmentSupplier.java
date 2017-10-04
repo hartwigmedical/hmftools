@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.segment;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,8 +17,6 @@ import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.purple.pcf.ImmutablePCFRegion;
 import com.hartwig.hmftools.common.purple.pcf.PCFFile;
 import com.hartwig.hmftools.common.purple.pcf.PCFRegion;
-import com.hartwig.hmftools.common.purple.ratio.ReadRatioFile;
-import com.hartwig.hmftools.common.r.RExecutor;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.purple.PurityPloidyEstimateApplication;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -64,14 +61,7 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
     @NotNull
     private Multimap<String, PCFRegion> ratioSegmentation(final @NotNull CommonConfig config, @NotNull final String description,
             @NotNull final String sample) throws IOException, InterruptedException {
-        final String ratioFile = ReadRatioFile.generateFilename(config.outputDirectory(), sample);
-        final String pcfFile = PCFFile.generateRatioFilename(config.outputDirectory(), sample);
-        if (config.forceSegmentation() || !new File(pcfFile).exists()) {
-            int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, pcfFile);
-            if (result != 0) {
-                throw new IOException("R execution failed. Unable to complete segmentation.");
-            }
-        }
+        final String pcfFile = PCFFile.generateRatioFilename(config.cobaltDirectory(), sample);
 
         LOGGER.info("Loading {} PCF segments from {}", description, pcfFile);
         return PCFFile.read(config.windowSize(), pcfFile);

@@ -1,14 +1,15 @@
-package com.hartwig.hmftools.common.purple.ratio;
+package com.hartwig.hmftools.cobalt.ratio;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.ratio.ImmutableReadRatio;
+import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 
 import org.jetbrains.annotations.NotNull;
 
-class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
+class DiploidRatioNormalization {
 
     private int startIndex = 0;
     private int endIndex = -1;
@@ -18,7 +19,7 @@ class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
     private final List<ReadRatio> result = Lists.newArrayList();
     private final RollingMedian rollingMedian = new RollingMedian();
 
-    RollingRatioNormalization(final double expectedRatio, final long maxWindowDistance, final long minWindowCoverage,
+    DiploidRatioNormalization(final double expectedRatio, final long maxWindowDistance, final long minWindowCoverage,
             final List<ReadRatio> ratios) {
         this.maxWindowDistance = maxWindowDistance;
         this.ratios = ratios;
@@ -38,7 +39,6 @@ class RollingRatioNormalization implements Supplier<List<ReadRatio>> {
         }
     }
 
-    @Override
     public List<ReadRatio> get() {
         return result;
     }

@@ -18,7 +18,7 @@ public enum ReadRatioFile {
 
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "Chr";
-    private static final String EXTENSION = ".purple.ratio";
+    private static final String EXTENSION = ".cobalt.ratio";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
@@ -30,30 +30,31 @@ public enum ReadRatioFile {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull Multimap<String, ReadRatio> ratios)
+    public static void write(@NotNull final String fileName, @NotNull Multimap<String, ReadRatio> ratios)
             throws IOException {
         List<ReadRatio> sorted = Lists.newArrayList(ratios.values());
         Collections.sort(sorted);
-        write(basePath, sample, sorted);
+        write(fileName, sorted);
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<ReadRatio> ratios)
+    public static void write(@NotNull final String fileName, @NotNull List<ReadRatio> ratios)
             throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
-        Files.write(new File(filePath).toPath(), toLines(ratios));
+        Files.write(new File(fileName).toPath(), toLines(ratios));
     }
 
     @NotNull
     static List<String> toLines(@NotNull final List<ReadRatio> ratio) {
         final List<String> lines = Lists.newArrayList();
-        lines.add(header());
+        lines.addAll(header());
         ratio.stream().map(ReadRatioFile::toString).forEach(lines::add);
         return lines;
     }
 
     @NotNull
-    private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("Chromosome").add("Position").add("Ratio").toString();
+    private static List<String> header() {
+        final List<String> result = Lists.newArrayList();
+        result.add(new StringJoiner(DELIMITER, "", "").add("Chromosome").add("Position").add("Ratio").toString());
+        return result;
     }
 
     @NotNull

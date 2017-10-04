@@ -35,7 +35,7 @@ public class GCMedianReadCountBuilder {
         }
     }
 
-    public GCMedianReadCountImpl build() {
+    public GCMedianReadCount build() {
 
         final Map<GCBucket, Integer> gcBucketMeans = Maps.newHashMap();
         for (GCBucket gcBucket : medianPerGCBucket.keySet()) {

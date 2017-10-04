@@ -18,8 +18,6 @@ import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.gc.GCProfile;
-import com.hartwig.hmftools.common.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
@@ -136,8 +134,7 @@ public class PurityPloidyEstimateApplication {
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
 
             // JOBA: Ratio Segmentation
-            final Multimap<String, GCProfile> gcContent = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
-            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config, gcContent, gender);
+            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config);
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
             final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
 

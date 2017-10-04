@@ -14,8 +14,8 @@ public class PCFFile {
 
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "sampleID";
-    private static final String RATIO_EXTENSION = ".purple.ratio.pcf";
-    private static final String BAF_EXTENSION = ".purple.baf.pcf";
+    private static final String RATIO_EXTENSION = ".cobalt.ratio.pcf";
+    private static final String BAF_EXTENSION = ".amber.baf.pcf";
 
     @NotNull
     public static String generateRatioFilename(@NotNull final String basePath, @NotNull final String sample) {

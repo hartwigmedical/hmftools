@@ -1,40 +1,32 @@
-package com.hartwig.hmftools.common.purple.ratio;
+package com.hartwig.hmftools.cobalt.ratio;
 
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.gc.GCMedianReadCountBuilder;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.ratio.ImmutableReadRatio;
+import com.hartwig.hmftools.common.purple.ratio.ReadRatio;
 
 import org.jetbrains.annotations.NotNull;
 
-public class NormalizedRatiosBuilder {
+class GCRatioNormalization {
 
-    private static final long ROLLING_MEDIAN_MAX_DISTANCE = 5_000;
-    private static final long ROLLING_MEDIAN_MIN_COVERAGE = 1_000;
     private static final double MIN_MAPPABLE_PERCENTAGE = 0.85;
 
-    private final Gender gender;
-    private final boolean applyRollingMedianNormalization;
     private final GCMedianReadCountBuilder medianReadCountBuilder = new GCMedianReadCountBuilder();
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
-    public NormalizedRatiosBuilder(final boolean applyRollingMedianNormalization, final Gender gender) {
-        this.applyRollingMedianNormalization = applyRollingMedianNormalization;
-        this.gender = gender;
-    }
 
-    public void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, @NotNull final ReadCount readCount) {
+    void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, @NotNull final ReadCount readCount) {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
         entries.put(gcProfile.chromosome(), readCountWithGCContent);
 
@@ -44,29 +36,19 @@ public class NormalizedRatiosBuilder {
         }
     }
 
-    public NormalizedRatios build() {
+    GCMedianReadCount gcMedianReadCount() {
+        return medianReadCountBuilder.build();
+    }
 
-        final GCMedianReadCount gcMedianReadCount = medianReadCountBuilder.build();
-        final ImmutableNormalizedRatios.Builder builder = ImmutableNormalizedRatios.builder().medianReadCount(gcMedianReadCount);
-
+    ListMultimap<String, ReadRatio> build(@NotNull final GCMedianReadCount gcMedianReadCount) {
+        final ListMultimap<String, ReadRatio> result = ArrayListMultimap.create();
         for (String chromosome : entries.keySet()) {
             final List<ReadRatio> normalisedRatio =
                     entries.get(chromosome).stream().map(x -> create(gcMedianReadCount, x)).collect(Collectors.toList());
-
-            if (applyRollingMedianNormalization) {
-                double expectedRatio = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 1 : 0.5;
-                final Supplier<List<ReadRatio>> diploidNormalization = new RollingRatioNormalization(expectedRatio,
-                        ROLLING_MEDIAN_MAX_DISTANCE,
-                        ROLLING_MEDIAN_MIN_COVERAGE,
-                        normalisedRatio);
-                builder.putAllNormalisedRatios(chromosome, diploidNormalization.get());
-            } else {
-                builder.putAllNormalisedRatios(chromosome, normalisedRatio);
-            }
-
+            result.replaceValues(chromosome, normalisedRatio);
         }
 
-        return builder.build();
+        return result;
     }
 
     private ReadRatio create(GCMedianReadCount medians, ReadCountWithGCContent readCount) {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.ratio;
+package com.hartwig.hmftools.cobalt.ratio;
 
 import static org.junit.Assert.assertEquals;
 
