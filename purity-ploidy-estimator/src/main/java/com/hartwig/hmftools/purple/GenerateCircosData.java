@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -41,16 +43,19 @@ class GenerateCircosData {
     private static final Logger LOGGER = LogManager.getLogger(GenerateCircosData.class);
 
     private static final int MAX_PLOT_POINTS = 25000;
+
+    private final ExecutorService executorService;
     private final String referenceSample;
     private final String tumorSample;
     private final CircosConfig config;
     private final String baseCircosTumorSample;
     private final String baseCircosReferenceSample;
 
-    GenerateCircosData(final ConfigSupplier configSupplier) throws IOException {
+    GenerateCircosData(final ConfigSupplier configSupplier, final ExecutorService executorService) throws IOException {
         this.tumorSample = configSupplier.commonConfig().tumorSample();
         this.referenceSample = configSupplier.commonConfig().refSample();
         this.config = configSupplier.circosConfig();
+        this.executorService = executorService;
         this.baseCircosTumorSample = config.circosDirectory() + File.separator + tumorSample;
         this.baseCircosReferenceSample = config.circosDirectory() + File.separator + referenceSample;
     }
@@ -64,7 +69,8 @@ class GenerateCircosData {
 
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
             @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<FittedRegion> regions, @NotNull final List<TumorBAF> bafs) throws IOException, InterruptedException {
+            @NotNull final List<FittedRegion> regions, @NotNull final List<TumorBAF> bafs)
+            throws IOException, InterruptedException, ExecutionException {
 
         createDirectory(config.plotDirectory());
         createDirectory(config.circosDirectory());
@@ -77,12 +83,12 @@ class GenerateCircosData {
         writeBafs(downsample(bafs));
 
         if (config.circosBinary().isPresent()) {
-            generateCircos(config.circosBinary().get(), "input");
-            generateCircos(config.circosBinary().get(), "circos");
+            executorService.submit(() -> generateCircos(config.circosBinary().get(), "input"));
+            executorService.submit(() -> generateCircos(config.circosBinary().get(), "circos"));
         }
     }
 
-    private void generateCircos(@NotNull final String executable, @NotNull final String type) throws IOException, InterruptedException {
+    private Object generateCircos(@NotNull final String executable, @NotNull final String type) throws IOException, InterruptedException {
         final File errorFile = file(type, "error");
         final File outputFile = file(type, "out");
         final String plotFileName = tumorSample + "." + type + ".png";
@@ -103,6 +109,8 @@ class GenerateCircosData {
         if (result != 0) {
             LOGGER.warn("Error creating circos plot. Examine error file {} for details.", errorFile.toString());
         }
+
+        return null;
     }
 
     @NotNull

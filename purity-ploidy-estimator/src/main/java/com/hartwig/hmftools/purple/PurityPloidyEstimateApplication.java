@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
+import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -95,7 +96,6 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String GC_PROFILE = "gc_profile";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -123,19 +123,30 @@ public class PurityPloidyEstimateApplication {
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
 
-            // JOBA: Load BAFs
+            // JOBA: Load BAFs from AMBER
             final BAFSupplier bafSupplier = new BAFSupplier(config, configSupplier.bafConfig());
             final Multimap<String, TumorBAF> bafs = bafSupplier.get();
+
+            // JOBA: Load Ratios from COBALT
+            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config);
+            final Multimap<String, ReadRatio> tumorRatios = ratioSupplier.tumorRatios();
+            final Multimap<String, ReadRatio> referenceRatios = ratioSupplier.referenceRatios();
+
+            // Gender
             final Gender gender = Gender.fromBAFCount(bafs);
-            LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
+            final Gender cobaltGender = Gender.fromReferenceReadRatios(referenceRatios);
+            if (gender.equals(cobaltGender)) {
+                LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
+            } else {
+                LOGGER.warn("PURPLE gender {} does not match COBALT gender {}", gender, cobaltGender);
+            }
 
             // JOBA: Load structural and somatic variants
             final List<PurpleSomaticVariant> somaticVariants = somaticVariants(configSupplier);
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
 
             // JOBA: Ratio Segmentation
-            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config);
-            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratioSupplier.tumorRatios()).get();
+            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, tumorRatios).get();
             final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
 
             LOGGER.info("Merging structural variants into freec segmentation");
@@ -143,8 +154,7 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Mapping all observations to the segmented regions");
             final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
-            final List<ObservedRegion> observedRegions =
-                    observedRegionFactory.combine(segments, bafs, ratioSupplier.tumorRatios(), ratioSupplier.referenceRatios());
+            final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, tumorRatios, referenceRatios);
 
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
@@ -215,7 +225,7 @@ public class PurityPloidyEstimateApplication {
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
-            new GenerateCircosData(configSupplier).write(gender,
+            new GenerateCircosData(configSupplier, executorService).write(gender,
                     smoothRegions,
                     enrichedSomatics,
                     structuralVariants,
@@ -290,7 +300,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(THREADS, true, "Number of threads (default 2)");
-        options.addOption(GC_PROFILE, true, "Location of GC Profile.");
 
         return options;
     }
