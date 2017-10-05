@@ -29,28 +29,32 @@ public class CountSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
+    private final String outputDirectory;
     private final int windowSize;
     private final int minQuality;
-    private final String chromosomeLengthFileName;
-    private final String countFileName;
+    private final ExecutorService executorService;
 
-    public CountSupplier(final int windowSize, final int minQuality, final String chromosomeLengthFileName, final String countFileName) {
+    public CountSupplier(final String outputDirectory, final int windowSize, final int minQuality, final ExecutorService executorService) {
+        this.outputDirectory = outputDirectory;
         this.windowSize = windowSize;
         this.minQuality = minQuality;
-        this.chromosomeLengthFileName = chromosomeLengthFileName;
-        this.countFileName = countFileName;
+        this.executorService = executorService;
     }
 
-    public Multimap<String, ReadCount> fromFile() throws IOException {
-        LOGGER.info("Reading read count from {}", countFileName);
-        return ReadCountFile.readFile(countFileName);
+    public Multimap<String, ReadCount> fromFile(@NotNull final String sample) throws IOException {
+        final String filename = ReadCountFile.generateFilename(outputDirectory, sample);
+        LOGGER.info("Reading read count from {}", filename);
+        return ReadCountFile.readFile(filename);
     }
 
-    public Multimap<String, ReadCount> fromBam(@NotNull final ExecutorService executorService, @NotNull final File inputFile) throws IOException, ExecutionException, InterruptedException {
+    public Multimap<String, ReadCount> fromBam(@NotNull final String sample, @NotNull final String bam) throws IOException, ExecutionException, InterruptedException {
+
+        final File inputFile = new File(bam);
 
         LOGGER.info("Calculating Read Count from {}", inputFile.toString());
         final SamReaderFactory readerFactory = SamReaderFactory.make();
 
+        final String chromosomeLengthFileName = ChromosomeLengthFile.generateFilename(outputDirectory, sample);
         final List<ChromosomeLength> lengths;
         try (SamReader reader = readerFactory.open(inputFile)) {
             lengths = ChromosomeLengthFactory.create(reader.getFileHeader());
@@ -68,15 +72,16 @@ public class CountSupplier {
             futures.add(executorService.submit(callable));
         }
 
-        LOGGER.info("Persisting read counts to {}", countFileName);
-        ReadCountFile.createFile(windowSize, countFileName);
+        final String countFilename = ReadCountFile.generateFilename(outputDirectory, sample);
+        LOGGER.info("Persisting read counts to {}", countFilename);
+        ReadCountFile.createFile(windowSize, countFilename);
         final ListMultimap<String, ReadCount> readCounts = ArrayListMultimap.create();
         for (Future<ChromosomeReadCount> future : futures) {
             final ChromosomeReadCount readCount = future.get();
             final String chromosome = readCount.chromosome();
             final List<ReadCount> result = readCount.readCount();
 
-            persist(countFileName, chromosome, result);
+            persist(countFilename, chromosome, result);
             readCounts.putAll(chromosome, result);
         }
 

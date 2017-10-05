@@ -11,9 +11,6 @@ import java.util.concurrent.ThreadFactory;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
-import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
-import com.hartwig.hmftools.cobalt.segment.PCFSegment;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -34,10 +31,11 @@ import org.jetbrains.annotations.Nullable;
 public class CountBamLinesApplication {
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
-    private static final String SAMPLE = "sample";
     private static final String THREADS = "threads";
-    private static final String DIPLOID = "diploid";
-    private static final String INPUT_FILE = "input";
+    private static final String REFERENCE = "reference";
+    private static final String REFERENCE_BAM = "reference_bam";
+    private static final String TUMOR = "tumor";
+    private static final String TUMOR_BAM = "tumor_bam";
     private static final String OUTPUT_DIR = "output_dir";
     private static final String GC_PROFILE = "gc_profile";
     private static final String WINDOW_SIZE = "window_size";
@@ -56,30 +54,40 @@ public class CountBamLinesApplication {
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
-        if (!cmd.hasOption(GC_PROFILE) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE)) {
+        if (!cmd.hasOption(GC_PROFILE) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(TUMOR) || !cmd.hasOption(REFERENCE)) {
             printUsageAndExit(options);
         }
 
-        final String sample = cmd.getOptionValue(SAMPLE);
-        final String outputFilename = ReadCountFile.generateFilename(cmd.getOptionValue(OUTPUT_DIR), sample);
-        final File outputFile = new File(outputFilename);
-        if (!cmd.hasOption(INPUT_FILE) && !outputFile.exists()) {
-            LOGGER.warn("Unable to run COBALT without \"-input\" argument, or previous count file.");
+        final String tumor = cmd.getOptionValue(TUMOR);
+        final String reference = cmd.getOptionValue(REFERENCE);
+        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
+
+        // Validate reference input
+        final String referenceReadCountFilename = ReadCountFile.generateFilename(outputDirectory, reference);
+        final File referenceReadCountFile = new File(referenceReadCountFilename);
+        if (!cmd.hasOption(REFERENCE_BAM) && !referenceReadCountFile.exists()) {
+            LOGGER.warn("Unable to run COBALT without \"-reference_bam\" argument, or previous count file.");
+            printUsageAndExit(options);
+        }
+
+        // Validate tumor input
+        final String tumorReadCountFilename = ReadCountFile.generateFilename(outputDirectory, tumor);
+        final File tumorReadCountFile = new File(tumorReadCountFilename);
+        if (!cmd.hasOption(TUMOR_BAM) && !tumorReadCountFile.exists()) {
+            LOGGER.warn("Unable to run COBALT without \"-tumor_bam\" argument, or previous count file.");
             printUsageAndExit(options);
         }
 
         // Create output directory
-        final Path outputPath = selectOrCreateOutputPath(cmd.getOptionValue(OUTPUT_DIR));
+        final Path outputPath = selectOrCreateOutputPath(outputDirectory);
         if (outputPath == null) {
             System.exit(1);
         }
 
         // Parameters
-        final String chromosomeLengthFile = ChromosomeLengthFile.generateFilename(outputPath.toString(), sample);
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
         final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
         final int minQuality = cmd.hasOption(MIN_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_QUALITY)) : MIN_QUALITY_DEFAULT;
-        LOGGER.info("Output Chromosome Lengths: {}", chromosomeLengthFile);
         LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minQuality);
 
         // GC Profile
@@ -90,23 +98,23 @@ public class CountBamLinesApplication {
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
         // Read Counts
-        final CountSupplier countSupplier = new CountSupplier(windowSize, minQuality, chromosomeLengthFile, outputFilename);
-        final Multimap<String, ReadCount> readCounts;
-        if (cmd.hasOption(INPUT_FILE)) {
-            final File inputFile = new File(cmd.getOptionValue(INPUT_FILE));
-            readCounts = countSupplier.fromBam(executorService, inputFile);
-        } else {
-            readCounts = countSupplier.fromFile();
-        }
+        final CountSupplier countSupplier = new CountSupplier(outputDirectory, windowSize, minQuality, executorService);
+        final Multimap<String, ReadCount> tumorReadCount = readCount(countSupplier, tumor, cmd.getOptionValue(TUMOR_BAM));
+        final Multimap<String, ReadCount> referenceReadCount = readCount(countSupplier, reference, cmd.getOptionValue(REFERENCE_BAM));
 
-        // Ratios
-        final RatioSupplier ratioSupplier = new RatioSupplier(sample, outputPath.toString(), cmd.hasOption(DIPLOID));
-        ratioSupplier.generateRatios(gcProfiles, readCounts);
-
-        // Segmentation
-        new PCFSegment(outputPath.toString()).ratioSegmentation(sample);
+        //        // Ratios
+        //        final RatioSupplier ratioSupplier = new RatioSupplier(sample, outputPath.toString(), false);
+        //        ratioSupplier.generateRatios(gcProfiles, readCounts);
+        //
+        //        // Segmentation
+        //        new PCFSegment(outputPath.toString()).ratioSegmentation(sample);
 
         executorService.shutdown();
+    }
+
+    private Multimap<String, ReadCount> readCount(@NotNull final CountSupplier countSupplier, @NotNull final String sample,
+            @Nullable final String bam) throws IOException, ExecutionException, InterruptedException {
+        return bam == null ? countSupplier.fromFile(sample) : countSupplier.fromBam(sample, bam);
     }
 
     @Nullable
@@ -147,12 +155,13 @@ public class CountBamLinesApplication {
         final Options options = new Options();
         options.addOption(WINDOW_SIZE, true, "Window size. Default 1000.");
         options.addOption(THREADS, true, "Number of threads. Default 4.");
-        options.addOption(INPUT_FILE, true, "Input bam location/filename");
+        options.addOption(REFERENCE, true, "Name of reference sample");
+        options.addOption(REFERENCE_BAM, true, "Reference bam file");
+        options.addOption(TUMOR, true, "Name of tumor sample.");
+        options.addOption(TUMOR_BAM, true, "Tumor bam file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(MIN_QUALITY, true, "Min quality. Default 10.");
-        options.addOption(SAMPLE, true, "Name of sample");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
-        options.addOption(DIPLOID, false, "Apply diploid normalization to ratios. Recommended for reference samples.");
 
         return options;
     }
