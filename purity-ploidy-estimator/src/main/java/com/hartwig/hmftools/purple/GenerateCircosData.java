@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -82,9 +83,15 @@ class GenerateCircosData {
         writeFittedRegions(downsample(regions));
         writeBafs(downsample(bafs));
 
+        final List<Future<Object>> futures = Lists.newArrayList();
         if (config.circosBinary().isPresent()) {
-            executorService.submit(() -> generateCircos(config.circosBinary().get(), "input"));
-            executorService.submit(() -> generateCircos(config.circosBinary().get(), "circos"));
+            futures.add(executorService.submit(() -> generateCircos(config.circosBinary().get(), "input")));
+            futures.add(executorService.submit(() -> generateCircos(config.circosBinary().get(), "circos")));
+        }
+
+        for (final Future<Object> future : futures) {
+            // Note: this (intentionally) has side effect of alerting users to any exceptions
+            future.get();
         }
     }
 
