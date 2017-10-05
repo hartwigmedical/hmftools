@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Multimap;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
 import com.hartwig.hmftools.cobalt.segment.PCFSegment;
@@ -82,12 +86,15 @@ public class CountBamLinesApplication {
         LOGGER.info("Reading GC Profile");
         final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
 
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
+        final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
+
         // Read Counts
-        final CountSupplier countSupplier = new CountSupplier(threadCount, windowSize, minQuality, chromosomeLengthFile, outputFilename);
+        final CountSupplier countSupplier = new CountSupplier(windowSize, minQuality, chromosomeLengthFile, outputFilename);
         final Multimap<String, ReadCount> readCounts;
         if (cmd.hasOption(INPUT_FILE)) {
             final File inputFile = new File(cmd.getOptionValue(INPUT_FILE));
-            readCounts = countSupplier.fromBam(inputFile);
+            readCounts = countSupplier.fromBam(executorService, inputFile);
         } else {
             readCounts = countSupplier.fromFile();
         }
@@ -98,6 +105,8 @@ public class CountBamLinesApplication {
 
         // Segmentation
         new PCFSegment(outputPath.toString()).ratioSegmentation(sample);
+
+        executorService.shutdown();
     }
 
     @Nullable

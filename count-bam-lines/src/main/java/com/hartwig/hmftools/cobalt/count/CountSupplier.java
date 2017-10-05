@@ -5,15 +5,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.CountBamLinesApplication;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
@@ -32,15 +29,12 @@ public class CountSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
-    private final int threadCount;
     private final int windowSize;
     private final int minQuality;
     private final String chromosomeLengthFileName;
     private final String countFileName;
 
-    public CountSupplier(final int threadCount, final int windowSize, final int minQuality, final String chromosomeLengthFileName,
-            final String countFileName) {
-        this.threadCount = threadCount;
+    public CountSupplier(final int windowSize, final int minQuality, final String chromosomeLengthFileName, final String countFileName) {
         this.windowSize = windowSize;
         this.minQuality = minQuality;
         this.chromosomeLengthFileName = chromosomeLengthFileName;
@@ -52,12 +46,10 @@ public class CountSupplier {
         return ReadCountFile.readFile(countFileName);
     }
 
-    public Multimap<String, ReadCount> fromBam(@NotNull final File inputFile) throws IOException, ExecutionException, InterruptedException {
+    public Multimap<String, ReadCount> fromBam(@NotNull final ExecutorService executorService, @NotNull final File inputFile) throws IOException, ExecutionException, InterruptedException {
 
         LOGGER.info("Calculating Read Count from {}", inputFile.toString());
         final SamReaderFactory readerFactory = SamReaderFactory.make();
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
-        final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
         final List<ChromosomeLength> lengths;
         try (SamReader reader = readerFactory.open(inputFile)) {
@@ -89,7 +81,6 @@ public class CountSupplier {
         }
 
         LOGGER.info("Read Count Complete");
-        executorService.shutdown();
 
         return readCounts;
     }
