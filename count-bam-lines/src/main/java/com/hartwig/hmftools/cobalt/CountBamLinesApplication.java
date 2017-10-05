@@ -57,13 +57,20 @@ public class CountBamLinesApplication {
         }
 
         final String sample = cmd.getOptionValue(SAMPLE);
+        final String outputFilename = ReadCountFile.generateFilename(cmd.getOptionValue(OUTPUT_DIR), sample);
+        final File outputFile = new File(outputFilename);
+        if (!cmd.hasOption(INPUT_FILE) && !outputFile.exists()) {
+            LOGGER.warn("Unable to run COBALT without \"-input\" argument, or previous count file.");
+            printUsageAndExit(options);
+        }
+
+        // Create output directory
         final Path outputPath = selectOrCreateOutputPath(cmd.getOptionValue(OUTPUT_DIR));
         if (outputPath == null) {
             System.exit(1);
         }
 
         // Parameters
-        final String outputCountFile = ReadCountFile.generateFilename(outputPath.toString(), sample);
         final String chromosomeLengthFile = ChromosomeLengthFile.generateFilename(outputPath.toString(), sample);
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
         final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
@@ -76,7 +83,7 @@ public class CountBamLinesApplication {
         final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
 
         // Read Counts
-        final CountSupplier countSupplier = new CountSupplier(threadCount, windowSize, minQuality, chromosomeLengthFile, outputCountFile);
+        final CountSupplier countSupplier = new CountSupplier(threadCount, windowSize, minQuality, chromosomeLengthFile, outputFilename);
         final Multimap<String, ReadCount> readCounts;
         if (cmd.hasOption(INPUT_FILE)) {
             final File inputFile = new File(cmd.getOptionValue(INPUT_FILE));
