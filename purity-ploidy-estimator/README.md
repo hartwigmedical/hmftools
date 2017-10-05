@@ -3,18 +3,6 @@
 
 PURPLE is a **pur**ity **pl**oidy **e**stimator. It leverages the read depth and tumor BAF to estimate the purity of a sample and generate a copy number profile.
 
-
-## R Dependencies
-Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
-
-
-This can be installed in R with the following commands:
-```
-   source("https://bioconductor.org/biocLite.R")
-   biocLite("copy number")
-```
-
-
 ## Required Input
 
 ### COBALT
@@ -37,7 +25,6 @@ Argument | Default | Description
 -ref_sample | None | Name of reference sample.
 -tumor_sample | None | Name of tumor sample.
 -run_dir | None | Base directory of run. Default values of output_dir, amber and cobalt will be relative to this.
--gc_profile | None | Location of GC profile.
 -output_dir |  <run_dir>/purple | Output directory.
 -baf | <amber_dir>/<tumor_sample>.amber.baf | Location of baf file. By default will look in the amber directory.
 -amber | <run_dir>/amber | Location of amber directory.
