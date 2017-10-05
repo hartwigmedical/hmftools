@@ -108,7 +108,8 @@ CREATE TABLE somaticVariant
     loh BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
-    INDEX(filter)
+    INDEX(filter),
+    INDEX(gene)
 );
 
 DROP TABLE IF EXISTS copyNumber;
@@ -239,7 +240,8 @@ CREATE TABLE geneCopyNumber
     meanCopyNumber DOUBLE PRECISION not null,
     regions int not null,
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(gene)
 );
 
 DROP TABLE IF EXISTS clinicalFindings;
