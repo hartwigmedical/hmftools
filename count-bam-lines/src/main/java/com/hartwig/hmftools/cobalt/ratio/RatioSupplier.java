@@ -14,47 +14,44 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class RatioSupplier  {
+public class RatioSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(GCRatioSupplier.class);
 
-    private final String sample;
+    private final String tumor;
+    private final String reference;
     private final String outputDirectory;
-    private final boolean reference;
 
-    public RatioSupplier(@NotNull final String sample, @NotNull final String outputDirectory, final boolean reference) {
-        this.sample = sample;
-        this.outputDirectory = outputDirectory;
+    public RatioSupplier(final String reference, final String tumor, final String outputDirectory) {
+        this.tumor = tumor;
         this.reference = reference;
+        this.outputDirectory = outputDirectory;
     }
 
-    public void generateRatios(@NotNull final Multimap<String, GCProfile> gcProfiles, @NotNull final Multimap<String, ReadCount> readCounts)
+    public void generateRatios(
+            @NotNull final Multimap<String, GCProfile> gcProfiles,
+            @NotNull final Multimap<String, ReadCount> referenceCounts,
+            @NotNull final Multimap<String, ReadCount> tumorCounts)
             throws IOException {
 
         LOGGER.info("Applying ratio gc normalization");
-        final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
+        final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, referenceCounts, tumorCounts);
+        final ListMultimap<String, ReadRatio> gcTumorRatios = gcRatioSupplier.tumorRatios();
+        final ListMultimap<String, ReadRatio> gcReferenceRatios = gcRatioSupplier.referenceRatios();
 
-        final Multimap<String, ReadRatio> ratios;
-        if (reference) {
-            LOGGER.info("Applying ratio diploid normalization");
-            ListMultimap<String, ReadRatio> intermediateRatios = gcRatioSupplier.ratios();
-            ratios = new DiploidRatioSupplier(intermediateRatios).result();
+        LOGGER.info("Applying ratio diploid normalization");
+        final ListMultimap<String, ReadRatio> referenceRatios = new DiploidRatioSupplier(gcReferenceRatios).result();
 
-            final String ratioFileName = ReadRatioFile.generateFilename(outputDirectory, sample) + ".gc";
-            LOGGER.info("Persisting gc corrected read ratios to {}", ratioFileName);
-            ReadRatioFile.write(ratioFileName, intermediateRatios);
+        LOGGER.info("Persisting ratios {}", outputDirectory);
+        ReadRatioFile.write(ReadRatioFile.generateFilename(outputDirectory, tumor), gcTumorRatios);
+        ReadRatioFile.write(ReadRatioFile.generateFilename(outputDirectory, reference), referenceRatios);
+        ReadRatioFile.write(ReadRatioFile.generateFilename(outputDirectory, reference) + ".gc", gcReferenceRatios);
 
-        } else {
-            ratios = gcRatioSupplier.ratios();
-        }
-
-        final String ratioFileName = ReadRatioFile.generateFilename(outputDirectory, sample);
-        LOGGER.info("Persisting read ratios to {}", ratioFileName);
-        ReadRatioFile.write(ratioFileName, ratios);
-
-        final String gcMedianFileName = GCMedianReadCountFile.generateFilename(outputDirectory, sample);
-        LOGGER.info("Persisting gc read count medians to {}", gcMedianFileName);
-        GCMedianReadCountFile.write(gcMedianFileName, gcRatioSupplier.gcMedianReadCount());
+        LOGGER.info("Persisting gc read count medians to {}", outputDirectory);
+        final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);
+        final String referenceGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, reference);
+        GCMedianReadCountFile.write(tumorGCMedianFilename, gcRatioSupplier.tumorGCMedianReadCount());
+        GCMedianReadCountFile.write(referenceGCMedianFilename, gcRatioSupplier.referenceGCMedianReadCount());
     }
 }
 

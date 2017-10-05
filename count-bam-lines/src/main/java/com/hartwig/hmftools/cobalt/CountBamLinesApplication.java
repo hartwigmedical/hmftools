@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadFactory;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
+import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -102,9 +103,9 @@ public class CountBamLinesApplication {
         final Multimap<String, ReadCount> tumorReadCount = readCount(countSupplier, tumor, cmd.getOptionValue(TUMOR_BAM));
         final Multimap<String, ReadCount> referenceReadCount = readCount(countSupplier, reference, cmd.getOptionValue(REFERENCE_BAM));
 
-        //        // Ratios
-        //        final RatioSupplier ratioSupplier = new RatioSupplier(sample, outputPath.toString(), false);
-        //        ratioSupplier.generateRatios(gcProfiles, readCounts);
+        // Ratios
+        final RatioSupplier ratioSupplier = new RatioSupplier(reference, tumor, outputDirectory);
+        ratioSupplier.generateRatios(gcProfiles, referenceReadCount, tumorReadCount);
         //
         //        // Segmentation
         //        new PCFSegment(outputPath.toString()).ratioSegmentation(sample);
