@@ -15,7 +15,7 @@ public enum GCMedianReadCountFile {
     ;
 
     private static final String DELIMITER = "\t";
-    private static final String EXTENSION = ".purple.gc.median";
+    private static final String EXTENSION = ".cobalt.gc.median";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
