@@ -36,6 +36,8 @@ public class PCFSegment {
         for (Future<Object> future : futures) {
             future.get();
         }
+
+        LOGGER.info("Segmentation Complete");
     }
 
     private Object ratioSegmentation(@NotNull final String sample) throws IOException, InterruptedException {
@@ -46,7 +48,6 @@ public class PCFSegment {
             throw new IOException("R execution failed. Unable to complete segmentation.");
         }
 
-        LOGGER.info("Segmentation Complete");
         return null;
     }
 
