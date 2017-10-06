@@ -12,6 +12,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
+import com.hartwig.hmftools.cobalt.segment.PCFSegment;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -106,9 +107,9 @@ public class CountBamLinesApplication {
         // Ratios
         final RatioSupplier ratioSupplier = new RatioSupplier(reference, tumor, outputDirectory);
         ratioSupplier.generateRatios(gcProfiles, referenceReadCount, tumorReadCount);
-        //
-        //        // Segmentation
-        //        new PCFSegment(outputPath.toString()).ratioSegmentation(sample);
+
+        // Segmentation
+        new PCFSegment(executorService, outputDirectory).applySegmentation(reference, tumor);
 
         executorService.shutdown();
     }
