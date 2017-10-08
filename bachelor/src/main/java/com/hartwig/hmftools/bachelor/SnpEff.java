@@ -51,18 +51,18 @@ public class SnpEff {
     }
 
     @Nullable
-    static SnpEff parseAnnotation(final List<String> input) {
-        if (input.size() < Field.MAX.value + 1) {
+    static SnpEff parseAnnotation(final List<String> annotation) {
+        if (annotation.size() < Field.MAX.value + 1) {
             return null;
         }
-        if (input.get(Field.FEATURE_TYPE.value).equals("transcript")) {
-            final String geneName = input.get(Field.GENE_NAME.value);
-            final String transcript = input.get(Field.FEATURE_ID.value);
-            final List<String> effects = Arrays.asList(input.get(Field.ANNOTATION.value).split("\\&"));
-            final String hgvsc = input.get(Field.HGVSc.value).replaceFirst("^c\\.", "");
-            final String hgvsp = input.get(Field.HGVSp.value).replaceFirst("^p\\.", "");
+        if (annotation.get(Field.FEATURE_TYPE.value).equals("transcript")) {
+            final String geneName = annotation.get(Field.GENE_NAME.value);
+            final String transcript = annotation.get(Field.FEATURE_ID.value);
+            final List<String> effects = Arrays.asList(annotation.get(Field.ANNOTATION.value).split("\\&"));
+            final String hgvsc = annotation.get(Field.HGVSc.value).replaceFirst("^c\\.", "");
+            final String hgvsp = annotation.get(Field.HGVSp.value).replaceFirst("^p\\.", "");
 
-            final List<Integer> proteinPosition = Arrays.stream(input.get(Field.PROTEIN.value).split("/"))
+            final List<Integer> proteinPosition = Arrays.stream(annotation.get(Field.PROTEIN.value).split("/"))
                     .filter(s -> !s.isEmpty())
                     .map(Integer::parseInt)
                     .collect(Collectors.toList());
