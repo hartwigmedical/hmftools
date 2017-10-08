@@ -123,7 +123,7 @@ class BachelorEligibility {
     }
 
     @NotNull
-    Collection<EligibilityReport> processVCF(final VCFFileReader reader) {
+    Collection<EligibilityReport> processVCF(final String tag, final VCFFileReader reader) {
         final Map<String, ImmutableEligibilityReport.Builder> results = Maps.newHashMap();
         for (final VariantContext variant : reader) {
             if (variant.isFiltered()) {
@@ -135,7 +135,7 @@ class BachelorEligibility {
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
             for (final String p : matchingPrograms) {
-                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().program(p)).addVariants(variant);
+                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().program(p).tag(tag)).addVariants(variant);
             }
         }
         return results.values().stream().map(ImmutableEligibilityReport.Builder::build).collect(Collectors.toList());

@@ -6,13 +6,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,15 +36,21 @@ public class BachelorApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
     private static final String CONFIG_DIRECTORY = "configDirectory";
+    private static final String RUN_DIRECTORY = "runDirectory";
     private static final String OUTPUT = "output";
-    private static final String VCF = "vcf";
+
+    // DEBUG
+    private static final String GERMLINE_VCF = "germlineVcf";
+    private static final String SOMATIC_VCF = "somaticVcf";
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(Option.builder(CONFIG_DIRECTORY).required().hasArg().desc("folder to find program XMLs").build());
+        options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
         options.addOption(Option.builder(OUTPUT).hasArg().desc("output file").build());
-        options.addOption(Option.builder(VCF).required().numberOfArgs(Option.UNLIMITED_VALUES).desc("vcf to process").build());
+        options.addOption(Option.builder(GERMLINE_VCF).required(false).hasArg().desc("germline vcf to process").build());
+        options.addOption(Option.builder(SOMATIC_VCF).required(false).hasArg().desc("somatic vcf to process").build());
         return options;
     }
 
@@ -63,6 +66,16 @@ public class BachelorApplication {
         System.exit(1);
     }
 
+    private static void processVCF(final String tag, final File vcf, final BachelorEligibility eligibility,
+            final List<EligibilityReport> reports, final Map<String, Integer> merged) {
+        LOGGER.info("process vcf: {}", vcf.getPath());
+        final VCFFileReader reader = new VCFFileReader(vcf, false);
+        final Collection<EligibilityReport> result = eligibility.processVCF(tag, reader);
+        result.forEach(report -> merged.merge(report.program(), report.variants().size(), (a, b) -> a + b));
+        reports.addAll(result);
+        reader.close();
+    }
+
     public static void main(final String... args) {
         final Options options = createOptions();
         try {
@@ -72,18 +85,26 @@ public class BachelorApplication {
             final Map<String, Program> map = BachelorHelper.loadXML(configPath);
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
-            final List<File> vcfFiles =
-                    Arrays.stream(cmd.getOptionValues(VCF)).map(s -> Paths.get(s).toFile()).collect(Collectors.toList());
+            final File germline;
+            final File somatic;
+
+            if (cmd.hasOption(RUN_DIRECTORY)) {
+                final RunDirectory run = new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY)));
+                germline = run.findGermline();
+                somatic = run.findSomatic();
+            } else {
+                germline = cmd.hasOption(GERMLINE_VCF) ? Paths.get(cmd.getOptionValue(GERMLINE_VCF)).toFile() : null;
+                somatic = cmd.hasOption(SOMATIC_VCF) ? Paths.get(cmd.getOptionValue(SOMATIC_VCF)).toFile() : null;
+            }
 
             final List<EligibilityReport> reports = Lists.newArrayList();
             final Map<String, Integer> merged = Maps.newHashMap();
-            for (final File vcf : vcfFiles) {
-                LOGGER.info("process vcf: {}", vcf.getPath());
-                final VCFFileReader reader = new VCFFileReader(vcf, false);
-                final Collection<EligibilityReport> result = eligibility.processVCF(reader);
-                result.forEach(report -> merged.merge(report.program(), report.variants().size(), (a, b) -> a + b));
-                reports.addAll(result);
-                reader.close();
+
+            if (germline != null) {
+                processVCF("germline", germline, eligibility, reports, merged);
+            }
+            if (somatic != null) {
+                processVCF("somatic", somatic, eligibility, reports, merged);
             }
 
             // output results
@@ -94,12 +115,12 @@ public class BachelorApplication {
                     .forEach(e -> LOGGER.info("{} = {} variants", e.getKey(), e.getValue()));
 
             if (cmd.hasOption(OUTPUT)) {
-                final BufferedWriter writer =
-                        Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)));
+                final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)));
                 for (final EligibilityReport report : reports) {
                     for (final VariantContext v : report.variants()) {
-                        writer.write(String.format("%s,%s,%d,%s,%s" + System.lineSeparator(), report.program(), v.getContig(), v.getStart(),
-                                v.getReference(), Strings.join(v.getAlternateAlleles(), '|')));
+                        writer.write(
+                                String.format("%s,%s,%s,%d,%s,%s" + System.lineSeparator(), report.tag(), report.program(), v.getContig(),
+                                        v.getStart(), v.getReference(), Strings.join(v.getAlternateAlleles(), '|')));
                     }
                 }
                 writer.close();

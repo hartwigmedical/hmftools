@@ -12,6 +12,9 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class EligibilityReport {
     @NotNull
+    public abstract String tag();
+
+    @NotNull
     public abstract String program();
 
     @NotNull
