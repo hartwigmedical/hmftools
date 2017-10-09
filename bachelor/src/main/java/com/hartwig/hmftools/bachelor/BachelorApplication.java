@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -25,7 +26,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.SAXException;
 
@@ -120,7 +120,8 @@ public class BachelorApplication {
                     for (final VariantContext v : report.variants()) {
                         writer.write(
                                 String.format("%s,%s,%s,%d,%s,%s" + System.lineSeparator(), report.tag(), report.program(), v.getContig(),
-                                        v.getStart(), v.getReference(), Strings.join(v.getAlternateAlleles(), '|')));
+                                        v.getStart(), v.getReference(), String.join("|",
+                                                v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()))));
                     }
                 }
                 writer.close();
