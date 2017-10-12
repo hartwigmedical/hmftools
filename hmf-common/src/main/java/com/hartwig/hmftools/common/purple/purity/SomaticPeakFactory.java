@@ -2,57 +2,52 @@ package com.hartwig.hmftools.common.purple.purity;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.kde.KernelEstimator;
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.mllib.stat.KernelDensity;
 import org.jetbrains.annotations.NotNull;
+
 
 class SomaticPeakFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticPeakFactory.class);
     private static final double KERNEL_BANDWIDTH = 0.02;
 
-    public static List<SomaticPeak> findSomaticPeaks(@NotNull final List<? extends PurityAdjustedSomaticVariant> variants) {
-        return findPeaks(variants.stream().map(PurityAdjustedSomaticVariant::adjustedVAF).collect(Collectors.toList()));
+    static List<SomaticPeak> findSomaticPeaks(@NotNull final List<? extends AllelicDepth> variants) {
+        return findPeaks(variants.stream().map(AllelicDepth::alleleFrequency).collect(Collectors.toList()));
     }
 
     static List<SomaticPeak> findPeaks(@NotNull final List<Double> sample) {
-        final SparkConf conf = new SparkConf().setAppName("com.hartwig.SomaticPeaks").setMaster("local");
-        final JavaSparkContext sc = new JavaSparkContext(conf);
-        final JavaRDD<Double> data = sc.parallelize(sample);
-        final KernelDensity kd = new KernelDensity().setSample(data).setBandwidth(KERNEL_BANDWIDTH);
+        final KernelEstimator estimator = new KernelEstimator(0.001, KERNEL_BANDWIDTH);
+        sample.forEach(x -> estimator.addValue(x, 1.0D));
 
         final double[] vafs = IntStream.rangeClosed(0, 51).mapToDouble(x -> x / 100d).toArray();
-        final double[] densities = kd.estimate(vafs);
+        final double[] densities = DoubleStream.of(vafs).map(estimator::getProbability).toArray();
 
         final List<SomaticPeak> results = Lists.newArrayList();
         for (int i = 1; i < densities.length - 1; i++) {
             double density = densities[i];
             if (Doubles.greaterThan(density, densities[i - 1]) && Doubles.greaterThan(density, densities[i + 1])) {
-                final double adjustedVaf = vafs[i];
-                final int peakCount = count(adjustedVaf, sample);
-                final SomaticPeak peak = ImmutableSomaticPeak.builder().adjustedVAF(adjustedVaf).count(peakCount).build();
+                final double alleleFrequency = vafs[i];
+                final int peakCount = count(alleleFrequency, sample);
+                final SomaticPeak peak = ImmutableSomaticPeak.builder().alleleFrequency(alleleFrequency).count(peakCount).build();
                 LOGGER.info("Discovered peak {}", peak);
                 results.add(peak);
             }
         }
 
-        sc.stop();
-
         return results;
     }
 
     private static int count(double peak, @NotNull final List<Double> sample) {
-        return (int) sample.stream().filter(vaf -> between(peak, vaf - KERNEL_BANDWIDTH / 2, vaf + KERNEL_BANDWIDTH / 2)).count();
+        return (int) sample.stream().filter(vaf -> between(peak, vaf - 0.005, vaf + 0.005)).count();
     }
 
     private static boolean between(double victim, double min, double max) {

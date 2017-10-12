@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 public abstract class SomaticPeak {
 
-    public abstract double adjustedVAF();
+    public abstract double alleleFrequency();
 
     public abstract int count();
 }

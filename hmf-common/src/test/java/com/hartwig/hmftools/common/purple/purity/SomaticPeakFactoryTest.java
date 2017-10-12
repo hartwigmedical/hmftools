@@ -2,9 +2,12 @@ package com.hartwig.hmftools.common.purple.purity;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
+import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -14,7 +17,13 @@ public class SomaticPeakFactoryTest {
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testRubbish() {
+    public void testSampleData() throws IOException {
+        List<PurpleSomaticVariant> variants =  new PurpleSomaticVariantFactory().fromVCFFile("CPCT02010478TII", "/Users/jon/hmf/analyses/CPCT02010478TII/CPCT02010478R_CPCT02010478TII_post_processed.vcf");
+        System.out.println(SomaticPeakFactory.findSomaticPeaks(variants));
+    }
+
+    @Test
+    public void testFindPeaks() {
 
         List<Double> sample = Lists.newArrayList();
         for (int i = 0; i < 100; i++) {
@@ -29,13 +38,13 @@ public class SomaticPeakFactoryTest {
 
         final List<SomaticPeak> peaks = SomaticPeakFactory.findPeaks(sample);
         assertEquals(2, peaks.size());
-        assertPeak(peaks.get(0), 0.2, 13);
-        assertPeak(peaks.get(1), 0.4, 13);
+        assertPeak(peaks.get(0), 0.2, 11);
+        assertPeak(peaks.get(1), 0.4, 11);
 
     }
 
     private static void assertPeak(@NotNull SomaticPeak victim, double vaf, int count) {
-        assertEquals(vaf, victim.adjustedVAF(), EPSILON);
+        assertEquals(vaf, victim.alleleFrequency(), EPSILON);
         assertEquals(count, victim.count());
     }
 
