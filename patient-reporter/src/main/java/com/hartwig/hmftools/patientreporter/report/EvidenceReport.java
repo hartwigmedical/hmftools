@@ -13,7 +13,7 @@ import java.awt.Color;
 import java.io.IOException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.AlterationEvidence;
@@ -36,13 +36,13 @@ class EvidenceReport {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generate(@NotNull final PatientReport report) throws IOException, DRException {
+    static JasperReportBuilder generate(@NotNull final SequencedPatientReport report) throws IOException, DRException {
 
         final EvidenceReportData evidenceReportData = ImmutableEvidenceReportData.of(report.civicAlterations());
 
         // @formatter:off
         final VerticalListBuilder totalReport = cmp.verticalList(
-                    MainPageTopSection.build("HMF Civic Evidence Supplement", report),
+                    MainPageTopSection.build("HMF Civic Evidence Supplement", report.sampleReport()),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle().setFontSize(15)),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),

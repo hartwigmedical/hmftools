@@ -9,7 +9,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,8 +22,8 @@ public class MainPageTopSection {
     private static final String REPORT_LOGO_PATH = "pdf/hartwig_logo.jpg";
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final PatientReport report) throws IOException {
-        return build(title, report.sample(), report.tumorType(), report.tumorPercentageString());
+    public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final SampleReport report) throws IOException {
+        return build(title, report.sampleCode(), report.tumorType(), report.tumorPercentageString());
     }
 
     @NotNull

@@ -29,8 +29,10 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
+import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
@@ -71,22 +73,20 @@ public class PDFWriter implements ReportWriter {
     }
 
     @Override
-    public void writeSequenceReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
+    public void writeSequenceReport(@NotNull final SequencedPatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
-        writeReport(fileName(report.sample(), "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleCode(), "_hmf_report.pdf"), reportBuilder);
         final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report);
-        writeReport(fileName(report.sample(), "_hmf_report_supplementary.pdf"), supplementaryBuilder);
+        writeReport(fileName(report.sampleReport().sampleCode(), "_hmf_report_supplementary.pdf"), supplementaryBuilder);
         final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report);
-        writeReport(fileName(report.sample(), "_evidence_items.pdf"), evidenceReportBuilder);
+        writeReport(fileName(report.sampleReport().sampleCode(), "_evidence_items.pdf"), evidenceReportBuilder);
     }
 
     @Override
-    public void writeNonSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage, @NotNull final NotSequenceableReason reason, @NotNull final NotSequenceableStudy study)
-            throws IOException, DRException {
-        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(sample, tumorType, tumorPercentage, reason, study);
-        writeReport(fileName(sample, "_hmf_report.pdf"), reportBuilder);
+    public void writeNonSequenceableReport(@NotNull final NotSequencedPatientReport report) throws IOException, DRException {
+        final JasperReportBuilder reportBuilder = generateNotSequenceableReport(report);
+        writeReport(fileName(report.sampleReport().sampleCode(), "_hmf_report.pdf"), reportBuilder);
     }
 
     private void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
@@ -107,29 +107,35 @@ public class PDFWriter implements ReportWriter {
     @VisibleForTesting
     @NotNull
 
-    static JasperReportBuilder generateNotSequenceableReport(@NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentageString, @NotNull final NotSequenceableReason reason,
-            @NotNull final NotSequenceableStudy study) throws IOException {
+    static JasperReportBuilder generateNotSequenceableReport(@NotNull final NotSequencedPatientReport report) throws IOException {
         // @formatter:off
-        final ComponentBuilder<?, ?> report =
+        final ComponentBuilder<?, ?> finalReport =
                 cmp.verticalList(
-                        MainPageTopSection.build("HMF Sequencing Report", sample, tumorType, tumorPercentageString),
+                        MainPageTopSection.build("HMF Sequencing Report", report.sampleReport()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        mainPageNotSequenceableSection(reason, study));
+                        mainPageNotSequenceableSection(report.reason(), report.study()),
         // @formatter:on
 
-        return report().noData(report);
+        // MIVO: hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
+        final DRDataSource singleItemDataSource = new DRDataSource("item");
+        singleItemDataSource.add(new Object());
+
+        return report().pageFooter(cmp.pageXslashY())
+                .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()), cmp.pageXslashY(),
+                        cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
+                .addDetail(finalReport)
+                .setDataSource(singleItemDataSource);
     }
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generatePatientReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData)
-            throws IOException {
+    static JasperReportBuilder generatePatientReport(@NotNull final SequencedPatientReport report,
+            @NotNull final HmfReporterData reporterData) throws IOException {
         final String additionalPagesTitleStart = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
         // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
                 cmp.verticalList(
-                        MainPageTopSection.build("HMF Sequencing Report", report),
+                        MainPageTopSection.build("HMF Sequencing Report", report.sampleReport()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -181,7 +187,7 @@ public class PDFWriter implements ReportWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(signatureFooter(reporterData.signaturePath()), cmp.pageXslashY(),
+                .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()), cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .addDetail(totalReport)
                 .setDataSource(singleItemDataSource);
@@ -189,11 +195,11 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-    static JasperReportBuilder generateSupplementaryReport(@NotNull final PatientReport report) throws IOException {
+    static JasperReportBuilder generateSupplementaryReport(@NotNull final SequencedPatientReport report) throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> structuralVariantPage =
                 cmp.verticalList(
-                        MainPageTopSection.build("HMF Supplement", report),
+                        MainPageTopSection.build("HMF Supplement", report.sampleReport()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         supplementDisclaimerSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -276,7 +282,8 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantReport(@NotNull final PatientReport report, @NotNull final HmfReporterData reporterData) {
+    private static ComponentBuilder<?, ?> variantReport(@NotNull final SequencedPatientReport report,
+            @NotNull final HmfReporterData reporterData) {
         final String mutationalLoadAddition =
                 "Patients with a mutational load over 140 could be " + "eligible for immunotherapy within DRUP.";
 
@@ -322,7 +329,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final PatientReport report) {
+    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final SequencedPatientReport report) {
         // @formatter:off
         final int fontSize = 6;
         final ComponentBuilder<?, ?> table;
@@ -357,7 +364,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final PatientReport report) {
+    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
         // @formatter:off
         final int fontSize = 6;
         final ComponentBuilder<?, ?> table;
@@ -412,7 +419,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final PatientReport report) {
+    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final SequencedPatientReport report) {
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
                 cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
