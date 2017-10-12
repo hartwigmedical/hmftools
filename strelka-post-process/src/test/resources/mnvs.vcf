@@ -1,0 +1,114 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=BCNoise,Description="Average fraction of filtered basecalls within 50 bases of the indel exceeds 0.3">
+##FILTER=<ID=DP,Description="Greater than 3.0x chromosomal mean depth in Normal sample">
+##FILTER=<ID=QSI_ref,Description="Normal sample is not homozygous ref or sindel Q-score < 10, ie calls with NT!=ref or QSI_NT < 10">
+##FILTER=<ID=QSS_ref,Description="Normal sample is not homozygous ref or ssnv Q-score < 10, ie calls with NT!=ref or QSS_NT < 10">
+##FILTER=<ID=Repeat,Description="Sequence repeat of more than 1000x in the reference sequence">
+##FILTER=<ID=SpanDel,Description="Fraction of reads crossing site with spanning deletions in either sample exceeeds 0.75">
+##FILTER=<ID=iHpol,Description="Indel overlaps an interrupted homopolymer longer than 14x in the reference sequence">
+##FORMAT=<ID=AU,Number=2,Type=Integer,Description="Number of 'A' alleles used in tiers 1,2">
+##FORMAT=<ID=CU,Number=2,Type=Integer,Description="Number of 'C' alleles used in tiers 1,2">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth for tier1">
+##FORMAT=<ID=DP2,Number=1,Type=Integer,Description="Read depth for tier2">
+##FORMAT=<ID=DP50,Number=1,Type=Float,Description="Average tier1 read depth within 50 bases">
+##FORMAT=<ID=FDP,Number=1,Type=Integer,Description="Number of basecalls filtered from original read depth for tier1">
+##FORMAT=<ID=FDP50,Number=1,Type=Float,Description="Average tier1 number of basecalls filtered from original read depth within 50 bases">
+##FORMAT=<ID=GU,Number=2,Type=Integer,Description="Number of 'G' alleles used in tiers 1,2">
+##FORMAT=<ID=SDP,Number=1,Type=Integer,Description="Number of reads with deletions spanning this site at tier1">
+##FORMAT=<ID=SUBDP,Number=1,Type=Integer,Description="Number of reads below tier1 mapping quality threshold aligned across this site">
+##FORMAT=<ID=SUBDP50,Number=1,Type=Float,Description="Average number of reads below tier1 mapping quality threshold aligned across sites within 50 bases">
+##FORMAT=<ID=TAR,Number=2,Type=Integer,Description="Reads strongly supporting alternate allele for tiers 1,2">
+##FORMAT=<ID=TIR,Number=2,Type=Integer,Description="Reads strongly supporting indel allele for tiers 1,2">
+##FORMAT=<ID=TOR,Number=2,Type=Integer,Description="Other reads (weak support or insufficient indel breakpoint overlap) for tiers 1,2">
+##FORMAT=<ID=TU,Number=2,Type=Integer,Description="Number of 'T' alleles used in tiers 1,2">
+##GATKCommandLine.CombineVariants=<ID=CombineVariants,Version=3.4-46-gbc02625,Date="Wed Sep 27 16:43:56 CEST 2017",Epoch=1506523436353,CommandLineOptions="analysis_type=CombineVariants input_file=[] showFullBamList=false read_buffer_size=null phone_home=AWS gatk_key=null tag=NA read_filter=[] disable_read_filter=[] intervals=null excludeIntervals=null interval_set_rule=UNION interval_merging=ALL interval_padding=0 reference_sequence=/data/GENOMES/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta nonDeterministicRandomSeed=false disableDithering=false maxRuntime=-1 maxRuntimeUnits=MINUTES downsampling_type=BY_SAMPLE downsample_to_fraction=null downsample_to_coverage=1000 baq=OFF baqGapOpenPenalty=40.0 refactor_NDN_cigar_string=false fix_misencoded_quality_scores=false allow_potentially_misencoded_quality_scores=false useOriginalQualities=false defaultBaseQualities=-1 performanceLog=null BQSR=null quantize_quals=0 disable_indel_quals=false emit_original_quals=false preserve_qscores_less_than=6 globalQScorePrior=-1.0 validation_strictness=SILENT remove_program_records=false keep_program_records=false sample_rename_mapping_file=null unsafe=null disable_auto_index_creation_and_locking_when_reading_rods=false no_cmdline_in_header=false sites_only=false never_trim_vcf_format_field=false bcf=false bam_compression=null simplifyBAM=false disable_bam_indexing=false generate_md5=false num_threads=1 num_cpu_threads_per_data_thread=1 num_io_threads=0 monitorThreadEfficiency=false num_bam_file_handles=null read_group_black_list=null pedigree=[] pedigreeString=[] pedigreeValidationType=STRICT allow_intervals_with_unindexed_bam=false generateShadowBCF=false variant_index_type=DYNAMIC_SEEK variant_index_parameter=-1 logging_level=INFO log_to_file=null help=false version=false variant=[(RodBindingCollection [(RodBinding name=snvs source=results/passed.somatic.snvs.vcf)]), (RodBindingCollection [(RodBinding name=indels source=results/passed.somatic.indels.vcf)])] out=/sample/output/somaticVariants/strelka/passed.somatic.merged.vcf genotypemergeoption=UNSORTED filteredrecordsmergetype=KEEP_IF_ANY_UNFILTERED multipleallelesmergetype=BY_TYPE rod_priority_list=null printComplexMerges=false filteredAreUncalled=false minimalVCF=false excludeNonVariants=false setKey=set assumeIdenticalSamples=false minimumN=1 suppressCommandLineHeader=false mergeInfoWithMaxAC=false filter_reads_with_N_cigar=false filter_mismatching_base_and_quals=false filter_bases_not_stored=false">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=IC,Number=1,Type=Integer,Description="Number of times RU repeats in the indel allele">
+##INFO=<ID=IHP,Number=1,Type=Integer,Description="Largest reference interrupted homopolymer length intersecting with the indel">
+##INFO=<ID=NT,Number=1,Type=String,Description="Genotype of the normal in all data tiers, as used to classify somatic variants. One of {ref,het,hom,conflict}.">
+##INFO=<ID=OVERLAP,Number=0,Type=Flag,Description="Somatic indel possibly overlaps a second indel.">
+##INFO=<ID=QSI,Number=1,Type=Integer,Description="Quality score for any somatic variant, ie. for the ALT haplotype to be present at a significantly different frequency in the tumor and normal">
+##INFO=<ID=QSI_NT,Number=1,Type=Integer,Description="Quality score reflecting the joint probability of a somatic variant and NT">
+##INFO=<ID=QSS,Number=1,Type=Integer,Description="Quality score for any somatic snv, ie. for the ALT allele to be present at a significantly different frequency in the tumor and normal">
+##INFO=<ID=QSS_NT,Number=1,Type=Integer,Description="Quality score reflecting the joint probability of a somatic variant and NT">
+##INFO=<ID=RC,Number=1,Type=Integer,Description="Number of times RU repeats in the reference allele">
+##INFO=<ID=RU,Number=1,Type=String,Description="Smallest repeating sequence unit in inserted or deleted sequence">
+##INFO=<ID=SGT,Number=1,Type=String,Description="Most likely somatic genotype excluding normal noise states">
+##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description="Somatic mutation">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=TQSI,Number=1,Type=Integer,Description="Data tier used to compute QSI">
+##INFO=<ID=TQSI_NT,Number=1,Type=Integer,Description="Data tier used to compute QSI_NT">
+##INFO=<ID=TQSS,Number=1,Type=Integer,Description="Data tier used to compute QSS">
+##INFO=<ID=TQSS_NT,Number=1,Type=Integer,Description="Data tier used to compute QSS_NT">
+##INFO=<ID=set,Number=1,Type=String,Description="Source VCF for the merged record in CombineVariants">
+##cmdline=/opt/strelka/libexec/consolidateResults.pl --config=/sample/output/somaticVariants/strelka/config/run.config.ini
+##content=strelka somatic indel calls
+##contig=<ID=1,length=249250621>
+##contig=<ID=2,length=243199373>
+##contig=<ID=3,length=198022430>
+##contig=<ID=4,length=191154276>
+##contig=<ID=5,length=180915260>
+##contig=<ID=6,length=171115067>
+##contig=<ID=7,length=159138663>
+##contig=<ID=8,length=146364022>
+##contig=<ID=9,length=141213431>
+##contig=<ID=10,length=135534747>
+##contig=<ID=11,length=135006516>
+##contig=<ID=12,length=133851895>
+##contig=<ID=13,length=115169878>
+##contig=<ID=14,length=107349540>
+##contig=<ID=15,length=102531392>
+##contig=<ID=16,length=90354753>
+##contig=<ID=17,length=81195210>
+##contig=<ID=18,length=78077248>
+##contig=<ID=19,length=59128983>
+##contig=<ID=20,length=63025520>
+##contig=<ID=21,length=48129895>
+##contig=<ID=22,length=51304566>
+##contig=<ID=X,length=155270560>
+##contig=<ID=Y,length=59373566>
+##contig=<ID=MT,length=16569>
+##fileDate=20170927
+##germlineIndelTheta=0.0001
+##germlineSnvTheta=0.001
+##maxDepth_10=139.733429068716
+##maxDepth_11=142.142522977054
+##maxDepth_12=145.563384934126
+##maxDepth_13=157.704847693184
+##maxDepth_14=145.36777603553
+##maxDepth_15=136.380161416951
+##maxDepth_16=124.996731827252
+##maxDepth_17=122.538410244024
+##maxDepth_18=150.430435249613
+##maxDepth_19=108.88564414442
+##maxDepth_1=141.140752705933
+##maxDepth_20=131.033149714514
+##maxDepth_21=159.762763183104
+##maxDepth_22=109.112902489487
+##maxDepth_2=148.441022075828
+##maxDepth_3=152.145895200153
+##maxDepth_4=158.962365171459
+##maxDepth_5=151.173578816903
+##maxDepth_6=152.527043766033
+##maxDepth_7=144.555164920701
+##maxDepth_8=147.677319575551
+##maxDepth_9=137.170919040925
+##maxDepth_MT=743.343070980203
+##maxDepth_X=139.472039845517
+##maxDepth_Y=6.80425898655569
+##priorSomaticIndelRate=1e-06
+##priorSomaticSnvRate=1e-06
+##reference=file:///data/GENOMES/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta
+##source=strelka
+##source_version=2.0.17.strelka1
+##startTime=Wed Sep 27 09:03:33 2017
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	TUMOR
+1	2	.	A	ATC	.	PASS	AC=0,0;AF=0.00,0.00;AN=0;NT=ref;QSS=54;QSS_NT=54;SGT=TT->AG;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs	0/1:49,42:97
+1	3	.	TCC	T	.	PASS	AC=0,0;AF=0.00,0.00;AN=0;NT=ref;QSS=54;QSS_NT=54;SGT=TT->AG;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs	0/1:49,42:97
+1	4	.	C	T	.	PASS	AC=0,0;AF=0.00,0.00;AN=0;NT=ref;QSS=54;QSS_NT=54;SGT=TT->AG;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs	0/1:49,42:97
+1	56654874	.	TC	T	.	PASS	AC=0;AF=0.00;AN=0;IC=3;IHP=5;NT=ref;QSI=75;QSI_NT=75;RC=4;RU=C;SGT=ref->het;SOMATIC;TQSI=1;TQSI_NT=1;set=indels	GT:AD:DP	0/1:49,42:97
+1	56654876	.	C	T	.	PASS	AC=0;AF=0.00;AN=0;NT=ref;QSS=66;QSS_NT=66;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs	GT:AD:DP	0/1:55,42:98
+1	170755775	.	T	TA	.	PASS	AC=0;AF=0.00;AN=0;IC=1;IHP=7;NT=ref;QSI=21;QSI_NT=21;RC=0;RU=A;SGT=ref->het;SOMATIC;TQSI=1;TQSI_NT=1;set=indels	GT:AD:DP	0/1:101,15:121
+1	170755776	.	G	A	.	PASS	AC=0;AF=0.00;AN=0;NT=ref;QSS=24;QSS_NT=24;SGT=GG->AG;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs	GT:AD:DP	0/1:104,15:120
