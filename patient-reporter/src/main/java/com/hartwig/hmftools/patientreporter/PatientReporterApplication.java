@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.center.Center;
+import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
@@ -56,6 +58,7 @@ public class PatientReporterApplication {
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String FUSION_CSV = "fusion_csv";
+    private static final String COMMENTS = "comments";
 
     private static final String CENTER_CSV = "center_csv";
     private static final String SIGNATURE = "signature";
@@ -72,14 +75,16 @@ public class PatientReporterApplication {
                 LOGGER.warn("Could not determine study for sample " + notSequenceableSample);
             } else {
                 LOGGER.info("Generating non-sequenceable report for " + notSequenceableSample);
+                final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
 
                 final NotSequenceableReason notSequenceableReason =
                         NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
 
                 final NotSequenceableReporter reporter =
-                        new NotSequenceableReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), buildReportWriter(cmd));
+                        new NotSequenceableReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), centerModel, buildReportWriter(cmd));
 
-                reporter.run(notSequenceableSample, notSequenceableReason, study);
+                reporter.run(notSequenceableSample, notSequenceableReason, study, cmd.getOptionValue(SIGNATURE),
+                        cmd.getOptionValue(COMMENTS));
             }
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Running patient reporter v" + VERSION);
@@ -87,7 +92,8 @@ public class PatientReporterApplication {
             final HmfReporterData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(reporterData.geneModel(), reporterData.fusionModel(), cmd);
 
-            final PatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY));
+            final SequencedPatientReport report =
+                    reporter.run(cmd.getOptionValue(RUN_DIRECTORY), reporterData, cmd.getOptionValue(COMMENTS));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);
@@ -119,7 +125,7 @@ public class PatientReporterApplication {
         }
         final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, geneModel.hmfRegions(), cosmic);
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), geneModel, variantAnalyzer, svAnalyzer);
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer);
     }
 
     @NotNull
@@ -148,7 +154,6 @@ public class PatientReporterApplication {
             final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
             final String centerCsv = cmd.getOptionValue(CENTER_CSV);
             final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-            final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
             if (drupGenesCsv == null || !exists(drupGenesCsv)) {
                 LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
@@ -156,8 +161,6 @@ public class PatientReporterApplication {
                 LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
             } else if (centerCsv == null || !exists(centerCsv)) {
                 LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
-            } else if (signaturePath == null || !exists(signaturePath)) {
-                LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
             } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
                 LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
             } else {
@@ -187,9 +190,12 @@ public class PatientReporterApplication {
 
     private static boolean validInputForReportWriter(@NotNull final CommandLine cmd) {
         final String reportDirectory = cmd.getOptionValue(REPORT_DIRECTORY);
+        final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
         if (reportDirectory == null || !exists(reportDirectory) || !isDirectory(reportDirectory)) {
             LOGGER.warn(REPORT_DIRECTORY + " has to be an existing directory: " + reportDirectory);
+        } else if (signaturePath == null || !exists(signaturePath)) {
+            LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
         } else {
             return true;
         }
@@ -236,6 +242,7 @@ public class PatientReporterApplication {
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
+        options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
     }
 

@@ -9,10 +9,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.center.Center;
+import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
+import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -22,8 +26,12 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
-import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
+import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
@@ -46,7 +54,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 public class PDFWriterTest {
 
     private static final boolean SHOW_AND_PRINT = false;
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
@@ -78,10 +86,13 @@ public class PDFWriterTest {
         final List<Alteration> alterations =
                 CivicAnalysis.run(variants, reporterData.geneModel(), doidMapping.doidsForTumorType(tumorType));
 
-        final PatientReport patientReport =
-                ImmutablePatientReport.of(sample, variants, fusions, disruptions, copyNumbers, mutationalLoad, tumorType,
-                        pathologyTumorPercentage, "58%", "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER),
-                        LocalDate.parse("01-Jan-2016", FORMATTER), alterations, "PREP013V23-QC037V20-SEQ008V25");
+        final SampleReport sampleReport = ImmutableSampleReport.of(sample, tumorType, pathologyTumorPercentage, "FC000001", "CSB000001",
+                LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
+                reporterData.centerModel().getAddresseeStringForSample(sample));
+
+        final SequencedPatientReport patientReport =
+                ImmutableSequencedPatientReport.of(sampleReport, variants, fusions, disruptions, copyNumbers, mutationalLoad, "58%",
+                        alterations, Optional.of("this is a test report"), signaturePath);
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
@@ -203,14 +214,23 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGenerateNotSequenceableReport() throws DRException, IOException {
+    public void canGenerateNotSequenceableReport() throws DRException, IOException, EmptyFileException {
         final String sample = "CPCT11111111T";
         final String tumorType = "Melanoma";
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
-        final String tumorPercentageString = "10%";
         final NotSequenceableStudy study = NotSequenceableStudy.CPCT;
+        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
+        final CenterModel centerModel = Center.readFromCSV(centerPath);
+        final SampleReport sampleReport =
+                ImmutableSampleReport.of(sample, tumorType, 0.1, "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER),
+                        LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
+                        centerModel.getAddresseeStringForSample(sample));
 
-        final JasperReportBuilder report = PDFWriter.generateNotSequenceableReport(sample, tumorType, tumorPercentageString, reason, study);
+        final NotSequencedPatientReport patientReport =
+                ImmutableNotSequencedPatientReport.of(sampleReport, reason, study, Optional.empty(), signaturePath);
+
+        final JasperReportBuilder report = PDFWriter.generateNotSequenceableReport(patientReport);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {

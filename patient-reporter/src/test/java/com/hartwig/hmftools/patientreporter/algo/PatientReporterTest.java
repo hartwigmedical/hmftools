@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
 import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusions;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -69,13 +71,20 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
+        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
+        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
+        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
+        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
+        final HmfReporterData reporterData =
+                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo =
-                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), geneModel, variantAnalyzer, svAnalyzer);
-        assertNotNull(algo.run(RUN_DIRECTORY));
+                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), variantAnalyzer, svAnalyzer);
+        assertNotNull(algo.run(RUN_DIRECTORY, reporterData, null));
     }
 
     @NotNull
