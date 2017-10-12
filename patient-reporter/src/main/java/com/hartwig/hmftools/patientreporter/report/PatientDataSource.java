@@ -89,8 +89,8 @@ class PatientDataSource {
                         SV_PARTNER_CONTEXT_FIELD.getName(), SV_TYPE_FIELD.getName(), SV_VAF.getName());
 
         fusions.forEach(
-                g -> dataSource.add(g.GeneStart(), g.TranscriptStart(), g.Start(), g.GeneContextStart(), g.GeneEnd(), g.TranscriptEnd(),
-                        g.End(), g.GeneContextEnd(), g.Type(), g.VAF()));
+                g -> dataSource.add(g.geneStart(), g.transcriptStart(), g.start(), g.geneContextStart(), g.geneEnd(), g.transcriptEnd(),
+                        g.end(), g.geneContextEnd(), g.type(), g.vaf()));
 
         return dataSource;
     }
@@ -103,8 +103,8 @@ class PatientDataSource {
                         SV_PARTNER_POSITION_FIELD.getName(), SV_ORIENTATION_FIELD.getName(), SV_GENE_CONTEXT.getName(), SV_VAF.getName());
 
         disruptions.forEach(
-                g -> dataSource.add(g.GeneName(), g.Transcript(), g.Location(), g.Type(), g.Partner(), g.Orientation(), g.GeneContext(),
-                        g.VAF()));
+                g -> dataSource.add(g.geneName(), g.transcript(), g.location(), g.type(), g.partner(), g.orientation(), g.geneContext(),
+                        g.vaf()));
 
         return dataSource;
     }

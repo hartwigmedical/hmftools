@@ -186,30 +186,30 @@ public class PDFWriterTest {
     @NotNull
     private static List<StructuralVariantAnalysis.GeneFusion> createTestFusions() {
         return Collections.singletonList(ImmutableGeneFusion.builder()
-                .Start("chr21:42872140")
-                .GeneStart("TMPRSS2")
-                .GeneContextStart("Exon 1")
-                .TranscriptStart("ENST00000398585")
-                .End("chr9:140404459")
-                .GeneEnd("PNPLA7")
-                .GeneContextEnd("Exon 13")
-                .TranscriptEnd("ENST00000406427")
-                .Type("BND")
-                .VAF("38% 40%")
+                .start("chr21:42872140")
+                .geneStart("TMPRSS2")
+                .geneContextStart("Exon 1")
+                .transcriptStart("ENST00000398585")
+                .end("chr9:140404459")
+                .geneEnd("PNPLA7")
+                .geneContextEnd("Exon 13")
+                .transcriptEnd("ENST00000406427")
+                .type("BND")
+                .vaf("38% 40%")
                 .build());
     }
 
     @NotNull
     private static List<StructuralVariantAnalysis.GeneDisruption> createTestDisruptions() {
         return Collections.singletonList(ImmutableGeneDisruption.builder()
-                .GeneName("BRAF")
-                .Transcript("ENST00000288602")
-                .Location("chr7:140568805")
-                .GeneContext("Intron 1")
-                .Orientation("5'")
-                .Partner("chr17:50158907")
-                .Type("BND")
-                .VAF("29%")
+                .geneName("BRAF")
+                .transcript("ENST00000288602")
+                .location("chr7:140568805")
+                .geneContext("Intron 1")
+                .orientation("5'")
+                .partner("chr17:50158907")
+                .type("BND")
+                .vaf("29%")
                 .build());
     }
 

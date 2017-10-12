@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class COSMICPromiscuousGene {
     @NotNull
-    public abstract String GeneName();
+    public abstract String geneName();
 
     @Nullable
-    public abstract String Transcript();
+    public abstract String transcript();
 }

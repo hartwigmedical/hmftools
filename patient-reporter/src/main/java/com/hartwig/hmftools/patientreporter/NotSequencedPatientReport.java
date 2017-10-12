@@ -26,5 +26,9 @@ public abstract class NotSequencedPatientReport implements PatientReport {
     @Override
     @NotNull
     public abstract Optional<String> comments();
+
+    @NotNull
+    @Override
+    public abstract String signaturePath();
 }
 

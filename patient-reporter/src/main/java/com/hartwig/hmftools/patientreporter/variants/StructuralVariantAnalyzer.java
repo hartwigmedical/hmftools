@@ -55,20 +55,20 @@ public class StructuralVariantAnalyzer {
 
     private boolean isPromiscuous(final GeneAnnotation gene) {
         return Stream.of(fusionModel.promiscuousFivePrime(), fusionModel.promiscuousThreePrime())
-                .anyMatch(l -> l.stream().anyMatch(g -> gene.getSynonyms().contains(g.GeneName())));
+                .anyMatch(l -> l.stream().anyMatch(g -> gene.getSynonyms().contains(g.geneName())));
     }
 
     private boolean oneEndPromiscuous(final Transcript five, final Transcript three) {
         final boolean promiscuousFive = fusionModel.promiscuousFivePrime()
                 .stream()
-                .anyMatch(p -> p.Transcript() != null
-                        ? p.Transcript().equals(five.getTranscriptId())
-                        : p.GeneName().equals(five.getGeneName()));
+                .anyMatch(p -> p.transcript() != null
+                        ? p.transcript().equals(five.getTranscriptId())
+                        : p.geneName().equals(five.getGeneName()));
         final boolean promiscuousThree = fusionModel.promiscuousThreePrime()
                 .stream()
-                .anyMatch(p -> p.Transcript() != null
-                        ? p.Transcript().equals(three.getTranscriptId())
-                        : p.GeneName().equals(three.getGeneName()));
+                .anyMatch(p -> p.transcript() != null
+                        ? p.transcript().equals(three.getTranscriptId())
+                        : p.geneName().equals(three.getGeneName()));
         return promiscuousFive || promiscuousThree;
     }
 
@@ -95,7 +95,6 @@ public class StructuralVariantAnalyzer {
 
         // left is upstream, right is downstream
         final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
-
 
         for (final VariantAnnotation sv : annotations) {
 
@@ -186,16 +185,16 @@ public class StructuralVariantAnalyzer {
             final Double threeAF = downstream.getBreakend().getAlleleFrequency();
 
             final StructuralVariantAnalysis.GeneFusion details = ImmutableGeneFusion.builder()
-                    .Type(upstream.getBreakend().getStructuralVariant().getVariant().type().toString())
-                    .Start(upstream.getBreakend().getPositionString())
-                    .GeneStart(upstream.getGeneName())
-                    .GeneContextStart(exonDescription(upstream, true))
-                    .TranscriptStart(upstream.getTranscriptId())
-                    .End(downstream.getBreakend().getPositionString())
-                    .GeneEnd(downstream.getGeneName())
-                    .GeneContextEnd(exonDescription(downstream, false))
-                    .TranscriptEnd(downstream.getTranscriptId())
-                    .VAF(PatientReportFormat.formatNullablePercent(fiveAF) + " " + PatientReportFormat.formatNullablePercent(threeAF))
+                    .type(upstream.getBreakend().getStructuralVariant().getVariant().type().toString())
+                    .start(upstream.getBreakend().getPositionString())
+                    .geneStart(upstream.getGeneName())
+                    .geneContextStart(exonDescription(upstream, true))
+                    .transcriptStart(upstream.getTranscriptId())
+                    .end(downstream.getBreakend().getPositionString())
+                    .geneEnd(downstream.getGeneName())
+                    .geneContextEnd(exonDescription(downstream, false))
+                    .transcriptEnd(downstream.getTranscriptId())
+                    .vaf(PatientReportFormat.formatNullablePercent(fiveAF) + " " + PatientReportFormat.formatNullablePercent(threeAF))
                     .build();
 
             result.add(details);
@@ -245,14 +244,14 @@ public class StructuralVariantAnalyzer {
                 }
 
                 final StructuralVariantAnalysis.GeneDisruption disruption = ImmutableGeneDisruption.builder()
-                        .GeneName(geneName)
-                        .Location(g.getBreakend().getPositionString())
-                        .GeneContext(exonDescription(g.getCanonical(), true))
-                        .Transcript(g.getCanonical().getTranscriptId())
-                        .Partner(g.getOtherBreakend().getPositionString())
-                        .Type(g.getBreakend().getStructuralVariant().getVariant().type().toString())
-                        .Orientation(g.getBreakend().getOrientation() > 0 ? "5'" : "3'")
-                        .VAF(PatientReportFormat.formatNullablePercent(g.getBreakend().getAlleleFrequency()))
+                        .geneName(geneName)
+                        .location(g.getBreakend().getPositionString())
+                        .geneContext(exonDescription(g.getCanonical(), true))
+                        .transcript(g.getCanonical().getTranscriptId())
+                        .partner(g.getOtherBreakend().getPositionString())
+                        .type(g.getBreakend().getStructuralVariant().getVariant().type().toString())
+                        .orientation(g.getBreakend().getOrientation() > 0 ? "5'" : "3'")
+                        .vaf(PatientReportFormat.formatNullablePercent(g.getBreakend().getAlleleFrequency()))
                         .build();
 
                 disruptions.add(disruption);
