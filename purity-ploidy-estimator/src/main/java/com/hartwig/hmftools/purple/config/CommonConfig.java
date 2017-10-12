@@ -20,9 +20,6 @@ public interface CommonConfig {
     String outputDirectory();
 
     @NotNull
-    String freecDirectory();
-
-    @NotNull
     String cobaltDirectory();
 
     @NotNull

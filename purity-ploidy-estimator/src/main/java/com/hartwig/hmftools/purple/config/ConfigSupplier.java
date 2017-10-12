@@ -8,7 +8,6 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.copynumber.freec.FreecFileLoader;
 import com.hartwig.hmftools.common.exception.HartwigException;
 
 import org.apache.commons.cli.CommandLine;
@@ -82,7 +81,6 @@ public class ConfigSupplier {
         }
 
         final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
-        final String freecDirectory = freecDirectory(cmd, runDirectory, refSample, tumorSample);
         final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
         final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
 
@@ -90,7 +88,6 @@ public class ConfigSupplier {
                 .refSample(refSample)
                 .tumorSample(tumorSample)
                 .outputDirectory(outputDirectory)
-                .freecDirectory(freecDirectory)
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
                 .forceSegmentation(cmd.hasOption(FORCE))
@@ -131,14 +128,6 @@ public class ConfigSupplier {
 
     public CircosConfig circosConfig() {
         return circosConfig;
-    }
-
-    @NotNull
-    private static String freecDirectory(@NotNull final CommandLine cmd, @NotNull final String runDirectory,
-            @NotNull final String refSample, @NotNull final String tumorSample) {
-        return cmd.hasOption(FREEC_DIRECTORY)
-                ? cmd.getOptionValue(FREEC_DIRECTORY)
-                : FreecFileLoader.getFreecBasePath(runDirectory, refSample, tumorSample);
     }
 
     @NotNull
