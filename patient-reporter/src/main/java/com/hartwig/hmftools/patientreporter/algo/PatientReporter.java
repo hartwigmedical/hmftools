@@ -49,21 +49,25 @@ public class PatientReporter {
     @NotNull
     private final LimsJsonModel limsModel;
     @NotNull
+    private final HmfReporterData reporterData;
+    @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final StructuralVariantAnalyzer structuralVariantAnalyzer;
 
     public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsJsonModel limsModel,
-            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final StructuralVariantAnalyzer structuralVariantAnalyzer) {
+            @NotNull final HmfReporterData reporterData, @NotNull final VariantAnalyzer variantAnalyzer,
+            @NotNull final StructuralVariantAnalyzer structuralVariantAnalyzer) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
+        this.reporterData = reporterData;
         this.variantAnalyzer = variantAnalyzer;
         this.structuralVariantAnalyzer = structuralVariantAnalyzer;
     }
 
     @NotNull
-    public SequencedPatientReport run(@NotNull final String runDirectory, @NotNull final HmfReporterData reporterData,
-            @Nullable final String comments) throws IOException, HartwigException {
+    public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments)
+            throws IOException, HartwigException {
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(runDirectory);
 
         final String sample = genomeAnalysis.sample();

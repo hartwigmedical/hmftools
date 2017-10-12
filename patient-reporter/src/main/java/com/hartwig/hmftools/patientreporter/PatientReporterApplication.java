@@ -15,13 +15,11 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
-import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionModel;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
@@ -88,12 +86,10 @@ public class PatientReporterApplication {
             }
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Running patient reporter v" + VERSION);
-
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(reporterData.geneModel(), reporterData.fusionModel(), cmd);
+            final PatientReporter reporter = buildReporter(reporterData, cmd);
 
-            final SequencedPatientReport report =
-                    reporter.run(cmd.getOptionValue(RUN_DIRECTORY), reporterData, cmd.getOptionValue(COMMENTS));
+            final SequencedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
             buildReportWriter(cmd).writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);
@@ -111,9 +107,9 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final GeneModel geneModel, @NotNull COSMICGeneFusionModel cosmic,
-            @NotNull final CommandLine cmd) throws IOException, EmptyFileException, XMLStreamException, SQLException {
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
+    private static PatientReporter buildReporter(@NotNull final HmfReporterData reporterData, @NotNull final CommandLine cmd)
+            throws IOException, EmptyFileException, XMLStreamException, SQLException {
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(reporterData.geneModel());
 
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {
@@ -123,9 +119,10 @@ public class PatientReporterApplication {
         } else {
             annotator = NullAnnotator.make();
         }
-        final StructuralVariantAnalyzer svAnalyzer = new StructuralVariantAnalyzer(annotator, geneModel.hmfRegions(), cosmic);
+        final StructuralVariantAnalyzer svAnalyzer =
+                new StructuralVariantAnalyzer(annotator, reporterData.geneModel().hmfRegions(), reporterData.fusionModel());
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), variantAnalyzer, svAnalyzer);
+        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), reporterData, variantAnalyzer, svAnalyzer);
     }
 
     @NotNull
