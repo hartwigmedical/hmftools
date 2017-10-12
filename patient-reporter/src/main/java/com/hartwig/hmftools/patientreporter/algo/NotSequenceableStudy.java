@@ -27,7 +27,6 @@ public enum NotSequenceableStudy {
         } else if (sample.contains(DRUP_IDENTIFIER)) {
             return DRUP;
         }
-
         return null;
     }
 
