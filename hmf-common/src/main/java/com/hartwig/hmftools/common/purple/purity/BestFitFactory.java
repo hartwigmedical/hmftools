@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -38,12 +39,15 @@ public class BestFitFactory {
             if (noDetectableTumor(somatics.size())) {
                 status = FittedPurityStatus.NO_TUMOR;
                 bestFit = lowestScore;
-            } else if (somaticsWontHelp(somatics.size(), lowestScore.purity())) {
-                status = FittedPurityStatus.HIGHLY_DIPLOID;
-                bestFit = lowestScore;
             } else {
-                status = FittedPurityStatus.SOMATIC;
-                bestFit = BestFitSomatics.bestSomaticFit(somatics, candidates);
+                final Optional<FittedPurity> somaticFit = SomaticFitFactory.fromSomatics(candidates, somatics);
+                if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
+                    status = FittedPurityStatus.HIGHLY_DIPLOID;
+                    bestFit = lowestScore;
+                } else {
+                    status = FittedPurityStatus.SOMATIC;
+                    bestFit = somaticFit.get();
+                }
             }
 
         } else {
@@ -56,8 +60,9 @@ public class BestFitFactory {
         return somaticCount > 0 && somaticCount < MIN_VARIANTS;
     }
 
-    private boolean somaticsWontHelp(int somaticCount, double lowestScoringPurity) {
-        return somaticCount == 0 || Doubles.lessOrEqual(lowestScoringPurity, LOWEST_SCORE_MIN_PURITY);
+    private boolean somaticsWontHelp(int somaticCount, double lowestScoringPurity, @NotNull final Optional<FittedPurity> somaticFit) {
+        return !somaticFit.isPresent() || somaticCount == 0 || (Doubles.lessOrEqual(lowestScoringPurity, LOWEST_SCORE_MIN_PURITY) && Doubles
+                .lessOrEqual(somaticFit.get().purity(), LOWEST_SCORE_MIN_PURITY));
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score) {
