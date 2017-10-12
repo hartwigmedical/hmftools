@@ -11,8 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(of = "new",
-             allParameters = true,
+@Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HmfReporterData {
 
@@ -33,5 +32,4 @@ public abstract class HmfReporterData {
 
     @NotNull
     public abstract COSMICGeneFusionModel fusionModel();
-
 }

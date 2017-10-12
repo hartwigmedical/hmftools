@@ -28,6 +28,6 @@ public final class HmfReporterDataLoader {
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
         final CenterModel centerModel = Center.readFromCSV(centerFile);
         final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromCSV(fusionFile);
-        return new ImmutableHmfReporterData(geneModel, cosmicModel, drupFilter, centerModel, signaturePath, fusionModel);
+        return ImmutableHmfReporterData.of(geneModel, cosmicModel, drupFilter, centerModel, signaturePath, fusionModel);
     }
 }
