@@ -3,12 +3,12 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -19,8 +19,11 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
-import com.hartwig.hmftools.patientreporter.ImmutablePatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
+import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
@@ -36,6 +39,7 @@ import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
@@ -45,24 +49,21 @@ public class PatientReporter {
     @NotNull
     private final LimsJsonModel limsModel;
     @NotNull
-    private final GeneModel geneModel;
-    @NotNull
     private final VariantAnalyzer variantAnalyzer;
     @NotNull
     private final StructuralVariantAnalyzer structuralVariantAnalyzer;
 
     public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsJsonModel limsModel,
-            @NotNull final GeneModel geneModel, @NotNull final VariantAnalyzer variantAnalyzer,
-            @NotNull final StructuralVariantAnalyzer structuralVariantAnalyzer) {
+            @NotNull final VariantAnalyzer variantAnalyzer, @NotNull final StructuralVariantAnalyzer structuralVariantAnalyzer) {
         this.cpctEcrfModel = cpctEcrfModel;
         this.limsModel = limsModel;
-        this.geneModel = geneModel;
         this.variantAnalyzer = variantAnalyzer;
         this.structuralVariantAnalyzer = structuralVariantAnalyzer;
     }
 
     @NotNull
-    public PatientReport run(@NotNull final String runDirectory) throws IOException, HartwigException {
+    public SequencedPatientReport run(@NotNull final String runDirectory, @NotNull final HmfReporterData reporterData,
+            @Nullable final String comments) throws IOException, HartwigException {
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(runDirectory);
 
         final String sample = genomeAnalysis.sample();
@@ -81,7 +82,7 @@ public class PatientReporter {
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations =
-                CivicAnalysis.run(variantAnalysis.findings(), geneModel, doidMapping.doidsForTumorType(tumorType));
+                CivicAnalysis.run(variantAnalysis.findings(), reporterData.geneModel(), doidMapping.doidsForTumorType(tumorType));
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants: " + Integer.toString(totalVariantCount));
@@ -102,10 +103,13 @@ public class PatientReporter {
 
         final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
-        return ImmutablePatientReport.of(sample, purpleEnrichedVariants, svAnalysis.fusions(), svAnalysis.disruptions(),
-                copyNumberAnalysis.findings(), mutationalLoad, tumorType, tumorPercentage, purpleAnalysis.purityString(),
-                limsModel.barcodeForSample(sample), limsModel.bloodBarcodeForSample(sample), limsModel.arrivalDateForSample(sample),
-                limsModel.bloodArrivalDateForSample(sample), alterations, limsModel.labProceduresForSample(sample));
+        final String sampleRecipient = reporterData.centerModel().getAddresseeStringForSample(sample);
+        final SampleReport sampleReport = ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.barcodeForSample(sample),
+                limsModel.bloodBarcodeForSample(sample), limsModel.arrivalDateForSample(sample),
+                limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
+        return ImmutableSequencedPatientReport.of(sampleReport, purpleEnrichedVariants, svAnalysis.fusions(), svAnalysis.disruptions(),
+                copyNumberAnalysis.findings(), mutationalLoad, purpleAnalysis.purityString(), alterations, Optional.ofNullable(comments),
+                reporterData.signaturePath());
     }
 
     @NotNull
