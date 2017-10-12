@@ -62,6 +62,7 @@ public class PDFWriter implements ReportWriter {
 
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
+    private static final int TEXT_END_OF_LINE_GAP = 30;
     private static final int LIST_INDENT = 5;
     private static final int DETAIL_TO_DETAIL_VERTICAL_GAP = 4;
 
@@ -114,6 +115,8 @@ public class PDFWriter implements ReportWriter {
                         MainPageTopSection.build("HMF Sequencing Report", report.sampleReport()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageNotSequenceableSection(report.reason(), report.study()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        sampleDetailsSection(report));
         // @formatter:on
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
@@ -162,16 +165,23 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        testDetailsSection(report, reporterData.centerModel().getAddresseeStringForSample(report.sample()))
+                        disclaimerSection()
+                );
+
+        final ComponentBuilder<?, ?> secondInfoPage =
+                cmp.verticalList(
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text(additionalPagesTitleStart + " - Sample Information")
+                                .setStyle(sectionHeaderStyle()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        sampleDetailsSection(report)
                 );
 
         final ComponentBuilder<?, ?> totalReport =
-                cmp.multiPageList()
-                        .add(reportMainPage)
-                        .newPage()
-                        .add(genePanelPage)
-                        .newPage()
-                        .add(additionalInfoPage);
+                cmp.multiPageList().add(reportMainPage)
+                        .newPage().add(genePanelPage)
+                        .newPage().add(additionalInfoPage)
+                        .newPage().add(secondInfoPage);
         // @formatter:on
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
@@ -489,33 +499,49 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> testDetailsSection(@NotNull final PatientReport report, @Nullable final String recipientAddress) {
-        if (recipientAddress == null) {
-            throw new IllegalStateException("No recipient address present for sample " + report.sample());
-        }
-
+    private static ComponentBuilder<?, ?> disclaimerSection() {
         //@formatter:off
         final List<String> lines = Lists.newArrayList("This test is not certified for diagnostic purposes.",
-                "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The data on which this report is based has passed all internal quality controls.",
-                "The samples have been analysed by Next Generation Sequencing",
                 "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
-                        + "findings using certified assays.",
-                "This test was performed according to lab procedures: " + report.labProcedures(),
-                "This report is addressed at: " + recipientAddress);
+                        + "findings using certified assays.");
         //@formatter:on
+        return toList("Disclaimer", lines);
+    }
 
+    @NotNull
+    private static ComponentBuilder<?, ?> sampleDetailsSection(@NotNull final PatientReport report) {
+        if (report.sampleReport().recipient() == null) {
+            throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleCode());
+        }
+        final List<String> lines;
         if (INCLUDE_SAMPLE_BARCODES_AND_DATES) {
-            lines.add(
-                    "This test was performed on the tumor sample with barcode " + report.tumorBarcode() + " arrived on " + toFormattedDate(
-                            report.tumorArrivalDate()));
-            lines.add(
-                    "This test was performed on the blood sample with barcode " + report.bloodBarcode() + " arrived on " + toFormattedDate(
-                            report.bloodArrivalDate()));
+            lines = Lists.newArrayList(
+                    "This test was performed on the tumor sample with barcode " + report.sampleReport().tumorBarcode() + " arrived on "
+                            + toFormattedDate(report.sampleReport().tumorArrivalDate()),
+                    "This test was performed on the blood sample with barcode " + report.sampleReport().bloodBarcode() + " arrived on "
+                            + toFormattedDate(report.sampleReport().bloodArrivalDate()));
+        } else {
+            lines = Lists.newArrayList(
+                    "This test was performed on the tumor sample arrived on " + toFormattedDate(report.sampleReport().tumorArrivalDate()),
+                    "This test was performed on the blood sample arrived on " + toFormattedDate(report.sampleReport().bloodArrivalDate()));
         }
 
-        return toList("Test details", lines);
+        if (report instanceof SequencedPatientReport) {
+            lines.addAll(
+                    Lists.newArrayList("The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
+                            "The samples have been analyzed by Next Generation Sequencing"));
+        }
+        //@formatter:off
+        lines.addAll(Lists.newArrayList(
+                "This test was performed according to lab procedures: " + report.sampleReport().labProcedures(),
+                "This report was generated and verified by: " + report.user(),
+                "This report is addressed at: " + report.sampleReport().recipient()));
+        //@formatter:on
+        report.comments().ifPresent(comments -> lines.add("Comments: " + comments));
+
+        return toList("Sample details", lines);
     }
 
     private static String toFormattedDate(@Nullable final LocalDate date) {
@@ -547,7 +573,7 @@ public class PDFWriter implements ReportWriter {
                 list.add(cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP));
             }
             list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT), cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                    cmp.text(line).setStyle(fontStyle())));
+                    cmp.text(line).setStyle(fontStyle()), cmp.horizontalGap(TEXT_END_OF_LINE_GAP)));
 
             isFirst = false;
         }
