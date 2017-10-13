@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
@@ -13,9 +12,10 @@ import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
+import com.hartwig.hmftools.patientreporter.algo.ImmutableNotSequenceableReporter;
+import com.hartwig.hmftools.patientreporter.algo.ImmutablePatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
@@ -66,49 +66,60 @@ public class PatientReporterApplication {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
+        if (!validInputForReportWriter(cmd) || !validInputForBaseReporterData(cmd)) {
+            printUsageAndExit(options);
+        }
+        LOGGER.info("Running patient reporter v" + VERSION);
+        final ReportWriter reportWriter = buildReportWriter(cmd);
+
         if (cmd.hasOption(NOT_SEQUENCEABLE) && validInputForNonSequenceableReport(cmd)) {
-            final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
-            final NotSequenceableStudy study = NotSequenceableStudy.fromSample(notSequenceableSample);
-            if (study == null) {
-                LOGGER.warn("Could not determine study for sample " + notSequenceableSample);
-            } else {
-                LOGGER.info("Generating non-sequenceable report for " + notSequenceableSample);
-                final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
+            final String sample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
+            LOGGER.info("Generating non-sequenceable report for {}", sample);
+            final NotSequenceableReason reason = NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
+            final NotSequenceableReporter reporter = ImmutableNotSequenceableReporter.of(buildBaseReporterData(cmd));
 
-                final NotSequenceableReason notSequenceableReason =
-                        NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
-
-                final NotSequenceableReporter reporter =
-                        new NotSequenceableReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), centerModel, buildReportWriter(cmd));
-
-                reporter.run(notSequenceableSample, notSequenceableReason, study, cmd.getOptionValue(SIGNATURE),
-                        cmd.getOptionValue(COMMENTS));
-            }
+            final NotSequencedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
+            reportWriter.writeNonSequenceableReport(report);
         } else if (validInputForPatientReporter(cmd)) {
-            LOGGER.info("Running patient reporter v" + VERSION);
+            LOGGER.info("Generating sequenceable report...");
             final HmfReporterData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(reporterData, cmd);
 
             final SequencedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
-            buildReportWriter(cmd).writeSequenceReport(report, reporterData);
+            reportWriter.writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);
         }
     }
 
-    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV),
-                cmd.getOptionValue(CENTER_CSV), cmd.getOptionValue(SIGNATURE), cmd.getOptionValue(FUSION_CSV));
+    @NotNull
+    private static ReportWriter buildReportWriter(@NotNull final CommandLine cmd) {
+        return new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
     }
 
     @NotNull
-    private static LimsJsonModel buildLimsModel(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
-        return LimsJsonModel.readModelFromFile(cmd.getOptionValue(LIMS_JSON));
+    private static BaseReporterData buildBaseReporterData(@NotNull final CommandLine cmd)
+            throws IOException, HartwigException, XMLStreamException {
+        LOGGER.info(" Loading ECRF database...");
+        final CpctEcrfModel cpctEcrfModel =
+                CpctEcrfModel.loadFromXML(cmd.getOptionValue(CPCT_ECRF), new ImmutableFormStatusModel(Maps.newHashMap()));
+        LOGGER.info("  Loaded data for {} patients.", cpctEcrfModel.patientCount());
+        LOGGER.info(" Loading LIMS database...");
+        final LimsJsonModel limsModel = LimsJsonModel.readModelFromFile(cmd.getOptionValue(LIMS_JSON));
+        LOGGER.info("  Loaded data for {} samples.", limsModel.dataPerSample().size());
+        final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
+        return ImmutableBaseReporterData.of(cpctEcrfModel, limsModel, centerModel, cmd.getOptionValue(SIGNATURE));
+    }
+
+    @NotNull
+    private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV),
+                cmd.getOptionValue(FUSION_CSV));
     }
 
     @NotNull
     private static PatientReporter buildReporter(@NotNull final HmfReporterData reporterData, @NotNull final CommandLine cmd)
-            throws IOException, EmptyFileException, XMLStreamException, SQLException {
+            throws IOException, HartwigException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(reporterData.geneModel());
 
         final VariantAnnotator annotator;
@@ -122,96 +133,74 @@ public class PatientReporterApplication {
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(annotator, reporterData.geneModel().hmfRegions(), reporterData.fusionModel());
 
-        return new PatientReporter(buildCpctEcrfModel(cmd), buildLimsModel(cmd), reporterData, variantAnalyzer, svAnalyzer);
-    }
-
-    @NotNull
-    private static CpctEcrfModel buildCpctEcrfModel(@NotNull final CommandLine cmd) throws FileNotFoundException, XMLStreamException {
-        LOGGER.info(" Loading ECRF database...");
-        final CpctEcrfModel cpctEcrfModel =
-                CpctEcrfModel.loadFromXML(cmd.getOptionValue(CPCT_ECRF), new ImmutableFormStatusModel(Maps.newHashMap()));
-        LOGGER.info("  Loaded data for " + cpctEcrfModel.patientCount() + " patients.");
-        return cpctEcrfModel;
-    }
-
-    @NotNull
-    private static ReportWriter buildReportWriter(@NotNull final CommandLine cmd) {
-        return new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
-    }
-
-    private static void printUsageAndExit(@NotNull final Options options) {
-        final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Patient-Reporter", options);
-        System.exit(1);
+        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
-        if (validInputForEcrfAndTumorPercentages(cmd) && validInputForReportWriter(cmd)) {
-            final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
-            final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
-            final String centerCsv = cmd.getOptionValue(CENTER_CSV);
-            final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
+        final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
+        final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
+        final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
+        final String fusionCsv = cmd.getOptionValue(FUSION_CSV);
 
-            if (drupGenesCsv == null || !exists(drupGenesCsv)) {
-                LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
-            } else if (cosmicCsv == null || !exists(cosmicCsv)) {
-                LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
-            } else if (centerCsv == null || !exists(centerCsv)) {
-                LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
-            } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
-                LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
-            } else {
-                return true;
-            }
+        if (drupGenesCsv == null || !exists(drupGenesCsv)) {
+            LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
+        } else if (cosmicCsv == null || !exists(cosmicCsv)) {
+            LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
+        } else if (fusionCsv == null || !exists(fusionCsv)) {
+            LOGGER.warn(FUSION_CSV + " has to be an existing file: " + fusionCsv);
+        } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
+            LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
+        } else {
+            return true;
         }
-
         return false;
     }
 
     private static boolean validInputForNonSequenceableReport(@NotNull final CommandLine cmd) {
-        if (validInputForEcrfAndTumorPercentages(cmd) && validInputForReportWriter(cmd)) {
-            final NotSequenceableReason notSequenceableReason =
-                    NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
-            final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
+        final NotSequenceableReason notSequenceableReason =
+                NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
+        final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
 
-            if (notSequenceableReason == NotSequenceableReason.OTHER) {
-                LOGGER.warn(NOT_SEQUENCEABLE_REASON + " has to be either low_tumor_percentage or low_dna_yield.");
-            } else if (notSequenceableSample == null) {
-                LOGGER.warn(NOT_SEQUENCEABLE_SAMPLE + " has to be provided.");
-            } else {
-                return true;
-            }
+        if (notSequenceableReason == NotSequenceableReason.OTHER) {
+            LOGGER.warn(NOT_SEQUENCEABLE_REASON + " has to be either low_tumor_percentage or low_dna_yield.");
+        } else if (notSequenceableSample == null) {
+            LOGGER.warn(NOT_SEQUENCEABLE_SAMPLE + " has to be provided.");
+        } else if (NotSequenceableStudy.fromSample(notSequenceableSample) == null) {
+            LOGGER.warn("Could not determine study for sample " + notSequenceableSample);
+        } else {
+            return true;
         }
         return false;
     }
 
     private static boolean validInputForReportWriter(@NotNull final CommandLine cmd) {
         final String reportDirectory = cmd.getOptionValue(REPORT_DIRECTORY);
-        final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
         if (reportDirectory == null || !exists(reportDirectory) || !isDirectory(reportDirectory)) {
             LOGGER.warn(REPORT_DIRECTORY + " has to be an existing directory: " + reportDirectory);
-        } else if (signaturePath == null || !exists(signaturePath)) {
-            LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
         } else {
             return true;
         }
-
         return false;
     }
 
-    private static boolean validInputForEcrfAndTumorPercentages(@NotNull final CommandLine cmd) {
+    private static boolean validInputForBaseReporterData(@NotNull final CommandLine cmd) {
         final String cpctEcrf = cmd.getOptionValue(CPCT_ECRF);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
+        final String centerCsv = cmd.getOptionValue(CENTER_CSV);
+        final String signaturePath = cmd.getOptionValue(SIGNATURE);
 
         if (cpctEcrf == null || !exists(cpctEcrf)) {
             LOGGER.warn(CPCT_ECRF + " has to be an existing file: " + cpctEcrf);
         } else if (limsJson == null || !exists(limsJson)) {
             LOGGER.warn(LIMS_JSON + " has to be an existing file: " + limsJson);
+        } else if (centerCsv == null || !exists(centerCsv)) {
+            LOGGER.warn(CENTER_CSV + " has to be an existing file: " + centerCsv);
+        } else if (signaturePath == null || !exists(signaturePath)) {
+            LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
         } else {
             return true;
         }
-
         return false;
     }
 
@@ -247,5 +236,11 @@ public class PatientReporterApplication {
     private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+    private static void printUsageAndExit(@NotNull final Options options) {
+        final HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("Patient-Reporter", options);
+        System.exit(1);
     }
 }

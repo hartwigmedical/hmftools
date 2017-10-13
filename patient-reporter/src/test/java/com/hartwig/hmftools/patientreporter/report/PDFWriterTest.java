@@ -15,17 +15,22 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.center.Center;
 import com.hartwig.hmftools.common.center.CenterModel;
+import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
+import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
+import com.hartwig.hmftools.patientreporter.ImmutableBaseReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
@@ -57,42 +62,32 @@ public class PDFWriterTest {
     private static final boolean WRITE_TO_PDF = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home");
+    private static final String SIGNATURE_PATH = Resources.getResource("signature").getPath() + File.separator + "signature.png";
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
     @Test
     public void canGenerateReports() throws DRException, IOException, HartwigException {
-        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
-        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
-        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
-        final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
+        final HmfReporterData reporterData = testHmfReporterData();
+        final BaseReporterData baseReporterData = testBaseReporterData();
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-
-        final String sample = "CPCT11111111T";
-        final String tumorType = "Melanoma";
-        final Double pathologyTumorPercentage = 0.6;
 
         final FittedPurity fittedPurity =
                 ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
-        final int mutationalLoad = 361;
         final List<CopyNumberReport> copyNumbers = createTestCopyNumbers();
 
         final List<StructuralVariantAnalysis.GeneFusion> fusions = createTestFusions();
         final List<StructuralVariantAnalysis.GeneDisruption> disruptions = createTestDisruptions();
-        final List<Alteration> alterations =
-                CivicAnalysis.run(variants, reporterData.geneModel(), doidMapping.doidsForTumorType(tumorType));
 
-        final SampleReport sampleReport = ImmutableSampleReport.of(sample, tumorType, pathologyTumorPercentage, "FC000001", "CSB000001",
-                LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
-                reporterData.centerModel().getAddresseeStringForSample(sample));
+        final SampleReport sampleReport = testSampleReport(0.6);
+        final List<Alteration> alterations =
+                CivicAnalysis.run(variants, reporterData.geneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
 
         final SequencedPatientReport patientReport =
-                ImmutableSequencedPatientReport.of(sampleReport, variants, fusions, disruptions, copyNumbers, mutationalLoad, "58%",
-                        alterations, Optional.of("this is a test report"), signaturePath);
+                ImmutableSequencedPatientReport.of(sampleReport, variants, fusions, disruptions, copyNumbers, 361, "58%", alterations,
+                        Optional.of("this is a test report"), baseReporterData.signaturePath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
@@ -215,20 +210,12 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateNotSequenceableReport() throws DRException, IOException, EmptyFileException {
-        final String sample = "CPCT11111111T";
-        final String tumorType = "Melanoma";
         final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
         final NotSequenceableStudy study = NotSequenceableStudy.CPCT;
-        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
-        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final CenterModel centerModel = Center.readFromCSV(centerPath);
-        final SampleReport sampleReport =
-                ImmutableSampleReport.of(sample, tumorType, 0.1, "FC000001", "CSB000001", LocalDate.parse("05-Jan-2016", FORMATTER),
-                        LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
-                        centerModel.getAddresseeStringForSample(sample));
+        final SampleReport sampleReport = testSampleReport(0.1);
 
         final NotSequencedPatientReport patientReport =
-                ImmutableNotSequencedPatientReport.of(sampleReport, reason, study, Optional.empty(), signaturePath);
+                ImmutableNotSequencedPatientReport.of(sampleReport, reason, study, Optional.empty(), SIGNATURE_PATH);
 
         final JasperReportBuilder report = PDFWriter.generateNotSequenceableReport(patientReport);
         assertNotNull(report);
@@ -240,5 +227,33 @@ public class PDFWriterTest {
         if (WRITE_TO_PDF) {
             report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/low_tumor_percentage_report.pdf"));
         }
+    }
+
+    @NotNull
+    private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException, EmptyFileException {
+        final String sample = "CPCT11111111T";
+        return ImmutableSampleReport.of(sample, "Melanoma", pathologyTumorPercentage, "FC000001", "CSB000001",
+                LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
+                testBaseReporterData().centerModel().getAddresseeStringForSample(sample));
+    }
+
+    @NotNull
+    public static BaseReporterData testBaseReporterData() throws IOException, EmptyFileException {
+        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
+        final CpctEcrfModel ecrfModel = new CpctEcrfModel(
+                ImmutableXMLEcrfDatamodel.of(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(),
+                        Lists.newArrayList()), Lists.newArrayList());
+        final LimsJsonModel limsModel = LimsJsonModel.buildEmptyModel();
+        final CenterModel centerModel = Center.readFromCSV(centerPath);
+
+        return ImmutableBaseReporterData.of(ecrfModel, limsModel, centerModel, SIGNATURE_PATH);
+    }
+
+    @NotNull
+    public static HmfReporterData testHmfReporterData() throws IOException, HartwigException {
+        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
+        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
+        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
+        return HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, fusionPath);
     }
 }

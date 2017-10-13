@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import static com.hartwig.hmftools.patientreporter.report.PDFWriterTest.testBaseReporterData;
+import static com.hartwig.hmftools.patientreporter.report.PDFWriterTest.testHmfReporterData;
+
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
@@ -9,16 +12,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
+import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.HmfReporterDataLoader;
 import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusions;
 import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -28,7 +28,6 @@ import com.hartwig.hmftools.svannotation.Transcript;
 import com.hartwig.hmftools.svannotation.VariantAnnotation;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sf.dynamicreports.report.exception.DRException;
@@ -71,26 +70,14 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final String drupFilterPath = Resources.getResource("csv").getPath() + File.separator + "drup_genes.csv";
-        final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
-        final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final String signaturePath = Resources.getResource("signature").getPath() + File.separator + "signature.png";
-        final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
+        final BaseReporterData baseReporterData = testBaseReporterData();
+        final HmfReporterData reporterData = testHmfReporterData();
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
-        final HmfReporterData reporterData =
-                HmfReporterDataLoader.buildFromFiles(drupFilterPath, cosmicPath, centerPath, signaturePath, fusionPath);
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(FUSIONS_CSV));
-        final PatientReporter algo =
-                new PatientReporter(buildTestCpctEcrfModel(), LimsJsonModel.buildEmptyModel(), reporterData, variantAnalyzer, svAnalyzer);
+        final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }
 
-    @NotNull
-    private static CpctEcrfModel buildTestCpctEcrfModel() {
-        return new CpctEcrfModel(
-                ImmutableXMLEcrfDatamodel.of(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(),
-                        Lists.newArrayList()), Lists.newArrayList());
-    }
 }
