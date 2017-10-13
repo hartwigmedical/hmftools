@@ -29,8 +29,8 @@ public class SomaticPeakFactoryTest {
 
         final List<SomaticPeak> peaks = SomaticPeakFactory.findPeaks(sample);
         assertEquals(2, peaks.size());
-        assertPeak(peaks.get(0), 0.2, 11);
-        assertPeak(peaks.get(1), 0.4, 11);
+        assertPeak(peaks.get(0), 0.2, 13);
+        assertPeak(peaks.get(1), 0.4, 13);
 
     }
 

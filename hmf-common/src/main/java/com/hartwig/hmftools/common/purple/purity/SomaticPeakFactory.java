@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 class SomaticPeakFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticPeakFactory.class);
-    private static final double KERNEL_BANDWIDTH = 0.02;
+    private static final double KERNEL_BANDWIDTH = 0.03;
 
     static List<SomaticPeak> findSomaticPeaks(@NotNull final List<? extends AllelicDepth> variants) {
         return findPeaks(variants.stream().map(AllelicDepth::alleleFrequency).collect(Collectors.toList()));
@@ -47,7 +47,7 @@ class SomaticPeakFactory {
     }
 
     private static int count(double peak, @NotNull final List<Double> sample) {
-        return (int) sample.stream().filter(vaf -> between(peak, vaf - 0.005, vaf + 0.005)).count();
+        return (int) sample.stream().filter(vaf -> between(peak, vaf - 0.015, vaf + 0.015)).count();
     }
 
     private static boolean between(double victim, double min, double max) {
