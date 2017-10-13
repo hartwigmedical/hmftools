@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
@@ -38,32 +38,27 @@ import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PatientReporter {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
 
     @NotNull
-    private final CpctEcrfModel cpctEcrfModel;
-    @NotNull
-    private final LimsJsonModel limsModel;
-    @NotNull
-    private final HmfReporterData reporterData;
-    @NotNull
-    private final VariantAnalyzer variantAnalyzer;
-    @NotNull
-    private final StructuralVariantAnalyzer structuralVariantAnalyzer;
+    public abstract BaseReporterData baseReporterData();
 
-    public PatientReporter(@NotNull final CpctEcrfModel cpctEcrfModel, @NotNull final LimsJsonModel limsModel,
-            @NotNull final HmfReporterData reporterData, @NotNull final VariantAnalyzer variantAnalyzer,
-            @NotNull final StructuralVariantAnalyzer structuralVariantAnalyzer) {
-        this.cpctEcrfModel = cpctEcrfModel;
-        this.limsModel = limsModel;
-        this.reporterData = reporterData;
-        this.variantAnalyzer = variantAnalyzer;
-        this.structuralVariantAnalyzer = structuralVariantAnalyzer;
-    }
+    @NotNull
+    public abstract HmfReporterData reporterData();
+
+    @NotNull
+    public abstract VariantAnalyzer variantAnalyzer();
+
+    @NotNull
+    public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
     public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments)
@@ -82,11 +77,11 @@ public class PatientReporter {
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int potentialMNVCount = variantAnalysis.potentialConsequentialMNVs().size();
         final int svCount = svAnalysis.annotations().size();
-        final String tumorType = PatientReporterHelper.extractTumorType(cpctEcrfModel, sample);
+        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), sample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations =
-                CivicAnalysis.run(variantAnalysis.findings(), reporterData.geneModel(), doidMapping.doidsForTumorType(tumorType));
+                CivicAnalysis.run(variantAnalysis.findings(), reporterData().geneModel(), doidMapping.doidsForTumorType(tumorType));
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants: " + Integer.toString(totalVariantCount));
@@ -105,15 +100,16 @@ public class PatientReporter {
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(svAnalysis.disruptions().size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
 
+        final LimsJsonModel limsModel = baseReporterData().limsModel();
         final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
-        final String sampleRecipient = reporterData.centerModel().getAddresseeStringForSample(sample);
+        final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
         final SampleReport sampleReport = ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.barcodeForSample(sample),
                 limsModel.bloodBarcodeForSample(sample), limsModel.arrivalDateForSample(sample),
                 limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
         return ImmutableSequencedPatientReport.of(sampleReport, purpleEnrichedVariants, svAnalysis.fusions(), svAnalysis.disruptions(),
                 copyNumberAnalysis.findings(), mutationalLoad, purpleAnalysis.purityString(), alterations, Optional.ofNullable(comments),
-                reporterData.signaturePath());
+                baseReporterData().signaturePath());
     }
 
     @NotNull
@@ -123,7 +119,7 @@ public class PatientReporter {
         final String sample = variantFile.sample();
         LOGGER.info("  " + variantFile.variants().size() + " somatic snv and indels loaded for sample " + sample);
         LOGGER.info(" Analyzing somatic snv and indels....");
-        final VariantAnalysis variantAnalysis = variantAnalyzer.run(variantFile.variants());
+        final VariantAnalysis variantAnalysis = variantAnalyzer().run(variantFile.variants());
 
         LOGGER.info(" Loading purity numbers...");
         final PurityContext context = PatientReporterHelper.loadPurity(runDirectory, sample);
@@ -150,7 +146,7 @@ public class PatientReporter {
         LOGGER.info(" Loading structural variants...");
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(svVcfPath.toString());
         LOGGER.info(" Analysing structural variants...");
-        final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer.run(structuralVariants);
+        final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer().run(structuralVariants);
 
         return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis, purpleAnalysis, svAnalysis);
     }
