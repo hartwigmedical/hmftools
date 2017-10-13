@@ -57,6 +57,9 @@ import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
+import com.hartwig.hmftools.purple.qc.PurpleQC;
+import com.hartwig.hmftools.purple.qc.PurpleQCFactory;
+import com.hartwig.hmftools.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.ratio.RatioSupplier;
 import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
@@ -199,6 +202,9 @@ public class PurityPloidyEstimateApplication {
                     .polyClonalProportion(polyclonalProproption(smoothRegions))
                     .build();
 
+            LOGGER.info("Generating QC Stats");
+            final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), smoothRegions, gender, cobaltGender);
+
             if (cmd.hasOption(DB_ENABLED)) {
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
                 dbAccess.writePurity(tumorSample, purityContext);
@@ -209,6 +215,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
+            PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
             FittedRegionFile.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
