@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.qc;
+package com.hartwig.hmftools.common.purple.qc;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +8,7 @@ import java.text.NumberFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,11 +23,30 @@ public class PurpleQCFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
+    public static PurpleQC read(@NotNull final String filename) throws IOException {
+        return fromLines(Files.readAllLines(new File(filename).toPath()));
+    }
+
     public static void write(@NotNull final String fileName, @NotNull final PurpleQC check) throws IOException {
         Files.write(new File(fileName).toPath(), toLines(check));
     }
 
-    private static List<String> toLines(@NotNull final PurpleQC check) {
+    static PurpleQC fromLines(@NotNull final List<String> lines) throws IOException {
+
+        return ImmutablePurpleQC.builder()
+                .trailingSegments(Integer.valueOf(getValue(lines.get(4))))
+                .ratioSegments(Integer.valueOf(getValue(lines.get(5))))
+                .ploidy(Double.valueOf(getValue(lines.get(6))))
+                .purpleGender(Gender.valueOf(getValue(lines.get(7))))
+                .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
+                .build();
+    }
+
+    private static String getValue(String line) {
+        return line.split(DELIMITER)[1];
+    }
+
+    static List<String> toLines(@NotNull final PurpleQC check) {
         final List<String> result = Lists.newArrayList();
 
         result.add("QCStatus" + DELIMITER + check.status());

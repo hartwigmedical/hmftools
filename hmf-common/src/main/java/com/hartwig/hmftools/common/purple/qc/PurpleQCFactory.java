@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.qc;
+package com.hartwig.hmftools.common.purple.qc;
 
 import java.util.List;
 import java.util.stream.Collectors;

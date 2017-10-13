@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,7 +60,7 @@ class PurityDAO {
                         .build();
     }
 
-    void write(@NotNull final String sample, @NotNull final PurityContext purity) {
+    void write(@NotNull final String sample, @NotNull final PurityContext purity, @NotNull final PurpleQC checks) {
 
         final FittedPurity bestFit = purity.bestFit();
         final FittedPurityScore score = purity.score();
@@ -72,6 +73,7 @@ class PurityDAO {
                 PURITY.PURITY_,
                 PURITY.GENDER,
                 PURITY.STATUS,
+                PURITY.QCSTATUS,
                 PURITY.NORMFACTOR,
                 PURITY.SCORE,
                 PURITY.PLOIDY,
@@ -88,6 +90,7 @@ class PurityDAO {
                         bestFit.purity(),
                         purity.gender().toString(),
                         purity.status().toString(),
+                        checks.status().toString(),
                         bestFit.normFactor(),
                         bestFit.score(),
                         bestFit.ploidy(),

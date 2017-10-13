@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.qc;
+package com.hartwig.hmftools.common.purple.qc;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
 

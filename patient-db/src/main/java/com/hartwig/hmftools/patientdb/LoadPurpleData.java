@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -41,8 +43,9 @@ public class LoadPurpleData {
         final String purplePath = cmd.getOptionValue(PURPLE_DIR);
 
         LOGGER.info("Persisting purity data");
+        final PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
         final PurityContext purityContext = FittedPurityFile.read(purplePath, tumorSample);
-        dbAccess.writePurity(tumorSample, purityContext);
+        dbAccess.writePurity(tumorSample, purityContext, purpleQC);
 
         LOGGER.info("Persisting copy numbers");
         final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purplePath, tumorSample);

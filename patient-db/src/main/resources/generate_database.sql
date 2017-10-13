@@ -153,6 +153,7 @@ CREATE TABLE purity
     sampleId varchar(255) NOT NULL,
     gender varchar(255) NOT NULL,
     status varchar(255) NOT NULL,
+    qcStatus varchar(255) NOT NULL,
     purity DOUBLE PRECISION not null,
     normFactor DOUBLE PRECISION not null,
     score DOUBLE PRECISION not null,

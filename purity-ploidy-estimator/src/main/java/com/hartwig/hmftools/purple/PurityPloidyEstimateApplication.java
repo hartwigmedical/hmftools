@@ -33,6 +33,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
@@ -57,9 +60,6 @@ import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
-import com.hartwig.hmftools.purple.qc.PurpleQC;
-import com.hartwig.hmftools.purple.qc.PurpleQCFactory;
-import com.hartwig.hmftools.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.ratio.RatioSupplier;
 import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
@@ -207,7 +207,7 @@ public class PurityPloidyEstimateApplication {
 
             if (cmd.hasOption(DB_ENABLED)) {
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
-                dbAccess.writePurity(tumorSample, purityContext);
+                dbAccess.writePurity(tumorSample, purityContext, qcChecks);
                 dbAccess.writeCopynumbers(tumorSample, smoothRegions);
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
                 dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
