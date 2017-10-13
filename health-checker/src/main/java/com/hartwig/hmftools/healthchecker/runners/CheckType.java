@@ -3,5 +3,6 @@ package com.hartwig.hmftools.healthchecker.runners;
 public enum CheckType {
     KINSHIP,
     COVERAGE,
-    SOMATIC_VARIANTS
+    SOMATIC_VARIANTS,
+    PURPLE
 }
