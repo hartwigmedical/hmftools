@@ -2,8 +2,6 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.center.Center;
-import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.cosmic.Cosmic;
 import com.hartwig.hmftools.common.cosmic.CosmicModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -21,13 +19,11 @@ public final class HmfReporterDataLoader {
 
     @NotNull
     public static HmfReporterData buildFromFiles(@NotNull final String drupFilterFile, @NotNull final String cosmicFile,
-            @NotNull final String centerFile, @NotNull final String signaturePath, @NotNull final String fusionFile)
-            throws IOException, HartwigException {
+            @NotNull final String fusionFile) throws IOException, HartwigException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
-        final CenterModel centerModel = Center.readFromCSV(centerFile);
         final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromCSV(fusionFile);
-        return ImmutableHmfReporterData.of(geneModel, cosmicModel, drupFilter, centerModel, signaturePath, fusionModel);
+        return ImmutableHmfReporterData.of(geneModel, cosmicModel, drupFilter, fusionModel);
     }
 }
