@@ -31,12 +31,20 @@ public abstract class PurpleCopyNumber implements CopyNumber {
 
         int betaAlleleCount = (int) Math.round(constrainedBaf * copyNumber);
         int alphaAlleleCount = copyNumber - betaAlleleCount;
-        return Strings.repeat("A", Math.max(alphaAlleleCount, betaAlleleCount)) + Strings.repeat("B",
-                Math.min(alphaAlleleCount, betaAlleleCount));
+        return formatBafField(Math.max(alphaAlleleCount, betaAlleleCount), Math.min(alphaAlleleCount, betaAlleleCount));
     }
 
     @Override
     public int value() {
         return (int) Math.max(0, Math.round(averageTumorCopyNumber()));
+    }
+
+    @NotNull
+    private static String formatBafField(final int aCount, final int bCount) {
+        if (aCount + bCount < 10) {
+            return Strings.repeat("A", aCount) + Strings.repeat("B", bCount);
+        } else {
+            return "A[" + aCount + "]B[" + bCount + "]";
+        }
     }
 }
