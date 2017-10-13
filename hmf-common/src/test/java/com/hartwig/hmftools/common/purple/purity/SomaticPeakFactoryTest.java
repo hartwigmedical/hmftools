@@ -2,12 +2,9 @@ package com.hartwig.hmftools.common.purple.purity;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
-import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -15,12 +12,6 @@ import org.junit.Test;
 public class SomaticPeakFactoryTest {
 
     private static final double EPSILON = 1e-10;
-
-    @Test
-    public void testSampleData() throws IOException {
-        List<PurpleSomaticVariant> variants =  new PurpleSomaticVariantFactory().fromVCFFile("CPCT02010478TII", "/Users/jon/hmf/analyses/CPCT02010478TII/CPCT02010478R_CPCT02010478TII_post_processed.vcf");
-        System.out.println(SomaticPeakFactory.findSomaticPeaks(variants));
-    }
 
     @Test
     public void testFindPeaks() {
