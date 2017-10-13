@@ -29,7 +29,7 @@ public class PurpleQCFile {
     private static List<String> toLines(@NotNull final PurpleQC check) {
         final List<String> result = Lists.newArrayList();
 
-        result.add("QCPass" + DELIMITER + check.overallPass());
+        result.add("QCStatus" + DELIMITER + check.status());
         result.add("SegmentPass" + DELIMITER + check.segmentPass());
         result.add("GenderPass" + DELIMITER + check.genderPass());
         result.add("SegmentScore" + DELIMITER + check.segmentScore());

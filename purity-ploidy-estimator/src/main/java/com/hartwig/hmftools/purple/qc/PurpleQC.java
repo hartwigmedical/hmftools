@@ -12,8 +12,16 @@ public abstract class PurpleQC {
 
     private static final int SEGMENT_THRESHOLD = 150;
 
-    public boolean overallPass() {
-        return segmentPass() && genderPass();
+    public PurpleQCStatus status() {
+        if (!segmentPass()) {
+            return PurpleQCStatus.FAIL_SEGMENT;
+        }
+
+        if (!genderPass()) {
+            return PurpleQCStatus.FAIL_GENDER;
+        }
+
+        return PurpleQCStatus.PASS;
     }
 
     public boolean segmentPass() {
