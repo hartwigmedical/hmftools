@@ -151,22 +151,30 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> additionalInfoPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text(additionalPagesTitleStart + " - Additional Information")
+                        cmp.text(additionalPagesTitleStart + " - Field Explanations")
                                 .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberExplanationSection(),
+                        copyNumberExplanationSection()
+                );
+
+        final ComponentBuilder<?, ?> sampleDetailsPage =
+                cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        disclaimerSection(),
+                        cmp.text(additionalPagesTitleStart + " - Sample Details & Disclaimer")
+                                .setStyle(sectionHeaderStyle()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        sampleDetailsSection(report)
+                        sampleDetailsSection(report),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        disclaimerSection()
                 );
 
         final ComponentBuilder<?, ?> totalReport =
                 cmp.multiPageList().add(reportMainPage)
                         .newPage().add(genePanelPage)
-                        .newPage().add(additionalInfoPage);
+                        .newPage().add(additionalInfoPage)
+                        .newPage().add(sampleDetailsPage);
         // @formatter:on
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:

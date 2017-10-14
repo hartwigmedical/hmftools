@@ -82,7 +82,8 @@ public class PDFWriterTest {
 
         final SequencedPatientReport patientReport =
                 ImmutableSequencedPatientReport.of(sampleReport, variants, fusions, disruptions, copyNumbers, 361, "58%", alterations,
-                        Optional.of("this is a test report"), baseReporterData.signaturePath());
+                        Optional.of("this is a test report and does not relate to any real CPCT patient"),
+                        baseReporterData.signaturePath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
