@@ -62,7 +62,7 @@ public class PDFWriterTest {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
     @Test
-    public void canGenerateReports() throws DRException, IOException, HartwigException {
+    public void canGenerateSequenceReport() throws DRException, IOException, HartwigException {
         final HmfReporterData reporterData = testHmfReporterData();
         final BaseReporterData baseReporterData = testBaseReporterData();
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");

@@ -57,9 +57,6 @@ public class PDFWriter implements ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(PDFWriter.class);
 
-    // KODU: This is commented out as long as LIMS provides unreliable results.
-    private static final boolean INCLUDE_SAMPLE_BARCODES_AND_DATES = false;
-
     private static final int TEXT_HEADER_INDENT = 30;
     private static final int TEXT_DETAIL_INDENT = 40;
     private static final int TEXT_END_OF_LINE_GAP = 30;
@@ -264,7 +261,7 @@ public class PDFWriter implements ReportWriter {
             case POST_ISOLATION_FAIL: {
                 title = "Notification of inadequate tumor sample";
                 subTitle = "Analysis has failed post DNA isolation";
-                message = "One of the steps post DNA isolation failed.";
+                message = "This sample could not be processed to completion successfully.";
                 break;
             }
             default: {
@@ -521,28 +518,20 @@ public class PDFWriter implements ReportWriter {
         if (report.sampleReport().recipient() == null) {
             throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleCode());
         }
-        final List<String> lines;
-        if (INCLUDE_SAMPLE_BARCODES_AND_DATES) {
-            lines = Lists.newArrayList(
-                    "This test was performed on the tumor sample with barcode " + report.sampleReport().tumorBarcode() + " arrived on "
-                            + toFormattedDate(report.sampleReport().tumorArrivalDate()),
-                    "This test was performed on the blood sample with barcode " + report.sampleReport().bloodBarcode() + " arrived on "
-                            + toFormattedDate(report.sampleReport().bloodArrivalDate()));
-        } else {
-            lines = Lists.newArrayList(
-                    "This test was performed on the tumor sample arrived on " + toFormattedDate(report.sampleReport().tumorArrivalDate()),
-                    "This test was performed on the blood sample arrived on " + toFormattedDate(report.sampleReport().bloodArrivalDate()));
-        }
+        final List<String> lines = Lists.newArrayList();
 
         if (report instanceof SequencedPatientReport) {
             lines.addAll(
                     Lists.newArrayList("The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                             "The samples have been analyzed by Next Generation Sequencing"));
         }
+
         //@formatter:off
         lines.addAll(Lists.newArrayList(
-                "This test was performed according to lab procedures: " + report.sampleReport().labProcedures(),
-                "This report was generated and verified by: " + report.user(),
+                "This test is performed on the tumor sample arrived on " + toFormattedDate(report.sampleReport().tumorArrivalDate()),
+                "This test is performed on the blood sample arrived on " + toFormattedDate(report.sampleReport().bloodArrivalDate()),
+                "This test is performed according to lab procedures: " + report.sampleReport().labProcedures(),
+                "This report is generated and verified by: " + report.user(),
                 "This report is addressed at: " + report.sampleReport().recipient()));
         //@formatter:on
         report.comments().ifPresent(comments -> lines.add("Comments: " + comments));
@@ -550,6 +539,7 @@ public class PDFWriter implements ReportWriter {
         return toList("Sample details", lines);
     }
 
+    @NotNull
     private static String toFormattedDate(@Nullable final LocalDate date) {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         return date != null ? formatter.format(date) : "?";
