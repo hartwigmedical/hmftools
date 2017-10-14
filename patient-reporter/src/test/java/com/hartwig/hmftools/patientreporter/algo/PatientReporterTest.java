@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import static com.hartwig.hmftools.patientreporter.report.PDFWriterTest.testBaseReporterData;
-import static com.hartwig.hmftools.patientreporter.report.PDFWriterTest.testHmfReporterData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -79,5 +79,4 @@ public class PatientReporterTest {
         final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }
-
 }

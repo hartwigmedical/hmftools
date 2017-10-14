@@ -161,8 +161,8 @@ public class PatientReporterApplication {
                 NotSequenceableReason.fromIdentifier(cmd.getOptionValue(NOT_SEQUENCEABLE_REASON));
         final String notSequenceableSample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
 
-        if (notSequenceableReason == NotSequenceableReason.OTHER) {
-            LOGGER.warn(NOT_SEQUENCEABLE_REASON + " has to be either low_tumor_percentage or low_dna_yield.");
+        if (notSequenceableReason == NotSequenceableReason.UNDEFINED) {
+            LOGGER.warn(NOT_SEQUENCEABLE_REASON + " has to be low_tumor_percentage, low_dna_yield or post_isolation_fail.");
         } else if (notSequenceableSample == null) {
             LOGGER.warn(NOT_SEQUENCEABLE_SAMPLE + " has to be provided.");
         } else if (NotSequenceableStudy.fromSample(notSequenceableSample) == null) {

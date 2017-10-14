@@ -261,6 +261,12 @@ public class PDFWriter implements ReportWriter {
                 message = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
+            case POST_ISOLATION_FAIL: {
+                title = "Notification of inadequate tumor sample";
+                subTitle = "Analysis has failed post DNA isolation";
+                message = "One of the steps post DNA isolation failed.";
+                break;
+            }
             default: {
                 title = "TITLE";
                 subTitle = "SUB_TITLE";

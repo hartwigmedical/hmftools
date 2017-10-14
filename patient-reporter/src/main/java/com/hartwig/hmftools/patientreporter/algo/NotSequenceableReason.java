@@ -7,7 +7,8 @@ import org.jetbrains.annotations.Nullable;
 public enum NotSequenceableReason {
     LOW_TUMOR_PERCENTAGE("low_tumor_percentage"),
     LOW_DNA_YIELD("low_dna_yield"),
-    OTHER(Strings.EMPTY);
+    POST_ISOLATION_FAIL("post_isolation_fail"),
+    UNDEFINED(Strings.EMPTY);
 
     @NotNull
     private final String identifier;
@@ -24,7 +25,7 @@ public enum NotSequenceableReason {
     @NotNull
     public static NotSequenceableReason fromIdentifier(@Nullable final String identifier) {
         if (identifier == null) {
-            return OTHER;
+            return UNDEFINED;
         }
 
         for (final NotSequenceableReason reason : NotSequenceableReason.values()) {
@@ -33,6 +34,6 @@ public enum NotSequenceableReason {
             }
         }
 
-        return OTHER;
+        return UNDEFINED;
     }
 }
