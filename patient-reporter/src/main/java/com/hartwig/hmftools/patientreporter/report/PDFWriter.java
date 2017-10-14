@@ -33,8 +33,6 @@ import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
-import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 
@@ -111,9 +109,7 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalList(
                         MainPageTopSection.build("HMF Sequencing Report", report.sampleReport()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        mainPageNotSequenceableSection(report.reason(), report.study()),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        sampleDetailsSection(report));
+                        mainPageNotSequenceableSection(report));
         // @formatter:on
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive, see additional comment below for details
@@ -162,14 +158,7 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         copyNumberExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        disclaimerSection()
-                );
-
-        final ComponentBuilder<?, ?> secondInfoPage =
-                cmp.verticalList(
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text(additionalPagesTitleStart + " - Sample Information")
-                                .setStyle(sectionHeaderStyle()),
+                        disclaimerSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         sampleDetailsSection(report)
                 );
@@ -177,8 +166,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> totalReport =
                 cmp.multiPageList().add(reportMainPage)
                         .newPage().add(genePanelPage)
-                        .newPage().add(additionalInfoPage)
-                        .newPage().add(secondInfoPage);
+                        .newPage().add(additionalInfoPage);
         // @formatter:on
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
@@ -238,13 +226,16 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequenceableReason reason,
-            @NotNull final NotSequenceableStudy study) {
+    private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequencedPatientReport report) {
+        if (report.sampleReport().recipient() == null) {
+            throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleCode());
+        }
+
         final String title;
         final String subTitle;
         final String message;
 
-        switch (reason) {
+        switch (report.reason()) {
             case LOW_DNA_YIELD: {
                 title = "Notification tumor sample on hold for sequencing";
                 subTitle = "Insufficient amount of DNA";
@@ -285,9 +276,15 @@ public class PDFWriter implements ReportWriter {
                                 "unless additional fresh tumor material can be provided for a new assessment.")
                         .setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("When possible, please resubmit using the same " + study.studyName() + "-number. In case additional tumor " +
-                        "material cannot be provided, please be notified that the patient will not be evaluable " +
-                        "for the " + study.studyCode() + " study.").setStyle(fontStyle()),
+                cmp.text("When possible, please resubmit using the same " + report.study().studyName() + "-number. " +
+                        "In case additional tumor material cannot be provided, please be notified that the patient will not be " +
+                        "evaluable for the " + report.study().studyCode() + " study.").setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("The biopsies evaluated for this sample have arrived on " +
+                        toFormattedDate(report.sampleReport().tumorArrivalDate())).setStyle(fontStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text("This report is generated and verified by: " + report.user() + " and is addressed at " +
+                        report.sampleReport().recipient()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl")
                         .setStyle(fontStyle()));
@@ -528,9 +525,11 @@ public class PDFWriter implements ReportWriter {
 
         //@formatter:off
         lines.addAll(Lists.newArrayList(
-                "This test is performed on the tumor sample arrived on " + toFormattedDate(report.sampleReport().tumorArrivalDate()),
-                "This test is performed on the blood sample arrived on " + toFormattedDate(report.sampleReport().bloodArrivalDate()),
-                "This test is performed according to lab procedures: " + report.sampleReport().labProcedures(),
+                "This experiment is performed on the tumor sample which arrived on " +
+                        toFormattedDate(report.sampleReport().tumorArrivalDate()),
+                "This experiment is performed on the blood sample which arrived on " +
+                        toFormattedDate(report.sampleReport().bloodArrivalDate()),
+                "This experiment is performed according to lab procedures: " + report.sampleReport().labProcedures(),
                 "This report is generated and verified by: " + report.user(),
                 "This report is addressed at: " + report.sampleReport().recipient()));
         //@formatter:on
