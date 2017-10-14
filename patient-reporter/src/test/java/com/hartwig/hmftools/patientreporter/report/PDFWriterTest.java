@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testH
 
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -56,7 +57,7 @@ public class PDFWriterTest {
     private static final boolean SHOW_AND_PRINT = false;
     private static final boolean WRITE_TO_PDF = false;
 
-    private static final String REPORT_BASE_DIR = System.getProperty("user.home");
+    private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf " + File.separator + "tmp";
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
@@ -97,9 +98,9 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_report.pdf"));
-            supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_supplement.pdf"));
-            evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/test_evidence_report.pdf"));
+            mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_report.pdf"));
+            supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_supplement.pdf"));
+            evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_evidence_report.pdf"));
         }
     }
 
@@ -203,15 +204,8 @@ public class PDFWriterTest {
     }
 
     @Test
-    public void canGenerateNotSequenceableReport() throws DRException, IOException, EmptyFileException {
-        final NotSequenceableReason reason = NotSequenceableReason.LOW_TUMOR_PERCENTAGE;
-        final NotSequenceableStudy study = NotSequenceableStudy.CPCT;
-        final SampleReport sampleReport = testSampleReport(0.1);
-
-        final NotSequencedPatientReport patientReport = ImmutableNotSequencedPatientReport.of(sampleReport, reason, study, Optional.empty(),
-                PatientReporterTestUtil.SIGNATURE_PATH);
-
-        final JasperReportBuilder report = PDFWriter.generateNotSequenceableReport(patientReport);
+    public void canGenerateLowTumorPercentageReport() throws DRException, IOException, EmptyFileException {
+        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.1, NotSequenceableReason.LOW_TUMOR_PERCENTAGE);
         assertNotNull(report);
 
         if (SHOW_AND_PRINT) {
@@ -219,13 +213,51 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + "/hmf/tmp/low_tumor_percentage_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "low_tumor_percentage_report.pdf"));
+        }
+    }
+
+    @Test
+    public void canGenerateLowDNAYieldReport() throws DRException, IOException, EmptyFileException {
+        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.LOW_DNA_YIELD);
+        assertNotNull(report);
+
+        if (SHOW_AND_PRINT) {
+            report.show().print();
+        }
+
+        if (WRITE_TO_PDF) {
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "low_dna_yield_report.pdf"));
+        }
+    }
+
+    @Test
+    public void canGeneratePostDNAIsolationFailReport() throws DRException, IOException, EmptyFileException {
+        final JasperReportBuilder report = generateNotSequenceableCPCTReport(0.6, NotSequenceableReason.POST_ISOLATION_FAIL);
+        assertNotNull(report);
+
+        if (SHOW_AND_PRINT) {
+            report.show().print();
+        }
+
+        if (WRITE_TO_PDF) {
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "post_dna_isolation_fail_report.pdf"));
         }
     }
 
     @NotNull
+    private static JasperReportBuilder generateNotSequenceableCPCTReport(final double pathologyTumorEstimate,
+            @NotNull final NotSequenceableReason reason) throws IOException, EmptyFileException {
+        final NotSequencedPatientReport patientReport =
+                ImmutableNotSequencedPatientReport.of(testSampleReport(pathologyTumorEstimate), reason, NotSequenceableStudy.CPCT,
+                        Optional.empty(), PatientReporterTestUtil.SIGNATURE_PATH);
+
+        return PDFWriter.generateNotSequenceableReport(patientReport);
+    }
+
+    @NotNull
     private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException, EmptyFileException {
-        final String sample = "CPCT11111111T";
+        final String sample = "CPCT02991111T";
         return ImmutableSampleReport.of(sample, "Melanoma", pathologyTumorPercentage, "FC000001", "CSB000001",
                 LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
                 testBaseReporterData().centerModel().getAddresseeStringForSample(sample));
