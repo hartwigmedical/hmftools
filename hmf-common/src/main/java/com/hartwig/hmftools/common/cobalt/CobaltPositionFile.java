@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 public class CobaltPositionFile {
 
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "#";
     private static final String EXTENSION = ".cobalt";
 
     @NotNull
@@ -45,7 +44,7 @@ public class CobaltPositionFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("Chromosome")
+        return new StringJoiner(DELIMITER, "", "").add("Chromosome")
                 .add("Position")
                 .add("ReferenceReadCount")
                 .add("TumorReadCount")
@@ -72,7 +71,7 @@ public class CobaltPositionFile {
 
         final Multimap<String, CobaltPosition> result = ArrayListMultimap.create();
         for (String line : lines) {
-            if (!line.startsWith(HEADER_PREFIX)) {
+            if (!line.startsWith("Ch")) {
                 final CobaltPosition position = fromLine(line);
                 result.put(position.chromosome(), position);
             }

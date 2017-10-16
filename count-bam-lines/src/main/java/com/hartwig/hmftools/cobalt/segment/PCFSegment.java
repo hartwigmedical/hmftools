@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.ReadRatioFile;
+import com.hartwig.hmftools.common.cobalt.CobaltPositionFile;
 import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.r.RExecutor;
 
@@ -29,9 +29,10 @@ public class PCFSegment {
 
     public void applySegmentation(@NotNull final String reference, @NotNull final String tumor)
             throws ExecutionException, InterruptedException {
+        final String ratioFile = CobaltPositionFile.generateFilename(outputDirectory, tumor);
         final List<Future<Object>> futures = Lists.newArrayList();
-        futures.add(executorService.submit(() -> ratioSegmentation(reference)));
-        futures.add(executorService.submit(() -> ratioSegmentation(tumor)));
+        futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, reference, "ReferenceGCDiploidRatio")));
+        futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, tumor, "TumorGCRatio")));
 
         for (Future<Object> future : futures) {
             future.get();
@@ -40,10 +41,9 @@ public class PCFSegment {
         LOGGER.info("Segmentation Complete");
     }
 
-    private Object ratioSegmentation(@NotNull final String sample) throws IOException, InterruptedException {
-        final String ratioFile = ReadRatioFile.generateFilename(outputDirectory, sample);
+    private Object ratioSegmentation(@NotNull final String ratioFile, @NotNull final String sample, @NotNull final String column) throws IOException, InterruptedException {
         final String pcfFile = PCFFile.generateRatioFilename(outputDirectory, sample);
-        int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, pcfFile);
+        int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, column, pcfFile);
         if (result != 0) {
             throw new IOException("R execution failed. Unable to complete segmentation.");
         }
