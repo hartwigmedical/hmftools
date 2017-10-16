@@ -8,6 +8,7 @@ import java.text.NumberFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +24,7 @@ public class PurpleQCFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static PurpleQC read(@NotNull final String filename) throws IOException {
+    public static PurpleQC read(@NotNull final String filename) throws IOException, MalformedFileException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
@@ -31,15 +32,19 @@ public class PurpleQCFile {
         Files.write(new File(fileName).toPath(), toLines(check));
     }
 
-    static PurpleQC fromLines(@NotNull final List<String> lines) throws IOException {
+    static PurpleQC fromLines(@NotNull final List<String> lines) throws IOException, MalformedFileException {
 
-        return ImmutablePurpleQC.builder()
-                .trailingSegments(Integer.valueOf(getValue(lines.get(4))))
-                .ratioSegments(Integer.valueOf(getValue(lines.get(5))))
-                .ploidy(Double.valueOf(getValue(lines.get(6))))
-                .purpleGender(Gender.valueOf(getValue(lines.get(7))))
-                .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
-                .build();
+        try {
+            return ImmutablePurpleQC.builder()
+                    .trailingSegments(Integer.valueOf(getValue(lines.get(4))))
+                    .ratioSegments(Integer.valueOf(getValue(lines.get(5))))
+                    .ploidy(Double.valueOf(getValue(lines.get(6))))
+                    .purpleGender(Gender.valueOf(getValue(lines.get(7))))
+                    .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
+                    .build();
+        } catch (Exception e) {
+            throw new MalformedFileException("Unable to parse purple qc file.");
+        }
     }
 
     private static String getValue(String line) {

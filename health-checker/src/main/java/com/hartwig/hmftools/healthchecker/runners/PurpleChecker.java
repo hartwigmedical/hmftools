@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -29,7 +30,8 @@ public class PurpleChecker extends ErrorHandlingChecker {
     @NotNull
     @Override
     protected BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
-        final PurpleQC qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(runContext.runDirectory(), runContext.tumorSample()));
+        final String purpleDirectory = runContext.runDirectory() + File.separator + "purple";
+        final PurpleQC qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample()));
         final List<HealthCheck> checks = Lists.newArrayList();
 
         final String genderValue = qcCheck.cobaltGender() + ":" + qcCheck.purpleGender();
