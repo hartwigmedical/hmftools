@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.CobaltPositionFile;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.r.RExecutor;
 
@@ -29,7 +29,7 @@ public class PCFSegment {
 
     public void applySegmentation(@NotNull final String reference, @NotNull final String tumor)
             throws ExecutionException, InterruptedException {
-        final String ratioFile = CobaltPositionFile.generateFilename(outputDirectory, tumor);
+        final String ratioFile = CobaltRatioFile.generateFilename(outputDirectory, tumor);
         final List<Future<Object>> futures = Lists.newArrayList();
         futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, reference, "ReferenceGCDiploidRatio")));
         futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, tumor, "TumorGCRatio")));

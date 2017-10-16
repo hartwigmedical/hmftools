@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.cobalt.CobaltPosition;
+import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.gc.GCProfile;
@@ -19,15 +19,15 @@ class GCRatioSupplier {
     private final GCMedianReadCount referenceGCMedianReadCount;
     private final ListMultimap<String, ReadRatio> referenceRatios;
 
-    GCRatioSupplier(final Multimap<String, GCProfile> gcProfiles, final Multimap<Chromosome, ? extends CobaltPosition> reference) {
+    GCRatioSupplier(final Multimap<String, GCProfile> gcProfiles, final Multimap<Chromosome, CobaltCount> counts) {
 
         final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.create(gcProfiles);
 
         final GCRatioNormalization tumorRatiosBuilder = new GCRatioNormalization();
         final GCRatioNormalization referenceRatiosBuilder = new GCRatioNormalization();
 
-        for (Chromosome chromosome : reference.keySet()) {
-            for (CobaltPosition cobaltPosition : reference.get(chromosome)) {
+        for (Chromosome chromosome : counts.keySet()) {
+            for (CobaltCount cobaltPosition : counts.get(chromosome)) {
                 final Optional<GCProfile> optionalGCProfile = gcProfileSelector.select(cobaltPosition);
                 if (optionalGCProfile.isPresent()) {
                     final GCProfile gcProfile = optionalGCProfile.get();

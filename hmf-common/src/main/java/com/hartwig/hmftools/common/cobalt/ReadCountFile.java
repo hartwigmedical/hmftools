@@ -24,10 +24,12 @@ public class ReadCountFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
+    @Deprecated
     public static void createFile(int windowSize, @NotNull final String filename) throws IOException {
         Files.write(new File(filename).toPath(), (metaData(windowSize) + "\n" + header() + "\n").getBytes());
     }
 
+    @Deprecated
     public static void append(@NotNull final String filename, @NotNull final List<ReadCount> readCounts) throws IOException {
         Files.write(new File(filename).toPath(), toLines(readCounts), StandardOpenOption.APPEND);
     }

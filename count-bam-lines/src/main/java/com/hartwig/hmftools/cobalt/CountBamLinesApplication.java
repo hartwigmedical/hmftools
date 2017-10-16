@@ -13,7 +13,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
 import com.hartwig.hmftools.cobalt.segment.PCFSegment;
-import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.cobalt.CobaltCount;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gc.GCProfile;
@@ -44,7 +47,6 @@ public class CountBamLinesApplication {
     private static final String MIN_QUALITY = "min_quality";
     private static final String GENDER = "gender";
 
-
     private static final int WINDOW_SIZE_DEFAULT = 1000;
     private static final int MIN_QUALITY_DEFAULT = 10;
 
@@ -65,20 +67,29 @@ public class CountBamLinesApplication {
         final String tumor = cmd.getOptionValue(TUMOR);
         final String reference = cmd.getOptionValue(REFERENCE);
         final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
+        final String outputFilename = CobaltRatioFile.generateFilename(outputDirectory, tumor);
+        final File outputFile = new File(outputFilename);
 
-        // Validate reference input
         final String referenceReadCountFilename = ReadCountFile.generateFilename(outputDirectory, reference);
         final File referenceReadCountFile = new File(referenceReadCountFilename);
-        if (!cmd.hasOption(REFERENCE_BAM) && !referenceReadCountFile.exists()) {
-            LOGGER.warn("Unable to run COBALT without \"-reference_bam\" argument, or previous count file.");
-            printUsageAndExit(options);
-        }
-
-        // Validate tumor input
         final String tumorReadCountFilename = ReadCountFile.generateFilename(outputDirectory, tumor);
         final File tumorReadCountFile = new File(tumorReadCountFilename);
-        if (!cmd.hasOption(TUMOR_BAM) && !tumorReadCountFile.exists()) {
-            LOGGER.warn("Unable to run COBALT without \"-tumor_bam\" argument, or previous count file.");
+
+        final boolean existingCobaltOutput = outputFile.exists();
+        final boolean existingCobaltReadCounts = referenceReadCountFile.exists() && tumorReadCountFile.exists();
+        final boolean useBams = cmd.hasOption(REFERENCE_BAM) || cmd.hasOption(TUMOR_BAM);
+
+        if (useBams) {
+            if (!cmd.hasOption(TUMOR_BAM)) {
+                LOGGER.warn("Argument -tumor_bam must be set when using -reference_bam");
+                printUsageAndExit(options);
+            }
+            if (!cmd.hasOption(REFERENCE_BAM)) {
+                LOGGER.warn("Argument -reference_bam must be set when using -tumor_bam");
+                printUsageAndExit(options);
+            }
+        } else if (!existingCobaltOutput && !existingCobaltReadCounts) {
+            LOGGER.warn("BAM arguments may only be omitted when previous cobalt output available.");
             printUsageAndExit(options);
         }
 
@@ -102,23 +113,26 @@ public class CountBamLinesApplication {
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
         // Read Counts
-        final CountSupplier countSupplier = new CountSupplier(outputDirectory, windowSize, minQuality, executorService);
-        final Multimap<String, ReadCount> tumorReadCount = readCount(countSupplier, tumor, cmd.getOptionValue(TUMOR_BAM));
-        final Multimap<String, ReadCount> referenceReadCount = readCount(countSupplier, reference, cmd.getOptionValue(REFERENCE_BAM));
+        final CountSupplier countSupplier = new CountSupplier(reference, tumor, outputDirectory, windowSize, minQuality, executorService);
+        final Multimap<Chromosome, CobaltCount> readCounts;
+        if (useBams) {
+            readCounts = countSupplier.fromBam(cmd.getOptionValue(REFERENCE_BAM), cmd.getOptionValue(TUMOR_BAM));
+        } else if (existingCobaltOutput) {
+            readCounts = countSupplier.fromExistingCobaltFile();
+        } else {
+            readCounts = countSupplier.fromReadCountFiles();
+        }
 
         // Ratios
         final RatioSupplier ratioSupplier = new RatioSupplier(reference, tumor, outputDirectory);
-        ratioSupplier.generateRatios(gcProfiles, referenceReadCount, tumorReadCount);
+        final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.generateRatios(gcProfiles, readCounts);
+        LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
+        CobaltRatioFile.write(outputFilename, ratios);
 
         // Segmentation
         new PCFSegment(executorService, outputDirectory).applySegmentation(reference, tumor);
 
         executorService.shutdown();
-    }
-
-    private Multimap<String, ReadCount> readCount(@NotNull final CountSupplier countSupplier, @NotNull final String sample,
-            @Nullable final String bam) throws IOException, ExecutionException, InterruptedException {
-        return bam == null ? countSupplier.fromFile(sample) : countSupplier.fromBam(sample, bam);
     }
 
     @Nullable

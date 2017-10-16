@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CobaltPositionFile {
+public class CobaltRatioFile {
 
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".cobalt";
@@ -24,21 +24,26 @@ public class CobaltPositionFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull final String fileName, @NotNull Multimap<Chromosome, ? extends CobaltPosition> ratios) throws IOException {
-        List<CobaltPosition> sorted = Lists.newArrayList(ratios.values());
+    @NotNull
+    public static Multimap<String, CobaltRatio> read(@NotNull final String filename) throws IOException {
+        return fromLines(Files.readAllLines(new File(filename).toPath()));
+    }
+
+    public static void write(@NotNull final String fileName, @NotNull Multimap<Chromosome, CobaltRatio> ratios) throws IOException {
+        List<CobaltRatio> sorted = Lists.newArrayList(ratios.values());
         Collections.sort(sorted);
         write(fileName, sorted);
     }
 
-    public static void write(@NotNull final String fileName, @NotNull List<CobaltPosition> ratios) throws IOException {
+    private static void write(@NotNull final String fileName, @NotNull List<CobaltRatio> ratios) throws IOException {
         Files.write(new File(fileName).toPath(), toLines(ratios));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<CobaltPosition> ratio) {
+    static List<String> toLines(@NotNull final List<CobaltRatio> ratio) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        ratio.stream().map(CobaltPositionFile::toString).forEach(lines::add);
+        ratio.stream().map(CobaltRatioFile::toString).forEach(lines::add);
         return lines;
     }
 
@@ -55,7 +60,7 @@ public class CobaltPositionFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final CobaltPosition position) {
+    private static String toString(@NotNull final CobaltRatio position) {
         return new StringJoiner(DELIMITER).add(String.valueOf(position.chromosome()))
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.referenceReadCount()))
@@ -67,12 +72,12 @@ public class CobaltPositionFile {
     }
 
     @NotNull
-    private static Multimap<String, CobaltPosition> fromLines(@NotNull final List<String> lines) {
+    private static Multimap<String, CobaltRatio> fromLines(@NotNull final List<String> lines) {
 
-        final Multimap<String, CobaltPosition> result = ArrayListMultimap.create();
+        final Multimap<String, CobaltRatio> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith("Ch")) {
-                final CobaltPosition position = fromLine(line);
+                final CobaltRatio position = fromLine(line);
                 result.put(position.chromosome(), position);
             }
         }
@@ -81,13 +86,13 @@ public class CobaltPositionFile {
     }
 
     @NotNull
-    private static CobaltPosition fromLine(@NotNull final String ratioLine) {
+    static CobaltRatio fromLine(@NotNull final String ratioLine) {
         final String[] values = ratioLine.split(DELIMITER);
 
         final String chromosome = values[0].trim();
         final long position = Long.valueOf(values[1].trim());
 
-        return ImmutableCobaltPosition.builder()
+        return ImmutableCobaltRatio.builder()
                 .chromosome(chromosome)
                 .position(position)
                 .referenceReadCount(Integer.valueOf(values[2].trim()))

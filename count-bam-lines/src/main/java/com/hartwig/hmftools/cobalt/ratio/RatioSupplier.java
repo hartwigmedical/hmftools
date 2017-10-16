@@ -4,11 +4,11 @@ import java.io.IOException;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.cobalt.CobaltPositionFactory;
-import com.hartwig.hmftools.common.cobalt.CobaltPositionFile;
-import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.cobalt.CobaltCount;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFactory;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
-import com.hartwig.hmftools.common.cobalt.ReadRatioFile;
 import com.hartwig.hmftools.common.gc.GCMedianReadCountFile;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -31,15 +31,12 @@ public class RatioSupplier {
         this.outputDirectory = outputDirectory;
     }
 
-    public void generateRatios(@NotNull final Multimap<String, GCProfile> gcProfiles,
-            @NotNull final Multimap<String, ReadCount> referenceCounts, @NotNull final Multimap<String, ReadCount> tumorCounts)
-            throws IOException {
-
-        final CobaltPositionFactory cobaltPositionFactory = new CobaltPositionFactory();
-        cobaltPositionFactory.addReadCounts(referenceCounts, tumorCounts);
+    @NotNull
+    public Multimap<Chromosome, CobaltRatio> generateRatios(@NotNull final Multimap<String, GCProfile> gcProfiles,
+            @NotNull final Multimap<Chromosome, CobaltCount> readCounts) throws IOException {
 
         LOGGER.info("Applying ratio gc normalization");
-        final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, cobaltPositionFactory.build());
+        final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
         final ListMultimap<String, ReadRatio> tumorGCRatio = gcRatioSupplier.tumorRatios();
         final ListMultimap<String, ReadRatio> referenceGCRatio = gcRatioSupplier.referenceRatios();
 
@@ -47,22 +44,13 @@ public class RatioSupplier {
         final Gender gender = Gender.fromReferenceReadRatios(referenceGCRatio);
         final ListMultimap<String, ReadRatio> referenceGCDiploidRatio = new DiploidRatioSupplier(gender, referenceGCRatio).result();
 
-        cobaltPositionFactory.addRatios(referenceGCRatio, tumorGCRatio, referenceGCDiploidRatio);
-        final String outputFile = CobaltPositionFile.generateFilename(outputDirectory, tumor);
-        LOGGER.info("Persisting ratios to {}", outputFile);
-        CobaltPositionFile.write(outputFile, cobaltPositionFactory.build());
-
-        LOGGER.info("Persisting ratios {}", outputDirectory);
-        ReadRatioFile.write(ReadRatioFile.generateFilename(outputDirectory, tumor), tumorGCRatio);
-        ReadRatioFile.write(ReadRatioFile.generateFilename(outputDirectory, reference), referenceGCDiploidRatio);
-        ReadRatioFile.write(ReadRatioFile.generateFilename(outputDirectory, reference) + ".gc", referenceGCRatio);
-
-
         LOGGER.info("Persisting gc read count medians to {}", outputDirectory);
         final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);
         final String referenceGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, reference);
         GCMedianReadCountFile.write(tumorGCMedianFilename, gcRatioSupplier.tumorGCMedianReadCount());
         GCMedianReadCountFile.write(referenceGCMedianFilename, gcRatioSupplier.referenceGCMedianReadCount());
+
+        return CobaltRatioFactory.merge(readCounts, referenceGCRatio, tumorGCRatio, referenceGCDiploidRatio);
     }
 }
 

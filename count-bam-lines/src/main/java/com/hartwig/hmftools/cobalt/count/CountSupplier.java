@@ -12,9 +12,14 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.CountBamLinesApplication;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
+import com.hartwig.hmftools.common.cobalt.CobaltCount;
+import com.hartwig.hmftools.common.cobalt.CobaltCountFactory;
+import com.hartwig.hmftools.common.cobalt.CobaltCountFile;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 
@@ -29,71 +34,95 @@ public class CountSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
+    private final String reference;
+    private final String tumor;
     private final String outputDirectory;
     private final int windowSize;
     private final int minQuality;
     private final ExecutorService executorService;
 
-    public CountSupplier(final String outputDirectory, final int windowSize, final int minQuality, final ExecutorService executorService) {
+    public CountSupplier(final String reference, final String tumor, final String outputDirectory, final int windowSize,
+            final int minQuality, final ExecutorService executorService) {
+        this.reference = reference;
+        this.tumor = tumor;
         this.outputDirectory = outputDirectory;
         this.windowSize = windowSize;
         this.minQuality = minQuality;
         this.executorService = executorService;
     }
 
-    public Multimap<String, ReadCount> fromFile(@NotNull final String sample) throws IOException {
-        final String filename = ReadCountFile.generateFilename(outputDirectory, sample);
-        LOGGER.info("Reading read count from {}", filename);
-        return ReadCountFile.readFile(filename);
+    @NotNull
+    public Multimap<Chromosome, CobaltCount> fromReadCountFiles() throws IOException {
+
+        final String referenceFilename = ReadCountFile.generateFilename(outputDirectory, reference);
+        LOGGER.info("Reading reference count from {}", referenceFilename);
+        Multimap<String, ReadCount> referenceCounts = ReadCountFile.readFile(referenceFilename);
+
+        final String tumorFilename = ReadCountFile.generateFilename(outputDirectory, tumor);
+        LOGGER.info("Reading tumor count from {}", tumorFilename);
+        Multimap<String, ReadCount> tumorCounts = ReadCountFile.readFile(tumorFilename);
+
+        return CobaltCountFactory.merge(referenceCounts, tumorCounts);
     }
 
-    public Multimap<String, ReadCount> fromBam(@NotNull final String sample, @NotNull final String bam) throws IOException, ExecutionException, InterruptedException {
+    @NotNull
+    public Multimap<Chromosome, CobaltCount> fromExistingCobaltFile() throws IOException {
+        final String filename = CobaltRatioFile.generateFilename(outputDirectory, tumor);
+        LOGGER.info("Reading reference and tumor counts from {}", filename);
+        return CobaltCountFile.read(filename);
+    }
 
-        final File inputFile = new File(bam);
+    @NotNull
+    public Multimap<Chromosome, CobaltCount> fromBam(@NotNull final String referenceBam, @NotNull final String tumorBam)
+            throws IOException, ExecutionException, InterruptedException {
 
-        LOGGER.info("Calculating Read Count from {}", inputFile.toString());
+        final File tumorFile = new File(tumorBam);
+        final File referenceFile = new File(referenceBam);
+
         final SamReaderFactory readerFactory = SamReaderFactory.make();
-
-        final String chromosomeLengthFileName = ChromosomeLengthFile.generateFilename(outputDirectory, sample);
+        final String chromosomeLengthFileName = ChromosomeLengthFile.generateFilename(outputDirectory, tumor);
         final List<ChromosomeLength> lengths;
-        try (SamReader reader = readerFactory.open(inputFile)) {
+        try (SamReader reader = readerFactory.open(tumorFile)) {
             lengths = ChromosomeLengthFactory.create(reader.getFileHeader());
         }
         ChromosomeLengthFile.write(chromosomeLengthFileName, lengths);
 
+        LOGGER.info("Calculating Read Count from {}", tumorFile.toString());
+        final List<Future<ChromosomeReadCount>> tumorFutures = createFutures(readerFactory, tumorFile, lengths);
+
+        LOGGER.info("Calculating Read Count from {}", referenceFile.toString());
+        final List<Future<ChromosomeReadCount>> referenceFutures = createFutures(readerFactory, referenceFile, lengths);
+
+        final Multimap<String, ReadCount> tumorCounts = fromFutures(tumorFutures);
+        final Multimap<String, ReadCount> referenceCounts = fromFutures(referenceFutures);
+
+        LOGGER.info("Read Count Complete");
+        return CobaltCountFactory.merge(referenceCounts, tumorCounts);
+    }
+
+    private List<Future<ChromosomeReadCount>> createFutures(final SamReaderFactory readerFactory, final File file,
+            final List<ChromosomeLength> lengths) {
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for (ChromosomeLength chromosome : lengths) {
-            final ChromosomeReadCount callable = new ChromosomeReadCount(inputFile,
-                    readerFactory,
-                    chromosome.chromosome(),
-                    chromosome.position(),
-                    windowSize,
-                    minQuality);
+            final ChromosomeReadCount callable =
+                    new ChromosomeReadCount(file, readerFactory, chromosome.chromosome(), chromosome.position(), windowSize, minQuality);
             futures.add(executorService.submit(callable));
         }
 
-        final String countFilename = ReadCountFile.generateFilename(outputDirectory, sample);
-        LOGGER.info("Persisting read counts to {}", countFilename);
-        ReadCountFile.createFile(windowSize, countFilename);
+        return futures;
+    }
+
+    private static Multimap<String, ReadCount> fromFutures(List<Future<ChromosomeReadCount>> futures)
+            throws ExecutionException, InterruptedException {
         final ListMultimap<String, ReadCount> readCounts = ArrayListMultimap.create();
         for (Future<ChromosomeReadCount> future : futures) {
             final ChromosomeReadCount readCount = future.get();
             final String chromosome = readCount.chromosome();
             final List<ReadCount> result = readCount.readCount();
 
-            persist(countFilename, chromosome, result);
             readCounts.putAll(chromosome, result);
         }
 
-        LOGGER.info("Read Count Complete");
-
         return readCounts;
     }
-
-    private void persist(@NotNull final String filename, @NotNull final String chromosome, @NotNull List<ReadCount> readCounts)
-            throws IOException {
-        LOGGER.info("Persisting {} windows from chromosome {}", readCounts.size(), chromosome);
-        ReadCountFile.append(filename, readCounts);
-    }
-
 }
