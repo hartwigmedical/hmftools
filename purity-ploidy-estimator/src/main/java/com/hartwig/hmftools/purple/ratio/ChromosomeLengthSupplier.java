@@ -10,7 +10,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 
@@ -24,7 +24,7 @@ public class ChromosomeLengthSupplier implements Supplier<Map<String, Chromosome
 
     private final Map<String, ChromosomeLength> chromosomeLengths;
 
-    public ChromosomeLengthSupplier(final CommonConfig config, Multimap<String, ReadRatio> tumorReadRatio) throws IOException, HartwigException {
+    public ChromosomeLengthSupplier(final CommonConfig config, Multimap<String, CobaltRatio> cobaltRatios) throws IOException, HartwigException {
 
         final String chrLengthFile = ChromosomeLengthFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
         if (new File(chrLengthFile).exists()) {
@@ -33,7 +33,7 @@ public class ChromosomeLengthSupplier implements Supplier<Map<String, Chromosome
                     ChromosomeLengthFile.read(chrLengthFile).stream().collect(Collectors.toMap(ChromosomeLength::chromosome, item -> item));
         } else {
             LOGGER.info("Generating chromosome lengths from tumor read ratios");
-            chromosomeLengths = ChromosomeLengthFactory.create(config.windowSize(), tumorReadRatio);
+            chromosomeLengths = ChromosomeLengthFactory.create(config.windowSize(), cobaltRatios);
         }
     }
 

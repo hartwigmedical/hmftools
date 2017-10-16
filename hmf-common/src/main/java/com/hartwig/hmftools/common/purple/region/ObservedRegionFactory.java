@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
@@ -28,24 +28,21 @@ public class ObservedRegionFactory {
 
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, TumorBAF> bafs,
-            @NotNull final Multimap<String, ReadRatio> tumorRatios, @NotNull final Multimap<String, ReadRatio> normalRatios) {
+            @NotNull final Multimap<String, CobaltRatio> ratios) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
-        final GenomePositionSelector<ReadRatio> tumorRatioSelector = GenomePositionSelectorFactory.create(tumorRatios);
-        final GenomePositionSelector<ReadRatio> normalRatioSelector = GenomePositionSelectorFactory.create(normalRatios);
+        final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
         final GenomePositionSelector<TumorBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
 
         for (final PurpleSegment region : regions) {
             final BAFAccumulator baf = new BAFAccumulator();
-            final RatioAccumulator tumorRatio = new RatioAccumulator();
-            final RatioAccumulator normalRatio = new RatioAccumulator();
+            final CobaltAccumulator cobalt = new CobaltAccumulator();
 
             bafSelector.select(region, baf);
-            tumorRatioSelector.select(region, tumorRatio);
-            normalRatioSelector.select(region, normalRatio);
+            cobaltSelector.select(region, cobalt);
 
-            double myTumorRatio = tumorRatio.meanRatio();
-            double myNormalRatio = normalRatio.meanRatio();
+            double myTumorRatio = cobalt.tumorMeanRatio();
+            double myNormalRatio = cobalt.referenceMeanRatio();
             final EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder()
                     .from(region)
                     .bafCount(baf.count())
@@ -54,7 +51,7 @@ public class ObservedRegionFactory {
                     .observedNormalRatio(myNormalRatio)
                     .ratioSupport(region.ratioSupport())
                     .structuralVariantSupport(region.structuralVariantSupport())
-                    .observedTumorRatioCount(tumorRatio.count())
+                    .observedTumorRatioCount(cobalt.tumorCount())
                     .status(FreecStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
                     .build();
 
@@ -89,7 +86,30 @@ public class ObservedRegionFactory {
         }
     }
 
-    private class RatioAccumulator implements Consumer<ReadRatio> {
+    private class CobaltAccumulator implements Consumer<CobaltRatio> {
+        private final RatioAccumulator referenceAccumulator = new RatioAccumulator();
+        private final RatioAccumulator tumorAccumulator = new RatioAccumulator();
+
+        private double referenceMeanRatio() {
+            return referenceAccumulator.meanRatio();
+        }
+
+        private double tumorMeanRatio() {
+            return tumorAccumulator.meanRatio();
+        }
+
+        private int tumorCount() {
+            return tumorAccumulator.count();
+        }
+
+        @Override
+        public void accept(final CobaltRatio ratio) {
+            referenceAccumulator.accept(ratio.referenceGCDiploidRatio());
+            tumorAccumulator.accept(ratio.tumorGCRatio());
+        }
+    }
+
+    private class RatioAccumulator implements Consumer<Double> {
         private double sumRatio;
         private int count;
 
@@ -102,10 +122,10 @@ public class ObservedRegionFactory {
         }
 
         @Override
-        public void accept(final ReadRatio ratio) {
-            if (Doubles.greaterThan(ratio.ratio(), -1)) {
+        public void accept(final Double ratio) {
+            if (Doubles.greaterThan(ratio, -1)) {
                 count++;
-                sumRatio += ratio.ratio();
+                sumRatio += ratio;
             }
         }
     }

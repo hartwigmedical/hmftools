@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
 import com.hartwig.hmftools.common.variant.vcf.VCFGermlineFile;
 
+@Deprecated
 class VCFSupplier implements Supplier<Multimap<String, TumorBAF>> {
 
     private static final double MIN_REF_ALLELE_FREQUENCY = 0.4;

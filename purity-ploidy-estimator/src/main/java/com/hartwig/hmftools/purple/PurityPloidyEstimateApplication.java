@@ -16,7 +16,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -61,8 +62,6 @@ import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
-import com.hartwig.hmftools.purple.ratio.RatioSupplier;
-import com.hartwig.hmftools.purple.ratio.ReadCountRatioSupplier;
 import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
 
 import org.apache.commons.cli.CommandLine;
@@ -131,13 +130,13 @@ public class PurityPloidyEstimateApplication {
             final Multimap<String, TumorBAF> bafs = bafSupplier.get();
 
             // JOBA: Load Ratios from COBALT
-            final RatioSupplier ratioSupplier = new ReadCountRatioSupplier(config);
-            final Multimap<String, ReadRatio> tumorRatios = ratioSupplier.tumorRatios();
-            final Multimap<String, ReadRatio> referenceRatios = ratioSupplier.referenceRatios();
+            final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
+            LOGGER.info("Reading cobalt ratios from {}", ratioFilename);
+            final Multimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
 
             // Gender
             final Gender gender = Gender.fromBAFCount(bafs);
-            final Gender cobaltGender = Gender.fromReferenceReadRatios(referenceRatios);
+            final Gender cobaltGender = Gender.fromCobaltRatio(ratios);
             if (gender.equals(cobaltGender)) {
                 LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
             } else {
@@ -149,7 +148,7 @@ public class PurityPloidyEstimateApplication {
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
 
             // JOBA: Ratio Segmentation
-            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, tumorRatios).get();
+            final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratios).get();
             final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
 
             LOGGER.info("Merging structural variants into freec segmentation");
@@ -157,7 +156,7 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Mapping all observations to the segmented regions");
             final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
-            final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, tumorRatios, referenceRatios);
+            final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios);
 
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);

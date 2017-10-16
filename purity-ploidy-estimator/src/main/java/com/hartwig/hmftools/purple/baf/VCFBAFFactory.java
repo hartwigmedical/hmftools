@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 class VCFBAFFactory {
 
     private static final Set<String> HETEROZYGOUS_GENO_TYPES = Sets.newHashSet("0/1", "0|1");
