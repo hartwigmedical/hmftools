@@ -3,10 +3,12 @@ package com.hartwig.hmftools.common.purple.gender;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -27,7 +29,15 @@ public enum Gender {
     }
 
     public static Gender fromReferenceReadRatios(@NotNull final Multimap<String, ReadRatio> readRatios) {
-        return Doubles.greaterThan(median(readRatios.get("X")), 0.75) ? Gender.FEMALE : Gender.MALE;
+        return fromRatio(readRatios, ReadRatio::ratio);
+    }
+
+    public static Gender fromCobaltRatio(@NotNull final Multimap<String, CobaltRatio> readRatios) {
+        return fromRatio(readRatios, CobaltRatio::referenceGCRatio);
+    }
+
+    private static <T> Gender fromRatio(@NotNull final Multimap<String, T> readRatios, Function<T, Double> transform) {
+        return Doubles.greaterThan(median(readRatios.get("X"), transform), 0.75) ? Gender.FEMALE : Gender.MALE;
     }
 
     public static Gender fromObservedRegions(Collection<ObservedRegion> regions) {
@@ -46,11 +56,13 @@ public enum Gender {
                 .sum() > MIN_BAF_COUNT ? FEMALE : MALE;
     }
 
-    private static double median(Collection<ReadRatio> readRatios) {
-        final List<Double> ratios = readRatios.stream().map(ReadRatio::ratio).filter(x -> !Doubles.equal(x, -1)).collect(Collectors.toList());
+    private static <T> double median(Collection<T> readRatios, Function<T, Double> transform) {
+        return median(readRatios.stream().map(transform).filter(x -> !Doubles.equal(x, -1)).collect(Collectors.toList()));
+    }
+
+    private static double median(List<Double> ratios) {
         Collections.sort(ratios);
         int count = ratios.size();
         return ratios.size() % 2 == 0 ? (ratios.get(count / 2) + ratios.get(count / 2 - 1)) / 2 : ratios.get(count / 2);
     }
-
 }
