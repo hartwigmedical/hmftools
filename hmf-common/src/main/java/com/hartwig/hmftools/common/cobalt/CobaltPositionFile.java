@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +25,7 @@ public class CobaltPositionFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull final String fileName, @NotNull Multimap<String, CobaltPosition> ratios) throws IOException {
+    public static void write(@NotNull final String fileName, @NotNull Multimap<Chromosome, ? extends CobaltPosition> ratios) throws IOException {
         List<CobaltPosition> sorted = Lists.newArrayList(ratios.values());
         Collections.sort(sorted);
         write(fileName, sorted);
@@ -47,10 +48,10 @@ public class CobaltPositionFile {
         return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("Chromosome")
                 .add("Position")
                 .add("ReferenceReadCount")
-                .add("ReferenceGCRatio")
-                .add("ReferenceGCDiploidRatio")
                 .add("TumorReadCount")
+                .add("ReferenceGCRatio")
                 .add("TumorGCRatio")
+                .add("ReferenceGCDiploidRatio")
                 .toString();
     }
 
@@ -59,10 +60,10 @@ public class CobaltPositionFile {
         return new StringJoiner(DELIMITER).add(String.valueOf(position.chromosome()))
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.referenceReadCount()))
-                .add(String.valueOf(position.referenceGCRatio()))
-                .add(String.valueOf(position.referenceGCDiploidRatio()))
                 .add(String.valueOf(position.tumorReadCount()))
+                .add(String.valueOf(position.referenceGCRatio()))
                 .add(String.valueOf(position.tumorGCRatio()))
+                .add(String.valueOf(position.referenceGCDiploidRatio()))
                 .toString();
     }
 
@@ -91,10 +92,10 @@ public class CobaltPositionFile {
                 .chromosome(chromosome)
                 .position(position)
                 .referenceReadCount(Integer.valueOf(values[2].trim()))
-                .referenceGCRatio(Double.valueOf(values[3].trim()))
-                .referenceGCDiploidRatio(Double.valueOf(values[4].trim()))
-                .tumorReadCount(Integer.valueOf(values[5].trim()))
-                .tumorGCRatio(Double.valueOf(values[6].trim()))
+                .tumorReadCount(Integer.valueOf(values[3].trim()))
+                .referenceGCRatio(Double.valueOf(values[4].trim()))
+                .tumorGCRatio(Double.valueOf(values[5].trim()))
+                .referenceGCDiploidRatio(Double.valueOf(values[6].trim()))
                 .build();
     }
 

@@ -8,7 +8,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
-import com.hartwig.hmftools.common.cobalt.ReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.gc.GCMedianReadCountBuilder;
@@ -25,13 +24,12 @@ class GCRatioNormalization {
     private final GCMedianReadCountBuilder medianReadCountBuilder = new GCMedianReadCountBuilder();
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
 
-
-    void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, @NotNull final ReadCount readCount) {
+    void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, final int readCount) {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
         entries.put(gcProfile.chromosome(), readCountWithGCContent);
 
         // TODO: TEST With/without ismappable
-        if (chromosome.isAutosome() && readCountWithGCContent.isMappable() && readCount.readCount() > 0) {
+        if (chromosome.isAutosome() && readCountWithGCContent.isMappable() && readCount > 0) {
             medianReadCountBuilder.add(gcProfile, readCount);
         }
     }
@@ -70,9 +68,9 @@ class GCRatioNormalization {
     private class ReadCountWithGCContent implements GenomePosition {
 
         private final GCProfile gcProfile;
-        private final ReadCount readCount;
+        private final int readCount;
 
-        private ReadCountWithGCContent(@NotNull final ReadCount readCount, @NotNull final GCProfile gcProfile) {
+        private ReadCountWithGCContent(final int readCount, @NotNull final GCProfile gcProfile) {
             this.readCount = readCount;
             this.gcProfile = gcProfile;
         }
@@ -80,16 +78,16 @@ class GCRatioNormalization {
         @NotNull
         @Override
         public String chromosome() {
-            return readCount.chromosome();
+            return gcProfile.chromosome();
         }
 
         @Override
         public long position() {
-            return readCount.position();
+            return gcProfile.start();
         }
 
         private int readCount() {
-            return readCount.readCount();
+            return readCount;
         }
 
         public GCProfile gcProfile() {

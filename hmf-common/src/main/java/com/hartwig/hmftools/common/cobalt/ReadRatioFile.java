@@ -13,6 +13,7 @@ import com.google.common.collect.Multimap;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public enum ReadRatioFile {
     ;
 

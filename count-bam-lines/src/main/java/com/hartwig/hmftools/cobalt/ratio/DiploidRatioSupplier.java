@@ -17,9 +17,8 @@ class DiploidRatioSupplier {
 
     private final ListMultimap<String, ReadRatio> result = ArrayListMultimap.create();
 
-    DiploidRatioSupplier(@NotNull final ListMultimap<String, ReadRatio> normalRatios) {
+    DiploidRatioSupplier(@NotNull final Gender gender, @NotNull final ListMultimap<String, ReadRatio> normalRatios) {
 
-        final Gender gender = Gender.fromReferenceReadRatios(normalRatios);
         for (String chromosome : normalRatios.keySet()) {
             double expectedRatio = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 1 : 0.5;
             final List<ReadRatio> ratios = normalRatios.get(chromosome);
@@ -32,5 +31,4 @@ class DiploidRatioSupplier {
     ListMultimap<String, ReadRatio> result() {
         return result;
     }
-
 }
