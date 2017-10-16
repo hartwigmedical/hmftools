@@ -28,4 +28,9 @@ class RunDirectory {
     File findSomatic() throws IOException {
         return Files.walk(prefix).filter(p -> p.toString().endsWith("_post_process.vcf")).map(Path::toFile).findFirst().orElse(null);
     }
+
+    @Nullable
+    File findCopyNumber() throws IOException {
+        return Files.walk(prefix).filter(p -> p.toString().endsWith("purple.cnv")).map(Path::toFile).findFirst().orElse(null);
+    }
 }
