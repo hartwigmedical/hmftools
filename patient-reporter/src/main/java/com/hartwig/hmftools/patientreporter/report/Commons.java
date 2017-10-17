@@ -13,7 +13,7 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 
 public final class Commons {
-    // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
+
     private static final String FONT = "Tinos";
     private static final String MONOSPACE_FONT = "Inconsolata";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
