@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <fontFamilies>
+    <fontFamily name="Tinos">
+        <normal>fonts/tinos/Tinos-Regular.ttf</normal>
+        <bold>fonts/tinos/Tinos-Bold.ttf</bold>
+        <italic>fonts/tinos/Tinos-Italic.ttf</italic>
+        <boldItalic>fonts/tinos/Tinos-BoldItalic.ttf</boldItalic>
+        <pdfEncoding>Cp1252</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+    </fontFamily>
     <fontFamily name="Inconsolata">
         <normal>fonts/inconsolata/Inconsolata-Regular.ttf</normal>
         <bold>fonts/inconsolata/Inconsolata-Bold.ttf</bold>
