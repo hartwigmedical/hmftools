@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.bamslicer;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -120,13 +123,27 @@ public class BamSlicerApplication {
         final URL indexUrl = SbpS3UrlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX));
         final String outputPath = cmd.getOptionValue(OUTPUT);
         final String bedPath = cmd.getOptionValue(BED);
-        final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexUrl));
+        final File index = downloadIndex(indexUrl);
+        index.deleteOnExit();
+        final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(index));
         LOGGER.info("Generating query intervals from BED file: {}", bedPath);
         final QueryInterval[] intervals = getIntervalsFromBED(bedPath, reader.getFileHeader());
         LOGGER.info("Generated {} query intervals.", intervals.length);
         LOGGER.info("Slicing bam...");
         writeToSlice(outputPath, reader, intervals);
         reader.close();
+    }
+
+    @NotNull
+    private static File downloadIndex(@NotNull final URL indexUrl) throws IOException {
+        LOGGER.info("Downloading index...");
+        final ReadableByteChannel indexChannel = Channels.newChannel(indexUrl.openStream());
+        final File index = File.createTempFile("tmp", ".bai");
+        final FileOutputStream indexOutputStream = new FileOutputStream(index);
+        indexOutputStream.getChannel().transferFrom(indexChannel, 0, Long.MAX_VALUE);
+        indexOutputStream.close();
+        indexChannel.close();
+        return index;
     }
 
     private static QueryInterval[] getIntervalsFromBED(@NotNull final String bedPath, @NotNull final SAMFileHeader header)
