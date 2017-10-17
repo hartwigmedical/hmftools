@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.dataStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.dataTableStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.monospaceBaseTable;
 import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderStyle;
 
@@ -310,7 +311,7 @@ public class PDFWriter implements ReportWriter {
 
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
-                cmp.subreport(baseTable().fields(PatientDataSource.variantFields())
+                cmp.subreport(monospaceBaseTable().fields(PatientDataSource.variantFields())
                         .columns(
                             col.column("Gene", PatientDataSource.GENE_FIELD).setFixedWidth(50),
                             col.column("Position", PatientDataSource.POSITION_FIELD),
@@ -439,7 +440,7 @@ public class PDFWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final SequencedPatientReport report) {
         // @formatter:off
         final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
-                cmp.subreport(baseTable().fields(PatientDataSource.copyNumberFields())
+                cmp.subreport(monospaceBaseTable().fields(PatientDataSource.copyNumberFields())
                         .columns(
                             col.column("Chromosome", PatientDataSource.CHROMOSOME_FIELD),
                             col.column("Band", PatientDataSource.BAND_FIELD),

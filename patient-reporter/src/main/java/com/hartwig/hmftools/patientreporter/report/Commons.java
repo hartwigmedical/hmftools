@@ -14,7 +14,8 @@ import net.sf.dynamicreports.report.constant.VerticalTextAlignment;
 
 public final class Commons {
     // MIVO: change font to monospace to remove text truncation issue (see gene panel type column for example)
-    private static final String FONT = "Times New Roman";
+    private static final String FONT = "Tinos";
+    private static final String MONOSPACE_FONT = "Inconsolata";
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
     public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
     private static final int TABLE_PADDING = 1;
@@ -58,6 +59,13 @@ public final class Commons {
     @NotNull
     public static JasperReportBuilder baseTable() {
         return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
+    }
+
+    @NotNull
+    public static JasperReportBuilder monospaceBaseTable() {
+        return report().setColumnStyle(dataStyle().setFontName(MONOSPACE_FONT))
+                .setColumnTitleStyle(tableHeaderStyle())
+                .highlightDetailEvenRows();
     }
 
     @NotNull
