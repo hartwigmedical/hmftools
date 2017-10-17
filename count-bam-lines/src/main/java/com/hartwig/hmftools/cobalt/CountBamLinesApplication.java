@@ -45,7 +45,6 @@ public class CountBamLinesApplication {
     private static final String GC_PROFILE = "gc_profile";
     private static final String WINDOW_SIZE = "window_size";
     private static final String MIN_QUALITY = "min_quality";
-    private static final String GENDER = "gender";
 
     private static final int WINDOW_SIZE_DEFAULT = 1000;
     private static final int MIN_QUALITY_DEFAULT = 10;
@@ -180,7 +179,6 @@ public class CountBamLinesApplication {
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(MIN_QUALITY, true, "Min quality. Default 10.");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
-        options.addOption(GENDER, true, "Optionally force gender. MALE or FEMALE.");
 
         return options;
     }
