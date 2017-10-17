@@ -10,9 +10,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.ChromosomeFilter;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -102,6 +99,7 @@ public class StructuralVariantFactory {
         }
 
         return ImmutableStructuralVariant.builder()
+                .id(context.getID())
                 .startChromosome(context.getContig())
                 .startPosition(start)
                 .startOrientation(startOrientation)
@@ -146,6 +144,8 @@ public class StructuralVariantFactory {
         }
 
         return ImmutableStructuralVariant.builder()
+                .id(first.getID())
+                .mateId(second.getID())
                 .startChromosome(first.getContig())
                 .startPosition(start)
                 .startOrientation(startOrientation)

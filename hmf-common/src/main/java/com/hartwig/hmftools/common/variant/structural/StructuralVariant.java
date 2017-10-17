@@ -8,6 +8,11 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class StructuralVariant {
 
+    public abstract String id();
+
+    @Nullable
+    public abstract String mateId();
+
     public abstract String startChromosome();
 
     public abstract String endChromosome();
