@@ -11,4 +11,11 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class StructuralVariantPosition implements GenomePosition {
     public abstract StructuralVariantType type();
+
+    public abstract String id();
+
+    public abstract  byte orientation();
+
+    @Nullable
+    public abstract Double alleleFrequency();
 }
