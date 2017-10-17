@@ -95,8 +95,8 @@ public class StrelkaPostProcessApplication {
         for (final VariantContext variantContext : vcfReader) {
             if (StrelkaPostProcess.checkVariant(variantContext, highConfidenceSlicer)) {
                 final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
-                final PotentialMNV detectorState = outputPair.getLeft();
-                outputPair = detector.checkMNV(detectorState, simplifiedVariant);
+                final PotentialMNV potentialMNV = outputPair.getLeft();
+                outputPair = detector.checkMNV(potentialMNV, simplifiedVariant);
                 outputPair.getRight().forEach(writer::add);
             }
         }
