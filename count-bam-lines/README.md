@@ -1,4 +1,4 @@
-# COBALT 1.1
+# COBALT 1.2
 
 **Co**unt **ba**m **l**ines is designed to count the number of read starts within each 1000 base window of a bam.
 
@@ -27,10 +27,11 @@ This can be installed in R with the following commands:
 
 Argument | Default | Description
 ---|---|---
--input | None | Location of bam file. Can be omitted to regenerate ratios if prior count file already exists.
+-reference_bam | None | Location of reference bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
+-tumor_bam | None | Location of tumor bam file. Can be omitted to regenerate ratios if prior cobalt file already exists.
 -output_dir | None | Directory to write output
--sample | None | Name of sample
--diploid | N/A | Applies diploid normalization. Used for reference samples.
+-reference | None | Name of reference sample
+-tumor | None | Name of tumor sample
 -threads | 4 | Number of threads to use
 -window_size | 1000 | Size of window
 -min_quality | 10 | Min quality
@@ -41,28 +42,21 @@ Arguments without default values are mandatory.
 ### Example Usage
 
 ```
-java -jar cobalt.jar -input /run_dir/SAMPLE.bam -output_dir /run_dir/cobalt -sample SAMPLE -threads 24 -gc_profile /path/to/GC_profile.1000bp.cnp
+java -jar cobalt.jar -reference REFERENCE -reference_bam /run_dir/REFERENCE.bam -tumor TUMOR -reference_bam /run_dir/TUMOR.bam -output_dir /run_dir/cobalt -threads 24 -gc_profile /path/to/GC_profile.1000bp.cnp
 ```
 
 
 ## Output
 The following tab delimited files are written:
 
-`/run_dir/cobalt/SAMPLE.cobalt.count`
+`/run_dir/cobalt/TUMOR.cobalt`
 
-`/run_dir/cobalt/SAMPLE.chr.len`
+`/run_dir/cobalt/TUMOR.chr.len`
 
-`/run_dir/cobalt/SAMPLE.cobalt.ratio`
+`/run_dir/cobalt/TUMOR.cobalt.ratio.pcf`
 
-`/run_dir/cobalt/SAMPLE.cobalt.ratio.pcf`
+`/run_dir/cobalt/REFERENCE.cobalt.ratio.pcf`
 
-SAMPLE.cobalt.count contains the Chromosome, Position and ReadCount of that window.
-Positions start from 1. A count of -1 indicates no read starts within that window.
-Not all empty windows will be written to file - only the first and last of each chromosome.
+TUMOR.cobalt contains the counts and ratios of the reference and tumor.
 
-SAMPLE.chr.len is written with the lengths of each chromosome from the bam file.
-This assists with downstream processes to produce accurate window sizes.
-
-SAMPLE.cobalt.ratio contains the Chromosome, Position and Ratio of each window.
-
-SAMPLE.cobalt.ratio.pcf contains the segmented regions determined from the ratios.
+TUMOR.cobalt.ratio.pcf contains the segmented regions determined from the ratios.
