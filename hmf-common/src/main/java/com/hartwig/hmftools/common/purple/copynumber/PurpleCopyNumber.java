@@ -42,6 +42,6 @@ public abstract class PurpleCopyNumber implements CopyNumber {
 
     @NotNull
     private static String formatBafField(@NotNull final String allele, final int count) {
-        return count < 10 ? Strings.repeat(allele, count) : allele + "[" + count + "]x";
+        return count < 10 ? Strings.repeat(allele, count) : allele + "[" + count + "x]";
     }
 }

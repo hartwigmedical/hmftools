@@ -48,7 +48,7 @@ public class PurpleCopyNumberTest {
         assertEquals("AAAA", createBAFString(0.875, 4));
         assertEquals("AAAA", createBAFString(0.9, 4));
 
-        assertEquals("A[12]x", createBAFString(0, 12));
+        assertEquals("A[12x]", createBAFString(0, 12));
     }
 
     @NotNull
