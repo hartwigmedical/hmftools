@@ -208,7 +208,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "low_tumor_percentage_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_low_tumor_percentage_report.pdf"));
         }
     }
 
@@ -222,7 +222,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "low_dna_yield_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_low_dna_yield_report.pdf"));
         }
     }
 
@@ -236,7 +236,7 @@ public class PDFWriterTest {
         }
 
         if (WRITE_TO_PDF) {
-            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "post_dna_isolation_fail_report.pdf"));
+            report.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "hmf_post_dna_isolation_fail_report.pdf"));
         }
     }
 
