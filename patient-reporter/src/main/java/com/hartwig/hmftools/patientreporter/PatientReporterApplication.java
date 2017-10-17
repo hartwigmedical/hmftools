@@ -47,7 +47,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: For testing
-    // public static final String VERSION = "3.16";
+    // public static final String VERSION = "3.17";
 
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_JSON = "lims_json";
