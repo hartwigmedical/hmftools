@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+    <fontFamily name="Inconsolata">
+        <normal>fonts/inconsolata/Inconsolata-Regular.ttf</normal>
+        <bold>fonts/inconsolata/Inconsolata-Bold.ttf</bold>
+        <pdfEncoding>Cp1252</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+    </fontFamily>
+</fontFamilies>
