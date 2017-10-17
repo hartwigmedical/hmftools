@@ -228,7 +228,7 @@ public class PDFWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> mainPageAboutSection() {
         return toList("About this report",
                 Lists.newArrayList("This test is performed for research purpose and is not meant to be used for clinical decision making.",
-                        "Additional information on the various fields can be found on the final page of this report.",
+                        "Detailed information on the various fields can be found on the additional pages of this report.",
                         "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl.",
                         "For other questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
