@@ -157,18 +157,12 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<CopyNumberReport> createTestCopyNumbers() {
-        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
-                .chromosome("2")
-                .chromosomeBand("p23.1-p23.2")
-                .gene("ALK")
+        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A")
                 .copyNumber(0)
                 .type(CopyNumberReportType.LOSS)
                 .build();
         final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder()
-                .chromosome("3")
-                .chromosomeBand("q26.32")
-                .gene("PIK3CA")
-                .copyNumber(9)
+                .chromosome("3").chromosomeBand("q12").gene("ERBB2").copyNumber(17)
                 .type(CopyNumberReportType.GAIN)
                 .build();
         return Lists.newArrayList(copyNumber1, copyNumber2);

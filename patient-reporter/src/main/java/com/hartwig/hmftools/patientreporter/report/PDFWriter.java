@@ -102,7 +102,6 @@ public class PDFWriter implements ReportWriter {
 
     @VisibleForTesting
     @NotNull
-
     static JasperReportBuilder generateNotSequenceableReport(@NotNull final NotSequencedPatientReport report) throws IOException {
         // @formatter:off
         final ComponentBuilder<?, ?> finalReport =
