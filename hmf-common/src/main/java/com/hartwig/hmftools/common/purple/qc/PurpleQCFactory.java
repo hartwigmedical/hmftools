@@ -21,7 +21,7 @@ public class PurpleQCFactory {
 
         return ImmutablePurpleQC.builder()
                 .cobaltGender(cobaltGender)
-                .purpleGender(purpleGender)
+                .amberGender(purpleGender)
                 .ploidy(purity.ploidy())
                 .ratioSegments(ratioOnlySegments)
                 .trailingSegments(trailingSegments.size())

@@ -29,7 +29,7 @@ public abstract class PurpleQC {
     }
 
     public boolean genderPass() {
-        return cobaltGender().equals(purpleGender());
+        return cobaltGender().equals(amberGender());
     }
 
     public int segmentScore() {
@@ -44,5 +44,5 @@ public abstract class PurpleQC {
 
     public abstract Gender cobaltGender();
 
-    public abstract Gender purpleGender();
+    public abstract Gender amberGender();
 }

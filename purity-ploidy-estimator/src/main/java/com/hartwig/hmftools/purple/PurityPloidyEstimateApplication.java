@@ -135,12 +135,12 @@ public class PurityPloidyEstimateApplication {
             final Multimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
 
             // Gender
-            final Gender gender = Gender.fromBAFCount(bafs);
-            final Gender cobaltGender = Gender.fromCobaltRatio(ratios);
-            if (gender.equals(cobaltGender)) {
-                LOGGER.info("Sample gender is {}", gender.toString().toLowerCase());
+            final Gender amberGender = Gender.fromAmber(bafs);
+            final Gender cobaltGender = Gender.fromCobalt(ratios);
+            if (amberGender.equals(cobaltGender)) {
+                LOGGER.info("Sample gender is {}", amberGender.toString().toLowerCase());
             } else {
-                LOGGER.warn("PURPLE gender {} does not match COBALT gender {}", gender, cobaltGender);
+                LOGGER.warn("AMBER gender {} does not match COBALT gender {}", amberGender, cobaltGender);
             }
 
             // JOBA: Load structural and somatic variants
@@ -155,14 +155,14 @@ public class PurityPloidyEstimateApplication {
             final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
 
             LOGGER.info("Mapping all observations to the segmented regions");
-            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(gender);
+            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(amberGender);
             final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios);
 
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
             final FittedRegionFactory fittedRegionFactory =
-                    new FittedRegionFactory(gender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
+                    new FittedRegionFactory(amberGender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
 
             LOGGER.info("Fitting purity");
             final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
@@ -185,7 +185,7 @@ public class PurityPloidyEstimateApplication {
             final FittedPurity bestFit = bestFitFactory.bestFit();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
-            final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, bestFit.purity(), bestFit.normFactor());
+            final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
             final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
             final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
             final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
@@ -196,13 +196,13 @@ public class PurityPloidyEstimateApplication {
                     .bestFit(bestFitFactory.bestFit())
                     .bestPerPurity(fittedPurityFactory.bestFitPerPurity())
                     .status(bestFitFactory.status())
-                    .gender(gender)
+                    .gender(amberGender)
                     .score(bestFitFactory.score())
                     .polyClonalProportion(polyclonalProproption(smoothRegions))
                     .build();
 
             LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), smoothRegions, gender, cobaltGender);
+            final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), smoothRegions, amberGender, cobaltGender);
 
             if (cmd.hasOption(DB_ENABLED)) {
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
@@ -231,7 +231,7 @@ public class PurityPloidyEstimateApplication {
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
-            new GenerateCircosData(configSupplier, executorService).write(gender,
+            new GenerateCircosData(configSupplier, executorService).write(amberGender,
                     smoothRegions,
                     enrichedSomatics,
                     structuralVariants,

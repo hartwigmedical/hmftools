@@ -22,7 +22,7 @@ public enum Gender {
 
     private static final int MIN_BAF_COUNT = 1000;
 
-    public static Gender fromBAFCount(@NotNull final Multimap<String, TumorBAF> bafs) {
+    public static Gender fromAmber(@NotNull final Multimap<String, TumorBAF> bafs) {
         return bafs.get("X").stream().filter(x -> x.position() > 2_699_520 && x.position() < 155_260_560).count() > MIN_BAF_COUNT
                 ? FEMALE
                 : MALE;
@@ -32,7 +32,7 @@ public enum Gender {
         return fromRatio(readRatios, ReadRatio::ratio);
     }
 
-    public static Gender fromCobaltRatio(@NotNull final Multimap<String, CobaltRatio> readRatios) {
+    public static Gender fromCobalt(@NotNull final Multimap<String, CobaltRatio> readRatios) {
         return fromRatio(readRatios, CobaltRatio::referenceGCRatio);
     }
 

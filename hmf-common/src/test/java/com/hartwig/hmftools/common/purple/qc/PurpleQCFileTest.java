@@ -22,7 +22,7 @@ public class PurpleQCFileTest {
                 .trailingSegments(90)
                 .ratioSegments(34)
                 .ploidy(3.17)
-                .purpleGender(Gender.MALE)
+                .amberGender(Gender.MALE)
                 .cobaltGender(Gender.FEMALE)
                 .build();
     }

@@ -39,7 +39,7 @@ public class PurpleQCFile {
                     .trailingSegments(Integer.valueOf(getValue(lines.get(4))))
                     .ratioSegments(Integer.valueOf(getValue(lines.get(5))))
                     .ploidy(Double.valueOf(getValue(lines.get(6))))
-                    .purpleGender(Gender.valueOf(getValue(lines.get(7))))
+                    .amberGender(Gender.valueOf(getValue(lines.get(7))))
                     .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
                     .build();
         } catch (Exception e) {
@@ -61,7 +61,7 @@ public class PurpleQCFile {
         result.add("TrailingSegments" + DELIMITER + check.trailingSegments());
         result.add("RatioOnlySegments" + DELIMITER + check.ratioSegments());
         result.add("Ploidy" + DELIMITER + formatter.format(check.ploidy()));
-        result.add("PurpleGender" + DELIMITER + check.purpleGender());
+        result.add("AmberGender" + DELIMITER + check.amberGender());
         result.add("CobaltGender" + DELIMITER + check.cobaltGender());
 
         return result;

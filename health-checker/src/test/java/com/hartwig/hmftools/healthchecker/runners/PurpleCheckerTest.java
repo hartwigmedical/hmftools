@@ -33,7 +33,8 @@ public class PurpleCheckerTest {
         Assert.assertEquals(CheckType.PURPLE, result.getCheckType());
         final List<HealthCheck> checks = ((MultiValueResult) result).getChecks();
 
-        assertCheck(checks, PurpleCheck.PURPLE_GENDER.toString(), "MALE:MALE");
+        assertCheck(checks, PurpleCheck.AMBER_GENDER.toString(), "MALE");
+        assertCheck(checks, PurpleCheck.COBALT_GENDER.toString(), "FEMALE");
         assertCheck(checks, PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), "88");
     }
 
@@ -41,9 +42,10 @@ public class PurpleCheckerTest {
     public void errorYieldsCorrectOutputForSomatic() {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, TUMOR_SAMPLE);
         final List<HealthCheck> checks = ((MultiValueResult) checker.errorRun(runContext)).getChecks();
-        assertEquals(2, checks.size());
+        assertEquals(3, checks.size());
         assertEquals("ERROR", checks.get(0).getValue());
         assertEquals("ERROR", checks.get(1).getValue());
+        assertEquals("ERROR", checks.get(2).getValue());
 
     }
 

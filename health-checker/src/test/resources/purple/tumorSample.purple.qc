@@ -1,4 +1,4 @@
-QCStatus	PASS
+QCStatus	FAIL_GENDER
 SegmentPass	true
 GenderPass	true
 SegmentScore	88
@@ -6,4 +6,4 @@ TrailingSegments	600
 RatioOnlySegments	400
 Ploidy	2.01
 PurpleGender	MALE
-CobaltGender	MALE
+CobaltGender	FEMALE

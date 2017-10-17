@@ -34,11 +34,10 @@ public class PurpleChecker extends ErrorHandlingChecker {
         final PurpleQC qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample()));
         final List<HealthCheck> checks = Lists.newArrayList();
 
-        final String genderValue = qcCheck.cobaltGender() + ":" + qcCheck.purpleGender();
-        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_GENDER.toString(), genderValue));
-
-        final String segmentValue = String.valueOf(qcCheck.segmentScore());
-        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), segmentValue));
+        final String segmentScore = String.valueOf(qcCheck.segmentScore());
+        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), segmentScore));
+        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.AMBER_GENDER.toString(), qcCheck.amberGender().toString()));
+        checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.COBALT_GENDER.toString(), qcCheck.cobaltGender().toString()));
 
         return toMultiValueResult(checks);
     }
@@ -49,7 +48,8 @@ public class PurpleChecker extends ErrorHandlingChecker {
         if (runContext.isSomaticRun()) {
             final List<HealthCheck> checks = Lists.newArrayList();
 
-            checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_GENDER.toString(), HealthCheckConstants.ERROR_VALUE));
+            checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.AMBER_GENDER.toString(), HealthCheckConstants.ERROR_VALUE));
+            checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.COBALT_GENDER.toString(), HealthCheckConstants.ERROR_VALUE));
             checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), HealthCheckConstants.ERROR_VALUE));
 
             return toMultiValueResult(checks);
