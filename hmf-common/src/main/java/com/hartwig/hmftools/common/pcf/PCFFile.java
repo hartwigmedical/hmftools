@@ -29,16 +29,21 @@ public class PCFFile {
         return basePath + File.separator + sample + BAF_EXTENSION;
     }
 
-    public static Multimap<Chromosome, PCFPosition> readPositions(@NotNull final String filename) throws IOException {
+    public static Multimap<Chromosome, PCFPosition> readPositions(int windowSize, @NotNull final String filename) throws IOException {
         Multimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
+        long end = 0;
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 String[] values = line.split(DELIMITER);
                 final String chromosomeName = values[1];
                 if (HumanChromosome.contains(chromosomeName)) {
                     final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-                    result.put(chromosome, position(chromosomeName, Long.valueOf(values[3])));
-                    result.put(chromosome, position(chromosomeName, Long.valueOf(values[4])));
+                    long start = Long.valueOf(values[3]);
+                    if (start != end) {
+                        result.put(chromosome, position(chromosomeName, start));
+                    }
+                    end = Long.valueOf(values[4]) + windowSize;
+                    result.put(chromosome, position(chromosomeName, end));
                 }
             }
         }
@@ -47,7 +52,7 @@ public class PCFFile {
     }
 
     private static PCFPosition position(@NotNull final String chromosome, long pos) {
-        return  ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).build();
+        return ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).build();
     }
 
     @NotNull
