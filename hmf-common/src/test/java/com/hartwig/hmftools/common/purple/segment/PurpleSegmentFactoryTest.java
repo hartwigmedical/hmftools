@@ -106,7 +106,8 @@ public class PurpleSegmentFactoryTest {
         assertEquals(variantSupport, victim.structuralVariantSupport());
     }
 
-    private void assertPurpleSegment(final PurpleSegment victim, long start, long end, boolean ratioSupport, StructuralVariantSupport variantSupport) {
+    private void assertPurpleSegment(final PurpleSegment victim, long start, long end, boolean ratioSupport,
+            StructuralVariantSupport variantSupport) {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
         assertEquals(ratioSupport, victim.ratioSupport());
@@ -114,7 +115,7 @@ public class PurpleSegmentFactoryTest {
     }
 
     private static StructuralVariantPosition createVariant(long position, StructuralVariantType type) {
-        return ImmutableStructuralVariantPosition.builder().chromosome("1").position(position).type(type).build();
+        return ImmutableStructuralVariantPosition.builder().chromosome("1").position(position).id("ID").orientation((byte) 1).type(type).build();
     }
 
     private static GenomeRegion createRegion(long start, long end) {

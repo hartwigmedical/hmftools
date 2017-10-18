@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,6 +27,27 @@ public class PCFFile {
     @NotNull
     public static String generateBAFFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + BAF_EXTENSION;
+    }
+
+    public static Multimap<Chromosome, PCFPosition> readPositions(@NotNull final String filename) throws IOException {
+        Multimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
+        for (String line : Files.readAllLines(new File(filename).toPath())) {
+            if (!line.startsWith(HEADER_PREFIX)) {
+                String[] values = line.split(DELIMITER);
+                final String chromosomeName = values[1];
+                if (HumanChromosome.contains(chromosomeName)) {
+                    final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
+                    result.put(chromosome, position(chromosomeName, Long.valueOf(values[3])));
+                    result.put(chromosome, position(chromosomeName, Long.valueOf(values[4])));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static PCFPosition position(@NotNull final String chromosome, long pos) {
+        return  ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).build();
     }
 
     @NotNull
