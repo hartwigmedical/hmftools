@@ -70,7 +70,8 @@ public class LoadStructuralVariants {
         return parser.parse(options, args);
     }
 
-    private static DatabaseAccess databaseAccess(CommandLine cmd) throws SQLException {
+    @NotNull
+    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
