@@ -13,7 +13,7 @@ public class MatchResult<T> {
     @NotNull
     private final List<ValidationFinding> findings;
 
-    public MatchResult(@NotNull final List<T> values, @NotNull final List<ValidationFinding> findings) {
+    MatchResult(@NotNull final List<T> values, @NotNull final List<ValidationFinding> findings) {
         this.values = values;
         this.findings = findings;
     }
