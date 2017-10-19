@@ -126,7 +126,7 @@ public class CpctPatientReader {
                 }
             }
         }
-        LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
+        final LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
         final Integer birthYear = determineBirthYear(birthYear1, birthYear2, birthYear3);
         patientBuilder.registrationDate(registrationDate);
         patientBuilder.birthYear(birthYear);
