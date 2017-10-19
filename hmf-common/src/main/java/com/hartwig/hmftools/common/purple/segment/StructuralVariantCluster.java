@@ -28,6 +28,20 @@ public abstract class StructuralVariantCluster implements GenomeRegion {
         return StructuralVariantSupport.MULTIPLE;
     }
 
+    public long firstVariantPosition() {
+        return variants().isEmpty() ? 0 : variants().get(0).position();
+    }
+
+    public long finalVariantPosition() {
+        return variants().isEmpty() ? 0 : variants().get(variants().size() - 1).position();
+    }
+
+    public StructuralVariantSupport finalVariantType() {
+        return variants().isEmpty()
+                ? StructuralVariantSupport.NONE
+                : StructuralVariantSupport.fromVariant(variants().get(variants().size() - 1).type());
+    }
+
     @Override
     public String toString() {
 
