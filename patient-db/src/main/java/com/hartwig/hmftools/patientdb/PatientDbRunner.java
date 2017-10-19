@@ -45,8 +45,6 @@ public final class PatientDbRunner {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String EXTREME_CONFIDENCE_BED = "extreme_confidence_bed";
     private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
     private static final String LIMS_JSON = "lims_json";
     private static final String LIMS_OLD_CSV = "lims_old_csv";
@@ -54,16 +52,14 @@ public final class PatientDbRunner {
     private static final String CLINICAL = "clinical";
     private static final String RAW_ECRF = "raw_ecrf";
     private static final String FORM_STATUS_FILE = "form_status";
-    private static final String CLEAR_SOMATIC_TABLES = "clear_somatic";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
             HartwigException {
         final Options basicOptions = createBasicOptions();
-        final Options somaticOptions = createSomaticOptions();
         final Options clinicalOptions = createClinicalOptions();
         final Options ecrfOptions = createEcrfOptions();
-        final Options options = mergeOptions(basicOptions, somaticOptions, clinicalOptions, ecrfOptions);
+        final Options options = mergeOptions(basicOptions, clinicalOptions, ecrfOptions);
         final CommandLine cmd = createCommandLine(args, options);
         final String runsFolderPath = cmd.getOptionValue(RUNS_DIR);
         final String userName = cmd.getOptionValue(DB_USER);
@@ -232,15 +228,6 @@ public final class PatientDbRunner {
         final Options options = new Options();
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
-        return options;
-    }
-
-    @NotNull
-    private static Options createSomaticOptions() {
-        final Options options = new Options();
-        options.addOption(HIGH_CONFIDENCE_BED, true, "The full path towards the high confidence bed.");
-        options.addOption(EXTREME_CONFIDENCE_BED, true, "The full path towards the extreme confidence bed.");
-        options.addOption(CLEAR_SOMATIC_TABLES, false, "Flag to delete existing somatic data");
         return options;
     }
 
