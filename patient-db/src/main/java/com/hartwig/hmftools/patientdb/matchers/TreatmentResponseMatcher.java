@@ -19,8 +19,8 @@ public final class TreatmentResponseMatcher {
     private TreatmentResponseMatcher() {
     }
 
-    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull final String patientId,
-            @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> responses) {
+    @NotNull
+    public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull final String patientId, @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> responses) {
         final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
         for (final BiopsyTreatmentResponseData response : responses) {
@@ -38,8 +38,7 @@ public final class TreatmentResponseMatcher {
                 matchedResponses.add(response);
             } else {
                 matchedResponses.add(ImmutableBiopsyTreatmentResponseData.of(matchedTreatments.get(0).id(), response.assessmentDate(),
-                        response.responseDate(), response.response(), response.measurementDone(), response.formStatus(),
-                        response.formLocked()));
+                        response.responseDate(), response.response(), response.measurementDone(), response.formStatus(), response.formLocked()));
             }
         }
         return new MatchResult<>(matchedResponses, findings);
