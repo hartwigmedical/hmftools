@@ -95,7 +95,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.patientdb.PatientDbRunner</mainClass>
+                            <mainClass>com.hartwig.hmftools.patientdb.LoadClinicalData</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

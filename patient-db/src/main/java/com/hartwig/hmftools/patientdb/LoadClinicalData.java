@@ -37,8 +37,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class PatientDbRunner {
-    private static final Logger LOGGER = LogManager.getLogger(PatientDbRunner.class);
+public final class LoadClinicalData {
+    private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
 
     private static final String RUNS_DIR = "runs_dir";
     private static final String ECRF_FILE = "ecrf";
