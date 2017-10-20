@@ -17,7 +17,7 @@ import org.junit.Test;
 public class LimsFactoryTest {
 
     private static final String LIMS_RESOURCES = Resources.getResource("lims").getPath();
-    private static final String LIMS_JSON = LIMS_RESOURCES + File.separator + "lims.json";
+    private static final String LIMS_JSON = LIMS_RESOURCES + File.separator + "lims_test.json";
     private static final String PRE_HMF_ARRIVAL_DATES_CSV = LIMS_RESOURCES + File.separator + "preHMFArrivalDates.csv";
 
     @Test

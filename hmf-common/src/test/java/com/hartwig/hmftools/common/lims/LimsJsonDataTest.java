@@ -8,7 +8,7 @@ import org.junit.Test;
 public class LimsJsonDataTest {
 
     @Test
-    public void labProcedures() throws Exception {
+    public void canConvertSOPsToLabProceduresString() throws Exception {
         final String NA = "N/A";
         final String completeSopString = "PREP013V23-QC037V20-SEQ008V25";
 

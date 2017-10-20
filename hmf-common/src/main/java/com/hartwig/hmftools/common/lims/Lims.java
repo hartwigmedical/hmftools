@@ -24,6 +24,7 @@ public class Lims {
     @NotNull
     private final Map<String, LocalDate> preHmfArrivalDates;
 
+    @VisibleForTesting
     Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preHmfArrivalDates) {
         this.dataPerSample = dataPerSample;
         this.preHmfArrivalDates = preHmfArrivalDates;
