@@ -59,11 +59,8 @@ public class LimsTest {
         assertTrue(sample4T.isTumor());
         final LimsTumorData sample4Tumor = (LimsTumorData) sample4T;
         final Double sample4TumorPercentage = sample4Tumor.tumorPercentage();
-        final Double limsModelTumorPercentage4 = limsModel.findTumorPercentageForSample(sample4Name);
         assertNotNull(sample4TumorPercentage);
-        assertNotNull(limsModelTumorPercentage4);
         assertEquals(0.8, sample4TumorPercentage, EPSILON);
-        assertEquals(sample4TumorPercentage, limsModelTumorPercentage4, EPSILON);
 
         final String sample5Name = "SAMP01010005T";
         final LimsData sample5 = dataPerSample.get(sample5Name);
@@ -74,10 +71,7 @@ public class LimsTest {
         assertTrue(sample5.isTumor());
         final LimsTumorData sample5Tumor = (LimsTumorData) sample5;
         final Double sample5TumorPercentage = sample5Tumor.tumorPercentage();
-        final Double limsModelTumorPercentage5 = limsModel.findTumorPercentageForSample(sample5Name);
         assertNotNull(sample5TumorPercentage);
-        assertNotNull(limsModelTumorPercentage5);
         assertEquals(0.3, sample5TumorPercentage, EPSILON);
-        assertEquals(sample5TumorPercentage, limsModelTumorPercentage5, EPSILON);
     }
 }

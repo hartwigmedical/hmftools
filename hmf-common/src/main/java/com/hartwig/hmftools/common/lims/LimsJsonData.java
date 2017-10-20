@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class LimsJsonData {
+abstract class LimsJsonData {
     @NotNull
     @SerializedName("sample_source")
     public abstract String sampleSource();
