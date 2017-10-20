@@ -69,7 +69,7 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LocalDate> readPreHMFArrivalDateCsv(final String preHMFArrivalDatesCsvPath) throws IOException {
+    static Map<String, LocalDate> readPreHMFArrivalDateCsv(@NotNull final String preHMFArrivalDatesCsvPath) throws IOException {
         final Map<String, LocalDate> arrivalDatesPerSample = Maps.newHashMap();
         final List<String> lines = Files.lines(Paths.get(preHMFArrivalDatesCsvPath)).collect(Collectors.toList());
         for (final String line : lines) {
