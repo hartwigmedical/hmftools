@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class Lims {
 
-    private static final Logger LOGGER = LogManager.getLogger(LimsJsonModel.class);
+    private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
     @VisibleForTesting
     static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");

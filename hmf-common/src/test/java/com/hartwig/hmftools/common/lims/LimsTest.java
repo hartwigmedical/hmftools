@@ -32,8 +32,8 @@ public class LimsTest {
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
 
-        assertEquals(toDate(arrivalDate), lims.arrivalDateForSample(SAMPLE));
-        assertEquals(toDate(samplingDate), lims.samplingDateForSample(SAMPLE));
+        assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDateForSample(SAMPLE));
+        assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDateForSample(SAMPLE));
         final Double tumorPerc = lims.tumorPercentageForSample(SAMPLE);
         assertNotNull(tumorPerc);
         assertEquals(0.4, tumorPerc, 1.0E-10);
@@ -47,7 +47,7 @@ public class LimsTest {
 
     @Test
     public void fallBackOnPreHMFArrivalDateWorks() {
-        final LocalDate date = toDate("2017-10-03");
+        final LocalDate date = LimsTestUtil.toDate("2017-10-03");
 
         final Lims lims = buildTestLimsWithPreHMFArrivalDateForSample(SAMPLE, date);
 
@@ -93,10 +93,5 @@ public class LimsTest {
     @NotNull
     private static ImmutableLimsJsonData.Builder jsonDataBuilder() {
         return ImmutableLimsJsonData.builder().sampleBarcode("IRRELEVANT").sampleSource("IRRELEVANT").patient("IRRELEVANT");
-    }
-
-    @NotNull
-    private static LocalDate toDate(@NotNull final String date) {
-        return LocalDate.parse(date, Lims.DATE_FORMATTER);
     }
 }
