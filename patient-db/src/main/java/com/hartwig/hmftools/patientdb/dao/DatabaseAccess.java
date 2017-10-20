@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -89,23 +88,8 @@ public class DatabaseAccess {
         return purityDAO.readFittedPurity(sampleId);
     }
 
-    @Nullable
-    public FittedPurityScore readFittedPurityScore(@NotNull final String sampleId) {
-        return purityDAO.readFittedPurityScore(sampleId);
-    }
-
-    @NotNull
-    public List<EnrichedSomaticVariant> readComprehensiveSomaticVariants(@NotNull final String sampleId) {
-        return somaticVariantDAO.read(sampleId, true);
-    }
-
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
-    }
-
-    @NotNull
-    public List<StructuralVariant> readStructuralVariants(@NotNull final String sampleId) {
-        return structuralVariantDAO.read(sampleId);
     }
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull List<StructuralVariant> variants) {
@@ -127,11 +111,6 @@ public class DatabaseAccess {
     @NotNull
     public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
         return copyNumberDAO.read(sample);
-    }
-
-    @NotNull
-    public List<FittedRegion> readCopynumberRegions(@NotNull final String sample) {
-        return copyNumberDAO.readCopyNumberRegions(sample);
     }
 
     public void clearEcrf() {
