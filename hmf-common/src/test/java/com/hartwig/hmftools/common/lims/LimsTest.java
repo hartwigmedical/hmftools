@@ -23,14 +23,15 @@ public class LimsTest {
         final String tumorPercentage = "40";
         final String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
 
-        final LimsJsonData data = jsonDataBuilder().sampleName(SAMPLE)
+        final LimsJsonData data = ImmutableLimsJsonData.builder().sampleId(SAMPLE)
                 .samplingDateString(samplingDate)
-                .arrivalDateString(arrivalDate)
-                .tumorPercentage(tumorPercentage)
+                .arrivalDateString(arrivalDate).tumorPercentageString(tumorPercentage)
                 .labSopVersions(labSopVersions)
                 .build();
 
         final Lims lims = buildTestLimsWithJsonData(SAMPLE, data);
+
+        assertEquals(1, lims.sampleCount());
 
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDateForSample(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDateForSample(SAMPLE));
@@ -57,10 +58,9 @@ public class LimsTest {
 
     @Test
     public void invalidDataYieldsNull() {
-        final LimsJsonData data = jsonDataBuilder().sampleName(SAMPLE)
+        final LimsJsonData data = ImmutableLimsJsonData.builder().sampleId(SAMPLE)
                 .samplingDateString("IsNotADate")
-                .arrivalDateString("IsNotADate")
-                .tumorPercentage("IsNotANumber")
+                .arrivalDateString("IsNotADate").tumorPercentageString("IsNotANumber")
                 .labSopVersions("anything")
                 .build();
 
@@ -88,10 +88,5 @@ public class LimsTest {
         preHmfArrivalDates.put(sample, date);
 
         return new Lims(dataPerSample, preHmfArrivalDates);
-    }
-
-    @NotNull
-    private static ImmutableLimsJsonData.Builder jsonDataBuilder() {
-        return ImmutableLimsJsonData.builder().sampleBarcode("IRRELEVANT").sampleSource("IRRELEVANT").patient("IRRELEVANT");
     }
 }

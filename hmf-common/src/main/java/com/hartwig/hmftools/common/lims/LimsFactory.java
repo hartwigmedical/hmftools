@@ -60,7 +60,7 @@ public final class LimsFactory {
 
             if (sampleLabel.equals("CPCT") || sampleLabel.equals("DRUP")) {
                 final LimsJsonData limsJsonData = gson.fromJson(jsonSample.getValue(), LimsJsonData.class);
-                limsDataPerSample.put(limsJsonData.sampleName(), limsJsonData);
+                limsDataPerSample.put(limsJsonData.sampleId(), limsJsonData);
             }
         });
 

@@ -14,20 +14,10 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class LimsJsonData {
-    @NotNull
-    @SerializedName("sample_source")
-    public abstract String sampleSource();
-
-    @NotNull
-    public abstract String patient();
 
     @NotNull
     @SerializedName("sample_name")
-    public abstract String sampleName();
-
-    @NotNull
-    @SerializedName("sample_barcode")
-    public abstract String sampleBarcode();
+    public abstract String sampleId();
 
     @NotNull
     @SerializedName("arrival_date")
@@ -39,7 +29,7 @@ abstract class LimsJsonData {
 
     @NotNull
     @SerializedName("tumor_perc")
-    public abstract String tumorPercentage();
+    public abstract String tumorPercentageString();
 
     @NotNull
     @SerializedName("lab_sop_versions")

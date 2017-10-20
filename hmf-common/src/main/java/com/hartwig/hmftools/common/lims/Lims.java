@@ -72,7 +72,7 @@ public class Lims {
         final LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             try {
-                return Double.parseDouble(sampleData.tumorPercentage()) / 100D;
+                return Double.parseDouble(sampleData.tumorPercentageString()) / 100D;
             } catch (final NumberFormatException e) {
                 return null;
             }

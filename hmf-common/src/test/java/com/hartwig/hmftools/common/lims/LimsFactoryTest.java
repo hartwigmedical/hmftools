@@ -18,7 +18,7 @@ public class LimsFactoryTest {
 
     private static final String LIMS_RESOURCES = Resources.getResource("lims").getPath();
     private static final String LIMS_JSON = LIMS_RESOURCES + File.separator + "lims_test.json";
-    private static final String PRE_HMF_ARRIVAL_DATES_CSV = LIMS_RESOURCES + File.separator + "preHMFArrivalDates.csv";
+    private static final String PRE_HMF_ARRIVAL_DATES_CSV = LIMS_RESOURCES + File.separator + "pre_hmf_arrival_dates.csv";
 
     @Test
     public void canBuildLimsFromTestData() throws IOException {
@@ -38,13 +38,13 @@ public class LimsFactoryTest {
         final LimsJsonData refData = dataPerSample.get("SAMP01010003R");
         assertEquals("2016-01-02", refData.samplingDateString());
         assertEquals("2016-01-03", refData.arrivalDateString());
-        assertEquals("NA", refData.tumorPercentage());
+        assertEquals("NA", refData.tumorPercentageString());
         assertEquals("PREP013V23-QC037V20-SEQ008V25", refData.labProcedures());
 
         final LimsJsonData tumorData = dataPerSample.get("SAMP01010003T");
         assertEquals("2016-01-04", tumorData.samplingDateString());
         assertEquals("2016-02-05", tumorData.arrivalDateString());
-        assertEquals("30", tumorData.tumorPercentage());
+        assertEquals("30", tumorData.tumorPercentageString());
         assertEquals("N/A", tumorData.labProcedures());
     }
 
