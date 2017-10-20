@@ -104,9 +104,9 @@ public abstract class PatientReporter {
         final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
-        final SampleReport sampleReport = ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.barcodeForSample(sample),
-                limsModel.bloodBarcodeForSample(sample), limsModel.arrivalDateForSample(sample),
-                limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
+        final SampleReport sampleReport =
+                ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.arrivalDateForSample(sample),
+                        limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
         return ImmutableSequencedPatientReport.of(sampleReport, purpleEnrichedVariants, svAnalysis.fusions(), svAnalysis.disruptions(),
                 copyNumberAnalysis.findings(), mutationalLoad, purpleAnalysis.purityString(), alterations, Optional.ofNullable(comments),
                 baseReporterData().signaturePath());

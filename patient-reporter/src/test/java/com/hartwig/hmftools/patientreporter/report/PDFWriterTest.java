@@ -256,8 +256,8 @@ public class PDFWriterTest {
     @NotNull
     private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException, EmptyFileException {
         final String sample = "CPCT02991111T";
-        return ImmutableSampleReport.of(sample, "Melanoma", pathologyTumorPercentage, "FC000001", "CSB000001",
-                LocalDate.parse("05-Jan-2016", FORMATTER), LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
+        return ImmutableSampleReport.of(sample, "Melanoma", pathologyTumorPercentage, LocalDate.parse("05-Jan-2016", FORMATTER),
+                LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
                 testBaseReporterData().centerModel().getAddresseeStringForSample(sample));
     }
 }

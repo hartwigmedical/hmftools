@@ -32,9 +32,9 @@ public abstract class NotSequenceableReporter {
         final LimsJsonModel limsModel = baseReporterData().limsModel();
         final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
-        final SampleReport sampleReport = ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.barcodeForSample(sample),
-                limsModel.bloodBarcodeForSample(sample), limsModel.arrivalDateForSample(sample),
-                limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
+        final SampleReport sampleReport =
+                ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.arrivalDateForSample(sample),
+                        limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
         return ImmutableNotSequencedPatientReport.of(sampleReport, reason, study, Optional.ofNullable(comments),
                 baseReporterData().signaturePath());
     }

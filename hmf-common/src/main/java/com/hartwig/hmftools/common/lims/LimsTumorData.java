@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class LimsTumorData implements LimsData {
+public abstract class LimsTumorData implements LimsData {
     @Nullable
     @Value.Parameter
     public abstract LocalDate samplingDate();

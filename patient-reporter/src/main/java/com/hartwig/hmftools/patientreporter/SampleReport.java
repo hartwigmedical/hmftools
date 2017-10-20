@@ -26,12 +26,6 @@ public abstract class SampleReport {
     }
 
     @Nullable
-    public abstract String tumorBarcode();
-
-    @Nullable
-    public abstract String bloodBarcode();
-
-    @Nullable
     public abstract LocalDate tumorArrivalDate();
 
     @Nullable
