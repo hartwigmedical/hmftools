@@ -5,6 +5,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +15,9 @@ import org.jetbrains.annotations.Nullable;
 public class Lims {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsJsonModel.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    @VisibleForTesting
+    static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @NotNull
     private final Map<String, LimsJsonData> dataPerSample;
@@ -83,10 +87,7 @@ public class Lims {
     }
 
     @Nullable
-    private static LocalDate getNullableDate(@Nullable final String dateString) {
-        if (dateString == null) {
-            return null;
-        }
+    private static LocalDate getNullableDate(@NotNull final String dateString) {
         try {
             return LocalDate.parse(dateString, DATE_FORMATTER);
         } catch (DateTimeParseException e) {
