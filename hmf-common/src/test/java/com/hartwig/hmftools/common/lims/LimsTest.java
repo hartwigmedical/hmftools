@@ -47,10 +47,10 @@ public class LimsTest {
     }
 
     @Test
-    public void fallBackOnPreHMFArrivalDateWorks() {
+    public void fallBackOnPreLIMSArrivalDateWorks() {
         final LocalDate date = LimsTestUtil.toDate("2017-10-03");
 
-        final Lims lims = buildTestLimsWithPreHMFArrivalDateForSample(SAMPLE, date);
+        final Lims lims = buildTestLimsWithPreLIMSArrivalDateForSample(SAMPLE, date);
 
         assertEquals(date, lims.arrivalDateForSample(SAMPLE));
         assertNull(lims.samplingDateForSample(SAMPLE));
@@ -76,17 +76,17 @@ public class LimsTest {
     private static Lims buildTestLimsWithJsonData(@NotNull final String sample, @NotNull final LimsJsonData data) {
         final Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
         dataPerSample.put(sample, data);
-        final Map<String, LocalDate> preHmfArrivalDates = Maps.newHashMap();
+        final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
 
-        return new Lims(dataPerSample, preHmfArrivalDates);
+        return new Lims(dataPerSample, preLIMSArrivalDates);
     }
 
     @NotNull
-    private static Lims buildTestLimsWithPreHMFArrivalDateForSample(@NotNull final String sample, @NotNull final LocalDate date) {
+    private static Lims buildTestLimsWithPreLIMSArrivalDateForSample(@NotNull final String sample, @NotNull final LocalDate date) {
         final Map<String, LimsJsonData> dataPerSample = Maps.newHashMap();
-        final Map<String, LocalDate> preHmfArrivalDates = Maps.newHashMap();
-        preHmfArrivalDates.put(sample, date);
+        final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
+        preLIMSArrivalDates.put(sample, date);
 
-        return new Lims(dataPerSample, preHmfArrivalDates);
+        return new Lims(dataPerSample, preLIMSArrivalDates);
     }
 }

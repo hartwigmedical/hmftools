@@ -22,12 +22,12 @@ public class Lims {
     @NotNull
     private final Map<String, LimsJsonData> dataPerSample;
     @NotNull
-    private final Map<String, LocalDate> preHmfArrivalDates;
+    private final Map<String, LocalDate> preLimsArrivalDates;
 
     @VisibleForTesting
-    Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preHmfArrivalDates) {
+    Lims(@NotNull final Map<String, LimsJsonData> dataPerSample, @NotNull final Map<String, LocalDate> preLimsArrivalDates) {
         this.dataPerSample = dataPerSample;
-        this.preHmfArrivalDates = preHmfArrivalDates;
+        this.preLimsArrivalDates = preLimsArrivalDates;
     }
 
     public int sampleCount() {
@@ -44,7 +44,7 @@ public class Lims {
                 LOGGER.warn("LIMS arrival date: " + sampleData.arrivalDateString() + " is not a valid date.");
             }
         } else {
-            arrivalDate = preHmfArrivalDates.get(sample);
+            arrivalDate = preLimsArrivalDates.get(sample);
         }
 
         if (arrivalDate == null) {

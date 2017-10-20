@@ -18,12 +18,12 @@ public class LimsFactoryTest {
 
     private static final String LIMS_RESOURCES = Resources.getResource("lims").getPath();
     private static final String LIMS_JSON = LIMS_RESOURCES + File.separator + "lims_test.json";
-    private static final String PRE_HMF_ARRIVAL_DATES_CSV = LIMS_RESOURCES + File.separator + "pre_hmf_arrival_dates.csv";
+    private static final String PRE_LIMS_ARRIVAL_DATES_CSV = LIMS_RESOURCES + File.separator + "pre_lims_arrival_dates.csv";
 
     @Test
     public void canBuildLimsFromTestData() throws IOException {
         assertNotNull(LimsFactory.fromLimsJson(LIMS_JSON));
-        assertNotNull(LimsFactory.fromLimsJsonWithPreHMFArrivalDates(LIMS_JSON, PRE_HMF_ARRIVAL_DATES_CSV));
+        assertNotNull(LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(LIMS_JSON, PRE_LIMS_ARRIVAL_DATES_CSV));
     }
 
     @Test(expected = FileNotFoundException.class)
@@ -49,14 +49,14 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readCorrectlyFromPreHMFArrivalDateFile() throws IOException {
-        final Map<String, LocalDate> preHMFArrivalDates = LimsFactory.readPreHMFArrivalDateCsv(PRE_HMF_ARRIVAL_DATES_CSV);
+    public void readCorrectlyFromPreLIMSArrivalDateFile() throws IOException {
+        final Map<String, LocalDate> preLIMSArrivalDates = LimsFactory.readPreLIMSArrivalDateCsv(PRE_LIMS_ARRIVAL_DATES_CSV);
 
-        assertNull(preHMFArrivalDates.get("SAMP01010001T"));
-        assertEquals(LimsTestUtil.toDate("2017-01-01"), preHMFArrivalDates.get("SAMP01010003R"));
-        assertEquals(LimsTestUtil.toDate("2017-01-05"), preHMFArrivalDates.get("SAMP01010004T"));
-        assertNull(preHMFArrivalDates.get("SAMP01010005T"));
-        assertNull(preHMFArrivalDates.get("SAMP01010006R"));
-        assertNull(preHMFArrivalDates.get("DoesNotExist"));
+        assertNull(preLIMSArrivalDates.get("SAMP01010001T"));
+        assertEquals(LimsTestUtil.toDate("2017-01-01"), preLIMSArrivalDates.get("SAMP01010003R"));
+        assertEquals(LimsTestUtil.toDate("2017-01-05"), preLIMSArrivalDates.get("SAMP01010004T"));
+        assertNull(preLIMSArrivalDates.get("SAMP01010005T"));
+        assertNull(preLIMSArrivalDates.get("SAMP01010006R"));
+        assertNull(preLIMSArrivalDates.get("DoesNotExist"));
     }
 }

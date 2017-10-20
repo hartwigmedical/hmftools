@@ -49,7 +49,7 @@ public final class LoadClinicalData {
     private static final String DB_URL = "db_url";
     private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
     private static final String LIMS_JSON = "lims_json";
-    private static final String PRE_HMF_ARRIVAL_DATES_CSV = "pre_hmf_arrival_dates_csv";
+    private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates_csv";
     private static final String FORM_STATUS_CSV = "form_status_csv";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
@@ -99,10 +99,10 @@ public final class LoadClinicalData {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String treatmentTypeCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
-        final String preHMFArrivalDatesCsv = cmd.getOptionValue(PRE_HMF_ARRIVAL_DATES_CSV);
+        final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
         final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentTypeCsv, limsJson, preHMFArrivalDatesCsv, formStatusCsv)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentTypeCsv, limsJson, preLIMSArrivalDatesCsv, formStatusCsv)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", clinicalOptions);
         } else {
@@ -110,7 +110,7 @@ public final class LoadClinicalData {
             dbWriter.clearClinicalTables();
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusCsv);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            final Lims lims = LimsFactory.fromLimsJsonWithPreHMFArrivalDates(limsJson, preHMFArrivalDatesCsv);
+            final Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
             final PatientReader patientReader = new PatientReader(model, readTreatmentToTypeMappingFile(treatmentTypeCsv), lims);
 
             final Set<String> cpctPatientIds = runContexts.stream()
@@ -213,7 +213,7 @@ public final class LoadClinicalData {
     private static Options createLimsOptions() {
         final Options options = new Options();
         options.addOption(LIMS_JSON, true, "Path towards the LIMS json file.");
-        options.addOption(PRE_HMF_ARRIVAL_DATES_CSV, true, "Path towards the pre-HMF arrival date csv.");
+        options.addOption(PRE_LIMS_ARRIVAL_DATES_CSV, true, "Path towards the pre-HMF arrival date csv.");
         return options;
     }
 

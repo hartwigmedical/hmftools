@@ -36,9 +36,9 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsJsonWithPreHMFArrivalDates(@NotNull final String limsJsonPath,
-            @NotNull final String preHMFArrivalDatesCsvPath) throws IOException {
-        return new Lims(readLimsJson(limsJsonPath), readPreHMFArrivalDateCsv(preHMFArrivalDatesCsvPath));
+    public static Lims fromLimsJsonWithPreLIMSArrivalDates(@NotNull final String limsJsonPath,
+            @NotNull final String preLIMSArrivalDatesCsvPath) throws IOException {
+        return new Lims(readLimsJson(limsJsonPath), readPreLIMSArrivalDateCsv(preLIMSArrivalDatesCsvPath));
     }
 
     @NotNull
@@ -69,9 +69,9 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LocalDate> readPreHMFArrivalDateCsv(@NotNull final String preHMFArrivalDatesCsvPath) throws IOException {
+    static Map<String, LocalDate> readPreLIMSArrivalDateCsv(@NotNull final String preLIMSArrivalDatesCsvPath) throws IOException {
         final Map<String, LocalDate> arrivalDatesPerSample = Maps.newHashMap();
-        final List<String> lines = Files.lines(Paths.get(preHMFArrivalDatesCsvPath)).collect(Collectors.toList());
+        final List<String> lines = Files.lines(Paths.get(preLIMSArrivalDatesCsvPath)).collect(Collectors.toList());
         for (final String line : lines) {
             final String[] parts = line.split(",");
 
