@@ -11,7 +11,8 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.lims.LimsJsonModel;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,9 +38,9 @@ public final class PatientReporterTestUtil {
         final CpctEcrfModel ecrfModel = new CpctEcrfModel(
                 ImmutableXMLEcrfDatamodel.of(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(),
                         Lists.newArrayList()), Lists.newArrayList());
-        final LimsJsonModel limsModel = LimsJsonModel.buildEmptyModel();
+        final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(centerPath);
 
-        return ImmutableBaseReporterData.of(ecrfModel, limsModel, centerModel, SIGNATURE_PATH);
+        return ImmutableBaseReporterData.of(ecrfModel, lims, centerModel, SIGNATURE_PATH);
     }
 }

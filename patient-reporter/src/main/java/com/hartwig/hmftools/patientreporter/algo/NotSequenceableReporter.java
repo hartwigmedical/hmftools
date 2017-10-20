@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.io.IOException;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.lims.LimsJsonModel;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
@@ -29,12 +29,12 @@ public abstract class NotSequenceableReporter {
         final NotSequenceableStudy study = NotSequenceableStudy.fromSample(sample);
         assert study != null;
         final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), sample);
-        final LimsJsonModel limsModel = baseReporterData().limsModel();
-        final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
+        final Lims lims = baseReporterData().limsModel();
+        final Double tumorPercentage = lims.tumorPercentageForSample(sample);
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
         final SampleReport sampleReport =
-                ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.arrivalDateForSample(sample),
-                        limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
+                ImmutableSampleReport.of(sample, tumorType, tumorPercentage, lims.arrivalDateForSample(sample), null,
+                        lims.labProceduresForSample(sample), sampleRecipient);
         return ImmutableNotSequencedPatientReport.of(sampleReport, reason, study, Optional.ofNullable(comments),
                 baseReporterData().signaturePath());
     }

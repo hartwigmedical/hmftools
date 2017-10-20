@@ -73,17 +73,17 @@ public class PDFWriter implements ReportWriter {
     public void writeSequenceReport(@NotNull final SequencedPatientReport report, @NotNull final HmfReporterData reporterData)
             throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generatePatientReport(report, reporterData);
-        writeReport(fileName(report.sampleReport().sampleCode(), "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), "_hmf_report.pdf"), reportBuilder);
         final JasperReportBuilder supplementaryBuilder = generateSupplementaryReport(report);
-        writeReport(fileName(report.sampleReport().sampleCode(), "_hmf_report_supplementary.pdf"), supplementaryBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), "_hmf_report_supplementary.pdf"), supplementaryBuilder);
         final JasperReportBuilder evidenceReportBuilder = EvidenceReport.generate(report);
-        writeReport(fileName(report.sampleReport().sampleCode(), "_evidence_items.pdf"), evidenceReportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), "_evidence_items.pdf"), evidenceReportBuilder);
     }
 
     @Override
     public void writeNonSequenceableReport(@NotNull final NotSequencedPatientReport report) throws IOException, DRException {
         final JasperReportBuilder reportBuilder = generateNotSequenceableReport(report);
-        writeReport(fileName(report.sampleReport().sampleCode(), "_hmf_report.pdf"), reportBuilder);
+        writeReport(fileName(report.sampleReport().sampleId(), "_hmf_report.pdf"), reportBuilder);
     }
 
     private void writeReport(@NotNull final String fileName, @NotNull final JasperReportBuilder report)
@@ -236,7 +236,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> mainPageNotSequenceableSection(@NotNull final NotSequencedPatientReport report) {
         if (report.sampleReport().recipient() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleCode());
+            throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleId());
         }
 
         final String title;
@@ -521,7 +521,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> sampleDetailsSection(@NotNull final PatientReport report) {
         if (report.sampleReport().recipient() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleCode());
+            throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleId());
         }
         final List<String> lines = Lists.newArrayList();
 

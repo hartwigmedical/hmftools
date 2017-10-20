@@ -23,7 +23,7 @@ public class MainPageTopSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final SampleReport report) throws IOException {
-        return build(title, report.sampleCode(), report.tumorType(), report.tumorPercentageString());
+        return build(title, report.sampleId(), report.tumorType(), report.tumorPercentageString());
     }
 
     @NotNull

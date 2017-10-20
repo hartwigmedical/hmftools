@@ -30,6 +30,10 @@ public class Lims {
         this.preHmfArrivalDates = preHmfArrivalDates;
     }
 
+    public int sampleCount() {
+        return dataPerSample.size();
+    }
+
     @Nullable
     public LocalDate arrivalDateForSample(@NotNull final String sample) {
         final LimsJsonData sampleData = dataPerSample.get(sample);

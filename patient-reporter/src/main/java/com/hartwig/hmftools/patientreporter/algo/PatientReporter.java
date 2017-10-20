@@ -5,10 +5,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
+import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.lims.LimsJsonModel;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -63,9 +65,11 @@ public abstract class PatientReporter {
     @NotNull
     public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments)
             throws IOException, HartwigException {
+        final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
         final GenomeAnalysis genomeAnalysis = analyseGenomeData(runDirectory);
+        assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
 
-        final String sample = genomeAnalysis.sample();
+        final String tumorSample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
         final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
@@ -77,7 +81,7 @@ public abstract class PatientReporter {
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int potentialMNVCount = variantAnalysis.potentialConsequentialMNVs().size();
         final int svCount = svAnalysis.annotations().size();
-        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), sample);
+        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), tumorSample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations =
@@ -100,13 +104,13 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(svAnalysis.disruptions().size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
 
-        final LimsJsonModel limsModel = baseReporterData().limsModel();
-        final Double tumorPercentage = limsModel.tumorPercentageForSample(sample);
+        final Lims lims = baseReporterData().limsModel();
+        final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
-        final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(sample);
+        final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
         final SampleReport sampleReport =
-                ImmutableSampleReport.of(sample, tumorType, tumorPercentage, limsModel.arrivalDateForSample(sample),
-                        limsModel.bloodArrivalDateForSample(sample), limsModel.labProceduresForSample(sample), sampleRecipient);
+                ImmutableSampleReport.of(tumorSample, tumorType, tumorPercentage, lims.arrivalDateForSample(tumorSample),
+                        lims.arrivalDateForSample(run.refSample()), lims.labProceduresForSample(tumorSample), sampleRecipient);
         return ImmutableSequencedPatientReport.of(sampleReport, purpleEnrichedVariants, svAnalysis.fusions(), svAnalysis.disruptions(),
                 copyNumberAnalysis.findings(), mutationalLoad, purpleAnalysis.purityString(), alterations, Optional.ofNullable(comments),
                 baseReporterData().signaturePath());

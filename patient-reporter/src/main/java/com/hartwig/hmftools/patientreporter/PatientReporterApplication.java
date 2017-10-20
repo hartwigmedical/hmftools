@@ -13,7 +13,8 @@ import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.lims.LimsJsonModel;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableNotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.ImmutablePatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
@@ -109,10 +110,10 @@ public class PatientReporterApplication {
                 CpctEcrfModel.loadFromXML(cmd.getOptionValue(CPCT_ECRF), new ImmutableFormStatusModel(Maps.newHashMap()));
         LOGGER.info("  Loaded data for {} patients.", cpctEcrfModel.patientCount());
         LOGGER.info(" Loading LIMS database...");
-        final LimsJsonModel limsModel = LimsJsonModel.readModelFromFile(cmd.getOptionValue(LIMS_JSON));
-        LOGGER.info("  Loaded data for {} samples.", limsModel.dataPerSample().size());
+        final Lims lims = LimsFactory.fromLimsJson(cmd.getOptionValue(LIMS_JSON));
+        LOGGER.info("  Loaded data for {} samples.", lims.sampleCount());
         final CenterModel centerModel = Center.readFromCSV(cmd.getOptionValue(CENTER_CSV));
-        return ImmutableBaseReporterData.of(cpctEcrfModel, limsModel, centerModel, cmd.getOptionValue(SIGNATURE));
+        return ImmutableBaseReporterData.of(cpctEcrfModel, lims, centerModel, cmd.getOptionValue(SIGNATURE));
     }
 
     @NotNull

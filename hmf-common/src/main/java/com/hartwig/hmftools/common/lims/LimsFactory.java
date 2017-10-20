@@ -42,6 +42,11 @@ public final class LimsFactory {
     }
 
     @NotNull
+    public static Lims empty() {
+        return new Lims(Maps.newHashMap(), Maps.newHashMap());
+    }
+
+    @NotNull
     @VisibleForTesting
     static Map<String, LimsJsonData> readLimsJson(@NotNull final String limsJsonPath) throws FileNotFoundException {
         final Gson gson = LimsGsonAdapter.buildGson();

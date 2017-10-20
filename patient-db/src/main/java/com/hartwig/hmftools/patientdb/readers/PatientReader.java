@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
@@ -30,33 +31,36 @@ public class PatientReader {
     @NotNull
     private final CpctPatientReader cpctPatientReader;
     @NotNull
-    private final SampleReader sampleReader;
+    private final LimsSampleReader limsSampleReader;
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
     public PatientReader(@NotNull final CpctEcrfModel model, @NotNull final Map<String, String> treatmentToTypeMappings,
-            @NotNull final String limsJson, @NotNull final String limsOldCsv, @NotNull final String umcuCsv)
+            @NotNull final Lims lims)
             throws IOException, HartwigException {
         cpctPatientReader = new CpctPatientReader(model);
-        sampleReader = new SampleReader(limsJson, limsOldCsv, umcuCsv);
+        limsSampleReader = new LimsSampleReader(lims);
         biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentToTypeMappings);
     }
 
     @NotNull
     public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<String> tumorSamplesForPatient)
             throws IOException, HartwigException {
-        LOGGER.info("Reading patient " + ecrfPatient.patientId() + ": Samples: " + tumorSamplesForPatient);
-        final List<SampleData> sequencedBiopsies = sampleReader.read(tumorSamplesForPatient);
+        LOGGER.info("Analyzing patient " + ecrfPatient.patientId() + " with samples: " + tumorSamplesForPatient);
+
+        final List<SampleData> sequencedBiopsies = limsSampleReader.read(tumorSamplesForPatient);
         final PatientData patientData = cpctPatientReader.read(ecrfPatient);
         final List<BiopsyData> clinicalBiopsies = BiopsyReader.read(ecrfPatient);
         final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
         final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
+
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), clinicalBiopsies, treatments);
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(ecrfPatient.patientId(), treatments, treatmentResponses);
+
         final List<ValidationFinding> findings = Lists.newArrayList();
         findings.addAll(matchedBiopsies.findings());
         findings.addAll(matchedTreatments.findings());

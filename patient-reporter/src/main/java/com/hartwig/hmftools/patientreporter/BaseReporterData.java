@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import com.hartwig.hmftools.common.center.CenterModel;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.lims.LimsJsonModel;
+import com.hartwig.hmftools.common.lims.Lims;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +16,7 @@ public abstract class BaseReporterData {
     public abstract CpctEcrfModel cpctEcrfModel();
 
     @NotNull
-    public abstract LimsJsonModel limsModel();
+    public abstract Lims limsModel();
 
     @NotNull
     public abstract CenterModel centerModel();

@@ -21,6 +21,8 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.reader.FileReader;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
@@ -47,17 +49,15 @@ public final class LoadClinicalData {
     private static final String DB_URL = "db_url";
     private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
     private static final String LIMS_JSON = "lims_json";
-    private static final String LIMS_OLD_CSV = "lims_old_csv";
-    private static final String LIMS_UMCU_CSV = "lims_umcu_csv";
-    private static final String CLINICAL = "clinical";
-    private static final String RAW_ECRF = "raw_ecrf";
-    private static final String FORM_STATUS_FILE = "form_status";
+    private static final String PRE_HMF_ARRIVAL_DATES_CSV = "pre_hmf_arrival_dates_csv";
+    private static final String FORM_STATUS_CSV = "form_status_csv";
+    private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
             HartwigException {
         final Options basicOptions = createBasicOptions();
-        final Options clinicalOptions = createClinicalOptions();
+        final Options clinicalOptions = createLimsOptions();
         final Options ecrfOptions = createEcrfOptions();
         final Options options = mergeOptions(basicOptions, clinicalOptions, ecrfOptions);
         final CommandLine cmd = createCommandLine(args, options);
@@ -66,10 +66,9 @@ public final class LoadClinicalData {
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
         final String jdbcUrl = "jdbc:" + databaseUrl;
-        final boolean clinical = cmd.hasOption(CLINICAL);
-        final boolean raw_ecrf = cmd.hasOption(RAW_ECRF);
+        final boolean raw_ecrf = cmd.hasOption(DO_LOAD_RAW_ECRF);
 
-        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl) || (!clinical && !raw_ecrf)) {
+        if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", basicOptions);
         } else {
@@ -78,11 +77,10 @@ public final class LoadClinicalData {
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
                 if (raw_ecrf) {
-                    writeEcrf(ecrfOptions, cmd, runContexts, dbWriter);
+                    writeRawEcrf(ecrfOptions, cmd, runContexts, dbWriter);
                 }
-                if (clinical) {
-                    writeClinicalData(clinicalOptions, cmd, runContexts, dbWriter);
-                }
+
+                writeClinicalData(clinicalOptions, cmd, runContexts, dbWriter);
             } else {
                 if (!runDirectory.exists()) {
                     LOGGER.warn("dir " + runDirectory + " does not exist.");
@@ -98,27 +96,27 @@ public final class LoadClinicalData {
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
             HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String treatmentToTypeMappingCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
+        final String treatmentTypeCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
-        final String limsOldCsv = cmd.getOptionValue(LIMS_OLD_CSV);
-        final String limsUmcuCsv = cmd.getOptionValue(LIMS_UMCU_CSV);
-        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_FILE);
+        final String preHMFArrivalDatesCsv = cmd.getOptionValue(PRE_HMF_ARRIVAL_DATES_CSV);
+        final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentToTypeMappingCsv, limsJson, limsOldCsv, limsUmcuCsv, formStatusPath)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentTypeCsv, limsJson, preHMFArrivalDatesCsv, formStatusCsv)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -" + CLINICAL, clinicalOptions);
+            formatter.printHelp("patient-db", clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
             dbWriter.clearClinicalTables();
-            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
+            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusCsv);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            final PatientReader patientReader =
-                    new PatientReader(model, readTreatmentToTypeMappingFile(treatmentToTypeMappingCsv), limsJson, limsOldCsv, limsUmcuCsv);
+            final Lims lims = LimsFactory.fromLimsJsonWithPreHMFArrivalDates(limsJson, preHMFArrivalDatesCsv);
+            final PatientReader patientReader = new PatientReader(model, readTreatmentToTypeMappingFile(treatmentTypeCsv), lims);
+
             final Set<String> cpctPatientIds = runContexts.stream()
                     .map(runContext -> getPatientId(runContext.setName()))
                     .filter(patientId -> patientId.startsWith("CPCT"))
                     .collect(Collectors.toSet());
-            LOGGER.info("Reading CPCT clinical data for " + cpctPatientIds.size() + " patients.");
+            LOGGER.info("Writing CPCT clinical data for " + cpctPatientIds.size() + " patients.");
             for (final String patientId : cpctPatientIds) {
                 final EcrfPatient patient = model.findPatientById(patientId);
                 if (patient == null) {
@@ -136,25 +134,25 @@ public final class LoadClinicalData {
         }
     }
 
-    private static void writeEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
+    private static void writeRawEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
             @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
             HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_FILE);
+        final String formStatusPath = cmd.getOptionValue(FORM_STATUS_CSV);
         if (Utils.anyNull(ecrfFilePath, formStatusPath)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db -" + RAW_ECRF, ecrfOptions);
+            formatter.printHelp("patient-db -" + DO_LOAD_RAW_ECRF, ecrfOptions);
         } else {
             dbWriter.clearEcrf();
-            LOGGER.info("loading ecrf model...");
+            LOGGER.info("Loading ecrf model...");
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            LOGGER.info("done loading ecrf model...");
             final Set<String> cpctPatientIds =
                     runContexts.stream().map(runContext -> getPatientId(runContext.setName())).collect(Collectors.toSet());
+            LOGGER.info("Writing raw ecrf data for " + cpctPatientIds.size() + " patients.");
             dbWriter.writeEcrf(model, cpctPatientIds);
-            LOGGER.info("Done!");
+            LOGGER.info("Done writing raw ecrf data for " + cpctPatientIds.size() + " patients!");
         }
     }
 
@@ -206,20 +204,15 @@ public final class LoadClinicalData {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(CLINICAL, false, "Read/write clinical data.");
-        options.addOption(RAW_ECRF, false, "Read/write ecrf data.");
+        options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
         return options;
     }
 
     @NotNull
-    private static Options createClinicalOptions() {
+    private static Options createLimsOptions() {
         final Options options = new Options();
-        options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
-        options.addOption(TREATMENT_TYPES_CSV, true, "Path towards the .csv file that maps treatment names to treatment types.");
-        options.addOption(LIMS_JSON, true, "Path towards the LIMS .json file.");
-        options.addOption(LIMS_OLD_CSV, true, "Path towards the LIMS-old .csv file.");
-        options.addOption(LIMS_UMCU_CSV, true, "Path towards the LIMS-UMCU .csv file.");
-        options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
+        options.addOption(LIMS_JSON, true, "Path towards the LIMS json file.");
+        options.addOption(PRE_HMF_ARRIVAL_DATES_CSV, true, "Path towards the pre-HMF arrival date csv.");
         return options;
     }
 
@@ -227,7 +220,8 @@ public final class LoadClinicalData {
     private static Options createEcrfOptions() {
         final Options options = new Options();
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
-        options.addOption(FORM_STATUS_FILE, true, "Path towards the form status .csv file.");
+        options.addOption(FORM_STATUS_CSV, true, "Path towards the form status csv file.");
+        options.addOption(TREATMENT_TYPES_CSV, true, "Path towards the csv file that maps treatment names to treatment types.");
         return options;
     }
 
