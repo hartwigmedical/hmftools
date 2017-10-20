@@ -74,6 +74,7 @@ public final class LoadClinicalData {
         } else {
             final File runDirectory = new File(runsFolderPath);
             if (runDirectory.isDirectory()) {
+                LOGGER.info("Running clinical data import.");
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
                 if (raw_ecrf) {
