@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
-public class LimsTest {
+public class LimsCsvTest {
 
     private static final String LIMS_EXAMPLE_FILE = Resources.getResource("lims").getPath() + File.separator + "LimsExample.csv";
     private static final double EPSILON = 1.0e-10;
