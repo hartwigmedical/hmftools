@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCsv;
 import com.hartwig.hmftools.common.lims.LimsData;
 import com.hartwig.hmftools.common.lims.LimsJsonModel;
 import com.hartwig.hmftools.common.lims.LimsModel;
@@ -36,9 +36,9 @@ class SampleReader {
         LOGGER.info("Reading lims file: " + limsJson);
         this.limsModel = LimsJsonModel.readModelFromFile(limsJson);
         LOGGER.info("Reading lims file: " + limsOldCsv);
-        this.limsOldModel = Lims.buildModelFromCsv(limsOldCsv, LIMS_DATE_FORMATTER);
+        this.limsOldModel = LimsCsv.buildModelFromCsv(limsOldCsv, LIMS_DATE_FORMATTER);
         LOGGER.info("Reading lims file: " + limsUmcuCsv);
-        this.limsUmcuModel = Lims.buildModelFromCsv(limsUmcuCsv, LIMS_DATE_FORMATTER);
+        this.limsUmcuModel = LimsCsv.buildModelFromCsv(limsUmcuCsv, LIMS_DATE_FORMATTER);
     }
 
     @NotNull

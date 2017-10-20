@@ -19,14 +19,14 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Lims {
+public final class LimsCsv {
 
-    private static final Logger LOGGER = LogManager.getLogger(Lims.class);
+    private static final Logger LOGGER = LogManager.getLogger(LimsCsv.class);
 
     private static final String SAMPLE_BASE_REGEX = "[A-Z]+[0-9]+[A-Z]?";
     private static final String SAMPLE_NUMBER_REGEX = "[0-9IVX]*";
 
-    private Lims() {
+    private LimsCsv() {
     }
 
     @NotNull
@@ -102,10 +102,5 @@ public final class Lims {
         } catch (DateTimeParseException e) {
             return null;
         }
-    }
-
-    @NotNull
-    public static LimsModel buildEmptyModel() {
-        return new LimsModel(Maps.newHashMap());
     }
 }

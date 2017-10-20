@@ -24,7 +24,7 @@ public class LimsTest {
 
     @Test
     public void canLoadFromCsv() throws IOException, EmptyFileException {
-        final LimsModel limsModel = Lims.buildModelFromCsv(LIMS_EXAMPLE_FILE, dateFormatter);
+        final LimsModel limsModel = LimsCsv.buildModelFromCsv(LIMS_EXAMPLE_FILE, dateFormatter);
 
         final Map<String, LimsData> dataPerSample = limsModel.data();
         assertEquals(4, dataPerSample.size());
