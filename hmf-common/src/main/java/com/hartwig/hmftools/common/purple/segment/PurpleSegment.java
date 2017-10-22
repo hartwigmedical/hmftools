@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
+@Value.Modifiable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleSegment implements GenomeRegion {
@@ -25,4 +26,6 @@ public abstract class PurpleSegment implements GenomeRegion {
 
     public abstract StructuralVariantSupport structuralVariantSupport();
 
+    //TODO: Remove(internal to PSFN)
+    public abstract long maxBoundary();
 }

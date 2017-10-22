@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
@@ -44,6 +46,8 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryNew;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantCluster;
 import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
@@ -63,6 +67,8 @@ import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
+import com.hartwig.hmftools.purple.segment.RatioBreakPoints;
+import com.hartwig.hmftools.purple.segment.StructuralBreakpoints;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -98,6 +104,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+    private static final String EXPERIMENTAL = "experimental";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -132,7 +139,7 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Load Ratios from COBALT
             final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
             LOGGER.info("Reading cobalt ratios from {}", ratioFilename);
-            final Multimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
+            final ListMultimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
 
             // Gender
             final Gender amberGender = Gender.fromAmber(bafs);
@@ -149,10 +156,18 @@ public class PurityPloidyEstimateApplication {
 
             // JOBA: Ratio Segmentation
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratios).get();
-            final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
+            final List<PurpleSegment> segments;
+            if (cmd.hasOption(EXPERIMENTAL)) {
+                final Multimap<String, PCFPosition> ratioSegments = RatioBreakPoints.createRatioSegments(config);
+                final Multimap<String, StructuralVariantCluster> svSegments =
+                        new StructuralBreakpoints(config).create(structuralVariants, ratios);
+                segments = PurpleSegmentFactoryNew.segment(svSegments, ratioSegments, lengths);
+            } else {
 
-            LOGGER.info("Merging structural variants into freec segmentation");
-            final List<PurpleSegment> segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
+                final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
+                LOGGER.info("Merging structural variants into freec segmentation");
+                segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
+            }
 
             LOGGER.info("Mapping all observations to the segmented regions");
             final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(amberGender);
@@ -306,6 +321,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(THREADS, true, "Number of threads (default 2)");
+        options.addOption(EXPERIMENTAL, false, "Anything goes!");
 
         return options;
     }

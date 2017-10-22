@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -25,7 +26,7 @@ public class CobaltRatioFile {
     }
 
     @NotNull
-    public static Multimap<String, CobaltRatio> read(@NotNull final String filename) throws IOException {
+    public static ListMultimap<String, CobaltRatio> read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
@@ -72,9 +73,9 @@ public class CobaltRatioFile {
     }
 
     @NotNull
-    private static Multimap<String, CobaltRatio> fromLines(@NotNull final List<String> lines) {
+    private static ListMultimap<String, CobaltRatio> fromLines(@NotNull final List<String> lines) {
 
-        final Multimap<String, CobaltRatio> result = ArrayListMultimap.create();
+        final ListMultimap<String, CobaltRatio> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith("Ch")) {
                 final CobaltRatio position = fromLine(line);

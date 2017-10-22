@@ -7,8 +7,6 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,22 +27,19 @@ public class PCFFile {
         return basePath + File.separator + sample + BAF_EXTENSION;
     }
 
-    public static Multimap<Chromosome, PCFPosition> readPositions(int windowSize, @NotNull final String filename) throws IOException {
-        Multimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
+    public static Multimap<String, PCFPosition> readPositions(int windowSize, @NotNull final String filename) throws IOException {
+        Multimap<String, PCFPosition> result = ArrayListMultimap.create();
         long end = 0;
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 String[] values = line.split(DELIMITER);
                 final String chromosomeName = values[1];
-                if (HumanChromosome.contains(chromosomeName)) {
-                    final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-                    long start = Long.valueOf(values[3]);
-                    if (start != end) {
-                        result.put(chromosome, position(chromosomeName, start));
-                    }
-                    end = Long.valueOf(values[4]) + windowSize;
-                    result.put(chromosome, position(chromosomeName, end));
+                long start = Long.valueOf(values[3]);
+                if (start != end) {
+                    result.put(chromosomeName, position(chromosomeName, start));
                 }
+                end = Long.valueOf(values[4]) + windowSize;
+                result.put(chromosomeName, position(chromosomeName, end));
             }
         }
 

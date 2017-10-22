@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class PurpleSegmentFactory {
 
     public static List<PurpleSegment> createSegments(List<GenomeRegion> regions, List<StructuralVariant> variants) {
-        return createSegmentsInner(regions, StructuralVariantPositions.createMinBaseFiltered(variants));
+        return createSegmentsInner(regions, StructuralVariantPositionFactory.createMinBaseFiltered(variants));
     }
 
     @VisibleForTesting
@@ -107,6 +107,7 @@ public class PurpleSegmentFactory {
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
+                .maxBoundary(end)
                 .ratioSupport(ratioSupport)
                 .structuralVariantSupport(svStart)
                 .build());

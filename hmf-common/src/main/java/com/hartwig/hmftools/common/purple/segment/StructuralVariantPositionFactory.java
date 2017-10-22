@@ -9,13 +9,13 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class StructuralVariantPositions {
+class StructuralVariantPositionFactory {
 
     private static final long MIN_BASES = 1000;
 
     @NotNull
     static List<StructuralVariantPosition> createMinBaseFiltered(@NotNull final List<StructuralVariant> variants) {
-        return create(variants.stream().filter(StructuralVariantPositions::include).collect(Collectors.toList()));
+        return create(variants.stream().filter(StructuralVariantPositionFactory::include).collect(Collectors.toList()));
     }
 
     @NotNull

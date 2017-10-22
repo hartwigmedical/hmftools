@@ -11,32 +11,41 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class StructuralVariantClusters {
+public class StructuralVariantClusterFactory {
 
     public final long windowSize;
 
-    public StructuralVariantClusters(final long windowSize) {
+    public StructuralVariantClusterFactory(final long windowSize) {
         this.windowSize = windowSize;
     }
 
-    public ListMultimap<String, StructuralVariantCluster> segment(Multimap<String, StructuralVariantPosition> variants,
+    @NotNull
+    public ListMultimap<String, StructuralVariantCluster> cluster(@NotNull final List<StructuralVariant> variants,
             ListMultimap<String, CobaltRatio> ratios) {
+        final Multimap<String, StructuralVariantPosition> positions = asMap(StructuralVariantPositionFactory.create(variants));
+        return cluster(positions, ratios);
+    }
+
+    @NotNull
+    public ListMultimap<String, StructuralVariantCluster> cluster(@NotNull final Multimap<String, StructuralVariantPosition> variants,
+            @NotNull final ListMultimap<String, CobaltRatio> ratios) {
 
         ListMultimap<String, StructuralVariantCluster> segments = ArrayListMultimap.create();
         for (String chromosome : variants.keySet()) {
             final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.EMPTY_LIST;
             final Collection<StructuralVariantPosition> chromosomeVariants = variants.get(chromosome);
-            segments.putAll(chromosome, segment(chromosomeVariants, chromosomeRatios));
+            segments.putAll(chromosome, cluster(chromosomeVariants, chromosomeRatios));
         }
 
         return segments;
     }
 
     @NotNull
-    List<StructuralVariantCluster> segment(@NotNull final Collection<StructuralVariantPosition> variants,
+    List<StructuralVariantCluster> cluster(@NotNull final Collection<StructuralVariantPosition> variants,
             @NotNull final List<CobaltRatio> ratios) {
 
         final List<StructuralVariantCluster> result = Lists.newArrayList();
@@ -97,4 +106,13 @@ public class StructuralVariantClusters {
         return position / windowSize * windowSize + 2 * windowSize;
     }
 
+    private static Multimap<String, StructuralVariantPosition> asMap(@NotNull final List<StructuralVariantPosition> variants) {
+        final Multimap<String, StructuralVariantPosition> result = ArrayListMultimap.create();
+
+        for (StructuralVariantPosition variant : variants) {
+            result.put(variant.chromosome(), variant);
+        }
+
+        return result;
+    }
 }

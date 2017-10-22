@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.position;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public class GenomePositionSelectorFactory {
 
     @NotNull
-    public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final List<P> positions) {
+    public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Collection<P> positions) {
         return new GenomePositionSelectorImpl<>(positions);
     }
 
