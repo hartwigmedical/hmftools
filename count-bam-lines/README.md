@@ -42,7 +42,7 @@ Arguments without default values are mandatory.
 ### Example Usage
 
 ```
-java -jar cobalt.jar -reference REFERENCE -reference_bam /run_dir/REFERENCE.bam -tumor TUMOR -reference_bam /run_dir/TUMOR.bam -output_dir /run_dir/cobalt -threads 24 -gc_profile /path/to/GC_profile.1000bp.cnp
+java -jar cobalt.jar -reference REFERENCE -reference_bam /run_dir/REFERENCE.bam -tumor TUMOR -tumor_bam /run_dir/TUMOR.bam -output_dir /run_dir/cobalt -threads 24 -gc_profile /path/to/GC_profile.1000bp.cnp
 ```
 
 
