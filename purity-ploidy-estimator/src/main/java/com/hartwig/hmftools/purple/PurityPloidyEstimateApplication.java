@@ -48,6 +48,7 @@ import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryNew;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantCluster;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantClusterFactory;
 import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
@@ -68,7 +69,6 @@ import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
 import com.hartwig.hmftools.purple.segment.RatioBreakPoints;
-import com.hartwig.hmftools.purple.segment.StructuralBreakpoints;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -160,7 +160,7 @@ public class PurityPloidyEstimateApplication {
             if (cmd.hasOption(EXPERIMENTAL)) {
                 final Multimap<String, GenomePosition> ratioSegments = RatioBreakPoints.createRatioSegments(config);
                 final Multimap<String, StructuralVariantCluster> svSegments =
-                        new StructuralBreakpoints(config).create(structuralVariants, ratios);
+                        new StructuralVariantClusterFactory(config.windowSize()).cluster(structuralVariants, ratios);
                 segments = PurpleSegmentFactoryNew.segment(svSegments, ratioSegments, lengths);
             } else {
 
