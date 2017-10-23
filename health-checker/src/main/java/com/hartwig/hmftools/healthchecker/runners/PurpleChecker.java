@@ -48,9 +48,10 @@ public class PurpleChecker extends ErrorHandlingChecker {
         if (runContext.isSomaticRun()) {
             final List<HealthCheck> checks = Lists.newArrayList();
 
+            checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(),
+                    HealthCheckConstants.ERROR_VALUE));
             checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.AMBER_GENDER.toString(), HealthCheckConstants.ERROR_VALUE));
             checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.COBALT_GENDER.toString(), HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), HealthCheckConstants.ERROR_VALUE));
 
             return toMultiValueResult(checks);
         } else {
@@ -63,5 +64,4 @@ public class PurpleChecker extends ErrorHandlingChecker {
         HealthCheck.log(LOGGER, checks);
         return new MultiValueResult(checkType(), checks);
     }
-
 }

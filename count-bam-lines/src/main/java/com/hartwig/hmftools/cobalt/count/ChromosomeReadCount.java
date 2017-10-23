@@ -28,19 +28,19 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
     private final long chromosomeLength;
     private final int windowSize;
     private final List<ReadCount> result = Lists.newArrayList();
-    private final int minQuality;
+    private final int minMappingQuality;
 
     private long start;
     private int count;
 
     ChromosomeReadCount(final File inputFile, final SamReaderFactory readerFactory, @NotNull final String chromosome,
-            final long chromosomeLength, final int windowSize, final int minQuality) {
+            final long chromosomeLength, final int windowSize, final int minMappingQuality) {
         this.inputFile = inputFile;
         this.readerFactory = readerFactory;
         this.chromosome = chromosome;
         this.chromosomeLength = chromosomeLength;
         this.windowSize = windowSize;
-        this.minQuality = minQuality;
+        this.minMappingQuality = minMappingQuality;
 
         start = 1;
         count = -1;
@@ -64,11 +64,8 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
     }
 
     List<ReadCount> readCount() {
-
-        // Finalise last record
         addReadCount(start, count);
 
-        // Add chromosome length
         long lastWindowPosition = lastWindowPosition();
         if (result.get(result.size() - 1).position() < lastWindowPosition) {
             addReadCount(lastWindowPosition, -1);
@@ -77,7 +74,7 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
         return result;
     }
 
-    private void addRecord(SAMRecord record) {
+    private void addRecord(@NotNull SAMRecord record) {
         if (isEligible(record)) {
 
             long window = windowPosition(record.getAlignmentStart());
@@ -94,8 +91,8 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
         result.add(ImmutableReadCount.builder().chromosome(chromosome).position(position).readCount(count).build());
     }
 
-    private boolean isEligible(SAMRecord record) {
-        return record.getMappingQuality() >= minQuality && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag()
+    private boolean isEligible(@NotNull SAMRecord record) {
+        return record.getMappingQuality() >= minMappingQuality && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag()
                 || record.isSecondaryOrSupplementary());
     }
 
@@ -111,5 +108,4 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
     static long windowPosition(long windowSize, long position) {
         return (position - 1) / windowSize * windowSize + 1;
     }
-
 }

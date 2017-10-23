@@ -10,14 +10,12 @@ import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleQCFactory {
+public final class PurpleQCFactory {
 
-    public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender purpleGender,
-            @NotNull Gender cobaltGender) {
-
+    @NotNull
+    public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender purpleGender, @NotNull Gender cobaltGender) {
         final List<PurpleCopyNumber> trailingSegments = copyNumbers.stream().filter(x -> x.start() != 1L).collect(Collectors.toList());
-        int ratioOnlySegments =
-                (int) trailingSegments.stream().filter(x -> x.structuralVariantSupport() == StructuralVariantSupport.NONE).count();
+        int ratioOnlySegments = (int) trailingSegments.stream().filter(x -> x.structuralVariantSupport() == StructuralVariantSupport.NONE).count();
 
         return ImmutablePurpleQC.builder()
                 .cobaltGender(cobaltGender)
@@ -27,5 +25,4 @@ public class PurpleQCFactory {
                 .trailingSegments(trailingSegments.size())
                 .build();
     }
-
 }

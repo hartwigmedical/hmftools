@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CobaltCountFactory {
+public final class CobaltCountFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(CobaltCountFactory.class);
 
@@ -38,6 +38,7 @@ public class CobaltCountFactory {
         return result;
     }
 
+    @NotNull
     private static CobaltCount create(@NotNull final ReadCount reference, int tumorReadCount) {
         return ImmutableCobaltRatio.builder()
                 .from(reference)

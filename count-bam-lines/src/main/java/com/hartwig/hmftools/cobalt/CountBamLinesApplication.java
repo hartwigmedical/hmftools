@@ -44,10 +44,10 @@ public class CountBamLinesApplication {
     private static final String OUTPUT_DIR = "output_dir";
     private static final String GC_PROFILE = "gc_profile";
     private static final String WINDOW_SIZE = "window_size";
-    private static final String MIN_QUALITY = "min_quality";
+    private static final String MIN_MAPPING_QUALITY = "min_quality";
 
     private static final int WINDOW_SIZE_DEFAULT = 1000;
-    private static final int MIN_QUALITY_DEFAULT = 10;
+    private static final int MIN_MAPPING_QUALITY_DEFAULT = 10;
 
     public static void main(final String... args)
             throws ParseException, IOException, ExecutionException, InterruptedException, HartwigException {
@@ -56,7 +56,6 @@ public class CountBamLinesApplication {
 
     private CountBamLinesApplication(final String... args)
             throws ParseException, IOException, ExecutionException, InterruptedException, HartwigException {
-
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         if (!cmd.hasOption(GC_PROFILE) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(TUMOR) || !cmd.hasOption(REFERENCE)) {
@@ -92,27 +91,25 @@ public class CountBamLinesApplication {
             printUsageAndExit(options);
         }
 
-        // Create output directory
         final Path outputPath = selectOrCreateOutputPath(outputDirectory);
         if (outputPath == null) {
             System.exit(1);
         }
 
-        // Parameters
         final int threadCount = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : 4;
         final int windowSize = cmd.hasOption(WINDOW_SIZE) ? Integer.valueOf(cmd.getOptionValue(WINDOW_SIZE)) : WINDOW_SIZE_DEFAULT;
-        final int minQuality = cmd.hasOption(MIN_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_QUALITY)) : MIN_QUALITY_DEFAULT;
-        LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minQuality);
+        final int minMappingQuality =
+                cmd.hasOption(MIN_MAPPING_QUALITY) ? Integer.valueOf(cmd.getOptionValue(MIN_MAPPING_QUALITY)) : MIN_MAPPING_QUALITY_DEFAULT;
+        LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", threadCount, windowSize, minMappingQuality);
 
-        // GC Profile
         LOGGER.info("Reading GC Profile");
         final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(cmd.getOptionValue(GC_PROFILE));
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("bam-%d").build();
         final ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
 
-        // Read Counts
-        final CountSupplier countSupplier = new CountSupplier(reference, tumor, outputDirectory, windowSize, minQuality, executorService);
+        final CountSupplier countSupplier =
+                new CountSupplier(reference, tumor, outputDirectory, windowSize, minMappingQuality, executorService);
         final Multimap<Chromosome, CobaltCount> readCounts;
         if (useBams) {
             readCounts = countSupplier.fromBam(cmd.getOptionValue(REFERENCE_BAM), cmd.getOptionValue(TUMOR_BAM));
@@ -122,20 +119,18 @@ public class CountBamLinesApplication {
             readCounts = countSupplier.fromReadCountFiles();
         }
 
-        // Ratios
         final RatioSupplier ratioSupplier = new RatioSupplier(reference, tumor, outputDirectory);
         final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.generateRatios(gcProfiles, readCounts);
         LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
         CobaltRatioFile.write(outputFilename, ratios);
 
-        // Segmentation
         new PCFSegment(executorService, outputDirectory).applySegmentation(reference, tumor);
 
         executorService.shutdown();
     }
 
     @Nullable
-    private Path selectOrCreateOutputPath(@NotNull final String outputString) {
+    private static Path selectOrCreateOutputPath(@NotNull final String outputString) {
         final File outputFile = new File(outputString);
         if (!outputFile.exists() && !outputFile.mkdirs()) {
             LOGGER.error("Unable to create output directory {} ", outputString);
@@ -177,7 +172,7 @@ public class CountBamLinesApplication {
         options.addOption(TUMOR, true, "Name of tumor sample.");
         options.addOption(TUMOR_BAM, true, "Tumor bam file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(MIN_QUALITY, true, "Min quality. Default 10.");
+        options.addOption(MIN_MAPPING_QUALITY, true, "Min quality. Default 10.");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
 
         return options;

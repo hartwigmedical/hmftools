@@ -38,22 +38,21 @@ public class CountSupplier {
     private final String tumor;
     private final String outputDirectory;
     private final int windowSize;
-    private final int minQuality;
+    private final int minMappingQuality;
     private final ExecutorService executorService;
 
     public CountSupplier(final String reference, final String tumor, final String outputDirectory, final int windowSize,
-            final int minQuality, final ExecutorService executorService) {
+            final int minMappingQuality, final ExecutorService executorService) {
         this.reference = reference;
         this.tumor = tumor;
         this.outputDirectory = outputDirectory;
         this.windowSize = windowSize;
-        this.minQuality = minQuality;
+        this.minMappingQuality = minMappingQuality;
         this.executorService = executorService;
     }
 
     @NotNull
     public Multimap<Chromosome, CobaltCount> fromReadCountFiles() throws IOException {
-
         final String referenceFilename = ReadCountFile.generateFilename(outputDirectory, reference);
         LOGGER.info("Reading reference count from {}", referenceFilename);
         Multimap<String, ReadCount> referenceCounts = ReadCountFile.readFile(referenceFilename);
@@ -75,7 +74,6 @@ public class CountSupplier {
     @NotNull
     public Multimap<Chromosome, CobaltCount> fromBam(@NotNull final String referenceBam, @NotNull final String tumorBam)
             throws IOException, ExecutionException, InterruptedException {
-
         final File tumorFile = new File(tumorBam);
         final File referenceFile = new File(referenceBam);
 
@@ -100,12 +98,13 @@ public class CountSupplier {
         return CobaltCountFactory.merge(referenceCounts, tumorCounts);
     }
 
-    private List<Future<ChromosomeReadCount>> createFutures(final SamReaderFactory readerFactory, final File file,
-            final List<ChromosomeLength> lengths) {
+    @NotNull
+    private List<Future<ChromosomeReadCount>> createFutures(final SamReaderFactory readerFactory, final File file, final List<ChromosomeLength> lengths) {
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for (ChromosomeLength chromosome : lengths) {
             final ChromosomeReadCount callable =
-                    new ChromosomeReadCount(file, readerFactory, chromosome.chromosome(), chromosome.position(), windowSize, minQuality);
+                    new ChromosomeReadCount(file, readerFactory, chromosome.chromosome(), chromosome.position(), windowSize,
+                            minMappingQuality);
             futures.add(executorService.submit(callable));
         }
 

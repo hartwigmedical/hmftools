@@ -23,7 +23,6 @@ public class CobaltCountFile {
 
     @NotNull
     private static Multimap<Chromosome, CobaltCount> fromLines(@NotNull final List<String> lines) {
-
         final Multimap<Chromosome, CobaltCount> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith("Ch")) {
@@ -34,5 +33,4 @@ public class CobaltCountFile {
 
         return result;
     }
-
 }
