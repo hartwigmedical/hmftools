@@ -57,6 +57,7 @@
         <rxjava2.version>2.1.2</rxjava2.version>
         <retrofit.version>2.3.0</retrofit.version>
         <aws.sdk.version>1.11.213</aws.sdk.version>
+        <okhttp.version>3.9.0</okhttp.version>
 
 
         <hmf-common.version>1</hmf-common.version>
@@ -274,6 +275,11 @@
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-s3</artifactId>
                 <version>${aws.sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
             </dependency>
             <!-- KODU: Test dependencies -->
             <dependency>

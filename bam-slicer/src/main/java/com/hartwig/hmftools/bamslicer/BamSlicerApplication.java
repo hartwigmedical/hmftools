@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamslicer;
 
+import static htsjdk.samtools.util.BlockCompressedFilePointerUtil.MAX_BLOCK_ADDRESS;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,7 +27,13 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.BAMFileReader;
+import htsjdk.samtools.BAMFileSpan;
+import htsjdk.samtools.BAMIndex;
+import htsjdk.samtools.Chunk;
+import htsjdk.samtools.DiskBasedBAMFileIndex;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -35,6 +43,8 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.util.BlockCompressedFilePointerUtil;
+import htsjdk.samtools.util.BlockCompressedStreamConstants;
 import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -123,15 +133,44 @@ public class BamSlicerApplication {
         final URL indexUrl = SbpS3UrlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX));
         final String outputPath = cmd.getOptionValue(OUTPUT);
         final String bedPath = cmd.getOptionValue(BED);
-        final File index = downloadIndex(indexUrl);
-        index.deleteOnExit();
-        final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(index));
+        final File indexFile = downloadIndex(indexUrl);
+        indexFile.deleteOnExit();
+        final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
         LOGGER.info("Generating query intervals from BED file: {}", bedPath);
         final QueryInterval[] intervals = getIntervalsFromBED(bedPath, reader.getFileHeader());
-        LOGGER.info("Generated {} query intervals.", intervals.length);
-        LOGGER.info("Slicing bam...");
-        writeToSlice(outputPath, reader, intervals);
+        final List<Chunk> expandedChunks = bamChunksForIntervals(indexFile, reader.getFileHeader(), intervals);
         reader.close();
+        LOGGER.info("Generated {} query intervals which map to {} bam chunks", intervals.length, expandedChunks.size());
+
+        final SamInputResource bamResource = SamInputResource.of(new CachingSeekableHTTPStream(bamUrl, expandedChunks)).index(indexFile);
+        final SamReader cachingReader = SamReaderFactory.makeDefault().open(bamResource);
+        LOGGER.info("Slicing bam...");
+        writeToSlice(outputPath, cachingReader, intervals);
+        cachingReader.close();
+    }
+
+    @NotNull
+    private static List<Chunk> expandChunks(@NotNull final List<Chunk> chunks) {
+        final List<Chunk> result = Lists.newArrayList();
+        //MIVO: add chunk for header
+        final long headerEndVirtualPointer = ((long) BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE) << 16;
+        result.add(new Chunk(0, headerEndVirtualPointer));
+        for (final Chunk chunk : chunks) {
+            final long chunkEndBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
+            final long extendedEndBlockAddress = chunkEndBlockAddress + BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE;
+            final long newChunkEnd = extendedEndBlockAddress > MAX_BLOCK_ADDRESS ? MAX_BLOCK_ADDRESS : extendedEndBlockAddress;
+            final long chunkEndVirtualPointer = newChunkEnd << 16;
+            result.add(new Chunk(chunk.getChunkStart(), chunkEndVirtualPointer));
+        }
+        return Chunk.optimizeChunkList(result, 0);
+    }
+
+    @NotNull
+    private static List<Chunk> bamChunksForIntervals(@NotNull final File index, @NotNull final SAMFileHeader header,
+            @NotNull final QueryInterval[] intervals) {
+        final BAMIndex bamIndex = new DiskBasedBAMFileIndex(index, header.getSequenceDictionary(), false);
+        final BAMFileSpan span = BAMFileReader.getFileSpan(intervals, bamIndex);
+        return expandChunks(span.getChunks());
     }
 
     @NotNull
@@ -146,6 +185,7 @@ public class BamSlicerApplication {
         return index;
     }
 
+    @NotNull
     private static QueryInterval[] getIntervalsFromBED(@NotNull final String bedPath, @NotNull final SAMFileHeader header)
             throws IOException, EmptyFileException {
         final Slicer bedSlicer = SlicerFactory.fromBedFile(bedPath);
@@ -173,6 +213,7 @@ public class BamSlicerApplication {
         writer.close();
     }
 
+    @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         final OptionGroup inputModeOptionGroup = new OptionGroup();
@@ -182,6 +223,7 @@ public class BamSlicerApplication {
         return options;
     }
 
+    @NotNull
     private static Options createS3Options() {
         final Options options = new Options();
         options.addOption(Option.builder(INPUT_MODE_S3).required().desc("read input BAM from s3").build());
@@ -193,6 +235,7 @@ public class BamSlicerApplication {
         return options;
     }
 
+    @NotNull
     private static Options createVcfOptions() {
         final Options options = new Options();
         options.addOption(Option.builder(INPUT_MODE_FILE).required().desc("read input BAM from the filesystem").build());
@@ -203,6 +246,7 @@ public class BamSlicerApplication {
         return options;
     }
 
+    @Nullable
     private static CommandLine createCommandLine(@NotNull final String... args) throws ParseException {
         final Options options = createOptions();
         final CommandLineParser parser = new DefaultParser();
