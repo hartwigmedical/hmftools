@@ -50,15 +50,15 @@ public class StructuralVariantClusterFactory {
 
         final List<StructuralVariantCluster> result = Lists.newArrayList();
 
-        int i = 0;
+        int ratioIndex = 0;
         ModifiableStructuralVariantCluster segment = null;
         for (StructuralVariantPosition variant : variants) {
-            while (i < ratios.size() && ratios.get(i).position() < variant.position()) {
-                i++;
+            while (ratioIndex < ratios.size() - 1 && ratios.get(ratioIndex).position() < variant.position()) {
+                ratioIndex++;
             }
 
-            final long start = start(variant.position(), i, ratios);
-            final long end = end(variant.position(), i, ratios);
+            final long start = start(variant.position(), ratioIndex, ratios);
+            final long end = end(variant.position(), ratioIndex, ratios);
 
             if (segment == null || start > segment.end()) {
                 if (segment != null) {
@@ -83,11 +83,14 @@ public class StructuralVariantClusterFactory {
 
     @VisibleForTesting
     long start(long position, int index, @NotNull final List<CobaltRatio> ratios) {
+        assert (index <= ratios.size());
         final long min = position / windowSize * windowSize + 1 - windowSize;
-        for (int i = index; i <= 0; i--) {
-            final CobaltRatio ratio = ratios.get(i);
-            if (ratio.position() <= min && Doubles.greaterThan(ratio.tumorGCRatio(), -1)) {
-                return ratio.position();
+        if (!ratios.isEmpty()) {
+            for (int i = index; i >= 0; i--) {
+                final CobaltRatio ratio = ratios.get(i);
+                if (ratio.position() <= min && Doubles.greaterThan(ratio.tumorGCRatio(), -1)) {
+                    return ratio.position();
+                }
             }
         }
 
