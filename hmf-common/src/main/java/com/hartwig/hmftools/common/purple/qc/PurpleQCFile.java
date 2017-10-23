@@ -32,8 +32,8 @@ public class PurpleQCFile {
         Files.write(new File(fileName).toPath(), toLines(check));
     }
 
+    @NotNull
     static PurpleQC fromLines(@NotNull final List<String> lines) throws IOException, MalformedFileException {
-
         try {
             return ImmutablePurpleQC.builder()
                     .trailingSegments(Integer.valueOf(getValue(lines.get(4))))
@@ -47,10 +47,12 @@ public class PurpleQCFile {
         }
     }
 
-    private static String getValue(String line) {
+    @NotNull
+    private static String getValue(@NotNull String line) {
         return line.split(DELIMITER)[1];
     }
 
+    @NotNull
     static List<String> toLines(@NotNull final PurpleQC check) {
         final List<String> result = Lists.newArrayList();
 
@@ -66,5 +68,4 @@ public class PurpleQCFile {
 
         return result;
     }
-
 }

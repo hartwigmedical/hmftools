@@ -12,6 +12,7 @@ public abstract class PurpleQC {
 
     private static final int SEGMENT_THRESHOLD = 150;
 
+    @NotNull
     public PurpleQCStatus status() {
         if (!segmentPass()) {
             return PurpleQCStatus.FAIL_SEGMENT;
@@ -24,11 +25,11 @@ public abstract class PurpleQC {
         return PurpleQCStatus.PASS;
     }
 
-    public boolean segmentPass() {
+    boolean segmentPass() {
         return segmentScore() <= SEGMENT_THRESHOLD;
     }
 
-    public boolean genderPass() {
+    boolean genderPass() {
         return cobaltGender().equals(amberGender());
     }
 

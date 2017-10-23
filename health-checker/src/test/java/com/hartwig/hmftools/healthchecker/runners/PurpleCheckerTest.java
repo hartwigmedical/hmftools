@@ -46,7 +46,6 @@ public class PurpleCheckerTest {
         assertEquals("ERROR", checks.get(0).getValue());
         assertEquals("ERROR", checks.get(1).getValue());
         assertEquals("ERROR", checks.get(2).getValue());
-
     }
 
     @Test(expected = MalformedFileException.class)
@@ -60,6 +59,7 @@ public class PurpleCheckerTest {
         final RunContext runContext = TestRunContextFactory.forSomaticTest(BASE_DIRECTORY, REF_SAMPLE, "missing");
         checker.tryRun(runContext);
     }
+
     private static void assertCheck(@NotNull final List<HealthCheck> checks, @NotNull final String checkName, final String expectedValue) {
         final Optional<HealthCheck> report = checks.stream().filter(data -> data.getCheckName().equals(checkName)).findFirst();
 
