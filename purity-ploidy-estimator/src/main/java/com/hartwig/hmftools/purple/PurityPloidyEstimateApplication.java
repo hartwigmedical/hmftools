@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
@@ -158,7 +158,7 @@ public class PurityPloidyEstimateApplication {
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratios).get();
             final List<PurpleSegment> segments;
             if (cmd.hasOption(EXPERIMENTAL)) {
-                final Multimap<String, PCFPosition> ratioSegments = RatioBreakPoints.createRatioSegments(config);
+                final Multimap<String, GenomePosition> ratioSegments = RatioBreakPoints.createRatioSegments(config);
                 final Multimap<String, StructuralVariantCluster> svSegments =
                         new StructuralBreakpoints(config).create(structuralVariants, ratios);
                 segments = PurpleSegmentFactoryNew.segment(svSegments, ratioSegments, lengths);

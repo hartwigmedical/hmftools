@@ -16,7 +16,6 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.pcf.ImmutablePCFRegion;
 import com.hartwig.hmftools.common.pcf.PCFFile;
-import com.hartwig.hmftools.common.pcf.PCFRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.purple.PurityPloidyEstimateApplication;
 import com.hartwig.hmftools.purple.config.CommonConfig;
@@ -34,13 +33,13 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
     public PCFSegmentSupplier(@NotNull final ExecutorService executorService, @NotNull final CommonConfig config,
             Map<String, ChromosomeLength> chromosomeLengths) throws IOException, ExecutionException, InterruptedException {
 
-        final Future<Multimap<String, PCFRegion>> tumorRegionsFuture =
+        final Future<Multimap<String, GenomeRegion>> tumorRegionsFuture =
                 executorService.submit(callable(config, "tumor ratio", config.tumorSample()));
-        final Future<Multimap<String, PCFRegion>> referenceRegionsFuture =
+        final Future<Multimap<String, GenomeRegion>> referenceRegionsFuture =
                 executorService.submit(callable(config, "reference ratio", config.refSample()));
 
-        Multimap<String, PCFRegion> tumorRegions = tumorRegionsFuture.get();
-        Multimap<String, PCFRegion> referenceRegions = referenceRegionsFuture.get();
+        Multimap<String, GenomeRegion> tumorRegions = tumorRegionsFuture.get();
+        Multimap<String, GenomeRegion> referenceRegions = referenceRegionsFuture.get();
 
         for (String chromosome : referenceRegions.keySet()) {
             long chromosomeEnd = chromosomeLengths.get(chromosome).position();
@@ -53,13 +52,13 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
         Collections.sort(segments);
     }
 
-    private Callable<Multimap<String, PCFRegion>> callable(final @NotNull CommonConfig config, @NotNull final String description,
+    private Callable<Multimap<String, GenomeRegion>> callable(final @NotNull CommonConfig config, @NotNull final String description,
             @NotNull final String sample) {
         return () -> ratioSegmentation(config, description, sample);
     }
 
     @NotNull
-    private Multimap<String, PCFRegion> ratioSegmentation(final @NotNull CommonConfig config, @NotNull final String description,
+    private Multimap<String, GenomeRegion> ratioSegmentation(final @NotNull CommonConfig config, @NotNull final String description,
             @NotNull final String sample) throws IOException, InterruptedException {
         final String pcfFile = PCFFile.generateRatioFilename(config.cobaltDirectory(), sample);
 
@@ -73,7 +72,7 @@ public class PCFSegmentSupplier implements Supplier<List<GenomeRegion>> {
     }
 
     @NotNull
-    private List<GenomeRegion> extend(final String chromosome, final long chromosomeEnd, Collection<PCFRegion> regions) {
+    private List<GenomeRegion> extend(final String chromosome, final long chromosomeEnd, Collection<GenomeRegion> regions) {
         final List<GenomeRegion> result = Lists.newArrayList();
         long start = 1;
         long end = 1;

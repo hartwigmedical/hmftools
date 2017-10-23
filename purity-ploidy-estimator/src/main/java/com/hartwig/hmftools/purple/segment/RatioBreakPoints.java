@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.pcf.PCFFile;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 
@@ -16,15 +16,15 @@ public class RatioBreakPoints {
     private static final Logger LOGGER = LogManager.getLogger(RatioBreakPoints.class);
 
     @NotNull
-    public static  Multimap<String, PCFPosition> createRatioSegments(@NotNull final CommonConfig config) throws IOException {
+    public static Multimap<String, GenomePosition> createRatioSegments(@NotNull final CommonConfig config) throws IOException {
 
         final String referenceFile = PCFFile.generateRatioFilename(config.cobaltDirectory(), config.refSample());
         LOGGER.info("Loading reference PCF segments from {}", referenceFile);
-        final Multimap<String, PCFPosition> referenceBreakPoint = PCFFile.readPositions(config.windowSize(), referenceFile);
+        final Multimap<String, GenomePosition> referenceBreakPoint = PCFFile.readPositions(config.windowSize(), referenceFile);
 
         final String tumorFile = PCFFile.generateRatioFilename(config.cobaltDirectory(), config.tumorSample());
         LOGGER.info("Loading tumor PCF segments from {}", tumorFile);
-        final Multimap<String, PCFPosition> tumorBreakPoints = PCFFile.readPositions(config.windowSize(), tumorFile);
+        final Multimap<String, GenomePosition> tumorBreakPoints = PCFFile.readPositions(config.windowSize(), tumorFile);
 
         LOGGER.info("Merging reference and tumor ratio break points");
         return GenomePositions.union(referenceBreakPoint, tumorBreakPoints);

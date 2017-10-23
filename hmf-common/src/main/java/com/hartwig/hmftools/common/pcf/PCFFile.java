@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -27,8 +29,8 @@ public class PCFFile {
         return basePath + File.separator + sample + BAF_EXTENSION;
     }
 
-    public static Multimap<String, PCFPosition> readPositions(int windowSize, @NotNull final String filename) throws IOException {
-        Multimap<String, PCFPosition> result = ArrayListMultimap.create();
+    public static Multimap<String, GenomePosition> readPositions(int windowSize, @NotNull final String filename) throws IOException {
+        Multimap<String, GenomePosition> result = ArrayListMultimap.create();
         long end = 0;
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
@@ -46,18 +48,14 @@ public class PCFFile {
         return result;
     }
 
-    private static PCFPosition position(@NotNull final String chromosome, long pos) {
-        return ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).build();
-    }
-
     @NotNull
-    public static Multimap<String, PCFRegion> read(int windowSize, @NotNull final String filename) throws IOException {
+    public static Multimap<String, GenomeRegion> read(int windowSize, @NotNull final String filename) throws IOException {
         return fromLines(windowSize, Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static Multimap<String, PCFRegion> fromLines(int windowSize, @NotNull List<String> lines) {
-        Multimap<String, PCFRegion> result = ArrayListMultimap.create();
+    private static Multimap<String, GenomeRegion> fromLines(int windowSize, @NotNull List<String> lines) {
+        Multimap<String, GenomeRegion> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith(HEADER_PREFIX)) {
                 final PCFRegion region = fromString(windowSize, line);
@@ -75,5 +73,9 @@ public class PCFFile {
                 .start(Long.valueOf(values[3]))
                 .end(Long.valueOf(values[4]) + windowSize - 1)
                 .build();
+    }
+
+    private static PCFPosition position(@NotNull final String chromosome, long pos) {
+        return ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).build();
     }
 }

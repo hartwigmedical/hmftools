@@ -10,23 +10,23 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
+import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
 public class PurpleSegmentFactoryNew {
 
-
     @NotNull
     public static List<PurpleSegment> segment(@NotNull final Multimap<String, StructuralVariantCluster> clusters,
-            @NotNull final Multimap<String, PCFPosition> ratios, @NotNull final Map<String, ChromosomeLength> lengths) {
+            @NotNull final Multimap<String, GenomePosition> ratios, @NotNull final Map<String, ChromosomeLength> lengths) {
 
         final List<PurpleSegment> segments = Lists.newArrayList();
 
         for (String chromosome : lengths.keySet()) {
             if (HumanChromosome.contains(chromosome)) {
-                final Collection<StructuralVariantCluster> cluster = clusters.containsKey(chromosome) ? clusters.get(chromosome) : Collections.emptyList();
-                final Collection<PCFPosition> ratio = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.emptyList();
+                final Collection<StructuralVariantCluster> cluster =
+                        clusters.containsKey(chromosome) ? clusters.get(chromosome) : Collections.emptyList();
+                final Collection<GenomePosition> ratio = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.emptyList();
                 segments.addAll(create(lengths.get(chromosome), cluster, ratio));
             }
         }
@@ -37,14 +37,14 @@ public class PurpleSegmentFactoryNew {
 
     @NotNull
     public static List<PurpleSegment> create(@NotNull final ChromosomeLength chromosome,
-            @NotNull final Collection<StructuralVariantCluster> clusteredVariants, @NotNull final Collection<PCFPosition> ratioBreaks) {
+            @NotNull final Collection<StructuralVariantCluster> clusteredVariants, @NotNull final Collection<GenomePosition> ratioBreaks) {
 
         final List<PurpleSegment> result = Lists.newArrayList();
 
-        Iterator<PCFPosition> ratioIterator = ratioBreaks.iterator();
+        Iterator<GenomePosition> ratioIterator = ratioBreaks.iterator();
         Iterator<StructuralVariantCluster> clusterIterator = clusteredVariants.iterator();
 
-        PCFPosition ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
+        GenomePosition ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
         StructuralVariantCluster cluster = clusterIterator.hasNext() ? clusterIterator.next() : null;
 
         ModifiablePurpleSegment segment = create(chromosome.chromosome(), 1);
@@ -72,6 +72,7 @@ public class PurpleSegmentFactoryNew {
                     segment = create(cluster);
                     if (ratio.position() <= segment.maxBoundary()) {
                         segment.setRatioSupport(true);
+                        ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
                     }
 
                     if (cluster.firstVariantPosition() != cluster.finalVariantPosition()) {
