@@ -54,10 +54,9 @@ public class PurpleSegmentFactoryNew {
                 result.add(segment.setEnd(cluster.firstVariantPosition() - 1));
                 segment = create(cluster);
 
-                //TODO: Add test to demonstrate size() > 1 does not work (ie, same position)
                 if (cluster.firstVariantPosition() != cluster.finalVariantPosition()) {
                     result.add(segment);
-                    segment = createFromLastVariant(cluster);
+                    segment = createFromLastVariant(cluster, false);
                 }
                 cluster = clusterIterator.hasNext() ? clusterIterator.next() : null;
 
@@ -70,16 +69,19 @@ public class PurpleSegmentFactoryNew {
                 if (cluster.start() <= ratio.position()) {
                     result.add(segment.setEnd(cluster.firstVariantPosition() - 1));
                     segment = create(cluster);
+                    final boolean ratioSupport;
                     if (ratio.position() <= segment.maxBoundary()) {
+                        ratioSupport = true;
                         segment.setRatioSupport(true);
                         ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
+                    } else {
+                        ratioSupport = false;
                     }
 
                     if (cluster.firstVariantPosition() != cluster.finalVariantPosition()) {
                         result.add(segment);
-                        segment = createFromLastVariant(cluster);
+                        segment = createFromLastVariant(cluster, ratioSupport);
                     }
-
                     cluster = clusterIterator.hasNext() ? clusterIterator.next() : null;
                 } else {
                     if (ratio.position() <= segment.maxBoundary()) {
@@ -112,19 +114,18 @@ public class PurpleSegmentFactoryNew {
                 .setChromosome(cluster.chromosome())
                 .setRatioSupport(false)
                 .setStart(cluster.firstVariantPosition())
-                .setEnd(cluster.finalVariantPosition())
+                .setEnd(cluster.finalVariantPosition() - 1)
                 .setMaxBoundary(cluster.end())
                 .setStructuralVariantSupport(cluster.type());
     }
 
-    private static ModifiablePurpleSegment createFromLastVariant(StructuralVariantCluster cluster) {
+    private static ModifiablePurpleSegment createFromLastVariant(StructuralVariantCluster cluster, boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())
-                .setRatioSupport(false)
+                .setRatioSupport(ratioSupport)
                 .setStart(cluster.finalVariantPosition())
                 .setEnd(0)
                 .setMaxBoundary(cluster.end())
                 .setStructuralVariantSupport(cluster.finalVariantType());
     }
-
 }
