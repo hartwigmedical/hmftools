@@ -20,7 +20,6 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
 
     @Override
     default int compareTo(@NotNull final GenomeRegion other) {
-
         if (chromosome().equals(other.chromosome())) {
             if (start() < other.start()) {
                 return -1;

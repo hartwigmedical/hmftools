@@ -34,7 +34,6 @@ public class RatioSupplier {
     @NotNull
     public Multimap<Chromosome, CobaltRatio> generateRatios(@NotNull final Multimap<String, GCProfile> gcProfiles,
             @NotNull final Multimap<Chromosome, CobaltCount> readCounts) throws IOException {
-
         LOGGER.info("Applying ratio gc normalization");
         final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
         final ListMultimap<String, ReadRatio> tumorGCRatio = gcRatioSupplier.tumorRatios();

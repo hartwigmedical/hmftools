@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
+import org.jetbrains.annotations.NotNull;
+
 class GCRatioSupplier {
 
     private final GCMedianReadCount tumorGCMedianReadCount;
@@ -19,8 +21,7 @@ class GCRatioSupplier {
     private final GCMedianReadCount referenceGCMedianReadCount;
     private final ListMultimap<String, ReadRatio> referenceRatios;
 
-    GCRatioSupplier(final Multimap<String, GCProfile> gcProfiles, final Multimap<Chromosome, CobaltCount> counts) {
-
+    GCRatioSupplier(@NotNull final Multimap<String, GCProfile> gcProfiles, @NotNull final Multimap<Chromosome, CobaltCount> counts) {
         final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.create(gcProfiles);
 
         final GCRatioNormalization tumorRatiosBuilder = new GCRatioNormalization();
@@ -44,18 +45,22 @@ class GCRatioSupplier {
         tumorRatios = tumorRatiosBuilder.build(tumorGCMedianReadCount);
     }
 
+    @NotNull
     ListMultimap<String, ReadRatio> referenceRatios() {
         return referenceRatios;
     }
 
+    @NotNull
     GCMedianReadCount referenceGCMedianReadCount() {
         return referenceGCMedianReadCount;
     }
 
+    @NotNull
     ListMultimap<String, ReadRatio> tumorRatios() {
         return tumorRatios;
     }
 
+    @NotNull
     GCMedianReadCount tumorGCMedianReadCount() {
         return tumorGCMedianReadCount;
     }
