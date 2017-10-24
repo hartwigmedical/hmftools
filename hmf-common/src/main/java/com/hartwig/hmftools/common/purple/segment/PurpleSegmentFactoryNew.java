@@ -8,13 +8,17 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 public class PurpleSegmentFactoryNew {
+
+    private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
 
     @NotNull
     public static List<PurpleSegment> segment(@NotNull final Multimap<String, StructuralVariantCluster> clusters,
@@ -55,15 +59,15 @@ public class PurpleSegmentFactoryNew {
                 maxClusterEnd = cluster.end();
 
                 // finalise previous segment
-                result.add(segment.setEnd(cluster.firstVariantPosition() - 1));
+                result.add(setStatus(segment.setEnd(cluster.firstVariantPosition() - 1)));
 
                 // create new segment
                 final boolean ratioSupport = ratio != null && ratio.position() <= maxClusterEnd;
-                segment = create(cluster, ratioSupport);
+                segment = createFromCluster(cluster, ratioSupport);
 
                 // create additional segment if cluster contains multiple variants
                 if (cluster.firstVariantPosition() != cluster.finalVariantPosition()) {
-                    result.add(segment);
+                    result.add(setStatus(segment));
                     segment = createFromLastVariant(cluster, ratioSupport);
                 }
 
@@ -74,7 +78,7 @@ public class PurpleSegmentFactoryNew {
                 if (ratio.position() <= maxClusterEnd) {
                     segment.setRatioSupport(true);
                 } else {
-                    result.add(segment.setEnd(ratio.position() - 1));
+                    result.add(setStatus(segment.setEnd(ratio.position() - 1)));
                     segment = create(ratio.chromosome(), ratio.position());
                 }
                 ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
@@ -91,15 +95,17 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(true)
                 .setStart(start)
                 .setEnd(0)
+                .setStatus(PurpleSegmentStatus.NORMAL)
                 .setStructuralVariantSupport(StructuralVariantSupport.NONE);
     }
 
-    private static ModifiablePurpleSegment create(StructuralVariantCluster cluster, boolean ratioSupport) {
+    private static ModifiablePurpleSegment createFromCluster(StructuralVariantCluster cluster, boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())
                 .setRatioSupport(ratioSupport)
                 .setStart(cluster.firstVariantPosition())
                 .setEnd(cluster.finalVariantPosition() - 1)
+                .setStatus(PurpleSegmentStatus.CLUSTER)
                 .setStructuralVariantSupport(cluster.type());
     }
 
@@ -109,6 +115,16 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(ratioSupport)
                 .setStart(cluster.finalVariantPosition())
                 .setEnd(0)
+                .setStatus(PurpleSegmentStatus.NORMAL)
                 .setStructuralVariantSupport(cluster.finalVariantType());
+    }
+
+    private static ModifiablePurpleSegment setStatus(@NotNull ModifiablePurpleSegment segment) {
+        final GenomeRegion centromere = CENTROMERES.get(segment.chromosome());
+        if (centromere != null && centromere.overlaps(segment)) {
+            segment.setStatus(PurpleSegmentStatus.CENTROMERE);
+        }
+
+        return segment;
     }
 }

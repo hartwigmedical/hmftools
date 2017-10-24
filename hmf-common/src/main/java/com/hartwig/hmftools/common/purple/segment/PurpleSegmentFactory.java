@@ -109,6 +109,7 @@ public class PurpleSegmentFactory {
                 .end(end)
                 .ratioSupport(ratioSupport)
                 .structuralVariantSupport(svStart)
+                .status(PurpleSegmentStatus.NORMAL)
                 .build());
     }
 }
