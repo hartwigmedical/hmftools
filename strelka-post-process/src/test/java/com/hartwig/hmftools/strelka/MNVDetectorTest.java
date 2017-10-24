@@ -34,8 +34,8 @@ public class MNVDetectorTest {
         final List<Pair<ReadScore, ReadScore>> mnvScores = Lists.newArrayList();
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.REF, 10), ImmutableReadScore.of(ReadType.REF, 20)));
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 15), ImmutableReadScore.of(ReadType.ALT, 15)));
-        final Map<SAMRecord, Map<VariantContext, ReadScore>> scores = build2VariantScores(mnvScores);
-        assertEquals(1.0, MNVDetector.computeMnvFrequency(scores), 0.000001);
+        final MNVScore scores = build2VariantScores(mnvScores);
+        assertEquals(1.0, scores.frequency(), 0.000001);
     }
 
     @Test
@@ -43,8 +43,8 @@ public class MNVDetectorTest {
         final List<Pair<ReadScore, ReadScore>> mnvScores = Lists.newArrayList();
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 10), ImmutableReadScore.of(ReadType.REF, 20)));
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 15), ImmutableReadScore.of(ReadType.ALT, 15)));
-        final Map<SAMRecord, Map<VariantContext, ReadScore>> scores = build2VariantScores(mnvScores);
-        assertEquals(0.5, MNVDetector.computeMnvFrequency(scores), 0.000001);
+        final MNVScore scores = build2VariantScores(mnvScores);
+        assertEquals(0.5, scores.frequency(), 0.000001);
     }
 
     @Test
@@ -52,8 +52,8 @@ public class MNVDetectorTest {
         final List<Pair<ReadScore, ReadScore>> mnvScores = Lists.newArrayList();
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 15), ImmutableReadScore.of(ReadType.MISSING, 0)));
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 15), ImmutableReadScore.of(ReadType.ALT, 15)));
-        final Map<SAMRecord, Map<VariantContext, ReadScore>> scores = Scoring.correctMissingScores(build2VariantScores(mnvScores));
-        assertEquals(0.5, MNVDetector.computeMnvFrequency(scores), 0.000001);
+        final MNVScore scores = build2VariantScores(mnvScores);
+        assertEquals(0.5, scores.frequency(), 0.000001);
     }
 
     @Test
@@ -62,8 +62,8 @@ public class MNVDetectorTest {
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 5), ImmutableReadScore.of(ReadType.REF, 20)));
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 15), ImmutableReadScore.of(ReadType.ALT, 15)));
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.REF, 25), ImmutableReadScore.of(ReadType.ALT, 10)));
-        final Map<SAMRecord, Map<VariantContext, ReadScore>> scores = build2VariantScores(mnvScores);
-        assertEquals(0.33, MNVDetector.computeMnvFrequency(scores), 0.01);
+        final MNVScore scores = build2VariantScores(mnvScores);
+        assertEquals(0.33, scores.frequency(), 0.01);
     }
 
     @Test
@@ -74,8 +74,8 @@ public class MNVDetectorTest {
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 15), ImmutableReadScore.of(ReadType.ALT, 15)));
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 13), ImmutableReadScore.of(ReadType.ALT, 17)));
         mnvScores.add(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 27), ImmutableReadScore.of(ReadType.ALT, 3)));
-        final Map<SAMRecord, Map<VariantContext, ReadScore>> scores = build2VariantScores(mnvScores);
-        assertEquals(0.8, MNVDetector.computeMnvFrequency(scores), 0.000001);
+        final MNVScore scores = build2VariantScores(mnvScores);
+        assertEquals(0.8, scores.frequency(), 0.000001);
     }
 
     @NotNull
@@ -101,18 +101,14 @@ public class MNVDetectorTest {
     }
 
     @NotNull
-    private static Map<SAMRecord, Map<VariantContext, ReadScore>> build2VariantScores(
-            @NotNull final List<Pair<ReadScore, ReadScore>> readScores) {
-        final Map<SAMRecord, Map<VariantContext, ReadScore>> scores = Maps.newHashMap();
-        int count = 1;
+    private static MNVScore build2VariantScores(@NotNull final List<Pair<ReadScore, ReadScore>> readScores) {
+        MNVScore score = MNVScore.of(Lists.newArrayList(VARIANTS.get(0), VARIANTS.get(1)));
         for (final Pair<ReadScore, ReadScore> readScore : readScores) {
-            final SAMRecord record = buildSamRecord(count, "1M", "C", false);
             final Map<VariantContext, ReadScore> recordScores = Maps.newHashMap();
             recordScores.put(VARIANTS.get(0), readScore.getLeft());
             recordScores.put(VARIANTS.get(1), readScore.getRight());
-            scores.put(record, recordScores);
-            count++;
+            score = MNVScore.addReadScore(score, recordScores);
         }
-        return scores;
+        return score;
     }
 }
