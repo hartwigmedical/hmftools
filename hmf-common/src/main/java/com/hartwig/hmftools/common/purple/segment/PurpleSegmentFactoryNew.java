@@ -48,15 +48,17 @@ public class PurpleSegmentFactoryNew {
         StructuralVariantCluster cluster = clusterIterator.hasNext() ? clusterIterator.next() : null;
 
         ModifiablePurpleSegment segment = create(chromosome.chromosome(), 1);
+        long maxClusterEnd = 0;
         while (ratio != null || cluster != null) {
 
             if (ratio == null || (cluster != null && cluster.start() <= ratio.position())) {
+                maxClusterEnd = cluster.end();
 
                 // finalise previous segment
                 result.add(segment.setEnd(cluster.firstVariantPosition() - 1));
 
                 // create new segment
-                final boolean ratioSupport = ratio != null && ratio.position() <= cluster.end();
+                final boolean ratioSupport = ratio != null && ratio.position() <= maxClusterEnd;
                 segment = create(cluster, ratioSupport);
 
                 // create additional segment if cluster contains multiple variants
@@ -69,7 +71,7 @@ public class PurpleSegmentFactoryNew {
 
             } else {
 
-                if (ratio.position() <= segment.maxBoundary()) {
+                if (ratio.position() <= maxClusterEnd) {
                     segment.setRatioSupport(true);
                 } else {
                     result.add(segment.setEnd(ratio.position() - 1));
@@ -89,7 +91,6 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(true)
                 .setStart(start)
                 .setEnd(0)
-                .setMaxBoundary(0)
                 .setStructuralVariantSupport(StructuralVariantSupport.NONE);
     }
 
@@ -99,7 +100,6 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(ratioSupport)
                 .setStart(cluster.firstVariantPosition())
                 .setEnd(cluster.finalVariantPosition() - 1)
-                .setMaxBoundary(cluster.end())
                 .setStructuralVariantSupport(cluster.type());
     }
 
@@ -109,7 +109,6 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(ratioSupport)
                 .setStart(cluster.finalVariantPosition())
                 .setEnd(0)
-                .setMaxBoundary(cluster.end())
                 .setStructuralVariantSupport(cluster.finalVariantType());
     }
 }

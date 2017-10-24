@@ -25,7 +25,4 @@ public abstract class PurpleSegment implements GenomeRegion {
     public abstract boolean ratioSupport();
 
     public abstract StructuralVariantSupport structuralVariantSupport();
-
-    //TODO: Remove(internal to PSFN)
-    public abstract long maxBoundary();
 }

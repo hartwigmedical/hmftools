@@ -107,7 +107,6 @@ public class PurpleSegmentFactory {
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
-                .maxBoundary(end)
                 .ratioSupport(ratioSupport)
                 .structuralVariantSupport(svStart)
                 .build());
