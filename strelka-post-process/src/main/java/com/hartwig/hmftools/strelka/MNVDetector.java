@@ -37,10 +37,9 @@ import htsjdk.variant.variantcontext.VariantContext;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVDetector {
     //TODO: MIVO: deal with potential mnvs of 3+ variants where only a subset are actually mnvs
-    //TODO: MIVO: export potential mnv regions to .bed file
-    //TODO: MIVO: slice bam on potential mnv regions (pad L+R?)
     //TODO: MIVO: multiple variants on same position => multiple potential mnvs starting at same position
     //TODO: MIVO: variants with multiple alts => multiple potential mnvs
+    //TODO: MIVO: export potential mnv regions to .bed file
 
     private static final Logger LOGGER = LogManager.getLogger(MNVDetector.class);
 

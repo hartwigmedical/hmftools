@@ -51,6 +51,11 @@ final class Scoring {
                     return ReadType.REF;
                 }
             }
+            // MIVO: check that this insertion is not part of a longer insertion
+            if (record.getReadLength() >= recordIdxOfVariantStart + alt.length()
+                    && record.getReferencePositionAtReadPosition(recordIdxOfVariantStart + alt.length()) == 0) {
+                return ReadType.REF;
+            }
             return ReadType.ALT;
         }
         if (variant.isSimpleDeletion()) {
@@ -59,6 +64,11 @@ final class Scoring {
                 if (index != 0 && record.getReadPositionAtReferencePosition(variant.getStart() + index) != 0) {
                     return ReadType.REF;
                 }
+            }
+            // MIVO: check that this deletion is not part of a longer deletion
+            if (record.getAlignmentEnd() >= variant.getStart() + ref.length()
+                    && record.getReadPositionAtReferencePosition(variant.getStart() + ref.length()) == 0) {
+                return ReadType.REF;
             }
             return ReadType.ALT;
         }
