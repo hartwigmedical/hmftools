@@ -7,6 +7,7 @@ import java.io.IOException;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +38,7 @@ public enum BEDFileLoader {
                 if (end < start) {
                     LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
                 } else {
-                    final GenomeRegion region = ImmutableBEDGenomeRegion.of(chromosome, start, end);
+                    final GenomeRegion region = GenomeRegionFactory.create(chromosome, start, end);
                     if (prevRegion != null && chromosome.equals(prevChromosome) && prevRegion.end() >= start) {
                         LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + prevRegion);
                     } else {

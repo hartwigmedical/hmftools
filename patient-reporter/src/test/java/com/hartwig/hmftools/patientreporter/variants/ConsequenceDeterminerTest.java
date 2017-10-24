@@ -9,7 +9,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
@@ -50,7 +50,7 @@ public class ConsequenceDeterminerTest {
     @Test
     public void worksAsExpected() {
 
-        final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(ImmutableBEDGenomeRegion.of(CHROMOSOME, POSITION - 10, POSITION + 10));
+        final Slicer slicer = SlicerFactory.fromSingleGenomeRegion(GenomeRegionFactory.create(CHROMOSOME, POSITION - 10, POSITION + 10));
         final Map<String, HmfGenomeRegion> transcriptMap = Maps.newHashMap();
         transcriptMap.put(TRANSCRIPT, hmfRegion());
 

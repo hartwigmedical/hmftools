@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.junit.Before;
@@ -119,7 +119,7 @@ public class PurpleSegmentFactoryTest {
     }
 
     private static GenomeRegion createRegion(long start, long end) {
-        return ImmutableBEDGenomeRegion.builder().chromosome("1").start(start).end(end).build();
+        return GenomeRegionFactory.create("1", start, end);
     }
 
 }

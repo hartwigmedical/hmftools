@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.junit.Test;
 
@@ -19,16 +19,15 @@ public class RegionZipperTest {
     @Test
     public void testZipper() {
 
-        final List<GenomeRegion> primary = Lists.newArrayList(
-                createRegion("1", 1, 100),
-                createRegion("1", 500, 1000),
-                createRegion("2", 500, 1000),
-                createRegion("4", 500, 1000));
+        final List<GenomeRegion> primary = Lists.newArrayList(GenomeRegionFactory.create("1", 1, 100),
+                GenomeRegionFactory.create("1", 500, 1000),
+                GenomeRegionFactory.create("2", 500, 1000),
+                GenomeRegionFactory.create("4", 500, 1000));
 
         final List<GenomeRegion> secondary = Lists.newArrayList(
-                createRegion("1", 500, 1000),
-                createRegion("2", 500, 1000),
-                createRegion("3", 500, 1000));
+                GenomeRegionFactory.create("1", 500, 1000),
+                GenomeRegionFactory.create("2", 500, 1000),
+                GenomeRegionFactory.create("3", 500, 1000));
 
         new Expectations() {{
             handler.enterChromosome("1");
@@ -47,7 +46,4 @@ public class RegionZipperTest {
         RegionZipper.zip(primary, secondary, handler);
     }
 
-    private GenomeRegion createRegion(final String chromosome, final long start, final long end) {
-        return ImmutableBEDGenomeRegion.builder().chromosome(chromosome).start(start).end(end).build();
-    }
 }

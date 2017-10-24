@@ -8,7 +8,6 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -20,11 +19,11 @@ public class GenomeRegionSelectorTest {
     private GenomeRegionSelector<GenomeRegion> standardSelector;
     private GenomeRegionSelector<GenomeRegion> chromosomeSelector;
 
-    private final GenomeRegion region1 = createRegion("1", 1, 100);
-    private final GenomeRegion region2 = createRegion("1", 101, 200);
-    private final GenomeRegion region3 = createRegion("2", 301, 400);
-    private final GenomeRegion region4 = createRegion("2", 501, 600);
-    private final GenomeRegion region5 = createRegion("3", 601, 700);
+    private final GenomeRegion region1 = GenomeRegionFactory.create("1", 1, 100);
+    private final GenomeRegion region2 = GenomeRegionFactory.create("1", 101, 200);
+    private final GenomeRegion region3 = GenomeRegionFactory.create("2", 301, 400);
+    private final GenomeRegion region4 = GenomeRegionFactory.create("2", 501, 600);
+    private final GenomeRegion region5 = GenomeRegionFactory.create("3", 601, 700);
 
     @Before
     public void setup() {
@@ -88,10 +87,6 @@ public class GenomeRegionSelectorTest {
     private void assertAbsense(final GenomePosition position) {
         assertEquals(Optional.empty(), chromosomeSelector.select(position));
         assertEquals(Optional.empty(), standardSelector.select(position));
-    }
-
-    private static GenomeRegion createRegion(final String chromosome, final long start, final long end) {
-        return ImmutableBEDGenomeRegion.builder().chromosome(chromosome).start(start).end(end).build();
     }
 
     private static GenomePosition createPosition(final String chromosome, final long position) {

@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.bed.ImmutableBEDGenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -34,9 +34,9 @@ public class GenomePositionSelectorTest {
     @Before
     public void setup() {
 
-        region1 = createRegion("1", 200, 300);
-        region2 = createRegion("1", 400, 500);
-        region3 = createRegion("2", 1, 100);
+        region1 = GenomeRegionFactory.create("1", 200, 300);
+        region2 = GenomeRegionFactory.create("1", 400, 500);
+        region3 = GenomeRegionFactory.create("2", 1, 100);
 
         beforeRegion1 = createPosition("1", 50);
         inRegion1a = createPosition("1", 200);
@@ -67,11 +67,6 @@ public class GenomePositionSelectorTest {
         final ListConsumer region3Consumer = new ListConsumer();
         standardSelector.select(region3, region3Consumer);
         assertEquals(inRegion3, region3Consumer.getPositions().get(0));
-    }
-
-
-    private GenomeRegion createRegion(final String chromosome, final long start, final long end) {
-        return ImmutableBEDGenomeRegion.builder().chromosome(chromosome).start(start).end(end).build();
     }
 
     private GenomePosition createPosition(final String chromosome, final long position) {
