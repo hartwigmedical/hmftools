@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.common.purple.segment;
+package com.hartwig.hmftools.common.purple.region;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum SegmentStatus {
+public enum ObservedRegionStatus {
     GERMLINE,
     SOMATIC,
     UNKNOWN;
@@ -14,7 +14,7 @@ public enum SegmentStatus {
     private static final double GERMLINE_MAX_RATIO = 1.2;
 
     @NotNull
-    public static SegmentStatus fromNormalRatio(final Gender gender, final String chromosome, final double ratio) {
+    public static ObservedRegionStatus fromNormalRatio(final Gender gender, final String chromosome, final double ratio) {
         if (Doubles.isZero(ratio)) {
             return UNKNOWN;
         }

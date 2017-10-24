@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
+import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -31,21 +31,21 @@ public class CombinedFittedRegionTest {
     @Test
     public void testObservedTumorRatioCountSummationOnlyAppliesToSomatic() {
         final FittedRegion startRegion =
-                PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).observedTumorRatioCount(2).status(SegmentStatus.GERMLINE).build();
+                PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).observedTumorRatioCount(2).status(ObservedRegionStatus.GERMLINE).build();
 
         final CombinedFittedRegion region = new CombinedFittedRegion(true, startRegion);
         assertEquals(0, region.region().observedTumorRatioCount());
 
         final FittedRegion germlineRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1001, 2000)
                 .observedTumorRatioCount(2)
-                .status(SegmentStatus.GERMLINE)
+                .status(ObservedRegionStatus.GERMLINE)
                 .build();
         region.combine(germlineRegion);
         assertEquals(0, region.region().observedTumorRatioCount());
 
         final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
                 .observedTumorRatioCount(2)
-                .status(SegmentStatus.SOMATIC)
+                .status(ObservedRegionStatus.SOMATIC)
                 .build();
         region.combine(somaticRegion);
         assertEquals(2, region.region().observedTumorRatioCount());

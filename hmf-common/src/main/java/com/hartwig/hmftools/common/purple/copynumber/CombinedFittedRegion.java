@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
-import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
+import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 
 class CombinedFittedRegion {
 
@@ -13,7 +13,7 @@ class CombinedFittedRegion {
     CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
-        if (region.status() != SegmentStatus.SOMATIC) {
+        if (region.status() != ObservedRegionStatus.SOMATIC) {
             combined.setRefNormalisedCopyNumber(0);
             combined.setObservedBAF(0);
             combined.setObservedTumorRatioCount(0);
@@ -37,8 +37,8 @@ class CombinedFittedRegion {
             combined.setRatioSupport(region.ratioSupport());
         }
 
-        if (region.status() == SegmentStatus.SOMATIC) {
-            combined.setStatus(SegmentStatus.SOMATIC);
+        if (region.status() == ObservedRegionStatus.SOMATIC) {
+            combined.setStatus(ObservedRegionStatus.SOMATIC);
             combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
             final long currentWeight;

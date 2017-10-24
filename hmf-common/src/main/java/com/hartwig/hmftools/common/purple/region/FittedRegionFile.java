@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -92,7 +91,7 @@ public enum FittedRegionFile {
                 .chromosome(values[0])
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
-                .status(SegmentStatus.valueOf(values[3]))
+                .status(ObservedRegionStatus.valueOf(values[3]))
                 .modelPloidy(Integer.valueOf(values[4]))
                 .bafCount(Integer.valueOf(values[5]))
                 .observedBAF(Double.valueOf(values[6]))

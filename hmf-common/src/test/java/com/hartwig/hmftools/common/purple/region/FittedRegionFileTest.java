@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
 
-import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.junit.Test;
@@ -22,7 +21,7 @@ public class FittedRegionFileTest {
                 .chromosome("X")
                 .start(random.nextLong())
                 .end(random.nextLong())
-                .status(SegmentStatus.GERMLINE)
+                .status(ObservedRegionStatus.GERMLINE)
                 .modelPloidy(random.nextInt())
                 .bafCount(random.nextInt())
                 .observedBAF(random.nextDouble())

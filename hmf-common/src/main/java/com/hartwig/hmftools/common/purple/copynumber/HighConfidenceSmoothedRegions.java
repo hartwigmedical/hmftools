@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
-import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
+import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
@@ -150,7 +150,7 @@ class HighConfidenceSmoothedRegions {
     }
 
     private boolean isGermline(@NotNull final FittedRegion newRegion) {
-        return !newRegion.status().equals(SegmentStatus.SOMATIC);
+        return !newRegion.status().equals(ObservedRegionStatus.SOMATIC);
     }
 
     private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final CombinedFittedRegion builder) {
@@ -220,7 +220,7 @@ class HighConfidenceSmoothedRegions {
     }
 
     private FittedRegion germinate(FittedRegion region) {
-        return ImmutableFittedRegion.builder().from(region).status(SegmentStatus.GERMLINE).build();
+        return ImmutableFittedRegion.builder().from(region).status(ObservedRegionStatus.GERMLINE).build();
     }
 
     private List<CombinedFittedRegion> finalPass(List<CombinedFittedRegion> regions) {

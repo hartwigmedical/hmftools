@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
-import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -52,7 +51,7 @@ public class ObservedRegionFactory {
                     .ratioSupport(region.ratioSupport())
                     .structuralVariantSupport(region.structuralVariantSupport())
                     .observedTumorRatioCount(cobalt.tumorCount())
-                    .status(SegmentStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
+                    .status(ObservedRegionStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
                     .build();
 
             result.add(copyNumber);
