@@ -9,12 +9,12 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -52,7 +52,7 @@ public class ObservedRegionFactory {
                     .ratioSupport(region.ratioSupport())
                     .structuralVariantSupport(region.structuralVariantSupport())
                     .observedTumorRatioCount(cobalt.tumorCount())
-                    .status(FreecStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
+                    .status(SegmentStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
                     .build();
 
             result.add(copyNumber);

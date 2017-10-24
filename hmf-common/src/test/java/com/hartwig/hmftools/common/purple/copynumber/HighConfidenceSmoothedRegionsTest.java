@@ -11,11 +11,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.junit.Test;
@@ -206,7 +206,7 @@ public class HighConfidenceSmoothedRegionsTest {
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
                 .observedTumorRatioCount(tumorCount)
-                .status(FreecStatus.SOMATIC)
+                .status(SegmentStatus.SOMATIC)
                 .build();
     }
 
@@ -223,7 +223,7 @@ public class HighConfidenceSmoothedRegionsTest {
     private FittedRegion createGermlineRegion(long start, long end, double copyNumber, StructuralVariantSupport sv) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
                 .bafCount(CopyNumberDeviation.MAX_BAF_COUNT)
-                .status(FreecStatus.GERMLINE)
+                .status(SegmentStatus.GERMLINE)
                 .structuralVariantSupport(sv)
                 .observedBAF(0.5)
                 .tumorCopyNumber(copyNumber)

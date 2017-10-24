@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +51,7 @@ public class PurpleDatamodelTest {
                 .observedTumorRatioCount(1)
                 .observedNormalRatio(1)
                 .ratioSupport(true)
-                .status(FreecStatus.SOMATIC)
+                .status(SegmentStatus.SOMATIC)
                 .structuralVariantSupport(StructuralVariantSupport.NONE);
     }
 

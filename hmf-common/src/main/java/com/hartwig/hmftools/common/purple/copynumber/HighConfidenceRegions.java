@@ -3,10 +3,10 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +32,7 @@ class HighConfidenceRegions {
     @NotNull
     List<FittedRegion> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
         fittedRegions.stream()
-                .filter(copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == FreecStatus.SOMATIC
+                .filter(copyNumber -> copyNumber.bafCount() > MIN_BAF_COUNT && copyNumber.status() == SegmentStatus.SOMATIC
                         && !Doubles.isZero(copyNumber.observedTumorRatio()))
                 .forEach(this::process);
 

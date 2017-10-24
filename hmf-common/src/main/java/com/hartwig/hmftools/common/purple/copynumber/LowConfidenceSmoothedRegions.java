@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +54,7 @@ class LowConfidenceSmoothedRegions {
     }
 
     private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final FittedRegion currentRegion) {
-        return newRegion.status().equals(FreecStatus.GERMLINE) || deviation.withinCopyNumberTolerance(currentRegion, newRegion)
+        return newRegion.status().equals(SegmentStatus.GERMLINE) || deviation.withinCopyNumberTolerance(currentRegion, newRegion)
                 || Doubles.isZero(newRegion.tumorCopyNumber()) || Doubles.isZero(currentRegion.tumorCopyNumber());
     }
 

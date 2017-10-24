@@ -11,11 +11,11 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -69,7 +69,7 @@ class CopyNumberDAO {
                     .chromosome(record.getValue(COPYNUMBERREGION.CHROMOSOME))
                     .start(record.getValue(COPYNUMBERREGION.START))
                     .end(record.getValue(COPYNUMBERREGION.END))
-                    .status(FreecStatus.valueOf(record.getValue(COPYNUMBERREGION.STATUS)))
+                    .status(SegmentStatus.valueOf(record.getValue(COPYNUMBERREGION.STATUS)))
                     .ratioSupport(true)
                     .structuralVariantSupport(StructuralVariantSupport.valueOf(record.getValue(COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT)))
                     .bafCount(record.getValue(COPYNUMBERREGION.BAFCOUNT))

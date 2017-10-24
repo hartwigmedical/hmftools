@@ -15,12 +15,12 @@ import java.util.concurrent.Future;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -70,7 +70,7 @@ public class FittedPurityFactory {
             final Chromosome chromosome = HumanChromosome.valueOf(region);
 
             if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
-                    && region.status() == FreecStatus.SOMATIC && Doubles.lessOrEqual(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
+                    && region.status() == SegmentStatus.SOMATIC && Doubles.lessOrEqual(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
             }

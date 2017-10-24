@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
 
-import com.hartwig.hmftools.common.copynumber.freec.FreecStatus;
+import com.hartwig.hmftools.common.purple.segment.SegmentStatus;
 import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 
 import org.junit.Test;
@@ -22,7 +22,7 @@ public class FittedRegionFileTest {
                 .chromosome("X")
                 .start(random.nextLong())
                 .end(random.nextLong())
-                .status(FreecStatus.GERMLINE)
+                .status(SegmentStatus.GERMLINE)
                 .modelPloidy(random.nextInt())
                 .bafCount(random.nextInt())
                 .observedBAF(random.nextDouble())
