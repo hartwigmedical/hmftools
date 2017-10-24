@@ -223,7 +223,3 @@ public abstract class MNVDetector {
         LOGGER.info("Reads with one variant: {}  Reads with all variants: {}", readsWithOneVariant, readsWithAllVariants);
     }
 }
-
-// TODO: manually check: Potential mnv of size 2: chromosome 4:       INDEL[64904204 - 64904208]: [64904204: CA -> C] [64904207: T -> C]
-// Percentage of reads with both variants: 1.0; but, 5 reads with an insertion of 5, 1 read with an insertion of 6(which contains the insertion of 5).
-// percentage should be lower?
