@@ -143,6 +143,28 @@ public class ScoringInsertionsTest {
     }
 
     @Test
+    public void doesNotComputeScoreForShorterINSinTumor() {
+        final SAMRecord alt = buildSamRecord(2, "1M1I1M", "ATC", "?5I", false);
+        assertEquals(ImmutableReadScore.of(ReadType.REF, 30), Scoring.getReadScore(alt, INSERTION));
+    }
+
+    @Test
+    public void doesNotComputeScoreForLongerINSinTumor() {
+        final SAMRecord alt = buildSamRecord(2, "1M3I", "ATCC", "?5II", false);
+        final ReadScore score = Scoring.getReadScore(alt, INSERTION);
+        assertEquals(ReadType.REF, score.type());
+        assertEquals(30, score.score());
+    }
+
+    @Test
+    public void doesNotComputeScoreForLongerINSandMatchInTumor() {
+        final SAMRecord alt = buildSamRecord(2, "1M3I1M", "ATCCM", "?5II?", false);
+        final ReadScore score = Scoring.getReadScore(alt, INSERTION);
+        assertEquals(ReadType.REF, score.type());
+        assertEquals(30, score.score());
+    }
+
+    @Test
     public void containsInsertionMNVTest() {
         final VariantContext INSERTION = VARIANTS.get(5);
         final VariantContext SNV = VARIANTS.get(6);

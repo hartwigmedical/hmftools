@@ -143,6 +143,28 @@ public class ScoringDeletionsTest {
     }
 
     @Test
+    public void doesNotComputeScoreForShorterDELinTumor() {
+        final SAMRecord alt = buildSamRecord(3, "1M1D1M", "TT", "PA", false);
+        assertEquals(ImmutableReadScore.of(ReadType.REF, 39), Scoring.getReadScore(alt, DELETION));
+    }
+
+    @Test
+    public void doesNotComputesScoreForDELinLongerDELinTumor() {
+        final SAMRecord alt = buildSamRecord(3, "1M3D", "T", "P", false);
+        final ReadScore score = Scoring.getReadScore(alt, DELETION);
+        assertEquals(ReadType.REF, score.type());
+        assertEquals(47, score.score());
+    }
+
+    @Test
+    public void doesNotComputesScoreForDELinLongerDELinTumor2() {
+        final SAMRecord alt = buildSamRecord(3, "1M3D1M", "TT", "PA", false);
+        final ReadScore score = Scoring.getReadScore(alt, DELETION);
+        assertEquals(ReadType.REF, score.type());
+        assertEquals(39, score.score());
+    }
+
+    @Test
     public void containsDeletionMNVTest() {
         final VariantContext DELETION = VARIANTS.get(3);
         final VariantContext SNV = VARIANTS.get(4);
