@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.strelka.scores.ReadScore;
 import com.hartwig.hmftools.strelka.scores.ReadType;
 
@@ -82,27 +81,26 @@ public abstract class MNVDetector {
         final QueryInterval[] queryIntervals =
                 new QueryInterval[] { new QueryInterval(referenceIndex, potentialMnv.start(), potentialMnv.lastPosition()) };
         final SAMRecordIterator iterator = tumorReader().queryOverlapping(queryIntervals);
-        final Map<SAMRecord, Map<VariantContext, ReadScore>> readToReadScore = Maps.newHashMap();
         final Map<Integer, List<Character>> readsPerPosition =
                 potentialMnv.gapPositions().stream().collect(Collectors.toMap(Function.identity(), position -> Lists.newArrayList()));
+        MNVScore score = MNVScore.of(potentialMnv.variants());
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
             if (goodRead(record) && containsAllMNVPositions(record, potentialMnv)) {
-                readToReadScore.put(record, recordScores(record, potentialMnv));
+                final Map<VariantContext, ReadScore> samRecordScores = recordScores(record, potentialMnv);
+                score = MNVScore.addReadScore(score, samRecordScores);
                 potentialMnv.gapPositions()
                         .forEach(position -> readsPerPosition.put(position,
                                 updatedReadsPerPosition(record, position, readsPerPosition.get(position))));
             }
         }
         if (potentialMnv.variants().size() == 2) {
-            final Map<SAMRecord, Map<VariantContext, ReadScore>> correctedScores = Scoring.correctMissingScores(readToReadScore);
-            final double mnvFrequency = computeMnvFrequency(correctedScores);
             final Map<Integer, Character> mostFrequentReadPerPosition = readsPerPosition.entrySet()
                     .stream()
                     .map(entry -> ImmutablePair.of(entry.getKey(), getMostCommonRead(entry.getValue())))
                     .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
             LOGGER.info(mostFrequentReadPerPosition);
-            if (mnvFrequency > 0.8) {
+            if (score.frequency() > 0.8) {
                 //TODO: pass sample name as param?
                 final String sampleName = potentialMnv.variants().get(0).getSampleNamesOrderedByName().get(0);
                 final VariantContext mergedVariant =
@@ -111,7 +109,7 @@ public abstract class MNVDetector {
             } else {
                 result.addAll(potentialMnv.variants());
             }
-            LOGGER.info("Percentage of reads with both variants: {}", mnvFrequency);
+            LOGGER.info("Percentage of reads with both variants: {}", score.frequency());
         }
         iterator.close();
         return result;
@@ -119,35 +117,6 @@ public abstract class MNVDetector {
 
     private boolean goodRead(@NotNull final SAMRecord record) {
         return !record.getDuplicateReadFlag();
-    }
-
-    @VisibleForTesting
-    static double computeMnvFrequency(@NotNull final Map<SAMRecord, Map<VariantContext, ReadScore>> scoresPerReadAndVariant) {
-        final long scoreWithAllVariants = scoresPerReadAndVariant.entrySet()
-                .stream()
-                .filter(recordEntry -> recordEntry.getValue()
-                        .entrySet()
-                        .stream()
-                        .allMatch(variantEntry -> variantEntry.getValue().type() == ReadType.ALT))
-                .mapToLong(recordEntry -> recordEntry.getValue()
-                        .entrySet()
-                        .stream()
-                        .mapToLong(variantEntry -> variantEntry.getValue().score())
-                        .sum())
-                .sum();
-        final long scoreWithOneVariant = scoresPerReadAndVariant.entrySet()
-                .stream()
-                .filter(recordEntry -> recordEntry.getValue()
-                        .entrySet()
-                        .stream()
-                        .anyMatch(variantEntry -> variantEntry.getValue().type() == ReadType.ALT))
-                .mapToLong(recordEntry -> recordEntry.getValue()
-                        .entrySet()
-                        .stream()
-                        .mapToLong(variantEntry -> variantEntry.getValue().score())
-                        .sum())
-                .sum();
-        return (double) scoreWithAllVariants / scoreWithOneVariant;
     }
 
     @VisibleForTesting
