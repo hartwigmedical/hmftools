@@ -16,6 +16,11 @@ public enum GenomePositions {
     ;
 
     @NotNull
+    public static GenomePosition create(@NotNull final String chromosome, final long position) {
+        return  ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
+    }
+
+    @NotNull
     public static <S, T extends GenomePosition> Multimap<S, T> union(@NotNull final Multimap<S, T> first,
             @NotNull final Multimap<S, T> second) {
 
