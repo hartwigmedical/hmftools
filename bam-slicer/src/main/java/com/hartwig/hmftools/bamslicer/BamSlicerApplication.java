@@ -61,6 +61,7 @@ public class BamSlicerApplication {
     private static final String PROXIMITY = "proximity";
     private static final String VCF = "vcf";
     private static final String BED = "bed";
+    private static final String MAX_CHUNKS_IN_MEMORY = "max_chunks";
 
     public static void main(final String... args) throws ParseException, IOException, EmptyFileException {
         final CommandLine cmd = createCommandLine(args);
@@ -133,6 +134,7 @@ public class BamSlicerApplication {
         final URL indexUrl = SbpS3UrlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX));
         final String outputPath = cmd.getOptionValue(OUTPUT);
         final String bedPath = cmd.getOptionValue(BED);
+        final int maxBufferSize = readMaxBufferSize(cmd);
         final File indexFile = downloadIndex(indexUrl);
         indexFile.deleteOnExit();
         final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
@@ -142,7 +144,8 @@ public class BamSlicerApplication {
         reader.close();
         LOGGER.info("Generated {} query intervals which map to {} bam chunks", intervals.length, expandedChunks.size());
 
-        final SamInputResource bamResource = SamInputResource.of(new CachingSeekableHTTPStream(bamUrl, expandedChunks)).index(indexFile);
+        final SamInputResource bamResource =
+                SamInputResource.of(new CachingSeekableHTTPStream(bamUrl, expandedChunks, maxBufferSize)).index(indexFile);
         final SamReader cachingReader = SamReaderFactory.makeDefault().open(bamResource);
         LOGGER.info("Slicing bam...");
         writeToSlice(outputPath, cachingReader, intervals);
@@ -213,6 +216,19 @@ public class BamSlicerApplication {
         writer.close();
     }
 
+    private static int readMaxBufferSize(@NotNull final CommandLine cmd) {
+        final String optionValue = cmd.getOptionValue(MAX_CHUNKS_IN_MEMORY);
+        try {
+            final int bufferSize = Integer.parseInt(optionValue);
+            if (bufferSize <= 0) {
+                throw new IllegalArgumentException("Buffer size cannot be <= 0.");
+            }
+            return bufferSize;
+        } catch (final NumberFormatException e) {
+            throw new IllegalArgumentException("Could not parse buffer size");
+        }
+    }
+
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
@@ -232,6 +248,7 @@ public class BamSlicerApplication {
         options.addOption(Option.builder(INDEX).required().hasArg().desc("BAM index location (required)").build());
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("the output BAM (required)").build());
         options.addOption(Option.builder(BED).required().hasArg().desc("BED to slice BAM with (required)").build());
+        options.addOption(Option.builder(MAX_CHUNKS_IN_MEMORY).required().hasArg().desc("Max number of chunks to keep in memory").build());
         return options;
     }
 
