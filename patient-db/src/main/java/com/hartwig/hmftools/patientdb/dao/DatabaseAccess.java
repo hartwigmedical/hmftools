@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.StructuralVariantCluster;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.data.Patient;
@@ -92,10 +94,13 @@ public class DatabaseAccess {
         somaticVariantDAO.write(sampleId, variants);
     }
 
-    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull List<StructuralVariant> variants) {
+    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<StructuralVariant> variants) {
         structuralVariantDAO.write(sampleId, variants);
     }
 
+    public void writeStructuralVariantClusters(@NotNull final String sampleId, @NotNull final Collection<StructuralVariantCluster> clusters) {
+        structuralVariantDAO.writeClusters(sampleId, clusters);
+    }
     public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }

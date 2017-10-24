@@ -224,6 +224,22 @@ CREATE TABLE structuralVariant
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS structuralVariantCluster;
+CREATE TABLE structuralVariantCluster
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    start int not null,
+    end int not null,
+    firstVariant int not null,
+    finalVariant int not null,
+    count int not null,
+    type varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
 DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
 (   id int NOT NULL AUTO_INCREMENT,

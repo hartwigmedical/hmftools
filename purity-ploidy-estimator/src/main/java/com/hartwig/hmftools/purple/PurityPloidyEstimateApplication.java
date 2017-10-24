@@ -157,16 +157,20 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Ratio Segmentation
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratios).get();
             final List<PurpleSegment> segments;
+            final List<StructuralVariantCluster> clusters;
             if (cmd.hasOption(EXPERIMENTAL)) {
                 final Multimap<String, GenomePosition> ratioSegments = RatioBreakPoints.createRatioSegments(config);
                 final Multimap<String, StructuralVariantCluster> svSegments =
                         new StructuralVariantClusterFactory(config.windowSize()).cluster(structuralVariants, ratios);
                 segments = PurpleSegmentFactoryNew.segment(svSegments, ratioSegments, lengths);
+                clusters = Lists.newArrayList(svSegments.values());
+                Collections.sort(clusters);
             } else {
 
                 final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
                 LOGGER.info("Merging structural variants into freec segmentation");
                 segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
+                clusters = Collections.emptyList();
             }
 
             LOGGER.info("Mapping all observations to the segmented regions");
@@ -226,6 +230,7 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
                 dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
                 dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
+                dbAccess.writeStructuralVariantClusters(tumorSample, clusters);
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
