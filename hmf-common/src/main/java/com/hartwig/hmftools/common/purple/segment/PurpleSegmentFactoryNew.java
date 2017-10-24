@@ -50,48 +50,32 @@ public class PurpleSegmentFactoryNew {
         ModifiablePurpleSegment segment = create(chromosome.chromosome(), 1);
         while (ratio != null || cluster != null) {
 
-            if (ratio == null) {
-                result.add(segment.setEnd(cluster.firstVariantPosition() - 1));
-                segment = create(cluster);
+            if (ratio == null || (cluster != null && cluster.start() <= ratio.position())) {
 
+                // finalise previous segment
+                result.add(segment.setEnd(cluster.firstVariantPosition() - 1));
+
+                // create new segment
+                final boolean ratioSupport = ratio != null && ratio.position() <= cluster.end();
+                segment = create(cluster, ratioSupport);
+
+                // create additional segment if cluster contains multiple variants
                 if (cluster.firstVariantPosition() != cluster.finalVariantPosition()) {
                     result.add(segment);
-                    segment = createFromLastVariant(cluster, false);
+                    segment = createFromLastVariant(cluster, ratioSupport);
                 }
+
                 cluster = clusterIterator.hasNext() ? clusterIterator.next() : null;
 
-            } else if (cluster == null) {
-                result.add(segment.setEnd(ratio.position() - 1));
-                segment = create(ratio.chromosome(), ratio.position());
-                ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
             } else {
 
-                if (cluster.start() <= ratio.position()) {
-                    result.add(segment.setEnd(cluster.firstVariantPosition() - 1));
-                    segment = create(cluster);
-                    final boolean ratioSupport;
-                    if (ratio.position() <= segment.maxBoundary()) {
-                        ratioSupport = true;
-                        segment.setRatioSupport(true);
-                        ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
-                    } else {
-                        ratioSupport = false;
-                    }
-
-                    if (cluster.firstVariantPosition() != cluster.finalVariantPosition()) {
-                        result.add(segment);
-                        segment = createFromLastVariant(cluster, ratioSupport);
-                    }
-                    cluster = clusterIterator.hasNext() ? clusterIterator.next() : null;
+                if (ratio.position() <= segment.maxBoundary()) {
+                    segment.setRatioSupport(true);
                 } else {
-                    if (ratio.position() <= segment.maxBoundary()) {
-                        segment.setRatioSupport(true);
-                    } else {
-                        result.add(segment.setEnd(ratio.position() - 1));
-                        segment = create(ratio.chromosome(), ratio.position());
-                    }
-                    ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
+                    result.add(segment.setEnd(ratio.position() - 1));
+                    segment = create(ratio.chromosome(), ratio.position());
                 }
+                ratio = ratioIterator.hasNext() ? ratioIterator.next() : null;
             }
         }
 
@@ -109,10 +93,10 @@ public class PurpleSegmentFactoryNew {
                 .setStructuralVariantSupport(StructuralVariantSupport.NONE);
     }
 
-    private static ModifiablePurpleSegment create(StructuralVariantCluster cluster) {
+    private static ModifiablePurpleSegment create(StructuralVariantCluster cluster, boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())
-                .setRatioSupport(false)
+                .setRatioSupport(ratioSupport)
                 .setStart(cluster.firstVariantPosition())
                 .setEnd(cluster.finalVariantPosition() - 1)
                 .setMaxBoundary(cluster.end())

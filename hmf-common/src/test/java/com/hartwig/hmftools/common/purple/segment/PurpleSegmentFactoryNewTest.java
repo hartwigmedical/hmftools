@@ -108,6 +108,20 @@ public class PurpleSegmentFactoryNewTest {
         assertPurpleSegment(segments.get(2), 19991, CHROM.position(), true, StructuralVariantSupport.BND);
     }
 
+    @Test
+    public void testMultipleClustersWithRatios() {
+        final List<StructuralVariantCluster> clusters =
+                Lists.newArrayList(
+                        cluster(18881, 17001, 20000).build(),
+                        cluster(25551, 24001, 27000).build());
+        final List<GenomePosition> ratios = Lists.newArrayList(ratio(19001));
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters, ratios);
+        assertEquals(3, segments.size());
+        assertPurpleSegment(segments.get(0), 1, 18880, true, StructuralVariantSupport.NONE);
+        assertPurpleSegment(segments.get(1), 18881, 25550, true, StructuralVariantSupport.BND);
+        assertPurpleSegment(segments.get(2), 25551, CHROM.position(), false, StructuralVariantSupport.BND);
+    }
+
     private static void assertPurpleSegment(final PurpleSegment victim, long start, long end, boolean ratioSupport,
             StructuralVariantSupport variantSupport) {
         assertEquals(start, victim.start());
