@@ -3,17 +3,13 @@ package com.hartwig.hmftools.strelka;
 import static com.hartwig.hmftools.strelka.Scoring.recordScores;
 
 import java.io.File;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.strelka.scores.ReadScore;
-import com.hartwig.hmftools.strelka.scores.ReadType;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -81,8 +77,8 @@ public abstract class MNVDetector {
         final QueryInterval[] queryIntervals =
                 new QueryInterval[] { new QueryInterval(referenceIndex, potentialMnv.start(), potentialMnv.lastPosition()) };
         final SAMRecordIterator iterator = tumorReader().queryOverlapping(queryIntervals);
-        final Map<Integer, List<Character>> readsPerPosition =
-                potentialMnv.gapPositions().stream().collect(Collectors.toMap(Function.identity(), position -> Lists.newArrayList()));
+        final Map<Integer, GapReads> readsPerPosition =
+                potentialMnv.gapPositions().stream().collect(Collectors.toMap(Function.identity(), (position) -> GapReads.empty()));
         MNVScore score = MNVScore.of(potentialMnv.variants());
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
@@ -91,16 +87,15 @@ public abstract class MNVDetector {
                 score = MNVScore.addReadScore(score, samRecordScores);
                 potentialMnv.gapPositions()
                         .forEach(position -> readsPerPosition.put(position,
-                                updatedReadsPerPosition(record, position, readsPerPosition.get(position))));
+                                GapReads.addRead(readsPerPosition.get(position), getReadAtPosition(record, position))));
             }
         }
         if (potentialMnv.variants().size() == 2) {
             final Map<Integer, Character> mostFrequentReadPerPosition = readsPerPosition.entrySet()
                     .stream()
-                    .map(entry -> ImmutablePair.of(entry.getKey(), getMostCommonRead(entry.getValue())))
+                    .map(entry -> ImmutablePair.of(entry.getKey(), entry.getValue().mostFrequentRead()))
                     .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-            LOGGER.info(mostFrequentReadPerPosition);
-            if (score.frequency() > 0.8) {
+            if (score.isMNV()) {
                 //TODO: pass sample name as param?
                 final String sampleName = potentialMnv.variants().get(0).getSampleNamesOrderedByName().get(0);
                 final VariantContext mergedVariant =
@@ -119,25 +114,10 @@ public abstract class MNVDetector {
         return !record.getDuplicateReadFlag();
     }
 
-    @VisibleForTesting
-    static boolean containsAllMNVPositions(@NotNull final SAMRecord record, @NotNull final PotentialMNV potentialMnv) {
+    private static boolean containsAllMNVPositions(@NotNull final SAMRecord record, @NotNull final PotentialMNV potentialMnv) {
         final VariantContext lastVariant = potentialMnv.variants().get(potentialMnv.variants().size() - 1);
         return record.getAlignmentStart() <= potentialMnv.start()
                 && record.getAlignmentEnd() >= lastVariant.getStart() + lastVariant.getReference().length() - 1;
-    }
-
-    private static Character getMostCommonRead(@NotNull final List<Character> reads) {
-        final Map<Character, Integer> countsPerRead = reads.stream()
-                .filter(read -> read != 'N')
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.collectingAndThen(Collectors.toList(), List::size)));
-        final Optional<Map.Entry<Character, Integer>> max =
-                countsPerRead.entrySet().stream().max(Comparator.comparing(Map.Entry::getValue));
-        if (max.isPresent()) {
-            return max.get().getKey();
-        } else {
-            LOGGER.warn("Couldn't find a frequent read for this position.");
-            return 'N';
-        }
     }
 
     private int getReferenceIndex(@NotNull final PotentialMNV potentialMnv) {
@@ -163,32 +143,5 @@ public abstract class MNVDetector {
         } else {
             return record.getReadString().charAt(recordPosition - 1);
         }
-    }
-
-    private static List<Character> updatedReadsPerPosition(@NotNull final SAMRecord record, final int position,
-            @NotNull final List<Character> currentReads) {
-        final List<Character> reads = Lists.newArrayList();
-        reads.addAll(currentReads);
-        reads.add(getReadAtPosition(record, position));
-        return reads;
-    }
-
-    private void printReadStats(@NotNull final Map<SAMRecord, Map<VariantContext, ReadScore>> scores) {
-        final long readsWithAllVariants = scores.entrySet()
-                .stream()
-                .filter(recordEntry -> recordEntry.getValue()
-                        .entrySet()
-                        .stream()
-                        .allMatch(variantEntry -> variantEntry.getValue().type() == ReadType.ALT))
-                .count();
-
-        final long readsWithOneVariant = scores.entrySet()
-                .stream()
-                .filter(recordEntry -> recordEntry.getValue()
-                        .entrySet()
-                        .stream()
-                        .anyMatch(variantEntry -> variantEntry.getValue().type() == ReadType.ALT))
-                .count();
-        LOGGER.info("Reads with one variant: {}  Reads with all variants: {}", readsWithOneVariant, readsWithAllVariants);
     }
 }
