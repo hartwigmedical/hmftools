@@ -6,19 +6,16 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class PotentialMNVRegionTest {
-    private static final Logger LOGGER = LogManager.getLogger(PotentialMNVRegionTest.class);
-
     private static final File VCF_FILE = new File(Resources.getResource("mnvs.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
     private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
@@ -66,7 +63,7 @@ public class PotentialMNVRegionTest {
 
     // MIVO: variants at positions: 1  1(del of 1)  4  =>  possible mnvs: (1del,4)
     @Test
-    public void correctlyMakesCombinationsWithSNPafterDEL() {
+    public void correctlyMakesCombinationsWithSNPAfterDEL() {
         final PotentialMNVRegion oneVariantRegion = PotentialMNVRegion.fromVariant(SNP);
         final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, DEL);
         final PotentialMNVRegion threeVariantRegion = PotentialMNVRegion.addVariant(twoVariantRegion, SNP_AFTER_DEL);
@@ -74,5 +71,15 @@ public class PotentialMNVRegionTest {
         assertEquals(0, twoVariantRegion.potentialMnvs().size());
         assertEquals(4, threeVariantRegion.mnvs().size());
         assertEquals(1, threeVariantRegion.potentialMnvs().size());
+    }
+
+    // MIVO: variants at positions: 1  1(del of 1)  3(alts: A,T)  4  =>
+    //      possible mnvs: (1,3A) (1,3T) (1,3A,4) (1,3T,4) (1del,3A) (1del,3T) (1del,4) (1del,3A,4) (1del,3T,4) (3A,4) (3T,4)
+    @Test
+    public void correctlyMakesCombinationsWithSNPAfterDELAndMultiAlt() {
+        final PotentialMNVRegion region =
+                PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(SNP, DEL, MULTI_ALT, SNP_AFTER_DEL));
+        assertEquals(16, region.mnvs().size());
+        assertEquals(11, region.potentialMnvs().size());
     }
 }
