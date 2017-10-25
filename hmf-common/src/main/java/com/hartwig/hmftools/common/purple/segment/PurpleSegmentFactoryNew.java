@@ -57,20 +57,19 @@ public class PurpleSegmentFactoryNew {
 
             if (ratio == null || (cluster != null && cluster.start() <= ratio.position())) {
                 maxClusterEnd = cluster.end();
-
-                // finalise previous segment
-                result.add(setStatus(segment.setEnd(cluster.firstVariantPosition() - 1)));
-
-                // create new segment
                 final boolean ratioSupport = ratio != null && ratio.position() <= maxClusterEnd;
-                segment = createFromCluster(cluster, ratioSupport);
 
-                // create additional segment if cluster contains multiple variants
-                if (cluster.firstVariantPosition() != cluster.finalVariantPosition()) {
-                    result.add(setStatus(segment));
-                    segment = createFromLastVariant(cluster, ratioSupport);
+                for (int i = 0; i < cluster.variants().size(); i++) {
+                    final StructuralVariantPosition variant = cluster.variants().get(i);
+                    if (variant.position() != segment.start()) {
+                        result.add(setStatus(segment.setEnd(variant.position() - 1)));
+                        segment = createFromCluster(cluster, variant, ratioSupport);
+                    } else {
+                        segment.setStructuralVariantSupport(StructuralVariantSupport.MULTIPLE);
+                    }
                 }
 
+                segment.setStatus(PurpleSegmentStatus.NORMAL);
                 cluster = clusterIterator.hasNext() ? clusterIterator.next() : null;
 
             } else {
@@ -99,26 +98,15 @@ public class PurpleSegmentFactoryNew {
                 .setStructuralVariantSupport(StructuralVariantSupport.NONE);
     }
 
-    private static ModifiablePurpleSegment createFromCluster(StructuralVariantCluster cluster, boolean ratioSupport) {
+    private static ModifiablePurpleSegment createFromCluster(StructuralVariantCluster cluster, StructuralVariantPosition variant,
+            boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())
                 .setRatioSupport(ratioSupport)
-                .setStart(cluster.firstVariantPosition())
-                .setEnd(cluster.finalVariantPosition() - 1)
-                .setStatus(cluster.type().equals(StructuralVariantSupport.MULTIPLE)
-                        ? PurpleSegmentStatus.CLUSTER
-                        : PurpleSegmentStatus.NORMAL)
-                .setStructuralVariantSupport(cluster.type());
-    }
-
-    private static ModifiablePurpleSegment createFromLastVariant(StructuralVariantCluster cluster, boolean ratioSupport) {
-        return ModifiablePurpleSegment.create()
-                .setChromosome(cluster.chromosome())
-                .setRatioSupport(ratioSupport)
-                .setStart(cluster.finalVariantPosition())
+                .setStart(variant.position())
                 .setEnd(0)
-                .setStatus(PurpleSegmentStatus.NORMAL)
-                .setStructuralVariantSupport(cluster.finalVariantType());
+                .setStatus(cluster.variants().size() > 1 ? PurpleSegmentStatus.CLUSTER : PurpleSegmentStatus.NORMAL)
+                .setStructuralVariantSupport(StructuralVariantSupport.fromVariant(variant.type()));
     }
 
     private static ModifiablePurpleSegment setStatus(@NotNull ModifiablePurpleSegment segment) {
