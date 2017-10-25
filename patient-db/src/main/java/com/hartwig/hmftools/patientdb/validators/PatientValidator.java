@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIR
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR2;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR3;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_DEATH_DATE;
-import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_ETHNICITY;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_PRIMARY_TUMOR_LOCATION_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
@@ -91,10 +90,6 @@ public class PatientValidator {
                         patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
                 findings.add(ValidationFinding.of("ecrf", cpctId, fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
                         "birth year could not be determined", patientData.eligibilityStatus(), patientData.eligibilityLocked()));
-            }
-            if (patientData.ethnicity() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_ETHNICITY, "ethnicity empty", patientData.demographyStatus(),
-                        patientData.demographyLocked()));
             }
         }
         return findings;

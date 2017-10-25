@@ -20,9 +20,6 @@ public abstract class PatientData {
     public abstract String gender();
 
     @Nullable
-    public abstract String ethnicity();
-
-    @Nullable
     public abstract String hospital();
 
     @Nullable

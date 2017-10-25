@@ -6,7 +6,6 @@ CREATE TABLE patient
     cpctId varchar(50),
     registrationDate DATE,
     gender varchar(10),
-    ethnicity varchar(255),
     hospital varchar(255),
     birthYear int,
     primaryTumorLocation varchar(255),

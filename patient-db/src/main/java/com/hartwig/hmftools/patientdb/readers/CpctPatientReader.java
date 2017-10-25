@@ -38,7 +38,6 @@ public class CpctPatientReader {
     private static final String ITEMGROUP_DEATH = "GRP.DEATH.DEATH";
 
     public static final String FIELD_SEX = "FLD.DEMOGRAPHY.SEX";
-    public static final String FIELD_ETHNICITY = "FLD.DEMOGRAPHY.ETHNIC";
 
     public static final String FIELD_REGISTRATION_DATE1 = "FLD.ELIGIBILITY.REGDTC";
     public static final String FIELD_REGISTRATION_DATE2 = "FLD.SELCRIT.NREGDTC";
@@ -78,7 +77,6 @@ public class CpctPatientReader {
             for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY, false)) {
                 for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY, false)) {
                     patientBuilder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
-                    patientBuilder.ethnicity(demographyItemGroup.readItemString(FIELD_ETHNICITY, 0, false));
                     patientBuilder.demographyStatus(demographyForm.status());
                     patientBuilder.demographyLocked(demographyForm.locked());
                 }

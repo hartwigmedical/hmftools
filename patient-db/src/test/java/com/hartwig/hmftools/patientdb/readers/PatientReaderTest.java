@@ -36,7 +36,6 @@ public class PatientReaderTest {
         assertEquals("CPCT02252500", patientData.cpctId());
         assertEquals("Breast cancer", patientData.primaryTumorLocation());
         assertEquals("female", patientData.gender());
-        assertEquals("Other or unknown", patientData.ethnicity());
         assertEquals("Bernhoven uden", patientData.hospital());
         assertEquals(new Integer(1963), patientData.birthYear());
         assertEquals(LocalDate.parse("2012-06-22", DATE_FORMATTER), patientData.deathDate());
