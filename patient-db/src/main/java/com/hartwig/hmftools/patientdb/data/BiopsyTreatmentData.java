@@ -94,7 +94,7 @@ public abstract class BiopsyTreatmentData {
         } else if (types.size() == 1) {
             return types.iterator().next();
         } else {
-            return "Combination";
+            return "Combi therapy";
         }
     }
 

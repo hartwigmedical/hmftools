@@ -182,7 +182,7 @@ public final class LoadClinicalData {
         FileReader.build().readLines(new File(treatmentToTypeMappingCsv).toPath()).forEach(line -> {
             final String[] parts = line.split(",");
             if (parts.length == 2) {
-                treatmentToTypeMapping.put(parts[0].toLowerCase().trim(), parts[1].toLowerCase().trim());
+                treatmentToTypeMapping.put(parts[0].toLowerCase().trim(), parts[1].trim());
             } else {
                 LOGGER.warn("Invalid row found in treatment to type mapping csv: " + line);
             }
