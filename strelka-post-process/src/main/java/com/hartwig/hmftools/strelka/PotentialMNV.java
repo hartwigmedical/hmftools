@@ -18,7 +18,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PotentialMNV {
-    private static final Logger LOGGER = LogManager.getLogger(MNVDetector.class);
+    private static final Logger LOGGER = LogManager.getLogger(PotentialMNV.class);
 
     public abstract String chromosome();
 
@@ -59,14 +59,6 @@ public abstract class PotentialMNV {
     static PotentialMNV fromVariant(@NotNull final VariantContext variant) {
         return ImmutablePotentialMNV.of(variant.getContig(), variant.getStart(),
                 variant.getStart() + variant.getReference().getBaseString().length(), Lists.newArrayList(variant), Lists.newArrayList());
-    }
-
-    static PotentialMNV fromVariants(@NotNull final List<VariantContext> variants) {
-        PotentialMNV state = PotentialMNV.empty();
-        for (final VariantContext variant : variants) {
-            state = addVariant(state, variant);
-        }
-        return state;
     }
 
     static PotentialMNV empty() {
