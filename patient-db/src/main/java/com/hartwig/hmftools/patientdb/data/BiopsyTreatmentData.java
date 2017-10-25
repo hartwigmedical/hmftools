@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -19,6 +20,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class BiopsyTreatmentData {
+
+    @VisibleForTesting
+    static final String COMBI_THERAPY = "Combi therapy";
 
     public abstract int id();
 
@@ -90,11 +94,11 @@ public abstract class BiopsyTreatmentData {
         }
 
         if (types.isEmpty()) {
-            return "NULL";
+            return null;
         } else if (types.size() == 1) {
             return types.iterator().next();
         } else {
-            return "Combi therapy";
+            return COMBI_THERAPY;
         }
     }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.data;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -26,13 +27,13 @@ public class BiopsyTreatmentDataTest {
     @Test
     public void canGenerateCorrectTreatmentType() {
         final List<BiopsyTreatmentDrugData> noTypes = Lists.newArrayList(drugWithType(null));
-        assertEquals("NULL", withDrugs(noTypes).type());
+        assertNull(withDrugs(noTypes).type());
 
         final List<BiopsyTreatmentDrugData> simpleType = Lists.newArrayList(drugWithType("simple"), drugWithType("simple"));
         assertEquals("simple", withDrugs(simpleType).type());
 
         final List<BiopsyTreatmentDrugData> combiType = Lists.newArrayList(drugWithType("complex1"), drugWithType("complex2"));
-        assertEquals("Combination", withDrugs(combiType).type());
+        assertEquals(BiopsyTreatmentData.COMBI_THERAPY, withDrugs(combiType).type());
     }
 
     @NotNull
