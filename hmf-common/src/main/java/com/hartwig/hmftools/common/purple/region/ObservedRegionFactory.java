@@ -20,9 +20,11 @@ import org.jetbrains.annotations.NotNull;
 public class ObservedRegionFactory {
 
     private final Gender gender;
+    private final ObservedRegionStatusFactory statusFactory;
 
     public ObservedRegionFactory(final Gender gender) {
         this.gender = gender;
+        statusFactory = new ObservedRegionStatusFactory(gender);
     }
 
     @NotNull
@@ -40,18 +42,18 @@ public class ObservedRegionFactory {
             bafSelector.select(region, baf);
             cobaltSelector.select(region, cobalt);
 
-            double myTumorRatio = cobalt.tumorMeanRatio();
-            double myNormalRatio = cobalt.referenceMeanRatio();
+            double tumorRatio = cobalt.tumorMeanRatio();
+            double normalRatio = cobalt.referenceMeanRatio();
             final EnrichedRegion copyNumber = ImmutableEnrichedRegion.builder()
                     .from(region)
                     .bafCount(baf.count())
                     .observedBAF(baf.medianBaf())
-                    .observedTumorRatio(myTumorRatio)
-                    .observedNormalRatio(myNormalRatio)
+                    .observedTumorRatio(tumorRatio)
+                    .observedNormalRatio(normalRatio)
                     .ratioSupport(region.ratioSupport())
                     .structuralVariantSupport(region.structuralVariantSupport())
                     .observedTumorRatioCount(cobalt.tumorCount())
-                    .status(ObservedRegionStatus.fromNormalRatio(gender, region.chromosome(), myNormalRatio))
+                    .status(statusFactory.status(region, normalRatio))
                     .build();
 
             result.add(copyNumber);

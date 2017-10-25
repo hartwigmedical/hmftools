@@ -105,7 +105,9 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(ratioSupport)
                 .setStart(cluster.firstVariantPosition())
                 .setEnd(cluster.finalVariantPosition() - 1)
-                .setStatus(PurpleSegmentStatus.CLUSTER)
+                .setStatus(cluster.type().equals(StructuralVariantSupport.MULTIPLE)
+                        ? PurpleSegmentStatus.CLUSTER
+                        : PurpleSegmentStatus.NORMAL)
                 .setStructuralVariantSupport(cluster.type());
     }
 

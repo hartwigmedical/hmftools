@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 public enum ObservedRegionStatus {
     GERMLINE,
     SOMATIC,
+    CENTROMERE,
+    CLUSTER,
     UNKNOWN;
 
     private static final double GERMLINE_MIN_RATIO = 0.8;
