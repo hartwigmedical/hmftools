@@ -3,11 +3,13 @@ package com.hartwig.hmftools.patientdb.data;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -78,16 +80,22 @@ public abstract class BiopsyTreatmentData {
 
     @Nullable
     public String type() {
-        final StringJoiner joiner = new StringJoiner("/");
-        drugs().forEach(drug -> {
-            final String drugType = drug.type();
-            if (drugType == null) {
-                joiner.add("NULL");
-            } else {
-                joiner.add(drugType);
+        final Set<String> types = Sets.newHashSet();
+
+        for (BiopsyTreatmentDrugData drug : drugs()) {
+            final String type = drug.type();
+            if (type != null) {
+                types.add(drug.type());
             }
-        });
-        return Strings.emptyToNull(joiner.toString());
+        }
+
+        if (types.isEmpty()) {
+            return "NULL";
+        } else if (types.size() == 1) {
+            return types.iterator().next();
+        } else {
+            return "Combination";
+        }
     }
 
     @Override
