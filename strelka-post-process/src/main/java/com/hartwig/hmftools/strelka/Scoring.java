@@ -20,6 +20,7 @@ final class Scoring {
     private Scoring() {
     }
 
+    @NotNull
     private static ReadType getReadType(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
         // MIVO: assumes single alt allele
         final Allele alt = variant.getAlternateAllele(0);
@@ -71,6 +72,7 @@ final class Scoring {
         return ReadType.OTHER;
     }
 
+    @NotNull
     static ReadScore getReadScore(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
         final ReadType readType = getReadType(record, variant);
         // MIVO: assumes single alt allele
@@ -108,6 +110,7 @@ final class Scoring {
         return ImmutableReadScore.of(readType, 0);
     }
 
+    @NotNull
     static Map<VariantContext, ReadScore> recordScores(@NotNull final SAMRecord record, @NotNull final List<VariantContext> variants) {
         return variants.stream()
                 .map(variant -> ImmutablePair.of(variant, getReadScore(record, variant)))
