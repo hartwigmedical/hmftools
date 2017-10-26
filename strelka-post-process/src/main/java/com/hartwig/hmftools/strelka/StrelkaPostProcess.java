@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.strelka;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -79,24 +80,22 @@ final class StrelkaPostProcess {
 
     @VisibleForTesting
     static double allelicFrequency(@NotNull final VariantContext variant) throws HartwigException {
-        final Genotype tumorGenotype = variant.getGenotype(TUMOR_GENOTYPE);
         if (variant.isSNP()) {
             final int tierIndex = getIntField(variant, SNP_TIER_INDEX_FIELD) - 1;
-            final String altField = tumorGenotype.getExtendedAttribute(alleleKey(variant.getAlternateAllele(0))).toString();
-            final String refField = tumorGenotype.getExtendedAttribute(alleleKey(variant.getReference())).toString();
-            return readAf(altField, refField, tierIndex);
+            return readAf(variant, tierIndex, StrelkaPostProcess::snpAlleleKey);
         } else if (variant.isIndel()) {
             final int tierIndex = getIntField(variant, INDEL_TIER_INDEX_FIELD) - 1;
-            final String altField = tumorGenotype.getExtendedAttribute(TIR_FIELD).toString();
-            final String refField = tumorGenotype.getExtendedAttribute(TAR_FIELD).toString();
-            return readAf(altField, refField, tierIndex);
+            return readAf(variant, tierIndex, StrelkaPostProcess::indelAlleleKey);
         } else {
             throw new HartwigException("record is not indel or snp: " + variant);
         }
     }
 
-    private static double readAf(@NotNull final String altField, @NotNull final String refField, final int tierIndex)
+    private static double readAf(@NotNull final VariantContext variant, final int tierIndex, @NotNull Function<Allele, String> alleleKey)
             throws HartwigException {
+        final Genotype tumorGenotype = variant.getGenotype(TUMOR_GENOTYPE);
+        final String altField = tumorGenotype.getExtendedAttribute(alleleKey.apply(variant.getAlternateAllele(0))).toString();
+        final String refField = tumorGenotype.getExtendedAttribute(alleleKey.apply(variant.getReference())).toString();
         final String[] altFieldParts = altField.split(SEPARATOR);
         final String[] refFieldParts = refField.split(SEPARATOR);
         final double altReads = Double.parseDouble(altFieldParts[tierIndex]);
@@ -122,24 +121,20 @@ final class StrelkaPostProcess {
 
     @VisibleForTesting
     static int[] getAD(@NotNull final VariantContext variant) throws HartwigException {
-        final Genotype tumorGenotype = variant.getGenotype(TUMOR_GENOTYPE);
         if (variant.isSNP()) {
-            return readAD(variant.getAlleles(), tumorGenotype);
+            return readAD(variant, StrelkaPostProcess::snpAlleleKey);
         } else if (variant.isIndel()) {
-            final String refADString = tumorGenotype.getExtendedAttribute(TAR_FIELD).toString().split(SEPARATOR)[0];
-            final int refAD = Integer.parseInt(refADString);
-            final String altADString = tumorGenotype.getExtendedAttribute(TIR_FIELD).toString().split(SEPARATOR)[0];
-            final int altAD = Integer.parseInt(altADString);
-            return new int[] { refAD, altAD };
+            return readAD(variant, StrelkaPostProcess::indelAlleleKey);
         } else {
             throw new HartwigException("record is not indel or snp: " + variant);
         }
     }
 
     @NotNull
-    private static int[] readAD(@NotNull final List<Allele> alleles, @NotNull final Genotype tumorGenotype) {
-        final List<Integer> alleleAds = alleles.stream().map(allele -> {
-            final String[] alleleADs = tumorGenotype.getExtendedAttribute(alleleKey(allele), "0").toString().split(SEPARATOR);
+    private static int[] readAD(@NotNull final VariantContext variant, @NotNull Function<Allele, String> alleleKey) {
+        final Genotype tumorGenotype = variant.getGenotype(TUMOR_GENOTYPE);
+        final List<Integer> alleleAds = variant.getAlleles().stream().map(allele -> {
+            final String[] alleleADs = tumorGenotype.getExtendedAttribute(alleleKey.apply(allele), "0").toString().split(SEPARATOR);
             if (alleleADs.length > 0) {
                 try {
                     return Integer.parseInt(alleleADs[0]);
@@ -153,8 +148,12 @@ final class StrelkaPostProcess {
         return ArrayUtils.toPrimitive(alleleAds.toArray(ads));
     }
 
-    private static String alleleKey(@NotNull final Allele allele) {
+    private static String snpAlleleKey(@NotNull final Allele allele) {
         return allele.getBaseString() + "U";
+    }
+
+    private static String indelAlleleKey(@NotNull final Allele allele) {
+        return allele.isReference() ? TAR_FIELD : TIR_FIELD;
     }
 
     @VisibleForTesting

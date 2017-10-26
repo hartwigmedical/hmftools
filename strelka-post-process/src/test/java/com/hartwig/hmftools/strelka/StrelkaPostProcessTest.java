@@ -57,6 +57,14 @@ public class StrelkaPostProcessTest {
     }
 
     @Test
+    public void canSimplifyMultipleAltIndelVariant() throws IOException, HartwigException {
+        final VariantContext indelVariant = VARIANTS.get(14);
+        assertTrue(indelVariant.isIndel());
+        assertArrayEquals(new int[] { 87, 3, 3 }, StrelkaPostProcess.getAD(indelVariant));
+        assertEquals(100, StrelkaPostProcess.getDP(indelVariant));
+    }
+
+    @Test
     public void canSimplifyVariantWithoutRead() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(3);
         assertTrue(snpVariant.isSNP());
