@@ -2,33 +2,27 @@ package com.hartwig.hmftools.strelka.scores;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(allParameters = true)
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
 public abstract class VariantScore {
+    private static final int PHRED_OFFSET = 33;
 
-    public abstract long sum();
+    public abstract ReadType type();
 
-    public abstract int count();
+    public abstract int score();
 
-    @Value.Lazy
-    public int average() {
-        if (count() == 0) {
-            return 0;
-        } else {
-            return (int) sum() / count();
-        }
+    public static VariantScore of(@NotNull final ReadType type, final char baseScore) {
+        return ImmutableVariantScore.of(type, baseScore - PHRED_OFFSET);
     }
 
-    public VariantScore addScore(@NotNull final ReadScore readScore) {
-        if (readScore.type() == ReadType.ALT || readScore.type() == ReadType.REF) {
-            return ImmutableVariantScore.of(sum() + readScore.score(), count() + 1);
-        } else {
-            return this;
+    public static VariantScore of(@NotNull final ReadType type, @NotNull final String baseQualities) {
+        double score = 0;
+        for (int index = 0; index < baseQualities.length(); index++) {
+            score += baseQualities.charAt(index) - PHRED_OFFSET;
         }
-    }
-
-    public static VariantScore newScore() {
-        return ImmutableVariantScore.of(0, 0);
+        return ImmutableVariantScore.of(type, (int) Math.floor(score / baseQualities.length()));
     }
 }

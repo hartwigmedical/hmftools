@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.strelka.scores.ReadScore;
+import com.hartwig.hmftools.strelka.scores.VariantScore;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -46,15 +46,15 @@ public class TestUtils {
 
     @NotNull
     static MNVScore build2VariantScores(@NotNull final List<VariantContext> variants,
-            @NotNull final List<Pair<ReadScore, ReadScore>> readScores) {
-        MNVScore score = MNVScore.of(variants);
+            @NotNull final List<Pair<VariantScore, VariantScore>> scores) {
+        MNVScore mnvScore = MNVScore.of(variants);
         assert variants.size() == 2;
-        for (final Pair<ReadScore, ReadScore> readScore : readScores) {
-            final Map<VariantContext, ReadScore> recordScores = Maps.newHashMap();
-            recordScores.put(variants.get(0), readScore.getLeft());
-            recordScores.put(variants.get(1), readScore.getRight());
-            score = MNVScore.addReadScore(score, recordScores);
+        for (final Pair<VariantScore, VariantScore> variantScorePair : scores) {
+            final Map<VariantContext, VariantScore> recordScores = Maps.newHashMap();
+            recordScores.put(variants.get(0), variantScorePair.getLeft());
+            recordScores.put(variants.get(1), variantScorePair.getRight());
+            mnvScore = MNVScore.addReadScore(mnvScore, recordScores);
         }
-        return score;
+        return mnvScore;
     }
 }

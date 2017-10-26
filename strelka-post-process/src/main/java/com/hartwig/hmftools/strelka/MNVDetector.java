@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.strelka;
 
-import static com.hartwig.hmftools.strelka.Scoring.recordScores;
+import static com.hartwig.hmftools.strelka.SamRecordScoring.scoresPerVariant;
 import static com.hartwig.hmftools.strelka.VariantContextUtils.splitMultiAlleleVariant;
 
 import java.io.File;
@@ -12,7 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.strelka.scores.ReadScore;
+import com.hartwig.hmftools.strelka.scores.VariantScore;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -90,7 +90,7 @@ public abstract class MNVDetector {
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
             if (goodRead(record) && containsAllMNVPositions(record, potentialMnvRegion)) {
-                final Map<VariantContext, ReadScore> samRecordScores = recordScores(record, potentialMnvRegion.variants());
+                final Map<VariantContext, VariantScore> samRecordScores = scoresPerVariant(record, potentialMnvRegion.variants());
                 scores = scores.entrySet()
                         .stream()
                         .map(entry -> Pair.of(entry.getKey(), MNVScore.addReadScore(entry.getValue(), samRecordScores)))
