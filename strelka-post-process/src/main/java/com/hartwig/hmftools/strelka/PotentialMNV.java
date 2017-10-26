@@ -37,10 +37,13 @@ public abstract class PotentialMNV {
         return variants().stream().allMatch(VariantContext::isSNP);
     }
 
+    @NotNull
     public abstract List<VariantContext> variants();
 
+    @NotNull
     public abstract List<Integer> gapPositions();
 
+    @NotNull
     static PotentialMNV addVariant(@NotNull final PotentialMNV potentialMnv, @NotNull final VariantContext variant) {
         if (potentialMnv.equals(PotentialMNV.empty())) {
             return fromVariant(variant);
@@ -56,11 +59,13 @@ public abstract class PotentialMNV {
         }
     }
 
+    @NotNull
     static PotentialMNV fromVariant(@NotNull final VariantContext variant) {
         return ImmutablePotentialMNV.of(variant.getContig(), variant.getStart(),
                 variant.getStart() + variant.getReference().getBaseString().length(), Lists.newArrayList(variant), Lists.newArrayList());
     }
 
+    @NotNull
     static PotentialMNV empty() {
         return ImmutablePotentialMNV.of("", -1, -1, Lists.newArrayList(), Lists.newArrayList());
     }
