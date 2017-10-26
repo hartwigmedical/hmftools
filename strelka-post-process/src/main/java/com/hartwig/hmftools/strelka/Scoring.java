@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.strelka;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -107,9 +108,8 @@ final class Scoring {
         return ImmutableReadScore.of(readType, 0);
     }
 
-    static Map<VariantContext, ReadScore> recordScores(@NotNull final SAMRecord record, @NotNull final PotentialMNV potentialMnv) {
-        return potentialMnv.variants()
-                .stream()
+    static Map<VariantContext, ReadScore> recordScores(@NotNull final SAMRecord record, @NotNull final List<VariantContext> variants) {
+        return variants.stream()
                 .map(variant -> ImmutablePair.of(variant, getReadScore(record, variant)))
                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
     }
