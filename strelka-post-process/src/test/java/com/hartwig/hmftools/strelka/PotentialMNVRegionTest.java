@@ -38,6 +38,7 @@ public class PotentialMNVRegionTest {
         assertEquals(1, twoVariantRegion.potentialMnvs().size());
         assertEquals(7, threeVariantRegion.mnvs().size());
         assertEquals(4, threeVariantRegion.potentialMnvs().size());
+        assertEquals(Lists.newArrayList(CONSECUTIVE_SNP1, CONSECUTIVE_SNP2, CONSECUTIVE_SNP3), threeVariantRegion.variants());
     }
 
     // MIVO: variants at positions: 1  2  4  =>  possible mnvs: (1,2) (2,4) (1,2,4)
@@ -50,6 +51,7 @@ public class PotentialMNVRegionTest {
         assertEquals(1, twoVariantRegion.potentialMnvs().size());
         assertEquals(6, threeVariantRegion.mnvs().size());
         assertEquals(3, threeVariantRegion.potentialMnvs().size());
+        assertEquals(Lists.newArrayList(CONSECUTIVE_SNP1, CONSECUTIVE_SNP2, CONSECUTIVE_SNP4), threeVariantRegion.variants());
     }
 
     // MIVO: variants at positions: 1  3(alts: A,T)  =>  possible mnvs: (1,3A) (1,3T)
@@ -59,6 +61,7 @@ public class PotentialMNVRegionTest {
         final PotentialMNVRegion twoVariantRegion = PotentialMNVRegion.addVariant(oneVariantRegion, MULTI_ALT);
         assertEquals(5, twoVariantRegion.mnvs().size());
         assertEquals(2, twoVariantRegion.potentialMnvs().size());
+        assertEquals(Lists.newArrayList(SNP, MULTI_ALT), twoVariantRegion.variants());
     }
 
     // MIVO: variants at positions: 1  1(del of 1)  4  =>  possible mnvs: (1del,4)
@@ -71,6 +74,7 @@ public class PotentialMNVRegionTest {
         assertEquals(0, twoVariantRegion.potentialMnvs().size());
         assertEquals(4, threeVariantRegion.mnvs().size());
         assertEquals(1, threeVariantRegion.potentialMnvs().size());
+        assertEquals(Lists.newArrayList(SNP, DEL, SNP_AFTER_DEL), threeVariantRegion.variants());
     }
 
     // MIVO: variants at positions: 1  1(del of 1)  3(alts: A,T)  4  =>
@@ -81,5 +85,6 @@ public class PotentialMNVRegionTest {
                 PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(SNP, DEL, MULTI_ALT, SNP_AFTER_DEL));
         assertEquals(16, region.mnvs().size());
         assertEquals(11, region.potentialMnvs().size());
+        assertEquals(Lists.newArrayList(SNP, DEL, MULTI_ALT, SNP_AFTER_DEL), region.variants());
     }
 }
