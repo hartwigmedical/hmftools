@@ -13,7 +13,11 @@ public abstract class VariantScore {
 
     @Value.Lazy
     public int average() {
-        return (int) sum() / count();
+        if (count() == 0) {
+            return 0;
+        } else {
+            return (int) sum() / count();
+        }
     }
 
     public VariantScore addScore(@NotNull final ReadScore readScore) {

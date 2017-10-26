@@ -71,7 +71,11 @@ public abstract class MNVScore {
             return averagePerPosition * missingPerPosition().get(entry.getKey());
         }).sum();
         final long correctedScoreWithOneVariant = scoreWithOneAlt() + correction;
-        return (double) scoreWithAllAlts() / correctedScoreWithOneVariant;
+        if (correctedScoreWithOneVariant == 0) {
+            return 0;
+        } else {
+            return (double) scoreWithAllAlts() / correctedScoreWithOneVariant;
+        }
     }
 
     boolean isMNV() {
