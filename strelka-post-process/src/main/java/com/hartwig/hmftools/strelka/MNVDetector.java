@@ -3,8 +3,10 @@ package com.hartwig.hmftools.strelka;
 import static com.hartwig.hmftools.strelka.Scoring.recordScores;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,60 +53,70 @@ public abstract class MNVDetector {
         return tumorReader().getFileHeader().getSequenceDictionary();
     }
 
-    Pair<PotentialMNV, List<VariantContext>> checkMNV(@NotNull final PotentialMNV potentialMnv, @NotNull final VariantContext variant) {
-        if (potentialMnv.chromosome().equals(variant.getContig()) && variant.getStart() - potentialMnv.end() <= 1
-                && variant.getStart() - potentialMnv.end() >= 0) {
-            return ImmutablePair.of(PotentialMNV.addVariant(potentialMnv, variant), Lists.newArrayList());
+    Pair<PotentialMNVRegion, List<VariantContext>> checkMNV(@NotNull final PotentialMNVRegion potentialMnvRegion,
+            @NotNull final VariantContext variant) {
+        if (potentialMnvRegion.chromosome().equals(variant.getContig()) && variant.getStart() - potentialMnvRegion.end() <= 1
+                && variant.getStart() - potentialMnvRegion.start() >= 0) {
+            return ImmutablePair.of(PotentialMNVRegion.addVariant(potentialMnvRegion, variant), Lists.newArrayList());
         } else {
-            return ImmutablePair.of(PotentialMNV.fromVariant(variant), mergeVariants(potentialMnv));
+            return ImmutablePair.of(PotentialMNVRegion.fromVariant(variant), mergeVariants(potentialMnvRegion));
         }
     }
 
-    List<VariantContext> mergeVariants(@NotNull final PotentialMNV potentialMnv) {
-        if (potentialMnv.variants().size() <= 1) {
-            return potentialMnv.variants();
+    List<VariantContext> mergeVariants(@NotNull final PotentialMNVRegion potentialMnvRegion) {
+        if (potentialMnvRegion.potentialMnvs().size() == 0) {
+            return potentialMnvRegion.variants();
         } else {
-            LOGGER.info("Potential mnv of size {}: {}", potentialMnv.variants().size(), potentialMnv);
-            final List<VariantContext> mergedVariants = queryBam(potentialMnv);
+            LOGGER.info("Potential mnv of size {}: {}", potentialMnvRegion.variants().size(), potentialMnvRegion);
+            final List<VariantContext> mergedVariants = queryBam(potentialMnvRegion);
             LOGGER.info("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
             return mergedVariants;
         }
     }
 
-    private List<VariantContext> queryBam(@NotNull final PotentialMNV potentialMnv) {
+    private List<VariantContext> queryBam(@NotNull final PotentialMNVRegion potentialMnvRegion) {
         final List<VariantContext> result = Lists.newArrayList();
-        final int referenceIndex = getReferenceIndex(potentialMnv);
+        final int referenceIndex = getReferenceIndex(potentialMnvRegion);
         final QueryInterval[] queryIntervals =
-                new QueryInterval[] { new QueryInterval(referenceIndex, potentialMnv.start(), potentialMnv.lastPosition()) };
+                new QueryInterval[] { new QueryInterval(referenceIndex, potentialMnvRegion.start(), potentialMnvRegion.end() - 1) };
         final SAMRecordIterator iterator = tumorReader().queryOverlapping(queryIntervals);
         final Map<Integer, GapReads> readsPerPosition =
-                potentialMnv.gapPositions().stream().collect(Collectors.toMap(Function.identity(), (position) -> GapReads.empty()));
-        MNVScore score = MNVScore.of(potentialMnv.variants());
+                potentialMnvRegion.gapPositions().stream().collect(Collectors.toMap(Function.identity(), (position) -> GapReads.empty()));
+        Map<PotentialMNV, MNVScore> scores = potentialMnvRegion.potentialMnvs()
+                .stream()
+                .collect(Collectors.toMap(Function.identity(), potentialMNV -> MNVScore.of(potentialMNV.variants())));
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
-            if (goodRead(record) && containsAllMNVPositions(record, potentialMnv)) {
-                final Map<VariantContext, ReadScore> samRecordScores = recordScores(record, potentialMnv);
-                score = MNVScore.addReadScore(score, samRecordScores);
-                potentialMnv.gapPositions()
+            if (goodRead(record) && containsAllMNVPositions(record, potentialMnvRegion)) {
+                final Map<VariantContext, ReadScore> samRecordScores = recordScores(record, potentialMnvRegion.variants());
+                scores = scores.entrySet()
+                        .stream()
+                        .map(entry -> Pair.of(entry.getKey(), MNVScore.addReadScore(entry.getValue(), samRecordScores)))
+                        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+                potentialMnvRegion.gapPositions()
                         .forEach(position -> readsPerPosition.put(position,
                                 GapReads.addRead(readsPerPosition.get(position), getReadAtPosition(record, position))));
             }
         }
-        if (potentialMnv.variants().size() == 2) {
+
+        if (potentialMnvRegion.variants().size() == 2) {
             final Map<Integer, Character> mostFrequentReadPerPosition = readsPerPosition.entrySet()
                     .stream()
                     .map(entry -> ImmutablePair.of(entry.getKey(), entry.getValue().mostFrequentRead()))
                     .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-            if (score.isMNV()) {
-                //TODO: pass sample name as param?
-                final String sampleName = potentialMnv.variants().get(0).getSampleNamesOrderedByName().get(0);
-                final VariantContext mergedVariant =
-                        MNVMerger.mergeVariants(sampleName, potentialMnv.variants(), mostFrequentReadPerPosition);
-                result.add(mergedVariant);
-            } else {
-                result.addAll(potentialMnv.variants());
+            for (final Map.Entry<PotentialMNV, MNVScore> scoreEntry : scores.entrySet()) {
+                final MNVScore score = scoreEntry.getValue();
+                if (score.isMNV()) {
+                    //TODO: pass sample name as param?
+                    final String sampleName = potentialMnvRegion.variants().get(0).getSampleNamesOrderedByName().get(0);
+                    final VariantContext mergedVariant =
+                            MNVMerger.mergeVariants(sampleName, potentialMnvRegion.variants(), mostFrequentReadPerPosition);
+                    result.add(mergedVariant);
+                } else {
+                    result.addAll(potentialMnvRegion.variants());
+                }
+                LOGGER.info("Percentage of reads with both variants: {}", score.frequency());
             }
-            LOGGER.info("Percentage of reads with both variants: {}", score.frequency());
         }
         iterator.close();
         return result;
@@ -114,24 +126,24 @@ public abstract class MNVDetector {
         return !record.getDuplicateReadFlag();
     }
 
-    private static boolean containsAllMNVPositions(@NotNull final SAMRecord record, @NotNull final PotentialMNV potentialMnv) {
-        final VariantContext lastVariant = potentialMnv.variants().get(potentialMnv.variants().size() - 1);
-        return record.getAlignmentStart() <= potentialMnv.start()
+    private static boolean containsAllMNVPositions(@NotNull final SAMRecord record, @NotNull final PotentialMNVRegion potentialMnvRegion) {
+        final VariantContext lastVariant = potentialMnvRegion.variants().get(potentialMnvRegion.variants().size() - 1);
+        return record.getAlignmentStart() <= potentialMnvRegion.start()
                 && record.getAlignmentEnd() >= lastVariant.getStart() + lastVariant.getReference().length() - 1;
     }
 
-    private int getReferenceIndex(@NotNull final PotentialMNV potentialMnv) {
-        int referenceIndex = tumorDictionary().getSequenceIndex(potentialMnv.chromosome());
+    private int getReferenceIndex(@NotNull final PotentialMNVRegion potentialMnvRegion) {
+        int referenceIndex = tumorDictionary().getSequenceIndex(potentialMnvRegion.chromosome());
         if (referenceIndex >= 0) {
             return referenceIndex;
         }
-        if (!potentialMnv.chromosome().startsWith("chr")) {
-            referenceIndex = tumorDictionary().getSequenceIndex("chr" + potentialMnv.chromosome());
+        if (!potentialMnvRegion.chromosome().startsWith("chr")) {
+            referenceIndex = tumorDictionary().getSequenceIndex("chr" + potentialMnvRegion.chromosome());
         } else {
-            referenceIndex = tumorDictionary().getSequenceIndex(potentialMnv.chromosome().substring(3));
+            referenceIndex = tumorDictionary().getSequenceIndex(potentialMnvRegion.chromosome().substring(3));
         }
         if (referenceIndex < 0) {
-            throw new RuntimeException(potentialMnv.chromosome() + " is not in the BAM: " + tumorBAM());
+            throw new RuntimeException(potentialMnvRegion.chromosome() + " is not in the BAM: " + tumorBAM());
         }
         return referenceIndex;
     }

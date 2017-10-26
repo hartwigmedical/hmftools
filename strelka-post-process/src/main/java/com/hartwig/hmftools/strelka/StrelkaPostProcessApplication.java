@@ -91,11 +91,11 @@ public class StrelkaPostProcessApplication {
                 .build();
         writer.writeHeader(outputHeader);
         final MNVDetector detector = ImmutableMNVDetector.of(tumorBam);
-        Pair<PotentialMNV, List<VariantContext>> outputPair = ImmutablePair.of(PotentialMNV.empty(), Lists.newArrayList());
+        Pair<PotentialMNVRegion, List<VariantContext>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Lists.newArrayList());
         for (final VariantContext variantContext : vcfReader) {
             if (StrelkaPostProcess.checkVariant(variantContext, highConfidenceSlicer)) {
                 final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
-                final PotentialMNV potentialMNV = outputPair.getLeft();
+                final PotentialMNVRegion potentialMNV = outputPair.getLeft();
                 outputPair = detector.checkMNV(potentialMNV, simplifiedVariant);
                 outputPair.getRight().forEach(writer::add);
             }
