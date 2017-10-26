@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.strelka;
 
+import static com.hartwig.hmftools.strelka.VariantContextUtils.splitMultiAlleleVariant;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,10 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 @Value.Immutable
 @Value.Style(allParameters = true,
@@ -66,25 +65,14 @@ public abstract class PotentialMNVRegion {
         return updatedRegion;
     }
 
+    @NotNull
     static PotentialMNVRegion fromVariant(@NotNull final VariantContext variant) {
         final List<PotentialMNV> mnvs = Lists.newArrayList(PotentialMNV.fromVariant(variant));
         return ImmutablePotentialMNVRegion.of(variant.getContig(), variant.getStart(),
                 variant.getStart() + variant.getReference().getBaseString().length(), mnvs);
     }
 
-    private static List<VariantContext> splitMultiAlleleVariant(@NotNull final VariantContext variant) {
-        final List<VariantContext> variants = Lists.newArrayList();
-        final int[] ad = variant.getGenotype(0).getAD();
-        final int dp = variant.getGenotype(0).getDP();
-        for (int index = 0; index < variant.getAlternateAlleles().size(); index++) {
-            final Allele alt = variant.getAlternateAllele(index);
-            final List<Allele> alleles = Lists.newArrayList(variant.getReference(), alt);
-            final Genotype genotype = new GenotypeBuilder(variant.getSampleNamesOrderedByName().get(0), alleles).DP(dp)
-                    .AD(new int[] { ad[0], ad[index + 1] })
-                    .make();
-            variants.add(new VariantContextBuilder(variant).alleles(alleles).genotypes(genotype).make());
         }
-        return variants;
     }
 
     static PotentialMNVRegion empty() {
