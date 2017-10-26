@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.strelka;
 
-import static com.hartwig.hmftools.strelka.MNVDetectorTest.buildSamRecord;
+import static com.hartwig.hmftools.strelka.TestUtils.buildSamRecord;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
