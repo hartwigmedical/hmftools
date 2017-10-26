@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.strelka;
 
 import static com.hartwig.hmftools.strelka.Scoring.recordScores;
+import static com.hartwig.hmftools.strelka.VariantContextUtils.splitMultiAlleleVariant;
 
 import java.io.File;
 import java.util.Collection;
@@ -85,6 +86,7 @@ public abstract class MNVDetector {
         Map<PotentialMNV, MNVScore> scores = potentialMnvRegion.potentialMnvs()
                 .stream()
                 .collect(Collectors.toMap(Function.identity(), potentialMNV -> MNVScore.of(potentialMNV.variants())));
+        //        MNVScore score = MNVScore.of(potentialMnvRegion.variants());
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();
             if (goodRead(record) && containsAllMNVPositions(record, potentialMnvRegion)) {
@@ -93,6 +95,7 @@ public abstract class MNVDetector {
                         .stream()
                         .map(entry -> Pair.of(entry.getKey(), MNVScore.addReadScore(entry.getValue(), samRecordScores)))
                         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+                //score = MNVScore.addReadScore(score, samRecordScores);
                 potentialMnvRegion.gapPositions()
                         .forEach(position -> readsPerPosition.put(position,
                                 GapReads.addRead(readsPerPosition.get(position), getReadAtPosition(record, position))));
@@ -106,6 +109,7 @@ public abstract class MNVDetector {
                     .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
             for (final Map.Entry<PotentialMNV, MNVScore> scoreEntry : scores.entrySet()) {
                 final MNVScore score = scoreEntry.getValue();
+                LOGGER.info(readsPerPosition);
                 if (score.isMNV()) {
                     //TODO: pass sample name as param?
                     final String sampleName = potentialMnvRegion.variants().get(0).getSampleNamesOrderedByName().get(0);
@@ -120,6 +124,42 @@ public abstract class MNVDetector {
         }
         iterator.close();
         return result;
+    }
+
+    static List<VariantContext> nonMnvVariants(@NotNull final PotentialMNVRegion mnvRegion,
+            @NotNull final Map<PotentialMNV, MNVScore> mnvScores) {
+        final List<VariantContext> snvs = Lists.newArrayList();
+        final Set<VariantContext> variantsInMnvs = mnvScores.entrySet()
+                .stream()
+                .filter(mnvEntry -> mnvEntry.getValue().isMNV())
+                .flatMap(mnvEntry -> mnvEntry.getKey().variants().stream())
+                .collect(Collectors.toSet());
+        mnvRegion.variants().forEach(variant -> {
+            if (variant.getAlternateAlleles().size() > 1) {
+                final List<VariantContext> notContainedAlts = splitMultiAlleleVariant(variant).stream()
+                        .filter(alt -> !variantsContain(variantsInMnvs, alt))
+                        .collect(Collectors.toList());
+                if (notContainedAlts.size() == variant.getAlternateAlleles().size()) {
+                    snvs.add(variant);
+                } else {
+                    snvs.addAll(notContainedAlts);
+                }
+            } else if (!variantsContain(variantsInMnvs, variant)) {
+                snvs.add(variant);
+            }
+        });
+        return snvs;
+    }
+
+    private static boolean variantsContain(@NotNull final Collection<VariantContext> variants, @NotNull final VariantContext other) {
+        for (final VariantContext variant : variants) {
+            if (variant.getContig().equals(other.getContig()) && variant.getStart() == other.getStart()
+                    && variant.getEnd() == other.getEnd() && variant.getReference().equals(other.getReference())
+                    && variant.getAlternateAlleles().stream().allMatch(other.getAlternateAlleles()::contains)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean goodRead(@NotNull final SAMRecord record) {
