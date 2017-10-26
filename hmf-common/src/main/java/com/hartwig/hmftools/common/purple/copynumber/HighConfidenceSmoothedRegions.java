@@ -220,7 +220,7 @@ class HighConfidenceSmoothedRegions {
     }
 
     private FittedRegion germinate(FittedRegion region) {
-        return ImmutableFittedRegion.builder().from(region).status(ObservedRegionStatus.GERMLINE).build();
+        return ImmutableFittedRegion.builder().from(region).status(ObservedRegionStatus.UNKNOWN).build();
     }
 
     private List<CombinedFittedRegion> finalPass(List<CombinedFittedRegion> regions) {

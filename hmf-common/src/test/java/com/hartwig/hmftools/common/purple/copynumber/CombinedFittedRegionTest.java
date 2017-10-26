@@ -30,15 +30,17 @@ public class CombinedFittedRegionTest {
 
     @Test
     public void testObservedTumorRatioCountSummationOnlyAppliesToSomatic() {
-        final FittedRegion startRegion =
-                PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).observedTumorRatioCount(2).status(ObservedRegionStatus.GERMLINE).build();
+        final FittedRegion startRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
+                .observedTumorRatioCount(2)
+                .status(ObservedRegionStatus.GERMLINE_AMPLIFICATION)
+                .build();
 
         final CombinedFittedRegion region = new CombinedFittedRegion(true, startRegion);
         assertEquals(0, region.region().observedTumorRatioCount());
 
         final FittedRegion germlineRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1001, 2000)
                 .observedTumorRatioCount(2)
-                .status(ObservedRegionStatus.GERMLINE)
+                .status(ObservedRegionStatus.GERMLINE_AMPLIFICATION)
                 .build();
         region.combine(germlineRegion);
         assertEquals(0, region.region().observedTumorRatioCount());

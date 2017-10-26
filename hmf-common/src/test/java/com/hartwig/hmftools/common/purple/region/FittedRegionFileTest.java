@@ -21,7 +21,7 @@ public class FittedRegionFileTest {
                 .chromosome("X")
                 .start(random.nextLong())
                 .end(random.nextLong())
-                .status(ObservedRegionStatus.GERMLINE)
+                .status(ObservedRegionStatus.SOMATIC)
                 .modelPloidy(random.nextInt())
                 .bafCount(random.nextInt())
                 .observedBAF(random.nextDouble())

@@ -54,7 +54,7 @@ class LowConfidenceSmoothedRegions {
     }
 
     private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final FittedRegion currentRegion) {
-        return newRegion.status().equals(ObservedRegionStatus.GERMLINE) || deviation.withinCopyNumberTolerance(currentRegion, newRegion)
+        return !newRegion.status().equals(ObservedRegionStatus.SOMATIC) || deviation.withinCopyNumberTolerance(currentRegion, newRegion)
                 || Doubles.isZero(newRegion.tumorCopyNumber()) || Doubles.isZero(currentRegion.tumorCopyNumber());
     }
 

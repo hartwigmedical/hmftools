@@ -153,15 +153,13 @@ public class HighConfidenceSmoothedRegionsTest {
 
     @Test
     public void mergeLowTumorCountSegmentStart() {
-        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(
-                createRegion(1001, 2000, 1),
-                createRegion(3001, 4000, 3));
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 1), createRegion(3001, 4000, 3));
 
-        final List<FittedRegion> copyNumbers = Lists.newArrayList(
-                    createFittedCopyNumber(1001, 2000, 1, MIN_RATIO_ONLY_TUMOR_RATIO_COUNT - 1),
-                    createFittedCopyNumber(2001, 3000, 2),
-                    createFittedCopyNumber(3001, 4000, 3),
-                    createFittedCopyNumber(4001, 5000, 4));
+        final List<FittedRegion> copyNumbers =
+                Lists.newArrayList(createFittedCopyNumber(1001, 2000, 1, MIN_RATIO_ONLY_TUMOR_RATIO_COUNT - 1),
+                        createFittedCopyNumber(2001, 3000, 2),
+                        createFittedCopyNumber(3001, 4000, 3),
+                        createFittedCopyNumber(4001, 5000, 4));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
         final List<FittedRegion> results = new HighConfidenceSmoothedRegions(purityAdjuster, broadRegions, copyNumbers).smoothedRegions();
@@ -174,12 +172,9 @@ public class HighConfidenceSmoothedRegionsTest {
 
     @Test
     public void mergeLowTumorCountSegment() {
-        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(
-                createRegion(1001, 2000, 1),
-                createRegion(3001, 4000, 3));
+        final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 1), createRegion(3001, 4000, 3));
 
-        final List<FittedRegion> copyNumbers = Lists.newArrayList(
-                createFittedCopyNumber(1001, 2000, 1),
+        final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1001, 2000, 1),
                 createFittedCopyNumber(2001, 3000, 2, MIN_RATIO_ONLY_TUMOR_RATIO_COUNT - 1),
                 createFittedCopyNumber(3001, 4000, 3),
                 createFittedCopyNumber(4001, 5000, 4));
@@ -223,7 +218,7 @@ public class HighConfidenceSmoothedRegionsTest {
     private FittedRegion createGermlineRegion(long start, long end, double copyNumber, StructuralVariantSupport sv) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
                 .bafCount(CopyNumberDeviation.MAX_BAF_COUNT)
-                .status(ObservedRegionStatus.GERMLINE)
+                .status(ObservedRegionStatus.GERMLINE_AMPLIFICATION)
                 .structuralVariantSupport(sv)
                 .observedBAF(0.5)
                 .tumorCopyNumber(copyNumber)
