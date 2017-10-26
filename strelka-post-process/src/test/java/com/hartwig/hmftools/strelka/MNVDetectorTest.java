@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.strelka.scores.ImmutableReadScore;
+import com.hartwig.hmftools.strelka.scores.ImmutableVariantScore;
 import com.hartwig.hmftools.strelka.scores.ReadType;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -35,8 +35,8 @@ public class MNVDetectorTest {
         Map<PotentialMNV, MNVScore> scores = region.potentialMnvs()
                 .stream()
                 .collect(Collectors.toMap(Function.identity(), potentialMNV -> MNVScore.of(potentialMNV.variants())));
-        final MNVScore score = TestUtils.build2VariantScores(region.potentialMnvs().get(0).variants(),
-                Lists.newArrayList(ImmutablePair.of(ImmutableReadScore.of(ReadType.ALT, 15), ImmutableReadScore.of(ReadType.ALT, 15))));
+        final MNVScore score = TestUtils.build2VariantScores(region.potentialMnvs().get(0).variants(), Lists.newArrayList(
+                ImmutablePair.of(ImmutableVariantScore.of(ReadType.ALT, 15), ImmutableVariantScore.of(ReadType.ALT, 15))));
         scores.put(region.potentialMnvs().get(0), score);
         assertTrue(scores.get(region.potentialMnvs().get(0)).isMNV());
         assertEquals(1, MNVDetector.nonMnvVariants(region, scores).size());

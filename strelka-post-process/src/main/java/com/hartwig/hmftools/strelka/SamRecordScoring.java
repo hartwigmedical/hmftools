@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.strelka.scores.ImmutableReadScore;
-import com.hartwig.hmftools.strelka.scores.ReadScore;
+import com.hartwig.hmftools.strelka.scores.ImmutableVariantScore;
 import com.hartwig.hmftools.strelka.scores.ReadType;
+import com.hartwig.hmftools.strelka.scores.VariantScore;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,8 +16,8 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
-final class Scoring {
-    private Scoring() {
+final class SamRecordScoring {
+    private SamRecordScoring() {
     }
 
     @NotNull
@@ -73,7 +73,7 @@ final class Scoring {
     }
 
     @NotNull
-    static ReadScore getReadScore(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
+    static VariantScore getVariantScore(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
         final ReadType readType = getReadType(record, variant);
         // MIVO: assumes single alt allele
         final Allele alt = variant.getAlternateAllele(0);
@@ -81,39 +81,40 @@ final class Scoring {
         switch (readType) {
             case REF: {
                 if (variant.isSNP()) {
-                    return ReadScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
+                    return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
                 } else if (variant.isSimpleInsertion()) {
-                    return ReadScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
+                    return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
                 } else if (variant.isSimpleDeletion()) {
                     final int endIndex = Math.min(recordIdxOfVariantStart - 1 + variant.getReference().length(), record.getReadLength());
-                    return ReadScore.of(readType, record.getBaseQualityString().substring(recordIdxOfVariantStart - 1, endIndex));
+                    return VariantScore.of(readType, record.getBaseQualityString().substring(recordIdxOfVariantStart - 1, endIndex));
                 }
                 break;
             }
             case ALT: {
                 if (variant.isSNP()) {
-                    return ReadScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
+                    return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
                 } else if (variant.isSimpleInsertion()) {
-                    return ReadScore.of(readType, record.getBaseQualityString()
+                    return VariantScore.of(readType, record.getBaseQualityString()
                             .substring(recordIdxOfVariantStart - 1, recordIdxOfVariantStart - 1 + alt.length()));
                 } else if (variant.isSimpleDeletion()) {
                     //MIVO: read score of next base after deletion if present, otherwise read score of base before deletion
                     if (record.getReadLength() > recordIdxOfVariantStart) {
-                        return ReadScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart));
+                        return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart));
                     } else {
-                        return ReadScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
+                        return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
                     }
                 }
                 break;
             }
         }
-        return ImmutableReadScore.of(readType, 0);
+        return ImmutableVariantScore.of(readType, 0);
     }
 
     @NotNull
-    static Map<VariantContext, ReadScore> recordScores(@NotNull final SAMRecord record, @NotNull final List<VariantContext> variants) {
+    static Map<VariantContext, VariantScore> scoresPerVariant(@NotNull final SAMRecord record,
+            @NotNull final List<VariantContext> variants) {
         return variants.stream()
-                .map(variant -> ImmutablePair.of(variant, getReadScore(record, variant)))
+                .map(variant -> ImmutablePair.of(variant, getVariantScore(record, variant)))
                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
     }
 }

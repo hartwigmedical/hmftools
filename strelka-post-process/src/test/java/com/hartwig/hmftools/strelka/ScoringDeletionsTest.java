@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.strelka.scores.ImmutableReadScore;
-import com.hartwig.hmftools.strelka.scores.ReadScore;
+import com.hartwig.hmftools.strelka.scores.ImmutableVariantScore;
 import com.hartwig.hmftools.strelka.scores.ReadType;
+import com.hartwig.hmftools.strelka.scores.VariantScore;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class ScoringDeletionsTest {
     @Test
     public void doesNotDetectDELinRef() {
         final SAMRecord reference = buildSamRecord(1, "11M", "GATCCCCGATC", false);
-        final ReadScore score = Scoring.getReadScore(reference, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(reference, DELETION);
         assertEquals(ReadType.REF, score.type());
         assertTrue(score.score() > 0);
     }
@@ -40,7 +40,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELinTumor() {
         final SAMRecord tumor = buildSamRecord(1, "3M2D6M", "GATCCGATC", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -48,7 +48,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELinTumorWithINSandDEL() {
         final SAMRecord tumor = buildSamRecord(1, "2M2I1M2D4M", "GATCTCCGA", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -56,7 +56,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELinTumorWithDELAfter() {
         final SAMRecord tumor = buildSamRecord(1, "3M2D2M3D1M", "GATCCC", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -64,7 +64,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELinTumorWithDELPre() {
         final SAMRecord tumor = buildSamRecord(1, "1M1D1M2D6M", "GTCCGATC", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -72,7 +72,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELinTumorWithINSAfter() {
         final SAMRecord tumor = buildSamRecord(1, "3M2D2M2I4M", "GATCCAAGATC", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -80,7 +80,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELinTumorWithINSPre() {
         final SAMRecord tumor = buildSamRecord(1, "2M2I1M2D6M", "GAAATCCGATC", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -88,7 +88,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELatEndOfRead() {
         final SAMRecord tumor = buildSamRecord(1, "3M2D1M", "GATC", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -96,7 +96,7 @@ public class ScoringDeletionsTest {
     @Test
     public void detectsDELatEndOfReadWithoutMatchAfter() {
         final SAMRecord tumor = buildSamRecord(1, "3M2D", "GAT", false);
-        final ReadScore score = Scoring.getReadScore(tumor, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(tumor, DELETION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
     }
@@ -105,33 +105,33 @@ public class ScoringDeletionsTest {
     public void computesScoreForDELinRef() {
         //MIVO: ref with qualities 25, 15, 35 --> average = 25
         final SAMRecord ref = buildSamRecord(3, "3M", "TCC", ":0D", false);
-        assertEquals(ImmutableReadScore.of(ReadType.REF, 25), Scoring.getReadScore(ref, DELETION));
+        assertEquals(ImmutableVariantScore.of(ReadType.REF, 25), SamRecordScoring.getVariantScore(ref, DELETION));
     }
 
     @Test
     public void computesScoreForDELinTumor() {
         //MIVO: take quality of first base after deletion if available
         final SAMRecord alt = buildSamRecord(3, "1M2D1M", "TT", "PA", false);
-        assertEquals(ImmutableReadScore.of(ReadType.ALT, 32), Scoring.getReadScore(alt, DELETION));
+        assertEquals(ImmutableVariantScore.of(ReadType.ALT, 32), SamRecordScoring.getVariantScore(alt, DELETION));
     }
 
     @Test
     public void computesScoreForDELinTumorWithDelAtEnd() {
         //MIVO: take quality of base before deletion if base after deletion not present
         final SAMRecord shortAlt = buildSamRecord(3, "1M2D", "T", "P", false);
-        assertEquals(ImmutableReadScore.of(ReadType.ALT, 47), Scoring.getReadScore(shortAlt, DELETION));
+        assertEquals(ImmutableVariantScore.of(ReadType.ALT, 47), SamRecordScoring.getVariantScore(shortAlt, DELETION));
     }
 
     @Test
     public void computesScoreForDELinOther() {
         final SAMRecord otherSNV = buildSamRecord(3, "2M", "TG", "FF", false);
-        assertEquals(ImmutableReadScore.of(ReadType.REF, 37), Scoring.getReadScore(otherSNV, DELETION));
+        assertEquals(ImmutableVariantScore.of(ReadType.REF, 37), SamRecordScoring.getVariantScore(otherSNV, DELETION));
     }
 
     @Test
     public void computesScoreForDELinReadWithDeletionOnVariantPos() {
         final SAMRecord deleted = buildSamRecord(2, "1M1D2M", "ACC", "FD", false);
-        assertEquals(ImmutableReadScore.of(ReadType.MISSING, 0), Scoring.getReadScore(deleted, DELETION));
+        assertEquals(ImmutableVariantScore.of(ReadType.MISSING, 0), SamRecordScoring.getVariantScore(deleted, DELETION));
     }
 
     @Test
@@ -139,19 +139,19 @@ public class ScoringDeletionsTest {
         //MIVO: read with partial deletion TC -> T instead of TCC -> T
         //MIVO: ref with qualities 32, 40 --> average = 36
         final SAMRecord otherDeletion = buildSamRecord(3, "1M1D1M", "TC", "AI", false);
-        assertEquals(ImmutableReadScore.of(ReadType.REF, 36), Scoring.getReadScore(otherDeletion, DELETION));
+        assertEquals(ImmutableVariantScore.of(ReadType.REF, 36), SamRecordScoring.getVariantScore(otherDeletion, DELETION));
     }
 
     @Test
     public void doesNotComputeScoreForShorterDELinTumor() {
         final SAMRecord alt = buildSamRecord(3, "1M1D1M", "TT", "PA", false);
-        assertEquals(ImmutableReadScore.of(ReadType.REF, 39), Scoring.getReadScore(alt, DELETION));
+        assertEquals(ImmutableVariantScore.of(ReadType.REF, 39), SamRecordScoring.getVariantScore(alt, DELETION));
     }
 
     @Test
     public void doesNotComputesScoreForDELinLongerDELinTumor() {
         final SAMRecord alt = buildSamRecord(3, "1M3D", "T", "P", false);
-        final ReadScore score = Scoring.getReadScore(alt, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(alt, DELETION);
         assertEquals(ReadType.REF, score.type());
         assertEquals(47, score.score());
     }
@@ -159,7 +159,7 @@ public class ScoringDeletionsTest {
     @Test
     public void doesNotComputesScoreForDELinLongerDELinTumor2() {
         final SAMRecord alt = buildSamRecord(3, "1M3D1M", "TT", "PA", false);
-        final ReadScore score = Scoring.getReadScore(alt, DELETION);
+        final VariantScore score = SamRecordScoring.getVariantScore(alt, DELETION);
         assertEquals(ReadType.REF, score.type());
         assertEquals(39, score.score());
     }
@@ -171,14 +171,14 @@ public class ScoringDeletionsTest {
         final List<SAMRecord> records = deletionMNVRecords();
         final SAMRecord cleanRecord = records.get(0);
         final SAMRecord deletionMNVRecord = records.get(1);
-        assertEquals(32, Scoring.getReadScore(cleanRecord, DELETION).score());
-        assertEquals(ReadType.REF, Scoring.getReadScore(cleanRecord, DELETION).type());
-        assertEquals(32, Scoring.getReadScore(cleanRecord, SNV).score());
-        assertEquals(ReadType.REF, Scoring.getReadScore(cleanRecord, DELETION).type());
-        assertEquals(32, Scoring.getReadScore(deletionMNVRecord, DELETION).score());
-        assertEquals(ReadType.ALT, Scoring.getReadScore(deletionMNVRecord, DELETION).type());
-        assertEquals(32, Scoring.getReadScore(deletionMNVRecord, SNV).score());
-        assertEquals(ReadType.ALT, Scoring.getReadScore(deletionMNVRecord, DELETION).type());
+        assertEquals(32, SamRecordScoring.getVariantScore(cleanRecord, DELETION).score());
+        assertEquals(ReadType.REF, SamRecordScoring.getVariantScore(cleanRecord, DELETION).type());
+        assertEquals(32, SamRecordScoring.getVariantScore(cleanRecord, SNV).score());
+        assertEquals(ReadType.REF, SamRecordScoring.getVariantScore(cleanRecord, DELETION).type());
+        assertEquals(32, SamRecordScoring.getVariantScore(deletionMNVRecord, DELETION).score());
+        assertEquals(ReadType.ALT, SamRecordScoring.getVariantScore(deletionMNVRecord, DELETION).type());
+        assertEquals(32, SamRecordScoring.getVariantScore(deletionMNVRecord, SNV).score());
+        assertEquals(ReadType.ALT, SamRecordScoring.getVariantScore(deletionMNVRecord, DELETION).type());
     }
 
     @NotNull
