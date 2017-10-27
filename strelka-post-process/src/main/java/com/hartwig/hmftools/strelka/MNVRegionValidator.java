@@ -76,7 +76,7 @@ public abstract class MNVRegionValidator {
     @NotNull
     MNVRegionValidator addSamRecord(@NotNull final SAMRecord record) {
         if (goodRead(record) && containsAllMNVPositions(record)) {
-            final Map<VariantContext, VariantScore> samRecordScores = scoresPerVariant(record, region().variantsInMnvs());
+            final Map<VariantContext, VariantScore> samRecordScores = scoresPerVariant(record, region().variantsInPotentialMnvs());
             final Map<PotentialMNV, MNVScore> scores = mnvScores().entrySet()
                     .stream()
                     .map(entry -> Pair.of(entry.getKey(), MNVScore.addReadScore(entry.getValue(), samRecordScores)))
