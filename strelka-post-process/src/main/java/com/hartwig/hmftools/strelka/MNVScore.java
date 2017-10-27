@@ -20,7 +20,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVScore {
-    private static double MNV_SCORE_THRESHOLD = 0.8;
+    private static final double MNV_SCORE_THRESHOLD = 0.8;
 
     @NotNull
     public abstract Map<VariantContext, VariantScoreAggregate> aggregatedScores();
@@ -32,6 +32,7 @@ public abstract class MNVScore {
 
     public abstract long scoreWithAllAlts();
 
+    @NotNull
     static MNVScore addReadScore(@NotNull final MNVScore mnvScore, @NotNull final Map<VariantContext, VariantScore> variantScores) {
         final Map<VariantContext, VariantScoreAggregate> aggregatedScores = Maps.newHashMap();
         final Map<VariantContext, Integer> missingCounts = Maps.newHashMap();
@@ -83,6 +84,7 @@ public abstract class MNVScore {
         return frequency() > MNV_SCORE_THRESHOLD;
     }
 
+    @NotNull
     public static MNVScore of(@NotNull final List<VariantContext> variants) {
         final Map<VariantContext, VariantScoreAggregate> scores =
                 variants.stream().collect(Collectors.toMap(Function.identity(), (variant) -> VariantScoreAggregate.newScore()));
