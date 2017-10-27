@@ -3,8 +3,10 @@ package com.hartwig.hmftools.strelka;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -18,7 +20,7 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class MNVMerger {
+class MNVMerger {
     private static final Logger LOGGER = LogManager.getLogger(MNVMerger.class);
     private static final String SET_VALUE = "mnvs";
     private static final String SET_KEY = "set";
@@ -27,20 +29,30 @@ public class MNVMerger {
     }
 
     @NotNull
-    public static VariantContext mergeVariants(@NotNull final String sampleName, @NotNull final List<VariantContext> variants,
-            @NotNull final Map<Integer, Character> gapReads) {
-        //MIVO: assumes variant list is sorted by start position
+    static VariantContext mergeVariants(@NotNull final PotentialMNV mnv, @NotNull final Map<Integer, Character> gapReads) {
+        final Map<Integer, Character> gapsForMnv =
+                mnv.gapPositions().stream().collect(Collectors.toMap(Function.identity(), gapReads::get));
+        return mergeVariants(mnv.variants(), gapsForMnv);
+    }
+
+    // MIVO: assumes variant list is sorted by start position and variants have only one sample (tumor)
+    // MIVO: gaps will *ALWAYS* be added to the output variant (no checking is done here to make sure they are needed)
+    @NotNull
+    @VisibleForTesting
+    static VariantContext mergeVariants(@NotNull final List<VariantContext> variants, @NotNull final Map<Integer, Character> gapReads) {
         final List<Allele> alleles = createMnvAlleles(variants, gapReads);
-        final Genotype genotype = new GenotypeBuilder(sampleName, alleles).DP(mergeDP(variants)).AD(mergeAD(variants)).make();
         final VariantContext firstVariant = variants.get(0);
         final VariantContext lastVariant = variants.get(variants.size() - 1);
         final Map<String, Object> attributes = createMnvAttributes(variants);
-        return new VariantContextBuilder("", firstVariant.getContig(), firstVariant.getStart(), lastVariant.getEnd(), alleles).genotypes(
-                genotype).filters(firstVariant.getFilters()).attributes(attributes).make();
+        final String sampleName = firstVariant.getSampleNamesOrderedByName().get(0);
+        final Genotype genotype = new GenotypeBuilder(sampleName, alleles).DP(mergeDP(variants)).AD(mergeAD(variants)).make();
+        return new VariantContextBuilder(firstVariant.getSource(), firstVariant.getContig(), firstVariant.getStart(), lastVariant.getEnd(),
+                alleles).genotypes(genotype).filters(firstVariant.getFilters()).attributes(attributes).make();
     }
 
     @NotNull
-    static List<Allele> createMnvAlleles(@NotNull final List<VariantContext> variants, @NotNull final Map<Integer, Character> gapReads) {
+    private static List<Allele> createMnvAlleles(@NotNull final List<VariantContext> variants,
+            @NotNull final Map<Integer, Character> gapReads) {
         final StringBuilder refBases = new StringBuilder();
         final StringBuilder altBases = new StringBuilder();
         variants.forEach(variant -> {
@@ -58,8 +70,7 @@ public class MNVMerger {
         return Lists.newArrayList(ref, alt);
     }
 
-    @NotNull
-    static int mergeDP(@NotNull final List<VariantContext> variants) {
+    private static int mergeDP(@NotNull final List<VariantContext> variants) {
         final OptionalInt min = variants.stream().mapToInt(variant -> variant.getGenotype(0).getDP()).min();
         if (min.isPresent()) {
             return min.getAsInt();
@@ -71,7 +82,7 @@ public class MNVMerger {
     }
 
     @NotNull
-    static int[] mergeAD(@NotNull final List<VariantContext> variants) {
+    private static int[] mergeAD(@NotNull final List<VariantContext> variants) {
         int[] ads = new int[] { Integer.MAX_VALUE, Integer.MAX_VALUE };
         variants.forEach(variant -> {
             int[] variantADs = variant.getGenotype(0).getAD();
@@ -86,7 +97,7 @@ public class MNVMerger {
     }
 
     @NotNull
-    static Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants) {
+    private static Map<String, Object> createMnvAttributes(@NotNull final List<VariantContext> variants) {
         final Map<String, Object> attributes;
         if (variants.stream().anyMatch(VariantContext::isIndel)) {
             attributes = mergeAttributes(variants.stream().filter(VariantContext::isIndel).collect(Collectors.toList()));
@@ -98,7 +109,7 @@ public class MNVMerger {
     }
 
     @NotNull
-    static Map<String, Object> mergeAttributes(@NotNull final List<VariantContext> variants) {
+    private static Map<String, Object> mergeAttributes(@NotNull final List<VariantContext> variants) {
         final Map<String, Object> mergedAttributes = Maps.newHashMap();
         variants.forEach(variant -> variant.getAttributes().forEach((key, value) -> {
             if (mergedAttributes.containsKey(key)) {
