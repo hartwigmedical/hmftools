@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.baf.TumorBAF;
 import com.hartwig.hmftools.common.baf.TumorBAFFile;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.pileup.PileupFile;
+import com.hartwig.hmftools.common.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -43,7 +44,8 @@ public class AmberApplication {
     }
 
     private AmberApplication(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
-
+        final VersionInfo versionInfo = new VersionInfo("amber.version");
+        LOGGER.info("AMBER version: {}", versionInfo.version());
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         if (!cmd.hasOption(REFERENCE_PILEUP) || !cmd.hasOption(TUMOR_PILEUP) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE)) {
@@ -72,6 +74,7 @@ public class AmberApplication {
         final String filename = TumorBAFFile.generateAmberFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
         LOGGER.info("Persisting file {}", filename);
         TumorBAFFile.write(filename, result);
+        versionInfo.write(outputDir.toString());
 
         LOGGER.info("Complete");
     }

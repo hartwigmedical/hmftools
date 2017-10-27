@@ -16,9 +16,9 @@
         <module>fastq-stats</module>
         <module>patient-db</module>
         <module>break-point-inspector</module>
-        <module>purity-ploidy-estimator</module>
-        <module>count-bam-lines</module>
         <module>amber</module>
+        <module>count-bam-lines</module>
+        <module>purity-ploidy-estimator</module>
         <module>hmf-gene-panel</module>
         <module>rups-checker</module>
         <module>strelka-post-process</module>

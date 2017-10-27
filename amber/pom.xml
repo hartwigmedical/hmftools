@@ -11,7 +11,7 @@
     <artifactId>amber</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - A Minipileup BAF Estimator</name>
+    <name>HMF Tools - AMBER</name>
 
     <dependencies>
         <dependency>
@@ -30,6 +30,12 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
