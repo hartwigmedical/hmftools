@@ -45,6 +45,11 @@ public abstract class PotentialMNVRegion {
         return potentialMnvs().stream().flatMap(potentialMNV -> potentialMNV.gapPositions().stream()).collect(Collectors.toSet());
     }
 
+    @Value.Lazy
+    public Set<VariantContext> variantsInMnvs() {
+        return potentialMnvs().stream().flatMap(potentialMNV -> potentialMNV.variants().stream()).collect(Collectors.toSet());
+    }
+
     @NotNull
     static PotentialMNVRegion addVariant(@NotNull final PotentialMNVRegion region, @NotNull final VariantContext variant) {
         if (region.equals(PotentialMNVRegion.empty())) {
