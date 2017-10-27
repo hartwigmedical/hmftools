@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.strelka;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -22,7 +22,6 @@ final class SamRecordScoring {
 
     @NotNull
     private static ReadType getReadType(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
-        // MIVO: assumes single alt allele
         final Allele alt = variant.getAlternateAllele(0);
         final int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(variant.getStart());
         if (recordIdxOfVariantStart == 0) {
@@ -72,10 +71,11 @@ final class SamRecordScoring {
         return ReadType.OTHER;
     }
 
+    // MIVO: assumes single alt allele
     @NotNull
     static VariantScore getVariantScore(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
+        assert variant.getAlternateAlleles().size() == 1;
         final ReadType readType = getReadType(record, variant);
-        // MIVO: assumes single alt allele
         final Allele alt = variant.getAlternateAllele(0);
         final int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(variant.getStart());
         switch (readType) {
@@ -112,7 +112,7 @@ final class SamRecordScoring {
 
     @NotNull
     static Map<VariantContext, VariantScore> scoresPerVariant(@NotNull final SAMRecord record,
-            @NotNull final List<VariantContext> variants) {
+            @NotNull final Collection<VariantContext> variants) {
         return variants.stream()
                 .map(variant -> ImmutablePair.of(variant, getVariantScore(record, variant)))
                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
