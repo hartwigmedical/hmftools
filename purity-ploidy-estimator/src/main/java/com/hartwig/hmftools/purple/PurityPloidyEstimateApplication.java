@@ -105,6 +105,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
     private static final String EXPERIMENTAL = "experimental";
+    private static final String VERSION = "version";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -121,16 +122,25 @@ public class PurityPloidyEstimateApplication {
 
     private PurityPloidyEstimateApplication(final String... args)
             throws ParseException, IOException, HartwigException, SQLException, ExecutionException, InterruptedException {
+        LOGGER.info("PURPLE version: {}", PurityPloidyEstimateVersion.version());
+
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
+        if (cmd.hasOption(VERSION)) {
+            System.exit(0);
+        }
+
         final int threads = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
         try {
+
             // JOBA: Get common config
             final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
             final CommonConfig config = configSupplier.commonConfig();
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
+
+
 
             // JOBA: Load BAFs from AMBER
             final BAFSupplier bafSupplier = new BAFSupplier(config, configSupplier.bafConfig());
@@ -234,6 +244,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
+            PurityPloidyEstimateVersion.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
@@ -327,6 +338,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
+        options.addOption(VERSION, false, "Exit after displaying version info.");
 
         return options;
     }
