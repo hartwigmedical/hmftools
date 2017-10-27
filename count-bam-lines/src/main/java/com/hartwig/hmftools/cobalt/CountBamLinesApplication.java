@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -56,6 +57,9 @@ public class CountBamLinesApplication {
 
     private CountBamLinesApplication(final String... args)
             throws ParseException, IOException, ExecutionException, InterruptedException, HartwigException {
+        final VersionInfo versionInfo = new VersionInfo("cobalt.version");
+        LOGGER.info("COBALT version: {}", versionInfo.version());
+
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         if (!cmd.hasOption(GC_PROFILE) || !cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(TUMOR) || !cmd.hasOption(REFERENCE)) {
@@ -122,6 +126,7 @@ public class CountBamLinesApplication {
         final RatioSupplier ratioSupplier = new RatioSupplier(reference, tumor, outputDirectory);
         final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.generateRatios(gcProfiles, readCounts);
         LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
+        versionInfo.write(outputDirectory);
         CobaltRatioFile.write(outputFilename, ratios);
 
         new PCFSegment(executorService, outputDirectory).applySegmentation(reference, tumor);

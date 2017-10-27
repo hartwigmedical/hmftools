@@ -57,6 +57,7 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
+import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.baf.BAFSupplier;
@@ -122,7 +123,8 @@ public class PurityPloidyEstimateApplication {
 
     private PurityPloidyEstimateApplication(final String... args)
             throws ParseException, IOException, HartwigException, SQLException, ExecutionException, InterruptedException {
-        LOGGER.info("PURPLE version: {}", PurityPloidyEstimateVersion.version());
+        final VersionInfo version = new VersionInfo("purple.version");
+        LOGGER.info("PURPLE version: {}", version.version());
 
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
@@ -244,7 +246,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
-            PurityPloidyEstimateVersion.write(outputDirectory);
+            version.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
             PurpleCopyNumberFile.write(outputDirectory, tumorSample, smoothRegions);
