@@ -2,11 +2,10 @@ package com.hartwig.hmftools.strelka;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Optional;
 
 import javax.xml.stream.XMLStreamException;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
@@ -90,17 +89,17 @@ public class StrelkaPostProcessApplication {
                 .setReferenceDictionary(outputHeader.getSequenceDictionary())
                 .build();
         writer.writeHeader(outputHeader);
-        final MNVDetector detector = ImmutableMNVDetector.of(tumorBam);
-        Pair<PotentialMNVRegion, List<VariantContext>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Lists.newArrayList());
+        final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
+        Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
         for (final VariantContext variantContext : vcfReader) {
             if (StrelkaPostProcess.checkVariant(variantContext, highConfidenceSlicer)) {
                 final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
-                outputPair = detector.checkMNV(potentialMNV, simplifiedVariant);
-                outputPair.getRight().forEach(writer::add);
+                outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
+                outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion).forEach(writer::add));
             }
         }
-        detector.mergeVariants(outputPair.getLeft()).forEach(writer::add);
+        validator.mergeVariants(outputPair.getLeft()).forEach(writer::add);
         writer.close();
         vcfReader.close();
         LOGGER.info("Written output variants to " + outputVcf);
