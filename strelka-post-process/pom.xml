@@ -49,24 +49,46 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>build-strelka-post-process</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <mainClass>com.hartwig.hmftools.strelka.StrelkaPostProcessApplication
+                                    </mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>strelka-post-process</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-mnv-detector</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <mainClass>com.hartwig.hmftools.strelka.MNVDetectorApplication
+                                    </mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>mnv-detector</finalName>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.strelka.StrelkaPostProcessApplication
-                            </mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
             </plugin>
         </plugins>
     </build>
