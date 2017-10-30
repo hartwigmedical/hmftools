@@ -47,11 +47,11 @@ class AmberBAFFactory {
             final int readCount = normal.readCount();
             final int altCount = maxMismatchReadCount(normal);
 
-            if (between(readCount, minDepth, maxDepth) && isHetrozygousRef(normal.referenceCount(), readCount) && isHetrozygousAlt(altCount,
-                    readCount)) {
+            if (normal.indels() == 0 && between(readCount, minDepth, maxDepth) && isHetrozygousRef(normal.referenceCount(), readCount)
+                    && isHetrozygousAlt(altCount, readCount)) {
 
                 final Character alt = alt(altCount, normal);
-                final Optional<AmberBAF> baf = tumorSelector.select(normal).map(x -> create(alt, normal, x));
+                final Optional<AmberBAF> baf = tumorSelector.select(normal).filter(x -> x.indels() == 0).map(x -> create(alt, normal, x));
                 if (baf.isPresent()) {
                     result.add(baf.get());
                 } else {

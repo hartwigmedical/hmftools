@@ -28,6 +28,7 @@ public class PileupFileTest
         assertEquals(0, pileup.cMismatchCount());
         assertEquals(3, pileup.insertions());
         assertEquals(0, pileup.deletions());
+        assertEquals(3, pileup.indels());
     }
 
     @Test
@@ -44,6 +45,7 @@ public class PileupFileTest
         assertEquals(0, pileup.cMismatchCount());
         assertEquals(3, pileup.insertions());
         assertEquals(0, pileup.deletions());
+        assertEquals(3, pileup.indels());
     }
 
     @Test
@@ -60,6 +62,7 @@ public class PileupFileTest
         assertEquals(0, pileup.cMismatchCount());
         assertEquals(0, pileup.insertions());
         assertEquals(2, pileup.deletions());
+        assertEquals(2, pileup.indels());
     }
 
     @Test
@@ -76,5 +79,6 @@ public class PileupFileTest
         assertEquals(1, pileup.cMismatchCount());
         assertEquals(0, pileup.insertions());
         assertEquals(2, pileup.deletions());
+        assertEquals(2, pileup.indels());
     }
 }
