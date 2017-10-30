@@ -72,8 +72,7 @@ public abstract class PotentialMNV {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder(
-                "chromosome " + chromosome() + ":\t" + (containsOnlySNVs() ? "SNV" : "INDEL") + "[" + start() + " - " + end() + "]: ");
+        final StringBuilder sb = new StringBuilder();
         variants().forEach(variant -> {
             sb.append("[");
             sb.append(variant.getStart());
@@ -82,11 +81,6 @@ public abstract class PotentialMNV {
             sb.append(" -> ");
             sb.append(variant.getAlternateAlleles().stream().map(Allele::getBaseString).collect(Collectors.joining(",")));
             sb.append("] ");
-        });
-        sb.append("gaps: ");
-        gapPositions().forEach(gap -> {
-            sb.append(gap);
-            sb.append(", ");
         });
         return sb.toString();
     }
