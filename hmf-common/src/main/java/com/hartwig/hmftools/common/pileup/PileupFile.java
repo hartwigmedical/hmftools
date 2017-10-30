@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.jetbrains.annotations.NotNull;
 
 public class PileupFile {
@@ -17,8 +19,9 @@ public class PileupFile {
         return Files.readAllLines(new File(filename).toPath()).stream().map(PileupFile::fromString).collect(Collectors.toList());
     }
 
+    @VisibleForTesting
     @NotNull
-    private static Pileup fromString(@NotNull final String line) {
+    static Pileup fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
         int referenceCount = 0;
@@ -26,11 +29,24 @@ public class PileupFile {
         int aCount = 0;
         int tCount = 0;
         int cCount = 0;
+        int insertions = 0;
+        int deletions = 0;
 
         if (values.length >= 5) {
             final String readBases = values[4];
             for (int i = 0; i < readBases.length(); i++) {
                 switch (Character.toUpperCase(readBases.charAt(i))) {
+                    case '+':
+                        insertions++;
+                        i += indelStringSize(i + 1, readBases);
+                        break;
+                    case '-':
+                        deletions++;
+                        i += indelStringSize(i + 1, readBases);
+                        break;
+                    case '^':
+                        i++;
+                        break;
                     case ',':
                     case '.':
                         referenceCount++;
@@ -62,6 +78,19 @@ public class PileupFile {
                 .aMismatchCount(aCount)
                 .tMismatchCount(tCount)
                 .cMismatchCount(cCount)
+                .insertions(insertions)
+                .deletions(deletions)
                 .build();
+    }
+
+    @VisibleForTesting
+    static int indelStringSize(int indelIndex, @NotNull final String text) {
+        for (int i = indelIndex + 1; i < text.length(); i++) {
+            if (!Character.isDigit(text.charAt(i))) {
+                return i - indelIndex + Integer.valueOf(text.substring(indelIndex, i));
+            }
+        }
+
+        return Integer.valueOf(text.substring(indelIndex, text.length()));
     }
 }

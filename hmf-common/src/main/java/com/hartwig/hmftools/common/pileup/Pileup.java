@@ -25,6 +25,10 @@ public interface Pileup extends GenomePosition {
 
     int cMismatchCount();
 
+    int insertions();
+
+    int deletions();
+
     default int mismatchCount(char base) {
         switch (Character.toUpperCase(base)) {
             case 'G':
