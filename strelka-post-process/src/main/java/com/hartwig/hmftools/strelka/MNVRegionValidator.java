@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.strelka;
 
 import static com.hartwig.hmftools.strelka.SamRecordScoring.scoresPerVariant;
+import static com.hartwig.hmftools.strelka.VariantContextUtils.splitMultiAlleleVariant;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.strelka.scores.VariantScore;
 
@@ -88,6 +92,45 @@ public abstract class MNVRegionValidator {
             return ImmutableMNVRegionValidator.of(region(), gapReads, scores);
         }
         return this;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<VariantContext> nonMnvVariants(@NotNull final PotentialMNVRegion region, @NotNull final Set<PotentialMNV> validMnvs) {
+        final List<VariantContext> snvs = Lists.newArrayList();
+        final Set<VariantContext> variantsInValidMnvs =
+                validMnvs.stream().flatMap(mnv -> mnv.variants().stream()).collect(Collectors.toSet());
+        region.variants().forEach(variant -> {
+            if (variant.getAlternateAlleles().size() > 1) {
+                final List<VariantContext> notContainedAlts = splitMultiAlleleVariant(variant).stream()
+                        .filter(alt -> !variantsContain(variantsInValidMnvs, alt))
+                        .collect(Collectors.toList());
+                if (notContainedAlts.size() == variant.getAlternateAlleles().size()) {
+                    snvs.add(variant);
+                } else {
+                    snvs.addAll(notContainedAlts);
+                }
+            } else if (!variantsContain(variantsInValidMnvs, variant)) {
+                snvs.add(variant);
+            }
+        });
+        return snvs;
+    }
+
+    @NotNull
+    List<VariantContext> nonMnvVariants() {
+        return nonMnvVariants(region(), validMnvs());
+    }
+
+    private static boolean variantsContain(@NotNull final Collection<VariantContext> variants, @NotNull final VariantContext other) {
+        for (final VariantContext variant : variants) {
+            if (variant.getContig().equals(other.getContig()) && variant.getStart() == other.getStart()
+                    && variant.getEnd() == other.getEnd() && variant.getReference().equals(other.getReference())
+                    && variant.getAlternateAlleles().stream().allMatch(other.getAlternateAlleles()::contains)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @NotNull
