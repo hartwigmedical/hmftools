@@ -21,8 +21,8 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class MNVDetectorTest {
-    private static final Logger LOGGER = LogManager.getLogger(MNVDetectorTest.class);
+public class MNVValidatorTest {
+    private static final Logger LOGGER = LogManager.getLogger(MNVValidatorTest.class);
 
     private static final File VCF_FILE = new File(Resources.getResource("mnvs.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
@@ -34,7 +34,7 @@ public class MNVDetectorTest {
         final PotentialMNVRegion region =
                 PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)));
         assertEquals(2, region.potentialMnvs().size());
-        final List<VariantContext> nonMnvs = MNVDetector.nonMnvVariants(region, Sets.newHashSet(region.potentialMnvs().get(0)));
+        final List<VariantContext> nonMnvs = MNVRegionValidator.nonMnvVariants(region, Sets.newHashSet(region.potentialMnvs().get(0)));
         assertEquals(1, nonMnvs.size());
         assertEquals("G", nonMnvs.get(0).getReference().getBaseString());
         assertEquals(1, nonMnvs.get(0).getAlternateAlleles().size());
@@ -47,7 +47,7 @@ public class MNVDetectorTest {
         final PotentialMNVRegion region =
                 PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)));
         assertEquals(2, region.potentialMnvs().size());
-        final List<VariantContext> nonMnvs = MNVDetector.nonMnvVariants(region, Sets.newHashSet());
+        final List<VariantContext> nonMnvs = MNVRegionValidator.nonMnvVariants(region, Sets.newHashSet());
         assertEquals(2, nonMnvs.size());
         assertEquals("C", nonMnvs.get(0).getReference().getBaseString());
         assertEquals(1, nonMnvs.get(0).getAlternateAlleles().size());
@@ -66,8 +66,8 @@ public class MNVDetectorTest {
                 PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)));
         final SAMRecord recordWith1and2 = buildSamRecord(170755999, "6M", "CATTAG", false);
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         LOGGER.info(outputVariants);
         assertEquals(1, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
@@ -85,8 +85,8 @@ public class MNVDetectorTest {
         final SAMRecord recordWith1 = buildSamRecord(170755999, "6M", "CATGAG", false);
         final SAMRecord recordWith2 = buildSamRecord(170755999, "6M", "CACTAG", false);
         final List<SAMRecord> records = Lists.newArrayList(recordWith1, recordWith2, recordWith1and2);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         LOGGER.info(outputVariants);
         assertEquals(2, outputVariants.size());
         assertEquals(VARIANTS.get(11), outputVariants.get(0));
@@ -101,8 +101,8 @@ public class MNVDetectorTest {
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)));
         final SAMRecord recordWith1and2and3 = buildSamRecord(170756000, "6M", "ATTTGC", false);
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3, recordWith1and2and3);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         assertEquals(1, outputVariants.size());
         assertEquals("CGA", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -118,8 +118,8 @@ public class MNVDetectorTest {
         final SAMRecord recordWith1and2 = buildSamRecord(170755999, "6M", "CATTAG", false);
         final SAMRecord recordWith1and2and3 = buildSamRecord(170756000, "6M", "ATTTGC", false);
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2and3);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         assertEquals(2, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -137,8 +137,8 @@ public class MNVDetectorTest {
         final SAMRecord recordWith2and3 = buildSamRecord(14, "2M1D3M", "CCAGC", false);
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and3, recordWith1and3, recordWith1and3, recordWith1and3, recordWith1and3, recordWith2and3);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         assertEquals(2, outputVariants.size());
         assertEquals(VARIANTS.get(16), outputVariants.get(0));
         assertEquals("CCG", outputVariants.get(1).getReference().getBaseString());
@@ -156,8 +156,8 @@ public class MNVDetectorTest {
         final SAMRecord recordWith1and3 = buildSamRecord(170755900, "6M", "CTCTAG", false);
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and3);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         assertEquals(2, outputVariants.size());
         assertEquals("CCG", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -180,8 +180,8 @@ public class MNVDetectorTest {
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and2, recordWith1and2and3, recordWith1and2and3, recordWith1and2and3, recordWith1and2and3,
                         recordWith2and3);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         LOGGER.info(outputVariants);
         assertEquals(2, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
@@ -198,8 +198,8 @@ public class MNVDetectorTest {
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)));
         final SAMRecord recordWith1and2and3and4 = buildSamRecord(170756001, "5M", "TTTCC", false);
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3and4, recordWith1and2and3and4);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         assertEquals(1, outputVariants.size());
         assertEquals("CGAT", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -218,8 +218,8 @@ public class MNVDetectorTest {
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and2and3and4, recordWith1and2and3and4, recordWith1and2and3and4, recordWith1and2and3and4,
                         recordWith1and2and3, recordWith2and3and4);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         assertEquals(2, outputVariants.size());
         assertEquals("CGA", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
@@ -237,8 +237,8 @@ public class MNVDetectorTest {
         final SAMRecord recordWith3and4 = buildSamRecord(170756000, "6M", "ACGTCC", false);
         final SAMRecord recordWith1and2and3and4 = buildSamRecord(170756001, "5M", "TTTCC", false);
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith3and4, recordWith1and2and3and4);
-        final MNVRegionValidator validator = MNVDetector.validateMNVs(records.iterator(), region);
-        final List<VariantContext> outputVariants = MNVDetector.outputVariants(validator);
+        final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
+        final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
         assertEquals(2, outputVariants.size());
         assertEquals("CG", outputVariants.get(0).getReference().getBaseString());
         assertEquals(1, outputVariants.get(0).getAlternateAlleles().size());
