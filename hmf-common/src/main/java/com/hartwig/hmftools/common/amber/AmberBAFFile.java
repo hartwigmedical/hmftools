@@ -54,15 +54,27 @@ public enum AmberBAFFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("Chromosome").add("Position").add("BAF").add("mBAF").toString();
+        return new StringJoiner(DELIMITER, "", "").add("Chromosome")
+                .add("Position")
+                .add("tumorBAF")
+                .add("tumorModifiedBAF")
+                .add("tumorDepth")
+                .add("normalBAF")
+                .add("normalModifiedBAF")
+                .add("normalDepth")
+                .toString();
     }
 
     @NotNull
     private static String toString(@NotNull final AmberBAF ratio) {
         return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
                 .add(String.valueOf(ratio.position()))
-                .add(String.valueOf(ratio.baf()))
-                .add(String.valueOf(ratio.mBaf()))
+                .add(String.valueOf(ratio.tumorBAF()))
+                .add(String.valueOf(ratio.tumorModifiedBAF()))
+                .add(String.valueOf(ratio.tumorDepth()))
+                .add(String.valueOf(ratio.normalBAF()))
+                .add(String.valueOf(ratio.normalModifiedBAF()))
+                .add(String.valueOf(ratio.normalDepth()))
                 .toString();
     }
 
@@ -81,6 +93,18 @@ public enum AmberBAFFile {
     @NotNull
     private static AmberBAF fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableAmberBAF.builder().chromosome(values[0]).position(Long.valueOf(values[1])).baf(Double.valueOf(values[2])).build();
+        ImmutableAmberBAF.Builder builder = ImmutableAmberBAF.builder()
+                .chromosome(values[0])
+                .position(Long.valueOf(values[1]))
+                .tumorBAF(Double.valueOf(values[2]))
+                .tumorDepth(0)
+                .normalBAF(0.5)
+                .normalDepth(0);
+
+        if (values.length == 8) {
+            builder.tumorDepth(Integer.valueOf(values[4])).normalBAF(Double.valueOf(values[5])).normalDepth(Integer.valueOf(values[7]));
+        }
+
+        return builder.build();
     }
 }

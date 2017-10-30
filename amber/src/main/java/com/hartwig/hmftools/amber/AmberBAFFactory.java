@@ -51,7 +51,7 @@ class AmberBAFFactory {
                     readCount)) {
 
                 final Character alt = alt(altCount, normal);
-                final Optional<AmberBAF> baf = tumorSelector.select(normal).map(x -> create(alt, x));
+                final Optional<AmberBAF> baf = tumorSelector.select(normal).map(x -> create(alt, normal, x));
                 if (baf.isPresent()) {
                     result.add(baf.get());
                 } else {
@@ -64,10 +64,18 @@ class AmberBAFFactory {
 
     }
 
-    private static AmberBAF create(final char base, @NotNull final Pileup pileup) {
-        int altCount = pileup.mismatchCount(base);
-        double baf = altCount / (double) (altCount + pileup.referenceCount());
-        return ImmutableAmberBAF.builder().from(pileup).baf(baf).build();
+    private static AmberBAF create(final char base, @NotNull final Pileup normal, @NotNull final Pileup tumor) {
+        int tumorAltCount = tumor.mismatchCount(base);
+        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.referenceCount());
+        int normalAltCount = normal.mismatchCount(base);
+        double normalBaf = normalAltCount / (double) (normalAltCount + normal.referenceCount());
+        return ImmutableAmberBAF.builder()
+                .from(tumor)
+                .normalBAF(normalBaf)
+                .normalDepth(normal.referenceCount())
+                .tumorBAF(tumorBaf)
+                .tumorDepth(tumor.readCount())
+                .build();
     }
 
     private static char alt(int count, @NotNull final Pileup pileup) {

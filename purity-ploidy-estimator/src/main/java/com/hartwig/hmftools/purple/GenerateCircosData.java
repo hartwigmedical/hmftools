@@ -139,7 +139,7 @@ class GenerateCircosData {
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".ratio.circos", fittedRegions, ObservedRegion::observedTumorRatio);
     }
     private void writeBafs(@NotNull final List<AmberBAF> bafs) throws IOException {
-        CircosFileWriter.writePositions(baseCircosTumorSample + ".baf.circos", bafs, AmberBAF::baf);
+        CircosFileWriter.writePositions(baseCircosTumorSample + ".baf.circos", bafs, AmberBAF::tumorBAF);
     }
 
     private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {

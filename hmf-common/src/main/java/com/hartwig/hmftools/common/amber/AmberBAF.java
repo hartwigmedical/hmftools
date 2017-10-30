@@ -10,9 +10,19 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface AmberBAF extends GenomePosition {
 
-    double baf();
+    double tumorBAF();
 
-    default double mBaf() {
-        return 0.5 + Math.abs(baf() - 0.5);
+    default double tumorModifiedBAF() {
+        return 0.5 + Math.abs(tumorBAF() - 0.5);
     }
+
+    int tumorDepth();
+
+    double normalBAF();
+
+    default double normalModifiedBAF() {
+        return 0.5 + Math.abs(normalBAF() - 0.5);
+    }
+
+    int normalDepth();
 }
