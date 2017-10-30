@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.amber;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
@@ -15,10 +16,14 @@ import org.jetbrains.annotations.NotNull;
 
 public enum AmberBAFFile {
     ;
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
+
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "Chr";
     private static final String PURPLE_EXTENSION = ".purple.baf";
     private static final String AMBER_EXTENSION = ".amber.baf";
+
+
 
     @Deprecated
     public static String generatePurpleFilename(@NotNull final String basePath, @NotNull final String sample) {
@@ -69,11 +74,11 @@ public enum AmberBAFFile {
     private static String toString(@NotNull final AmberBAF ratio) {
         return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
                 .add(String.valueOf(ratio.position()))
-                .add(String.valueOf(ratio.tumorBAF()))
-                .add(String.valueOf(ratio.tumorModifiedBAF()))
+                .add(FORMAT.format(ratio.tumorBAF()))
+                .add(FORMAT.format(ratio.tumorModifiedBAF()))
                 .add(String.valueOf(ratio.tumorDepth()))
-                .add(String.valueOf(ratio.normalBAF()))
-                .add(String.valueOf(ratio.normalModifiedBAF()))
+                .add(FORMAT.format(ratio.normalBAF()))
+                .add(FORMAT.format(ratio.normalModifiedBAF()))
                 .add(String.valueOf(ratio.normalDepth()))
                 .toString();
     }

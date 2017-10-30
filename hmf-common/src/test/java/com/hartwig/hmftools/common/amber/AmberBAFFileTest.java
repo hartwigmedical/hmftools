@@ -14,7 +14,7 @@ import org.junit.Test;
 public class AmberBAFFileTest {
 
     private static final String BASE_PATH = Resources.getResource("amber").getPath() + File.separator;
-    private static final double EPSILON = 1e-10;
+    private static final double EPSILON = 1e-4;
 
     @Test
     public void testNewOldCompatibility() throws IOException {
