@@ -7,7 +7,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -21,7 +21,7 @@ public enum Gender {
     private static final int MIN_BAF_COUNT = 1000;
 
     @NotNull
-    public static Gender fromAmber(@NotNull final Multimap<String, TumorBAF> bafs) {
+    public static Gender fromAmber(@NotNull final Multimap<String, AmberBAF> bafs) {
         return bafs.get("X").stream().filter(x -> x.position() > 2_699_520 && x.position() < 155_260_560).count() > MIN_BAF_COUNT ? FEMALE : MALE;
     }
 

@@ -15,7 +15,8 @@ import java.util.concurrent.Executors;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
@@ -60,7 +61,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoade
 import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.baf.BAFSupplier;
 import com.hartwig.hmftools.purple.config.CircosConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
@@ -145,8 +145,7 @@ public class PurityPloidyEstimateApplication {
 
 
             // JOBA: Load BAFs from AMBER
-            final BAFSupplier bafSupplier = new BAFSupplier(config, configSupplier.bafConfig());
-            final Multimap<String, TumorBAF> bafs = bafSupplier.get();
+            final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(configSupplier.bafConfig().bafFile().toString());
 
             // JOBA: Load Ratios from COBALT
             final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());

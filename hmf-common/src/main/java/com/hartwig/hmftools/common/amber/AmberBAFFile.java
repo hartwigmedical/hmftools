@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.baf;
+package com.hartwig.hmftools.common.amber;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,13 +13,14 @@ import com.google.common.collect.Multimap;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum TumorBAFFile {
+public enum AmberBAFFile {
     ;
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "Chr";
     private static final String PURPLE_EXTENSION = ".purple.baf";
     private static final String AMBER_EXTENSION = ".amber.baf";
 
+    @Deprecated
     public static String generatePurpleFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + PURPLE_EXTENSION;
     }
@@ -29,25 +30,25 @@ public enum TumorBAFFile {
     }
 
     @NotNull
-    public static Multimap<String, TumorBAF> read(@NotNull final String fileName) throws IOException {
+    public static Multimap<String, AmberBAF> read(@NotNull final String fileName) throws IOException {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull Multimap<String, TumorBAF> bafs) throws IOException {
-        List<TumorBAF> sortedBafs = Lists.newArrayList(bafs.values());
+    public static void write(@NotNull final String filename, @NotNull Multimap<String, AmberBAF> bafs) throws IOException {
+        List<AmberBAF> sortedBafs = Lists.newArrayList(bafs.values());
         Collections.sort(sortedBafs);
         write(filename, sortedBafs);
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<TumorBAF> bafs) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull List<AmberBAF> bafs) throws IOException {
         Files.write(new File(filename).toPath(), toLines(bafs));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<TumorBAF> purity) {
+    static List<String> toLines(@NotNull final List<AmberBAF> purity) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().map(TumorBAFFile::toString).forEach(lines::add);
+        purity.stream().map(AmberBAFFile::toString).forEach(lines::add);
         return lines;
     }
 
@@ -57,7 +58,7 @@ public enum TumorBAFFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final TumorBAF ratio) {
+    private static String toString(@NotNull final AmberBAF ratio) {
         return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
                 .add(String.valueOf(ratio.position()))
                 .add(String.valueOf(ratio.baf()))
@@ -66,11 +67,11 @@ public enum TumorBAFFile {
     }
 
     @NotNull
-    private static Multimap<String, TumorBAF> fromLines(@NotNull List<String> lines) {
-        Multimap<String, TumorBAF> result = ArrayListMultimap.create();
+    private static Multimap<String, AmberBAF> fromLines(@NotNull List<String> lines) {
+        Multimap<String, AmberBAF> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith(HEADER_PREFIX)) {
-                final TumorBAF region = fromString(line);
+                final AmberBAF region = fromString(line);
                 result.put(region.chromosome(), region);
             }
         }
@@ -78,8 +79,8 @@ public enum TumorBAFFile {
     }
 
     @NotNull
-    private static TumorBAF fromString(@NotNull final String line) {
+    private static AmberBAF fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableTumorBAF.builder().chromosome(values[0]).position(Long.valueOf(values[1])).baf(Double.valueOf(values[2])).build();
+        return ImmutableAmberBAF.builder().chromosome(values[0]).position(Long.valueOf(values[1])).baf(Double.valueOf(values[2])).build();
     }
 }

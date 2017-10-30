@@ -5,8 +5,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.baf.ImmutableTumorBAF;
-import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
@@ -33,7 +33,7 @@ class AmberBAFFactory {
     }
 
     @NotNull
-    List<TumorBAF> create(@NotNull final List<Pileup> normalPileup, @NotNull final List<Pileup> tumorPileup) {
+    List<AmberBAF> create(@NotNull final List<Pileup> normalPileup, @NotNull final List<Pileup> tumorPileup) {
 
         final GenomePositionSelector<Pileup> tumorSelector = GenomePositionSelectorFactory.create(tumorPileup);
 
@@ -41,7 +41,7 @@ class AmberBAFFactory {
         int minDepth = (int) Math.round(medianDepth * minDepthPercentage);
         int maxDepth = (int) Math.round(medianDepth * maxDepthPercentage);
 
-        final List<TumorBAF> result = Lists.newArrayList();
+        final List<AmberBAF> result = Lists.newArrayList();
         for (Pileup normal : normalPileup) {
 
             final int readCount = normal.readCount();
@@ -51,7 +51,7 @@ class AmberBAFFactory {
                     readCount)) {
 
                 final Character alt = alt(altCount, normal);
-                final Optional<TumorBAF> baf = tumorSelector.select(normal).map(x -> create(alt, x));
+                final Optional<AmberBAF> baf = tumorSelector.select(normal).map(x -> create(alt, x));
                 if (baf.isPresent()) {
                     result.add(baf.get());
                 } else {
@@ -64,10 +64,10 @@ class AmberBAFFactory {
 
     }
 
-    private static TumorBAF create(final char base, @NotNull final Pileup pileup) {
+    private static AmberBAF create(final char base, @NotNull final Pileup pileup) {
         int altCount = pileup.mismatchCount(base);
         double baf = altCount / (double) (altCount + pileup.referenceCount());
-        return ImmutableTumorBAF.builder().from(pileup).baf(baf).build();
+        return ImmutableAmberBAF.builder().from(pileup).baf(baf).build();
     }
 
     private static char alt(int count, @NotNull final Pileup pileup) {

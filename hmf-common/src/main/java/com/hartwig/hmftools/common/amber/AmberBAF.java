@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.baf;
+package com.hartwig.hmftools.common.amber;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface TumorBAF extends GenomePosition {
+public interface AmberBAF extends GenomePosition {
 
     double baf();
 

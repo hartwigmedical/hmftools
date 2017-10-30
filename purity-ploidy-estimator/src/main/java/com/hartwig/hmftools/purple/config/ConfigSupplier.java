@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
 import java.io.File;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.baf.TumorBAFFile;
+import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -34,7 +34,6 @@ public class ConfigSupplier {
 
     private static final String STRUCTURAL_VARIANTS = "structural_vcf";
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
-    private static final String BAF_VARIANTS = "baf_vcf";
     private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
 
@@ -49,7 +48,6 @@ public class ConfigSupplier {
         options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation.");
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
 
-        options.addOption(BAF_VARIANTS, true, "Location of vcf to calculate BAF.");
         options.addOption(BAF, true, "Baf file location.");
         options.addOption(CIRCOS, true, "Location of circos binary.");
         options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
@@ -180,8 +178,6 @@ public class ConfigSupplier {
     @NotNull
     private static BAFConfig createBAFConfig(CommandLine cmd, Options opt, CommonConfig config) throws ParseException {
 
-        final ImmutableBAFConfig.Builder builder = ImmutableBAFConfig.builder().bafFile(Optional.empty()).bafVCFFile(Optional.empty());
-
         if (cmd.hasOption(BAF)) {
             final String filename = cmd.getOptionValue(BAF);
             final File file = new File(filename);
@@ -189,33 +185,23 @@ public class ConfigSupplier {
                 printHelp(opt);
                 throw new ParseException("Unable to read bafs from: " + filename);
             }
-            return builder.bafFile(Optional.of(file)).build();
+            return ImmutableBAFConfig.builder().bafFile(file).build();
         }
 
-        final String amberBaf = TumorBAFFile.generateAmberFilename(config.amberDirectory(), config.tumorSample());
+        final String amberBaf = AmberBAFFile.generateAmberFilename(config.amberDirectory(), config.tumorSample());
         final File amberFile = new File(amberBaf);
         if (amberFile.exists()) {
-            return builder.bafFile(Optional.of(amberFile)).build();
+            return ImmutableBAFConfig.builder().bafFile(amberFile).build();
         }
 
-        final String purpleBaf = TumorBAFFile.generatePurpleFilename(config.outputDirectory(), config.tumorSample());
+        final String purpleBaf = AmberBAFFile.generatePurpleFilename(config.outputDirectory(), config.tumorSample());
         final File purpleFile = new File(purpleBaf);
         if (purpleFile.exists()) {
-            return builder.bafFile(Optional.of(purpleFile)).build();
-        }
-
-        if (cmd.hasOption(BAF_VARIANTS)) {
-            final String filename = cmd.getOptionValue(BAF_VARIANTS);
-            final File file = new File(filename);
-            if (!file.exists()) {
-                printHelp(opt);
-                throw new ParseException("Unable to read bafs from: " + filename);
-            }
-            return builder.bafVCFFile(Optional.of(file)).build();
+            return ImmutableBAFConfig.builder().bafFile(purpleFile).build();
         }
 
         printHelp(opt);
-        throw new ParseException("Cached baf file " + purpleBaf + " not found. Please supply one of -baf or -baf_vcf arguments.");
+        throw new ParseException("Baf file " + amberBaf + " not found. Please supply -baf argument.");
     }
 
     private static void printHelp(Options opt) {

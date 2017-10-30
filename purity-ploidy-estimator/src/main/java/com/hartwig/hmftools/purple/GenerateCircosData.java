@@ -16,7 +16,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
@@ -70,7 +70,7 @@ class GenerateCircosData {
 
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
             @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<FittedRegion> regions, @NotNull final List<TumorBAF> bafs)
+            @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
             throws IOException, InterruptedException, ExecutionException {
 
         createDirectory(config.plotDirectory());
@@ -138,8 +138,8 @@ class GenerateCircosData {
         CircosFileWriter.writeRegions(baseCircosReferenceSample + ".ratio.circos", fittedRegions, ObservedRegion::observedNormalRatio);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".ratio.circos", fittedRegions, ObservedRegion::observedTumorRatio);
     }
-    private void writeBafs(@NotNull final List<TumorBAF> bafs) throws IOException {
-        CircosFileWriter.writePositions(baseCircosTumorSample + ".baf.circos", bafs, TumorBAF::baf);
+    private void writeBafs(@NotNull final List<AmberBAF> bafs) throws IOException {
+        CircosFileWriter.writePositions(baseCircosTumorSample + ".baf.circos", bafs, AmberBAF::baf);
     }
 
     private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {

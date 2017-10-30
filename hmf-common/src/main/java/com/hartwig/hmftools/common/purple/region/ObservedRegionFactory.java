@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.baf.TumorBAF;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -28,12 +28,12 @@ public class ObservedRegionFactory {
     }
 
     @NotNull
-    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, TumorBAF> bafs,
+    public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, AmberBAF> bafs,
             @NotNull final Multimap<String, CobaltRatio> ratios) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
-        final GenomePositionSelector<TumorBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
+        final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
 
         for (final PurpleSegment region : regions) {
             final BAFAccumulator baf = new BAFAccumulator();
@@ -62,12 +62,12 @@ public class ObservedRegionFactory {
         return result;
     }
 
-    private class BAFAccumulator implements Consumer<TumorBAF> {
+    private class BAFAccumulator implements Consumer<AmberBAF> {
         private int count;
         final private List<Double> bafs = Lists.newArrayList();
 
         @Override
-        public void accept(final TumorBAF baf) {
+        public void accept(final AmberBAF baf) {
             if (HumanChromosome.valueOf(baf).isHomologous(gender) && !Double.isNaN(baf.mBaf())) {
                 count++;
                 bafs.add(baf.mBaf());

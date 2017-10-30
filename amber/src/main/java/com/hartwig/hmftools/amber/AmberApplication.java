@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import com.hartwig.hmftools.common.baf.TumorBAF;
-import com.hartwig.hmftools.common.baf.TumorBAFFile;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.pileup.PileupFile;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -69,11 +69,11 @@ public class AmberApplication {
         final List<Pileup> normal = PileupFile.read(cmd.getOptionValue(REFERENCE_PILEUP));
 
         LOGGER.info("Calculating BAFs");
-        final List<TumorBAF> result = factory.create(normal, tumor);
+        final List<AmberBAF> result = factory.create(normal, tumor);
 
-        final String filename = TumorBAFFile.generateAmberFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
+        final String filename = AmberBAFFile.generateAmberFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
         LOGGER.info("Persisting file {}", filename);
-        TumorBAFFile.write(filename, result);
+        AmberBAFFile.write(filename, result);
         versionInfo.write(outputDir.toString());
 
         LOGGER.info("Complete");
