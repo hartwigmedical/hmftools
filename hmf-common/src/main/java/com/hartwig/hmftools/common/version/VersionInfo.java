@@ -5,8 +5,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.List;
 
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
@@ -36,12 +37,9 @@ public class VersionInfo {
     }
 
     public void write(@NotNull final String outputDirectory) throws IOException {
-        Files.write(new File(outputDirectory + File.separator + resource).toPath(), read());
-    }
-
-    private List<String> read() throws IOException {
-        final File file = new File(VersionInfo.class.getClassLoader().getResource(resource).getFile());
-        return Files.readAllLines(file.toPath());
+        final String content = readResource();
+        final Charset charset = StandardCharsets.UTF_8;
+        Files.write(new File(outputDirectory + File.separator + resource).toPath(), content.getBytes(charset));
     }
 
     @NotNull

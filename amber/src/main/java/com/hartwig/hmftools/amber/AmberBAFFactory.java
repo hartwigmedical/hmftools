@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.amber;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -11,13 +10,9 @@ import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class AmberBAFFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
 
     private final double minHetAFPercentage;
     private final double maxHetAFPercentage;
@@ -51,12 +46,7 @@ class AmberBAFFactory {
                     && isHetrozygousAlt(altCount, readCount)) {
 
                 final Character alt = alt(altCount, normal);
-                final Optional<AmberBAF> baf = tumorSelector.select(normal).filter(x -> x.indels() == 0).map(x -> create(alt, normal, x));
-                if (baf.isPresent()) {
-                    result.add(baf.get());
-                } else {
-                    LOGGER.warn("Unable to locate position in tumor. Ensure pileups are created from same bed.");
-                }
+                tumorSelector.select(normal).filter(x -> x.indels() == 0).map(x -> create(alt, normal, x)).ifPresent(result::add);
             }
         }
 
