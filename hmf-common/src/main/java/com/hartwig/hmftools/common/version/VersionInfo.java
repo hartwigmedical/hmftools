@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.common.version;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class VersionInfo {
@@ -15,13 +19,13 @@ public class VersionInfo {
         this.resource = resource;
     }
 
-    public String version() {
+    public String version() throws IOException {
         return value("version=", "UNKNOWN");
     }
 
     public String value(@NotNull final String key, @NotNull final String defaultValue) {
         try {
-            for (String entry : read()) {
+            for (String entry : readResource().split("\n")) {
                 if (entry.startsWith(key)) {
                     return entry.substring(key.length());
                 }
@@ -38,5 +42,12 @@ public class VersionInfo {
     private List<String> read() throws IOException {
         final File file = new File(VersionInfo.class.getClassLoader().getResource(resource).getFile());
         return Files.readAllLines(file.toPath());
+    }
+
+    @NotNull
+    private String readResource() throws IOException {
+        InputStream in = VersionInfo.class.getClassLoader().getResourceAsStream(resource);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        return IOUtils.toString(reader);
     }
 }
