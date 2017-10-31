@@ -19,6 +19,7 @@ import nl.hartwigmedicalfoundation.bachelor.Effect;
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.Program;
 import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
+import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
 import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 
 import org.apache.logging.log4j.LogManager;
@@ -61,20 +62,28 @@ class BachelorEligibility {
 
         for (final Program program : input.values()) {
 
-            final boolean allGene = program.getPanel().getAllGenes() != null;
-            final List<GeneIdentifier> panel = program.getPanel().getGene();
-            final List<String> effects = program.getPanel().getSnpEffect().stream().map(Effect::value).collect(Collectors.toList());
+            final Map<String, String> geneToEnsemblMap = Maps.newHashMap();
 
-            // load ensembl mappings as we want specific transcripts
-            final Map<String, String> geneToEnsemblMap =
-                    program.getPanel().getGene().stream().collect(Collectors.toMap(GeneIdentifier::getName, GeneIdentifier::getEnsembl));
+            // load panels, potentially multiple
 
-            final Predicate<ExtractedVariantInfo> inPanel = v -> allGene
-                    ? v.Annotations.stream().anyMatch(a -> a.Annotations.stream().anyMatch(effects::contains))
-                    : panel.stream()
-                            .anyMatch(p -> v.Annotations.stream()
-                                    .anyMatch(a -> a.Transcript.equals(p.getEnsembl()) && a.Annotations.stream()
-                                            .anyMatch(effects::contains)));
+            final List<Predicate<ExtractedVariantInfo>> panelPredicates = Lists.newArrayList();
+            for (final ProgramPanel panel : program.getPanel()) {
+                final boolean allGene = panel.getAllGenes() != null;
+                final List<GeneIdentifier> genes = panel.getGene();
+                final List<String> effects = panel.getSnpEffect().stream().map(Effect::value).collect(Collectors.toList());
+
+                genes.forEach(g -> geneToEnsemblMap.put(g.getName(), g.getEnsembl()));
+
+                final Predicate<ExtractedVariantInfo> panelPredicate = v -> allGene
+                        ? v.Annotations.stream().anyMatch(a -> a.Annotations.stream().anyMatch(effects::contains))
+                        : genes.stream()
+                                .anyMatch(p -> v.Annotations.stream()
+                                        .anyMatch(a -> a.Transcript.equals(p.getEnsembl()) && a.Annotations.stream()
+                                                .anyMatch(effects::contains)));
+                panelPredicates.add(panelPredicate);
+            }
+
+            final Predicate<ExtractedVariantInfo> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
 
             // blacklist
 
