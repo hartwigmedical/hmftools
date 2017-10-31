@@ -32,6 +32,12 @@ public abstract class MNVScore {
 
     public abstract long scoreWithAllAlts();
 
+    //    @NotNull
+    //    @Value.Derived
+    //    public List<VariantContext> variants() {
+    //        return aggregatedScores().keySet().stream().sorted(Comparator.comparing(VariantContext::getStart)).collect(Collectors.toList());
+    //    }
+
     @NotNull
     static MNVScore addReadScore(@NotNull final MNVScore mnvScore, @NotNull final Map<VariantContext, VariantScore> variantScores) {
         final Map<VariantContext, VariantScoreAggregate> aggregatedScores = Maps.newHashMap();
