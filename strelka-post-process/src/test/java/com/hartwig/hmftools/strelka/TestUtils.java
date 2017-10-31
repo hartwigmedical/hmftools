@@ -41,6 +41,9 @@ public class TestUtils {
         record.setReadString(readString);
         record.setReadNegativeStrandFlag(negativeStrand);
         record.setBaseQualityString(qualities);
+        record.setMappingQuality(20);
+        record.setDuplicateReadFlag(false);
+        record.setReadUnmappedFlag(false);
         return record;
     }
 

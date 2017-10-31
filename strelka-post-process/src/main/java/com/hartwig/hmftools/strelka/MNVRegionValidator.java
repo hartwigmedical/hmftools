@@ -29,6 +29,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVRegionValidator {
+    private static final int MIN_MAPPING_QUALITY = 10;
+
     @NotNull
     public abstract PotentialMNVRegion region();
 
@@ -79,7 +81,7 @@ public abstract class MNVRegionValidator {
 
     @NotNull
     MNVRegionValidator addSamRecord(@NotNull final SAMRecord record) {
-        if (goodRead(record) && containsAllMNVPositions(record)) {
+        if (isEligible(record) && containsAllMNVPositions(record)) {
             final Map<VariantContext, VariantScore> samRecordScores = scoresPerVariant(record, region().variantsInPotentialMnvs());
             final Map<PotentialMNV, MNVScore> scores = mnvScores().entrySet()
                     .stream()
@@ -144,8 +146,9 @@ public abstract class MNVRegionValidator {
         return sizeComparator.reversed().thenComparing(frequencyComparator.reversed()).thenComparing(startPositionComparator);
     }
 
-    private boolean goodRead(@NotNull final SAMRecord record) {
-        return !record.getDuplicateReadFlag();
+    private boolean isEligible(@NotNull final SAMRecord record) {
+        return record.getMappingQuality() >= MIN_MAPPING_QUALITY && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag()
+                || record.isSecondaryOrSupplementary());
     }
 
     private boolean containsAllMNVPositions(@NotNull final SAMRecord record) {
