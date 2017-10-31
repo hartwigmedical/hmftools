@@ -39,7 +39,8 @@ final class SamRecordScoring {
         if (variant.isSimpleInsertion()) {
             for (int index = 0; index < alt.length(); index++) {
                 final int recordIndex = recordIdxOfVariantStart + index;
-                if (record.getReadString().charAt(recordIndex - 1) == alt.getBaseString().charAt(index)) {
+                if (recordIndex - 1 < record.getReadLength() && record.getReadString().charAt(recordIndex - 1) == alt.getBaseString()
+                        .charAt(index)) {
                     if (index != 0 && record.getReferencePositionAtReadPosition(recordIndex) != 0) {
                         return ReadType.REF;
                     }
@@ -80,9 +81,7 @@ final class SamRecordScoring {
         final int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(variant.getStart());
         switch (readType) {
             case REF: {
-                if (variant.isSNP()) {
-                    return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
-                } else if (variant.isSimpleInsertion()) {
+                if (variant.isSNP() || variant.isSimpleInsertion()) {
                     return VariantScore.of(readType, record.getBaseQualityString().charAt(recordIdxOfVariantStart - 1));
                 } else if (variant.isSimpleDeletion()) {
                     final int endIndex = Math.min(recordIdxOfVariantStart - 1 + variant.getReference().length(), record.getReadLength());
