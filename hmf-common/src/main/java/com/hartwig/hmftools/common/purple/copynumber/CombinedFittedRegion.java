@@ -9,6 +9,7 @@ class CombinedFittedRegion {
 
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
+    private boolean modified = false;
 
     CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region) {
         this.bafWeighted = bafWeighted;
@@ -22,11 +23,16 @@ class CombinedFittedRegion {
         }
     }
 
+    public boolean isModified() {
+        return modified;
+    }
+
     FittedRegion region() {
         return combined;
     }
 
     void combine(final FittedRegion region) {
+        modified = true;
         long currentBases = combined.bases();
 
         combined.setStart(Math.min(combined.start(), region.start()));

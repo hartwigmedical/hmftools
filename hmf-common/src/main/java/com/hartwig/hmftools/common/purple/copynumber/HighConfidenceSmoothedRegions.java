@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
@@ -28,10 +27,12 @@ class HighConfidenceSmoothedRegions {
     private final List<? extends GenomeRegion> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
     private final CopyNumberDeviation deviation;
+    private final BAFDeviation bafDeviation;
 
     HighConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final List<? extends GenomeRegion> highConfidenceRegions, @NotNull final List<FittedRegion> fittedRegions) {
         this.deviation = new CopyNumberDeviation(purityAdjuster);
+        this.bafDeviation = new BAFDeviation();
         this.highConfidenceRegions = highConfidenceRegions;
         this.fittedRegions = fittedRegions;
 
@@ -155,27 +156,12 @@ class HighConfidenceSmoothedRegions {
 
     private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final CombinedFittedRegion builder) {
         final FittedRegion combinedRegion = builder.region();
-        int bafCount = Math.min(newRegion.bafCount(), combinedRegion.bafCount());
         if (isGermline(newRegion)) {
             return true;
         }
 
-        if (!deviation.withinCopyNumberTolerance(combinedRegion, newRegion)) {
-            return false;
-        }
+        return deviation.inTolerance(combinedRegion, newRegion) && bafDeviation.inTolerance(newRegion, combinedRegion);
 
-        if (bafCount > 0 && !Doubles.isZero(combinedRegion.observedBAF())) {
-            double bafDeviation = Math.abs(newRegion.observedBAF() - combinedRegion.observedBAF());
-            if (Doubles.greaterThan(bafDeviation, allowedBAFDeviation(bafCount))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    static double allowedBAFDeviation(int bafCount) {
-        return 1d / Math.max(1, bafCount) * 0.35 + 0.03;
     }
 
     private int indexOfEnd(int minIndex, @NotNull GenomeRegion region) {

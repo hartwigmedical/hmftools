@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
 import static com.hartwig.hmftools.common.numeric.Doubles.lessThan;
+import static com.hartwig.hmftools.common.purple.copynumber.BAFDeviation.allowedBAFDeviation;
 import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceSmoothedRegions.MIN_RATIO_ONLY_TUMOR_RATIO_COUNT;
-import static com.hartwig.hmftools.common.purple.copynumber.HighConfidenceSmoothedRegions.allowedBAFDeviation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

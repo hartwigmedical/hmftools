@@ -26,7 +26,7 @@ final class CopyNumberDeviation {
         this.purityAdjuster = purityAdjuster;
     }
 
-    boolean withinCopyNumberTolerance(@NotNull final FittedRegion first, @NotNull final FittedRegion second) {
+    boolean inTolerance(@NotNull final FittedRegion first, @NotNull final FittedRegion second) {
         double tumorCopyNumberDeviation = Math.abs(first.tumorCopyNumber() - second.tumorCopyNumber());
         double refNormalisedCopyNumberDeviation = Math.abs(first.refNormalisedCopyNumber() - second.refNormalisedCopyNumber());
         double copyNumberDeviation = Math.min(tumorCopyNumberDeviation, refNormalisedCopyNumberDeviation);
