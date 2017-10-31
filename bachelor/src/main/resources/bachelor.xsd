@@ -81,7 +81,7 @@
     <xsd:element name="Program">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element name="Panel" type="ProgramPanel"/>
+                <xsd:element name="Panel" type="ProgramPanel" maxOccurs="unbounded"/>
                 <xsd:element name="Blacklist" type="ProgramBlacklist" minOccurs="0"/>
                 <xsd:element name="Whitelist" type="ProgramWhitelist" minOccurs="0"/>
             </xsd:sequence>
