@@ -88,9 +88,28 @@
                             <finalName>mnv-detector</finalName>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>build-mnv-validator</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <mainClass>com.hartwig.hmftools.strelka.MNVValidatorApplication
+                                    </mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>mnv-validator</finalName>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
 </project>
