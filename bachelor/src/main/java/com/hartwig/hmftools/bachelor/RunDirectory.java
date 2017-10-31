@@ -33,4 +33,9 @@ class RunDirectory {
     File findCopyNumber() throws IOException {
         return Files.walk(prefix).filter(p -> p.toString().endsWith("purple.cnv")).map(Path::toFile).findFirst().orElse(null);
     }
+
+    @Nullable
+    File findStructuralVariants() throws IOException {
+        return Files.walk(prefix).filter(p -> p.toString().endsWith("bpi.vcf")).map(Path::toFile).findFirst().orElse(null);
+    }
 }

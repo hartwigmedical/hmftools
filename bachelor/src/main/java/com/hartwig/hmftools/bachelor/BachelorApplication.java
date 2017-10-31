@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -42,6 +43,8 @@ public class BachelorApplication {
     // DEBUG
     private static final String GERMLINE_VCF = "germlineVcf";
     private static final String SOMATIC_VCF = "somaticVcf";
+    private static final String PURPLE_FILE = "purple";
+    private static final String BPI_VCF = "bpiVcf";
 
     @NotNull
     private static Options createOptions() {
@@ -51,6 +54,8 @@ public class BachelorApplication {
         options.addOption(Option.builder(OUTPUT).hasArg().desc("output file").build());
         options.addOption(Option.builder(GERMLINE_VCF).required(false).hasArg().desc("germline vcf to process").build());
         options.addOption(Option.builder(SOMATIC_VCF).required(false).hasArg().desc("somatic vcf to process").build());
+        options.addOption(Option.builder(BPI_VCF).required(false).hasArg().desc("BPI structural variant vcf to process").build());
+        options.addOption(Option.builder(PURPLE_FILE).required(false).hasArg().desc("purple cnv file to process").build());
         return options;
     }
 
@@ -67,13 +72,23 @@ public class BachelorApplication {
     }
 
     private static void processVCF(final String tag, final File vcf, final BachelorEligibility eligibility,
-            final List<EligibilityReport> reports, final Map<String, Integer> merged) {
+            final List<EligibilityReport> reports, final Map<String, Integer> results) {
         LOGGER.info("process vcf: {}", vcf.getPath());
         final VCFFileReader reader = new VCFFileReader(vcf, false);
         final Collection<EligibilityReport> result = eligibility.processVCF(tag, reader);
-        result.forEach(report -> merged.merge(report.program(), report.variants().size(), (a, b) -> a + b));
+        result.forEach(report -> results.merge(report.program(), report.variants().size(), (a, b) -> a + b));
         reports.addAll(result);
         reader.close();
+    }
+
+    private static void processPurpleCNV(final File cnv, final BachelorEligibility eligibility, final List<EligibilityReport> reports,
+            final Map<String, Integer> results) {
+        LOGGER.info("process cnv: {}", cnv.getPath());
+    }
+
+    private static void processSV(final File vcf, final BachelorEligibility eligibility, final List<EligibilityReport> reports,
+            final Map<String, Integer> results) {
+        LOGGER.info("process sv: {}", vcf.getPath());
     }
 
     public static void main(final String... args) {
@@ -87,14 +102,20 @@ public class BachelorApplication {
 
             final File germline;
             final File somatic;
+            final File copyNumber;
+            final File structuralVariants;
 
             if (cmd.hasOption(RUN_DIRECTORY)) {
                 final RunDirectory run = new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY)));
                 germline = run.findGermline();
                 somatic = run.findSomatic();
+                copyNumber = run.findCopyNumber();
+                structuralVariants = run.findStructuralVariants();
             } else {
                 germline = cmd.hasOption(GERMLINE_VCF) ? Paths.get(cmd.getOptionValue(GERMLINE_VCF)).toFile() : null;
                 somatic = cmd.hasOption(SOMATIC_VCF) ? Paths.get(cmd.getOptionValue(SOMATIC_VCF)).toFile() : null;
+                copyNumber = cmd.hasOption(PURPLE_FILE) ? Paths.get(cmd.getOptionValue(PURPLE_FILE)).toFile() : null;
+                structuralVariants = cmd.hasOption(BPI_VCF) ? Paths.get(cmd.getOptionValue(BPI_VCF)).toFile() : null;
             }
 
             final List<EligibilityReport> reports = Lists.newArrayList();
@@ -106,17 +127,26 @@ public class BachelorApplication {
             if (somatic != null) {
                 processVCF("somatic", somatic, eligibility, reports, merged);
             }
+            if (copyNumber != null) {
+                processPurpleCNV(copyNumber, eligibility, reports, merged);
+            }
+            if (structuralVariants != null) {
+                processSV(structuralVariants, eligibility, reports, merged);
+            }
 
             // output results
 
             merged.entrySet()
                     .stream()
                     .sorted(Comparator.comparingInt(Map.Entry::getValue))
-                    .forEach(e -> LOGGER.info("{} = {} variants", e.getKey(), e.getValue()));
+                    .forEach(e -> LOGGER.info("{} = {} events", e.getKey(), e.getValue()));
 
             if (cmd.hasOption(OUTPUT)) {
                 final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)));
                 for (final EligibilityReport report : reports) {
+                    // header
+                    writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "CHROM", "POS", "REF", "ALTS")));
+                    // data
                     for (final VariantContext v : report.variants()) {
                         writer.write(
                                 String.format("%s,%s,%s,%d,%s,%s" + System.lineSeparator(), report.tag(), report.program(), v.getContig(),
