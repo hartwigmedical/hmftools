@@ -12,23 +12,33 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public final class VariantContextUtils {
+final class VariantContextUtils {
     private VariantContextUtils() {
     }
 
     @NotNull
-    public static List<VariantContext> splitMultiAlleleVariant(@NotNull final VariantContext variant) {
+    static List<VariantContext> splitMultiAlleleVariant(@NotNull final VariantContext variant) {
         final List<VariantContext> variants = Lists.newArrayList();
         final int[] ad = variant.getGenotype(0).getAD();
         final int dp = variant.getGenotype(0).getDP();
         for (int index = 0; index < variant.getAlternateAlleles().size(); index++) {
             final Allele alt = variant.getAlternateAllele(index);
             final List<Allele> alleles = Lists.newArrayList(variant.getReference(), alt);
+            final int altADIndex;
+            if (isWronglyPostProcessedIndel(variant)) {
+                altADIndex = 1;
+            } else {
+                altADIndex = index + 1;
+            }
             final Genotype genotype = new GenotypeBuilder(variant.getSampleNamesOrderedByName().get(0), alleles).DP(dp)
-                    .AD(new int[] { ad[0], ad[index + 1] })
+                    .AD(new int[] { ad[0], ad[altADIndex] })
                     .make();
             variants.add(new VariantContextBuilder(variant).alleles(alleles).genotypes(genotype).make());
         }
         return variants;
+    }
+
+    private static boolean isWronglyPostProcessedIndel(@NotNull final VariantContext variant) {
+        return variant.isIndel() && variant.getGenotype(0).getAD().length < variant.getAlleles().size();
     }
 }
