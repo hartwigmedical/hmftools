@@ -45,6 +45,7 @@ public class MNVValidatorApplication {
             formatter.printHelp("MNV Validator", options);
             System.exit(1);
         }
+        LOGGER.info("Validating mnvs in {} using bam {}.", inputVcf, tumorBam);
         processVariants(inputVcf, outputVcf, tumorBam);
     }
 

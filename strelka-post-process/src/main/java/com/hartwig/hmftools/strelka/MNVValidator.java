@@ -8,8 +8,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,8 +24,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVValidator {
-    private static final Logger LOGGER = LogManager.getLogger(MNVValidator.class);
-
     @NotNull
     protected abstract String tumorBAM();
 
@@ -48,13 +44,10 @@ public abstract class MNVValidator {
         if (potentialMnvRegion.potentialMnvs().size() == 0) {
             return potentialMnvRegion.variants();
         } else {
-            LOGGER.info("Potential mnv of size {}: {}", potentialMnvRegion.variants().size(), potentialMnvRegion);
             final SAMRecordIterator samIterator = queryBam(potentialMnvRegion);
             final MNVRegionValidator regionValidator = validateMNVs(samIterator, potentialMnvRegion);
             samIterator.close();
-            final List<VariantContext> mergedVariants = outputVariants(regionValidator);
-            LOGGER.info("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
-            return mergedVariants;
+            return outputVariants(regionValidator);
         }
     }
 
@@ -74,14 +67,9 @@ public abstract class MNVValidator {
     @VisibleForTesting
     static List<VariantContext> outputVariants(@NotNull final MNVRegionValidator regionValidator) {
         final List<VariantContext> result = Lists.newArrayList();
-        LOGGER.info("Number of valid mnvs: {}", regionValidator.validMnvs().size());
         for (final PotentialMNV validMnv : regionValidator.validMnvs()) {
             final VariantContext mergedVariant = MNVMerger.mergeVariants(validMnv, regionValidator.mostFrequentReads());
-            if (validMnv.variants().size() > 2) {
-                LOGGER.info("Region with {} variants; mergedVariant: {}", validMnv.variants().size(), mergedVariant);
-            }
             result.add(mergedVariant);
-            LOGGER.info("Percentage of reads with all variants: {}", regionValidator.mnvScores().get(validMnv).frequency());
         }
         result.addAll(regionValidator.nonMnvVariants());
         result.sort(Comparator.comparing(VariantContext::getStart).thenComparing(variantContext -> variantContext.getReference().length()));

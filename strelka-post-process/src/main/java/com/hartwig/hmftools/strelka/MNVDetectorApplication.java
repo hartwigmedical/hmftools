@@ -47,6 +47,7 @@ public class MNVDetectorApplication {
             formatter.printHelp("MNV Detector", options);
             System.exit(1);
         }
+        LOGGER.info("Searching for mnvs in {}", inputVcf);
         processVariants(inputVcf, outputVcf, outputBed);
     }
 
@@ -103,10 +104,6 @@ public class MNVDetectorApplication {
         if (potentialMnvRegion.potentialMnvs().size() == 0) {
             return Optional.empty();
         } else {
-            LOGGER.info("potential MNV region of size {} on chr{}: {} -> {}", potentialMnvRegion.variants().size(),
-                    potentialMnvRegion.chromosome(), potentialMnvRegion.start(), potentialMnvRegion.end());
-            potentialMnvRegion.potentialMnvs().forEach(LOGGER::info);
-            LOGGER.info("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
             return Optional.of(potentialMnvRegion);
         }
     }
