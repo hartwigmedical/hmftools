@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.FolderChecker;
 import com.hartwig.hmftools.healthchecker.report.JsonReport;
 import com.hartwig.hmftools.healthchecker.report.Report;
+import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
 import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
 import com.hartwig.hmftools.healthchecker.runners.KinshipChecker;
@@ -87,8 +88,11 @@ public final class HealthChecksApplication {
 
     private void run() {
         final Report report = new JsonReport();
-        final Collection<HealthChecker> checkers =
-                Lists.newArrayList(new CoverageChecker(), new SomaticVariantsChecker(), new KinshipChecker(), new PurpleChecker());
+        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(),
+                new SomaticVariantsChecker(),
+                new KinshipChecker(),
+                new PurpleChecker(),
+                new AmberChecker());
 
         for (final HealthChecker checker : checkers) {
             report.addResult(checker.run(runContext));

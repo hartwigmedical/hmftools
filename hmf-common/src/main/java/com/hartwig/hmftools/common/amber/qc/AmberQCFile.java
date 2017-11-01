@@ -35,7 +35,7 @@ public class AmberQCFile {
     static AmberQC fromLines(@NotNull final List<String> lines) throws IOException, MalformedFileException {
         try {
             return ImmutableAmberQC.builder()
-                    .meanBAF(Double.valueOf(getValue(lines.get(2))))
+                    .meanBAF(Double.valueOf(getValue(lines.get(1))))
                     .build();
         } catch (Exception e) {
             throw new MalformedFileException("Unable to parse amber qc file.");

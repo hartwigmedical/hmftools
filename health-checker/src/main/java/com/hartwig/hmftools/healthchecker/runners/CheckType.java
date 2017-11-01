@@ -4,5 +4,6 @@ public enum CheckType {
     KINSHIP,
     COVERAGE,
     SOMATIC_VARIANTS,
-    PURPLE
+    PURPLE,
+    AMBER
 }
