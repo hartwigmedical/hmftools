@@ -120,7 +120,7 @@ public class BachelorApplication {
 
             final List<RunDirectory> runDirectories = Lists.newArrayList();
             if (cmd.hasOption(BATCH_DIRECTORY)) {
-                final File[] runs = Paths.get("runs").toFile().listFiles(File::isDirectory);
+                final File[] runs = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY)).toFile().listFiles(File::isDirectory);
                 if (runs != null) {
                     Stream.of(runs).forEach(r -> runDirectories.add(new RunDirectory(r.toPath())));
                 }
