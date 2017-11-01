@@ -10,6 +10,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.strelka.mnv.ImmutableMNVValidator;
+import com.hartwig.hmftools.strelka.mnv.MNVDetector;
+import com.hartwig.hmftools.strelka.mnv.MNVValidator;
+import com.hartwig.hmftools.strelka.mnv.PotentialMNVRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

@@ -9,6 +9,8 @@ import java.util.Optional;
 import javax.xml.stream.XMLStreamException;
 
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.strelka.mnv.MNVDetector;
+import com.hartwig.hmftools.strelka.mnv.PotentialMNVRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

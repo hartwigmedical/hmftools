@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
 import static org.junit.Assert.assertEquals;
 

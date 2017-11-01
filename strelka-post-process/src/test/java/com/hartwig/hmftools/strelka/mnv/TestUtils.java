@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.strelka.scores.VariantScore;
+import com.hartwig.hmftools.strelka.mnv.scores.VariantScore;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -12,19 +12,18 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.variant.variantcontext.VariantContext;
 
-class TestUtils {
+public class TestUtils {
     @NotNull
-    static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
-            final boolean negativeStrand) {
+    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString) {
         final StringBuilder qualityString = new StringBuilder();
         for (int i = 0; i < readString.length(); i++) {
             qualityString.append("A");
         }
-        return buildSamRecord(alignmentStart, cigar, readString, qualityString.toString(), negativeStrand);
+        return buildSamRecord(alignmentStart, cigar, readString, qualityString.toString(), false);
     }
 
     @NotNull
-    static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
+    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
             @NotNull final String qualities, final boolean negativeStrand) {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(alignmentStart);

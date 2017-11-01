@@ -1,12 +1,10 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv.scores;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.strelka.scores.ImmutableVariantScore;
-import com.hartwig.hmftools.strelka.scores.ReadType;
-import com.hartwig.hmftools.strelka.scores.VariantScore;
+import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,7 +14,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
-final class SamRecordScoring {
+public final class SamRecordScoring {
     private SamRecordScoring() {
     }
 
@@ -74,6 +72,7 @@ final class SamRecordScoring {
 
     // MIVO: assumes single alt allele
     @NotNull
+    @VisibleForTesting
     static VariantScore getVariantScore(@NotNull final SAMRecord record, @NotNull final VariantContext variant) {
         assert variant.getAlternateAlleles().size() == 1;
         final ReadType readType = getReadType(record, variant);
@@ -110,7 +109,7 @@ final class SamRecordScoring {
     }
 
     @NotNull
-    static Map<VariantContext, VariantScore> scoresPerVariant(@NotNull final SAMRecord record,
+    public static Map<VariantContext, VariantScore> scoresPerVariant(@NotNull final SAMRecord record,
             @NotNull final Collection<VariantContext> variants) {
         return variants.stream()
                 .map(variant -> ImmutablePair.of(variant, getVariantScore(record, variant)))

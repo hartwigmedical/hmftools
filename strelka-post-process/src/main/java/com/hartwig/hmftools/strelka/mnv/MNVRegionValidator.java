@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
-import static com.hartwig.hmftools.strelka.SamRecordScoring.scoresPerVariant;
 import static com.hartwig.hmftools.strelka.VariantContextUtils.splitMultiAlleleVariant;
+import static com.hartwig.hmftools.strelka.mnv.scores.SamRecordScoring.scoresPerVariant;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.strelka.scores.VariantScore;
+import com.hartwig.hmftools.strelka.mnv.scores.VariantScore;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,17 +32,16 @@ public abstract class MNVRegionValidator {
     private static final int MIN_MAPPING_QUALITY = 10;
 
     @NotNull
-    public abstract PotentialMNVRegion region();
+    abstract PotentialMNVRegion region();
 
     @NotNull
-    public abstract Map<Integer, GapReads> gapReads();
+    abstract Map<Integer, GapReads> gapReads();
 
     @NotNull
-    public abstract Map<PotentialMNV, MNVScore> mnvScores();
+    abstract Map<PotentialMNV, MNVScore> mnvScores();
 
     @Value.Lazy
-    @NotNull
-    public Map<Integer, Character> mostFrequentReads() {
+    Map<Integer, Character> mostFrequentReads() {
         return gapReads().entrySet()
                 .stream()
                 .map(entry -> ImmutablePair.of(entry.getKey(), entry.getValue().mostFrequentRead()))
@@ -50,8 +49,7 @@ public abstract class MNVRegionValidator {
     }
 
     @Value.Lazy
-    @NotNull
-    public Set<PotentialMNV> validMnvs() {
+    Set<PotentialMNV> validMnvs() {
         final Set<PotentialMNV> result = Sets.newHashSet();
         final List<PotentialMNV> mnvsSortedByLength = mnvScores().entrySet()
                 .stream()

@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.strelka;
-
-import static com.hartwig.hmftools.strelka.TestUtils.buildSamRecord;
+package com.hartwig.hmftools.strelka.mnv;
 
 import static org.junit.Assert.assertEquals;
 
@@ -64,7 +62,7 @@ public class MNVValidatorTest {
     public void correctOutputForMnvOf2InRegionOf2() {
         final PotentialMNVRegion region =
                 PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)));
-        final SAMRecord recordWith1and2 = buildSamRecord(170755999, "6M", "CATTAG", false);
+        final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
         final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
@@ -81,9 +79,9 @@ public class MNVValidatorTest {
     public void correctOutputForNoMnvOfInRegionOf2() {
         final PotentialMNVRegion region =
                 PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12)));
-        final SAMRecord recordWith1and2 = buildSamRecord(170755999, "6M", "CATTAG", false);
-        final SAMRecord recordWith1 = buildSamRecord(170755999, "6M", "CATGAG", false);
-        final SAMRecord recordWith2 = buildSamRecord(170755999, "6M", "CACTAG", false);
+        final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
+        final SAMRecord recordWith1 = TestUtils.buildSamRecord(170755999, "6M", "CATGAG");
+        final SAMRecord recordWith2 = TestUtils.buildSamRecord(170755999, "6M", "CACTAG");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1, recordWith2, recordWith1and2);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
         final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
@@ -99,7 +97,7 @@ public class MNVValidatorTest {
     public void correctOutputForMnvOf3InRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)));
-        final SAMRecord recordWith1and2and3 = buildSamRecord(170756000, "6M", "ATTTGC", false);
+        final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3, recordWith1and2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
         final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
@@ -115,8 +113,8 @@ public class MNVValidatorTest {
     public void correctOutputForMnvOf2InRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)));
-        final SAMRecord recordWith1and2 = buildSamRecord(170755999, "6M", "CATTAG", false);
-        final SAMRecord recordWith1and2and3 = buildSamRecord(170756000, "6M", "ATTTGC", false);
+        final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
+        final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith1and2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
         final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
@@ -133,8 +131,8 @@ public class MNVValidatorTest {
     public void correctOutputForMnvOf2InRegionOf3With2AtSamePos() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
                 Lists.newArrayList(VARIANTS.get(15), VARIANTS.get(16), VARIANTS.get(17)));
-        final SAMRecord recordWith1and3 = buildSamRecord(14, "6M", "CTCAGC", false);
-        final SAMRecord recordWith2and3 = buildSamRecord(14, "2M1D3M", "CCAGC", false);
+        final SAMRecord recordWith1and3 = TestUtils.buildSamRecord(14, "6M", "CTCAGC");
+        final SAMRecord recordWith2and3 = TestUtils.buildSamRecord(14, "2M1D3M", "CCAGC");
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and3, recordWith1and3, recordWith1and3, recordWith1and3, recordWith1and3, recordWith2and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
@@ -152,8 +150,8 @@ public class MNVValidatorTest {
     public void correctOutputForMnvOf2With2Alts() {
         final PotentialMNVRegion region =
                 PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(), Lists.newArrayList(VARIANTS.get(7), VARIANTS.get(9)));
-        final SAMRecord recordWith1and2 = buildSamRecord(170755900, "6M", "CTCAAG", false);
-        final SAMRecord recordWith1and3 = buildSamRecord(170755900, "6M", "CTCTAG", false);
+        final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755900, "6M", "CTCAAG");
+        final SAMRecord recordWith1and3 = TestUtils.buildSamRecord(170755900, "6M", "CTCTAG");
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and2, recordWith1and3);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
@@ -174,9 +172,9 @@ public class MNVValidatorTest {
     public void correctOutputFor2PotentialMnvInRegionOf3() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13)));
-        final SAMRecord recordWith1and2 = buildSamRecord(170755999, "6M", "CATTAG", false);
-        final SAMRecord recordWith2and3 = buildSamRecord(170755999, "6M", "CACTTG", false);
-        final SAMRecord recordWith1and2and3 = buildSamRecord(170756000, "6M", "ATTTGC", false);
+        final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAG");
+        final SAMRecord recordWith2and3 = TestUtils.buildSamRecord(170755999, "6M", "CACTTG");
+        final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170756000, "6M", "ATTTGC");
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and2, recordWith1and2and3, recordWith1and2and3, recordWith1and2and3, recordWith1and2and3,
                         recordWith2and3);
@@ -196,7 +194,7 @@ public class MNVValidatorTest {
     public void correctOutputForMnvOf4InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)));
-        final SAMRecord recordWith1and2and3and4 = buildSamRecord(170756001, "5M", "TTTCC", false);
+        final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2and3and4, recordWith1and2and3and4);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
         final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);
@@ -212,9 +210,9 @@ public class MNVValidatorTest {
     public void correctOutputFor2MnvOf3InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)));
-        final SAMRecord recordWith1and2and3 = buildSamRecord(170755999, "6M", "CATTTT", false);
-        final SAMRecord recordWith2and3and4 = buildSamRecord(170756000, "6M", "ACTTCC", false);
-        final SAMRecord recordWith1and2and3and4 = buildSamRecord(170756001, "5M", "TTTCC", false);
+        final SAMRecord recordWith1and2and3 = TestUtils.buildSamRecord(170755999, "6M", "CATTTT");
+        final SAMRecord recordWith2and3and4 = TestUtils.buildSamRecord(170756000, "6M", "ACTTCC");
+        final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
         final List<SAMRecord> records =
                 Lists.newArrayList(recordWith1and2and3and4, recordWith1and2and3and4, recordWith1and2and3and4, recordWith1and2and3and4,
                         recordWith1and2and3, recordWith2and3and4);
@@ -233,9 +231,9 @@ public class MNVValidatorTest {
     public void correctOutputFor2MnvOf2InRegionOf4() {
         final PotentialMNVRegion region = PotentialMNVRegion.addVariants(PotentialMNVRegion.empty(),
                 Lists.newArrayList(VARIANTS.get(11), VARIANTS.get(12), VARIANTS.get(13), VARIANTS.get(14)));
-        final SAMRecord recordWith1and2 = buildSamRecord(170755999, "6M", "CATTAT", false);
-        final SAMRecord recordWith3and4 = buildSamRecord(170756000, "6M", "ACGTCC", false);
-        final SAMRecord recordWith1and2and3and4 = buildSamRecord(170756001, "5M", "TTTCC", false);
+        final SAMRecord recordWith1and2 = TestUtils.buildSamRecord(170755999, "6M", "CATTAT");
+        final SAMRecord recordWith3and4 = TestUtils.buildSamRecord(170756000, "6M", "ACGTCC");
+        final SAMRecord recordWith1and2and3and4 = TestUtils.buildSamRecord(170756001, "5M", "TTTCC");
         final List<SAMRecord> records = Lists.newArrayList(recordWith1and2, recordWith3and4, recordWith1and2and3and4);
         final MNVRegionValidator validator = MNVValidator.validateMNVs(records.iterator(), region);
         final List<VariantContext> outputVariants = MNVValidator.outputVariants(validator);

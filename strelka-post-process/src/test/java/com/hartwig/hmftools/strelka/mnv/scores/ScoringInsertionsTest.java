@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.strelka;
-
-import static com.hartwig.hmftools.strelka.TestUtils.buildSamRecord;
+package com.hartwig.hmftools.strelka.mnv.scores;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -12,9 +10,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.strelka.scores.ImmutableVariantScore;
-import com.hartwig.hmftools.strelka.scores.ReadType;
-import com.hartwig.hmftools.strelka.scores.VariantScore;
+import com.hartwig.hmftools.strelka.mnv.TestUtils;
+import com.hartwig.hmftools.strelka.mnv.scores.ImmutableVariantScore;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -31,7 +28,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void doesNotDetectINSinRef() {
-        final SAMRecord reference = buildSamRecord(1, "9M", "GATCCGATC", false);
+        final SAMRecord reference = TestUtils.buildSamRecord(1, "9M", "GATCCGATC");
         final VariantScore score = SamRecordScoring.getVariantScore(reference, INSERTION);
         assertEquals(ReadType.REF, score.type());
         assertTrue(score.score() > 0);
@@ -39,7 +36,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void detectsINSinTumor() {
-        final SAMRecord tumor = buildSamRecord(1, "2M2I7M", "GATCTCCGATC", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "2M2I7M", "GATCTCCGATC");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -47,7 +44,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void detectsINSinTumorWithINSandDEL() {
-        final SAMRecord tumor = buildSamRecord(1, "2M2I1M2D4M", "GATCTCCGA", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "2M2I1M2D4M", "GATCTCCGA");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -55,7 +52,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void detectsINSinTumorWithDELPre() {
-        final SAMRecord tumor = buildSamRecord(1, "1D1M2I7M", "ATCTCCGATC", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "1D1M2I7M", "ATCTCCGATC");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -63,7 +60,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void detectsINSinTumorWithDELAfter() {
-        final SAMRecord tumor = buildSamRecord(1, "2M2I1M2D4M", "GATCTGATC", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "2M2I1M2D4M", "GATCTGATC");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -71,7 +68,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void detectsINSinTumorWithINSPre() {
-        final SAMRecord tumor = buildSamRecord(1, "1M3I1M2I7M", "GGCCATCTCCGATC", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "1M3I1M2I7M", "GGCCATCTCCGATC");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -79,7 +76,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void detectsINSinTumorWithINSAfter() {
-        final SAMRecord tumor = buildSamRecord(1, "2M2I2M4I5M", "GATCTCAAAACGATC", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "2M2I2M4I5M", "GATCTCAAAACGATC");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -87,7 +84,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void doesNotdetectINSinRefWithSNV() {
-        final SAMRecord tumor = buildSamRecord(1, "9M", "GAGGCGATC", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "9M", "GAGGCGATC");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.REF, score.type());
         assertTrue(score.score() > 0);
@@ -95,7 +92,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void doesNotDetectINSinTumorWithShortRead() {
-        final SAMRecord referenceShortRead = buildSamRecord(1, "3M", "GAT", false);
+        final SAMRecord referenceShortRead = TestUtils.buildSamRecord(1, "3M", "GAT");
         final VariantScore score = SamRecordScoring.getVariantScore(referenceShortRead, INSERTION);
         assertEquals(ReadType.REF, score.type());
         assertTrue(score.score() > 0);
@@ -103,7 +100,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void detectsINSatEndOfRead() {
-        final SAMRecord tumor = buildSamRecord(1, "2M2I", "GATC", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "2M2I", "GATC");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, INSERTION);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -111,7 +108,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void doesNotDetectINSatEndOfReadInRef() {
-        final SAMRecord reference = buildSamRecord(1, "4M", "GATC", false);
+        final SAMRecord reference = TestUtils.buildSamRecord(1, "4M", "GATC");
         final VariantScore score = SamRecordScoring.getVariantScore(reference, INSERTION);
         assertEquals(ReadType.REF, score.type());
         assertTrue(score.score() > 0);
@@ -119,38 +116,38 @@ public class ScoringInsertionsTest {
 
     @Test
     public void computesScoreForINSinRef() {
-        final SAMRecord ref = buildSamRecord(2, "2M", "AA", "++", false);
+        final SAMRecord ref = TestUtils.buildSamRecord(2, "2M", "AA", "++", false);
         assertEquals(ImmutableVariantScore.of(ReadType.REF, 10), SamRecordScoring.getVariantScore(ref, INSERTION));
     }
 
     @Test
     public void computesScoreForINSinTumor() {
         //MIVO: insertion with qualities 30, 20, 40 --> average = 30
-        final SAMRecord alt = buildSamRecord(2, "1M2I", "ATC", "?5I", false);
+        final SAMRecord alt = TestUtils.buildSamRecord(2, "1M2I", "ATC", "?5I", false);
         assertEquals(ImmutableVariantScore.of(ReadType.ALT, 30), SamRecordScoring.getVariantScore(alt, INSERTION));
     }
 
     @Test
     public void computesScoreForINSinOther() {
-        final SAMRecord otherSNV = buildSamRecord(2, "2M", "CC", "C", false);
+        final SAMRecord otherSNV = TestUtils.buildSamRecord(2, "2M", "CC", "C", false);
         assertEquals(ImmutableVariantScore.of(ReadType.REF, 34), SamRecordScoring.getVariantScore(otherSNV, INSERTION));
     }
 
     @Test
     public void computesScoreForINSinReadWithDeletionOnVariantPos() {
-        final SAMRecord deleted = buildSamRecord(1, "1M2D1M", "AA", "FD", false);
+        final SAMRecord deleted = TestUtils.buildSamRecord(1, "1M2D1M", "AA", "FD", false);
         assertEquals(ImmutableVariantScore.of(ReadType.MISSING, 0), SamRecordScoring.getVariantScore(deleted, INSERTION));
     }
 
     @Test
     public void doesNotComputeScoreForShorterINSinTumor() {
-        final SAMRecord alt = buildSamRecord(2, "1M1I1M", "ATC", "?5I", false);
+        final SAMRecord alt = TestUtils.buildSamRecord(2, "1M1I1M", "ATC", "?5I", false);
         assertEquals(ImmutableVariantScore.of(ReadType.REF, 30), SamRecordScoring.getVariantScore(alt, INSERTION));
     }
 
     @Test
     public void doesNotComputeScoreForLongerINSinTumor() {
-        final SAMRecord alt = buildSamRecord(2, "1M3I", "ATCC", "?5II", false);
+        final SAMRecord alt = TestUtils.buildSamRecord(2, "1M3I", "ATCC", "?5II", false);
         final VariantScore score = SamRecordScoring.getVariantScore(alt, INSERTION);
         assertEquals(ReadType.REF, score.type());
         assertEquals(30, score.score());
@@ -158,7 +155,7 @@ public class ScoringInsertionsTest {
 
     @Test
     public void doesNotComputeScoreForLongerINSandMatchInTumor() {
-        final SAMRecord alt = buildSamRecord(2, "1M3I1M", "ATCCM", "?5II?", false);
+        final SAMRecord alt = TestUtils.buildSamRecord(2, "1M3I1M", "ATCCM", "?5II?", false);
         final VariantScore score = SamRecordScoring.getVariantScore(alt, INSERTION);
         assertEquals(ReadType.REF, score.type());
         assertEquals(30, score.score());
@@ -183,12 +180,10 @@ public class ScoringInsertionsTest {
 
     @NotNull
     private List<SAMRecord> insertionMNVRecords() {
-        final SAMRecord insertionMNVRecord = buildSamRecord(170755676, "100M1I50M",
-                "AGGTTTTAGAAACAGGCTGTAAACCAGAGGGGAATAACCCACTGTGGCTAAAAAAGTAAACATAAACTTTGCAGACTCATTGGAAACAGTGTGTGGATATAAAAAAAAATATGTACTGTAACCAGAGAAAAAGAAGGCTACTTAAGAGAGA",
-                false);
-        final SAMRecord noMNVRecord = buildSamRecord(170755701, "151M",
-                "AGTGGGGAATAACCCACTGTGGCTAAAAAATTAAACATAAACTTTTCAGACTCATTGGAAACAGTGTGTGGATATGAAAAAAATATGTACTGTAACCAGAGAAAAAGAAGGCTACTTAAGAGATAACTCTCCAATGAGTATCTTTTGTTTC",
-                false);
+        final SAMRecord insertionMNVRecord = TestUtils.buildSamRecord(170755676, "100M1I50M",
+                "AGGTTTTAGAAACAGGCTGTAAACCAGAGGGGAATAACCCACTGTGGCTAAAAAAGTAAACATAAACTTTGCAGACTCATTGGAAACAGTGTGTGGATATAAAAAAAAATATGTACTGTAACCAGAGAAAAAGAAGGCTACTTAAGAGAGA");
+        final SAMRecord noMNVRecord = TestUtils.buildSamRecord(170755701, "151M",
+                "AGTGGGGAATAACCCACTGTGGCTAAAAAATTAAACATAAACTTTTCAGACTCATTGGAAACAGTGTGTGGATATGAAAAAAATATGTACTGTAACCAGAGAAAAAGAAGGCTACTTAAGAGATAACTCTCCAATGAGTATCTTTTGTTTC");
         return Lists.newArrayList(noMNVRecord, insertionMNVRecord);
     }
 }
