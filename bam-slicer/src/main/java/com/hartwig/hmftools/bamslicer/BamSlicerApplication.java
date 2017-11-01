@@ -39,12 +39,12 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.BlockCompressedFilePointerUtil;
 import htsjdk.samtools.util.BlockCompressedStreamConstants;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -83,7 +83,8 @@ public class BamSlicerApplication {
         final int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
         final SamReader reader = SamReaderFactory.makeDefault().open(new File(inputPath));
         final QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
-        writeToSlice(outputPath, reader, intervals);
+        final CloseableIterator<SAMRecord> iterator = getIterator(reader, intervals);
+        writeToSlice(outputPath, reader.getFileHeader(), iterator);
         reader.close();
     }
 
@@ -100,7 +101,7 @@ public class BamSlicerApplication {
             if (variant.getStructuralVariantType() == StructuralVariantType.BND) {
 
                 final String call = variant.getAlternateAllele(0).getDisplayString();
-                final String[] leftSplit = call.split("\\]");
+                final String[] leftSplit = call.split("]");
                 final String[] rightSplit = call.split("\\[");
 
                 final String contig;
@@ -136,20 +137,22 @@ public class BamSlicerApplication {
         final String bedPath = cmd.getOptionValue(BED);
         final int maxBufferSize = readMaxBufferSize(cmd);
         final File indexFile = downloadIndex(indexUrl);
-        indexFile.deleteOnExit();
         final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
         LOGGER.info("Generating query intervals from BED file: {}", bedPath);
         final QueryInterval[] intervals = getIntervalsFromBED(bedPath, reader.getFileHeader());
-        final List<Chunk> expandedChunks = bamChunksForIntervals(indexFile, reader.getFileHeader(), intervals);
-        reader.close();
+        final BAMFileSpan span = bamSpanForIntervals(indexFile, reader.getFileHeader(), intervals);
+        final List<Chunk> expandedChunks = expandChunks(span.getChunks());
         LOGGER.info("Generated {} query intervals which map to {} bam chunks", intervals.length, expandedChunks.size());
-
         final SamInputResource bamResource =
                 SamInputResource.of(new CachingSeekableHTTPStream(bamUrl, expandedChunks, maxBufferSize)).index(indexFile);
         final SamReader cachingReader = SamReaderFactory.makeDefault().open(bamResource);
+
         LOGGER.info("Slicing bam...");
-        writeToSlice(outputPath, cachingReader, intervals);
+        final CloseableIterator<SAMRecord> iterator = getIterator(cachingReader, intervals, span.toCoordinateArray());
+        writeToSlice(outputPath, cachingReader.getFileHeader(), iterator);
         cachingReader.close();
+        reader.close();
+        indexFile.deleteOnExit();
     }
 
     @NotNull
@@ -169,11 +172,10 @@ public class BamSlicerApplication {
     }
 
     @NotNull
-    private static List<Chunk> bamChunksForIntervals(@NotNull final File index, @NotNull final SAMFileHeader header,
+    private static BAMFileSpan bamSpanForIntervals(@NotNull final File index, @NotNull final SAMFileHeader header,
             @NotNull final QueryInterval[] intervals) {
         final BAMIndex bamIndex = new DiskBasedBAMFileIndex(index, header.getSequenceDictionary(), false);
-        final BAMFileSpan span = BAMFileReader.getFileSpan(intervals, bamIndex);
-        return expandChunks(span.getChunks());
+        return BAMFileReader.getFileSpan(intervals, bamIndex);
     }
 
     @NotNull
@@ -199,10 +201,28 @@ public class BamSlicerApplication {
         return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
     }
 
-    private static void writeToSlice(final String path, final SamReader reader, final QueryInterval[] intervals) {
+    @NotNull
+    private static CloseableIterator<SAMRecord> getIterator(@NotNull final SamReader reader, @NotNull final QueryInterval[] intervals) {
+        return reader.queryOverlapping(intervals);
+    }
+
+    @NotNull
+    private static CloseableIterator<SAMRecord> getIterator(@NotNull final SamReader reader, @NotNull final QueryInterval[] intervals,
+            @NotNull final long[] filePointers) {
+        if (reader instanceof SamReader.PrimitiveSamReaderToSamReaderAdapter) {
+            final SamReader.PrimitiveSamReaderToSamReaderAdapter adapter = (SamReader.PrimitiveSamReaderToSamReaderAdapter) reader;
+            if (adapter.underlyingReader() instanceof BAMFileReader) {
+                final BAMFileReader bamReader = (BAMFileReader) adapter.underlyingReader();
+                return bamReader.createIndexIterator(intervals, false, filePointers);
+            }
+        }
+        return reader.queryOverlapping(intervals);
+    }
+
+    private static void writeToSlice(@NotNull final String path, @NotNull final SAMFileHeader header,
+            @NotNull final CloseableIterator<SAMRecord> iterator) {
         final File outputBAM = new File(path);
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(reader.getFileHeader(), true, outputBAM);
-        final SAMRecordIterator iterator = reader.queryOverlapping(intervals);
+        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true).makeBAMWriter(header, true, outputBAM);
         String contig = "";
         while (iterator.hasNext()) {
             final SAMRecord record = iterator.next();

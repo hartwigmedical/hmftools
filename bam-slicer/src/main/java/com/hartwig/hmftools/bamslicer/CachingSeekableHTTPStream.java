@@ -33,7 +33,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
                 contentLength = -1;
             }
         }
-        LOGGER.info("Caching bam chunks from {}", url);
+        LOGGER.info("Caching {} bam chunks from {}", maxBufferSize, url);
         chunkBuffer = new ChunkHttpBuffer(url, maxBufferSize, chunks);
         updatePosition(0);
     }
