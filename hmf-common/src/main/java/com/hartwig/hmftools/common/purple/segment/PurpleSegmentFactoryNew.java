@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
@@ -20,22 +21,32 @@ public class PurpleSegmentFactoryNew {
 
     private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
 
+
     @NotNull
     public static List<PurpleSegment> segment(@NotNull final Multimap<String, StructuralVariantCluster> clusters,
             @NotNull final Multimap<String, GenomePosition> ratios, @NotNull final Map<String, ChromosomeLength> lengths) {
+        final List<PurpleSegment> results = Lists.newArrayList();
+        results.addAll(segmentMap(clusters, ratios, lengths).values());
+        Collections.sort(results);
+        return results;
+    }
 
-        final List<PurpleSegment> segments = Lists.newArrayList();
+
+    @NotNull
+    static Multimap<String, PurpleSegment> segmentMap(@NotNull final Multimap<String, StructuralVariantCluster> clusters,
+            @NotNull final Multimap<String, GenomePosition> ratios, @NotNull final Map<String, ChromosomeLength> lengths) {
+
+        final Multimap<String, PurpleSegment> segments = ArrayListMultimap.create();
 
         for (String chromosome : lengths.keySet()) {
             if (HumanChromosome.contains(chromosome)) {
                 final Collection<StructuralVariantCluster> cluster =
                         clusters.containsKey(chromosome) ? clusters.get(chromosome) : Collections.emptyList();
                 final Collection<GenomePosition> ratio = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.emptyList();
-                segments.addAll(create(lengths.get(chromosome), cluster, ratio));
+                segments.putAll(chromosome,  create(lengths.get(chromosome), cluster, ratio));
             }
         }
 
-        Collections.sort(segments);
         return segments;
     }
 

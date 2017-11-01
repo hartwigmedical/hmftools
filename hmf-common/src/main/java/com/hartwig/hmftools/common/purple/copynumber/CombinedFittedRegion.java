@@ -11,27 +11,46 @@ class CombinedFittedRegion {
     private ModifiableFittedRegion combined;
     private boolean modified = false;
 
+    @Deprecated
     CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region) {
+        this(bafWeighted, region, region.status() != ObservedRegionStatus.SOMATIC);
+    }
+
+    CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearValues) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
-        if (region.status() != ObservedRegionStatus.SOMATIC) {
-            combined.setRefNormalisedCopyNumber(0);
-            combined.setObservedBAF(0);
-            combined.setObservedTumorRatioCount(0);
-            combined.setTumorCopyNumber(0);
-            combined.setBafCount(0);
+        if (clearValues) {
+            clearValues();
         }
+    }
+
+    public void clearValues() {
+        modified = true;
+        combined.setRefNormalisedCopyNumber(0);
+        combined.setObservedBAF(0);
+        combined.setObservedTumorRatioCount(0);
+        combined.setTumorCopyNumber(0);
+        combined.setBafCount(0);
     }
 
     public boolean isModified() {
         return modified;
     }
 
+    public void setModified() {
+        this.modified = true;
+    }
+
     FittedRegion region() {
         return combined;
     }
 
+    @Deprecated
     void combine(final FittedRegion region) {
+        combine(region, region.status() == ObservedRegionStatus.SOMATIC);
+    }
+
+    void combine(final FittedRegion region, boolean includeFittedValues) {
         modified = true;
         long currentBases = combined.bases();
 
@@ -43,8 +62,8 @@ class CombinedFittedRegion {
             combined.setRatioSupport(region.ratioSupport());
         }
 
-        if (region.status() == ObservedRegionStatus.SOMATIC) {
-            combined.setStatus(ObservedRegionStatus.SOMATIC);
+        if (includeFittedValues) {
+            combined.setStatus(ObservedRegionStatus.SOMATIC); //TODO: Consider fixing this
             combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
             final long currentWeight;
