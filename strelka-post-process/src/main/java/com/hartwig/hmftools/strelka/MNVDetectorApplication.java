@@ -93,7 +93,7 @@ public class MNVDetectorApplication {
             @NotNull final BufferedWriter bedWriter, final String lineTerminator) {
         mnvRegion.variants().forEach(vcfWriter::add);
         try {
-            bedWriter.write(mnvRegion.chromosome() + "\t" + mnvRegion.start() + "\t" + mnvRegion.end() + lineTerminator);
+            bedWriter.write(mnvRegion.chromosome() + "\t" + mnvRegion.start() + "\t" + (mnvRegion.end() - 1) + lineTerminator);
         } catch (IOException e) {
             LOGGER.error("Couldn't write mnv to bed file");
         }
