@@ -7,6 +7,9 @@ import java.util.concurrent.ExecutionException;
 
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.amber.qc.AmberQC;
+import com.hartwig.hmftools.common.amber.qc.AmberQCFactory;
+import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
 import com.hartwig.hmftools.common.pileup.Pileup;
 import com.hartwig.hmftools.common.pileup.PileupFile;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -71,9 +74,14 @@ public class AmberApplication {
         LOGGER.info("Calculating BAFs");
         final List<AmberBAF> result = factory.create(normal, tumor);
 
+        LOGGER.info("Generating QC Stats");
+        final AmberQC qcStats = AmberQCFactory.create(result);
+        final String qcFilename = AmberQCFile.generateFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
+
         final String filename = AmberBAFFile.generateAmberFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
         LOGGER.info("Persisting file {}", filename);
         AmberBAFFile.write(filename, result);
+        AmberQCFile.write(qcFilename, qcStats);
         versionInfo.write(outputDir.toString());
 
         LOGGER.info("Complete");
