@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
 import static com.hartwig.hmftools.strelka.VariantContextUtils.splitMultiAlleleVariant;
 
@@ -13,7 +13,6 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
 @Value.Immutable
@@ -37,12 +36,12 @@ public abstract class PotentialMNVRegion {
     }
 
     @Value.Derived
-    public Set<Integer> gapPositions() {
+    Set<Integer> gapPositions() {
         return potentialMnvs().stream().flatMap(potentialMNV -> potentialMNV.gapPositions().stream()).collect(Collectors.toSet());
     }
 
     @Value.Lazy
-    public Set<VariantContext> variantsInPotentialMnvs() {
+    Set<VariantContext> variantsInPotentialMnvs() {
         return potentialMnvs().stream().flatMap(potentialMNV -> potentialMNV.variants().stream()).collect(Collectors.toSet());
     }
 
@@ -101,29 +100,7 @@ public abstract class PotentialMNVRegion {
     }
 
     @NotNull
-    static PotentialMNVRegion empty() {
+    public static PotentialMNVRegion empty() {
         return ImmutablePotentialMNVRegion.of("", -1, -1, Lists.newArrayList(), Lists.newArrayList());
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(
-                "chromosome " + chromosome() + ":\t" + (potentialMnvs().stream().allMatch(PotentialMNV::containsOnlySNVs) ? "SNV" : "INDEL")
-                        + "[" + start() + " - " + end() + "]: ");
-        variants().forEach(variant -> {
-            sb.append("[");
-            sb.append(variant.getStart());
-            sb.append(": ");
-            sb.append(variant.getReference().getBaseString());
-            sb.append(" -> ");
-            sb.append(variant.getAlternateAlleles().stream().map(Allele::getBaseString).collect(Collectors.joining(",")));
-            sb.append("] ");
-        });
-        sb.append("gaps: ");
-        gapPositions().forEach(gap -> {
-            sb.append(gap);
-            sb.append(", ");
-        });
-        return sb.toString();
     }
 }

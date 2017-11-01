@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka.scores;
+package com.hartwig.hmftools.strelka.mnv.scores;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

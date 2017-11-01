@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -15,10 +15,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GapReads {
+abstract class GapReads {
     private static final Logger LOGGER = LogManager.getLogger(GapReads.class);
 
-    public abstract Map<Character, Integer> countPerBases();
+    abstract Map<Character, Integer> countPerBases();
 
     Character mostFrequentRead() {
         final Optional<Map.Entry<Character, Integer>> maxCountEntry =

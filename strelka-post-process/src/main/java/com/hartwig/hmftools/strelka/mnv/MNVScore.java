@@ -1,14 +1,15 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.strelka.scores.ReadType;
-import com.hartwig.hmftools.strelka.scores.VariantScore;
-import com.hartwig.hmftools.strelka.scores.VariantScoreAggregate;
+import com.hartwig.hmftools.strelka.mnv.scores.ReadType;
+import com.hartwig.hmftools.strelka.mnv.scores.VariantScore;
+import com.hartwig.hmftools.strelka.mnv.scores.VariantScoreAggregate;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -23,20 +24,14 @@ public abstract class MNVScore {
     private static final double MNV_SCORE_THRESHOLD = 0.8;
 
     @NotNull
-    public abstract Map<VariantContext, VariantScoreAggregate> aggregatedScores();
+    abstract Map<VariantContext, VariantScoreAggregate> aggregatedScores();
 
     @NotNull
-    public abstract Map<VariantContext, Integer> missingPerPosition();
+    abstract Map<VariantContext, Integer> missingPerPosition();
 
-    public abstract long scoreWithOneAlt();
+    abstract long scoreWithOneAlt();
 
-    public abstract long scoreWithAllAlts();
-
-    //    @NotNull
-    //    @Value.Derived
-    //    public List<VariantContext> variants() {
-    //        return aggregatedScores().keySet().stream().sorted(Comparator.comparing(VariantContext::getStart)).collect(Collectors.toList());
-    //    }
+    abstract long scoreWithAllAlts();
 
     @NotNull
     static MNVScore addReadScore(@NotNull final MNVScore mnvScore, @NotNull final Map<VariantContext, VariantScore> variantScores) {
@@ -73,6 +68,7 @@ public abstract class MNVScore {
         }
     }
 
+    @VisibleForTesting
     double frequency() {
         final long correction = missingPerPosition().entrySet().stream().mapToInt(entry -> {
             final int averagePerPosition = aggregatedScores().get(entry.getKey()).average();

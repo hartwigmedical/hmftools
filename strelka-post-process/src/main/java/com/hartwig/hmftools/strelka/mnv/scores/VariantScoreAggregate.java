@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka.scores;
+package com.hartwig.hmftools.strelka.mnv.scores;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,9 +7,9 @@ import org.jetbrains.annotations.NotNull;
 @Value.Style(allParameters = true)
 public abstract class VariantScoreAggregate {
 
-    public abstract long sum();
+    abstract long sum();
 
-    public abstract int count();
+    abstract int count();
 
     @Value.Lazy
     public int average() {

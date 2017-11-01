@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka.scores;
+package com.hartwig.hmftools.strelka.mnv.scores;
 
 public enum ReadType {
     REF,

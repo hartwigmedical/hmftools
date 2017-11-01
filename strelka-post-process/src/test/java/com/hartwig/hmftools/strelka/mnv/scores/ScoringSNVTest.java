@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.strelka;
-
-import static com.hartwig.hmftools.strelka.TestUtils.buildSamRecord;
+package com.hartwig.hmftools.strelka.mnv.scores;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -11,9 +9,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.strelka.scores.ImmutableVariantScore;
-import com.hartwig.hmftools.strelka.scores.ReadType;
-import com.hartwig.hmftools.strelka.scores.VariantScore;
+import com.hartwig.hmftools.strelka.mnv.TestUtils;
+import com.hartwig.hmftools.strelka.mnv.scores.ImmutableVariantScore;
 
 import org.junit.Test;
 
@@ -29,7 +26,7 @@ public class ScoringSNVTest {
 
     @Test
     public void doesNotDetectSNVinRef() {
-        final SAMRecord reference = buildSamRecord(1, "6M", "GATCCG", false);
+        final SAMRecord reference = TestUtils.buildSamRecord(1, "6M", "GATCCG");
         final VariantScore score = SamRecordScoring.getVariantScore(reference, SNV);
         assertEquals(ReadType.REF, score.type());
         assertTrue(score.score() > 0);
@@ -37,7 +34,7 @@ public class ScoringSNVTest {
 
     @Test
     public void doesNotDetectSNVWithDeletionOnPos() {
-        final SAMRecord recordWithDeletion = buildSamRecord(1, "3M1D2M", "GATCG", false);
+        final SAMRecord recordWithDeletion = TestUtils.buildSamRecord(1, "3M1D2M", "GATCG");
         final VariantScore score = SamRecordScoring.getVariantScore(recordWithDeletion, SNV);
         assertEquals(ReadType.MISSING, score.type());
         assertEquals(0, score.score());
@@ -45,7 +42,7 @@ public class ScoringSNVTest {
 
     @Test
     public void detectsSNVinTumor() {
-        final SAMRecord tumor = buildSamRecord(1, "6M", "GATTCG", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "6M", "GATTCG");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, SNV);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -53,7 +50,7 @@ public class ScoringSNVTest {
 
     @Test
     public void detectsSNVinTumorWithDELPre() {
-        final SAMRecord tumor = buildSamRecord(1, "2M1D3M", "GATCG", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "2M1D3M", "GATCG");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, SNV);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -61,7 +58,7 @@ public class ScoringSNVTest {
 
     @Test
     public void detectsSNVinTumorWithDELAfter() {
-        final SAMRecord tumor = buildSamRecord(1, "4M1D1M", "GATTG", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "4M1D1M", "GATTG");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, SNV);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -69,7 +66,7 @@ public class ScoringSNVTest {
 
     @Test
     public void detectsSNVinTumorWithINSPre() {
-        final SAMRecord tumor = buildSamRecord(1, "2M2I4M", "GACCTTCG", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "2M2I4M", "GACCTTCG");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, SNV);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -77,7 +74,7 @@ public class ScoringSNVTest {
 
     @Test
     public void detectsSNVinTumorWithINSAfter() {
-        final SAMRecord tumor = buildSamRecord(1, "4M2I2M", "GATTAACG", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "4M2I2M", "GATTAACG");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, SNV);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -85,7 +82,7 @@ public class ScoringSNVTest {
 
     @Test
     public void detectsSNVatEndOfRead() {
-        final SAMRecord tumor = buildSamRecord(1, "4M", "GATT", false);
+        final SAMRecord tumor = TestUtils.buildSamRecord(1, "4M", "GATT");
         final VariantScore score = SamRecordScoring.getVariantScore(tumor, SNV);
         assertEquals(ReadType.ALT, score.type());
         assertTrue(score.score() > 0);
@@ -93,7 +90,7 @@ public class ScoringSNVTest {
 
     @Test
     public void doesNotDetectSNVatEndOfReadInRef() {
-        final SAMRecord reference = buildSamRecord(1, "4M", "GATC", false);
+        final SAMRecord reference = TestUtils.buildSamRecord(1, "4M", "GATC");
         final VariantScore score = SamRecordScoring.getVariantScore(reference, SNV);
         assertEquals(ReadType.REF, score.type());
         assertTrue(score.score() > 0);
@@ -101,25 +98,25 @@ public class ScoringSNVTest {
 
     @Test
     public void computesScoreForSNVinRef() {
-        final SAMRecord ref = buildSamRecord(4, "1M", "C", "+", false);
+        final SAMRecord ref = TestUtils.buildSamRecord(4, "1M", "C", "+", false);
         assertEquals(ImmutableVariantScore.of(ReadType.REF, 10), SamRecordScoring.getVariantScore(ref, SNV));
     }
 
     @Test
     public void computesScoreForSNVinTumor() {
-        final SAMRecord alt = buildSamRecord(4, "1M", "T", "P", false);
+        final SAMRecord alt = TestUtils.buildSamRecord(4, "1M", "T", "P", false);
         assertEquals(ImmutableVariantScore.of(ReadType.ALT, 47), SamRecordScoring.getVariantScore(alt, SNV));
     }
 
     @Test
     public void computesScoreForSNVinOther() {
-        final SAMRecord otherSNV = buildSamRecord(4, "1M", "A", "F", false);
+        final SAMRecord otherSNV = TestUtils.buildSamRecord(4, "1M", "A", "F", false);
         assertEquals(ImmutableVariantScore.of(ReadType.REF, 37), SamRecordScoring.getVariantScore(otherSNV, SNV));
     }
 
     @Test
     public void computesScoreForSNVinReadWithDeletionOnVariantPos() {
-        final SAMRecord deleted = buildSamRecord(3, "1M1D1M", "AA", "FD", false);
+        final SAMRecord deleted = TestUtils.buildSamRecord(3, "1M1D1M", "AA", "FD", false);
         assertEquals(ImmutableVariantScore.of(ReadType.MISSING, 0), SamRecordScoring.getVariantScore(deleted, SNV));
     }
 }

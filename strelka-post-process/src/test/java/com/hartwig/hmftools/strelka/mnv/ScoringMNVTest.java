@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
-import static com.hartwig.hmftools.strelka.TestUtils.build2VariantScores;
+import static com.hartwig.hmftools.strelka.mnv.TestUtils.build2VariantScores;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.strelka.scores.ImmutableVariantScore;
-import com.hartwig.hmftools.strelka.scores.ReadType;
-import com.hartwig.hmftools.strelka.scores.VariantScore;
+import com.hartwig.hmftools.strelka.mnv.scores.ImmutableVariantScore;
+import com.hartwig.hmftools.strelka.mnv.scores.ReadType;
+import com.hartwig.hmftools.strelka.mnv.scores.VariantScore;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;

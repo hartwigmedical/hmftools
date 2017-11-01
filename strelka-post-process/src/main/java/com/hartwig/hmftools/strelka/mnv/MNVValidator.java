@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
 import java.io.File;
 import java.util.Comparator;
@@ -25,22 +25,20 @@ import htsjdk.variant.variantcontext.VariantContext;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVValidator {
     @NotNull
-    protected abstract String tumorBAM();
+    abstract String tumorBAM();
 
-    @Value.Derived
     @NotNull
-    protected SamReader tumorReader() {
+    private SamReader tumorReader() {
         return SamReaderFactory.makeDefault().open(new File(tumorBAM()));
     }
 
-    @Value.Derived
     @NotNull
-    protected SAMSequenceDictionary tumorDictionary() {
+    private SAMSequenceDictionary tumorDictionary() {
         return tumorReader().getFileHeader().getSequenceDictionary();
     }
 
     @NotNull
-    List<VariantContext> mergeVariants(@NotNull final PotentialMNVRegion potentialMnvRegion) {
+    public List<VariantContext> mergeVariants(@NotNull final PotentialMNVRegion potentialMnvRegion) {
         if (potentialMnvRegion.potentialMnvs().size() == 0) {
             return potentialMnvRegion.variants();
         } else {

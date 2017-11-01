@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.strelka;
+package com.hartwig.hmftools.strelka.mnv;
 
 import java.util.Optional;
 
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-class MNVDetector {
+public class MNVDetector {
     private MNVDetector() {
     }
 
@@ -16,7 +16,7 @@ class MNVDetector {
     //  if true, add mnv to current region => return pair of: updated region, empty
     //  if false, we moved past the current region => return pair of: new mnv region starting at variant, previous region (region passed as param)
     @NotNull
-    static Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> fitsMNVRegion(@NotNull final PotentialMNVRegion potentialMnvRegion,
+    public static Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> fitsMNVRegion(@NotNull final PotentialMNVRegion potentialMnvRegion,
             @NotNull final VariantContext variant) {
         if (potentialMnvRegion.chromosome().equals(variant.getContig()) && variant.getStart() - potentialMnvRegion.end() <= 1
                 && variant.getStart() - potentialMnvRegion.start() >= 0) {

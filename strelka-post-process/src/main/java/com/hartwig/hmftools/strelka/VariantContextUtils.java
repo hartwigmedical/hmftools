@@ -12,12 +12,12 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-final class VariantContextUtils {
+public final class VariantContextUtils {
     private VariantContextUtils() {
     }
 
     @NotNull
-    static List<VariantContext> splitMultiAlleleVariant(@NotNull final VariantContext variant) {
+    public static List<VariantContext> splitMultiAlleleVariant(@NotNull final VariantContext variant) {
         final List<VariantContext> variants = Lists.newArrayList();
         final int[] ad = variant.getGenotype(0).getAD();
         final int dp = variant.getGenotype(0).getDP();
