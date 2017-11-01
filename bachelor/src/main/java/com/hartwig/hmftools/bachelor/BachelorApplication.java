@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bachelor;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 
@@ -133,10 +133,12 @@ public class BachelorApplication {
 
             final List<RunDirectory> runDirectories = Lists.newArrayList();
             if (cmd.hasOption(BATCH_DIRECTORY)) {
-                final File[] runs = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY)).toFile().listFiles(File::isDirectory);
-                if (runs != null) {
-                    Stream.of(runs).forEach(r -> runDirectories.add(new RunDirectory(r.toPath())));
-                }
+                final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
+                Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS)
+                        .filter(p -> p.toFile().isDirectory())
+                        .filter(p -> !p.equals(root))
+                        .map(RunDirectory::new)
+                        .forEach(runDirectories::add);
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
                 runDirectories.add(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
             } else {
