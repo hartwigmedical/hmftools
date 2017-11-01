@@ -2,19 +2,17 @@ package com.hartwig.hmftools.bachelor;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
 
@@ -28,7 +26,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.xml.sax.SAXException;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -38,6 +35,7 @@ public class BachelorApplication {
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
     private static final String CONFIG_DIRECTORY = "configDirectory";
     private static final String RUN_DIRECTORY = "runDirectory";
+    private static final String BATCH_DIRECTORY = "batchDirectory";
     private static final String OUTPUT = "output";
 
     // DEBUG
@@ -56,6 +54,7 @@ public class BachelorApplication {
         options.addOption(Option.builder(SOMATIC_VCF).required(false).hasArg().desc("somatic vcf to process").build());
         options.addOption(Option.builder(BPI_VCF).required(false).hasArg().desc("BPI structural variant vcf to process").build());
         options.addOption(Option.builder(PURPLE_FILE).required(false).hasArg().desc("purple cnv file to process").build());
+        options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
         return options;
     }
 
@@ -71,24 +70,42 @@ public class BachelorApplication {
         System.exit(1);
     }
 
-    private static void processVCF(final String tag, final File vcf, final BachelorEligibility eligibility,
-            final List<EligibilityReport> reports, final Map<String, Integer> results) {
+    private static void processVCF(final boolean isGermline, final File vcf, final BachelorEligibility eligibility,
+            final List<EligibilityReport> reports) throws Exception {
         LOGGER.info("process vcf: {}", vcf.getPath());
+
         final VCFFileReader reader = new VCFFileReader(vcf, false);
-        final Collection<EligibilityReport> result = eligibility.processVCF(tag, reader);
-        result.forEach(report -> results.merge(report.program(), report.variants().size(), (a, b) -> a + b));
+
+        // TODO: always correct? germline has R,T somatic has just T
+        final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
+        final Collection<EligibilityReport> result = eligibility.processVCF(sample, isGermline ? "germline" : "somatic", reader);
         reports.addAll(result);
+
         reader.close();
     }
 
-    private static void processPurpleCNV(final File cnv, final BachelorEligibility eligibility, final List<EligibilityReport> reports,
-            final Map<String, Integer> results) {
+    private static void processPurpleCNV(final File cnv, final BachelorEligibility eligibility, final List<EligibilityReport> reports) {
         LOGGER.info("process cnv: {}", cnv.getPath());
     }
 
-    private static void processSV(final File vcf, final BachelorEligibility eligibility, final List<EligibilityReport> reports,
-            final Map<String, Integer> results) {
+    private static void processSV(final File vcf, final BachelorEligibility eligibility, final List<EligibilityReport> reports) {
         LOGGER.info("process sv: {}", vcf.getPath());
+    }
+
+    private static void process(final BachelorEligibility eligibility, final List<EligibilityReport> reports, final File germline,
+            final File somatic, final File copyNumber, final File structuralVariants) throws Exception {
+        if (germline != null) {
+            processVCF(true, germline, eligibility, reports);
+        }
+        if (somatic != null) {
+            processVCF(false, somatic, eligibility, reports);
+        }
+        if (copyNumber != null) {
+            processPurpleCNV(copyNumber, eligibility, reports);
+        }
+        if (structuralVariants != null) {
+            processSV(structuralVariants, eligibility, reports);
+        }
     }
 
     public static void main(final String... args) {
@@ -99,67 +116,60 @@ public class BachelorApplication {
             final Path configPath = Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY));
             final Map<String, Program> map = BachelorHelper.loadXML(configPath);
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
-
-            final File germline;
-            final File somatic;
-            final File copyNumber;
-            final File structuralVariants;
-
-            if (cmd.hasOption(RUN_DIRECTORY)) {
-                final RunDirectory run = new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY)));
-                germline = run.findGermline();
-                somatic = run.findSomatic();
-                copyNumber = run.findCopyNumber();
-                structuralVariants = run.findStructuralVariants();
-            } else {
-                germline = cmd.hasOption(GERMLINE_VCF) ? Paths.get(cmd.getOptionValue(GERMLINE_VCF)).toFile() : null;
-                somatic = cmd.hasOption(SOMATIC_VCF) ? Paths.get(cmd.getOptionValue(SOMATIC_VCF)).toFile() : null;
-                copyNumber = cmd.hasOption(PURPLE_FILE) ? Paths.get(cmd.getOptionValue(PURPLE_FILE)).toFile() : null;
-                structuralVariants = cmd.hasOption(BPI_VCF) ? Paths.get(cmd.getOptionValue(BPI_VCF)).toFile() : null;
-            }
-
             final List<EligibilityReport> reports = Lists.newArrayList();
-            final Map<String, Integer> merged = Maps.newHashMap();
 
-            if (germline != null) {
-                processVCF("germline", germline, eligibility, reports, merged);
+            final List<RunDirectory> runDirectories = Lists.newArrayList();
+            if (cmd.hasOption(BATCH_DIRECTORY)) {
+                final File[] runs = Paths.get("runs").toFile().listFiles(File::isDirectory);
+                if (runs != null) {
+                    Stream.of(runs).forEach(r -> runDirectories.add(new RunDirectory(r.toPath())));
+                }
+            } else if (cmd.hasOption(RUN_DIRECTORY)) {
+                runDirectories.add(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
+            } else {
+                process(eligibility, reports, cmd.hasOption(GERMLINE_VCF) ? Paths.get(cmd.getOptionValue(GERMLINE_VCF)).toFile() : null,
+                        cmd.hasOption(SOMATIC_VCF) ? Paths.get(cmd.getOptionValue(SOMATIC_VCF)).toFile() : null,
+                        cmd.hasOption(PURPLE_FILE) ? Paths.get(cmd.getOptionValue(PURPLE_FILE)).toFile() : null,
+                        cmd.hasOption(BPI_VCF) ? Paths.get(cmd.getOptionValue(BPI_VCF)).toFile() : null);
             }
-            if (somatic != null) {
-                processVCF("somatic", somatic, eligibility, reports, merged);
-            }
-            if (copyNumber != null) {
-                processPurpleCNV(copyNumber, eligibility, reports, merged);
-            }
-            if (structuralVariants != null) {
-                processSV(structuralVariants, eligibility, reports, merged);
+
+            for (final RunDirectory run : runDirectories) {
+                LOGGER.info("processing run: {}", run.prefix);
+
+                final File germline = run.findGermline();
+                final File somatic = run.findSomatic();
+                final File copyNumber = run.findCopyNumber();
+                final File structuralVariants = run.findStructuralVariants();
+
+                process(eligibility, reports, germline, somatic, copyNumber, structuralVariants);
             }
 
             // output results
 
-            merged.entrySet()
-                    .stream()
-                    .sorted(Comparator.comparingInt(Map.Entry::getValue))
-                    .forEach(e -> LOGGER.info("{} = {} events", e.getKey(), e.getValue()));
-
             if (cmd.hasOption(OUTPUT)) {
                 final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)));
+
+                // header
+                writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS")));
+                writer.newLine();
+
+                // data
                 for (final EligibilityReport report : reports) {
-                    // header
-                    writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "CHROM", "POS", "REF", "ALTS")));
-                    // data
                     for (final VariantContext v : report.variants()) {
-                        writer.write(
-                                String.format("%s,%s,%s,%d,%s,%s" + System.lineSeparator(), report.tag(), report.program(), v.getContig(),
-                                        v.getStart(), v.getReference(), String.join("|",
-                                                v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()))));
+                        final String alts =
+                                String.join("|", v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()));
+                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
+                                v.getContig(), v.getStart(), v.getReference(), alts));
+                        writer.newLine();
                     }
                 }
+
                 writer.close();
             }
 
         } catch (final ParseException e) {
             printHelpAndExit(options);
-        } catch (SAXException | IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -26,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -132,21 +133,33 @@ class BachelorEligibility {
     }
 
     @NotNull
-    Collection<EligibilityReport> processVCF(final String tag, final VCFFileReader reader) {
+    Collection<EligibilityReport> processVCF(final String sample, final String tag, final VCFFileReader reader) {
+
         final Map<String, ImmutableEligibilityReport.Builder> results = Maps.newHashMap();
         for (final VariantContext variant : reader) {
+
             if (variant.isFiltered()) {
                 continue;
             }
+
+            // we will skip when an ALT is not present in the sample
+            final Genotype genotype = variant.getGenotype(sample);
+            if (genotype == null || !(genotype.isHomVar() || genotype.isHet())) {
+                continue;
+            }
+
             final List<String> matchingPrograms = programs.entrySet()
                     .stream()
                     .filter(program -> program.getValue().test(ExtractedVariantInfo.from(variant)))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
+
             for (final String p : matchingPrograms) {
-                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().program(p).tag(tag)).addVariants(variant);
+                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().sample(sample).program(p).tag(tag))
+                        .addVariants(variant);
             }
         }
+
         return results.values().stream().map(ImmutableEligibilityReport.Builder::build).collect(Collectors.toList());
     }
 }

@@ -26,7 +26,7 @@ class RunDirectory {
 
     @Nullable
     File findSomatic() throws IOException {
-        return Files.walk(prefix).filter(p -> p.toString().endsWith("_post_process.vcf")).map(Path::toFile).findFirst().orElse(null);
+        return Files.walk(prefix).filter(p -> p.toString().endsWith("_post_processed.vcf")).map(Path::toFile).findFirst().orElse(null);
     }
 
     @Nullable
