@@ -16,26 +16,46 @@ class RunDirectory {
     }
 
     @Nullable
-    File findGermline() throws IOException {
-        return Files.walk(prefix, 1)
-                .filter(p -> p.toString().endsWith("GoNLv5.vcf") || p.toString().endsWith("annotated.vcf"))
-                .map(Path::toFile)
-                .findFirst()
-                .orElse(null);
+    File findGermline() {
+        try {
+            return Files.walk(prefix, 1)
+                    .filter(p -> p.toString().endsWith("GoNLv5.vcf") || p.toString().endsWith("annotated.vcf"))
+                    .map(Path::toFile)
+                    .findFirst()
+                    .orElse(null);
+        } catch (final IOException e) {
+            return null;
+        }
     }
 
     @Nullable
-    File findSomatic() throws IOException {
-        return Files.walk(prefix).filter(p -> p.toString().endsWith("_post_processed.vcf")).map(Path::toFile).findFirst().orElse(null);
+    File findSomatic() {
+        try {
+            return Files.walk(prefix)
+                    .filter(p -> p.toString().endsWith("_post_processed.vcf") || p.toString().endsWith("_melted.vcf"))
+                    .map(Path::toFile)
+                    .findFirst()
+                    .orElse(null);
+        } catch (final IOException e) {
+            return null;
+        }
     }
 
     @Nullable
-    File findCopyNumber() throws IOException {
-        return Files.walk(prefix).filter(p -> p.toString().endsWith("purple.cnv")).map(Path::toFile).findFirst().orElse(null);
+    File findCopyNumber() {
+        try {
+            return Files.walk(prefix).filter(p -> p.toString().endsWith("purple.cnv")).map(Path::toFile).findFirst().orElse(null);
+        } catch (final IOException e) {
+            return null;
+        }
     }
 
     @Nullable
-    File findStructuralVariants() throws IOException {
-        return Files.walk(prefix).filter(p -> p.toString().endsWith("bpi.vcf")).map(Path::toFile).findFirst().orElse(null);
+    File findStructuralVariants() {
+        try {
+            return Files.walk(prefix).filter(p -> p.toString().endsWith("bpi.vcf")).map(Path::toFile).findFirst().orElse(null);
+        } catch (final IOException e) {
+            return null;
+        }
     }
 }

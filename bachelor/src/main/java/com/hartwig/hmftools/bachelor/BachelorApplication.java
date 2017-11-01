@@ -70,8 +70,8 @@ public class BachelorApplication {
         System.exit(1);
     }
 
-    private static void processVCF(final boolean isGermline, final File vcf, final BachelorEligibility eligibility,
-            final List<EligibilityReport> reports) throws Exception {
+    private static Collection<EligibilityReport> processVCF(final boolean isGermline, final File vcf,
+            final BachelorEligibility eligibility) {
         LOGGER.info("process vcf: {}", vcf.getPath());
 
         final VCFFileReader reader = new VCFFileReader(vcf, false);
@@ -79,33 +79,46 @@ public class BachelorApplication {
         // TODO: always correct? germline has R,T somatic has just T
         final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
         final Collection<EligibilityReport> result = eligibility.processVCF(sample, isGermline ? "germline" : "somatic", reader);
-        reports.addAll(result);
-
         reader.close();
+
+        return result;
     }
 
-    private static void processPurpleCNV(final File cnv, final BachelorEligibility eligibility, final List<EligibilityReport> reports) {
+    private static void processPurpleCNV(final File cnv, final BachelorEligibility eligibility) {
         LOGGER.info("process cnv: {}", cnv.getPath());
     }
 
-    private static void processSV(final File vcf, final BachelorEligibility eligibility, final List<EligibilityReport> reports) {
+    private static void processSV(final File vcf, final BachelorEligibility eligibility) {
         LOGGER.info("process sv: {}", vcf.getPath());
     }
 
-    private static void process(final BachelorEligibility eligibility, final List<EligibilityReport> reports, final File germline,
-            final File somatic, final File copyNumber, final File structuralVariants) throws Exception {
+    private static Collection<EligibilityReport> process(final BachelorEligibility eligibility, final File germline, final File somatic,
+            final File copyNumber, final File structuralVariants) {
+        final List<EligibilityReport> result = Lists.newArrayList();
         if (germline != null) {
-            processVCF(true, germline, eligibility, reports);
+            result.addAll(processVCF(true, germline, eligibility));
         }
         if (somatic != null) {
-            processVCF(false, somatic, eligibility, reports);
+            result.addAll(processVCF(false, somatic, eligibility));
         }
         if (copyNumber != null) {
-            processPurpleCNV(copyNumber, eligibility, reports);
+            processPurpleCNV(copyNumber, eligibility);
         }
         if (structuralVariants != null) {
-            processSV(structuralVariants, eligibility, reports);
+            processSV(structuralVariants, eligibility);
         }
+        return result;
+    }
+
+    private static Collection<EligibilityReport> process(final BachelorEligibility eligibility, final RunDirectory run) {
+        LOGGER.info("processing run: {}", run.prefix);
+
+        final File germline = run.findGermline();
+        final File somatic = run.findSomatic();
+        final File copyNumber = run.findCopyNumber();
+        final File structuralVariants = run.findStructuralVariants();
+
+        return process(eligibility, germline, somatic, copyNumber, structuralVariants);
     }
 
     public static void main(final String... args) {
@@ -127,22 +140,14 @@ public class BachelorApplication {
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
                 runDirectories.add(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
             } else {
-                process(eligibility, reports, cmd.hasOption(GERMLINE_VCF) ? Paths.get(cmd.getOptionValue(GERMLINE_VCF)).toFile() : null,
-                        cmd.hasOption(SOMATIC_VCF) ? Paths.get(cmd.getOptionValue(SOMATIC_VCF)).toFile() : null,
-                        cmd.hasOption(PURPLE_FILE) ? Paths.get(cmd.getOptionValue(PURPLE_FILE)).toFile() : null,
-                        cmd.hasOption(BPI_VCF) ? Paths.get(cmd.getOptionValue(BPI_VCF)).toFile() : null);
+                reports.addAll(
+                        process(eligibility, cmd.hasOption(GERMLINE_VCF) ? Paths.get(cmd.getOptionValue(GERMLINE_VCF)).toFile() : null,
+                                cmd.hasOption(SOMATIC_VCF) ? Paths.get(cmd.getOptionValue(SOMATIC_VCF)).toFile() : null,
+                                cmd.hasOption(PURPLE_FILE) ? Paths.get(cmd.getOptionValue(PURPLE_FILE)).toFile() : null,
+                                cmd.hasOption(BPI_VCF) ? Paths.get(cmd.getOptionValue(BPI_VCF)).toFile() : null));
             }
 
-            for (final RunDirectory run : runDirectories) {
-                LOGGER.info("processing run: {}", run.prefix);
-
-                final File germline = run.findGermline();
-                final File somatic = run.findSomatic();
-                final File copyNumber = run.findCopyNumber();
-                final File structuralVariants = run.findStructuralVariants();
-
-                process(eligibility, reports, germline, somatic, copyNumber, structuralVariants);
-            }
+            reports.addAll(runDirectories.parallelStream().flatMap(run -> process(eligibility, run).stream()).collect(Collectors.toList()));
 
             // output results
 

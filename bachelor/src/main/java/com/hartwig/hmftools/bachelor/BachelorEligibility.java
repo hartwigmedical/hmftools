@@ -148,6 +148,8 @@ class BachelorEligibility {
                 continue;
             }
 
+            // TODO: do we need to verify specific ALTS have specific SnpEff effects
+
             final List<String> matchingPrograms = programs.entrySet()
                     .stream()
                     .filter(program -> program.getValue().test(ExtractedVariantInfo.from(variant)))
