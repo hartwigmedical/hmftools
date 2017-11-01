@@ -73,6 +73,7 @@ class ChunkHttpBuffer {
         });
     }
 
+    @NotNull
     Pair<Long, byte[]> getEntryAtPosition(final long position) throws IOException {
         final long chunkOffset = chunksPerOffset.floorEntry(position).getKey();
         final byte[] bytesAtOffset;
@@ -100,6 +101,7 @@ class ChunkHttpBuffer {
         });
     }
 
+    @NotNull
     private ListenableFuture<byte[]> getBytesForChunk(@NotNull final Chunk chunk) {
         final long start = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkStart());
         final long end = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
@@ -110,6 +112,7 @@ class ChunkHttpBuffer {
         }
     }
 
+    @NotNull
     private ListenableFuture<byte[]> readUrlBytes(final long offset, final long count) {
         final Headers httpHeaders = new Headers.Builder().add("Range", "bytes=" + offset + "-" + (offset + count - 1)).build();
         final Request request = new Request.Builder().url(url).headers(httpHeaders).build();
@@ -118,6 +121,7 @@ class ChunkHttpBuffer {
         return bytesFuture;
     }
 
+    @NotNull
     private Callback retryingCallback(final int retryCount, @NotNull final SettableFuture<byte[]> resultFuture) {
         return new Callback() {
             @Override
