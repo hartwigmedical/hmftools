@@ -5,8 +5,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,8 +16,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PotentialMNV {
-    private static final Logger LOGGER = LogManager.getLogger(PotentialMNV.class);
-
     public abstract String chromosome();
 
     public abstract int start();
