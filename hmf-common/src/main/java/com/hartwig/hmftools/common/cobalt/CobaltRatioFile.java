@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.cobalt;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
@@ -16,6 +17,8 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import org.jetbrains.annotations.NotNull;
 
 public class CobaltRatioFile {
+    private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
+
 
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".cobalt";
@@ -66,9 +69,9 @@ public class CobaltRatioFile {
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.referenceReadCount()))
                 .add(String.valueOf(position.tumorReadCount()))
-                .add(String.valueOf(position.referenceGCRatio()))
-                .add(String.valueOf(position.tumorGCRatio()))
-                .add(String.valueOf(position.referenceGCDiploidRatio()))
+                .add(String.valueOf(FORMAT.format(position.referenceGCRatio())))
+                .add(String.valueOf(FORMAT.format(position.tumorGCRatio())))
+                .add(String.valueOf(FORMAT.format(position.referenceGCDiploidRatio())))
                 .toString();
     }
 
