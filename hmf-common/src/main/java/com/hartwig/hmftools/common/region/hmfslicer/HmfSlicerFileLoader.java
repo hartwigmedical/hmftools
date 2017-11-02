@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.common.region.hmfslicer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,12 @@ public final class HmfSlicerFileLoader {
     public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream inputStream)
             throws IOException, EmptyFileException {
         return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
+    }
+
+    @NotNull
+    public static SortedSetMultimap<String, HmfGenomeRegion> fromFile(@NotNull final String filename)
+            throws IOException, EmptyFileException {
+        return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull

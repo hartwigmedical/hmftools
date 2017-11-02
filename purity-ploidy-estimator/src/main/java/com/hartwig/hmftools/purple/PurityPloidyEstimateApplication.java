@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
@@ -107,6 +106,7 @@ public class PurityPloidyEstimateApplication {
     private static final String DB_URL = "db_url";
     private static final String EXPERIMENTAL = "experimental";
     private static final String VERSION = "version";
+    private static final String GENE_PANEL = "gene_panel";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -141,6 +141,11 @@ public class PurityPloidyEstimateApplication {
             final CommonConfig config = configSupplier.commonConfig();
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
+
+            // Read Gene Panel
+            final List<HmfGenomeRegion> genePanel = cmd.hasOption(GENE_PANEL)
+                    ? HmfGenePanelSupplier.fromFile(cmd.getOptionValue(GENE_PANEL))
+                    : HmfGenePanelSupplier.defaultList();
 
             // JOBA: Load BAFs from AMBER
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(configSupplier.bafConfig().bafFile().toString());
@@ -222,7 +227,8 @@ public class PurityPloidyEstimateApplication {
             final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
             final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
             final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
-            final List<GeneCopyNumber> geneCopyNumbers = geneCopyNumbers(smoothRegions);
+            final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(genePanel, smoothRegions);
+
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, smoothRegions);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
@@ -305,11 +311,6 @@ public class PurityPloidyEstimateApplication {
         }
     }
 
-    private List<GeneCopyNumber> geneCopyNumbers(List<PurpleCopyNumber> copyNumbers) throws IOException, EmptyFileException {
-        final List<HmfGenomeRegion> hmgGenomeRegions = HmfGenePanelSupplier.asList();
-        return GeneCopyNumberFactory.geneCopyNumbers(hmgGenomeRegions, copyNumbers);
-    }
-
     private static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
         if (cmd.hasOption(opt)) {
             final double result = Double.valueOf(cmd.getOptionValue(opt));
@@ -343,6 +344,7 @@ public class PurityPloidyEstimateApplication {
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
+        options.addOption(GENE_PANEL, true, "Use specified gene panel instead of default.");
 
         return options;
     }

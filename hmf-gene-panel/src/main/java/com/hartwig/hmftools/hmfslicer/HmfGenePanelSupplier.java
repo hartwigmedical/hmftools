@@ -17,14 +17,24 @@ public enum HmfGenePanelSupplier {
     ;
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> asMap() throws IOException, EmptyFileException {
+    public static SortedSetMultimap<String, HmfGenomeRegion> defaultMap() throws IOException, EmptyFileException {
         final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/hmf_gene_panel.tsv");
         return HmfSlicerFileLoader.fromInputStream(inputStream);
     }
 
     @NotNull
-    public static List<HmfGenomeRegion> asList() throws IOException, EmptyFileException {
-        final List<HmfGenomeRegion> result = Lists.newArrayList(asMap().values());
+    public static List<HmfGenomeRegion> defaultList() throws IOException, EmptyFileException {
+        return toList(defaultMap());
+    }
+
+    @NotNull
+    public static List<HmfGenomeRegion> fromFile(@NotNull final String filename) throws IOException, EmptyFileException {
+        return toList(HmfSlicerFileLoader.fromFile(filename));
+    }
+
+    @NotNull
+    private static List<HmfGenomeRegion> toList(@NotNull final SortedSetMultimap<String, HmfGenomeRegion>  map) throws IOException, EmptyFileException {
+        final List<HmfGenomeRegion> result = Lists.newArrayList(map.values());
         Collections.sort(result);
         return result;
     }

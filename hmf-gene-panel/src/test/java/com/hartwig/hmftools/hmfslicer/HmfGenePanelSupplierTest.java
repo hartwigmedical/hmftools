@@ -17,13 +17,13 @@ public class HmfGenePanelSupplierTest {
     @Test
     public void canLoadGeneRegionsFromFile() throws IOException, EmptyFileException {
         final List<String> genes = HmfGenePanelBuilder.readGeneList();
-        final List<HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.asList();
+        final List<HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.defaultList();
         assertEquals(genes.size(), geneRegions.size());
     }
 
     @Test
     public void loadedRegionsAreSortedCorrectly() throws IOException, EmptyFileException {
-        final SortedSetMultimap<String, HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.asMap();
+        final SortedSetMultimap<String, HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.defaultMap();
         for (final String chromosome : geneRegions.keySet()) {
             long start = 0;
             for (final HmfGenomeRegion hmfGenomeRegion : geneRegions.get(chromosome)) {

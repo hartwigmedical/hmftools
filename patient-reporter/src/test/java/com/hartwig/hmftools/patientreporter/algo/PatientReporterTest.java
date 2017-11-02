@@ -70,7 +70,7 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.asMap());
+        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.defaultMap());
         final BaseReporterData baseReporterData = testBaseReporterData();
         final HmfReporterData reporterData = testHmfReporterData();
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
