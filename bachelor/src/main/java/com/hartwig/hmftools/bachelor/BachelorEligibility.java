@@ -40,8 +40,7 @@ class BachelorEligibility {
 
         private ExtractedVariantInfo(final VariantContext ctx) {
             dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
-            Annotations = ctx.getAttributeAsStringList("ANN", "")
-                    .stream()
+            Annotations = Arrays.stream(ctx.getAttributeAsString("ANN", "").split(","))
                     .map(s -> Arrays.asList(s.split("\\|")))
                     .map(SnpEff::parseAnnotation)
                     .filter(Objects::nonNull)
