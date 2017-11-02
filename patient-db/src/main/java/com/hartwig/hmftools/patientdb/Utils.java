@@ -32,4 +32,10 @@ public final class Utils {
         }
         return false;
     }
+
+    @NotNull
+    public static String getPatientId(@NotNull final String runName) {
+        final String[] names = runName.split("_");
+        return names[4];
+    }
 }

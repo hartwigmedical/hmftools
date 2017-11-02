@@ -114,7 +114,7 @@ public final class LoadClinicalData {
             final PatientReader patientReader = new PatientReader(model, readTreatmentToTypeMappingFile(treatmentTypeCsv), lims);
 
             final Set<String> cpctPatientIds = runContexts.stream()
-                    .map(runContext -> getPatientId(runContext.setName()))
+                    .map(runContext -> Utils.getPatientId(runContext.setName()))
                     .filter(patientId -> patientId.startsWith("CPCT"))
                     .collect(Collectors.toSet());
             LOGGER.info("Writing CPCT clinical data for " + cpctPatientIds.size() + " patients.");
@@ -145,14 +145,14 @@ public final class LoadClinicalData {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db -" + DO_LOAD_RAW_ECRF, ecrfOptions);
         } else {
-            dbWriter.clearEcrf();
+            dbWriter.clearCpctEcrf();
             LOGGER.info("Loading ecrf model...");
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final Set<String> cpctPatientIds =
-                    runContexts.stream().map(runContext -> getPatientId(runContext.setName())).collect(Collectors.toSet());
+                    runContexts.stream().map(runContext -> Utils.getPatientId(runContext.setName())).collect(Collectors.toSet());
             LOGGER.info("Writing raw ecrf data for " + cpctPatientIds.size() + " patients.");
-            dbWriter.writeEcrf(model, cpctPatientIds);
+            dbWriter.writeCpctEcrf(model, cpctPatientIds);
             LOGGER.info("Done writing raw ecrf data for " + cpctPatientIds.size() + " patients!");
         }
     }
@@ -167,12 +167,6 @@ public final class LoadClinicalData {
             }
         });
         return sampleIdsForPatient;
-    }
-
-    @NotNull
-    private static String getPatientId(@NotNull final String runName) {
-        final String[] names = runName.split("_");
-        return names[4];
     }
 
     @NotNull
