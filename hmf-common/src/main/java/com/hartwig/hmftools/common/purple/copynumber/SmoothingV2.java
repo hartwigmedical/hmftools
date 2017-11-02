@@ -95,8 +95,9 @@ public class SmoothingV2 {
         assert (startIndex < regions.size());
         final CombinedFittedRegion target = regions.get(startIndex);
 
-        for (int i = startIndex - 1; i >= 0; i--) {
-            final FittedRegion left = regions.get(i).region();
+        int targetIndex = startIndex - 1;
+        while (targetIndex >= 0) {
+            final FittedRegion left = regions.get(targetIndex).region();
             final double leftCopyNumber = left.tumorCopyNumber();
             final FittedRegion right = target.region();
             final double rightCopyNumber = right.tumorCopyNumber();
@@ -114,9 +115,11 @@ public class SmoothingV2 {
                 return;
             }
 
-            regions.remove(i);
+            regions.remove(targetIndex);
             LOGGER.info("Merged in left region {}", toString(left));
+            targetIndex--;
         }
+
     }
 
     private boolean isSomatic(@NotNull final FittedRegion region) {

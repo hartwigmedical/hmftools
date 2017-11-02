@@ -54,6 +54,7 @@ public class ClusterFactory {
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(variantPositions);
         allPositions.addAll(ratioPositions);
+        Collections.sort(allPositions);
 
         final List<Cluster> result = Lists.newArrayList();
 

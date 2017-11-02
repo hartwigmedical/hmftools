@@ -2,16 +2,13 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTCLUSTER;
 
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantCluster;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -19,7 +16,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep14;
-import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -85,39 +81,6 @@ class StructuralVariantDAO {
         }
     }
 
-    void writeClusters(@NotNull final String sample, @NotNull final Collection<StructuralVariantCluster> clusters) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(STRUCTURALVARIANTCLUSTER).where(STRUCTURALVARIANTCLUSTER.SAMPLEID.eq(sample)).execute();
-
-        for (List<StructuralVariantCluster> batch : Iterables.partition(clusters, BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(STRUCTURALVARIANTCLUSTER,
-                    STRUCTURALVARIANTCLUSTER.SAMPLEID,
-                    STRUCTURALVARIANTCLUSTER.CHROMOSOME,
-                    STRUCTURALVARIANTCLUSTER.START,
-                    STRUCTURALVARIANTCLUSTER.END,
-                    STRUCTURALVARIANTCLUSTER.FIRSTVARIANT,
-                    STRUCTURALVARIANTCLUSTER.FINALVARIANT,
-                    STRUCTURALVARIANTCLUSTER.COUNT,
-                    STRUCTURALVARIANTCLUSTER.TYPE,
-                    STRUCTURALVARIANTCLUSTER.MODIFIED);
-
-            batch.forEach(x -> addRecord(timestamp, inserter, sample, x));
-            inserter.execute();
-        }
-
-    }
-
-    private void addRecord(Timestamp timestamp, InsertValuesStep9 inserter, String sample, StructuralVariantCluster cluster) {
-        inserter.values(sample,
-                cluster.chromosome(),
-                cluster.start(),
-                cluster.end(),
-                cluster.firstVariantPosition(),
-                cluster.finalVariantPosition(),
-                cluster.variants().size(),
-                cluster.type(),
-                timestamp);
-    }
 
     private void addRecord(Timestamp timestamp, InsertValuesStep14 inserter, String sample, StructuralVariant region) {
         inserter.values(sample,

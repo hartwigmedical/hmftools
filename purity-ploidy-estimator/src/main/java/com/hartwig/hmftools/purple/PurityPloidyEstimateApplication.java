@@ -45,11 +45,11 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
+import com.hartwig.hmftools.common.purple.segment.Cluster;
+import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryNew;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantCluster;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantClusterFactory;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryNew2;
 import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
@@ -142,8 +142,6 @@ public class PurityPloidyEstimateApplication {
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
 
-
-
             // JOBA: Load BAFs from AMBER
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(configSupplier.bafConfig().bafFile().toString());
 
@@ -168,13 +166,18 @@ public class PurityPloidyEstimateApplication {
             // JOBA: Ratio Segmentation
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratios).get();
             final List<PurpleSegment> segments;
-            final List<StructuralVariantCluster> clusters;
+            final List<Cluster> clusters;
+
             if (cmd.hasOption(EXPERIMENTAL)) {
                 final Multimap<String, GenomePosition> ratioSegments = RatioBreakPoints.createRatioSegments(config);
-                final Multimap<String, StructuralVariantCluster> svSegments =
-                        new StructuralVariantClusterFactory(config.windowSize()).cluster(structuralVariants, ratios);
-                segments = PurpleSegmentFactoryNew.segment(svSegments, ratioSegments, lengths);
-                clusters = Lists.newArrayList(svSegments.values());
+                final Multimap<String, Cluster> clusterMap =
+                        new ClusterFactory(config.windowSize()).cluster(structuralVariants, ratioSegments, ratios);
+
+                //                final Multimap<String, StructuralVariantCluster> svSegments =
+                //                        new StructuralVariantClusterFactory(config.windowSize()).cluster(structuralVariants, ratios);
+                //                segments = PurpleSegmentFactoryNew.segment(svSegments, ratioSegments, lengths);
+                segments = PurpleSegmentFactoryNew2.segment(clusterMap, lengths);
+                clusters = Lists.newArrayList(clusterMap.values());
                 Collections.sort(clusters);
             } else {
 
@@ -241,7 +244,7 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
                 dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
                 dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
-                dbAccess.writeStructuralVariantClusters(tumorSample, clusters);
+                dbAccess.writeClusters(tumorSample, clusters);
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);

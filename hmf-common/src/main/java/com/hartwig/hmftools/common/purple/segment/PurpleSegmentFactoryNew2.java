@@ -65,7 +65,16 @@ public class PurpleSegmentFactoryNew2 {
                 }
                 segment.setStatus(PurpleSegmentStatus.NORMAL);
             } else {
+
                 final List<GenomePosition> ratioPositions = cluster.ratios();
+
+                // DO ALL
+//                for (GenomePosition genomePosition : ratioPositions) {
+//                    result.add(setStatus(segment.setEnd(genomePosition.position() - 1)));
+//                    segment = create(genomePosition.chromosome(), genomePosition.position());
+//                }
+
+                // DO FIRST AND LAST
                 final GenomePosition firstRatioBreak = ratioPositions.get(0);
                 result.add(setStatus(segment.setEnd(firstRatioBreak.position() - 1)));
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position());

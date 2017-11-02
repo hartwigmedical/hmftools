@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantCluster;
+import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.data.Patient;
@@ -96,9 +96,8 @@ public class DatabaseAccess {
         structuralVariantDAO.write(sampleId, variants);
     }
 
-    public void writeStructuralVariantClusters(@NotNull final String sampleId,
-            @NotNull final Collection<StructuralVariantCluster> clusters) {
-        structuralVariantDAO.writeClusters(sampleId, clusters);
+    public void writeClusters(@NotNull final String sampleId, @NotNull final Collection<Cluster> clusters) {
+        copyNumberDAO.writeClusters(sampleId, clusters);
     }
 
     public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {

@@ -224,16 +224,20 @@ CREATE TABLE structuralVariant
 );
 
 DROP TABLE IF EXISTS structuralVariantCluster;
-CREATE TABLE structuralVariantCluster
+DROP TABLE IF EXISTS copyNumberCluster;
+CREATE TABLE copyNumberCluster
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
-    firstVariant int not null,
-    finalVariant int not null,
-    count int not null,
+    firstVariant int,
+    finalVariant int,
+    variantCount int not null,
+    firstRatio int,
+    finalRatio int,
+    ratioCount int not null,
     type varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)

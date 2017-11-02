@@ -42,6 +42,7 @@ public class PurpleCopyNumberFactory {
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
+//            final List<FittedRegion> smoothedV2 = new SmoothingV2(purityAdjuster).doStuff(chromosomeFittedRegions);
             final List<PurpleCopyNumber> copyNumbers = smoothFittedRegions.stream().map(this::create).collect(toList());
             smoothedRegions.addAll(RegionStepFilter.filter(copyNumbers));
         }
