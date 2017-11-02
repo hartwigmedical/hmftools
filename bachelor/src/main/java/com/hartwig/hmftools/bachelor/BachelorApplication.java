@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -39,14 +40,16 @@ public class BachelorApplication {
     private static final String RUN_DIRECTORY = "runDirectory";
     private static final String BATCH_DIRECTORY = "batchDirectory";
     private static final String OUTPUT = "output";
+    private static final String VALIDATE = "validate";
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(Option.builder(CONFIG_DIRECTORY).required().hasArg().desc("folder to find program XMLs").build());
+        options.addOption(Option.builder(OUTPUT).required().hasArg().desc("output file").build());
         options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
-        options.addOption(Option.builder(OUTPUT).hasArg().desc("output file").build());
         options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
+        options.addOption(Option.builder(VALIDATE).required(false).desc("only validate the configs").build());
         return options;
     }
 
@@ -65,15 +68,14 @@ public class BachelorApplication {
     private static Collection<EligibilityReport> processVCF(final boolean isGermline, final File vcf,
             final BachelorEligibility eligibility) {
         LOGGER.info("process vcf: {}", vcf.getPath());
-
-        final VCFFileReader reader = new VCFFileReader(vcf, false);
-
-        // TODO: always correct? germline has R,T somatic has just T
-        final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
-        final Collection<EligibilityReport> result = eligibility.processVCF(sample, isGermline ? "germline" : "somatic", reader);
-        reader.close();
-
-        return result;
+        try (final VCFFileReader reader = new VCFFileReader(vcf, false)) {
+            // TODO: always correct? germline has R,T somatic has just T
+            final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
+            return eligibility.processVCF(sample, isGermline ? "germline" : "somatic", reader);
+        } catch (final TribbleException e) {
+            LOGGER.error("error with VCF file {}: {}", vcf.getPath(), e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     private static void processPurpleCNV(final File cnv, final BachelorEligibility eligibility) {
@@ -112,10 +114,16 @@ public class BachelorApplication {
         try {
             final CommandLine cmd = createCommandLine(options, args);
 
+            // load configs
+
             final Path configPath = Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY));
             final Map<String, Program> map = BachelorHelper.loadXML(configPath);
+            if (cmd.hasOption(VALIDATE)) {
+                System.exit(0);
+                return;
+            }
+
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
-            final List<EligibilityReport> reports = Lists.newArrayList();
 
             final List<RunDirectory> runDirectories;
             if (cmd.hasOption(BATCH_DIRECTORY)) {
@@ -131,40 +139,39 @@ public class BachelorApplication {
                 runDirectories = Collections.singletonList(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
             } else {
                 LOGGER.error("requires either a batch or single run directory");
+                System.exit(1);
                 return;
             }
 
             LOGGER.info("beginning processing...");
-            reports.addAll(runDirectories.parallelStream().flatMap(run -> process(eligibility, run).stream()).collect(Collectors.toList()));
+            final List<EligibilityReport> reports =
+                    runDirectories.parallelStream().flatMap(run -> process(eligibility, run).stream()).collect(Collectors.toList());
             LOGGER.info("... processing complete!");
 
             // output results
 
-            if (cmd.hasOption(OUTPUT)) {
-                LOGGER.info("outputting to CSV {} ...", cmd.getOptionValue(OUTPUT));
+            LOGGER.info("outputting to CSV {} ...", cmd.getOptionValue(OUTPUT));
 
-                try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)))) {
+            try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)))) {
 
-                    // header
-                    writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS")));
-                    writer.newLine();
+                // header
+                writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS")));
+                writer.newLine();
 
-                    // data
-                    for (final EligibilityReport report : reports) {
-                        for (final VariantContext v : report.variants()) {
-                            final String alts =
-                                    String.join("|", v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()));
-                            writer.write(
-                                    String.format("%s,%s,%s,%s,%s,%d,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
-                                            v.getContig(), v.getStart(), v.getReference(), alts));
-                            writer.newLine();
-                        }
+                // data
+                for (final EligibilityReport report : reports) {
+                    for (final VariantContext v : report.variants()) {
+                        final String alts =
+                                String.join("|", v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()));
+                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
+                                v.getContig(), v.getStart(), v.getReference(), alts));
+                        writer.newLine();
                     }
-
                 }
 
-                LOGGER.info("... output complete!");
             }
+
+            LOGGER.info("... output complete!");
 
             LOGGER.info("bachelor done!");
 
