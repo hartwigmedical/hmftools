@@ -37,6 +37,8 @@ Argument | Default | Description
 -db_user | None | Database username. Mandatory if db_enabled.
 -db_pass | None | Database password. Mandatory if db_enabled.
 -db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
+-gene_panel | Default gene panel | Specify gene panel to be used.
+
 
 ### Example Usage
 
