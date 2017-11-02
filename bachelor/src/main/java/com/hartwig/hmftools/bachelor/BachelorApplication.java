@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 
@@ -112,13 +113,7 @@ public class BachelorApplication {
 
     private static Collection<EligibilityReport> process(final BachelorEligibility eligibility, final RunDirectory run) {
         LOGGER.info("processing run: {}", run.prefix);
-
-        final File germline = run.findGermline();
-        final File somatic = run.findSomatic();
-        final File copyNumber = run.findCopyNumber();
-        final File structuralVariants = run.findStructuralVariants();
-
-        return process(eligibility, germline, somatic, copyNumber, structuralVariants);
+        return process(eligibility, run.germline, run.somatic, run.copyNumber, run.structuralVariants);
     }
 
     public static void main(final String... args) {
@@ -131,14 +126,17 @@ public class BachelorApplication {
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
             final List<EligibilityReport> reports = Lists.newArrayList();
 
+            LOGGER.info("collating files for processing...");
+
             final List<RunDirectory> runDirectories = Lists.newArrayList();
             if (cmd.hasOption(BATCH_DIRECTORY)) {
                 final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
-                Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS)
-                        .filter(p -> p.toFile().isDirectory())
-                        .filter(p -> !p.equals(root))
-                        .map(RunDirectory::new)
-                        .forEach(runDirectories::add);
+                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS)) {
+                    stream.filter(p -> p.toFile().isDirectory())
+                            .filter(p -> !p.equals(root))
+                            .map(RunDirectory::new)
+                            .forEach(runDirectories::add);
+                }
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
                 runDirectories.add(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
             } else {
@@ -149,30 +147,39 @@ public class BachelorApplication {
                                 cmd.hasOption(BPI_VCF) ? Paths.get(cmd.getOptionValue(BPI_VCF)).toFile() : null));
             }
 
+            LOGGER.info("beginning processing...");
             reports.addAll(runDirectories.parallelStream().flatMap(run -> process(eligibility, run).stream()).collect(Collectors.toList()));
+            LOGGER.info("... processing complete!");
 
             // output results
 
             if (cmd.hasOption(OUTPUT)) {
-                final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)));
+                LOGGER.info("outputting to CSV {} ...", cmd.getOptionValue(OUTPUT));
 
-                // header
-                writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS")));
-                writer.newLine();
+                try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)))) {
 
-                // data
-                for (final EligibilityReport report : reports) {
-                    for (final VariantContext v : report.variants()) {
-                        final String alts =
-                                String.join("|", v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()));
-                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
-                                v.getContig(), v.getStart(), v.getReference(), alts));
-                        writer.newLine();
+                    // header
+                    writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS")));
+                    writer.newLine();
+
+                    // data
+                    for (final EligibilityReport report : reports) {
+                        for (final VariantContext v : report.variants()) {
+                            final String alts =
+                                    String.join("|", v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()));
+                            writer.write(
+                                    String.format("%s,%s,%s,%s,%s,%d,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
+                                            v.getContig(), v.getStart(), v.getReference(), alts));
+                            writer.newLine();
+                        }
                     }
+
                 }
 
-                writer.close();
+                LOGGER.info("... output complete!");
             }
+
+            LOGGER.info("bachelor done!");
 
         } catch (final ParseException e) {
             printHelpAndExit(options);

@@ -5,64 +5,71 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 
 class RunDirectory {
 
     final Path prefix;
+    final File germline;
+    final File somatic;
+    final File copyNumber;
+    final File structuralVariants;
 
     RunDirectory(final Path runDirectory) {
         prefix = runDirectory;
+        germline = findGermline();
+        somatic = findSomatic();
+        copyNumber = findCopyNumber();
+        structuralVariants = findStructuralVariants();
     }
 
     @Nullable
-    File findGermline() {
+    private File findGermline() {
         try {
-            return Files.walk(prefix.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS)
-                    .filter(p -> p.toString().endsWith("GoNLv5.vcf") || p.toString().endsWith("annotated.vcf"))
-                    .map(Path::toFile)
-                    .findFirst()
-                    .orElse(null);
+            try (final Stream<Path> stream = Files.walk(prefix.toRealPath(), 1, FileVisitOption.FOLLOW_LINKS)) {
+                return stream.filter(p -> p.toString().endsWith("GoNLv5.vcf") || p.toString().endsWith("annotated.vcf"))
+                        .map(Path::toFile)
+                        .findFirst()
+                        .orElse(null);
+            }
         } catch (final IOException e) {
             return null;
         }
     }
 
     @Nullable
-    File findSomatic() {
+    private File findSomatic() {
         try {
-            return Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)
-                    .filter(p -> p.toString().endsWith("_post_processed.vcf") || p.toString().endsWith("_melted.vcf"))
-                    .map(Path::toFile)
-                    .findFirst()
-                    .orElse(null);
+            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
+                return stream.filter(p -> p.toString().endsWith("_post_processed.vcf") || p.toString().endsWith("_melted.vcf"))
+                        .map(Path::toFile)
+                        .findFirst()
+                        .orElse(null);
+            }
         } catch (final IOException e) {
             return null;
         }
     }
 
     @Nullable
-    File findCopyNumber() {
+    private File findCopyNumber() {
         try {
-            return Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)
-                    .filter(p -> p.toString().endsWith("purple.cnv"))
-                    .map(Path::toFile)
-                    .findFirst()
-                    .orElse(null);
+            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
+                return stream.filter(p -> p.toString().endsWith("purple.cnv")).map(Path::toFile).findFirst().orElse(null);
+            }
         } catch (final IOException e) {
             return null;
         }
     }
 
     @Nullable
-    File findStructuralVariants() {
+    private File findStructuralVariants() {
         try {
-            return Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)
-                    .filter(p -> p.toString().endsWith("bpi.vcf"))
-                    .map(Path::toFile)
-                    .findFirst()
-                    .orElse(null);
+            try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
+                return stream.filter(p -> p.toString().endsWith("bpi.vcf")).map(Path::toFile).findFirst().orElse(null);
+            }
         } catch (final IOException e) {
             return null;
         }
