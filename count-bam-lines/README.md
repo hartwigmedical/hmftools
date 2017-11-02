@@ -1,6 +1,6 @@
 # COBALT 1.2
 
-**Co**unt **ba**m **l**ines is designed to count the number of read starts within each 1000 base window of a bam.
+**Co**unt **ba**m **l**ines is designed to count the number of read starts within each 1000 base window of a tumor and reference bam.
 
 It will only include reads that match ALL the following criteria:
 * Equals or exceeds min quality (default 10)
@@ -8,7 +8,10 @@ It will only include reads that match ALL the following criteria:
 * Is not duplicated
 * Is neither secondary nor supplementary
 
-It then applies GC Normalization to calculate the read ratios. It can optionally apply a diploid normalization (to be used for reference samples)
+It then applies GC normalization to calculate the read ratios.
+
+The reference ratios then have a further diploid normalization applied to them.
+This normalization assumes that the median ratio of the surrounding 10Mbase window (minimum 1Mbases readable) is diploid.
 
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
 
