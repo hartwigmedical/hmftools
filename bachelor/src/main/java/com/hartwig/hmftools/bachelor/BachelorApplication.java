@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,22 +40,12 @@ public class BachelorApplication {
     private static final String BATCH_DIRECTORY = "batchDirectory";
     private static final String OUTPUT = "output";
 
-    // DEBUG
-    private static final String GERMLINE_VCF = "germlineVcf";
-    private static final String SOMATIC_VCF = "somaticVcf";
-    private static final String PURPLE_FILE = "purple";
-    private static final String BPI_VCF = "bpiVcf";
-
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(Option.builder(CONFIG_DIRECTORY).required().hasArg().desc("folder to find program XMLs").build());
         options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
         options.addOption(Option.builder(OUTPUT).hasArg().desc("output file").build());
-        options.addOption(Option.builder(GERMLINE_VCF).required(false).hasArg().desc("germline vcf to process").build());
-        options.addOption(Option.builder(SOMATIC_VCF).required(false).hasArg().desc("somatic vcf to process").build());
-        options.addOption(Option.builder(BPI_VCF).required(false).hasArg().desc("BPI structural variant vcf to process").build());
-        options.addOption(Option.builder(PURPLE_FILE).required(false).hasArg().desc("purple cnv file to process").build());
         options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
         return options;
     }
@@ -126,25 +117,21 @@ public class BachelorApplication {
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
             final List<EligibilityReport> reports = Lists.newArrayList();
 
-            LOGGER.info("collating files for processing...");
-
-            final List<RunDirectory> runDirectories = Lists.newArrayList();
+            final List<RunDirectory> runDirectories;
             if (cmd.hasOption(BATCH_DIRECTORY)) {
+                LOGGER.info("collating files for processing...");
                 final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
-                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS)) {
-                    stream.filter(p -> p.toFile().isDirectory())
+                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel()) {
+                    runDirectories = stream.filter(p -> p.toFile().isDirectory())
                             .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
-                            .forEach(runDirectories::add);
+                            .collect(Collectors.toList());
                 }
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
-                runDirectories.add(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
+                runDirectories = Collections.singletonList(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
             } else {
-                reports.addAll(
-                        process(eligibility, cmd.hasOption(GERMLINE_VCF) ? Paths.get(cmd.getOptionValue(GERMLINE_VCF)).toFile() : null,
-                                cmd.hasOption(SOMATIC_VCF) ? Paths.get(cmd.getOptionValue(SOMATIC_VCF)).toFile() : null,
-                                cmd.hasOption(PURPLE_FILE) ? Paths.get(cmd.getOptionValue(PURPLE_FILE)).toFile() : null,
-                                cmd.hasOption(BPI_VCF) ? Paths.get(cmd.getOptionValue(BPI_VCF)).toFile() : null));
+                LOGGER.error("requires either a batch or single run directory");
+                return;
             }
 
             LOGGER.info("beginning processing...");
