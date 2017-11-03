@@ -12,7 +12,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.CountSupplier;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
-import com.hartwig.hmftools.cobalt.segment.PCFSegment;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -129,7 +128,7 @@ public class CountBamLinesApplication {
         versionInfo.write(outputDirectory);
         CobaltRatioFile.write(outputFilename, ratios);
 
-        new PCFSegment(executorService, outputDirectory).applySegmentation(reference, tumor);
+        new RatioSegmentation(executorService, outputDirectory).applySegmentation(reference, tumor);
 
         executorService.shutdown();
     }

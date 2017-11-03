@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.segment;
+package com.hartwig.hmftools.cobalt;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,19 +15,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class PCFSegment {
+class RatioSegmentation {
 
-    private static final Logger LOGGER = LogManager.getLogger(PCFSegment.class);
+    private static final Logger LOGGER = LogManager.getLogger(RatioSegmentation.class);
 
     private final String outputDirectory;
     private final ExecutorService executorService;
 
-    public PCFSegment(final ExecutorService executorService, final String outputDirectory) {
+    RatioSegmentation(final ExecutorService executorService, final String outputDirectory) {
         this.outputDirectory = outputDirectory;
         this.executorService = executorService;
     }
 
-    public void applySegmentation(@NotNull final String reference, @NotNull final String tumor)
+    void applySegmentation(@NotNull final String reference, @NotNull final String tumor)
             throws ExecutionException, InterruptedException {
         final String ratioFile = CobaltRatioFile.generateFilename(outputDirectory, tumor);
         final List<Future<Object>> futures = Lists.newArrayList();
