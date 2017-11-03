@@ -12,14 +12,14 @@ import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-class AmberBAFFactory {
+class BAFFactory {
 
     private final double minHetAFPercentage;
     private final double maxHetAFPercentage;
     private final double minDepthPercentage;
     private final double maxDepthPercentage;
 
-    AmberBAFFactory(final double minBAFPercentage, final double minHetAFPercentage, final double minDepthPercentage,
+    BAFFactory(final double minBAFPercentage, final double minHetAFPercentage, final double minDepthPercentage,
             final double maxDepthPercentage) {
         this.minHetAFPercentage = minBAFPercentage;
         this.maxHetAFPercentage = minHetAFPercentage;

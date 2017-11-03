@@ -6,5 +6,5 @@ pcfFile1  <- paste(args[2], "1", sep="")
 
 library(copynumber)
 baf <- read.table(bafFile, header=TRUE)
-baf <- baf[,c("Chromosome","Position","mBAF")]
+baf <- baf[,c("Chromosome","Position","TumorModifiedBAF")]
 baf.seg<-pcf(baf,verbose=FALSE,gamma=100,kmin=1,save.res = TRUE, file.names = c(pcfFile1, pcfFile))

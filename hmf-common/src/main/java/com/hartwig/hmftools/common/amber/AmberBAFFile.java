@@ -61,12 +61,12 @@ public enum AmberBAFFile {
     private static String header() {
         return new StringJoiner(DELIMITER, "", "").add("Chromosome")
                 .add("Position")
-                .add("tumorBAF")
-                .add("tumorModifiedBAF")
-                .add("tumorDepth")
-                .add("normalBAF")
-                .add("normalModifiedBAF")
-                .add("normalDepth")
+                .add("TumorBAF")
+                .add("TumorModifiedBAF")
+                .add("TumorDepth")
+                .add("NormalBAF")
+                .add("NormalModifiedBAF")
+                .add("NormalDepth")
                 .toString();
     }
 

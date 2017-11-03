@@ -55,12 +55,13 @@ public class AmberApplication {
             printUsageAndExit(options);
         }
 
-        final File outputDir = new File(cmd.getOptionValue(OUTPUT_DIR));
+        final String outputDirectory = cmd.getOptionValue(OUTPUT_DIR);
+        final File outputDir = new File(outputDirectory);
         if (!outputDir.exists() && !outputDir.mkdirs()) {
-            throw new IOException("Unable to write directory " + cmd.getOptionValue(OUTPUT_DIR));
+            throw new IOException("Unable to write directory " + outputDirectory);
         }
 
-        final AmberBAFFactory factory = new AmberBAFFactory(defaultValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE),
+        final BAFFactory factory = new BAFFactory(defaultValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE),
                 defaultValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE),
                 defaultValue(cmd, MIN_DEPTH_PERCENTAGE, DEFAULT_MIN_DEPTH_PERCENTAGE),
                 defaultValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE));
@@ -76,13 +77,16 @@ public class AmberApplication {
 
         LOGGER.info("Generating QC Stats");
         final AmberQC qcStats = AmberQCFactory.create(result);
-        final String qcFilename = AmberQCFile.generateFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
+        final String qcFilename = AmberQCFile.generateFilename(outputDirectory, cmd.getOptionValue(SAMPLE));
 
-        final String filename = AmberBAFFile.generateAmberFilename(cmd.getOptionValue(OUTPUT_DIR), cmd.getOptionValue(SAMPLE));
+        final String filename = AmberBAFFile.generateAmberFilename(outputDirectory, cmd.getOptionValue(SAMPLE));
         LOGGER.info("Persisting file {}", filename);
         AmberBAFFile.write(filename, result);
         AmberQCFile.write(qcFilename, qcStats);
         versionInfo.write(outputDir.toString());
+
+        LOGGER.info("Applying pcf segmentation");
+        new BAFSegmentation(outputDirectory).applySegmentation(cmd.getOptionValue(SAMPLE));
 
         LOGGER.info("Complete");
     }
