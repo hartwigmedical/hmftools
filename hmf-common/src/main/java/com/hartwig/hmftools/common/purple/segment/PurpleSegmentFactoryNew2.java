@@ -11,6 +11,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
@@ -66,7 +67,7 @@ public class PurpleSegmentFactoryNew2 {
                 segment.setStatus(PurpleSegmentStatus.NORMAL);
             } else {
 
-                final List<GenomePosition> ratioPositions = cluster.ratios();
+                final List<PCFPosition> pcfPositions = cluster.pcfPositions();
 
                 // DO ALL
 //                for (GenomePosition genomePosition : ratioPositions) {
@@ -75,11 +76,11 @@ public class PurpleSegmentFactoryNew2 {
 //                }
 
                 // DO FIRST AND LAST
-                final GenomePosition firstRatioBreak = ratioPositions.get(0);
+                final GenomePosition firstRatioBreak = pcfPositions.get(0);
                 result.add(setStatus(segment.setEnd(firstRatioBreak.position() - 1)));
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position());
-                if (ratioPositions.size() > 1) {
-                    final GenomePosition finalRatioPosition = ratioPositions.get(ratioPositions.size() - 1);
+                if (pcfPositions.size() > 1) {
+                    final GenomePosition finalRatioPosition = pcfPositions.get(pcfPositions.size() - 1);
                     result.add(setStatus(segment.setEnd(finalRatioPosition.position() - 1)));
                     segment = create(firstRatioBreak.chromosome(), finalRatioPosition.position());
                 }

@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
@@ -25,19 +26,19 @@ public class ClusterFactory {
     }
 
     @NotNull
-    public ListMultimap<String, Cluster> cluster(@NotNull final List<StructuralVariant> variants, @NotNull final Multimap<String, GenomePosition> ratioPositions,
-            ListMultimap<String, CobaltRatio> ratios) {
+    public ListMultimap<String, Cluster> cluster(@NotNull final List<StructuralVariant> variants,
+            @NotNull final Multimap<String, PCFPosition> pcfPositions, ListMultimap<String, CobaltRatio> ratios) {
         final Multimap<String, StructuralVariantPosition> positions = asMap(StructuralVariantPositionFactory.create(variants));
-        return cluster(positions, ratioPositions, ratios);
+        return cluster(positions, pcfPositions, ratios);
     }
 
     @NotNull
     public ListMultimap<String, Cluster> cluster(@NotNull final Multimap<String, StructuralVariantPosition> variantPositions,
-            @NotNull final Multimap<String, GenomePosition> ratioPositions, @NotNull final ListMultimap<String, CobaltRatio> ratios) {
+            @NotNull final Multimap<String, PCFPosition> pcfPositions, @NotNull final ListMultimap<String, CobaltRatio> ratios) {
 
         ListMultimap<String, Cluster> clusters = ArrayListMultimap.create();
-        for (String chromosome : ratioPositions.keySet()) {
-            final Collection<GenomePosition> chromosomeRatioPositions = ratioPositions.get(chromosome);
+        for (String chromosome : pcfPositions.keySet()) {
+            final Collection<PCFPosition> chromosomeRatioPositions = pcfPositions.get(chromosome);
             final Collection<StructuralVariantPosition> chromosomeVariants =
                     variantPositions.containsKey(chromosome) ? variantPositions.get(chromosome) : Collections.EMPTY_LIST;
             final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.EMPTY_LIST;
@@ -49,11 +50,11 @@ public class ClusterFactory {
 
     @NotNull
     List<Cluster> cluster(@NotNull final Collection<StructuralVariantPosition> variantPositions,
-            @NotNull final Collection<GenomePosition> ratioPositions, @NotNull final List<CobaltRatio> ratios) {
+            @NotNull final Collection<PCFPosition> pcfPositions, @NotNull final List<CobaltRatio> ratios) {
 
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(variantPositions);
-        allPositions.addAll(ratioPositions);
+        allPositions.addAll(pcfPositions);
         Collections.sort(allPositions);
 
         final List<Cluster> result = Lists.newArrayList();
@@ -82,7 +83,7 @@ public class ClusterFactory {
             if (position instanceof StructuralVariantPosition) {
                 segment.addVariants((StructuralVariantPosition) position);
             } else {
-                segment.addRatios(position);
+                segment.addPcfPositions((PCFPosition) position);
             }
 
         }

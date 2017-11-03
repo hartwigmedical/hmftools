@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep11;
-import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -206,7 +206,7 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERCLUSTER).where(COPYNUMBERCLUSTER.SAMPLEID.eq(sample)).execute();
 
         for (List<Cluster> batch : Iterables.partition(clusters, BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(COPYNUMBERCLUSTER,
+            InsertValuesStep15 inserter = context.insertInto(COPYNUMBERCLUSTER,
                     COPYNUMBERCLUSTER.SAMPLEID,
                     COPYNUMBERCLUSTER.CHROMOSOME,
                     COPYNUMBERCLUSTER.START,
@@ -217,16 +217,20 @@ class CopyNumberDAO {
                     COPYNUMBERCLUSTER.FIRSTRATIO,
                     COPYNUMBERCLUSTER.FINALRATIO,
                     COPYNUMBERCLUSTER.RATIOCOUNT,
+                    COPYNUMBERCLUSTER.FIRSTBAF,
+                    COPYNUMBERCLUSTER.FINALBAF,
+                    COPYNUMBERCLUSTER.BAFCOUNT,
                     COPYNUMBERCLUSTER.TYPE,
                     COPYNUMBERCLUSTER.MODIFIED);
 
-            batch.stream().filter(x -> x.variants().size() + x.ratios().size() > 1).forEach(x -> addRecord(timestamp, inserter, sample, x));
+            batch.forEach(x -> addRecord(timestamp, inserter, sample, x));
+//            batch.stream().filter(x -> x.variants().size() + x.ratios().size() > 1).forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
 
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep12 inserter, String sample, Cluster cluster) {
+    private void addRecord(Timestamp timestamp, InsertValuesStep15 inserter, String sample, Cluster cluster) {
         inserter.values(sample,
                 cluster.chromosome(),
                 cluster.start(),
@@ -237,6 +241,9 @@ class CopyNumberDAO {
                 cluster.firstRatio(),
                 cluster.finalRatio(),
                 cluster.ratios().size(),
+                cluster.firstBAF(),
+                cluster.finalBAF(),
+                cluster.bafs().size(),
                 cluster.type(),
                 timestamp);
     }

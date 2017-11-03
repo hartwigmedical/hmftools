@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
@@ -67,8 +67,8 @@ import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
+import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
-import com.hartwig.hmftools.purple.segment.RatioBreakPoints;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -174,13 +174,9 @@ public class PurityPloidyEstimateApplication {
             final List<Cluster> clusters;
 
             if (cmd.hasOption(EXPERIMENTAL)) {
-                final Multimap<String, GenomePosition> ratioSegments = RatioBreakPoints.createRatioSegments(config);
+                final Multimap<String, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(config);
                 final Multimap<String, Cluster> clusterMap =
-                        new ClusterFactory(config.windowSize()).cluster(structuralVariants, ratioSegments, ratios);
-
-                //                final Multimap<String, StructuralVariantCluster> svSegments =
-                //                        new StructuralVariantClusterFactory(config.windowSize()).cluster(structuralVariants, ratios);
-                //                segments = PurpleSegmentFactoryNew.segment(svSegments, ratioSegments, lengths);
+                        new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
                 segments = PurpleSegmentFactoryNew2.segment(clusterMap, lengths);
                 clusters = Lists.newArrayList(clusterMap.values());
                 Collections.sort(clusters);

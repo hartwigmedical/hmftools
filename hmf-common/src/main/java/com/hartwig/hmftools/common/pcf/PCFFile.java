@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,8 +28,8 @@ public class PCFFile {
         return basePath + File.separator + sample + BAF_EXTENSION;
     }
 
-    public static Multimap<String, GenomePosition> readPositions(int windowSize, @NotNull final String filename) throws IOException {
-        Multimap<String, GenomePosition> result = ArrayListMultimap.create();
+    public static Multimap<String, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source,  @NotNull final String filename) throws IOException {
+        Multimap<String, PCFPosition> result = ArrayListMultimap.create();
         long end = 0;
         for (String line : Files.readAllLines(new File(filename).toPath())) {
             if (!line.startsWith(HEADER_PREFIX)) {
@@ -38,10 +37,10 @@ public class PCFFile {
                 final String chromosomeName = values[1];
                 long start = Long.valueOf(values[3]);
                 if (start != end) {
-                    result.put(chromosomeName, position(chromosomeName, start));
+                    result.put(chromosomeName, position(chromosomeName, start, source));
                 }
                 end = Long.valueOf(values[4]) + windowSize;
-                result.put(chromosomeName, position(chromosomeName, end));
+                result.put(chromosomeName, position(chromosomeName, end, source));
             }
         }
 
@@ -75,7 +74,7 @@ public class PCFFile {
                 .build();
     }
 
-    private static PCFPosition position(@NotNull final String chromosome, long pos) {
-        return ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).build();
+    private static PCFPosition position(@NotNull final String chromosome, long pos, @NotNull final PCFSource source) {
+        return ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).source(source).build();
     }
 }

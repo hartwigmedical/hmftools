@@ -239,6 +239,9 @@ CREATE TABLE copyNumberCluster
     firstRatio int,
     finalRatio int,
     ratioCount int not null,
+    firstBaf int,
+    finalBaf int,
+    bafCount int not null,
     type varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)

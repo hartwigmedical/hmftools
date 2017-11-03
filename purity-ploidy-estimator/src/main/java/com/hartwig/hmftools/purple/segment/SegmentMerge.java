@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 class SegmentMerge implements RegionZipperHandler<GenomeRegion, GenomeRegion> {
 
     static List<GenomeRegion> merge(List<GenomeRegion> normal, List<GenomeRegion> tumor) {
