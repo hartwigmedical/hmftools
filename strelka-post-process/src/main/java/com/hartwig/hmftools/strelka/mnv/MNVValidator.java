@@ -28,12 +28,14 @@ public abstract class MNVValidator {
     abstract String tumorBAM();
 
     @NotNull
-    private SamReader tumorReader() {
+    @Value.Derived
+    protected SamReader tumorReader() {
         return SamReaderFactory.makeDefault().open(new File(tumorBAM()));
     }
 
     @NotNull
-    private SAMSequenceDictionary tumorDictionary() {
+    @Value.Derived
+    protected SAMSequenceDictionary tumorDictionary() {
         return tumorReader().getFileHeader().getSequenceDictionary();
     }
 
