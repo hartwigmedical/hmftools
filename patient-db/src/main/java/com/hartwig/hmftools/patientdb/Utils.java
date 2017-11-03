@@ -15,15 +15,6 @@ public final class Utils {
         return date != null ? java.sql.Date.valueOf(date) : null;
     }
 
-    public static boolean anyNotNull(@NotNull final Object... arguments) {
-        for (final Object object : arguments) {
-            if (object != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     static boolean anyNull(@NotNull final Object... arguments) {
         for (final Object object : arguments) {
             if (object == null) {
@@ -34,7 +25,7 @@ public final class Utils {
     }
 
     @NotNull
-    public static String getPatientId(@NotNull final String runName) {
+    static String getPatientId(@NotNull final String runName) {
         final String[] names = runName.split("_");
         return names[4];
     }
