@@ -73,8 +73,8 @@ class ClinicalDAO {
     }
 
     private void writeSampleData(final int patientId, @NotNull final SampleData sample) {
-        context.insertInto(SAMPLE, SAMPLE.SAMPLEID, SAMPLE.PATIENTID, SAMPLE.ARRIVALDATE)
-                .values(sample.sampleId(), patientId, Utils.toSQLDate(sample.arrivalDate()))
+        context.insertInto(SAMPLE, SAMPLE.SAMPLEID, SAMPLE.PATIENTID, SAMPLE.ARRIVALDATE, SAMPLE.SAMPLINGDATE)
+                .values(sample.sampleId(), patientId, Utils.toSQLDate(sample.arrivalDate()), Utils.toSQLDate(sample.samplingDate()))
                 .execute();
     }
 
