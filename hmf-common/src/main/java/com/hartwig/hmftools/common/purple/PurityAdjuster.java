@@ -64,7 +64,7 @@ public class PurityAdjuster {
 
     public double purityAdjustedBAF(final String chromosomeName, final double copyNumber, final double observedFrequency) {
         final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
-        if (!chromosome.isHomologous(gender) || Doubles.lessOrEqual(copyNumber, 0.5)) {
+        if (!chromosome.isHomologous(gender) || Doubles.lessOrEqual(copyNumber, 0.5) || Doubles.isZero(observedFrequency)) {
             return 0;
         }
 
