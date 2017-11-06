@@ -19,9 +19,8 @@ public class PileupFile {
         return Files.readAllLines(new File(filename).toPath()).stream().map(PileupFile::fromString).collect(Collectors.toList());
     }
 
-    @VisibleForTesting
     @NotNull
-    static Pileup fromString(@NotNull final String line) {
+    public static Pileup fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
         int referenceCount = 0;
