@@ -3,6 +3,7 @@ package com.hartwig.hmftools.amber;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
@@ -54,7 +55,8 @@ class BAFFactory {
 
     }
 
-    private static AmberBAF create(final char base, @NotNull final Pileup normal, @NotNull final Pileup tumor) {
+    @VisibleForTesting
+    static AmberBAF create(final char base, @NotNull final Pileup normal, @NotNull final Pileup tumor) {
         int tumorAltCount = tumor.mismatchCount(base);
         double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.referenceCount());
         int normalAltCount = normal.mismatchCount(base);
@@ -62,7 +64,7 @@ class BAFFactory {
         return ImmutableAmberBAF.builder()
                 .from(tumor)
                 .normalBAF(normalBaf)
-                .normalDepth(normal.referenceCount())
+                .normalDepth(normal.readCount())
                 .tumorBAF(tumorBaf)
                 .tumorDepth(tumor.readCount())
                 .build();
