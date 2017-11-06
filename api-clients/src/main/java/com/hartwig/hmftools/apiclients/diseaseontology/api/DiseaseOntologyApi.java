@@ -9,7 +9,13 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 
 public interface DiseaseOntologyApi {
+    int RETRY_COUNT = 5;
+
     @NotNull
     @GET("metadata/{id}")
-    Observable<DiseaseOntologyMetadata> getMetadata(@Path("id") final String doid);
+    Observable<DiseaseOntologyMetadata> getMetadataService(@Path("id") final String doid);
+
+    default Observable<DiseaseOntologyMetadata> getMetadata(final String doid) {
+        return getMetadataService(doid).retry(RETRY_COUNT);
+    }
 }

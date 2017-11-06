@@ -33,6 +33,8 @@ public class CivicApiWrapper {
         requestDispatcher.setMaxRequestsPerHost(100);
         httpClient = new OkHttpClient.Builder().connectionPool(new ConnectionPool(20, 5, TimeUnit.SECONDS))
                 .readTimeout(20, TimeUnit.SECONDS)
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
                 .dispatcher(requestDispatcher)
                 .build();
         final Gson gson = CivicApiDataGson.buildGson();

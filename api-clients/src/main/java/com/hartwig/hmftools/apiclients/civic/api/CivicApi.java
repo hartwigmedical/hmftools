@@ -13,23 +13,45 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface CivicApi {
+    int RETRY_COUNT = 5;
+
     @NotNull
     @GET("genes/{id}?identifier_type=entrez_id")
-    Observable<CivicGene> getGene(@Path("id") final int entrezId);
+    Observable<CivicGene> getGeneService(@Path("id") final int entrezId);
 
     @NotNull
     @GET("variants/{id}")
-    Observable<CivicVariant> getVariant(@Path("id") final int variantId);
+    Observable<CivicVariant> getVariantService(@Path("id") final int variantId);
 
     @NotNull
     @GET("variants")
-    Observable<CivicIndexResult<CivicVariant>> getVariants(@Query("page") final long page);
+    Observable<CivicIndexResult<CivicVariant>> getVariantsService(@Query("page") final long page);
 
     @NotNull
     @GET("evidence_items")
-    Observable<CivicIndexResult<CivicEvidenceItem>> getEvidenceItems(@Query("page") final long page);
+    Observable<CivicIndexResult<CivicEvidenceItem>> getEvidenceItemsService(@Query("page") final long page);
 
     @NotNull
     @GET("genes")
-    Observable<CivicIndexResult<CivicGene>> getGenes(@Query("page") final long page);
+    Observable<CivicIndexResult<CivicGene>> getGenesService(@Query("page") final long page);
+
+    default Observable<CivicGene> getGene(final int entrezId) {
+        return getGeneService(entrezId).retry(RETRY_COUNT);
+    }
+
+    default Observable<CivicVariant> getVariant(final int variantId) {
+        return getVariantService(variantId).retry(RETRY_COUNT);
+    }
+
+    default Observable<CivicIndexResult<CivicVariant>> getVariants(final long page) {
+        return getVariantsService(page).retry(RETRY_COUNT);
+    }
+
+    default Observable<CivicIndexResult<CivicEvidenceItem>> getEvidenceItems(final long page) {
+        return getEvidenceItemsService(page).retry(RETRY_COUNT);
+    }
+
+    default Observable<CivicIndexResult<CivicGene>> getGenes(final long page) {
+        return getGenesService(page).retry(RETRY_COUNT);
+    }
 }
