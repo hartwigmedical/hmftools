@@ -10,16 +10,16 @@ public class SnpEff {
 
     final String GeneName;
     final String Transcript;
-    final List<String> Annotations;
+    final List<String> Effects;
     final String HGVSc;
     final String HGVSp;
     final List<Integer> ProteinPosition;
 
-    private SnpEff(final String name, final String transcript, final List<String> annotation, final String hgvsc, final String hgvsp,
+    private SnpEff(final String name, final String transcript, final List<String> effects, final String hgvsc, final String hgvsp,
             final List<Integer> proteinPosition) {
         GeneName = name;
         Transcript = transcript;
-        Annotations = annotation;
+        Effects = effects;
         HGVSc = hgvsc;
         HGVSp = hgvsp;
         ProteinPosition = proteinPosition;

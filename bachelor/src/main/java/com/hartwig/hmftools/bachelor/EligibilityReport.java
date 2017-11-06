@@ -6,8 +6,6 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.variant.variantcontext.VariantContext;
-
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class EligibilityReport {
@@ -21,5 +19,5 @@ abstract class EligibilityReport {
     public abstract String program();
 
     @NotNull
-    public abstract List<VariantContext> variants();
+    public abstract List<VariantModel> variants();
 }

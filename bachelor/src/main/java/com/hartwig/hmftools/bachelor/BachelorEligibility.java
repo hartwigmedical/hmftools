@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.bachelor;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -34,25 +32,7 @@ class BachelorEligibility {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
 
-    private static class ExtractedVariantInfo {
-        final List<SnpEff> Annotations;
-        final Set<String> dbSNP;
-
-        private ExtractedVariantInfo(final VariantContext ctx) {
-            dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
-            Annotations = Arrays.stream(ctx.getAttributeAsString("ANN", "").split(","))
-                    .map(s -> Arrays.asList(s.split("\\|")))
-                    .map(SnpEff::parseAnnotation)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        }
-
-        static ExtractedVariantInfo from(final VariantContext ctx) {
-            return new ExtractedVariantInfo(ctx);
-        }
-    }
-
-    private final Map<String, Predicate<ExtractedVariantInfo>> programs = Maps.newHashMap();
+    private final Map<String, Predicate<VariantModel>> programs = Maps.newHashMap();
 
     private BachelorEligibility() {
     }
@@ -66,7 +46,7 @@ class BachelorEligibility {
 
             // load panels, potentially multiple
 
-            final List<Predicate<ExtractedVariantInfo>> panelPredicates = Lists.newArrayList();
+            final List<Predicate<VariantModel>> panelPredicates = Lists.newArrayList();
             for (final ProgramPanel panel : program.getPanel()) {
                 final boolean allGene = panel.getAllGenes() != null;
                 final List<GeneIdentifier> genes = panel.getGene();
@@ -74,23 +54,23 @@ class BachelorEligibility {
 
                 genes.forEach(g -> geneToEnsemblMap.put(g.getName(), g.getEnsembl()));
 
-                final Predicate<ExtractedVariantInfo> panelPredicate = v -> allGene
-                        ? v.Annotations.stream().anyMatch(a -> a.Annotations.stream().anyMatch(effects::contains))
+                final Predicate<VariantModel> panelPredicate = v -> allGene
+                        ? v.Annotations.stream().anyMatch(a -> a.Effects.stream().anyMatch(effects::contains))
                         : genes.stream()
                                 .anyMatch(p -> v.Annotations.stream()
-                                        .anyMatch(a -> a.Transcript.equals(p.getEnsembl()) && a.Annotations.stream()
+                                        .anyMatch(a -> a.Transcript.equals(p.getEnsembl()) && a.Effects.stream()
                                                 .anyMatch(effects::contains)));
                 panelPredicates.add(panelPredicate);
             }
 
-            final Predicate<ExtractedVariantInfo> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
+            final Predicate<VariantModel> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
 
             // blacklist
 
             final List<ProgramBlacklist.Exclusion> blacklist =
                     program.getBlacklist() != null ? program.getBlacklist().getExclusion() : Lists.newArrayList();
 
-            final Predicate<ExtractedVariantInfo> inBlacklist = v -> blacklist.stream().anyMatch(b -> {
+            final Predicate<VariantModel> inBlacklist = v -> blacklist.stream().anyMatch(b -> {
                 for (final SnpEff annotation : v.Annotations) {
                     final boolean transcriptMatches = geneToEnsemblMap.get(b.getGene().getName()).equals(annotation.Transcript);
                     if (transcriptMatches && !annotation.HGVSp.isEmpty()) {
@@ -121,10 +101,10 @@ class BachelorEligibility {
                     }
                 }
             }
-            final Predicate<ExtractedVariantInfo> inWhitelist = v -> v.dbSNP.stream().anyMatch(dbSNP::contains) || v.Annotations.stream()
+            final Predicate<VariantModel> inWhitelist = v -> v.dbSNP.stream().anyMatch(dbSNP::contains) || v.Annotations.stream()
                     .anyMatch(a -> !a.HGVSp.isEmpty() && whitelist.get(a.Transcript).contains(a.HGVSp));
 
-            final Predicate<ExtractedVariantInfo> predicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
+            final Predicate<VariantModel> predicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
             result.programs.put(program.getName(), predicate);
         }
 
@@ -149,15 +129,16 @@ class BachelorEligibility {
 
             // TODO: do we need to verify specific ALTS have specific SnpEff effects
 
+            final VariantModel model = VariantModel.from(variant);
+
             final List<String> matchingPrograms = programs.entrySet()
                     .stream()
-                    .filter(program -> program.getValue().test(ExtractedVariantInfo.from(variant)))
+                    .filter(program -> program.getValue().test(model))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
 
             for (final String p : matchingPrograms) {
-                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().sample(sample).program(p).tag(tag))
-                        .addVariants(variant);
+                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().sample(sample).program(p).tag(tag)).addVariants(model);
             }
         }
 

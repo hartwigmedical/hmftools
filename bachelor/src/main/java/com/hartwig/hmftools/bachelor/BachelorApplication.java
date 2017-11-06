@@ -67,7 +67,7 @@ public class BachelorApplication {
 
     private static Collection<EligibilityReport> processVCF(final boolean isGermline, final File vcf,
             final BachelorEligibility eligibility) {
-        LOGGER.info("process vcf: {}", vcf.getPath());
+        LOGGER.info("process {} vcf: {}", isGermline ? "gemline" : "somatic", vcf.getPath());
         try (final VCFFileReader reader = new VCFFileReader(vcf, false)) {
             // TODO: always correct? germline has R,T somatic has just T
             final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
@@ -78,35 +78,32 @@ public class BachelorApplication {
         }
     }
 
-    private static void processPurpleCNV(final File cnv, final BachelorEligibility eligibility) {
+    private static Collection<EligibilityReport> processPurpleCNV(final File cnv, final BachelorEligibility eligibility) {
         LOGGER.info("process cnv: {}", cnv.getPath());
+        return Collections.emptyList();
     }
 
-    private static void processSV(final File vcf, final BachelorEligibility eligibility) {
+    private static Collection<EligibilityReport> processSV(final File vcf, final BachelorEligibility eligibility) {
         LOGGER.info("process sv: {}", vcf.getPath());
-    }
-
-    private static Collection<EligibilityReport> process(final BachelorEligibility eligibility, final File germline, final File somatic,
-            final File copyNumber, final File structuralVariants) {
-        final List<EligibilityReport> result = Lists.newArrayList();
-        if (germline != null) {
-            result.addAll(processVCF(true, germline, eligibility));
-        }
-        if (somatic != null) {
-            result.addAll(processVCF(false, somatic, eligibility));
-        }
-        if (copyNumber != null) {
-            processPurpleCNV(copyNumber, eligibility);
-        }
-        if (structuralVariants != null) {
-            processSV(structuralVariants, eligibility);
-        }
-        return result;
+        return Collections.emptyList();
     }
 
     private static Collection<EligibilityReport> process(final BachelorEligibility eligibility, final RunDirectory run) {
         LOGGER.info("processing run: {}", run.prefix);
-        return process(eligibility, run.germline, run.somatic, run.copyNumber, run.structuralVariants);
+        final List<EligibilityReport> result = Lists.newArrayList();
+        if (run.germline != null) {
+            result.addAll(processVCF(true, run.germline, eligibility));
+        }
+        if (run.somatic != null) {
+            result.addAll(processVCF(false, run.somatic, eligibility));
+        }
+        if (run.copyNumber != null) {
+            result.addAll(processPurpleCNV(run.copyNumber, eligibility));
+        }
+        if (run.structuralVariants != null) {
+            result.addAll(processSV(run.structuralVariants, eligibility));
+        }
+        return result;
     }
 
     public static void main(final String... args) {
@@ -155,16 +152,20 @@ public class BachelorApplication {
             try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)))) {
 
                 // header
-                writer.write(String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS")));
+                writer.write(
+                        String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS")));
                 writer.newLine();
 
                 // data
                 for (final EligibilityReport report : reports) {
-                    for (final VariantContext v : report.variants()) {
-                        final String alts =
-                                String.join("|", v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.toList()));
-                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
-                                v.getContig(), v.getStart(), v.getReference(), alts));
+                    for (final VariantModel model : report.variants()) {
+
+                        final VariantContext v = model.Context;
+                        final String alts = v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
+                        final String effects = model.Annotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.joining("|"));
+
+                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%s,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
+                                v.getContig(), v.getStart(), v.getReference(), alts, effects));
                         writer.newLine();
                     }
                 }
