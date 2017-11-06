@@ -2,6 +2,11 @@
 <<include ideogram.conf>>
 <<include ticks.conf>>
 
+<colors>
+    amber = 255,126,0
+    cobalt= 0,71,171
+</colors>
+
 <image>
 	<<include etc/image.conf>>
 </image>
@@ -27,7 +32,7 @@ chromosomes                 = -EXCLUDE
 <plots>
 
 	# -----------------------------------------------------------
-	# Tumor Ratio (Blue)
+	# Tumor Ratio (COBALT)
 	<plot>
 		type = scatter
 		file = SAMPLE.ratio.circos
@@ -35,12 +40,12 @@ chromosomes                 = -EXCLUDE
 		r1   = 0.975r
 		min  = 0
 		max  = 2
-		color = purple
+		color = cobalt
 		glyph = circle
 
 		<axes>
 			<axis>
-				color     = lpurple
+				color     = lblue
 				thickness = 1
 				spacing   = 0.25r
 			</axis>
@@ -48,13 +53,13 @@ chromosomes                 = -EXCLUDE
 
 		<backgrounds>
 			<background>
-				color = vlpurple_a5
+				color = vlblue_a5
 			</background>
 		</backgrounds>
 	</plot>
 
 	# -----------------------------------------------------------
-	# Reference Ratio (Orange)
+	# Reference Ratio (Green)
 	<plot>
 		type = scatter
 		file = REFERENCE.ratio.circos
@@ -62,12 +67,12 @@ chromosomes                 = -EXCLUDE
 		r1   = 0.975r
 		min  = 0
 		max  = 2
-		color = orange
+		color = green
 		glyph = circle
 	</plot>
 
 	# -----------------------------------------------------------
-	# BAF (Blue)
+	# BAF (Amber)
 	<plot>
 		type = scatter
 		file = SAMPLE.baf.circos
@@ -75,12 +80,12 @@ chromosomes                 = -EXCLUDE
 		r1   = 0.550r
 		min  = 0
 		max  = 1
-		color = vdblue
+		color = amber
 		glyph = circle
 
         <axes>
             <axis>
-                color     = lblue
+                color     = lorange
                 thickness = 1
                 spacing   = 0.25r
             </axis>
@@ -88,7 +93,7 @@ chromosomes                 = -EXCLUDE
 
         <backgrounds>
             <background>
-                color = vlblue_a5
+                color = vlorange_a5
             </background>
         </backgrounds>
 	</plot>
