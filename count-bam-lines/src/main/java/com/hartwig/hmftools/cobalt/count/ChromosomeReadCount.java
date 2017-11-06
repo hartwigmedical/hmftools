@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadCount;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.window.Window;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,9 +26,9 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
     private final SamReaderFactory readerFactory;
     private final String chromosome;
     private final long chromosomeLength;
-    private final int windowSize;
     private final List<ReadCount> result = Lists.newArrayList();
     private final int minMappingQuality;
+    private final Window window;
 
     private long start;
     private int count;
@@ -39,8 +39,8 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
         this.readerFactory = readerFactory;
         this.chromosome = chromosome;
         this.chromosomeLength = chromosomeLength;
-        this.windowSize = windowSize;
         this.minMappingQuality = minMappingQuality;
+        this.window = new Window(windowSize);
 
         start = 1;
         count = -1;
@@ -101,11 +101,6 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
     }
 
     private long windowPosition(long position) {
-        return (position - 1) / windowSize * windowSize + 1;
-    }
-
-    @VisibleForTesting
-    static long windowPosition(long windowSize, long position) {
-        return (position - 1) / windowSize * windowSize + 1;
+        return window.start(position);
     }
 }
