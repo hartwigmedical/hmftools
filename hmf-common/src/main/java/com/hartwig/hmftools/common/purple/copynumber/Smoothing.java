@@ -18,24 +18,24 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class SmoothingV2 {
+class Smoothing {
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
-    private static final Logger LOGGER = LogManager.getLogger(SmoothingV2.class);
+    private static final Logger LOGGER = LogManager.getLogger(Smoothing.class);
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     private List<CombinedFittedRegion> regions = Lists.newLinkedList();
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    SmoothingV2(@NotNull final PurityAdjuster adjuster) {
+    Smoothing(@NotNull final PurityAdjuster adjuster) {
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
     }
 
     @NotNull
     private List<FittedRegion> smoothedRegions() {
-        return regions.stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
+        return SmoothTelomeres.smooth(regions.stream().map(CombinedFittedRegion::region).collect(Collectors.toList()));
     }
 
     @NotNull
