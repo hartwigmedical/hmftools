@@ -51,7 +51,7 @@ class CopyNumberDAO {
                     .end(record.getValue(COPYNUMBER.END))
                     .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
                     .ratioSupport(true)
-                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBER.STRUCTURALVARIANTSUPPORT)))
+                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SUPPORT)))
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
@@ -75,7 +75,7 @@ class CopyNumberDAO {
                     .end(record.getValue(COPYNUMBERREGION.END))
                     .status(ObservedRegionStatus.valueOf(record.getValue(COPYNUMBERREGION.STATUS)))
                     .ratioSupport(true)
-                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT)))
+                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBERREGION.SUPPORT)))
                     .bafCount(record.getValue(COPYNUMBERREGION.BAFCOUNT))
                     .observedBAF(record.getValue(COPYNUMBERREGION.OBSERVEDBAF))
                     .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
@@ -111,7 +111,7 @@ class CopyNumberDAO {
                     COPYNUMBER.START,
                     COPYNUMBER.END,
                     COPYNUMBER.RATIOSUPPORT,
-                    COPYNUMBER.STRUCTURALVARIANTSUPPORT,
+                    COPYNUMBER.SUPPORT,
                     COPYNUMBER.BAFCOUNT,
                     COPYNUMBER.OBSERVEDBAF,
                     COPYNUMBER.ACTUALBAF,
@@ -149,7 +149,7 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.END,
                     COPYNUMBERREGION.STATUS,
                     COPYNUMBERREGION.RATIOSUPPORT,
-                    COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT,
+                    COPYNUMBERREGION.SUPPORT,
                     COPYNUMBERREGION.BAFCOUNT,
                     COPYNUMBERREGION.OBSERVEDBAF,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIO,
