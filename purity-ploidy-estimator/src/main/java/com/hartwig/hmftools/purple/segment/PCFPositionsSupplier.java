@@ -3,12 +3,18 @@ package com.hartwig.hmftools.purple.segment;
 import static com.hartwig.hmftools.common.position.GenomePositions.union;
 
 import java.io.IOException;
+import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.centromeres.Centromeres;
+import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.purple.config.CommonConfig;
+import com.hartwig.hmftools.window.Window;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +40,23 @@ public class PCFPositionsSupplier {
         final Multimap<String, PCFPosition> tumorBAF = PCFFile.readPositions(config.windowSize(), PCFSource.TUMOR_BAF, amberFile);
 
         LOGGER.info("Merging reference and tumor ratio break points");
-        return union(union(referenceBreakPoint, tumorBreakPoints), tumorBAF);
+        return union(union(union(referenceBreakPoint, tumorBreakPoints), tumorBAF), centromeres(config.windowSize()));
+    }
+
+    private static Multimap<String, PCFPosition> centromeres(int windowSize) {
+        final Window window = new Window(windowSize);
+
+        final Multimap<String, PCFPosition> result = ArrayListMultimap.create();
+        for (final Map.Entry<String, GenomeRegion> entry : Centromeres.grch37().entrySet()) {
+            final GenomeRegion centromere = entry.getValue();
+            result.put(entry.getKey(), create(centromere.chromosome(), window.start(centromere.start())));
+            result.put(entry.getKey(), create(centromere.chromosome(), window.start(centromere.end()) + windowSize));
+        }
+
+        return result;
+    }
+
+    private static PCFPosition create(@NotNull final String chromosome, long position) {
+        return ImmutablePCFPosition.builder().chromosome(chromosome).position(position).source(PCFSource.REFERENCE_RATIO).build();
     }
 }

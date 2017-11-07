@@ -28,7 +28,7 @@ public class Centromeres {
         addCentromere(result, "14", 16000000, 19000000);
         addCentromere(result, "15", 17000000, 20000000);
         addCentromere(result, "16", 35335801, 38335801);
-        addCentromere(result, "17", 22263006, 25263000);
+        addCentromere(result, "17", 22263006, 25263006);
         addCentromere(result, "18", 15460898, 18460898);
         addCentromere(result, "19", 24681782, 27681782);
         addCentromere(result, "20", 26369569, 29369569);
