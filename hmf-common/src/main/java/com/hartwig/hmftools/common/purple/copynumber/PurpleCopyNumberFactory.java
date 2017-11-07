@@ -31,6 +31,9 @@ public class PurpleCopyNumberFactory {
         final Set<String> orderedChromosomes =
                 fittedRegions.stream().map(GenomeRegion::chromosome).collect(Collectors.toCollection(LinkedHashSet::new));
 
+//        final List<FittedRegion> jon =
+//                fittedRegions.stream().filter(matchesChromosome("3")).collect(toList());
+
         for (String chromosome : orderedChromosomes) {
             final List<FittedRegion> chromosomeFittedRegions =
                     fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
@@ -42,7 +45,7 @@ public class PurpleCopyNumberFactory {
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
-//            final List<FittedRegion> smoothedV2 = new SmoothingV2(purityAdjuster).doStuff(chromosomeFittedRegions);
+//            final List<FittedRegion> smoothedV2 = new SmoothingV2(purityAdjuster).smooth(chromosomeFittedRegions);
             final List<PurpleCopyNumber> copyNumbers = smoothFittedRegions.stream().map(this::create).collect(toList());
             smoothedRegions.addAll(RegionStepFilter.filter(copyNumbers));
         }

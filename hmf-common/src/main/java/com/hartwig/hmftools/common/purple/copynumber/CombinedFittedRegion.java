@@ -10,6 +10,7 @@ class CombinedFittedRegion {
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
     private boolean modified = false;
+    private boolean containsCentromere = false;
 
     @Deprecated
     CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region) {
@@ -19,6 +20,7 @@ class CombinedFittedRegion {
     CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearValues) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
+        this.containsCentromere = region.status() == ObservedRegionStatus.CENTROMERE;
         if (clearValues) {
             clearValues();
         }
@@ -31,6 +33,10 @@ class CombinedFittedRegion {
         combined.setObservedTumorRatioCount(0);
         combined.setTumorCopyNumber(0);
         combined.setBafCount(0);
+    }
+
+    public boolean spansCentromere() {
+        return containsCentromere;
     }
 
     public boolean isModified() {
@@ -53,6 +59,7 @@ class CombinedFittedRegion {
     void combine(final FittedRegion region, boolean includeFittedValues) {
         modified = true;
         long currentBases = combined.bases();
+        this.containsCentromere |= region.status() == ObservedRegionStatus.CENTROMERE;
 
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));

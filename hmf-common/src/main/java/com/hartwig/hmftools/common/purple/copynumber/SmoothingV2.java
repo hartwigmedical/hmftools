@@ -7,9 +7,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
@@ -19,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class SmoothingV2 {
+class SmoothingV2 {
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
     private static final Logger LOGGER = LogManager.getLogger(SmoothingV2.class);
@@ -29,17 +27,18 @@ public class SmoothingV2 {
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    public SmoothingV2(@NotNull final PurityAdjuster adjuster) {
+    SmoothingV2(@NotNull final PurityAdjuster adjuster) {
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
     }
 
     @NotNull
-    public List<FittedRegion> smoothedRegions() {
+    private List<FittedRegion> smoothedRegions() {
         return regions.stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
     }
 
-    public List<FittedRegion> doStuff(@NotNull final Collection<FittedRegion> fittedRegions) {
+    @NotNull
+    List<FittedRegion> smooth(@NotNull final Collection<FittedRegion> fittedRegions) {
 
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
@@ -50,6 +49,7 @@ public class SmoothingV2 {
         int highestConfidenceIndex = nextIndex();
         while (highestConfidenceIndex > -1) {
             final CombinedFittedRegion highestConfidence = regions.get(highestConfidenceIndex);
+
             LOGGER.info("Selected region {}", toString(highestConfidence.region()));
             smoothRight(highestConfidenceIndex);
             smoothLeft(highestConfidenceIndex);
@@ -68,26 +68,14 @@ public class SmoothingV2 {
         int targetIndex = startIndex + 1;
 
         while (targetIndex < regions.size()) {
-            final FittedRegion left = target.region();
-            final double leftCopyNumber = left.tumorCopyNumber();
-            final FittedRegion right = regions.get(targetIndex).region();
-            final double rightCopyNumber = right.tumorCopyNumber();
-
-            if (!target.isModified() && !(isSomatic(left) || isValidGermline(rightCopyNumber, left))) {
-                target.clearValues();
-            }
-
-            final boolean isRightValid = isSomatic(right) || isValidGermline(leftCopyNumber, right);
-            if (!isRightValid) {
-                target.combine(right, false);
-            } else if (inTolerance(target.region(), right)) {
-                target.combine(right, true);
-            } else {
+            final FittedRegion neighbour = regions.get(targetIndex).region();
+            initialiseTarget(target, neighbour);
+            if (!mergeIfPossible(target, neighbour)) {
                 return;
             }
 
             regions.remove(targetIndex);
-            LOGGER.info("Merged in right region {}", toString(right));
+            LOGGER.info("Merged in right region {}", toString(neighbour));
         }
     }
 
@@ -97,57 +85,83 @@ public class SmoothingV2 {
 
         int targetIndex = startIndex - 1;
         while (targetIndex >= 0) {
-            final FittedRegion left = regions.get(targetIndex).region();
-            final double leftCopyNumber = left.tumorCopyNumber();
-            final FittedRegion right = target.region();
-            final double rightCopyNumber = right.tumorCopyNumber();
+            final FittedRegion neighbour = regions.get(targetIndex).region();
+            initialiseTarget(target, neighbour);
 
-            if (!target.isModified() && !(isSomatic(right) || isValidGermline(leftCopyNumber, right))) {
-                target.clearValues();
-            }
-
-            final boolean isLeftValid = isSomatic(left) || isValidGermline(rightCopyNumber, left);
-            if (!isLeftValid) {
-                target.combine(left, false);
-            } else if (inTolerance(left, target.region())) {
-                target.combine(left, true);
-            } else {
+            if (!mergeIfPossible(target, neighbour)) {
                 return;
             }
 
             regions.remove(targetIndex);
-            LOGGER.info("Merged in left region {}", toString(left));
+            LOGGER.info("Merged in left region {}", toString(neighbour));
             targetIndex--;
         }
 
     }
 
-    private boolean isSomatic(@NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.SOMATIC;
+    private void initialiseTarget(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+        final FittedRegion targetRegion = target.region();
+        final double neighbourCopyNumber = neighbour.tumorCopyNumber();
+        if (!target.isModified() && !(isValidSomatic(targetRegion) || isValidGermline(neighbourCopyNumber, targetRegion))) {
+            target.clearValues();
+        }
     }
 
-    private boolean isValidGermline(double surroundingTumorCopyNumber, @NotNull final FittedRegion region) {
-        return isValidGermlineHetrozygous(region) || isValidGermlineAmplification(surroundingTumorCopyNumber, region);
+    private boolean breakForCentromereStart(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+        if (target.region().start() < neighbour.start()) {
+            return neighbour.status() == ObservedRegionStatus.CENTROMERE;
+        }
+
+        return target.spansCentromere();
+    }
+
+    private boolean mergeIfPossible(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+
+        if (breakForCentromereStart(target, neighbour)) {
+            return false;
+        }
+
+        final double targetCopyNumber = target.region().tumorCopyNumber();
+        final boolean isNeighbourValid = isValidSomatic(neighbour) || isValidGermline(targetCopyNumber, neighbour);
+        if (!isNeighbourValid) {
+            target.combine(neighbour, false);
+        } else if (inTolerance(target.region(), neighbour)) {
+            target.combine(neighbour, true);
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isValidSomatic(@NotNull final FittedRegion region) {
+        return region.status() == ObservedRegionStatus.SOMATIC && (region.structuralVariantSupport() != StructuralVariantSupport.NONE
+                || region.observedTumorRatioCount() > 5);
+    }
+
+    private boolean isValidGermline(double neighbourCopyNumber, @NotNull final FittedRegion region) {
+        return isValidGermlineHetrozygous(region) || isValidGermlineAmplification(neighbourCopyNumber, region);
     }
 
     private boolean isValidGermlineHetrozygous(@NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.GERMLINE_HET_DELETION && Doubles.lessThan(region.refNormalisedCopyNumber(), 0.5);
+        return false;
+        //        return region.status() == ObservedRegionStatus.GERMLINE_HET_DELETION && Doubles.lessThan(region.refNormalisedCopyNumber(), 0.5);
     }
 
-    private boolean isValidGermlineAmplification(double surroundingTumorCopyNumber, @NotNull final FittedRegion region) {
-        double tumorCopyNumber = region.refNormalisedCopyNumber() / (Math.ceil(2 * region.observedNormalRatio()));
-        return region.status() == ObservedRegionStatus.GERMLINE_AMPLIFICATION && Doubles.greaterThan(tumorCopyNumber,
-                surroundingTumorCopyNumber);
+    private boolean isValidGermlineAmplification(double neighbourCopyNumber, @NotNull final FittedRegion region) {
+        return false;
+        //        double tumorCopyNumber = region.refNormalisedCopyNumber() / (Math.ceil(2 * region.observedNormalRatio()));
+        //        return region.status() == ObservedRegionStatus.GERMLINE_AMPLIFICATION && Doubles.greaterThan(tumorCopyNumber,
+        //                surroundingTumorCopyNumber);
     }
 
-    private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
-        Preconditions.checkArgument(right.start() > left.end());
-        return right.structuralVariantSupport() == StructuralVariantSupport.NONE && inTolerances(left, right);
+    private boolean inTolerance(@NotNull final FittedRegion target, @NotNull final FittedRegion neighbour) {
+        final FittedRegion right = neighbour.start() > target.start() ? neighbour : target;
+        return right.structuralVariantSupport() == StructuralVariantSupport.NONE
+                && inTolerances(target, neighbour);
     }
 
     private boolean inTolerances(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
-        assert (left.end() < right.start());
-
         return bafDeviation.inTolerance(left, right) && copyNumberDeviation.inTolerance(left, right);
     }
 
@@ -192,7 +206,7 @@ public class SmoothingV2 {
                 .add("end", region.end())
                 .add("status", region.status())
                 .add("sv", region.structuralVariantSupport())
-                .add("copyNumer", FORMAT.format(region.tumorCopyNumber()))
+                .add("copyNumber", FORMAT.format(region.tumorCopyNumber()))
                 .toString();
     }
 }
