@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class PurpleDatamodelTest {
                 .start(start)
                 .end(end)
                 .averageTumorCopyNumber(copyNumber)
-                .structuralVariantSupport(StructuralVariantSupport.NONE)
+                .support(SegmentSupport.NONE)
                 .ratioSupport(true)
                 .bafCount(0)
                 .averageObservedBAF(0.5)
@@ -52,7 +52,7 @@ public class PurpleDatamodelTest {
                 .observedNormalRatio(1)
                 .ratioSupport(true)
                 .status(ObservedRegionStatus.SOMATIC)
-                .structuralVariantSupport(StructuralVariantSupport.NONE);
+                .support(SegmentSupport.NONE);
     }
 
     @NotNull
@@ -73,7 +73,7 @@ public class PurpleDatamodelTest {
                 .modelTumorRatio(0)
                 .refNormalisedCopyNumber(2)
                 .ratioSupport(true)
-                .structuralVariantSupport(StructuralVariantSupport.NONE)
+                .support(SegmentSupport.NONE)
                 .bafDeviation(0);
     }
 

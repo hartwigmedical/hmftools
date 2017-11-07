@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.segment;
 
-import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.MULTIPLE;
-import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.NONE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 
 import java.util.List;
 
@@ -52,9 +52,9 @@ public class PurpleSegmentFactory {
     }
 
     @NotNull
-    private StructuralVariantSupport svStart = NONE;
+    private SegmentSupport svStart = NONE;
     @NotNull
-    private StructuralVariantSupport svEnd = NONE;
+    private SegmentSupport svEnd = NONE;
     private boolean ratioSupport;
 
     @NotNull
@@ -94,12 +94,12 @@ public class PurpleSegmentFactory {
             insert(variant.position() - 1);
             ratioSupport = false;
             start = variant.position();
-            svStart = StructuralVariantSupport.fromVariant(variant.type());
+            svStart = SegmentSupport.fromVariant(variant.type());
         }
     }
 
-    private StructuralVariantSupport svSupport(StructuralVariantSupport current, StructuralVariantPosition variant) {
-        return current.equals(NONE) ? StructuralVariantSupport.fromVariant(variant.type()) : MULTIPLE;
+    private SegmentSupport svSupport(SegmentSupport current, StructuralVariantPosition variant) {
+        return current.equals(NONE) ? SegmentSupport.fromVariant(variant.type()) : MULTIPLE;
     }
 
     private void insert(long end) {
@@ -108,8 +108,7 @@ public class PurpleSegmentFactory {
                 .start(start)
                 .end(end)
                 .ratioSupport(ratioSupport)
-                .structuralVariantSupport(svStart)
-                .status(PurpleSegmentStatus.NORMAL)
+                .support(svStart)
                 .build());
     }
 }

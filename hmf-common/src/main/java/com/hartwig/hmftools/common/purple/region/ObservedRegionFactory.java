@@ -51,7 +51,7 @@ public class ObservedRegionFactory {
                     .observedTumorRatio(tumorRatio)
                     .observedNormalRatio(normalRatio)
                     .ratioSupport(region.ratioSupport())
-                    .structuralVariantSupport(region.structuralVariantSupport())
+                    .support(region.support())
                     .observedTumorRatioCount(cobalt.tumorCount())
                     .status(statusFactory.status(region, normalRatio))
                     .build();

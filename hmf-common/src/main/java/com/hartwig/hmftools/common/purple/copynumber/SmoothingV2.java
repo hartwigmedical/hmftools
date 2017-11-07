@@ -8,10 +8,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,15 +110,23 @@ class SmoothingV2 {
 
     private boolean breakForCentromereStart(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.region().start() < neighbour.start()) {
-            return neighbour.status() == ObservedRegionStatus.CENTROMERE;
+            return neighbour.support() == SegmentSupport.CENTROMERE;
         }
 
-        return target.spansCentromere();
+        return target.region().support() == SegmentSupport.CENTROMERE;
+    }
+
+    private boolean breakForStructuralVariant(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+        if (target.region().start() < neighbour.start()) {
+            return neighbour.support() != SegmentSupport.NONE;
+        }
+
+        return target.region().support() != SegmentSupport.NONE;
     }
 
     private boolean mergeIfPossible(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
 
-        if (breakForCentromereStart(target, neighbour)) {
+        if (breakForCentromereStart(target, neighbour) || breakForStructuralVariant(target, neighbour)) {
             return false;
         }
 
@@ -135,7 +144,7 @@ class SmoothingV2 {
     }
 
     private boolean isValidSomatic(@NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.SOMATIC && (region.structuralVariantSupport() != StructuralVariantSupport.NONE
+        return region.status() == ObservedRegionStatus.SOMATIC && (region.support() != SegmentSupport.NONE
                 || region.observedTumorRatioCount() > 5);
     }
 
@@ -149,19 +158,11 @@ class SmoothingV2 {
     }
 
     private boolean isValidGermlineAmplification(double neighbourCopyNumber, @NotNull final FittedRegion region) {
-        return false;
-        //        double tumorCopyNumber = region.refNormalisedCopyNumber() / (Math.ceil(2 * region.observedNormalRatio()));
-        //        return region.status() == ObservedRegionStatus.GERMLINE_AMPLIFICATION && Doubles.greaterThan(tumorCopyNumber,
-        //                surroundingTumorCopyNumber);
+        return region.status() == ObservedRegionStatus.GERMLINE_AMPLIFICATION && Doubles.greaterThan(region.tumorCopyNumber(),
+                neighbourCopyNumber);
     }
 
-    private boolean inTolerance(@NotNull final FittedRegion target, @NotNull final FittedRegion neighbour) {
-        final FittedRegion right = neighbour.start() > target.start() ? neighbour : target;
-        return right.structuralVariantSupport() == StructuralVariantSupport.NONE
-                && inTolerances(target, neighbour);
-    }
-
-    private boolean inTolerances(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
+    private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
         return bafDeviation.inTolerance(left, right) && copyNumberDeviation.inTolerance(left, right);
     }
 
@@ -205,7 +206,7 @@ class SmoothingV2 {
                 .add("start", region.start())
                 .add("end", region.end())
                 .add("status", region.status())
-                .add("sv", region.structuralVariantSupport())
+                .add("support", region.support())
                 .add("copyNumber", FORMAT.format(region.tumorCopyNumber()))
                 .toString();
     }

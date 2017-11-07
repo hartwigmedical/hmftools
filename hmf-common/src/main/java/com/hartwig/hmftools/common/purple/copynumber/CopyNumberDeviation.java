@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,8 +38,8 @@ final class CopyNumberDeviation {
 
     static double maxCopyNumberDeviation(@NotNull final FittedRegion first, @NotNull final FittedRegion second) {
         boolean structuralBreakTransition = second.start() < first.start()
-                ? !first.structuralVariantSupport().equals(StructuralVariantSupport.NONE)
-                : !second.structuralVariantSupport().equals(StructuralVariantSupport.NONE);
+                ? !first.support().equals(SegmentSupport.NONE)
+                : !second.support().equals(SegmentSupport.NONE);
 
         return maxCopyNumberDeviation(Math.min(first.bafCount(), second.bafCount()), structuralBreakTransition);
     }

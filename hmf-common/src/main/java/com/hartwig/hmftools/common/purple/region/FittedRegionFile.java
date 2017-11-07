@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -51,7 +51,7 @@ public enum FittedRegionFile {
                 .add("segmentBAF")
                 .add("refNormalisedCopyNumber")
                 .add("ratioSupport")
-                .add("structuralVariantSupport")
+                .add("support")
                 .add("observedTumorRatioCount")
                 .toString();
     }
@@ -79,7 +79,7 @@ public enum FittedRegionFile {
                 .add(String.valueOf(copyNumber.segmentBAF()))
                 .add(String.valueOf(copyNumber.refNormalisedCopyNumber()))
                 .add(String.valueOf(copyNumber.ratioSupport()))
-                .add(String.valueOf(copyNumber.structuralVariantSupport()))
+                .add(String.valueOf(copyNumber.support()))
                 .add(String.valueOf(copyNumber.observedTumorRatioCount()))
                 .toString();
     }
@@ -109,7 +109,7 @@ public enum FittedRegionFile {
                 .segmentBAF(Double.valueOf(values[18]))
                 .refNormalisedCopyNumber(Double.valueOf(values[19]))
                 .ratioSupport(Boolean.valueOf(values[20]))
-                .structuralVariantSupport(StructuralVariantSupport.valueOf(values[21]))
+                .support(SegmentSupport.valueOf(values[21]))
                 .observedTumorRatioCount(Integer.valueOf(values[22]))
                 .build();
     }

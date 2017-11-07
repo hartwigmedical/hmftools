@@ -26,12 +26,6 @@ class ObservedRegionStatusFactory {
     }
 
     ObservedRegionStatus status(@NotNull final PurpleSegment segment, final double normalRatio) {
-        switch (segment.status()) {
-            case CENTROMERE:
-                return ObservedRegionStatus.CENTROMERE;
-            case CLUSTER:
-                return ObservedRegionStatus.CLUSTER;
-        }
         return fromNormalRatio(segment.chromosome(), normalRatio);
     }
 

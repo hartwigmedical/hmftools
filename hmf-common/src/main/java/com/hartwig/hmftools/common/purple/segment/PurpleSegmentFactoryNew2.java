@@ -49,7 +49,8 @@ public class PurpleSegmentFactoryNew2 {
     public static List<PurpleSegment> create(@NotNull final ChromosomeLength chromosome, @NotNull final Collection<Cluster> clusters) {
 
         final List<PurpleSegment> result = Lists.newArrayList();
-        ModifiablePurpleSegment segment = create(chromosome.chromosome(), 1);
+        ModifiablePurpleSegment segment = create(chromosome.chromosome(), 1).setSupport(SegmentSupport.TELOMERE);
+
         for (final Cluster cluster : clusters) {
 
             boolean ratioSupport = !cluster.ratios().isEmpty();
@@ -61,19 +62,12 @@ public class PurpleSegmentFactoryNew2 {
                         result.add(setStatus(segment.setEnd(variant.position() - 1)));
                         segment = createFromCluster(cluster, variant, ratioSupport);
                     } else {
-                        segment.setStructuralVariantSupport(StructuralVariantSupport.MULTIPLE);
+                        segment.setSupport(SegmentSupport.MULTIPLE);
                     }
                 }
-                segment.setStatus(PurpleSegmentStatus.NORMAL);
             } else {
 
                 final List<PCFPosition> pcfPositions = cluster.pcfPositions();
-
-                // DO ALL
-//                for (GenomePosition genomePosition : ratioPositions) {
-//                    result.add(setStatus(segment.setEnd(genomePosition.position() - 1)));
-//                    segment = create(genomePosition.chromosome(), genomePosition.position());
-//                }
 
                 // DO FIRST AND LAST
                 final GenomePosition firstRatioBreak = pcfPositions.get(0);
@@ -97,8 +91,7 @@ public class PurpleSegmentFactoryNew2 {
                 .setRatioSupport(true)
                 .setStart(start)
                 .setEnd(0)
-                .setStatus(PurpleSegmentStatus.NORMAL)
-                .setStructuralVariantSupport(StructuralVariantSupport.NONE);
+                .setSupport(SegmentSupport.NONE);
     }
 
     private static ModifiablePurpleSegment createFromCluster(Cluster cluster, StructuralVariantPosition variant, boolean ratioSupport) {
@@ -107,14 +100,13 @@ public class PurpleSegmentFactoryNew2 {
                 .setRatioSupport(ratioSupport)
                 .setStart(variant.position())
                 .setEnd(0)
-                .setStatus(cluster.variants().size() > 1 ? PurpleSegmentStatus.CLUSTER : PurpleSegmentStatus.NORMAL)
-                .setStructuralVariantSupport(StructuralVariantSupport.fromVariant(variant.type()));
+                .setSupport(SegmentSupport.fromVariant(variant.type()));
     }
 
     private static ModifiablePurpleSegment setStatus(@NotNull ModifiablePurpleSegment segment) {
         final GenomeRegion centromere = CENTROMERES.get(segment.chromosome());
         if (centromere != null && centromere.overlaps(segment)) {
-            segment.setStatus(PurpleSegmentStatus.CENTROMERE);
+            segment.setSupport(SegmentSupport.CENTROMERE);
         }
 
         return segment;

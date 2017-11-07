@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jfree.data.xy.CategoryTableXYDataset;
@@ -60,7 +60,7 @@ public class CopyNumberChartsTest {
                 .bafCount(10)
                 .averageObservedBAF(baf)
                 .ratioSupport(true)
-                .structuralVariantSupport(StructuralVariantSupport.NONE)
+                .support(SegmentSupport.NONE)
                 .averageActualBAF(baf).build();
     }
 }

@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
 
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.junit.Test;
 
@@ -39,7 +39,7 @@ public class FittedRegionFileTest {
                 .segmentBAF(random.nextDouble())
                 .refNormalisedCopyNumber(random.nextDouble())
                 .ratioSupport(random.nextBoolean())
-                .structuralVariantSupport(StructuralVariantSupport.BND)
+                .support(SegmentSupport.BND)
                 .observedTumorRatioCount(random.nextInt())
                 .build();
     }

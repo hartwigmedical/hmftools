@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.google.common.base.Strings;
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public abstract class PurpleCopyNumber implements CopyNumber {
 
     public abstract double averageTumorCopyNumber();
 
-    public abstract StructuralVariantSupport structuralVariantSupport();
+    public abstract SegmentSupport support();
 
     public String descriptiveBAF() {
 

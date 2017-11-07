@@ -6,7 +6,5 @@ public enum ObservedRegionStatus {
     GERMLINE_AMPLIFICATION,
     GERMLINE_NOISE,
     SOMATIC,
-    CENTROMERE,
-    CLUSTER,
     UNKNOWN
 }

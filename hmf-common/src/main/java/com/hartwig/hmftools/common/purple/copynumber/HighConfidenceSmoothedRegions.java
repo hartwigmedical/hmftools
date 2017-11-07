@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -85,7 +85,7 @@ class HighConfidenceSmoothedRegions {
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion region = fittedRegions.get(i);
             boolean isGermline = isGermline(region);
-            boolean isSVSupported = region.structuralVariantSupport() != StructuralVariantSupport.NONE;
+            boolean isSVSupported = region.support() != SegmentSupport.NONE;
             if (isGermline && (isSVSupported || !buffer.isEmpty())) {
                 buffer.add(region);
             } else {
@@ -188,10 +188,10 @@ class HighConfidenceSmoothedRegions {
         CombinedFittedRegion current = regions.get(0);
         for (int i = 1; i < regions.size(); i++) {
             CombinedFittedRegion next = regions.get(i);
-            if (next.region().structuralVariantSupport() == StructuralVariantSupport.NONE
+            if (next.region().support() == SegmentSupport.NONE
                     && next.region().observedTumorRatioCount() < MIN_RATIO_ONLY_TUMOR_RATIO_COUNT) {
                 current.combine(germinate(next.region()));
-            } else if (i == 1 && next.region().structuralVariantSupport() == StructuralVariantSupport.NONE
+            } else if (i == 1 && next.region().support() == SegmentSupport.NONE
                     && current.region().observedTumorRatioCount() < MIN_RATIO_ONLY_TUMOR_RATIO_COUNT) {
                 next.combine(germinate(current.region()));
                 current = next;

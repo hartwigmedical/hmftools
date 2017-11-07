@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +25,6 @@ public enum PurpleCopyNumberFile {
         final String filePath = basePath + File.separator + sample + EXTENSION;
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
-
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers)
             throws IOException {
@@ -43,16 +42,12 @@ public enum PurpleCopyNumberFile {
 
     @NotNull
     static List<PurpleCopyNumber> fromLines(@NotNull List<String> lines) {
-        return lines.stream()
-                .filter(x -> !x.startsWith(HEADER_PREFIX))
-                .map(PurpleCopyNumberFile::fromString)
-                .collect(toList());
+        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(PurpleCopyNumberFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
-                .add("chromosome")
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("chromosome")
                 .add("start")
                 .add("end")
                 .add("copyNumber")
@@ -60,14 +55,13 @@ public enum PurpleCopyNumberFile {
                 .add("observedBAF")
                 .add("actualBAF")
                 .add("ratioSupport")
-                .add("structuralVariantSupport")
+                .add("support")
                 .toString();
     }
 
     @NotNull
     private static String toString(@NotNull final PurpleCopyNumber copyNumber) {
-        return new StringJoiner(DELIMITER)
-                .add(String.valueOf(copyNumber.chromosome()))
+        return new StringJoiner(DELIMITER).add(String.valueOf(copyNumber.chromosome()))
                 .add(String.valueOf(copyNumber.start()))
                 .add(String.valueOf(copyNumber.end()))
                 .add(String.valueOf(copyNumber.averageTumorCopyNumber()))
@@ -75,7 +69,7 @@ public enum PurpleCopyNumberFile {
                 .add(String.valueOf(copyNumber.averageObservedBAF()))
                 .add(String.valueOf(copyNumber.averageActualBAF()))
                 .add(String.valueOf(copyNumber.ratioSupport()))
-                .add(String.valueOf(copyNumber.structuralVariantSupport()))
+                .add(String.valueOf(copyNumber.support()))
                 .toString();
     }
 
@@ -91,7 +85,7 @@ public enum PurpleCopyNumberFile {
                 .averageObservedBAF(Double.valueOf(values[5]))
                 .averageActualBAF(Double.valueOf(values[6]))
                 .ratioSupport(Boolean.valueOf(values[7]))
-                .structuralVariantSupport(StructuralVariantSupport.valueOf(values[8]))
+                .support(SegmentSupport.valueOf(values[8]))
                 .build();
     }
 }

@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.purple.segment.Cluster;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -51,7 +51,7 @@ class CopyNumberDAO {
                     .end(record.getValue(COPYNUMBER.END))
                     .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
                     .ratioSupport(true)
-                    .structuralVariantSupport(StructuralVariantSupport.valueOf(record.getValue(COPYNUMBER.STRUCTURALVARIANTSUPPORT)))
+                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBER.STRUCTURALVARIANTSUPPORT)))
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
@@ -75,7 +75,7 @@ class CopyNumberDAO {
                     .end(record.getValue(COPYNUMBERREGION.END))
                     .status(ObservedRegionStatus.valueOf(record.getValue(COPYNUMBERREGION.STATUS)))
                     .ratioSupport(true)
-                    .structuralVariantSupport(StructuralVariantSupport.valueOf(record.getValue(COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT)))
+                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBERREGION.STRUCTURALVARIANTSUPPORT)))
                     .bafCount(record.getValue(COPYNUMBERREGION.BAFCOUNT))
                     .observedBAF(record.getValue(COPYNUMBERREGION.OBSERVEDBAF))
                     .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
@@ -129,7 +129,7 @@ class CopyNumberDAO {
                 region.start(),
                 region.end(),
                 region.ratioSupport(),
-                region.structuralVariantSupport(),
+                region.support(),
                 region.bafCount(),
                 region.averageObservedBAF(),
                 region.averageActualBAF(),
@@ -180,7 +180,7 @@ class CopyNumberDAO {
                 region.end(),
                 region.status(),
                 region.ratioSupport(),
-                region.structuralVariantSupport(),
+                region.support(),
                 region.bafCount(),
                 region.observedBAF(),
                 region.observedTumorRatio(),
@@ -224,7 +224,7 @@ class CopyNumberDAO {
                     COPYNUMBERCLUSTER.MODIFIED);
 
             batch.forEach(x -> addRecord(timestamp, inserter, sample, x));
-//            batch.stream().filter(x -> x.variants().size() + x.ratios().size() > 1).forEach(x -> addRecord(timestamp, inserter, sample, x));
+            //            batch.stream().filter(x -> x.variants().size() + x.ratios().size() > 1).forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
 

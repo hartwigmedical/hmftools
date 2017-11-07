@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
-import com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.junit.Test;
 
@@ -122,8 +122,8 @@ public class HighConfidenceSmoothedRegionsTest {
         final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2), createRegion(3001, 4000, 3));
 
         final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1001, 2000, 2),
-                createGermlineRegion(2001, 2500, 2.5, StructuralVariantSupport.DEL),
-                createGermlineRegion(2501, 3000, 2.5, StructuralVariantSupport.NONE),
+                createGermlineRegion(2001, 2500, 2.5, SegmentSupport.DEL),
+                createGermlineRegion(2501, 3000, 2.5, SegmentSupport.NONE),
                 createFittedCopyNumber(3001, 4000, 3));
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, 1, 1);
@@ -139,7 +139,7 @@ public class HighConfidenceSmoothedRegionsTest {
         final List<PurpleCopyNumber> broadRegions = Lists.newArrayList(createRegion(1001, 2000, 2), createRegion(3001, 4000, 3));
 
         final List<FittedRegion> copyNumbers = Lists.newArrayList(createFittedCopyNumber(1001, 2000, 2),
-                createGermlineRegion(2001, 2500, 2.5, StructuralVariantSupport.DEL),
+                createGermlineRegion(2001, 2500, 2.5, SegmentSupport.DEL),
                 createFittedCopyNumber(2501, 3000, 3),
                 createFittedCopyNumber(3001, 4000, 3));
 
@@ -215,11 +215,11 @@ public class HighConfidenceSmoothedRegionsTest {
                 .build();
     }
 
-    private FittedRegion createGermlineRegion(long start, long end, double copyNumber, StructuralVariantSupport sv) {
+    private FittedRegion createGermlineRegion(long start, long end, double copyNumber, SegmentSupport sv) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
                 .bafCount(CopyNumberDeviation.MAX_BAF_COUNT)
                 .status(ObservedRegionStatus.GERMLINE_AMPLIFICATION)
-                .structuralVariantSupport(sv)
+                .support(sv)
                 .observedBAF(0.5)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)

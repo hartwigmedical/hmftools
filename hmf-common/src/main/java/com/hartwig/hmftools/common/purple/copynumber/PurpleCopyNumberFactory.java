@@ -48,6 +48,7 @@ public class PurpleCopyNumberFactory {
 //            final List<FittedRegion> smoothedV2 = new SmoothingV2(purityAdjuster).smooth(chromosomeFittedRegions);
             final List<PurpleCopyNumber> copyNumbers = smoothFittedRegions.stream().map(this::create).collect(toList());
             smoothedRegions.addAll(RegionStepFilter.filter(copyNumbers));
+//            smoothedRegions.addAll(copyNumbers);
         }
     }
 
@@ -74,7 +75,7 @@ public class PurpleCopyNumberFactory {
                 .averageActualBAF(purityAdjuster.purityAdjustedBAF(region.chromosome(), region.tumorCopyNumber(), region.observedBAF()))
                 .averageTumorCopyNumber(region.tumorCopyNumber())
                 .ratioSupport(region.ratioSupport())
-                .structuralVariantSupport(region.structuralVariantSupport())
+                .support(region.support())
                 .build();
     }
 

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.purple.segment;
 
-import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.BND;
-import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.DEL;
-import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.INS;
-import static com.hartwig.hmftools.common.purple.segment.StructuralVariantSupport.NONE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.BND;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.DEL;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.INS;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -98,20 +98,20 @@ public class PurpleSegmentFactoryTest {
         assertPurpleSegment(segments.get(4), 25000, 30000, false, BND);
     }
 
-    private void assertPurpleSegment(final PurpleSegment victim, GenomeRegion region, StructuralVariantSupport variantSupport) {
+    private void assertPurpleSegment(final PurpleSegment victim, GenomeRegion region, SegmentSupport variantSupport) {
         assertEquals(region.chromosome(), victim.chromosome());
         assertEquals(region.start(), victim.start());
         assertEquals(region.end(), victim.end());
         assertEquals(true, victim.ratioSupport());
-        assertEquals(variantSupport, victim.structuralVariantSupport());
+        assertEquals(variantSupport, victim.support());
     }
 
     private void assertPurpleSegment(final PurpleSegment victim, long start, long end, boolean ratioSupport,
-            StructuralVariantSupport variantSupport) {
+            SegmentSupport variantSupport) {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
         assertEquals(ratioSupport, victim.ratioSupport());
-        assertEquals(variantSupport, victim.structuralVariantSupport());
+        assertEquals(variantSupport, victim.support());
     }
 
     private static StructuralVariantPosition createVariant(long position, StructuralVariantType type) {
