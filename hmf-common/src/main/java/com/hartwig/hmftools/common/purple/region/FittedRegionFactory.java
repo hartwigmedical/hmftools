@@ -45,8 +45,8 @@ public class FittedRegionFactory {
         double minDeviation = 0;
         double observedBAF = observedRegion.observedBAF();
         double observedTumorRatio = observedRegion.observedTumorRatio();
-        double tumorCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
-        double refNormalisedTumorCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
+        double purityAdjustedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
+        double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
@@ -54,8 +54,8 @@ public class FittedRegionFactory {
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
-                .tumorCopyNumber(tumorCopyNumber)
-                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedTumorCopyNumber));
+                .tumorCopyNumber(tumorCopyNumber(observedRegion, purityAdjustedCopyNumber, refNormalisedCopyNumber))
+                .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber));
 
         for (int ploidy = 0; ploidy <= maxPloidy; ploidy++) {
             double modelRatio = modelRatio(purity, normFactor, ploidy);
@@ -82,6 +82,19 @@ public class FittedRegionFactory {
         }
 
         return builder.build();
+    }
+
+    private double tumorCopyNumber(@NotNull final ObservedRegion region, double purityAdjustedCopyNumber, double refNormalisedCopyNumber) {
+        switch (region.status()) {
+            case GERMLINE_NOISE:
+            case GERMLINE_HOM_DELETION:
+            case GERMLINE_HET_DELETION:
+                return refNormalisedCopyNumber;
+            case GERMLINE_AMPLIFICATION:
+                return refNormalisedCopyNumber / Math.ceil(2 * (region.observedNormalRatio()));
+        }
+
+        return purityAdjustedCopyNumber;
     }
 
     @VisibleForTesting
