@@ -22,7 +22,9 @@ public abstract class PurpleCopyNumber implements CopyNumber {
 
     public abstract double averageTumorCopyNumber();
 
-    public abstract SegmentSupport support();
+    public abstract SegmentSupport segmentStartSupport();
+
+    public abstract SegmentSupport segmentEndSupport();
 
     public String descriptiveBAF() {
 

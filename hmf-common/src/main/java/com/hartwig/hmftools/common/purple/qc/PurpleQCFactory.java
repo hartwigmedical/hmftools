@@ -15,7 +15,7 @@ public final class PurpleQCFactory {
     @NotNull
     public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender purpleGender, @NotNull Gender cobaltGender) {
         final List<PurpleCopyNumber> trailingSegments = copyNumbers.stream().filter(x -> x.start() != 1L).collect(Collectors.toList());
-        int ratioOnlySegments = (int) trailingSegments.stream().filter(x -> x.support() == SegmentSupport.NONE).count();
+        int ratioOnlySegments = (int) trailingSegments.stream().filter(x -> x.segmentStartSupport() == SegmentSupport.NONE).count();
 
         return ImmutablePurpleQC.builder()
                 .cobaltGender(cobaltGender)

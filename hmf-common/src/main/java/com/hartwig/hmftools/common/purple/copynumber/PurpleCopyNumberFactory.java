@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -45,8 +46,8 @@ public class PurpleCopyNumberFactory {
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
-//            final List<FittedRegion> smoothedV2 = new SmoothingV2(purityAdjuster).smooth(chromosomeFittedRegions);
-            final List<PurpleCopyNumber> copyNumbers = smoothFittedRegions.stream().map(this::create).collect(toList());
+//            final List<FittedRegion> smoothedV2 = new Smoothing(purityAdjuster).smooth(chromosomeFittedRegions);
+            final List<PurpleCopyNumber> copyNumbers = toCopyNumber(smoothFittedRegions);
             smoothedRegions.addAll(RegionStepFilter.filter(copyNumbers));
 //            smoothedRegions.addAll(copyNumbers);
         }
@@ -61,11 +62,27 @@ public class PurpleCopyNumberFactory {
     }
 
     private List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
-        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions).stream().map(this::create).collect(toList());
+        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions).stream().map(x -> create(x, SegmentSupport.NONE)).collect(toList());
     }
 
     @NotNull
-    private PurpleCopyNumber create(@NotNull final FittedRegion region) {
+    private List<PurpleCopyNumber> toCopyNumber(@NotNull final List<FittedRegion> regions) {
+        final List<PurpleCopyNumber> result = Lists.newArrayList();
+        for (int i = 0; i < regions.size() - 1; i++) {
+            final FittedRegion region = regions.get(i);
+            final FittedRegion next = regions.get(i + 1);
+            result.add(create(region, next.support()));
+        }
+
+        if (!regions.isEmpty()) {
+            result.add(create(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private PurpleCopyNumber create(@NotNull final FittedRegion region, @NotNull final SegmentSupport trailingSupport) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(region.chromosome())
                 .start(region.start())
@@ -75,7 +92,8 @@ public class PurpleCopyNumberFactory {
                 .averageActualBAF(purityAdjuster.purityAdjustedBAF(region.chromosome(), region.tumorCopyNumber(), region.observedBAF()))
                 .averageTumorCopyNumber(region.tumorCopyNumber())
                 .ratioSupport(region.ratioSupport())
-                .support(region.support())
+                .segmentStartSupport(region.support())
+                .segmentEndSupport(trailingSupport)
                 .build();
     }
 

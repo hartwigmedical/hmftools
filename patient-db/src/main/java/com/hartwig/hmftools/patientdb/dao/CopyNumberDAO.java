@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep11;
+import org.jooq.InsertValuesStep12;
 import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -51,7 +51,8 @@ class CopyNumberDAO {
                     .end(record.getValue(COPYNUMBER.END))
                     .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
                     .ratioSupport(true)
-                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SUPPORT)))
+                    .segmentStartSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTSTARTSUPPORT)))
+                    .segmentEndSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTENDSUPPORT)))
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
                     .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
                     .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
@@ -75,7 +76,7 @@ class CopyNumberDAO {
                     .end(record.getValue(COPYNUMBERREGION.END))
                     .status(ObservedRegionStatus.valueOf(record.getValue(COPYNUMBERREGION.STATUS)))
                     .ratioSupport(true)
-                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBERREGION.SUPPORT)))
+                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBERREGION.SEGMENTSTARTSUPPORT)))
                     .bafCount(record.getValue(COPYNUMBERREGION.BAFCOUNT))
                     .observedBAF(record.getValue(COPYNUMBERREGION.OBSERVEDBAF))
                     .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
@@ -105,13 +106,14 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep11 inserter = context.insertInto(COPYNUMBER,
+            InsertValuesStep12 inserter = context.insertInto(COPYNUMBER,
                     COPYNUMBER.SAMPLEID,
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
                     COPYNUMBER.END,
                     COPYNUMBER.RATIOSUPPORT,
-                    COPYNUMBER.SUPPORT,
+                    COPYNUMBER.SEGMENTSTARTSUPPORT,
+                    COPYNUMBER.SEGMENTENDSUPPORT,
                     COPYNUMBER.BAFCOUNT,
                     COPYNUMBER.OBSERVEDBAF,
                     COPYNUMBER.ACTUALBAF,
@@ -123,13 +125,14 @@ class CopyNumberDAO {
 
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep11 inserter, String sample, PurpleCopyNumber region) {
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep12 inserter, String sample, PurpleCopyNumber region) {
         inserter.values(sample,
                 region.chromosome(),
                 region.start(),
                 region.end(),
                 region.ratioSupport(),
-                region.support(),
+                region.segmentStartSupport(),
+                region.segmentEndSupport(),
                 region.bafCount(),
                 region.averageObservedBAF(),
                 region.averageActualBAF(),
@@ -149,7 +152,7 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.END,
                     COPYNUMBERREGION.STATUS,
                     COPYNUMBERREGION.RATIOSUPPORT,
-                    COPYNUMBERREGION.SUPPORT,
+                    COPYNUMBERREGION.SEGMENTSTARTSUPPORT,
                     COPYNUMBERREGION.BAFCOUNT,
                     COPYNUMBERREGION.OBSERVEDBAF,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIO,

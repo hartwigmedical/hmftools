@@ -60,7 +60,8 @@ public class CopyNumberChartsTest {
                 .bafCount(10)
                 .averageObservedBAF(baf)
                 .ratioSupport(true)
-                .support(SegmentSupport.NONE)
+                .segmentStartSupport(SegmentSupport.NONE)
+                .segmentEndSupport(SegmentSupport.NONE)
                 .averageActualBAF(baf).build();
     }
 }
