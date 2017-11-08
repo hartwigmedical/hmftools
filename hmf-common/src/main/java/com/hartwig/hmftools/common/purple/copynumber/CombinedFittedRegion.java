@@ -63,7 +63,7 @@ class CombinedFittedRegion {
         }
 
         if (includeFittedValues) {
-            combined.setStatus(ObservedRegionStatus.SOMATIC); //TODO: Consider fixing this
+            combined.setStatus(ObservedRegionStatus.SOMATIC);
             combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
             final long currentWeight;
@@ -78,6 +78,10 @@ class CombinedFittedRegion {
 
             if (!Doubles.isZero(region.observedBAF())) {
                 combined.setObservedBAF(newValue(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
+            }
+
+            if (!Doubles.isZero(region.tumorBAF())) {
+                combined.setTumorBAF(newValue(currentWeight, combined.tumorBAF(), newWeight, region.tumorBAF()));
             }
 
             if (!Doubles.isZero(region.tumorCopyNumber())) {

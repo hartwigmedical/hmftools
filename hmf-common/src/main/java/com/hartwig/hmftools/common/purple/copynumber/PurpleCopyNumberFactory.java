@@ -89,7 +89,7 @@ public class PurpleCopyNumberFactory {
                 .end(region.end())
                 .bafCount(region.bafCount())
                 .averageObservedBAF(region.observedBAF())
-                .averageActualBAF(purityAdjuster.purityAdjustedBAF(region.chromosome(), region.tumorCopyNumber(), region.observedBAF()))
+                .averageActualBAF(region.tumorBAF())
                 .averageTumorCopyNumber(region.tumorCopyNumber())
                 .ratioSupport(region.ratioSupport())
                 .segmentStartSupport(region.support())
