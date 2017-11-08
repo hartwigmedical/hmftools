@@ -191,6 +191,7 @@ CREATE TABLE copyNumberRegion
     modelPloidy int not null,
     modelBaf DOUBLE PRECISION not null,
     modelTumorRatio DOUBLE PRECISION not null,
+    actualTumorBaf DOUBLE PRECISION not null,
     actualTumorCopyNumber DOUBLE PRECISION not null,
     refNormalisedTumorCopyNumber DOUBLE PRECISION not null,
     cnvDeviation DOUBLE PRECISION not null,

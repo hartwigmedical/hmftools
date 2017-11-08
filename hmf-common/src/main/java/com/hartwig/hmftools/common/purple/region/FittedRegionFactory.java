@@ -47,6 +47,8 @@ public class FittedRegionFactory {
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double purityAdjustedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
+        double tumorCopyNumber = tumorCopyNumber(observedRegion, purityAdjustedCopyNumber, refNormalisedCopyNumber);
+        double tumorBAF = purityAdjuster.purityAdjustedBAF(observedRegion.chromosome(), tumorCopyNumber, observedBAF);
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
@@ -54,7 +56,8 @@ public class FittedRegionFactory {
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
-                .tumorCopyNumber(tumorCopyNumber(observedRegion, purityAdjustedCopyNumber, refNormalisedCopyNumber))
+                .tumorCopyNumber(tumorCopyNumber)
+                .tumorBAF(tumorBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber));
 
         for (int ploidy = 0; ploidy <= maxPloidy; ploidy++) {

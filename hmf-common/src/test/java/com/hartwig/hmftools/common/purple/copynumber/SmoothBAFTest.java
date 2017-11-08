@@ -41,7 +41,6 @@ public class SmoothBAFTest {
         assertBAF(2/3d, 3, 2/3d, 6);
         assertBAF(2/4d, 4, 2/3d, 6);
         assertBAF(3/5d, 5, 2/3d, 6);
-
     }
 
     private void assertBAF(double expectedBAF, double regionCopyNumber, double neighbourBAF, double neighbourCopyNumber) {

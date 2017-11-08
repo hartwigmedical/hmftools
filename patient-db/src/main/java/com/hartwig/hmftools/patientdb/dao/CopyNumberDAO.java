@@ -85,6 +85,7 @@ class CopyNumberDAO {
                     .modelPloidy(record.getValue(COPYNUMBERREGION.MODELPLOIDY))
                     .modelBAF(record.getValue(COPYNUMBERREGION.MODELBAF))
                     .modelTumorRatio(record.getValue(COPYNUMBERREGION.MODELTUMORRATIO))
+                    .tumorBAF(record.getValue(COPYNUMBERREGION.ACTUALTUMORBAF))
                     .tumorCopyNumber(record.getValue(COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER))
                     .refNormalisedCopyNumber(record.getValue(COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER))
                     .cnvDeviation(record.getValue(COPYNUMBERREGION.CNVDEVIATION))
@@ -161,6 +162,7 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.MODELPLOIDY,
                     COPYNUMBERREGION.MODELBAF,
                     COPYNUMBERREGION.MODELTUMORRATIO,
+                    COPYNUMBERREGION.ACTUALTUMORBAF,
                     COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER,
                     COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER,
                     COPYNUMBERREGION.CNVDEVIATION,
@@ -192,6 +194,7 @@ class CopyNumberDAO {
                 region.modelPloidy(),
                 region.modelBAF(),
                 region.modelTumorRatio(),
+                region.tumorBAF(),
                 region.tumorCopyNumber(),
                 region.refNormalisedCopyNumber(),
                 region.cnvDeviation(),

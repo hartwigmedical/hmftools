@@ -53,6 +53,7 @@ public enum FittedRegionFile {
                 .add("ratioSupport")
                 .add("support")
                 .add("observedTumorRatioCount")
+                .add("tumorBAF")
                 .toString();
     }
 
@@ -81,6 +82,7 @@ public enum FittedRegionFile {
                 .add(String.valueOf(copyNumber.ratioSupport()))
                 .add(String.valueOf(copyNumber.support()))
                 .add(String.valueOf(copyNumber.observedTumorRatioCount()))
+                .add(String.valueOf(copyNumber.tumorBAF()))
                 .toString();
     }
 
@@ -111,6 +113,7 @@ public enum FittedRegionFile {
                 .ratioSupport(Boolean.valueOf(values[20]))
                 .support(SegmentSupport.valueOf(values[21]))
                 .observedTumorRatioCount(Integer.valueOf(values[22]))
+                .tumorBAF(Double.valueOf(values[23]))
                 .build();
     }
 

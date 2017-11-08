@@ -25,6 +25,7 @@ public class FittedRegionFileTest {
                 .modelPloidy(random.nextInt())
                 .bafCount(random.nextInt())
                 .observedBAF(random.nextDouble())
+                .tumorBAF(random.nextDouble())
                 .modelBAF(random.nextDouble())
                 .bafDeviation(random.nextDouble())
                 .observedTumorRatio(random.nextDouble())

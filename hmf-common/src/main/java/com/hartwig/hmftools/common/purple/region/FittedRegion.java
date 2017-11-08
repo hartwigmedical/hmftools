@@ -21,12 +21,16 @@ public abstract class FittedRegion implements ObservedRegion {
 
     public abstract double cnvDeviation();
 
-    public abstract double tumorCopyNumber();
-
     public abstract double refNormalisedCopyNumber();
 
+    public abstract double tumorCopyNumber();
+
+    public abstract double tumorBAF();
+
+    @Deprecated
     public abstract double broadTumorCopyNumber();
 
+    @Deprecated
     public abstract double broadBAF();
 
     public abstract double segmentTumorCopyNumber();

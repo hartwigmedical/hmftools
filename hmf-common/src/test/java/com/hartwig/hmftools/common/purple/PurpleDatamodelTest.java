@@ -63,6 +63,7 @@ public class PurpleDatamodelTest {
         return ImmutableFittedRegion.builder()
                 .from(observedRegion)
                 .tumorCopyNumber(2)
+                .tumorBAF(0.5)
                 .broadBAF(0)
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)

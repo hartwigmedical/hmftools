@@ -2,9 +2,13 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 
-public class SmoothBAF {
+class SmoothBAF {
 
-    public static double estimateBAF(double copyNumber, double neighbourBAF, double neighbourCopyNumber) {
+    static double estimateBAF(double copyNumber, double neighbourBAF, double neighbourCopyNumber) {
+
+        if (Doubles.isZero(copyNumber)) {
+            return 0;
+        }
 
         if (Doubles.lessOrEqual(copyNumber, 1)) {
             return 1;
