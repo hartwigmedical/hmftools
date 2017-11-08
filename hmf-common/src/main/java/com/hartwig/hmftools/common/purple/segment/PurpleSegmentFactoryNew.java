@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleSegmentFactoryNew2 {
+public class PurpleSegmentFactoryNew {
 
     private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
 

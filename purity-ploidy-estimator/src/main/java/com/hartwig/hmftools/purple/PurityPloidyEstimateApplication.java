@@ -47,8 +47,8 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryNew2;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryNew;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryOld;
 import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
@@ -177,14 +177,14 @@ public class PurityPloidyEstimateApplication {
                 final Multimap<String, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(config);
                 final Multimap<String, Cluster> clusterMap =
                         new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
-                segments = PurpleSegmentFactoryNew2.segment(clusterMap, lengths);
+                segments = PurpleSegmentFactoryNew.segment(clusterMap, lengths);
                 clusters = Lists.newArrayList(clusterMap.values());
                 Collections.sort(clusters);
             } else {
 
                 final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
                 LOGGER.info("Merging structural variants into freec segmentation");
-                segments = PurpleSegmentFactory.createSegments(regions, structuralVariants);
+                segments = PurpleSegmentFactoryOld.createSegments(regions, structuralVariants);
                 clusters = Collections.emptyList();
             }
 

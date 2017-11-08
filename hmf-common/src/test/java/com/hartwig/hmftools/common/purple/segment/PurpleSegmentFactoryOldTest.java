@@ -17,7 +17,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PurpleSegmentFactoryTest {
+@Deprecated
+public class PurpleSegmentFactoryOldTest {
 
     private GenomeRegion region1;
     private GenomeRegion region2;
@@ -37,7 +38,7 @@ public class PurpleSegmentFactoryTest {
         final StructuralVariantPosition variant1 = createVariant(1000, StructuralVariantType.BND);
         final StructuralVariantPosition variant2 = createVariant(9000, StructuralVariantType.DEL);
         final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryOld.createSegmentsInner(regions, positions);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), region1, BND);
         assertPurpleSegment(segments.get(1), region2, DEL);
@@ -49,7 +50,7 @@ public class PurpleSegmentFactoryTest {
         final StructuralVariantPosition variant1 = createVariant(1000, StructuralVariantType.BND);
         final StructuralVariantPosition variant2 = createVariant(7000, StructuralVariantType.INS);
         final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryOld.createSegmentsInner(regions, positions);
         assertEquals(4, segments.size());
         assertPurpleSegment(segments.get(0), 1, 6999, true, BND);
         assertPurpleSegment(segments.get(1), 7000, 10000, false, INS);
@@ -62,7 +63,7 @@ public class PurpleSegmentFactoryTest {
         final StructuralVariantPosition variant1 = createVariant(4000, StructuralVariantType.BND);
         final StructuralVariantPosition variant2 = createVariant(9000, StructuralVariantType.BND);
         final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryOld.createSegmentsInner(regions, positions);
         assertEquals(4, segments.size());
         assertPurpleSegment(segments.get(0), 1, 3999, true, NONE);
         assertPurpleSegment(segments.get(1), 4000, 10000, false, BND);
@@ -75,7 +76,7 @@ public class PurpleSegmentFactoryTest {
         final StructuralVariantPosition variant1 = createVariant(4000, StructuralVariantType.BND);
         final StructuralVariantPosition variant2 = createVariant(7000, StructuralVariantType.BND);
         final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryOld.createSegmentsInner(regions, positions);
         assertEquals(5, segments.size());
         assertPurpleSegment(segments.get(0), 1, 3999, true, NONE);
         assertPurpleSegment(segments.get(1), 4000, 6999, false, BND);
@@ -89,7 +90,7 @@ public class PurpleSegmentFactoryTest {
         final StructuralVariantPosition variant1 = createVariant(3000, StructuralVariantType.BND);
         final StructuralVariantPosition variant2 = createVariant(25000, StructuralVariantType.BND);
         final List<StructuralVariantPosition> positions = Lists.newArrayList(variant1, variant2);
-        final List<PurpleSegment> segments = PurpleSegmentFactory.createSegmentsInner(regions, positions);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryOld.createSegmentsInner(regions, positions);
         assertEquals(5, segments.size());
         assertPurpleSegment(segments.get(0), 1, 2999, true, NONE);
         assertPurpleSegment(segments.get(1), 3000, 10000, false, BND);

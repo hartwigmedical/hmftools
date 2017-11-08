@@ -14,7 +14,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleSegmentFactory {
+@Deprecated
+public class PurpleSegmentFactoryOld {
 
     public static List<PurpleSegment> createSegments(List<GenomeRegion> regions, List<StructuralVariant> variants) {
         return createSegmentsInner(regions, StructuralVariantPositionFactory.createMinBaseFiltered(variants));
@@ -22,7 +23,7 @@ public class PurpleSegmentFactory {
 
     @VisibleForTesting
     static List<PurpleSegment> createSegmentsInner(List<GenomeRegion> regions, List<StructuralVariantPosition> variants) {
-        return new PurpleSegmentFactory(regions, variants).segments();
+        return new PurpleSegmentFactoryOld(regions, variants).segments();
     }
 
     @VisibleForTesting
@@ -33,7 +34,7 @@ public class PurpleSegmentFactory {
     private long start;
     private long end;
 
-    private PurpleSegmentFactory(List<GenomeRegion> regions, List<StructuralVariantPosition> variants) {
+    private PurpleSegmentFactoryOld(List<GenomeRegion> regions, List<StructuralVariantPosition> variants) {
         segments = Lists.newArrayList();
 
         final GenomePositionSelector<StructuralVariantPosition> variantSelector = GenomePositionSelectorFactory.create(variants);

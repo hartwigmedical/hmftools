@@ -27,7 +27,7 @@ public class PurpleSegmentFactoryNewTest {
 
     @Test
     public void testEmpty() {
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, Collections.emptyList());
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, Collections.emptyList());
         assertEquals(1, segments.size());
         assertPurpleSegment(segments.get(0), 1, CHROM.position(), true, TELOMERE, NORMAL);
     }
@@ -35,7 +35,7 @@ public class PurpleSegmentFactoryNewTest {
     @Test
     public void testSingleSV() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, CHROM.position(), false, BND, NORMAL);
@@ -45,7 +45,7 @@ public class PurpleSegmentFactoryNewTest {
     public void testSingleSVWithRatioSupportAtStart() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
         final List<GenomePosition> ratios = Lists.newArrayList(ratio(17050));
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, CHROM.position(), true, BND, NORMAL);
@@ -55,7 +55,7 @@ public class PurpleSegmentFactoryNewTest {
     public void testSingleSVWithRatioBeforeStart() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
         final List<GenomePosition> ratios = Lists.newArrayList(ratio(16001));
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 16000, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 16001, 18880, true, NONE, NORMAL);
@@ -66,7 +66,7 @@ public class PurpleSegmentFactoryNewTest {
     public void testSingleSVWithRatioSupportAtEnd() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
         final List<GenomePosition> ratios = Lists.newArrayList(ratio(19050));
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, CHROM.position(), true, BND, NORMAL);
@@ -76,7 +76,7 @@ public class PurpleSegmentFactoryNewTest {
     public void testSingleSVWithRatioAfter() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
         final List<GenomePosition> ratios = Lists.newArrayList(ratio(20001));
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, 20000, false, BND, NORMAL);
@@ -87,7 +87,7 @@ public class PurpleSegmentFactoryNewTest {
     public void testMultipleSVAtSamePosition() {
         final List<Cluster> clusters =
                 Lists.newArrayList(cluster(18881, 17001, 20000).addVariants(variant(18881)).build());
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, CHROM.position(), false, MULTIPLE, NORMAL);
@@ -97,7 +97,7 @@ public class PurpleSegmentFactoryNewTest {
     public void testMultipleSVInSameCluster() {
         final List<Cluster> clusters =
                 Lists.newArrayList(cluster(18881, 17001, 20000).addVariants(variant(19991)).build());
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, 19990, false, BND, CLUSTER);
@@ -109,7 +109,7 @@ public class PurpleSegmentFactoryNewTest {
         final List<Cluster> clusters =
                 Lists.newArrayList(cluster(18881, 17001, 21000).addVariants(variant(19991)).build());
         final List<GenomePosition> ratios = Lists.newArrayList(ratio(20001));
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, 19990, true, BND, CLUSTER);
@@ -123,7 +123,7 @@ public class PurpleSegmentFactoryNewTest {
                         cluster(18881, 17001, 20000).build(),
                         cluster(25551, 24001, 27000).build());
         final List<GenomePosition> ratios = Lists.newArrayList(ratio(19001));
-        final List<PurpleSegment> segments = PurpleSegmentFactoryNew2.create(CHROM, clusters);
+        final List<PurpleSegment> segments = PurpleSegmentFactoryNew.create(CHROM, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE, NORMAL);
         assertPurpleSegment(segments.get(1), 18881, 25550, true, BND, NORMAL);
