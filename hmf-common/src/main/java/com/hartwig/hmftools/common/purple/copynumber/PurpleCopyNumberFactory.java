@@ -78,7 +78,7 @@ public class PurpleCopyNumberFactory {
             result.add(create(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
         }
 
-        return result;
+        return PurpleCopyNumberSmoothing.smooth(result);
     }
 
     @NotNull

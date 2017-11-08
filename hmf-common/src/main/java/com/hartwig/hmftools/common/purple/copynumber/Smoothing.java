@@ -35,7 +35,7 @@ class Smoothing {
 
     @NotNull
     private List<FittedRegion> smoothedRegions() {
-        return SmoothTelomeres.smooth(regions.stream().map(CombinedFittedRegion::region).collect(Collectors.toList()));
+        return regions.stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
     }
 
     @NotNull

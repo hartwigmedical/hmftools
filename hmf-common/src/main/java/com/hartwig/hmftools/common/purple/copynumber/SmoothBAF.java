@@ -2,7 +2,13 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 
+import org.jetbrains.annotations.NotNull;
+
 class SmoothBAF {
+
+    static double estimateBAF(@NotNull final PurpleCopyNumber region, @NotNull final PurpleCopyNumber neighbour) {
+        return estimateBAF(region.averageTumorCopyNumber(), neighbour.averageActualBAF(), neighbour.averageTumorCopyNumber());
+    }
 
     static double estimateBAF(double copyNumber, double neighbourBAF, double neighbourCopyNumber) {
 
