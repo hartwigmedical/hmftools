@@ -182,7 +182,7 @@ CREATE TABLE copyNumberRegion
     end int not null,
     status varchar(255) NOT NULL,
     ratioSupport BOOLEAN NOT NULL,
-    support varchar(255) NOT NULL,
+    segmentStartSupport varchar(255) NOT NULL,
     bafCount int not null,
     observedBaf DOUBLE PRECISION not null,
     observedTumorRatio DOUBLE PRECISION not null,
