@@ -19,6 +19,7 @@ CREATE TABLE sample
     patientId int NOT NULL,
     arrivalDate DATE NOT NULL,
     samplingDate DATE,
+    tumorPercentage DOUBLE PRECISION,
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );

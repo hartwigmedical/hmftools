@@ -1,44 +1,32 @@
 package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SampleData {
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class SampleData {
 
     @NotNull
-    private final String sampleId;
-    @NotNull
-    private final LocalDate arrivalDate;
-    @Nullable
-    private final LocalDate samplingDate;
-
-    public SampleData(@NotNull final String sampleId, @NotNull final LocalDate arrivalDate,
-            @Nullable final LocalDate samplingDate) {
-        this.sampleId = sampleId;
-        this.arrivalDate = arrivalDate;
-        this.samplingDate = samplingDate;
-    }
+    public abstract String sampleId();
 
     @NotNull
-    public String sampleId() {
-        return sampleId;
-    }
-
-    @NotNull
-    public LocalDate arrivalDate() {
-        return arrivalDate;
-    }
+    public abstract LocalDate arrivalDate();
 
     @Nullable
-    public LocalDate samplingDate() {
-        return samplingDate;
-    }
+    public abstract LocalDate samplingDate();
+
+    @Nullable
+    public abstract Double tumorPercentage();
 
     @NotNull
+    @Value.Derived
     public LocalDate date() {
-        return samplingDate != null ? samplingDate : arrivalDate;
+        final LocalDate samplingDate = samplingDate();
+        return samplingDate != null ? samplingDate : arrivalDate();
     }
 }

@@ -10,6 +10,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
+import com.hartwig.hmftools.patientdb.data.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,10 +25,10 @@ public class BiopsyMatcherTest {
     private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
     private final static LocalDate NOV2015 = LocalDate.parse("2015-11-01");
 
-    private final static SampleData LIMS_BIOPSY_JUL = new SampleData("jul", JUL2015, null);
-    private final static SampleData LIMS_BIOPSY_AUG = new SampleData("aug", AUG2015, null);
-    private final static SampleData LIMS_BIOPSY_SEP = new SampleData("sep", SEP2015, null);
-    private final static SampleData LIMS_BIOPSY_NOV = new SampleData("nov", NOV2015, null);
+    private final static SampleData LIMS_BIOPSY_JUL = ImmutableSampleData.of("jul", JUL2015, null, 50.0);
+    private final static SampleData LIMS_BIOPSY_AUG = ImmutableSampleData.of("aug", AUG2015, null, 50.0);
+    private final static SampleData LIMS_BIOPSY_SEP = ImmutableSampleData.of("sep", SEP2015, null, 50.0);
+    private final static SampleData LIMS_BIOPSY_NOV = ImmutableSampleData.of("nov", NOV2015, null, 50.0);
 
     private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "");
     private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "");

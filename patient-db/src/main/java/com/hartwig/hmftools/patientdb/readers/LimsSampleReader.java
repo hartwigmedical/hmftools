@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.patientdb.data.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,8 @@ class LimsSampleReader {
         sampleIds.forEach(sampleId -> {
             final LocalDate arrivalDate = lims.arrivalDateForSample(sampleId);
             if (arrivalDate != null) {
-                limsBiopsies.add(new SampleData(sampleId, arrivalDate, lims.samplingDateForSample(sampleId)));
+                limsBiopsies.add(ImmutableSampleData.of(sampleId, arrivalDate, lims.samplingDateForSample(sampleId),
+                        lims.tumorPercentageForSample(sampleId)));
             }
         });
         return limsBiopsies;
