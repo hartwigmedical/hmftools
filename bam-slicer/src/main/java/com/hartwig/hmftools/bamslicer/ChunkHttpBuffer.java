@@ -49,6 +49,9 @@ class ChunkHttpBuffer {
         requestDispatcher.setMaxRequests(MAX_REQUESTS);
         requestDispatcher.setMaxRequestsPerHost(MAX_REQUESTS);
         httpClient = new OkHttpClient.Builder().connectionPool(new ConnectionPool(20, 1, TimeUnit.MINUTES))
+                .readTimeout(20, TimeUnit.SECONDS)
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
                 .dispatcher(requestDispatcher)
                 .build();
     }
@@ -155,10 +158,9 @@ class ChunkHttpBuffer {
 
     private void retryCall(@NotNull final Call call, @NotNull final Exception exception, final int remainingRetries,
             @NotNull final SettableFuture<byte[]> resultFuture) {
-        LOGGER.info("Call {} to {} failed with exception: {}", call.request().method(), call.request().url(), exception.getMessage());
-        LOGGER.info("Call headers: {}", call.request().headers());
-        LOGGER.info("Retrying {} more times...", remainingRetries);
         if (remainingRetries <= 0) {
+            LOGGER.info("Call {} to {} failed with exception: {}", call.request().method(), call.request().url(), exception.getMessage());
+            LOGGER.info("Call headers: {}", call.request().headers());
             resultFuture.setException(exception);
         } else {
             call.clone().enqueue(retryingCallback(remainingRetries - 1, resultFuture));
