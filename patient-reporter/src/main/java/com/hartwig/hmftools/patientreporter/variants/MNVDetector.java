@@ -18,6 +18,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
@@ -59,16 +61,32 @@ final class MNVDetector {
 
     @NotNull
     private static VariantContext fromSomaticVariant(@NotNull final SomaticVariant variant) {
+        final List<Allele> alleles = buildAlleles(variant);
+        return new VariantContextBuilder().chr(variant.chromosome())
+                .start(variant.position())
+                .stop(variant.position() + variant.ref().length() - 1)
+                .alleles(alleles)
+                .genotypes(mockGenotype(alleles))
+                .make();
+    }
+
+    @NotNull
+    private static List<Allele> buildAlleles(@NotNull final SomaticVariant variant) {
         final List<Allele> alts = Arrays.stream(variant.alt().split(","))
                 .map(String::trim)
                 .map(alleleString -> Allele.create(alleleString, false))
                 .collect(Collectors.toList());
         final List<Allele> alleles = Lists.newArrayList(Allele.create(variant.ref(), true));
         alleles.addAll(alts);
-        return new VariantContextBuilder().chr(variant.chromosome())
-                .start(variant.position())
-                .stop(variant.position() + variant.ref().length() - 1)
-                .alleles(alleles)
-                .make();
+        return alleles;
+    }
+
+    @NotNull
+    private static Genotype mockGenotype(@NotNull final List<Allele> alleles) {
+        int[] ads = new int[alleles.size()];
+        for (int index = 0; index < ads.length; index++) {
+            ads[index] = index;
+        }
+        return new GenotypeBuilder("mockSample").DP(50).AD(ads).make();
     }
 }

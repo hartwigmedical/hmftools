@@ -75,7 +75,7 @@ public class VariantAnalyzerTest {
 
     @NotNull
     private static SomaticVariant.Builder builder() {
-        return new SomaticVariant.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).filter(PASS_FILTER);
+        return new SomaticVariant.Builder().type(VariantType.SNP).chromosome(CHROMOSOME).filter(PASS_FILTER).ref("A").alt("T");
     }
 
     @NotNull
