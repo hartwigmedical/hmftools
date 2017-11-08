@@ -102,7 +102,7 @@ public class MNVDetectorApplication {
     }
 
     @NotNull
-    private static Optional<PotentialMNVRegion> filterMnvRegion(@NotNull final PotentialMNVRegion potentialMnvRegion) {
+    public static Optional<PotentialMNVRegion> filterMnvRegion(@NotNull final PotentialMNVRegion potentialMnvRegion) {
         if (potentialMnvRegion.potentialMnvs().size() == 0) {
             return Optional.empty();
         } else {

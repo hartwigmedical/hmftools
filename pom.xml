@@ -65,6 +65,8 @@
         <patient-db.version>1.0</patient-db.version>
         <apiclients.version>1.0</apiclients.version>
         <variant-annotation.version>1.0</variant-annotation.version>
+        <strelka-post-process.version>1.0</strelka-post-process.version>
+
 
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
@@ -147,6 +149,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>api-clients</artifactId>
                 <version>${apiclients.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>strelka-post-process</artifactId>
+                <version>${strelka-post-process.version}</version>
             </dependency>
 
             <dependency>

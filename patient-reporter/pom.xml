@@ -62,6 +62,10 @@
             <groupId>com.hartwig</groupId>
             <artifactId>api-clients</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>strelka-post-process</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
