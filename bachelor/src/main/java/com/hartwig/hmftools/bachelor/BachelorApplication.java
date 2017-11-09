@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,9 +68,14 @@ public class BachelorApplication {
 
     private static Collection<EligibilityReport> processVCF(final String patient, final boolean isGermline, final File vcf,
             final BachelorEligibility eligibility) {
-        LOGGER.info("process {} vcf: {}", isGermline ? "gemline" : "somatic", vcf.getPath());
+
+        final String tag = isGermline ? "germline" : "somatic";
+        LOGGER.info("process {} vcf: {}", tag, vcf.getPath());
+
         try (final VCFFileReader reader = new VCFFileReader(vcf, false)) {
-            return eligibility.processVCF(patient, isGermline ? "germline" : "somatic", reader);
+            // TODO: always correct? germline has R,T somatic has just T
+            final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
+            return eligibility.processVCF(patient, sample, tag, reader);
         } catch (final TribbleException e) {
             LOGGER.error("error with VCF file {}: {}", vcf.getPath(), e.getMessage());
             return Collections.emptyList();
@@ -89,10 +93,10 @@ public class BachelorApplication {
     }
 
     private static File process(final BachelorEligibility eligibility, final RunDirectory run) {
-        LOGGER.info("processing run: {}", run.prefix);
-
         final String[] split = run.prefix.getFileName().toString().split("_");
         final String patient = split[split.length - 1];
+
+        LOGGER.info("processing run: {}", patient);
 
         final List<EligibilityReport> result = Lists.newArrayList();
         if (run.germline != null) {
@@ -121,6 +125,10 @@ public class BachelorApplication {
         }
     }
 
+    private static String fileHeader() {
+        return String.join(",", Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
+    }
+
     private static void outputToFile(final Collection<EligibilityReport> reports, final File outputFile) throws IOException {
         try (final BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath())) {
             for (final EligibilityReport report : reports) {
@@ -132,11 +140,12 @@ public class BachelorApplication {
                             String.join("|", model.Annotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.toSet()));
                     final String genes = String.join("|", model.Annotations.stream().map(a -> a.GeneName).collect(Collectors.toSet()));
 
-                    writer.write(String.format("%s,%s,%s,%s,%s,%s,%d,%s,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
+                    writer.write(String.format("%s,%s,%s,%s,%s,%s,%d,%s,%s,%s", report.patient(), report.tag(), report.program(), v.getID(),
                             genes, v.getContig(), v.getStart(), v.getReference(), alts, effects));
                     writer.newLine();
                 }
             }
+            writer.close();
         }
     }
 
@@ -156,35 +165,28 @@ public class BachelorApplication {
 
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
-            final List<RunDirectory> runDirectories;
+            LOGGER.info("beginning processing...");
+
+            final List<File> filesToMerge;
             if (cmd.hasOption(BATCH_DIRECTORY)) {
-                LOGGER.info("collating files for processing...");
                 final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
                 try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel()) {
-                    runDirectories = stream.filter(p -> p.toFile().isDirectory())
+                    filesToMerge = stream.filter(p -> p.toFile().isDirectory())
                             .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
+                            .map(run -> process(eligibility, run))
                             .collect(Collectors.toList());
                 }
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
-                runDirectories = Collections.singletonList(new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))));
+                filesToMerge =
+                        Collections.singletonList(process(eligibility, new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY)))));
             } else {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
                 return;
             }
 
-            LOGGER.info("beginning processing...");
-
-            final List<File> filesToMerge = runDirectories.parallelStream()
-                    .map(run -> process(eligibility, run))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
             LOGGER.info("... processing complete!");
-
-            // output results
-
             LOGGER.info("merging to CSV {} ...", cmd.getOptionValue(OUTPUT));
 
             // TODO: better way to join files? using FileChannels?
@@ -192,8 +194,7 @@ public class BachelorApplication {
             try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)))) {
 
                 // header
-                writer.write(String.join(",",
-                        Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "CHROM", "POS", "REF", "ALTS", "EFFECTS")));
+                writer.write(fileHeader());
                 writer.newLine();
 
                 for (final File file : filesToMerge) {

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class EligibilityReport {
     @NotNull
-    public abstract String sample();
+    public abstract String patient();
 
     @NotNull
     public abstract String tag();
