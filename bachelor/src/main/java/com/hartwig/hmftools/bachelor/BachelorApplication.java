@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bachelor;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -65,13 +67,11 @@ public class BachelorApplication {
         System.exit(1);
     }
 
-    private static Collection<EligibilityReport> processVCF(final boolean isGermline, final File vcf,
+    private static Collection<EligibilityReport> processVCF(final String patient, final boolean isGermline, final File vcf,
             final BachelorEligibility eligibility) {
         LOGGER.info("process {} vcf: {}", isGermline ? "gemline" : "somatic", vcf.getPath());
         try (final VCFFileReader reader = new VCFFileReader(vcf, false)) {
-            // TODO: always correct? germline has R,T somatic has just T
-            final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
-            return eligibility.processVCF(sample, isGermline ? "germline" : "somatic", reader);
+            return eligibility.processVCF(patient, isGermline ? "germline" : "somatic", reader);
         } catch (final TribbleException e) {
             LOGGER.error("error with VCF file {}: {}", vcf.getPath(), e.getMessage());
             return Collections.emptyList();
@@ -88,14 +88,18 @@ public class BachelorApplication {
         return Collections.emptyList();
     }
 
-    private static Collection<EligibilityReport> process(final BachelorEligibility eligibility, final RunDirectory run) {
+    private static File process(final BachelorEligibility eligibility, final RunDirectory run) {
         LOGGER.info("processing run: {}", run.prefix);
+
+        final String[] split = run.prefix.getFileName().toString().split("_");
+        final String patient = split[split.length - 1];
+
         final List<EligibilityReport> result = Lists.newArrayList();
         if (run.germline != null) {
-            result.addAll(processVCF(true, run.germline, eligibility));
+            result.addAll(processVCF(patient, true, run.germline, eligibility));
         }
         if (run.somatic != null) {
-            result.addAll(processVCF(false, run.somatic, eligibility));
+            result.addAll(processVCF(patient, false, run.somatic, eligibility));
         }
         if (run.copyNumber != null) {
             result.addAll(processPurpleCNV(run.copyNumber, eligibility));
@@ -103,7 +107,37 @@ public class BachelorApplication {
         if (run.structuralVariants != null) {
             result.addAll(processSV(run.structuralVariants, eligibility));
         }
-        return result;
+
+        try {
+            final File file = File.createTempFile(patient, ".csv");
+            file.deleteOnExit();
+
+            outputToFile(result, file);
+
+            return file;
+        } catch (final IOException e) {
+            LOGGER.error("error with temporary file for {}", run.prefix);
+            return null;
+        }
+    }
+
+    private static void outputToFile(final Collection<EligibilityReport> reports, final File outputFile) throws IOException {
+        try (final BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath())) {
+            for (final EligibilityReport report : reports) {
+                for (final VariantModel model : report.variants()) {
+                    final VariantContext v = model.Context;
+
+                    final String alts = v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
+                    final String effects =
+                            String.join("|", model.Annotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.toSet()));
+                    final String genes = String.join("|", model.Annotations.stream().map(a -> a.GeneName).collect(Collectors.toSet()));
+
+                    writer.write(String.format("%s,%s,%s,%s,%s,%s,%d,%s,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
+                            genes, v.getContig(), v.getStart(), v.getReference(), alts, effects));
+                    writer.newLine();
+                }
+            }
+        }
     }
 
     public static void main(final String... args) {
@@ -141,31 +175,31 @@ public class BachelorApplication {
             }
 
             LOGGER.info("beginning processing...");
-            final List<EligibilityReport> reports =
-                    runDirectories.parallelStream().flatMap(run -> process(eligibility, run).stream()).collect(Collectors.toList());
+
+            final List<File> filesToMerge = runDirectories.parallelStream()
+                    .map(run -> process(eligibility, run))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
             LOGGER.info("... processing complete!");
 
             // output results
 
-            LOGGER.info("outputting to CSV {} ...", cmd.getOptionValue(OUTPUT));
+            LOGGER.info("merging to CSV {} ...", cmd.getOptionValue(OUTPUT));
+
+            // TODO: better way to join files? using FileChannels?
 
             try (final BufferedWriter writer = Files.newBufferedWriter(Paths.get(cmd.getOptionValue(OUTPUT)))) {
 
                 // header
-                writer.write(
-                        String.join(",", Arrays.asList("SAMPLE", "SOURCE", "PROGRAM", "ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS")));
+                writer.write(String.join(",",
+                        Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "CHROM", "POS", "REF", "ALTS", "EFFECTS")));
                 writer.newLine();
 
-                // data
-                for (final EligibilityReport report : reports) {
-                    for (final VariantModel model : report.variants()) {
-
-                        final VariantContext v = model.Context;
-                        final String alts = v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
-                        final String effects = model.Annotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.joining("|"));
-
-                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%s,%s,%s", report.sample(), report.tag(), report.program(), v.getID(),
-                                v.getContig(), v.getStart(), v.getReference(), alts, effects));
+                for (final File file : filesToMerge) {
+                    final List<String> lines = Files.readAllLines(file.toPath());
+                    for (final String line : lines) {
+                        writer.write(line);
                         writer.newLine();
                     }
                 }
