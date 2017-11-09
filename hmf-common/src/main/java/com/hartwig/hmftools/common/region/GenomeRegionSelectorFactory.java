@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.region;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class GenomeRegionSelectorFactory {
 
     @NotNull
-    public static <R extends GenomeRegion> GenomeRegionSelector<R> create(@NotNull final List<R> regions) {
+    public static <R extends GenomeRegion> GenomeRegionSelector<R> create(@NotNull final Collection<R> regions) {
         return new GenomeRegionSelectorImpl<>(regions);
     }
 
