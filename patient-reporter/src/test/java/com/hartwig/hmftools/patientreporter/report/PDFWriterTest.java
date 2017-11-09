@@ -189,16 +189,73 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<StructuralVariantAnalysis.GeneDisruption> createTestDisruptions() {
-        return Collections.singletonList(ImmutableGeneDisruption.builder()
-                .geneName("BRAF")
-                .transcript("ENST00000288602")
-                .location("chr7:140568805")
+        final StructuralVariantAnalysis.GeneDisruption disruption1 = ImmutableGeneDisruption.builder()
+                .geneName("ERBB4")
+                .transcript("ENST00000342788")
+                .location("chr2:212381802")
+                .geneContext("Intron 20")
+                .orientation("3'")
+                .partner("chr2:212643300")
+                .type("DUP")
+                .vaf("19%")
+                .build();
+
+        final StructuralVariantAnalysis.GeneDisruption disruption2 = ImmutableGeneDisruption.builder()
+                .geneName("ERBB4")
+                .transcript("ENST00000342788")
+                .location("chr2:212643300")
+                .geneContext("Intron 4")
+                .orientation("5'")
+                .partner("chr2:212381802")
+                .type("DUP")
+                .vaf("22%")
+                .build();
+
+        final StructuralVariantAnalysis.GeneDisruption disruption3 = ImmutableGeneDisruption.builder()
+                .geneName("NRG1")
+                .transcript("ENST00000356819")
+                .location("chr8:32440124")
+                .geneContext("Intron 1")
+                .orientation("3'")
+                .partner("chr8:142709799")
+                .type("INV")
+                .vaf("7%")
+                .build();
+
+        final StructuralVariantAnalysis.GeneDisruption disruption4 = ImmutableGeneDisruption.builder()
+                .geneName("NRG1")
+                .transcript("ENST00000356819")
+                .location("chr8:32440762")
                 .geneContext("Intron 1")
                 .orientation("5'")
-                .partner("chr17:50158907")
-                .type("BND")
-                .vaf("29%")
-                .build());
+                .partner("chr8:66361264")
+                .type("DEL")
+                .vaf("9%")
+                .build();
+
+        final StructuralVariantAnalysis.GeneDisruption disruption5 = ImmutableGeneDisruption.builder()
+                .geneName("PIK3CB")
+                .transcript("ENST00000477593")
+                .location("chr3:138513398")
+                .geneContext("Intron 1")
+                .orientation("3'")
+                .partner("chr3:138887286")
+                .type("DUP")
+                .vaf("20%")
+                .build();
+
+        final StructuralVariantAnalysis.GeneDisruption disruption6 = ImmutableGeneDisruption.builder()
+                .geneName("CDK12")
+                .transcript("ENST00000447079")
+                .location("chr17:37681264")
+                .geneContext("Intron 12")
+                .orientation("3'")
+                .partner("chr17:37906886")
+                .type("DUP")
+                .vaf("68%")
+                .build();
+
+        return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
     }
 
     @Test
