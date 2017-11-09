@@ -13,6 +13,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -24,12 +25,16 @@ public class PurpleCopyNumberFactory {
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
-
+    @NotNull
     private final List<PurpleCopyNumber> highConfidenceRegions;
+    @NotNull
     private final List<PurpleCopyNumber> smoothedRegions;
 
-    public PurpleCopyNumberFactory(@NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
-            final List<StructuralVariant> structuralVariants) {
+    private final boolean experimental;
+
+    public PurpleCopyNumberFactory(boolean experimental, @NotNull final PurityAdjuster purityAdjuster,
+            final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
+        this.experimental = experimental;
         this.purityAdjuster = purityAdjuster;
         smoothedRegions = Lists.newArrayList();
         highConfidenceRegions = Lists.newArrayList();
@@ -56,13 +61,16 @@ public class PurpleCopyNumberFactory {
             newMethod.putAll(chromosome, copyNumbers);
 
             // Old Method
-            smoothedRegions.addAll(RegionStepFilter.filter(toCopyNumber(smoothFittedRegions)));
+            if (!experimental) {
+                smoothedRegions.addAll(RegionStepFilter.filter(toCopyNumber(smoothFittedRegions)));
+            }
         }
 
-        // New Method
-//        StructuralVariantCopyNumber copyNumber = new StructuralVariantCopyNumber(structuralVariants);
-//        smoothedRegions.addAll(copyNumber.calculateSVCopyNumber(newMethod).values());
-
+        if (experimental) {
+            // New Method
+            StructuralVariantCopyNumber copyNumber = new StructuralVariantCopyNumber(structuralVariants);
+            smoothedRegions.addAll(copyNumber.calculateSVCopyNumber(newMethod).values());
+        }
         Collections.sort(smoothedRegions);
     }
 

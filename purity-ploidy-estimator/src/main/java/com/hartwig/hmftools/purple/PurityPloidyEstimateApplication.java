@@ -173,7 +173,8 @@ public class PurityPloidyEstimateApplication {
             final List<PurpleSegment> segments;
             final List<Cluster> clusters;
 
-            if (cmd.hasOption(EXPERIMENTAL)) {
+            final boolean experimental = cmd.hasOption(EXPERIMENTAL);
+            if (experimental) {
                 final Multimap<String, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(config);
                 final Multimap<String, Cluster> clusterMap =
                         new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
@@ -221,7 +222,7 @@ public class PurityPloidyEstimateApplication {
 
             final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
             final PurpleCopyNumberFactory purpleCopyNumberFactory =
-                    new PurpleCopyNumberFactory(purityAdjuster, fittedRegions, structuralVariants);
+                    new PurpleCopyNumberFactory(experimental, purityAdjuster, fittedRegions, structuralVariants);
             final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
             final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
             final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(genePanel, smoothRegions);
