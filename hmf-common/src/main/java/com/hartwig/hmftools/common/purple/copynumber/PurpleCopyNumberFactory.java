@@ -2,17 +2,21 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import static java.util.stream.Collectors.toList;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +28,8 @@ public class PurpleCopyNumberFactory {
     private final List<PurpleCopyNumber> highConfidenceRegions;
     private final List<PurpleCopyNumber> smoothedRegions;
 
-    public PurpleCopyNumberFactory(@NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions) {
+    public PurpleCopyNumberFactory(@NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
+            final List<StructuralVariant> structuralVariants) {
         this.purityAdjuster = purityAdjuster;
         smoothedRegions = Lists.newArrayList();
         highConfidenceRegions = Lists.newArrayList();
@@ -32,8 +37,7 @@ public class PurpleCopyNumberFactory {
         final Set<String> orderedChromosomes =
                 fittedRegions.stream().map(GenomeRegion::chromosome).collect(Collectors.toCollection(LinkedHashSet::new));
 
-//        final List<FittedRegion> jon =
-//                fittedRegions.stream().filter(matchesChromosome("3")).collect(toList());
+        final ListMultimap<String, PurpleCopyNumber> newMethod = ArrayListMultimap.create();
 
         for (String chromosome : orderedChromosomes) {
             final List<FittedRegion> chromosomeFittedRegions =
@@ -46,11 +50,20 @@ public class PurpleCopyNumberFactory {
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
-//            final List<FittedRegion> smoothedV2 = new Smoothing(purityAdjuster).smooth(chromosomeFittedRegions);
-            final List<PurpleCopyNumber> copyNumbers = toCopyNumber(smoothFittedRegions);
-            smoothedRegions.addAll(RegionStepFilter.filter(copyNumbers));
-//            smoothedRegions.addAll(copyNumbers);
+            final List<FittedRegion> smoothedV2 = new Smoothing(purityAdjuster).smooth(chromosomeFittedRegions);
+
+            final List<PurpleCopyNumber> copyNumbers = toCopyNumber(smoothedV2);
+            newMethod.putAll(chromosome, copyNumbers);
+
+            // Old Method
+            smoothedRegions.addAll(RegionStepFilter.filter(toCopyNumber(smoothFittedRegions)));
         }
+
+        // New Method
+//        StructuralVariantCopyNumber copyNumber = new StructuralVariantCopyNumber(structuralVariants);
+//        smoothedRegions.addAll(copyNumber.calculateSVCopyNumber(newMethod).values());
+
+        Collections.sort(smoothedRegions);
     }
 
     public List<PurpleCopyNumber> highConfidenceRegions() {
@@ -62,7 +75,10 @@ public class PurpleCopyNumberFactory {
     }
 
     private List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
-        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions).stream().map(x -> create(x, SegmentSupport.NONE)).collect(toList());
+        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions)
+                .stream()
+                .map(x -> create(x, SegmentSupport.NONE))
+                .collect(toList());
     }
 
     @NotNull

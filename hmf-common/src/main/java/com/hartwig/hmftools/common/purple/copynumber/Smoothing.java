@@ -40,7 +40,6 @@ class Smoothing {
 
     @NotNull
     List<FittedRegion> smooth(@NotNull final Collection<FittedRegion> fittedRegions) {
-
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
         for (FittedRegion fittedRegion : fittedRegions) {
@@ -51,11 +50,11 @@ class Smoothing {
         while (highestConfidenceIndex > -1) {
             final CombinedFittedRegion highestConfidence = regions.get(highestConfidenceIndex);
 
-            LOGGER.info("Selected region {}", toString(highestConfidence.region()));
+            LOGGER.debug("Selected region {}", toString(highestConfidence.region()));
             smoothRight(highestConfidenceIndex);
             smoothLeft(highestConfidenceIndex);
 
-            LOGGER.info("Completed region {}", toString(highestConfidence.region()));
+            LOGGER.debug("Completed region {}", toString(highestConfidence.region()));
             highestConfidence.setModified();
             highestConfidenceIndex = nextIndex();
         }
@@ -76,7 +75,7 @@ class Smoothing {
             }
 
             regions.remove(targetIndex);
-            LOGGER.info("Merged in right region {}", toString(neighbour));
+            LOGGER.debug("Merged in right region {}", toString(neighbour));
         }
     }
 
@@ -94,7 +93,7 @@ class Smoothing {
             }
 
             regions.remove(targetIndex);
-            LOGGER.info("Merged in left region {}", toString(neighbour));
+            LOGGER.debug("Merged in left region {}", toString(neighbour));
             targetIndex--;
         }
 

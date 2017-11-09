@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
@@ -15,11 +16,11 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class StructualVariantPloidyFactory {
+class StructuralVariantPloidyFactory {
 
     @NotNull
-    public static List<StructuralVariantPloidy> create(@NotNull final StructuralVariant variant,
-            @NotNull final List<PurpleCopyNumber> copyNumbers) {
+    static List<StructuralVariantPloidy> create(@NotNull final StructuralVariant variant,
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
 
         final Optional<ModifiableStructuralVariantPloidy> start = Optional.ofNullable(variant.startAF())
                 .flatMap(vaf -> create(variant.startChromosome(),
@@ -93,7 +94,7 @@ public class StructualVariantPloidyFactory {
                 .setOrientation(orientation)
                 .setUnweightedImpliedPloidy(multiplier * copyNumber)
                 .setAlternate(alternate)
+                .setAdjacentCopyNumber(copyNumber)
                 .setWeight(copyNumber);
     }
-
 }

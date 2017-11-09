@@ -220,7 +220,8 @@ public class PurityPloidyEstimateApplication {
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
             final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
-            final PurpleCopyNumberFactory purpleCopyNumberFactory = new PurpleCopyNumberFactory(purityAdjuster, fittedRegions);
+            final PurpleCopyNumberFactory purpleCopyNumberFactory =
+                    new PurpleCopyNumberFactory(purityAdjuster, fittedRegions, structuralVariants);
             final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
             final List<PurpleCopyNumber> smoothRegions = purpleCopyNumberFactory.smoothedRegions();
             final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(genePanel, smoothRegions);

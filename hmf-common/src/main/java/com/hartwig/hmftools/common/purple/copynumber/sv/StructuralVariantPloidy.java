@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class StructuralVariantPloidy implements GenomePosition {
+abstract class StructuralVariantPloidy implements GenomePosition {
 
     public abstract double unweightedImpliedPloidy();
 
@@ -20,4 +20,6 @@ public abstract class StructuralVariantPloidy implements GenomePosition {
     public abstract int orientation();
 
     public abstract boolean alternate();
+
+    public abstract double adjacentCopyNumber();
 }
