@@ -65,6 +65,7 @@ public class PurpleSegmentFactoryNew {
                         segment.setSupport(SegmentSupport.MULTIPLE);
                     }
                 }
+                segment.setSvCluster(false);
             } else {
 
                 final List<PCFPosition> pcfPositions = cluster.pcfPositions();
@@ -91,6 +92,7 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(true)
                 .setStart(start)
                 .setEnd(0)
+                .setSvCluster(false)
                 .setSupport(SegmentSupport.NONE);
     }
 
@@ -100,6 +102,7 @@ public class PurpleSegmentFactoryNew {
                 .setRatioSupport(ratioSupport)
                 .setStart(variant.position())
                 .setEnd(0)
+                .setSvCluster(true)
                 .setSupport(SegmentSupport.fromVariant(variant.type()));
     }
 

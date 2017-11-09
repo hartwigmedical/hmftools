@@ -26,6 +26,10 @@ class ObservedRegionStatusFactory {
     }
 
     ObservedRegionStatus status(@NotNull final PurpleSegment segment, final double normalRatio) {
+        if (segment.svCluster()) {
+            return ObservedRegionStatus.CLUSTER;
+        }
+
         return fromNormalRatio(segment.chromosome(), normalRatio);
     }
 

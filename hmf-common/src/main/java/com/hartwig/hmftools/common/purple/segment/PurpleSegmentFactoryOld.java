@@ -110,6 +110,7 @@ public class PurpleSegmentFactoryOld {
                 .end(end)
                 .ratioSupport(ratioSupport)
                 .support(svStart)
+                .svCluster(false)
                 .build());
     }
 }

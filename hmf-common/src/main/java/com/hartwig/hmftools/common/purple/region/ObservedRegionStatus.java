@@ -5,6 +5,7 @@ public enum ObservedRegionStatus {
     GERMLINE_HET_DELETION,
     GERMLINE_AMPLIFICATION,
     GERMLINE_NOISE,
+    CLUSTER,
     SOMATIC,
     UNKNOWN
 }
