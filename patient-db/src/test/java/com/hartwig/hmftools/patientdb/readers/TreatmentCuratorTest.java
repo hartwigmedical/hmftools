@@ -18,12 +18,12 @@ import org.junit.Test;
 
 public class TreatmentCuratorTest {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
-    private static final String TREATMENT_NAMES_CSV = Resources.getResource("treatment_name_mapping.csv").getPath();
+    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("treatment_mapping.csv").getPath();
     private static final TreatmentCurator MATCHER;
 
     static {
         try {
-            MATCHER = new TreatmentCurator(TREATMENT_NAMES_CSV);
+            MATCHER = new TreatmentCurator(TREATMENT_MAPPING_CSV);
         } catch (IOException e) {
             LOGGER.error(e);
             throw new RuntimeException(e);

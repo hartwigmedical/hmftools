@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.readers;
 import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -22,9 +23,9 @@ import com.hartwig.hmftools.patientdb.data.PatientData;
 import org.junit.Test;
 
 public class PatientReaderTest {
-
     private static final String TEST_ECRF = Resources.getResource("ecrf.xml").getPath();
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("treatment_mapping.csv").getPath();
 
     @Test
     public void canReadCpctPatientInfo() throws FileNotFoundException, XMLStreamException {
@@ -54,11 +55,12 @@ public class PatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientTreatments() throws FileNotFoundException, XMLStreamException {
+    public void canReadCpctPatientTreatments() throws IOException, XMLStreamException {
         final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final List<BiopsyTreatmentData> treatments = new BiopsyTreatmentReader(Maps.newHashMap()).read(cpctPatient);
+        final List<BiopsyTreatmentData> treatments =
+                new BiopsyTreatmentReader(new TreatmentCurator(TREATMENT_MAPPING_CSV)).read(cpctPatient);
         assertEquals(1, treatments.size());
         assertEquals(1, treatments.get(0).drugs().size());
         final LocalDate startDate = LocalDate.parse("2012-02-18", DATE_FORMATTER);

@@ -91,7 +91,7 @@ public class TreatmentCurator {
         final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
         if (hits.length > 0) {
             if (hits.length > 1) {
-                final float topScoresSimilarity = hits[1].doc / hits[0].score;
+                final float topScoresSimilarity = hits[1].score / hits[0].score;
                 if (topScoresSimilarity > AMBIGUOUS_RESULTS_THRESHOLD) {
                     return Optional.empty();
                 }

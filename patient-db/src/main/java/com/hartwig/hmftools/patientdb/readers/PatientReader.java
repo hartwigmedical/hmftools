@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
@@ -35,12 +34,11 @@ public class PatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public PatientReader(@NotNull final CpctEcrfModel model, @NotNull final Map<String, String> treatmentToTypeMappings,
-            @NotNull final Lims lims)
+    public PatientReader(@NotNull final CpctEcrfModel model, @NotNull final TreatmentCurator treatmentCurator, @NotNull final Lims lims)
             throws IOException, HartwigException {
         cpctPatientReader = new CpctPatientReader(model);
         limsSampleReader = new LimsSampleReader(lims);
-        biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentToTypeMappings);
+        biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentCurator);
     }
 
     @NotNull
