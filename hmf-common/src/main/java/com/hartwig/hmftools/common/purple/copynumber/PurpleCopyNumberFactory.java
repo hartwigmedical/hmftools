@@ -30,11 +30,9 @@ public class PurpleCopyNumberFactory {
     @NotNull
     private final List<PurpleCopyNumber> smoothedRegions;
 
-    private final boolean experimental;
 
     public PurpleCopyNumberFactory(boolean experimental, @NotNull final PurityAdjuster purityAdjuster,
             final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
-        this.experimental = experimental;
         this.purityAdjuster = purityAdjuster;
         smoothedRegions = Lists.newArrayList();
         highConfidenceRegions = Lists.newArrayList();

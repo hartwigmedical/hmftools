@@ -14,9 +14,13 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class StructuralVariantPloidyFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantPloidyFactory.class);
 
     @NotNull
     static List<StructuralVariantPloidy> create(@NotNull final StructuralVariant variant,
@@ -49,8 +53,17 @@ class StructuralVariantPloidyFactory {
         double totalWeight = startWeight + endWeight;
         double averagePloidy = (startWeight * startPloidy + endWeight * endPloidy) / totalWeight;
 
-        start.ifPresent(x -> result.add(x.setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy)));
-        end.ifPresent(x -> result.add(x.setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy)));
+        if (start.isPresent()) {
+            result.add(start.get().setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy));
+        } else {
+            LOGGER.debug("Unable to determine start ploidy of {}:{}", variant.startChromosome(), variant.startPosition());
+        }
+
+        if (end.isPresent()) {
+            result.add(end.get().setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy));
+        } else {
+            LOGGER.debug("Unable to determine end ploidy of {}:{}", variant.startChromosome(), variant.startPosition());
+        }
 
         Collections.sort(result);
         return result;

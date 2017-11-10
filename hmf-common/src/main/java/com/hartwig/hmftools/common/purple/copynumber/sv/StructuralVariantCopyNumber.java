@@ -38,16 +38,15 @@ public class StructuralVariantCopyNumber {
         final ListMultimap<String, PurpleCopyNumber> result = ArrayListMultimap.create();
         result.putAll(copyNumbers);
 
-        long previousMissingCopyNumbers = copyNumbers.size();
-        long currentMissingCopyNumbers = missingCopyNumbers(copyNumbers);
+        long previousMissingCopyNumbers = result.size();
+        long currentMissingCopyNumbers = missingCopyNumbers(result);
 
         while (currentMissingCopyNumbers < previousMissingCopyNumbers && currentMissingCopyNumbers > 0) {
-            final List<StructuralVariantPloidy> ploidies = createPloidies(result);
-            final GenomePositionSelector<StructuralVariantPloidy> selector = GenomePositionSelectorFactory.create(ploidies);
+            final GenomePositionSelector<StructuralVariantPloidy> selector = GenomePositionSelectorFactory.create(createPloidies(result));
 
             for (Chromosome chromosome : HumanChromosome.values()) {
                 final String chromosomeName = chromosome.toString();
-                final List<PurpleCopyNumber> chromosomeCopyNumbers = copyNumbers.get(chromosomeName);
+                final List<PurpleCopyNumber> chromosomeCopyNumbers = result.get(chromosomeName);
                 for (int i = 0; i < chromosomeCopyNumbers.size(); i++) {
                     final PurpleCopyNumber copyNumber = chromosomeCopyNumbers.get(i);
                     if (Doubles.isZero(copyNumber.averageTumorCopyNumber())) {
@@ -80,10 +79,10 @@ public class StructuralVariantCopyNumber {
             }
 
             previousMissingCopyNumbers = currentMissingCopyNumbers;
-            currentMissingCopyNumbers = missingCopyNumbers(copyNumbers);
+            currentMissingCopyNumbers = missingCopyNumbers(result);
         }
 
-        return copyNumbers;
+        return result;
     }
 
     @NotNull
