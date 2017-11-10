@@ -497,9 +497,9 @@ public class PDFWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> supplementDisclaimerSection() {
         //@formatter:off
         final List<String> lines = Lists.newArrayList("This supplement is a prototype for new types of reporting that " +
-                        "may or may not eventually end up in the actual sequencing report",
-                "Findings should be considered suspicious and should not be used for clinical decision making without " +
-                        "validation using certified assays"
+                    "may or may not eventually end up in the actual sequencing report",
+                    "Findings should be considered as indicative and need confirmation by other means " +
+                            "before being used in clinical decision making."
                 );
         //@formatter:on
 
