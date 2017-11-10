@@ -27,10 +27,10 @@ import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.core.LetterTokenizer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.util.CharTokenizer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -57,7 +57,7 @@ public class TreatmentCurator {
     private static final String DRUG_TYPE_FIELD = "drugType";
     private static final int NUM_HITS = 20;
     private static final int MAX_SHINGLES = 10;
-    private static final float SPELLCHECK_ACCURACY = .8f;
+    private static final float SPELLCHECK_ACCURACY = .75f;
     private static final float AMBIGUOUS_RESULTS_THRESHOLD = .7f;
     private final SpellChecker spellChecker;
     private final IndexSearcher indexSearcher;
@@ -73,10 +73,11 @@ public class TreatmentCurator {
     public List<CuratedTreatment> search(@NotNull final String searchTerm) throws IOException {
         final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchTerm);
         if (!matchedTreatment.isPresent()) {
-            LOGGER.warn("Failed to match search term: {}. attempting to matchSingle multiple treatments", searchTerm);
+            LOGGER.warn("Failed to match search term: {}. attempting to match multiple treatments", searchTerm);
             final List<CuratedTreatment> matchedTreatments = matchMultiple(searchTerm);
             if (!matchedTreatments.isEmpty()) {
-                LOGGER.info("Matched {} to {}", searchTerm, matchedTreatments);
+                LOGGER.info("Matched multiple treatments {} to {}", searchTerm,
+                        matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList()));
             }
             return matchMultiple(searchTerm);
         } else {
@@ -90,17 +91,28 @@ public class TreatmentCurator {
         final Query query = new QueryParser(DRUG_NAME_FIELD, analyzer).createPhraseQuery(DRUG_NAME_FIELD, searchTerm);
         final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
         if (hits.length > 0) {
-            if (hits.length > 1) {
-                final float topScoresSimilarity = hits[1].score / hits[0].score;
-                if (topScoresSimilarity > AMBIGUOUS_RESULTS_THRESHOLD) {
+            return filterSearchResults(hits);
+        }
+        return Optional.empty();
+    }
+
+    @NotNull
+    private Optional<CuratedTreatment> filterSearchResults(@NotNull final ScoreDoc[] hits) throws IOException {
+        final ScoreDoc topScoreHit = hits[0];
+        final Document topSearchResult = indexSearcher.doc(hits[0].doc);
+        final String topResultCanonicalDrug = topSearchResult.get(CANONICAL_DRUG_NAME_FIELD);
+        for (final ScoreDoc hit : hits) {
+            final String hitCanonicalDrug = indexSearcher.doc(hit.doc).get(CANONICAL_DRUG_NAME_FIELD);
+            if (!hitCanonicalDrug.equals(topResultCanonicalDrug)) {
+                final float scoreSimilarity = hit.score / topScoreHit.score;
+                if (scoreSimilarity > AMBIGUOUS_RESULTS_THRESHOLD) {
+                    LOGGER.info("Search results ambiguous. topHit: {}, otherHit: {}", topResultCanonicalDrug,
+                            indexSearcher.doc(hit.doc).get(CANONICAL_DRUG_NAME_FIELD));
                     return Optional.empty();
                 }
             }
-            final Document topSearchResult = indexSearcher.doc(hits[0].doc);
-            return Optional.of(
-                    ImmutableCuratedTreatment.of(topSearchResult.get(CANONICAL_DRUG_NAME_FIELD), topSearchResult.get(DRUG_TYPE_FIELD)));
         }
-        return Optional.empty();
+        return Optional.of(ImmutableCuratedTreatment.of(topResultCanonicalDrug, topSearchResult.get(DRUG_TYPE_FIELD)));
     }
 
     @NotNull
@@ -121,7 +133,7 @@ public class TreatmentCurator {
                 matchedTokens.add(token);
             }
         });
-        return matchedTokens.stream().map(tokenToTreatmentMap::get).collect(Collectors.toList());
+        return matchedTokens.stream().map(tokenToTreatmentMap::get).distinct().collect(Collectors.toList());
     }
 
     @NotNull
@@ -146,7 +158,7 @@ public class TreatmentCurator {
     @NotNull
     private static IndexWriter createIndexWriter(@NotNull final Directory directory) throws IOException {
         //        final Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
-        final Analyzer analyzer = new SimpleAnalyzer();
+        final Analyzer analyzer = createIndexAnalyzer();
         final IndexWriterConfig config = new IndexWriterConfig(analyzer);
         return new IndexWriter(directory, config);
     }
@@ -194,7 +206,7 @@ public class TreatmentCurator {
             @Override
             protected TokenStreamComponents createComponents(final String field) {
                 final StringReader reader = new StringReader(field);
-                final Tokenizer source = new LetterTokenizer();
+                final Tokenizer source = CharTokenizer.fromTokenCharPredicate(Character::isLetterOrDigit);
                 source.setReader(reader);
                 final TokenFilter filteredSource = new LowerCaseFilter(source);
                 final ShingleFilter shingleFilter = new ShingleFilter(filteredSource, maxShingles);
@@ -210,11 +222,25 @@ public class TreatmentCurator {
             @Override
             protected TokenStreamComponents createComponents(final String field) {
                 final StringReader reader = new StringReader(field);
-                final Tokenizer source = new LetterTokenizer();
+                final Tokenizer source = CharTokenizer.fromTokenCharPredicate(Character::isLetterOrDigit);
                 source.setReader(reader);
                 final TokenFilter filteredSource = new LowerCaseFilter(source);
                 final SpellCheckerTokenFilter spellCheckFilter = new SpellCheckerTokenFilter(filteredSource, spellChecker);
                 return new TokenStreamComponents(source, spellCheckFilter);
+            }
+        };
+    }
+
+    @NotNull
+    private static Analyzer createIndexAnalyzer() {
+        return new Analyzer() {
+            @Override
+            protected TokenStreamComponents createComponents(final String field) {
+                final StringReader reader = new StringReader(field);
+                final Tokenizer source = CharTokenizer.fromTokenCharPredicate(Character::isLetterOrDigit);
+                source.setReader(reader);
+                final TokenFilter filteredSource = new LowerCaseFilter(source);
+                return new TokenStreamComponents(source, filteredSource);
             }
         };
     }

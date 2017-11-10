@@ -125,6 +125,12 @@ public class TreatmentCuratorTest {
     }
 
     @Test
+    public void doesNotMatchAmbiguousMultiTerm() throws IOException, ParseException {
+        final List<CuratedTreatment> matchedTreatments = MATCHER.search("pain therapy");
+        assertEquals(0, matchedTreatments.size());
+    }
+
+    @Test
     public void matchesUnambiguousShortTerm() throws IOException, ParseException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("ASA");
         assertEquals(1, matchedTreatments.size());
@@ -135,6 +141,27 @@ public class TreatmentCuratorTest {
     @Test
     public void doesNotMatchNonExistentComposedTerm() throws IOException, ParseException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("amlodipine phosphate");
+        assertEquals(0, matchedTreatments.size());
+    }
+
+    @Test
+    public void matchesTermWithAlias() throws IOException, ParseException {
+        final List<CuratedTreatment> matchedTreatments = MATCHER.search("Zocor (simvastatin)");
+        assertEquals(1, matchedTreatments.size());
+        assertEquals("Zocor", matchedTreatments.get(0).name());
+    }
+
+    @Test
+    public void matchesTermWithNumbers() throws IOException, ParseException {
+        final List<CuratedTreatment> matchedTreatments = MATCHER.search("TNT 101");
+        assertEquals(1, matchedTreatments.size());
+        assertEquals("TNT-101", matchedTreatments.get(0).name());
+    }
+
+    @Test
+    public void doesNotMatchSingleOccurrenceOfAmbiguousTerm() throws IOException, ParseException {
+        final List<CuratedTreatment> matchedTreatments = MATCHER.search("acetate");
+        LOGGER.info(matchedTreatments);
         assertEquals(0, matchedTreatments.size());
     }
 }
