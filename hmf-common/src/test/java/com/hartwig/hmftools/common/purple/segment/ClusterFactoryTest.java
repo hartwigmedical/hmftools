@@ -123,5 +123,4 @@ public class ClusterFactoryTest {
                 .orientation((byte) 1)
                 .build();
     }
-
 }

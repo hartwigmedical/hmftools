@@ -6,6 +6,8 @@ import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -79,5 +81,41 @@ public class PurpleDatamodelTest {
                 .bafDeviation(0);
     }
 
+    @NotNull
+    public static ImmutableStructuralVariant.Builder createStructuralVariant(@NotNull final String startChromosome,
+            final long startPosition, @NotNull final String endChromosome, final long endPosition,
+            @NotNull final StructuralVariantType type) {
+
+        final byte startOrientation;
+        final byte endOrientation;
+        switch (type) {
+            case DUP:
+                startOrientation = -1;
+                endOrientation = 1;
+                break;
+            case BND:
+            case INV:
+                startOrientation = 1;
+                endOrientation = 1;
+                break;
+            default:
+                startOrientation = 1;
+                endOrientation = -1;
+                break;
+        }
+
+        return ImmutableStructuralVariant.builder()
+                .id("")
+                .insertSequence("")
+                .type(type)
+                .startChromosome(startChromosome)
+                .startPosition(startPosition)
+                .startOrientation(startOrientation)
+                .startHomology("")
+                .endChromosome(endChromosome)
+                .endPosition(endPosition)
+                .endOrientation(endOrientation)
+                .endHomology("");
+    }
 
 }

@@ -14,15 +14,18 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ClusterFactory {
 
     public final long windowSize;
+    private final Window window;
 
-    public ClusterFactory(final long windowSize) {
+    public ClusterFactory(final int windowSize) {
         this.windowSize = windowSize;
+        window = new Window(windowSize);
     }
 
     @NotNull
@@ -73,7 +76,6 @@ public class ClusterFactory {
                 if (segment != null) {
                     result.add(segment);
                 }
-
                 segment = ModifiableCluster.create().setChromosome(position.chromosome()).setStart(start).setEnd(end);
 
             } else {
@@ -97,7 +99,7 @@ public class ClusterFactory {
     @VisibleForTesting
     long start(long position, int index, @NotNull final List<CobaltRatio> ratios) {
         assert (index <= ratios.size());
-        final long min = position / windowSize * windowSize + 1 - windowSize;
+        final long min = window.start(position) - windowSize;
         if (!ratios.isEmpty()) {
             for (int i = index; i >= 0; i--) {
                 final CobaltRatio ratio = ratios.get(i);

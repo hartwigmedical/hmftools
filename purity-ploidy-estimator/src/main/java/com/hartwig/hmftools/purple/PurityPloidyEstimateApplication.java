@@ -47,7 +47,7 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryNew;
+import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryOld;
 import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
@@ -178,7 +178,7 @@ public class PurityPloidyEstimateApplication {
                 final Multimap<String, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(config);
                 final Multimap<String, Cluster> clusterMap =
                         new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
-                segments = PurpleSegmentFactoryNew.segment(clusterMap, lengths);
+                segments = PurpleSegmentFactory.segment(clusterMap, lengths);
                 clusters = Lists.newArrayList(clusterMap.values());
                 Collections.sort(clusters);
             } else {

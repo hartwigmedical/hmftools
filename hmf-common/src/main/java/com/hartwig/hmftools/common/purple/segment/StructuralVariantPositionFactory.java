@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,6 +14,7 @@ class StructuralVariantPositionFactory {
 
     private static final long MIN_BASES = 1000;
 
+    @Deprecated
     @NotNull
     static List<StructuralVariantPosition> createMinBaseFiltered(@NotNull final List<StructuralVariant> variants) {
         return create(variants.stream().filter(StructuralVariantPositionFactory::include).collect(Collectors.toList()));
@@ -23,23 +25,26 @@ class StructuralVariantPositionFactory {
         final List<StructuralVariantPosition> positions = Lists.newArrayList();
         for (StructuralVariant variant : variants) {
 
-            positions.add(ImmutableStructuralVariantPosition.builder()
-                    .id(variant.id())
-                    .chromosome(variant.startChromosome())
-                    .position(variant.startPosition())
-                    .type(variant.type())
-                    .orientation(variant.startOrientation())
-                    .alleleFrequency(variant.startAF())
-                    .build());
+            if (variant.type() != StructuralVariantType.INS) {
 
-            positions.add(ImmutableStructuralVariantPosition.builder()
-                    .id(variant.id())
-                    .chromosome(variant.endChromosome())
-                    .position(variant.endPosition())
-                    .type(variant.type())
-                    .orientation(variant.endOrientation())
-                    .alleleFrequency(variant.endAF())
-                    .build());
+                positions.add(ImmutableStructuralVariantPosition.builder()
+                        .id(variant.id())
+                        .chromosome(variant.startChromosome())
+                        .position(variant.startPosition())
+                        .type(variant.type())
+                        .orientation(variant.startOrientation())
+                        .alleleFrequency(variant.startAF())
+                        .build());
+
+                positions.add(ImmutableStructuralVariantPosition.builder()
+                        .id(variant.id())
+                        .chromosome(variant.endChromosome())
+                        .position(variant.endPosition())
+                        .type(variant.type())
+                        .orientation(variant.endOrientation())
+                        .alleleFrequency(variant.endAF())
+                        .build());
+            }
         }
 
         Collections.sort(positions);
