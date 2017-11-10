@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.matchers;
+package com.hartwig.hmftools.patientdb.readers;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,16 +7,21 @@ import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenFilter;
@@ -28,12 +33,12 @@ import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -45,69 +50,69 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.jetbrains.annotations.NotNull;
 
-public class TreatmentNameMatcher {
+public class TreatmentCurator {
+    private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
     private static final String DRUG_NAME_FIELD = "drugName";
     private static final String CANONICAL_DRUG_NAME_FIELD = "canonicalDrugName";
+    private static final String DRUG_TYPE_FIELD = "drugType";
     private static final int NUM_HITS = 20;
     private static final int MAX_SHINGLES = 10;
     private static final float SPELLCHECK_ACCURACY = .8f;
     private static final float AMBIGUOUS_RESULTS_THRESHOLD = .7f;
-    private final Directory index;
     private final SpellChecker spellChecker;
+    private final IndexSearcher indexSearcher;
 
-    public TreatmentNameMatcher(@NotNull final String mappingCsv) throws IOException {
-        index = createIndex(mappingCsv);
+    public TreatmentCurator(@NotNull final String mappingCsv) throws IOException {
+        final Directory index = createIndex(mappingCsv);
+        final IndexReader reader = DirectoryReader.open(index);
         spellChecker = createIndexSpellchecker(index);
+        indexSearcher = new IndexSearcher(reader);
     }
 
     @NotNull
-    public String match(@NotNull final String searchTerm) throws IOException, ParseException {
-        final IndexReader reader = DirectoryReader.open(index);
-        final IndexSearcher searcher = new IndexSearcher(reader);
+    public List<CuratedTreatment> search(@NotNull final String searchTerm) throws IOException {
+        final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchTerm);
+        if (!matchedTreatment.isPresent()) {
+            LOGGER.warn("Failed to match search term: {}. attempting to matchSingle multiple treatments", searchTerm);
+            final List<CuratedTreatment> matchedTreatments = matchMultiple(searchTerm);
+            if (!matchedTreatments.isEmpty()) {
+                LOGGER.info("Matched {} to {}", searchTerm, matchedTreatments);
+            }
+            return matchMultiple(searchTerm);
+        } else {
+            return Lists.newArrayList(matchedTreatment.get());
+        }
+    }
+
+    @NotNull
+    Optional<CuratedTreatment> matchSingle(@NotNull final String searchTerm) throws IOException {
         final Analyzer analyzer = spellcheckAnalyzer(spellChecker);
         final Query query = new QueryParser(DRUG_NAME_FIELD, analyzer).createPhraseQuery(DRUG_NAME_FIELD, searchTerm);
-        final ScoreDoc[] hits = searcher.search(query, NUM_HITS).scoreDocs;
+        final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
         if (hits.length > 0) {
             if (hits.length > 1) {
                 final float topScoresSimilarity = hits[1].doc / hits[0].score;
                 if (topScoresSimilarity > AMBIGUOUS_RESULTS_THRESHOLD) {
-                    return "";
+                    return Optional.empty();
                 }
             }
-            return searcher.doc(hits[0].doc).get(CANONICAL_DRUG_NAME_FIELD);
+            final Document topSearchResult = indexSearcher.doc(hits[0].doc);
+            return Optional.of(
+                    ImmutableCuratedTreatment.of(topSearchResult.get(CANONICAL_DRUG_NAME_FIELD), topSearchResult.get(DRUG_TYPE_FIELD)));
         }
-        return "";
+        return Optional.empty();
     }
 
     @NotNull
-    List<String> search(@NotNull final String searchTerm) throws IOException, ParseException {
-        final String matchedTreatment = match(searchTerm);
-        if (matchedTreatment.isEmpty()) {
-            return matchMultiple(searchTerm);
-        } else {
-            return Lists.newArrayList(matchedTreatment);
-        }
-    }
-
-    @NotNull
-    private TokenStream getSpellcheckedShingleStream(@NotNull final String searchTerm) {
-        StringReader reader = new StringReader(searchTerm);
-        final Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
-        return analyzer.tokenStream(DRUG_NAME_FIELD, reader);
-    }
-
-    @NotNull
-    List<String> matchMultiple(@NotNull final String searchTerm) throws IOException, ParseException {
-        final HashMap<String, String> tokenToTreatmentMap = Maps.newHashMap();
+    List<CuratedTreatment> matchMultiple(@NotNull final String searchTerm) throws IOException {
+        final HashMap<String, CuratedTreatment> tokenToTreatmentMap = Maps.newHashMap();
         final Set<String> matchedTokens = Sets.newHashSet();
         final TokenStream tokenStream = getSpellcheckedShingleStream(searchTerm);
         tokenStream.reset();
         while (tokenStream.incrementToken()) {
             final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
-            final String matchedTreatment = match(searchToken);
-            if (!matchedTreatment.isEmpty()) {
-                tokenToTreatmentMap.put(searchToken, matchedTreatment);
-            }
+            final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchToken);
+            matchedTreatment.ifPresent(curatedTreatment -> tokenToTreatmentMap.put(searchToken, curatedTreatment));
         }
         tokenStream.end();
         tokenStream.close();
@@ -117,6 +122,13 @@ public class TreatmentNameMatcher {
             }
         });
         return matchedTokens.stream().map(tokenToTreatmentMap::get).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private TokenStream getSpellcheckedShingleStream(@NotNull final String searchTerm) {
+        StringReader reader = new StringReader(searchTerm);
+        final Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
+        return analyzer.tokenStream(DRUG_NAME_FIELD, reader);
     }
 
     @NotNull
@@ -154,22 +166,24 @@ public class TreatmentNameMatcher {
 
     private static void indexRecord(@NotNull final IndexWriter writer, @NotNull final CSVRecord record) throws IOException {
         final String otherNamesString = record.get("other_names");
+        final String drugType = record.get("type");
         final String canonicalName = record.get("drug");
         if (!otherNamesString.isEmpty()) {
             final CSVParser otherNamesParser = CSVParser.parse(otherNamesString, CSVFormat.DEFAULT);
             for (final CSVRecord otherNames : otherNamesParser) {
                 for (final String name : otherNames) {
-                    indexEntry(writer, name.trim(), canonicalName.trim());
+                    indexEntry(writer, name.trim(), drugType, canonicalName.trim());
                 }
             }
         }
-        indexEntry(writer, canonicalName.trim(), canonicalName.trim());
+        indexEntry(writer, canonicalName.trim(), drugType, canonicalName.trim());
     }
 
-    private static void indexEntry(@NotNull final IndexWriter writer, @NotNull final String name, @NotNull final String canonicalName)
-            throws IOException {
+    private static void indexEntry(@NotNull final IndexWriter writer, @NotNull final String name, @NotNull final String type,
+            @NotNull final String canonicalName) throws IOException {
         final Document document = new Document();
         document.add(new TextField(DRUG_NAME_FIELD, name, Field.Store.YES));
+        document.add(new StringField(DRUG_TYPE_FIELD, type, Field.Store.YES));
         document.add(new TextField(CANONICAL_DRUG_NAME_FIELD, canonicalName, Field.Store.YES));
         writer.addDocument(document);
     }

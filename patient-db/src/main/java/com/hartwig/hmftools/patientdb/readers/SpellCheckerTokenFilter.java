@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.matchers;
+package com.hartwig.hmftools.patientdb.readers;
 
 import java.io.IOException;
 
