@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 class HighConfidenceSmoothedRegions {
 
     @VisibleForTesting

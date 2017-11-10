@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 class LowConfidenceSmoothedRegions {
 
     @NotNull

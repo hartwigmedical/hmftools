@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 class HighConfidenceRegions {
 
     private static final int MIN_BAF_COUNT = 50;

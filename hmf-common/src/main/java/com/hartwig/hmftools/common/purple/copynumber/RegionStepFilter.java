@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 enum RegionStepFilter {
     ;
 
