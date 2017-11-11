@@ -24,10 +24,9 @@ public class GenePanelSection {
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull final HmfReporterData reporterData) {
         final long coverage = Math.round(reporterData.geneModel().slicer().numberOfBases() / 1E6);
-        final VerticalListBuilder section = toList("Details on the reported gene panel",
-                Lists.newArrayList("The findings in this report are generated from whole-genome-sequencing analysis.",
-                        "Findings are reported for the " + Integer.toString(reporterData.geneModel().slicer().numberOfRegions())
-                                + " genes (canonical transcripts) indicated below, covering " + coverage + " MBases."));
+        final VerticalListBuilder section = toList("Details on the reported gene panel", Lists.newArrayList(
+                "Findings are reported for the " + Integer.toString(reporterData.geneModel().slicer().numberOfRegions())
+                        + " genes (canonical transcripts) indicated below, covering " + coverage + " MBases."));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), genePanelTable(reporterData));
     }
