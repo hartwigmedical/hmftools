@@ -68,7 +68,7 @@ public class StructuralVariantCopyNumber {
                             final double newCopyNumber =
                                     (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
                             final PurpleCopyNumber newPurpleCopyNumber =
-                                    ImmutablePurpleCopyNumber.builder().from(copyNumber).averageTumorCopyNumber(newCopyNumber).build();
+                                    ImmutablePurpleCopyNumber.builder().from(copyNumber).inferred(true).averageTumorCopyNumber(newCopyNumber).build();
 
                             chromosomeCopyNumbers.set(i, newPurpleCopyNumber);
                         }

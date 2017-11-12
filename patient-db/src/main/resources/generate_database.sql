@@ -121,7 +121,7 @@ CREATE TABLE copyNumber
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
-    ratioSupport BOOLEAN NOT NULL,
+    inferred BOOLEAN NOT NULL,
     segmentStartSupport varchar(255) NOT NULL,
     segmentEndSupport varchar(255) NOT NULL,
     bafCount int not null,

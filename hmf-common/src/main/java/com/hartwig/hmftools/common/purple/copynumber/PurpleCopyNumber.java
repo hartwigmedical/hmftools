@@ -14,7 +14,7 @@ public abstract class PurpleCopyNumber implements CopyNumber {
 
     public abstract int bafCount();
 
-    public abstract boolean ratioSupport();
+    public abstract boolean inferred();
 
     public abstract double averageActualBAF();
 

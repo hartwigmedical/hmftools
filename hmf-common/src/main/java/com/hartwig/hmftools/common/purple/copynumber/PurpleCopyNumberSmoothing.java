@@ -24,6 +24,7 @@ class PurpleCopyNumberSmoothing {
                         .from(telomere)
                         .averageTumorCopyNumber(neighbour.averageTumorCopyNumber())
                         .averageActualBAF(neighbour.averageActualBAF())
+                        .inferred(true)
                         .build();
                 copyNumbers.set(0, fixed);
             }

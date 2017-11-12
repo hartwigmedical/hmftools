@@ -113,7 +113,7 @@ public class PurpleCopyNumberFactory {
                 .averageObservedBAF(region.observedBAF())
                 .averageActualBAF(region.tumorBAF())
                 .averageTumorCopyNumber(region.tumorCopyNumber())
-                .ratioSupport(region.ratioSupport())
+                .inferred(false)
                 .segmentStartSupport(region.support())
                 .segmentEndSupport(trailingSupport)
                 .build();

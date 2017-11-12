@@ -50,7 +50,7 @@ class CopyNumberDAO {
                     .start(record.getValue(COPYNUMBER.START))
                     .end(record.getValue(COPYNUMBER.END))
                     .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
-                    .ratioSupport(true)
+                    .inferred(false)
                     .segmentStartSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTSTARTSUPPORT)))
                     .segmentEndSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTENDSUPPORT)))
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
@@ -112,7 +112,7 @@ class CopyNumberDAO {
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
                     COPYNUMBER.END,
-                    COPYNUMBER.RATIOSUPPORT,
+                    COPYNUMBER.INFERRED,
                     COPYNUMBER.SEGMENTSTARTSUPPORT,
                     COPYNUMBER.SEGMENTENDSUPPORT,
                     COPYNUMBER.BAFCOUNT,
@@ -131,7 +131,7 @@ class CopyNumberDAO {
                 region.chromosome(),
                 region.start(),
                 region.end(),
-                region.ratioSupport(),
+                region.inferred(),
                 region.segmentStartSupport(),
                 region.segmentEndSupport(),
                 region.bafCount(),

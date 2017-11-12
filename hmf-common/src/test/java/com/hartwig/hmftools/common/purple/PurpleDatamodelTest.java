@@ -36,7 +36,7 @@ public class PurpleDatamodelTest {
                 .averageTumorCopyNumber(copyNumber)
                 .segmentStartSupport(SegmentSupport.NONE)
                 .segmentEndSupport(SegmentSupport.NONE)
-                .ratioSupport(true)
+                .inferred(false)
                 .bafCount(0)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);

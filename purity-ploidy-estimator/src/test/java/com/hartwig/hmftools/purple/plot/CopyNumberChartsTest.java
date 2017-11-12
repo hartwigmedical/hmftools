@@ -59,7 +59,7 @@ public class CopyNumberChartsTest {
                 .averageTumorCopyNumber(copyNumber)
                 .bafCount(10)
                 .averageObservedBAF(baf)
-                .ratioSupport(true)
+                .inferred(false)
                 .segmentStartSupport(SegmentSupport.NONE)
                 .segmentEndSupport(SegmentSupport.NONE)
                 .averageActualBAF(baf).build();
