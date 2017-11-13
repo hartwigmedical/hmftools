@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.patientdb.readers;
 
+import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS;
+import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_WORD_PARTS;
+import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.SPLIT_ON_NUMERICS;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -7,6 +11,7 @@ import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,9 +33,12 @@ import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.analysis.miscellaneous.FingerprintFilter;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.util.CharTokenizer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -52,13 +60,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class TreatmentCurator {
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
+    private static final String DRUG_TERMS_FIELD = "drugTerms";
     private static final String DRUG_NAME_FIELD = "drugName";
     private static final String CANONICAL_DRUG_NAME_FIELD = "canonicalDrugName";
     private static final String DRUG_TYPE_FIELD = "drugType";
     private static final int NUM_HITS = 20;
     private static final int MAX_SHINGLES = 10;
-    private static final float SPELLCHECK_ACCURACY = .75f;
-    private static final float AMBIGUOUS_RESULTS_THRESHOLD = .7f;
+    private static final float SPELLCHECK_ACCURACY = .85f;
     private final SpellChecker spellChecker;
     private final IndexSearcher indexSearcher;
 
@@ -79,7 +87,7 @@ public class TreatmentCurator {
                 LOGGER.info("Matched multiple treatments {} to {}", searchTerm,
                         matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList()));
             }
-            return matchMultiple(searchTerm);
+            return matchedTreatments;
         } else {
             return Lists.newArrayList(matchedTreatment.get());
         }
@@ -90,29 +98,12 @@ public class TreatmentCurator {
         final Analyzer analyzer = spellcheckAnalyzer(spellChecker);
         final Query query = new QueryParser(DRUG_NAME_FIELD, analyzer).createPhraseQuery(DRUG_NAME_FIELD, searchTerm);
         final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
-        if (hits.length > 0) {
-            return filterSearchResults(hits);
+        if (hits.length == 1) {
+            final Document searchResult = indexSearcher.doc(hits[0].doc);
+            return Optional.of(
+                    ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD), searchResult.get(DRUG_TYPE_FIELD)));
         }
         return Optional.empty();
-    }
-
-    @NotNull
-    private Optional<CuratedTreatment> filterSearchResults(@NotNull final ScoreDoc[] hits) throws IOException {
-        final ScoreDoc topScoreHit = hits[0];
-        final Document topSearchResult = indexSearcher.doc(hits[0].doc);
-        final String topResultCanonicalDrug = topSearchResult.get(CANONICAL_DRUG_NAME_FIELD);
-        for (final ScoreDoc hit : hits) {
-            final String hitCanonicalDrug = indexSearcher.doc(hit.doc).get(CANONICAL_DRUG_NAME_FIELD);
-            if (!hitCanonicalDrug.equals(topResultCanonicalDrug)) {
-                final float scoreSimilarity = hit.score / topScoreHit.score;
-                if (scoreSimilarity > AMBIGUOUS_RESULTS_THRESHOLD) {
-                    LOGGER.info("Search results ambiguous. topHit: {}, otherHit: {}", topResultCanonicalDrug,
-                            indexSearcher.doc(hit.doc).get(CANONICAL_DRUG_NAME_FIELD));
-                    return Optional.empty();
-                }
-            }
-        }
-        return Optional.of(ImmutableCuratedTreatment.of(topResultCanonicalDrug, topSearchResult.get(DRUG_TYPE_FIELD)));
     }
 
     @NotNull
@@ -128,11 +119,18 @@ public class TreatmentCurator {
         }
         tokenStream.end();
         tokenStream.close();
-        tokenToTreatmentMap.keySet().stream().sorted(Comparator.comparing(String::length).reversed()).forEach(token -> {
+        final Set<String> shingleTokens =
+                tokenToTreatmentMap.keySet().stream().sorted(Comparator.comparing(String::length).reversed()).collect(Collectors.toSet());
+        shingleTokens.forEach(token -> {
             if (matchedTokens.stream().noneMatch(matchedToken -> matchedToken.contains(token))) {
                 matchedTokens.add(token);
             }
         });
+        final long lengthOfMatchedCharacters = matchedTokens.stream().mapToLong(String::length).sum();
+        final long lengthOfSearchCharacters = searchTerm.chars().filter(Character::isLetterOrDigit).count();
+        if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < .9) {
+            LOGGER.warn("Matched portion is lower than 90% of search term. Proceed with caution!");
+        }
         return matchedTokens.stream().map(tokenToTreatmentMap::get).distinct().collect(Collectors.toList());
     }
 
@@ -157,8 +155,7 @@ public class TreatmentCurator {
 
     @NotNull
     private static IndexWriter createIndexWriter(@NotNull final Directory directory) throws IOException {
-        //        final Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
-        final Analyzer analyzer = createIndexAnalyzer();
+        final Analyzer analyzer = indexAnalyzer();
         final IndexWriterConfig config = new IndexWriterConfig(analyzer);
         return new IndexWriter(directory, config);
     }
@@ -169,8 +166,9 @@ public class TreatmentCurator {
         final IndexReader indexReader = DirectoryReader.open(index);
         final Analyzer analyzer = new SimpleAnalyzer();
         final IndexWriterConfig config = new IndexWriterConfig(analyzer);
-        final Dictionary dictionary = new HighFrequencyDictionary(indexReader, DRUG_NAME_FIELD, 0.0f);
+        final Dictionary dictionary = new HighFrequencyDictionary(indexReader, DRUG_TERMS_FIELD, 0.0f);
         final SpellChecker spellChecker = new SpellChecker(spellCheckerDirectory);
+
         spellChecker.indexDictionary(dictionary, config, false);
         spellChecker.setAccuracy(SPELLCHECK_ACCURACY);
         return spellChecker;
@@ -180,21 +178,27 @@ public class TreatmentCurator {
         final String otherNamesString = record.get("other_names");
         final String drugType = record.get("type");
         final String canonicalName = record.get("drug");
+        final List<String> drugNames = Lists.newArrayList();
         if (!otherNamesString.isEmpty()) {
             final CSVParser otherNamesParser = CSVParser.parse(otherNamesString, CSVFormat.DEFAULT);
             for (final CSVRecord otherNames : otherNamesParser) {
                 for (final String name : otherNames) {
-                    indexEntry(writer, name.trim(), drugType, canonicalName.trim());
+                    drugNames.add(name.trim());
                 }
             }
         }
-        indexEntry(writer, canonicalName.trim(), drugType, canonicalName.trim());
+        indexEntry(writer, drugNames, drugType, canonicalName.trim());
     }
 
-    private static void indexEntry(@NotNull final IndexWriter writer, @NotNull final String name, @NotNull final String type,
+    private static void indexEntry(@NotNull final IndexWriter writer, @NotNull final List<String> names, @NotNull final String type,
             @NotNull final String canonicalName) throws IOException {
         final Document document = new Document();
-        document.add(new TextField(DRUG_NAME_FIELD, name, Field.Store.YES));
+        names.forEach(name -> {
+            document.add(new TextField(DRUG_NAME_FIELD, name, Field.Store.NO));
+            document.add(new TextField(DRUG_TERMS_FIELD, name, Field.Store.YES));
+        });
+        document.add(new TextField(DRUG_NAME_FIELD, canonicalName, Field.Store.NO));
+        document.add(new TextField(DRUG_TERMS_FIELD, canonicalName, Field.Store.YES));
         document.add(new StringField(DRUG_TYPE_FIELD, type, Field.Store.YES));
         document.add(new TextField(CANONICAL_DRUG_NAME_FIELD, canonicalName, Field.Store.YES));
         writer.addDocument(document);
@@ -204,12 +208,10 @@ public class TreatmentCurator {
     private static Analyzer createShingleAnalyzer(final int maxShingles) {
         return new Analyzer() {
             @Override
-            protected TokenStreamComponents createComponents(final String field) {
-                final StringReader reader = new StringReader(field);
-                final Tokenizer source = CharTokenizer.fromTokenCharPredicate(Character::isLetterOrDigit);
-                source.setReader(reader);
-                final TokenFilter filteredSource = new LowerCaseFilter(source);
-                final ShingleFilter shingleFilter = new ShingleFilter(filteredSource, maxShingles);
+            protected TokenStreamComponents createComponents(@NotNull final String field) {
+                final Tokenizer source = new WhitespaceTokenizer();
+                source.setReader(new StringReader(field));
+                final ShingleFilter shingleFilter = new ShingleFilter(defaultTokenFilter(source), maxShingles);
                 shingleFilter.setOutputUnigrams(true);
                 return new TokenStreamComponents(source, shingleFilter);
             }
@@ -220,28 +222,50 @@ public class TreatmentCurator {
     private static Analyzer spellcheckAnalyzer(@NotNull final SpellChecker spellChecker) {
         return new Analyzer() {
             @Override
-            protected TokenStreamComponents createComponents(final String field) {
-                final StringReader reader = new StringReader(field);
-                final Tokenizer source = CharTokenizer.fromTokenCharPredicate(Character::isLetterOrDigit);
-                source.setReader(reader);
-                final TokenFilter filteredSource = new LowerCaseFilter(source);
-                final SpellCheckerTokenFilter spellCheckFilter = new SpellCheckerTokenFilter(filteredSource, spellChecker);
-                return new TokenStreamComponents(source, spellCheckFilter);
+            protected TokenStreamComponents createComponents(@NotNull final String field) {
+                final Tokenizer source = new WhitespaceTokenizer();
+                source.setReader(new StringReader(field));
+                final SpellCheckerTokenFilter spellCheckFilter = new SpellCheckerTokenFilter(defaultTokenFilter(source), spellChecker);
+                final TokenFilter fingerprintFilter = new FingerprintFilter(spellCheckFilter);
+                return new TokenStreamComponents(source, fingerprintFilter);
             }
         };
     }
 
     @NotNull
-    private static Analyzer createIndexAnalyzer() {
+    private static Analyzer wordDelimiterAnalyzer() {
         return new Analyzer() {
             @Override
-            protected TokenStreamComponents createComponents(final String field) {
-                final StringReader reader = new StringReader(field);
-                final Tokenizer source = CharTokenizer.fromTokenCharPredicate(Character::isLetterOrDigit);
-                source.setReader(reader);
-                final TokenFilter filteredSource = new LowerCaseFilter(source);
-                return new TokenStreamComponents(source, filteredSource);
+            protected TokenStreamComponents createComponents(@NotNull final String field) {
+                final Tokenizer source = new WhitespaceTokenizer();
+                source.setReader(new StringReader(field));
+                return new TokenStreamComponents(source, defaultTokenFilter(source));
             }
         };
+    }
+
+    @NotNull
+    private static Analyzer fingerprintAnalyzer() {
+        return new Analyzer() {
+            @Override
+            protected TokenStreamComponents createComponents(@NotNull final String field) {
+                final Tokenizer source = new WhitespaceTokenizer();
+                source.setReader(new StringReader(field));
+                final TokenFilter fingerprintFilter = new FingerprintFilter(defaultTokenFilter(source));
+                return new TokenStreamComponents(source, fingerprintFilter);
+            }
+        };
+    }
+
+    private static TokenFilter defaultTokenFilter(@NotNull final Tokenizer source) {
+        final TokenFilter filteredSource = new LowerCaseFilter(source);
+        return new WordDelimiterGraphFilter(filteredSource, SPLIT_ON_NUMERICS | GENERATE_WORD_PARTS | GENERATE_NUMBER_PARTS, null);
+    }
+
+    @NotNull
+    private static Analyzer indexAnalyzer() {
+        final Map<String, Analyzer> fieldAnalyzers = Maps.newHashMap();
+        fieldAnalyzers.put(DRUG_NAME_FIELD, fingerprintAnalyzer());
+        return new PerFieldAnalyzerWrapper(wordDelimiterAnalyzer(), fieldAnalyzers);
     }
 }

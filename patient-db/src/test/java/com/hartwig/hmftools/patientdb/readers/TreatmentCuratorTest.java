@@ -46,9 +46,9 @@ public class TreatmentCuratorTest {
 
     @Test
     public void matchesSingleWordWithTypo() throws IOException, ParseException {
-        final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("zoco");
+        final Optional<CuratedTreatment> matchedTreatment = MATCHER.matchSingle("lisinoprill");
         assertTrue(matchedTreatment.isPresent());
-        assertEquals("Zocor", matchedTreatment.get().name());
+        assertEquals("Lisinopril", matchedTreatment.get().name());
     }
 
     @Test
@@ -109,16 +109,9 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchPartialName() throws IOException, ParseException {
-        final List<CuratedTreatment> matchedTreatments = MATCHER.search("acetylsalicylic acid");
-        assertEquals(1, matchedTreatments.size());
-        final List<String> matches = matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList());
-        assertTrue(matches.contains("Aspirin"));
-    }
-
-    @Test
     public void doesNotMatchAmbiguousTerm() throws IOException, ParseException {
         final List<CuratedTreatment> acidmatchedTreatments = MATCHER.search("acid");
+        LOGGER.info(acidmatchedTreatments);
         assertEquals(0, acidmatchedTreatments.size());
         final List<CuratedTreatment> amlodipineMatchedTreatments = MATCHER.search("amlodipine");
         assertEquals(0, amlodipineMatchedTreatments.size());
@@ -128,14 +121,6 @@ public class TreatmentCuratorTest {
     public void doesNotMatchAmbiguousMultiTerm() throws IOException, ParseException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("pain therapy");
         assertEquals(0, matchedTreatments.size());
-    }
-
-    @Test
-    public void matchesUnambiguousShortTerm() throws IOException, ParseException {
-        final List<CuratedTreatment> matchedTreatments = MATCHER.search("ASA");
-        assertEquals(1, matchedTreatments.size());
-        final List<String> matches = matchedTreatments.stream().map(CuratedTreatment::name).collect(Collectors.toList());
-        assertTrue(matches.contains("Aspirin"));
     }
 
     @Test
@@ -161,7 +146,6 @@ public class TreatmentCuratorTest {
     @Test
     public void doesNotMatchSingleOccurrenceOfAmbiguousTerm() throws IOException, ParseException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("acetate");
-        LOGGER.info(matchedTreatments);
         assertEquals(0, matchedTreatments.size());
     }
 }
