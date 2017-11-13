@@ -12,6 +12,7 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -54,6 +55,7 @@ public class PurpleCopyNumberFileTest {
                 .bafCount(random.nextInt())
                 .averageObservedBAF(random.nextDouble())
                 .averageActualBAF(random.nextDouble())
+                .segmentEndSupport(SegmentSupport.NONE)
                 .build();
     }
 }
