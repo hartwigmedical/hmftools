@@ -42,7 +42,7 @@ class BachelorEligibility {
 
         for (final Program program : input.values()) {
 
-            final Map<String, String> geneToEnsemblMap = Maps.newHashMap();
+            final Multimap<String, String> geneToEnsemblMap = HashMultimap.create();
 
             // load panels, potentially multiple
 
@@ -72,7 +72,7 @@ class BachelorEligibility {
 
             final Predicate<VariantModel> inBlacklist = v -> blacklist.stream().anyMatch(b -> {
                 for (final SnpEff annotation : v.Annotations) {
-                    final boolean transcriptMatches = geneToEnsemblMap.get(b.getGene().getName()).equals(annotation.Transcript);
+                    final boolean transcriptMatches = geneToEnsemblMap.values().contains(annotation.Transcript);
                     if (transcriptMatches && !annotation.HGVSp.isEmpty()) {
                         if (b.getHGVSP() != null && b.getHGVSP().equals(annotation.HGVSp)) {
                             return true;
@@ -94,8 +94,9 @@ class BachelorEligibility {
                 for (final Object o : program.getWhitelist().getVariantOrDbSNP()) {
                     if (o instanceof ProgramWhitelist.Variant) {
                         final ProgramWhitelist.Variant v = (ProgramWhitelist.Variant) o;
-                        final String transcript = geneToEnsemblMap.get(v.getGene().getName());
-                        whitelist.put(transcript, v.getHGVSP());
+                        for (final String transcript : geneToEnsemblMap.get(v.getGene().getName())) {
+                            whitelist.put(transcript, v.getHGVSP());
+                        }
                     } else if (o instanceof String) {
                         dbSNP.add((String) o);
                     }
@@ -138,7 +139,8 @@ class BachelorEligibility {
                     .collect(Collectors.toList());
 
             for (final String p : matchingPrograms) {
-                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().patient(patient).program(p).tag(tag)).addVariants(model);
+                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().patient(patient).program(p).tag(tag))
+                        .addVariants(model);
             }
         }
 
