@@ -19,11 +19,11 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
-import com.hartwig.hmftools.patientdb.readers.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.apache.commons.cli.CommandLine;

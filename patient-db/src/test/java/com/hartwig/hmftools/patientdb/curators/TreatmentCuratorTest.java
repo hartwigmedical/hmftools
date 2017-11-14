@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.curators;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -111,7 +111,6 @@ public class TreatmentCuratorTest {
     @Test
     public void doesNotMatchAmbiguousTerm() throws IOException, ParseException {
         final List<CuratedTreatment> acidmatchedTreatments = MATCHER.search("acid");
-        LOGGER.info(acidmatchedTreatments);
         assertEquals(0, acidmatchedTreatments.size());
         final List<CuratedTreatment> amlodipineMatchedTreatments = MATCHER.search("amlodipine");
         assertEquals(0, amlodipineMatchedTreatments.size());
@@ -132,8 +131,9 @@ public class TreatmentCuratorTest {
     @Test
     public void matchesTermWithAlias() throws IOException, ParseException {
         final List<CuratedTreatment> matchedTreatments = MATCHER.search("Zocor (simvastatin)");
-        assertEquals(1, matchedTreatments.size());
+        assertEquals(2, matchedTreatments.size());
         assertEquals("Zocor", matchedTreatments.get(0).name());
+        assertEquals("Zocor", matchedTreatments.get(1).name());
     }
 
     @Test

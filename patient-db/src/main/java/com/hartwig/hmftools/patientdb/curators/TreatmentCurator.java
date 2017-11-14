@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.curators;
 
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_NUMBER_PARTS;
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_WORD_PARTS;
@@ -21,6 +21,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
+import com.hartwig.hmftools.patientdb.data.ImmutableSearchToken;
+import com.hartwig.hmftools.patientdb.data.SearchToken;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -34,11 +36,11 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.analysis.miscellaneous.FingerprintFilter;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -100,38 +102,38 @@ public class TreatmentCurator {
         final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
         if (hits.length == 1) {
             final Document searchResult = indexSearcher.doc(hits[0].doc);
-            return Optional.of(
-                    ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD), searchResult.get(DRUG_TYPE_FIELD)));
+            return Optional.of(ImmutableCuratedTreatment.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD), searchResult.get(DRUG_TYPE_FIELD),
+                    searchTerm));
         }
         return Optional.empty();
     }
 
     @NotNull
     List<CuratedTreatment> matchMultiple(@NotNull final String searchTerm) throws IOException {
-        final HashMap<String, CuratedTreatment> tokenToTreatmentMap = Maps.newHashMap();
-        final Set<String> matchedTokens = Sets.newHashSet();
+        final HashMap<SearchToken, CuratedTreatment> matchedTokens = Maps.newHashMap();
         final TokenStream tokenStream = getSpellcheckedShingleStream(searchTerm);
+        final Set<SearchToken> searchTokens = Sets.newHashSet();
         tokenStream.reset();
         while (tokenStream.incrementToken()) {
             final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
-            final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchToken);
-            matchedTreatment.ifPresent(curatedTreatment -> tokenToTreatmentMap.put(searchToken, curatedTreatment));
+            final OffsetAttribute offset = tokenStream.getAttribute(OffsetAttribute.class);
+            searchTokens.add(ImmutableSearchToken.of(searchToken, offset.startOffset(), offset.endOffset()));
         }
         tokenStream.end();
         tokenStream.close();
-        final Set<String> shingleTokens =
-                tokenToTreatmentMap.keySet().stream().sorted(Comparator.comparing(String::length).reversed()).collect(Collectors.toSet());
-        shingleTokens.forEach(token -> {
-            if (matchedTokens.stream().noneMatch(matchedToken -> matchedToken.contains(token))) {
-                matchedTokens.add(token);
+        final List<SearchToken> sortedTokens = searchTokens.stream()
+                .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
+                .collect(Collectors.toList());
+        for (final SearchToken searchToken : sortedTokens) {
+            if (matchedTokens.keySet()
+                    .stream()
+                    .noneMatch(token -> (token.startOffset() <= searchToken.startOffset() && searchToken.startOffset() <= token.endOffset())
+                            || (token.startOffset() <= searchToken.endOffset() && searchToken.endOffset() <= token.endOffset()))) {
+                final Optional<CuratedTreatment> matchedTreatment = matchSingle(searchToken.term());
+                matchedTreatment.ifPresent(curatedTreatment -> matchedTokens.put(searchToken, curatedTreatment));
             }
-        });
-        final long lengthOfMatchedCharacters = matchedTokens.stream().mapToLong(String::length).sum();
-        final long lengthOfSearchCharacters = searchTerm.chars().filter(Character::isLetterOrDigit).count();
-        if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < .9) {
-            LOGGER.warn("Matched portion is lower than 90% of search term. Proceed with caution!");
         }
-        return matchedTokens.stream().map(tokenToTreatmentMap::get).distinct().collect(Collectors.toList());
+        return Lists.newArrayList(matchedTokens.values());
     }
 
     @NotNull
@@ -226,8 +228,8 @@ public class TreatmentCurator {
                 final Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
                 final SpellCheckerTokenFilter spellCheckFilter = new SpellCheckerTokenFilter(defaultTokenFilter(source), spellChecker);
-                final TokenFilter fingerprintFilter = new FingerprintFilter(spellCheckFilter);
-                return new TokenStreamComponents(source, fingerprintFilter);
+                final TokenFilter concatenatingFilter = new ConcatenatingFilter(spellCheckFilter, ' ');
+                return new TokenStreamComponents(source, concatenatingFilter);
             }
         };
     }
@@ -245,14 +247,14 @@ public class TreatmentCurator {
     }
 
     @NotNull
-    private static Analyzer fingerprintAnalyzer() {
+    private static Analyzer concatenatingAnalyzer() {
         return new Analyzer() {
             @Override
             protected TokenStreamComponents createComponents(@NotNull final String field) {
                 final Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
-                final TokenFilter fingerprintFilter = new FingerprintFilter(defaultTokenFilter(source));
-                return new TokenStreamComponents(source, fingerprintFilter);
+                final TokenFilter concatenatingFilter = new ConcatenatingFilter(defaultTokenFilter(source), ' ');
+                return new TokenStreamComponents(source, concatenatingFilter);
             }
         };
     }
@@ -265,7 +267,7 @@ public class TreatmentCurator {
     @NotNull
     private static Analyzer indexAnalyzer() {
         final Map<String, Analyzer> fieldAnalyzers = Maps.newHashMap();
-        fieldAnalyzers.put(DRUG_NAME_FIELD, fingerprintAnalyzer());
+        fieldAnalyzers.put(DRUG_NAME_FIELD, concatenatingAnalyzer());
         return new PerFieldAnalyzerWrapper(wordDelimiterAnalyzer(), fieldAnalyzers);
     }
 }
