@@ -91,7 +91,7 @@ public class PurityPloidyEstimateApplication {
     private static final int MAX_PLOIDY = 20;
 
     private static final double PURITY_INCREMENT_DEFAULT = 0.01;
-    private static final double NORM_FACTOR_INCREMENTS = 0.01;
+    private static final double NORM_FACTOR_INCREMENTS_DEFAULT = 0.01;
     private static final int THREADS_DEFAULT = 2;
 
     private static final String THREADS = "threads";
@@ -100,6 +100,7 @@ public class PurityPloidyEstimateApplication {
     private static final String PURITY_INCREMENT = "purity_increment";
     private static final String MIN_NORM_FACTOR = "min_norm_factor";
     private static final String MAX_NORM_FACTOR = "max_norm_factor";
+    private static final String NORM_FACTOR_INCREMENTS = "norm_factor_increment";
     private static final String DB_ENABLED = "db_enabled";
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -205,6 +206,7 @@ public class PurityPloidyEstimateApplication {
             final double purityIncrement = defaultValue(cmd, PURITY_INCREMENT, PURITY_INCREMENT_DEFAULT);
             final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
             final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
+            final double normFactorIncrement = defaultValue(cmd, NORM_FACTOR_INCREMENTS, NORM_FACTOR_INCREMENTS_DEFAULT);
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     MAX_PLOIDY,
                     minPurity,
@@ -212,7 +214,7 @@ public class PurityPloidyEstimateApplication {
                     purityIncrement,
                     minNormFactor,
                     maxNormFactor,
-                    NORM_FACTOR_INCREMENTS,
+                    normFactorIncrement,
                     fittedRegionFactory,
                     observedRegions);
 
@@ -334,6 +336,7 @@ public class PurityPloidyEstimateApplication {
 
         options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
         options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
+        options.addOption(NORM_FACTOR_INCREMENTS, true, "Norm factor increments (default 0.01)");
 
         options.addOption(DB_ENABLED, false, "Persist data to DB.");
         options.addOption(DB_USER, true, "Database user name.");
