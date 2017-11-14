@@ -109,14 +109,13 @@ public class StrelkaPostProcessApplication {
         LOGGER.info("Written output variants to " + outputVcf);
     }
 
+    @NotNull
     private static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
         final VCFHeader outputVCFHeader = new VCFHeader(header.getMetaDataInInputOrder(), Sets.newHashSet(sampleName));
-        outputVCFHeader.addMetaDataLine(
-                new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
-                        "Allelic depths for the ref and alt alleles in the order listed"));
+        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
+                "Allelic depths for the ref and alt alleles in the order listed"));
         outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_KEY, 1, VCFHeaderLineType.String, "Genotype"));
-        outputVCFHeader.addMetaDataLine(
-                new VCFHeaderLine("StrelkaGATKCompatibility", "Added GT fields to strelka calls for gatk compatibility."));
+        outputVCFHeader.addMetaDataLine(new VCFHeaderLine("StrelkaGATKCompatibility", "Added GT fields to strelka calls for gatk compatibility."));
         return outputVCFHeader;
     }
 }

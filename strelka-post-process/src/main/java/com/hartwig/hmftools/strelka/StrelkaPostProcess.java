@@ -107,6 +107,7 @@ final class StrelkaPostProcess {
         return altReads / total;
     }
 
+    @NotNull
     static VariantContext simplifyVariant(@NotNull final VariantContext variant, @NotNull final String sampleName) throws HartwigException {
         //MIVO: force GT to 0/1 even for variants with multiple alts
         final List<Allele> outputVariantAlleles = variant.getAlleles().subList(0, 2);
