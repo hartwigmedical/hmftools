@@ -42,10 +42,12 @@ import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientValidator {
@@ -61,6 +63,7 @@ public class PatientValidator {
             findings.addAll(validateTreatmentResponses(patientId, patient.treatments(), patient.treatmentResponses()));
             findings.addAll(validateDeathDate(patientId, patient.patientData(), patient.treatments()));
             findings.addAll(validateRegistrationDate(patientId, patient.patientData(), patient.clinicalBiopsies()));
+            findings.addAll(validateTreatmentCuration(patientId, patient.treatments()));
         }
         return findings;
     }
@@ -217,6 +220,38 @@ public class PatientValidator {
             findings.add(ValidationFinding.of("ecrf", patientId, fields(FIELD_DRUG, FIELD_DRUG_OTHER), "drug name empty", formStatus,
                     formLocked));
         }
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validateTreatmentCuration(@NotNull final String patientId,
+            @NotNull final List<BiopsyTreatmentData> treatments) {
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        treatments.forEach(treatmentData -> treatmentData.drugs().forEach(drug -> {
+            final String drugName = drug.name();
+            if (drugName != null) {
+                if (drug.curatedTreatments().isEmpty()) {
+                    findings.add(ValidationFinding.of("treatmentCuration", patientId, fields(FIELD_DRUG, FIELD_DRUG_OTHER),
+                            "Failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
+                            treatmentData.formStatus(), treatmentData.formLocked(), drugName));
+                } else {
+                    final List<String> curatedTreatments =
+                            drug.curatedTreatments().stream().map(CuratedTreatment::name).collect(Collectors.toList());
+                    final List<String> matchedTerms =
+                            drug.curatedTreatments().stream().map(CuratedTreatment::searchTerm).collect(Collectors.toList());
+                    final long lengthOfMatchedCharacters = matchedTerms.stream().mapToLong(String::length).sum();
+                    final long lengthOfSearchCharacters = drugName.chars().filter(Character::isLetterOrDigit).count();
+                    if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < .9) {
+                        findings.add(ValidationFinding.of("treatmentCuration", patientId, fields(FIELD_DRUG, FIELD_DRUG_OTHER),
+                                "Matched drugs are based on less than 90% of search term.", treatmentData.formStatus(),
+                                treatmentData.formLocked(),
+                                drugName + " matched to " + Strings.join(curatedTreatments, ',') + " based on " + Strings.join(matchedTerms,
+                                        ',')));
+                    }
+                }
+            }
+        }));
         return findings;
     }
 
