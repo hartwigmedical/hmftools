@@ -13,4 +13,7 @@ public abstract class CuratedTreatment {
 
     @NotNull
     public abstract String type();
+
+    @NotNull
+    public abstract String searchTerm();
 }
