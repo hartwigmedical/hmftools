@@ -37,6 +37,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 public class BachelorApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
+    private static final String CONFIG_XML = "configXml";
     private static final String CONFIG_DIRECTORY = "configDirectory";
     private static final String RUN_DIRECTORY = "runDirectory";
     private static final String BATCH_DIRECTORY = "batchDirectory";
@@ -46,7 +47,8 @@ public class BachelorApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(Option.builder(CONFIG_DIRECTORY).required().hasArg().desc("folder to find program XMLs").build());
+        options.addOption(Option.builder(CONFIG_DIRECTORY).required(false).hasArg().desc("folder to find program XMLs").build());
+        options.addOption(Option.builder(CONFIG_XML).required(false).hasArg().desc("single config XML to run").build());
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("output file").build());
         options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
         options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
@@ -155,11 +157,24 @@ public class BachelorApplication {
             final CommandLine cmd = createCommandLine(options, args);
 
             // load configs
+            final Map<String, Program> map;
+            if (cmd.hasOption(CONFIG_DIRECTORY)) {
+                map = BachelorHelper.loadXML(Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY)));
+            } else if (cmd.hasOption(CONFIG_XML)) {
+                map = BachelorHelper.loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
+            } else {
+                LOGGER.error("config directory or xml required!");
+                System.exit(1);
+                return;
+            }
 
-            final Path configPath = Paths.get(cmd.getOptionValue(CONFIG_DIRECTORY));
-            final Map<String, Program> map = BachelorHelper.loadXML(configPath);
             if (cmd.hasOption(VALIDATE)) {
                 System.exit(0);
+                return;
+            }
+            if (map.isEmpty()) {
+                LOGGER.error("no programs loaded!");
+                System.exit(1);
                 return;
             }
 
