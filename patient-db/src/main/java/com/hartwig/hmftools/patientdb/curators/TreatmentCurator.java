@@ -21,8 +21,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTreatment;
-import com.hartwig.hmftools.patientdb.data.ImmutableSearchToken;
-import com.hartwig.hmftools.patientdb.data.SearchToken;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
