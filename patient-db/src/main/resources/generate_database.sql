@@ -274,7 +274,7 @@ CREATE TABLE geneCopyNumber
 DROP TABLE IF EXISTS clinicalFindings;
 CREATE TABLE clinicalFindings
 (   id int NOT NULL AUTO_INCREMENT,
-    level varchar(10),
+    level varchar(30),
     patientId varchar(20),
     ecrfItem varchar(100),
     formStatus varchar(30),
