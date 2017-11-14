@@ -58,17 +58,19 @@ public class StructuralVariantCopyNumber {
 
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
 
-                            final double startWeight = optionalStart.map(StructuralVariantPloidy::weight).orElse(0d);
-                            final double endWeight = optionalEnd.map(StructuralVariantPloidy::weight).orElse(0d);
-                            final double startCopyNumber =
-                                    optionalStart.map(x -> x.adjacentCopyNumber() - x.orientation() * x.averageImpliedPloidy()).orElse(0d);
-                            final double endCopyNumber =
-                                    optionalEnd.map(x -> x.adjacentCopyNumber() + x.orientation() * x.averageImpliedPloidy()).orElse(0d);
+                            final double startWeight = optionalStart.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
+                            final double startCopyNumber = optionalStart.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);
+
+                            final double endWeight = optionalEnd.map(StructuralVariantPloidy::impliedLeftCopyNumberWeight).orElse(0d);
+                            final double endCopyNumber = optionalEnd.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
 
                             final double newCopyNumber =
                                     (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
-                            final PurpleCopyNumber newPurpleCopyNumber =
-                                    ImmutablePurpleCopyNumber.builder().from(copyNumber).inferred(true).averageTumorCopyNumber(newCopyNumber).build();
+                            final PurpleCopyNumber newPurpleCopyNumber = ImmutablePurpleCopyNumber.builder()
+                                    .from(copyNumber)
+                                    .inferred(true)
+                                    .averageTumorCopyNumber(newCopyNumber)
+                                    .build();
 
                             chromosomeCopyNumbers.set(i, newPurpleCopyNumber);
                         }
@@ -87,6 +89,12 @@ public class StructuralVariantCopyNumber {
 
     @NotNull
     private List<StructuralVariantPloidy> createPloidies(@NotNull ListMultimap<String, PurpleCopyNumber> copyNumbers) {
+        return createPloidies(structuralVariants, copyNumbers);
+    }
+
+    @NotNull
+    static List<StructuralVariantPloidy> createPloidies(@NotNull final List<StructuralVariant> structuralVariants,
+            @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
         final List<StructuralVariantPloidy> result = Lists.newArrayList();
         for (StructuralVariant structuralVariant : structuralVariants) {
             result.addAll(StructuralVariantPloidyFactory.create(structuralVariant, copyNumbers));

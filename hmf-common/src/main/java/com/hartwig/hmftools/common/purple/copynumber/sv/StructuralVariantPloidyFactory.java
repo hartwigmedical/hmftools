@@ -22,6 +22,19 @@ class StructuralVariantPloidyFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantPloidyFactory.class);
 
+    //    @NotNull
+    //    static List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> structuralVariants,
+    //            @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
+    //
+    //        final TreeSet<StructuralVariantPloidy> set = new TreeSet<>(Comparator.naturalOrder());
+    //        for (StructuralVariant structuralVariant : structuralVariants) {
+    //            final List<StructuralVariantPloidy> ploidies = create(structuralVariant, copyNumbers);
+    //            for (StructuralVariantPloidy ploidy : ploidies) {
+    //                if (set.)
+    //            }
+    //        }
+    //    }
+
     @NotNull
     static List<StructuralVariantPloidy> create(@NotNull final StructuralVariant variant,
             @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
@@ -87,27 +100,28 @@ class StructuralVariantPloidyFactory {
             alternate = left;
         }
 
-        if (correct.isPresent()) {
-            return correct.map(PurpleCopyNumber::averageTumorCopyNumber)
-                    .map(copyNumber -> create(svPosition, orientation, vaf, copyNumber, false));
-        } else {
-
-            return alternate.map(PurpleCopyNumber::averageTumorCopyNumber)
-                    .map(copyNumber -> create(svPosition, orientation, vaf, copyNumber, true));
+        if (!correct.isPresent() && !alternate.isPresent()) {
+            return Optional.empty();
         }
-    }
 
-    @NotNull
-    private static ModifiableStructuralVariantPloidy create(@NotNull final GenomePosition position, int orientation, double vaf,
-            double copyNumber, boolean alternate) {
+        final double ploidy;
+        final double weight;
+        if (correct.isPresent()) {
+            ploidy = vaf * correct.get().averageTumorCopyNumber();
+            weight = 1;
+        } else {
+            double copyNumber = alternate.get().averageTumorCopyNumber();
+            ploidy = vaf / (1 - vaf) * copyNumber;
+            weight = 1 / (1 + Math.pow(Math.max(copyNumber, 2) / Math.min(Math.max(copyNumber, 0.01), 2), 2));
+        }
 
-        double multiplier = alternate ? vaf / (1 - vaf) : vaf;
-        return ModifiableStructuralVariantPloidy.create()
-                .from(position)
+        return Optional.of(ModifiableStructuralVariantPloidy.create()
+                .from(svPosition)
                 .setOrientation(orientation)
-                .setUnweightedImpliedPloidy(multiplier * copyNumber)
-                .setAlternate(alternate)
-                .setAdjacentCopyNumber(copyNumber)
-                .setWeight(copyNumber);
+                .setUnweightedImpliedPloidy(ploidy)
+                .setLeftCopyNumber(left.map(PurpleCopyNumber::averageTumorCopyNumber))
+                .setRightCopyNumber(right.map(PurpleCopyNumber::averageTumorCopyNumber))
+                .setWeight(weight));
     }
+
 }
