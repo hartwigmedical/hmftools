@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
+import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
@@ -70,30 +70,10 @@ public class BiopsyTreatmentReader {
             if (drugName == null || drugName.trim().toLowerCase().startsWith("other")) {
                 drugName = itemGroup.readItemString(FIELD_DRUG_OTHER, 0, false);
             }
-            if (drugName == null) {
-                drugs.add(ImmutableBiopsyTreatmentDrugData.of(null, null, drugStart, drugEnd));
-            } else {
-                drugs.addAll(curatedDrugs(drugName, drugStart, drugEnd));
-            }
+            final List<CuratedTreatment> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
+            drugs.add(ImmutableBiopsyTreatmentDrugData.of(drugName, drugStart, drugEnd, curatedDrugs));
         }
         return drugs;
-    }
-
-    @NotNull
-    private List<BiopsyTreatmentDrugData> curatedDrugs(@NotNull final String drugName, @Nullable final LocalDate drugStart,
-            @Nullable final LocalDate drugEnd) throws IOException {
-        final List<CuratedTreatment> matchedTreatments = treatmentCurator.search(drugName);
-        if (matchedTreatments.isEmpty()) {
-            LOGGER.warn(
-                    "Failed to map ecrf drug {} to any drug in curated list. Either the list contained no entry, or search results were ambiguous.",
-                    drugName);
-            return Lists.newArrayList(ImmutableBiopsyTreatmentDrugData.of(drugName, null, drugStart, drugEnd));
-        } else {
-            return matchedTreatments.stream()
-                    .map(curatedTreatment -> ImmutableBiopsyTreatmentDrugData.of(curatedTreatment.name(), curatedTreatment.type(),
-                            drugStart, drugEnd))
-                    .collect(Collectors.toList());
-        }
     }
 
     @Nullable
