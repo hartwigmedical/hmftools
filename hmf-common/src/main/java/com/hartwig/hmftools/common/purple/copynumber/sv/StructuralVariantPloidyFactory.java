@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -13,37 +14,36 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class StructuralVariantPloidyFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantPloidyFactory.class);
-
     @NotNull
-    static List<StructuralVariantPloidy> create(@NotNull final StructuralVariant variant,
+    static List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> variants,
             @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
 
-        if (variant.type() == StructuralVariantType.INS) {
-            return Collections.emptyList();
+        final List<StructuralVariantPloidy> result = Lists.newArrayList();
+        final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variants);
+
+        for (StructuralVariantLegs leg : allLegs) {
+            result.addAll(create(leg, copyNumbers));
         }
 
-        final Optional<ModifiableStructuralVariantPloidy> start = Optional.ofNullable(variant.startAF())
-                .flatMap(vaf -> create(variant.startChromosome(),
-                        variant.startPosition(),
-                        (int) variant.startOrientation(),
-                        vaf,
-                        GenomeRegionSelectorFactory.create(copyNumbers)));
+        Collections.sort(result);
+        return result;
+    }
 
-        final Optional<ModifiableStructuralVariantPloidy> end = Optional.ofNullable(variant.endAF())
-                .flatMap(vaf -> create(variant.endChromosome(),
-                        variant.endPosition(),
-                        (int) variant.endOrientation(),
-                        vaf,
-                        GenomeRegionSelectorFactory.create(copyNumbers)));
+    @VisibleForTesting
+    @NotNull
+    static List<StructuralVariantPloidy> create(@NotNull final StructuralVariantLegs legs,
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
+
+        final Optional<ModifiableStructuralVariantPloidy> start =
+                legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.create(copyNumbers)));
+
+        final Optional<ModifiableStructuralVariantPloidy> end =
+                legs.end().flatMap(x -> create(x, GenomeRegionSelectorFactory.create(copyNumbers)));
 
         if (!start.isPresent() && !end.isPresent()) {
             return Collections.emptyList();
@@ -58,33 +58,26 @@ class StructuralVariantPloidyFactory {
         double totalWeight = startWeight + endWeight;
         double averagePloidy = (startWeight * startPloidy + endWeight * endPloidy) / totalWeight;
 
-        if (start.isPresent()) {
-            result.add(start.get().setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy));
-        } else {
-            LOGGER.debug("Unable to determine start ploidy of {}:{}", variant.startChromosome(), variant.startPosition());
-        }
+        start.ifPresent(modifiableStructuralVariantPloidy -> result.add(modifiableStructuralVariantPloidy.setWeight(totalWeight)
+                .setAverageImpliedPloidy(averagePloidy)));
 
-        if (end.isPresent()) {
-            result.add(end.get().setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy));
-        } else {
-            LOGGER.debug("Unable to determine end ploidy of {}:{}", variant.startChromosome(), variant.startPosition());
-        }
+        end.ifPresent(modifiableStructuralVariantPloidy -> result.add(modifiableStructuralVariantPloidy.setWeight(totalWeight)
+                .setAverageImpliedPloidy(averagePloidy)));
 
         Collections.sort(result);
         return result;
     }
 
-    private static Optional<ModifiableStructuralVariantPloidy> create(@NotNull final String chromosome, long position, int orientation,
-            double vaf, @NotNull final GenomeRegionSelector<PurpleCopyNumber> selector) {
+    private static Optional<ModifiableStructuralVariantPloidy> create(@NotNull StructuralVariantLeg leg,
+            @NotNull final GenomeRegionSelector<PurpleCopyNumber> selector) {
 
-        final GenomePosition svPosition = GenomePositions.create(chromosome, position);
-        final GenomePosition svPositionLeft = GenomePositions.create(chromosome, position - 1);
+        final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.position() - 1);
         final Optional<PurpleCopyNumber> left = selector.select(svPositionLeft).filter(x -> !Doubles.isZero(x.averageTumorCopyNumber()));
-        final Optional<PurpleCopyNumber> right = selector.select(svPosition).filter(x -> !Doubles.isZero(x.averageTumorCopyNumber()));
+        final Optional<PurpleCopyNumber> right = selector.select(leg).filter(x -> !Doubles.isZero(x.averageTumorCopyNumber()));
 
         final Optional<PurpleCopyNumber> correct;
         final Optional<PurpleCopyNumber> alternate;
-        if (orientation == 1) {
+        if (leg.orientation() == 1) {
             correct = left;
             alternate = right;
         } else {
@@ -96,6 +89,7 @@ class StructuralVariantPloidyFactory {
             return Optional.empty();
         }
 
+        final double vaf = leg.vaf();
         final double ploidy;
         final double weight;
         if (correct.isPresent()) {
@@ -108,12 +102,11 @@ class StructuralVariantPloidyFactory {
         }
 
         return Optional.of(ModifiableStructuralVariantPloidy.create()
-                .from(svPosition)
-                .setOrientation(orientation)
+                .from(leg)
+                .setOrientation(leg.orientation())
                 .setUnweightedImpliedPloidy(ploidy)
                 .setLeftCopyNumber(left.map(PurpleCopyNumber::averageTumorCopyNumber))
                 .setRightCopyNumber(right.map(PurpleCopyNumber::averageTumorCopyNumber))
                 .setWeight(weight));
     }
-
 }

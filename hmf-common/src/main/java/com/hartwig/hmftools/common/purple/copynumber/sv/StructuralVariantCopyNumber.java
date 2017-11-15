@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.common.purple.copynumber.sv;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
@@ -89,18 +87,7 @@ public class StructuralVariantCopyNumber {
 
     @NotNull
     private List<StructuralVariantPloidy> createPloidies(@NotNull ListMultimap<String, PurpleCopyNumber> copyNumbers) {
-        return createPloidies(structuralVariants, copyNumbers);
-    }
-
-    @NotNull
-    static List<StructuralVariantPloidy> createPloidies(@NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
-        final List<StructuralVariantPloidy> result = Lists.newArrayList();
-        for (StructuralVariant structuralVariant : structuralVariants) {
-            result.addAll(StructuralVariantPloidyFactory.create(structuralVariant, copyNumbers));
-        }
-        Collections.sort(result);
-        return result;
+        return StructuralVariantPloidyFactory.create(structuralVariants, copyNumbers);
     }
 
     private long missingCopyNumbers(Multimap<String, PurpleCopyNumber> copyNumbers) {

@@ -15,6 +15,8 @@ abstract class StructuralVariantPloidy implements GenomePosition {
 
     public abstract int orientation();
 
+    public abstract double vaf();
+
     public abstract Optional<Double> leftCopyNumber();
 
     public double impliedRightCopyNumber() {
