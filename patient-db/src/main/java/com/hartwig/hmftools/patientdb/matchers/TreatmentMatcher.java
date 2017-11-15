@@ -58,8 +58,7 @@ public final class TreatmentMatcher {
                 matchedTreatments.add(treatment);
             } else {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);
-                matchedTreatments.add(ImmutableBiopsyTreatmentData.of(treatment.id(), treatment.treatmentGiven(), treatment.startDate(),
-                        treatment.endDate(), treatment.drugs(), clinicalBiopsy.id(), treatment.formStatus(), treatment.formLocked()));
+                matchedTreatments.add(ImmutableBiopsyTreatmentData.builder().from(treatment).biopsyId(clinicalBiopsy.id()).build());
                 remainingBiopsies = partitions.get(false);
             }
         }

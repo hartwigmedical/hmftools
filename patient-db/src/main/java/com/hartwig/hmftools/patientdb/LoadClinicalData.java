@@ -4,25 +4,23 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
-import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.readers.PatientReader;
@@ -47,7 +45,8 @@ public final class LoadClinicalData {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String TREATMENT_TYPES_CSV = "treatment_types_csv";
+    private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
+    private static final String TUMOR_LOCATION_MAPPING_CSV = "tumor_location_mapping_csv";
     private static final String LIMS_JSON = "lims_json";
     private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates_csv";
     private static final String FORM_STATUS_CSV = "form_status_csv";
@@ -97,12 +96,13 @@ public final class LoadClinicalData {
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
             HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String treatmentTypeCsv = cmd.getOptionValue(TREATMENT_TYPES_CSV);
+        final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_MAPPING_CSV);
+        final String tumorLocationMappingCsv = cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
         final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentTypeCsv, limsJson, preLIMSArrivalDatesCsv, formStatusCsv)) {
+        if (Utils.anyNull(ecrfFilePath, treatmentMappingCsv, tumorLocationMappingCsv, limsJson, preLIMSArrivalDatesCsv, formStatusCsv)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", clinicalOptions);
         } else {
@@ -111,7 +111,9 @@ public final class LoadClinicalData {
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusCsv);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
-            final PatientReader patientReader = new PatientReader(model, readTreatmentToTypeMappingFile(treatmentTypeCsv), lims);
+            final PatientReader patientReader =
+                    new PatientReader(model, new TreatmentCurator(treatmentMappingCsv), new TumorLocationCurator(tumorLocationMappingCsv),
+                            lims);
 
             final Set<String> cpctPatientIds = runContexts.stream()
                     .map(runContext -> Utils.getPatientId(runContext.setName()))
@@ -170,21 +172,6 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, String> readTreatmentToTypeMappingFile(@NotNull final String treatmentToTypeMappingCsv)
-            throws IOException, EmptyFileException {
-        final Map<String, String> treatmentToTypeMapping = Maps.newHashMap();
-        FileReader.build().readLines(new File(treatmentToTypeMappingCsv).toPath()).forEach(line -> {
-            final String[] parts = line.split(",");
-            if (parts.length == 2) {
-                treatmentToTypeMapping.put(parts[0].toLowerCase().trim(), parts[1].trim());
-            } else {
-                LOGGER.warn("Invalid row found in treatment to type mapping csv: " + line);
-            }
-        });
-        return treatmentToTypeMapping;
-    }
-
-    @NotNull
     private static Options mergeOptions(@NotNull final Options... optionsArray) {
         final Options options = new Options();
         final List<Options> optionsList = Lists.newArrayList(optionsArray);
@@ -216,7 +203,9 @@ public final class LoadClinicalData {
         final Options options = new Options();
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(FORM_STATUS_CSV, true, "Path towards the form status csv file.");
-        options.addOption(TREATMENT_TYPES_CSV, true, "Path towards the csv file that maps treatment names to treatment types.");
+        options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards the csv file that maps treatment to treatment names and types.");
+        options.addOption(TUMOR_LOCATION_MAPPING_CSV, true,
+                "Path towards the csv file that maps detailed tumor locations to general ones.");
         return options;
     }
 

@@ -8,7 +8,8 @@ CREATE TABLE patient
     gender varchar(10),
     hospital varchar(255),
     birthYear int,
-    primaryTumorLocation varchar(255),
+    primaryTumorCategory varchar(255),
+    primaryTumorSubcategory varchar(255),
     deathDate DATE,
     PRIMARY KEY (id)
 );
@@ -274,7 +275,7 @@ CREATE TABLE geneCopyNumber
 DROP TABLE IF EXISTS clinicalFindings;
 CREATE TABLE clinicalFindings
 (   id int NOT NULL AUTO_INCREMENT,
-    level varchar(10),
+    level varchar(30),
     patientId varchar(20),
     ecrfItem varchar(100),
     formStatus varchar(30),

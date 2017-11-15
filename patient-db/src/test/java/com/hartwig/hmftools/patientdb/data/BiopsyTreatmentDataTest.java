@@ -21,7 +21,7 @@ public class BiopsyTreatmentDataTest {
 
         final BiopsyTreatmentData data = withDrugs(drugs);
 
-        assertEquals("DrugA/DrugB/DrugC/NULL", data.treatmentName());
+        assertEquals("DrugA/DrugB/DrugC", data.treatmentName());
     }
 
     @Test
@@ -43,11 +43,15 @@ public class BiopsyTreatmentDataTest {
 
     @NotNull
     private static BiopsyTreatmentDrugData drugWithName(@Nullable String name) {
-        return ImmutableBiopsyTreatmentDrugData.of(name, null, null, null);
+        final List<CuratedTreatment> curatedDrugs =
+                name == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of(name, "", ""));
+        return ImmutableBiopsyTreatmentDrugData.of(name, null, null, curatedDrugs);
     }
 
     @NotNull
     private static BiopsyTreatmentDrugData drugWithType(@Nullable String type) {
-        return ImmutableBiopsyTreatmentDrugData.of(null, type, null, null);
+        final List<CuratedTreatment> curatedDrugs =
+                type == null ? Lists.newArrayList() : Lists.newArrayList(ImmutableCuratedTreatment.of("", type, ""));
+        return ImmutableBiopsyTreatmentDrugData.of(null, null, null, curatedDrugs);
     }
 }

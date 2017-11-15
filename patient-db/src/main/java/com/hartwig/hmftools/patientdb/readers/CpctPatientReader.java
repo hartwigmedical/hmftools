@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 
@@ -58,77 +59,94 @@ public class CpctPatientReader {
     @NotNull
     private final Map<Integer, String> hospitals;
 
-    CpctPatientReader(@NotNull final CpctEcrfModel model) {
+    @NotNull
+    private final TumorLocationCurator tumorLocationCurator;
+
+    CpctPatientReader(@NotNull final CpctEcrfModel model, @NotNull final TumorLocationCurator tumorLocationCurator) {
         this.hospitals = extractHospitalMap(model);
+        this.tumorLocationCurator = tumorLocationCurator;
     }
 
     @NotNull
     PatientData read(@NotNull final EcrfPatient patient) {
+        final ImmutablePatientData.Builder patientBuilder =
+                ImmutablePatientData.builder().cpctId(patient.patientId()).hospital(getHospital(patient, hospitals));
+
+        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
+            setDemographyData(patientBuilder, studyEvent);
+            setPrimaryTumorData(patientBuilder, studyEvent);
+            setRegistrationAndBirthData(patientBuilder, studyEvent);
+        }
+        setDeathData(patientBuilder, patient);
+        return patientBuilder.build();
+    }
+
+    private static void setDeathData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfPatient patient) {
+        for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
+            for (final EcrfForm deathFrom : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
+                for (final EcrfItemGroup deathItemGroup : deathFrom.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
+                    builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER, false));
+                    builder.deathStatus(deathFrom.status());
+                    builder.deathLocked(deathFrom.locked());
+                }
+            }
+        }
+    }
+
+    private static void setRegistrationAndBirthData(@NotNull final ImmutablePatientData.Builder builder,
+            @NotNull final EcrfStudyEvent studyEvent) {
         LocalDate registrationDate1 = null;
         LocalDate registrationDate2 = null;
         String birthYear1 = null;
         String birthYear2 = null;
         LocalDate birthYear3 = null;
-
-        final ImmutablePatientData.Builder patientBuilder =
-                ImmutablePatientData.builder().cpctId(patient.patientId()).hospital(getHospital(patient, hospitals));
-
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
-            for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY, false)) {
-                for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY, false)) {
-                    patientBuilder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
-                    patientBuilder.demographyStatus(demographyForm.status());
-                    patientBuilder.demographyLocked(demographyForm.locked());
-                }
-            }
-
-            for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {
-                for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA, false)) {
-                    String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, false);
-                    if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
-                        primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0, false);
-                    }
-                    patientBuilder.primaryTumorLocation(primaryTumorLocation);
-                    patientBuilder.primaryTumorStatus(carcinomaForm.status());
-                    patientBuilder.primaryTumorLocked(carcinomaForm.locked());
-                }
-            }
-
-            for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY, false)) {
-                for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY, false)) {
-                    registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1, 0, DATE_FORMATTER, false);
-                    birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2, 0, false);
-                    birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, DATE_FORMATTER, false);
-                    patientBuilder.eligibilityStatus(eligibilityForm.status());
-                    patientBuilder.eligibilityLocked(eligibilityForm.locked());
-                }
-            }
-
-            for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT, false)) {
-                for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT, false)) {
-                    birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1, 0, false);
-                    if (registrationDate1 == null) {
-                        registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2, 0, DATE_FORMATTER, false);
-                        patientBuilder.selectionCriteriaStatus(selcritForm.status());
-                        patientBuilder.selectionCriteriaLocked(selcritForm.locked());
-                    }
-                }
+        for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY, false)) {
+            for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY, false)) {
+                registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1, 0, DATE_FORMATTER, false);
+                birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2, 0, false);
+                birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3, 0, DATE_FORMATTER, false);
+                builder.eligibilityStatus(eligibilityForm.status());
+                builder.eligibilityLocked(eligibilityForm.locked());
             }
         }
-        for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
-            for (final EcrfForm deathFrom : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
-                for (final EcrfItemGroup deathItemGroup : deathFrom.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
-                    patientBuilder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER, false));
-                    patientBuilder.deathStatus(deathFrom.status());
-                    patientBuilder.deathLocked(deathFrom.locked());
+        for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT, false)) {
+            for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT, false)) {
+                birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1, 0, false);
+                if (registrationDate1 == null) {
+                    registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2, 0, DATE_FORMATTER, false);
+                    builder.selectionCriteriaStatus(selcritForm.status());
+                    builder.selectionCriteriaLocked(selcritForm.locked());
                 }
             }
         }
         final LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
         final Integer birthYear = determineBirthYear(birthYear1, birthYear2, birthYear3);
-        patientBuilder.registrationDate(registrationDate);
-        patientBuilder.birthYear(birthYear);
-        return patientBuilder.build();
+        builder.registrationDate(registrationDate);
+        builder.birthYear(birthYear);
+    }
+
+    private void setPrimaryTumorData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+        for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA, false)) {
+            for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA, false)) {
+                String primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION, 0, false);
+                if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
+                    primaryTumorLocation = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER, 0, false);
+                }
+                builder.primaryTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
+                builder.primaryTumorStatus(carcinomaForm.status());
+                builder.primaryTumorLocked(carcinomaForm.locked());
+            }
+        }
+    }
+
+    private void setDemographyData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+        for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY, false)) {
+            for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY, false)) {
+                builder.gender(demographyItemGroup.readItemString(FIELD_SEX, 0, false));
+                builder.demographyStatus(demographyForm.status());
+                builder.demographyLocked(demographyForm.locked());
+            }
+        }
     }
 
     @NotNull

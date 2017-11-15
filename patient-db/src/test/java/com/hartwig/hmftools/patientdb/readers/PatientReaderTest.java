@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.readers;
 import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -14,6 +15,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
+import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
@@ -22,19 +25,22 @@ import com.hartwig.hmftools.patientdb.data.PatientData;
 import org.junit.Test;
 
 public class PatientReaderTest {
-
     private static final String TEST_ECRF = Resources.getResource("ecrf.xml").getPath();
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String TREATMENT_MAPPING_CSV = Resources.getResource("treatment_mapping.csv").getPath();
+    private static final String TUMOR_LOCATION_MAPPING_CSV = Resources.getResource("tumor_location_mapping.csv").getPath();
 
     @Test
-    public void canReadCpctPatientInfo() throws FileNotFoundException, XMLStreamException {
+    public void canReadCpctPatientInfo() throws IOException, XMLStreamException {
         final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final CpctPatientReader cpctPatientReader = new CpctPatientReader(model);
+        final CpctPatientReader cpctPatientReader = new CpctPatientReader(model, new TumorLocationCurator(TUMOR_LOCATION_MAPPING_CSV));
         final PatientData patientData = cpctPatientReader.read(cpctPatient);
         assertEquals("CPCT02252500", patientData.cpctId());
-        assertEquals("Breast cancer", patientData.primaryTumorLocation());
+        assertEquals("Breast cancer", patientData.primaryTumorLocation().searchTerm());
+        assertEquals("Breast", patientData.primaryTumorLocation().category());
+        assertEquals("Breast Cancer: subtype unknown", patientData.primaryTumorLocation().subcategory());
         assertEquals("female", patientData.gender());
         assertEquals("Bernhoven uden", patientData.hospital());
         assertEquals(new Integer(1963), patientData.birthYear());
@@ -54,11 +60,12 @@ public class PatientReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientTreatments() throws FileNotFoundException, XMLStreamException {
+    public void canReadCpctPatientTreatments() throws IOException, XMLStreamException {
         final CpctEcrfModel model = CpctEcrfModel.loadFromXML(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
         assertEquals(1, model.patientCount());
         final EcrfPatient cpctPatient = model.patients().iterator().next();
-        final List<BiopsyTreatmentData> treatments = new BiopsyTreatmentReader(Maps.newHashMap()).read(cpctPatient);
+        final List<BiopsyTreatmentData> treatments =
+                new BiopsyTreatmentReader(new TreatmentCurator(TREATMENT_MAPPING_CSV)).read(cpctPatient);
         assertEquals(1, treatments.size());
         assertEquals(1, treatments.get(0).drugs().size());
         final LocalDate startDate = LocalDate.parse("2012-02-18", DATE_FORMATTER);

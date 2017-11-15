@@ -42,10 +42,12 @@ import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientValidator {
@@ -53,14 +55,16 @@ public class PatientValidator {
 
     public static List<ValidationFinding> validatePatient(@NotNull final Patient patient) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        findings.addAll(validatePatientData(patient.patientData()));
         final String patientId = patient.patientData().cpctId();
         if (patientId != null) {
+            findings.addAll(validatePatientData(patient.patientData()));
+            findings.addAll(validateTumorLocationCuration(patient.patientData()));
             findings.addAll(validateBiopsies(patientId, patient.clinicalBiopsies(), patient.treatments()));
             findings.addAll(validateTreatments(patientId, patient.treatments()));
             findings.addAll(validateTreatmentResponses(patientId, patient.treatments(), patient.treatmentResponses()));
             findings.addAll(validateDeathDate(patientId, patient.patientData(), patient.treatments()));
             findings.addAll(validateRegistrationDate(patientId, patient.patientData(), patient.clinicalBiopsies()));
+            findings.addAll(validateTreatmentCuration(patientId, patient.treatments()));
         }
         return findings;
     }
@@ -70,27 +74,26 @@ public class PatientValidator {
     static List<ValidationFinding> validatePatientData(@NotNull final PatientData patientData) {
         final String cpctId = patientData.cpctId();
         final List<ValidationFinding> findings = Lists.newArrayList();
-        if (cpctId != null) {
-            if (patientData.primaryTumorLocation() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
-                        "primary tumor location empty", patientData.primaryTumorStatus(), patientData.primaryTumorLocked()));
-            }
-            if (patientData.gender() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_SEX, "gender empty", patientData.demographyStatus(),
-                        patientData.demographyLocked()));
-            }
-            if (patientData.registrationDate() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE2, "registration date empty or in wrong format",
-                        patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE1, "registration date empty or in wrong format",
-                        patientData.eligibilityStatus(), patientData.eligibilityLocked()));
-            }
-            if (patientData.birthYear() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_BIRTH_YEAR1, "birth year could not be determined",
-                        patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
-                findings.add(ValidationFinding.of("ecrf", cpctId, fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
-                        "birth year could not be determined", patientData.eligibilityStatus(), patientData.eligibilityLocked()));
-            }
+        if (patientData.primaryTumorLocation().searchTerm() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
+                    "primary tumor location empty", patientData.primaryTumorStatus(), patientData.primaryTumorLocked()));
+        }
+        if (patientData.gender() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_SEX, "gender empty", patientData.demographyStatus(),
+                    patientData.demographyLocked()));
+        }
+        if (patientData.registrationDate() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE2, "registration date empty or in wrong format",
+                    patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE1, "registration date empty or in wrong format",
+                    patientData.eligibilityStatus(), patientData.eligibilityLocked()));
+        }
+        if (patientData.birthYear() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_BIRTH_YEAR1, "birth year could not be determined",
+                    patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
+            findings.add(
+                    ValidationFinding.of("ecrf", cpctId, fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3), "birth year could not be determined",
+                            patientData.eligibilityStatus(), patientData.eligibilityLocked()));
         }
         return findings;
     }
@@ -216,6 +219,50 @@ public class PatientValidator {
         if (drugData.name() == null) {
             findings.add(ValidationFinding.of("ecrf", patientId, fields(FIELD_DRUG, FIELD_DRUG_OTHER), "drug name empty", formStatus,
                     formLocked));
+        }
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validateTreatmentCuration(@NotNull final String patientId,
+            @NotNull final List<BiopsyTreatmentData> treatments) {
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        treatments.forEach(treatmentData -> treatmentData.drugs().forEach(drug -> {
+            final String drugName = drug.name();
+            if (drugName != null) {
+                if (drug.curatedTreatments().isEmpty()) {
+                    findings.add(ValidationFinding.of("treatmentCuration", patientId, fields(FIELD_DRUG, FIELD_DRUG_OTHER),
+                            "Failed to curate ecrf drug. Curated list contained no matching entry, or match was ambiguous.",
+                            treatmentData.formStatus(), treatmentData.formLocked(), drugName));
+                } else {
+                    final List<String> curatedTreatments =
+                            drug.curatedTreatments().stream().map(CuratedTreatment::name).collect(Collectors.toList());
+                    final List<String> matchedTerms =
+                            drug.curatedTreatments().stream().map(CuratedTreatment::searchTerm).collect(Collectors.toList());
+                    final long lengthOfMatchedCharacters = matchedTerms.stream().mapToLong(String::length).sum();
+                    final long lengthOfSearchCharacters = drugName.chars().filter(Character::isLetterOrDigit).count();
+                    if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < .9) {
+                        findings.add(ValidationFinding.of("treatmentCuration", patientId, fields(FIELD_DRUG, FIELD_DRUG_OTHER),
+                                "Matched drugs are based on less than 90% of search term.", treatmentData.formStatus(),
+                                treatmentData.formLocked(),
+                                drugName + " matched to " + Strings.join(curatedTreatments, ',') + " based on " + Strings.join(matchedTerms,
+                                        ',')));
+                    }
+                }
+            }
+        }));
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validateTumorLocationCuration(@NotNull final PatientData patientData) {
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        if (patientData.primaryTumorLocation().searchTerm() != null && patientData.primaryTumorLocation().category() == null) {
+            findings.add(ValidationFinding.of("tumorLocationCuration", patientData.cpctId(),
+                    fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER), "Failed to curate primary tumor location.",
+                    patientData.primaryTumorStatus(), patientData.primaryTumorLocked(), patientData.primaryTumorLocation().searchTerm()));
         }
         return findings;
     }

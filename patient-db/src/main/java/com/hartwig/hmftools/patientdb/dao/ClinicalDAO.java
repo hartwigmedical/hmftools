@@ -56,9 +56,10 @@ class ClinicalDAO {
             return patientRecord.getValue(PATIENT.ID);
         } else {
             final int patientId = context.insertInto(PATIENT, PATIENT.CPCTID, PATIENT.REGISTRATIONDATE, PATIENT.GENDER, PATIENT.HOSPITAL,
-                    PATIENT.BIRTHYEAR, PATIENT.PRIMARYTUMORLOCATION, PATIENT.DEATHDATE)
+                    PATIENT.BIRTHYEAR, PATIENT.PRIMARYTUMORCATEGORY, PATIENT.PRIMARYTUMORSUBCATEGORY, PATIENT.DEATHDATE)
                     .values(patient.cpctId(), Utils.toSQLDate(patient.registrationDate()), patient.gender(), patient.hospital(),
-                            patient.birthYear(), patient.primaryTumorLocation(), Utils.toSQLDate(patient.deathDate()))
+                            patient.birthYear(), patient.primaryTumorLocation().category(), patient.primaryTumorLocation().subcategory(),
+                            Utils.toSQLDate(patient.deathDate()))
                     .returning(PATIENT.ID)
                     .fetchOne()
                     .getValue(PATIENT.ID);
@@ -98,13 +99,15 @@ class ClinicalDAO {
 
     private void writeDrugData(final int patientId, final int treatmentId, @NotNull final BiopsyTreatmentDrugData drug,
             @NotNull final String formStatus, @NotNull final String formLocked) {
-        final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
-                .values(treatmentId, patientId, Utils.toSQLDate(drug.startDate()), Utils.toSQLDate(drug.endDate()), drug.name(),
-                        drug.type())
-                .returning(DRUG.ID)
-                .fetchOne()
-                .getValue(DRUG.ID);
-        writeFormStatus(id, DRUG.getName(), "treatment", formStatus, formLocked);
+        drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
+            final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
+                    .values(treatmentId, patientId, Utils.toSQLDate(drug.startDate()), Utils.toSQLDate(drug.endDate()),
+                            curatedTreatment.name(), curatedTreatment.type())
+                    .returning(DRUG.ID)
+                    .fetchOne()
+                    .getValue(DRUG.ID);
+            writeFormStatus(id, DRUG.getName(), "treatment", formStatus, formLocked);
+        });
     }
 
     private void writeTreatmentResponseData(final int patientId, @NotNull final BiopsyTreatmentResponseData treatmentResponse) {

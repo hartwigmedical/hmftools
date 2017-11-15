@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.hartwig.hmftools.patientdb.Utils;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -47,6 +45,11 @@ public abstract class BiopsyTreatmentData {
     @NotNull
     public abstract String formLocked();
 
+    @Value.Derived
+    List<CuratedTreatment> curatedDrugs() {
+        return drugs().stream().flatMap(drug -> drug.filteredCuratedTreatments().stream()).collect(Collectors.toList());
+    }
+
     private static final AtomicInteger ID_COUNTER = new AtomicInteger();
 
     private static int createId() {
@@ -63,36 +66,17 @@ public abstract class BiopsyTreatmentData {
 
     @Nullable
     public String treatmentName() {
-        final List<String> drugNames = Lists.newArrayList();
-        for (BiopsyTreatmentDrugData drug : drugs()) {
-            final String drugName = drug.name();
-            if (drugName == null) {
-                drugNames.add("NULL");
-            } else {
-                drugNames.add(toFirstLetterUpperCase(drugName));
-            }
-        }
-
-        Collections.sort(drugNames);
-
-        final StringJoiner joiner = new StringJoiner("/");
-        for (String drugName : drugNames) {
-            joiner.add(drugName);
-        }
-        return Strings.emptyToNull(joiner.toString());
+        final String distinctSortedDrugs = curatedDrugs().stream()
+                .map(treatment -> Utils.capitalize(treatment.name()))
+                .sorted()
+                .distinct()
+                .collect(Collectors.joining("/"));
+        return Strings.emptyToNull(distinctSortedDrugs);
     }
 
     @Nullable
     public String type() {
-        final Set<String> types = Sets.newHashSet();
-
-        for (BiopsyTreatmentDrugData drug : drugs()) {
-            final String type = drug.type();
-            if (type != null) {
-                types.add(drug.type());
-            }
-        }
-
+        final Set<String> types = curatedDrugs().stream().map(CuratedTreatment::type).collect(Collectors.toSet());
         if (types.isEmpty()) {
             return null;
         } else if (types.size() == 1) {
@@ -105,16 +89,5 @@ public abstract class BiopsyTreatmentData {
     @Override
     public String toString() {
         return treatmentName() + "(" + startDate() + " - " + endDate() + ")";
-    }
-
-    @NotNull
-    private static String toFirstLetterUpperCase(@NotNull final String string) {
-        if (string.length() == 0) {
-            return string;
-        } else if (string.length() == 1) {
-            return string.toUpperCase();
-        } else {
-            return string.toUpperCase().substring(0, 1) + string.substring(1);
-        }
     }
 }

@@ -58,6 +58,8 @@
         <retrofit.version>2.3.0</retrofit.version>
         <aws.sdk.version>1.11.213</aws.sdk.version>
         <okhttp.version>3.9.0</okhttp.version>
+        <apache.lucene.version>7.1.0</apache.lucene.version>
+        <apache.commons.csv.version>1.5</apache.commons.csv.version>
 
 
         <hmf-common.version>1</hmf-common.version>
@@ -282,6 +284,31 @@
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
                 <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${apache.lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-common</artifactId>
+                <version>${apache.lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queryparser</artifactId>
+                <version>${apache.lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-suggest</artifactId>
+                <version>${apache.lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-csv</artifactId>
+                <version>${apache.commons.csv.version}</version>
             </dependency>
             <!-- KODU: Test dependencies -->
             <dependency>

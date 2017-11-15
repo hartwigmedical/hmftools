@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutablePatientData;
 import com.hartwig.hmftools.patientdb.data.PatientData;
 
@@ -26,7 +27,11 @@ public class PatientDataValidationTest {
     private final String CPCT_ID = "CPCT01020000";
     private final String HOSPITAL = "Test Hospital";
     private final PatientData PATIENT_DATA =
-            ImmutablePatientData.of(CPCT_ID, null, null, HOSPITAL, null, null, null, "", "", "", "", "", "", "", "", "", "");
+            ImmutablePatientData.of(CPCT_ID, null, null, HOSPITAL, null, ImmutableCuratedTumorLocation.of(null, null, null), null, "", "",
+                    "", "", "", "", "", "", "", "");
+    private final PatientData PATIENT_DATA_MISSING_LOCATION_MAPPING =
+            ImmutablePatientData.of(CPCT_ID, null, null, HOSPITAL, null, ImmutableCuratedTumorLocation.of(null, null, "some_location"),
+                    null, "", "", "", "", "", "", "", "", "", "");
 
     @Test
     public void reportsMissingFields() {
@@ -39,6 +44,15 @@ public class PatientDataValidationTest {
         assertTrue(findingsFields.contains(FIELD_SEX));
         assertTrue(findingsFields.contains(FIELD_BIRTH_YEAR1));
         assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
+        assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
+    }
+
+    @Test
+    public void reportsFailureToCuratePrimaryTumorLocation() {
+        final List<ValidationFinding> findings = PatientValidator.validateTumorLocationCuration(PATIENT_DATA_MISSING_LOCATION_MAPPING);
+        assertEquals(1, findings.size());
+        assertEquals("tumorLocationCuration", findings.get(0).level());
+        final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
     }
 }
