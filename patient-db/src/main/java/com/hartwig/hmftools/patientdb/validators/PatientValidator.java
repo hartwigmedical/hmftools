@@ -55,9 +55,10 @@ public class PatientValidator {
 
     public static List<ValidationFinding> validatePatient(@NotNull final Patient patient) {
         final List<ValidationFinding> findings = Lists.newArrayList();
-        findings.addAll(validatePatientData(patient.patientData()));
         final String patientId = patient.patientData().cpctId();
         if (patientId != null) {
+            findings.addAll(validatePatientData(patient.patientData()));
+            findings.addAll(validateTumorLocationCuration(patient.patientData()));
             findings.addAll(validateBiopsies(patientId, patient.clinicalBiopsies(), patient.treatments()));
             findings.addAll(validateTreatments(patientId, patient.treatments()));
             findings.addAll(validateTreatmentResponses(patientId, patient.treatments(), patient.treatmentResponses()));
@@ -73,27 +74,26 @@ public class PatientValidator {
     static List<ValidationFinding> validatePatientData(@NotNull final PatientData patientData) {
         final String cpctId = patientData.cpctId();
         final List<ValidationFinding> findings = Lists.newArrayList();
-        if (cpctId != null) {
-            if (patientData.primaryTumorLocation() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
-                        "primary tumor location empty", patientData.primaryTumorStatus(), patientData.primaryTumorLocked()));
-            }
-            if (patientData.gender() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_SEX, "gender empty", patientData.demographyStatus(),
-                        patientData.demographyLocked()));
-            }
-            if (patientData.registrationDate() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE2, "registration date empty or in wrong format",
-                        patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE1, "registration date empty or in wrong format",
-                        patientData.eligibilityStatus(), patientData.eligibilityLocked()));
-            }
-            if (patientData.birthYear() == null) {
-                findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_BIRTH_YEAR1, "birth year could not be determined",
-                        patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
-                findings.add(ValidationFinding.of("ecrf", cpctId, fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
-                        "birth year could not be determined", patientData.eligibilityStatus(), patientData.eligibilityLocked()));
-            }
+        if (patientData.primaryTumorLocation().searchTerm() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER),
+                    "primary tumor location empty", patientData.primaryTumorStatus(), patientData.primaryTumorLocked()));
+        }
+        if (patientData.gender() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_SEX, "gender empty", patientData.demographyStatus(),
+                    patientData.demographyLocked()));
+        }
+        if (patientData.registrationDate() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE2, "registration date empty or in wrong format",
+                    patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_REGISTRATION_DATE1, "registration date empty or in wrong format",
+                    patientData.eligibilityStatus(), patientData.eligibilityLocked()));
+        }
+        if (patientData.birthYear() == null) {
+            findings.add(ValidationFinding.of("ecrf", cpctId, FIELD_BIRTH_YEAR1, "birth year could not be determined",
+                    patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
+            findings.add(
+                    ValidationFinding.of("ecrf", cpctId, fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3), "birth year could not be determined",
+                            patientData.eligibilityStatus(), patientData.eligibilityLocked()));
         }
         return findings;
     }
@@ -252,6 +252,18 @@ public class PatientValidator {
                 }
             }
         }));
+        return findings;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ValidationFinding> validateTumorLocationCuration(@NotNull final PatientData patientData) {
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        if (patientData.primaryTumorLocation().searchTerm() != null && patientData.primaryTumorLocation().category() == null) {
+            findings.add(ValidationFinding.of("tumorLocationCuration", patientData.cpctId(),
+                    fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER), "Failed to curate primary tumor location.",
+                    patientData.primaryTumorStatus(), patientData.primaryTumorLocked(), patientData.primaryTumorLocation().searchTerm()));
+        }
         return findings;
     }
 
