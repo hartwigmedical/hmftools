@@ -37,8 +37,7 @@ public final class BiopsyMatcher {
             final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 1 && possibleMatches.get(0).date() != null) {
                 final BiopsyData clinicalBiopsy = partitions.get(true).get(0);
-                matchedBiopsies.add(ImmutableBiopsyData.of(clinicalBiopsy.id(), clinicalBiopsy.date(), clinicalBiopsy.location(),
-                        sequencedBiopsy.sampleId(), clinicalBiopsy.formStatus(), clinicalBiopsy.formLocked()));
+                matchedBiopsies.add(ImmutableBiopsyData.builder().from(clinicalBiopsy).sampleId(sequencedBiopsy.sampleId()).build());
                 remainingBiopsies = partitions.get(false);
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
                 findings.add(
