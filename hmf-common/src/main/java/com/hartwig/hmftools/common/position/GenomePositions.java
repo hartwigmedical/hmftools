@@ -17,7 +17,12 @@ public enum GenomePositions {
 
     @NotNull
     public static GenomePosition create(@NotNull final String chromosome, final long position) {
-        return  ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
+        return ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
+    }
+
+    @NotNull
+    public static <T extends GenomePosition> GenomePosition create(@NotNull final T genomePosition) {
+        return ImmutableGenomePositionImpl.builder().chromosome(genomePosition.chromosome()).position(genomePosition.position()).build();
     }
 
     @NotNull
