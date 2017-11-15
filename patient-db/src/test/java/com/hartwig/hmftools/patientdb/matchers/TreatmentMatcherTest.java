@@ -32,11 +32,11 @@ public class TreatmentMatcherTest {
     private final static BiopsyTreatmentData TREATMENT_MAR_NULL =
             ImmutableBiopsyTreatmentData.of("Yes", MAR2015, null, Lists.newArrayList(), "", "");
 
-    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "");
-    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "");
-    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "");
-    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "");
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "");
+    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "");
+    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "");
+    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "", "");
+    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "", "");
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "", "");
 
     // MIVO:    ---start(feb)-biopsy(mar)----end(jul)---
     @Test

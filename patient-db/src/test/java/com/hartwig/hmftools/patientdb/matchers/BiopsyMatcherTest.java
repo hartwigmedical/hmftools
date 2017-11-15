@@ -30,14 +30,14 @@ public class BiopsyMatcherTest {
     private final static SampleData LIMS_BIOPSY_SEP = ImmutableSampleData.of("sep", SEP2015, null, 50.0);
     private final static SampleData LIMS_BIOPSY_NOV = ImmutableSampleData.of("nov", NOV2015, null, 50.0);
 
-    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "");
-    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "");
-    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "");
-    private final static BiopsyData BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", "");
+    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "");
+    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "");
+    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "", "");
+    private final static BiopsyData BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", "", "");
 
-    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "");
+    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "", "");
 
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "");
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "", "");
 
     // MIVO:    ---biopsy(jul)/sample(jul)---
     @Test

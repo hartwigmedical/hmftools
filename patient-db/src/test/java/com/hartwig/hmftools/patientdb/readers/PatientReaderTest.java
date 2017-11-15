@@ -55,7 +55,8 @@ public class PatientReaderTest {
         final EcrfPatient cpctPatient = model.patients().iterator().next();
         final List<BiopsyData> biopsies = BiopsyReader.read(cpctPatient);
         assertEquals(1, biopsies.size());
-        assertEquals("Soft tissue", biopsies.get(0).location());
+        assertEquals("Soft tissue", biopsies.get(0).site());
+        assertEquals("near right scapula", biopsies.get(0).location());
         assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), biopsies.get(0).date());
     }
 

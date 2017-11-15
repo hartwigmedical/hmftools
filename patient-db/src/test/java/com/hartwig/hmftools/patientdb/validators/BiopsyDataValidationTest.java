@@ -2,7 +2,8 @@ package com.hartwig.hmftools.patientdb.validators;
 
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_BIOPSY_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION_OTHER;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_REGISTRATION_DATE1;
@@ -32,20 +33,21 @@ public class BiopsyDataValidationTest {
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2016 = LocalDate.parse("2016-03-01");
 
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, "", "");
-    private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, "1", "", "");
-    private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, "2", "", "");
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, null, "", "");
+    private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, "1", "", "", "");
+    private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, "2", "", "", "");
     private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
             ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(), "", "");
 
     @Test
     public void reportsMissingFields() {
         final List<ValidationFinding> findings = PatientValidator.validateBiopsyData(CPCT_ID, BIOPSY_NULL);
-        assertEquals(2, findings.size());
+        assertEquals(3, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_BIOPSY_DATE));
-        assertTrue(findingsFields.contains(fields(FIELD_LOCATION, FIELD_LOCATION_OTHER)));
+        assertTrue(findingsFields.contains(fields(FIELD_SITE, FIELD_SITE_OTHER)));
+        assertTrue(findingsFields.contains(fields(FIELD_LOCATION)));
     }
 
     @Test
@@ -61,11 +63,12 @@ public class BiopsyDataValidationTest {
     public void reportsAllFindings() {
         final List<ValidationFinding> findings =
                 PatientValidator.validateBiopsies(CPCT_ID, Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB1, BIOPSY_FEB2), Lists.newArrayList());
-        assertEquals(2, findings.size());
+        assertEquals(3, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_BIOPSY_DATE));
-        assertTrue(findingsFields.contains(fields(FIELD_LOCATION, FIELD_LOCATION_OTHER)));
+        assertTrue(findingsFields.contains(fields(FIELD_SITE, FIELD_SITE_OTHER)));
+        assertTrue(findingsFields.contains(fields(FIELD_LOCATION)));
     }
 
     @Test
