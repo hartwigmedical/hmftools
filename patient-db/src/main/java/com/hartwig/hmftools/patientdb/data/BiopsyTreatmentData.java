@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.hartwig.hmftools.patientdb.Utils;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +67,7 @@ public abstract class BiopsyTreatmentData {
     @Nullable
     public String treatmentName() {
         final String distinctSortedDrugs = curatedDrugs().stream()
-                .map(treatment -> toFirstLetterUpperCase(treatment.name()))
+                .map(treatment -> Utils.capitalize(treatment.name()))
                 .sorted()
                 .distinct()
                 .collect(Collectors.joining("/"));
@@ -88,14 +89,5 @@ public abstract class BiopsyTreatmentData {
     @Override
     public String toString() {
         return treatmentName() + "(" + startDate() + " - " + endDate() + ")";
-    }
-
-    @NotNull
-    private static String toFirstLetterUpperCase(@NotNull final String string) {
-        if (string.isEmpty()) {
-            return string;
-        } else {
-            return string.toUpperCase().substring(0, 1) + string.substring(1);
-        }
     }
 }

@@ -29,4 +29,13 @@ public final class Utils {
         final String[] names = runName.split("_");
         return names[4];
     }
+
+    @NotNull
+    public static String capitalize(@NotNull final String string) {
+        if (string.isEmpty()) {
+            return string;
+        } else {
+            return string.toUpperCase().substring(0, 1) + string.substring(1);
+        }
+    }
 }
