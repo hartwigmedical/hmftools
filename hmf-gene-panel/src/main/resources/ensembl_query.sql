@@ -8,7 +8,7 @@ select
     gene.stable_id as gene_id,
     gene.seq_region_start as gene_start,
     gene.seq_region_end as gene_end,
-    GROUP_CONCAT(karyotype.band SEPARATOR '-') as chromosome_band,
+    GROUP_CONCAT(karyotype.band ORDER BY karyotype.band SEPARATOR '-') as chromosome_band,
 	dbprimary_acc as entrezId,
     e.stable_id as exon_id,
     e.seq_region_start as exon_start,
