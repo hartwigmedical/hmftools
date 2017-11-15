@@ -56,9 +56,10 @@ class ClinicalDAO {
             return patientRecord.getValue(PATIENT.ID);
         } else {
             final int patientId = context.insertInto(PATIENT, PATIENT.CPCTID, PATIENT.REGISTRATIONDATE, PATIENT.GENDER, PATIENT.HOSPITAL,
-                    PATIENT.BIRTHYEAR, PATIENT.PRIMARYTUMORLOCATION, PATIENT.DEATHDATE)
+                    PATIENT.BIRTHYEAR, PATIENT.PRIMARYTUMORCATEGORY, PATIENT.PRIMARYTUMORSUBCATEGORY, PATIENT.DEATHDATE)
                     .values(patient.cpctId(), Utils.toSQLDate(patient.registrationDate()), patient.gender(), patient.hospital(),
-                            patient.birthYear(), patient.primaryTumorLocation(), Utils.toSQLDate(patient.deathDate()))
+                            patient.birthYear(), patient.primaryTumorLocation().category(), patient.primaryTumorLocation().subcategory(),
+                            Utils.toSQLDate(patient.deathDate()))
                     .returning(PATIENT.ID)
                     .fetchOne()
                     .getValue(PATIENT.ID);
