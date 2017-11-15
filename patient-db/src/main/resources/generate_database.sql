@@ -8,8 +8,8 @@ CREATE TABLE patient
     gender varchar(10),
     hospital varchar(255),
     birthYear int,
-    primaryTumorCategory varchar(255),
-    primaryTumorSubcategory varchar(255),
+    cancerType varchar(255),
+    cancerSubtype varchar(255),
     deathDate DATE,
     PRIMARY KEY (id)
 );
