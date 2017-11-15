@@ -25,8 +25,11 @@ public abstract class PatientData {
     @Nullable
     public abstract Integer birthYear();
 
-    @Nullable
-    public abstract String primaryTumorLocation();
+    @NotNull
+    @Value.Default
+    public CuratedTumorLocation primaryTumorLocation() {
+        return ImmutableCuratedTumorLocation.of(null, null, null);
+    }
 
     @Nullable
     public abstract LocalDate deathDate();
