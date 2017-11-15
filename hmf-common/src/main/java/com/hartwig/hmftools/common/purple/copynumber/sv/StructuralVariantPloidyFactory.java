@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,22 +23,13 @@ class StructuralVariantPloidyFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantPloidyFactory.class);
 
-    //    @NotNull
-    //    static List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> structuralVariants,
-    //            @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
-    //
-    //        final TreeSet<StructuralVariantPloidy> set = new TreeSet<>(Comparator.naturalOrder());
-    //        for (StructuralVariant structuralVariant : structuralVariants) {
-    //            final List<StructuralVariantPloidy> ploidies = create(structuralVariant, copyNumbers);
-    //            for (StructuralVariantPloidy ploidy : ploidies) {
-    //                if (set.)
-    //            }
-    //        }
-    //    }
-
     @NotNull
     static List<StructuralVariantPloidy> create(@NotNull final StructuralVariant variant,
             @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
+
+        if (variant.type() == StructuralVariantType.INS) {
+            return Collections.emptyList();
+        }
 
         final Optional<ModifiableStructuralVariantPloidy> start = Optional.ofNullable(variant.startAF())
                 .flatMap(vaf -> create(variant.startChromosome(),
