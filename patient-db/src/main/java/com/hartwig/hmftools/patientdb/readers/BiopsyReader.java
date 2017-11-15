@@ -20,8 +20,9 @@ public final class BiopsyReader {
     private static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
 
     public static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
-    public static final String FIELD_LOCATION = "FLD.BIOPS.BILESSITE";
-    public static final String FIELD_LOCATION_OTHER = "FLD.BIOPS.BIOTHLESSITE";
+    public static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
+    public static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
+    public static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -35,12 +36,13 @@ public final class BiopsyReader {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, false)) {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, false)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, false);
+                    final String site = itemGroup.readItemString(FIELD_SITE, 0, false);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, false);
-                    if (location == null || location.trim().toLowerCase().startsWith("other")) {
-                        final String location_other = itemGroup.readItemString(FIELD_LOCATION_OTHER, 0, false);
-                        biopsies.add(ImmutableBiopsyData.of(date, location_other, form.status(), form.locked()));
+                    if (site == null || site.trim().toLowerCase().startsWith("other")) {
+                        final String site_other = itemGroup.readItemString(FIELD_SITE_OTHER, 0, false);
+                        biopsies.add(ImmutableBiopsyData.of(date, site_other, location, form.status(), form.locked()));
                     } else {
-                        biopsies.add(ImmutableBiopsyData.of(date, location, form.status(), form.locked()));
+                        biopsies.add(ImmutableBiopsyData.of(date, site, location, form.status(), form.locked()));
                     }
                 }
             }

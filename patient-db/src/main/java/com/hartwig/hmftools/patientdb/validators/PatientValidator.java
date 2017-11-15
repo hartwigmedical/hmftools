@@ -7,7 +7,8 @@ import static java.util.Comparator.nullsLast;
 
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_BIOPSY_DATE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_LOCATION_OTHER;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FIELD_SITE_OTHER;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyReader.FORM_BIOPS;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_DRUG_END;
@@ -130,9 +131,13 @@ public class PatientValidator {
             findings.add(ValidationFinding.of("ecrf", patientId, FIELD_BIOPSY_DATE, "biopsy date empty or in wrong format",
                     biopsyData.formStatus(), biopsyData.formLocked()));
         }
-        if (biopsyData.location() == null) {
-            findings.add(ValidationFinding.of("ecrf", patientId, fields(FIELD_LOCATION, FIELD_LOCATION_OTHER), "biopsy location empty",
+        if (biopsyData.site() == null) {
+            findings.add(ValidationFinding.of("ecrf", patientId, fields(FIELD_SITE, FIELD_SITE_OTHER), "biopsy site empty",
                     biopsyData.formStatus(), biopsyData.formLocked()));
+        }
+        if (biopsyData.location() == null) {
+            findings.add(ValidationFinding.of("ecrf", patientId, fields(FIELD_LOCATION), "biopsy location empty", biopsyData.formStatus(),
+                    biopsyData.formLocked()));
         }
         return findings;
     }

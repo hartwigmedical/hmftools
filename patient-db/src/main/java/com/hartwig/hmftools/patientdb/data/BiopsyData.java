@@ -18,6 +18,9 @@ public abstract class BiopsyData {
     public abstract LocalDate date();
 
     @Nullable
+    public abstract String site();
+
+    @Nullable
     public abstract String location();
 
     @Nullable
@@ -36,13 +39,13 @@ public abstract class BiopsyData {
     }
 
     @NotNull
-    public static BiopsyData of(@Nullable final LocalDate date, @Nullable final String location, @NotNull final String formStatus,
-            @NotNull final String formLocked) {
-        return ImmutableBiopsyData.of(createId(), date, location, null, formStatus, formLocked);
+    public static BiopsyData of(@Nullable final LocalDate date, @Nullable final String site, @Nullable final String location,
+            @NotNull final String formStatus, @NotNull final String formLocked) {
+        return ImmutableBiopsyData.of(createId(), date, site, location, null, formStatus, formLocked);
     }
 
     @Override
     public String toString() {
-        return location() + "(" + date() + ")";
+        return site() + "(" + date() + ")";
     }
 }
