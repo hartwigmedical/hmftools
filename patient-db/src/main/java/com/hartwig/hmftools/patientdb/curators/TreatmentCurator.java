@@ -64,6 +64,9 @@ public class TreatmentCurator {
     private static final String DRUG_NAME_FIELD = "drugName";
     private static final String CANONICAL_DRUG_NAME_FIELD = "canonicalDrugName";
     private static final String DRUG_TYPE_FIELD = "drugType";
+    private static final String CANONICAL_DRUG_NAME_CSV_FIELD = "drug";
+    private static final String DRUG_TYPE_CSV_FIELD = "type";
+    private static final String OTHER_DRUG_NAMES_CSV_FIELD = "other_names";
     private static final int NUM_HITS = 20;
     private static final int MAX_SHINGLES = 10;
     private static final float SPELLCHECK_ACCURACY = .85f;
@@ -109,20 +112,8 @@ public class TreatmentCurator {
     @NotNull
     List<CuratedTreatment> matchMultiple(@NotNull final String searchTerm) throws IOException {
         final HashMap<SearchToken, CuratedTreatment> matchedTokens = Maps.newHashMap();
-        final TokenStream tokenStream = getSpellcheckedShingleStream(searchTerm);
-        final Set<SearchToken> searchTokens = Sets.newHashSet();
-        tokenStream.reset();
-        while (tokenStream.incrementToken()) {
-            final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
-            final OffsetAttribute offset = tokenStream.getAttribute(OffsetAttribute.class);
-            searchTokens.add(ImmutableSearchToken.of(searchToken, offset.startOffset(), offset.endOffset()));
-        }
-        tokenStream.end();
-        tokenStream.close();
-        final List<SearchToken> sortedTokens = searchTokens.stream()
-                .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
-                .collect(Collectors.toList());
-        for (final SearchToken searchToken : sortedTokens) {
+        final List<SearchToken> searchTokens = generateSearchTokens(searchTerm);
+        for (final SearchToken searchToken : searchTokens) {
             if (matchedTokens.keySet()
                     .stream()
                     .noneMatch(token -> (token.startOffset() <= searchToken.startOffset() && searchToken.startOffset() <= token.endOffset())
@@ -134,8 +125,24 @@ public class TreatmentCurator {
         return Lists.newArrayList(matchedTokens.values());
     }
 
+    private static List<SearchToken> generateSearchTokens(@NotNull final String searchTerm) throws IOException {
+        final Set<SearchToken> searchTokens = Sets.newHashSet();
+        final TokenStream tokenStream = getSpellcheckedShingleStream(searchTerm);
+        tokenStream.reset();
+        while (tokenStream.incrementToken()) {
+            final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
+            final OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
+            searchTokens.add(ImmutableSearchToken.of(searchToken, offsetAttribute.startOffset(), offsetAttribute.endOffset()));
+        }
+        tokenStream.end();
+        tokenStream.close();
+        return searchTokens.stream()
+                .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
+                .collect(Collectors.toList());
+    }
+
     @NotNull
-    private TokenStream getSpellcheckedShingleStream(@NotNull final String searchTerm) {
+    private static TokenStream getSpellcheckedShingleStream(@NotNull final String searchTerm) {
         StringReader reader = new StringReader(searchTerm);
         final Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
         return analyzer.tokenStream(DRUG_NAME_FIELD, reader);
@@ -146,7 +153,7 @@ public class TreatmentCurator {
         final Directory treatmentIndex = new RAMDirectory();
         final CSVParser parser = CSVParser.parse(new File(mappingCsv), Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         final IndexWriter indexWriter = createIndexWriter(treatmentIndex);
-        for (CSVRecord record : parser) {
+        for (final CSVRecord record : parser) {
             indexRecord(indexWriter, record);
         }
         indexWriter.close();
@@ -175,9 +182,9 @@ public class TreatmentCurator {
     }
 
     private static void indexRecord(@NotNull final IndexWriter writer, @NotNull final CSVRecord record) throws IOException {
-        final String otherNamesString = record.get("other_names");
-        final String drugType = record.get("type");
-        final String canonicalName = record.get("drug");
+        final String canonicalName = record.get(CANONICAL_DRUG_NAME_CSV_FIELD);
+        final String drugType = record.get(DRUG_TYPE_CSV_FIELD);
+        final String otherNamesString = record.get(OTHER_DRUG_NAMES_CSV_FIELD);
         final List<String> drugNames = Lists.newArrayList();
         if (!otherNamesString.isEmpty()) {
             final CSVParser otherNamesParser = CSVParser.parse(otherNamesString, CSVFormat.DEFAULT);
