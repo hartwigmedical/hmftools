@@ -75,7 +75,9 @@ class StructuralVariantPloidyFactory {
         return result;
     }
 
-    private Optional<ModifiableStructuralVariantPloidy> create(@NotNull StructuralVariantLeg leg,
+    @VisibleForTesting
+    @NotNull
+    Optional<ModifiableStructuralVariantPloidy> create(@NotNull StructuralVariantLeg leg,
             @NotNull final GenomeRegionSelector<PurpleCopyNumber> selector) {
 
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.position() - 1);
@@ -119,6 +121,7 @@ class StructuralVariantPloidyFactory {
     }
 
     private double purityAdjustedPloidy(String chromosome, double vaf, double copyNumber) {
-        return purityAdjuster.purityAdjustedVAF(chromosome, vaf, copyNumber) * copyNumber;
+        double adjustedVAF = purityAdjuster.purityAdjustedVAF(chromosome, copyNumber, vaf);
+        return  adjustedVAF * copyNumber;
     }
 }

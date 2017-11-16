@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.junit.Test;
 
-public class StructualVariantPositionFactoryTest {
+public class StructuralVariantPositionFactoryTest {
 
     @Test
     public void excludeInserts() {
