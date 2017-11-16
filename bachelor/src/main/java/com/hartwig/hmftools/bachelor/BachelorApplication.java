@@ -43,6 +43,8 @@ public class BachelorApplication {
     private static final String BATCH_DIRECTORY = "batchDirectory";
     private static final String OUTPUT = "output";
     private static final String VALIDATE = "validate";
+    private static final String GERMLINE = "germline";
+    private static final String SOMATIC = "somatic";
 
     @NotNull
     private static Options createOptions() {
@@ -53,6 +55,8 @@ public class BachelorApplication {
         options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
         options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
         options.addOption(Option.builder(VALIDATE).required(false).desc("only validate the configs").build());
+        options.addOption(Option.builder(GERMLINE).required(false).desc("process the germline file only").build());
+        options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file only").build());
         return options;
     }
 
@@ -94,7 +98,8 @@ public class BachelorApplication {
         return Collections.emptyList();
     }
 
-    private static File process(final BachelorEligibility eligibility, final RunDirectory run) {
+    private static File process(final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
+            final boolean somatic) {
         final String[] split = run.prefix.getFileName().toString().split("_");
         final String patient = split[split.length - 1];
 
@@ -182,6 +187,12 @@ public class BachelorApplication {
 
             LOGGER.info("beginning processing...");
 
+            final boolean germline = !cmd.hasOption(SOMATIC);
+            final boolean somatic = !cmd.hasOption(GERMLINE);
+            if (!(germline || somatic)) {
+                LOGGER.error("can't have -germline and -somatic set at the same time");
+            }
+
             final List<File> filesToMerge;
             if (cmd.hasOption(BATCH_DIRECTORY)) {
                 final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
@@ -189,12 +200,12 @@ public class BachelorApplication {
                     filesToMerge = stream.filter(p -> p.toFile().isDirectory())
                             .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
-                            .map(run -> process(eligibility, run))
+                            .map(run -> process(eligibility, run, germline, somatic))
                             .collect(Collectors.toList());
                 }
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
-                filesToMerge =
-                        Collections.singletonList(process(eligibility, new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY)))));
+                filesToMerge = Collections.singletonList(
+                        process(eligibility, new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))), germline, somatic));
             } else {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
