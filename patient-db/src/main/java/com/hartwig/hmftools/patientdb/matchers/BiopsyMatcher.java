@@ -42,8 +42,7 @@ public final class BiopsyMatcher {
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
                 findings.add(
                         ValidationFinding.of("match", patientId, FORM_BIOPS, "could not match any clinical biopsy with sequenced biopsy.",
-                                "", "", "biopsy: " + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + ","
-                                        + sequencedBiopsy.arrivalDate() + "); ecrf biopsies: " + clinicalBiopsies.stream()
+                                "", "", "biopsy: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                         .map(BiopsyData::date)
                                         .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
                 // MIVO: abort finding new matches if we can't match one sequenced biopsy
@@ -51,15 +50,20 @@ public final class BiopsyMatcher {
             } else if (possibleMatches.size() > 1) {
                 findings.add(ValidationFinding.of("match", patientId, FORM_BIOPS,
                         "more than 1 possible clinical biopsy match for sequenced biopsy.", "", "",
-                        "biopsy: " + sequencedBiopsy.sampleId() + "(" + sequencedBiopsy.samplingDate() + "," + sequencedBiopsy.arrivalDate()
-                                + "); ecrf biopsies: " + clinicalBiopsies.stream().map(BiopsyData::date).collect(Collectors.toList())
-                                + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
+                        "biopsy: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
+                                .map(BiopsyData::date)
+                                .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
                 // MIVO: abort finding new matches if we can't match one sequenced biopsy
                 return new MatchResult<>(clinicalBiopsies, findings);
             }
         }
         matchedBiopsies.addAll(remainingBiopsies);
         return new MatchResult<>(matchedBiopsies, findings);
+    }
+
+    @NotNull
+    private static String sampleDataToString(@NotNull final SampleData sampleData) {
+        return sampleData.sampleId() + "(s:" + sampleData.samplingDate() + ",a:" + sampleData.arrivalDate() + ")";
     }
 
     private static boolean isPossibleMatch(@NotNull final SampleData sequencedBiopsy, @NotNull final BiopsyData clinicalBiopsy) {
@@ -82,10 +86,10 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    private static String getMatchDateCriteria(@NotNull final SampleData sequencedBiopsy) {
-        if (sequencedBiopsy.samplingDate() != null) {
-            return "sampling date " + sequencedBiopsy.samplingDate() + " threshold: " + Config.SAMPLING_DATE_THRESHOLD;
+    private static String getMatchDateCriteria(@NotNull final SampleData sampleData) {
+        if (sampleData.samplingDate() != null) {
+            return "sampling date " + sampleData.samplingDate() + " threshold: " + Config.SAMPLING_DATE_THRESHOLD;
         }
-        return "arrival date " + sequencedBiopsy.arrivalDate() + " threshold: " + Config.ARRIVAL_DATE_THRESHOLD;
+        return "arrival date " + sampleData.arrivalDate() + " threshold: " + Config.ARRIVAL_DATE_THRESHOLD;
     }
 }
