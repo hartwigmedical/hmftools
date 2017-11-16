@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -59,10 +58,9 @@ public final class LoadDrupEcrfData {
                 LOGGER.info("Importing DRUP ecrf data from: {}", ecrfFile);
                 final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFile, new ImmutableFormStatusModel(Maps.newHashMap()));
                 final List<RunContext> runContexts = RunsFolderReader.getRunContexts(runDirectory);
-                final Set<String> patientIds =
-                        runContexts.stream().map(runContext -> Utils.getPatientId(runContext.setName())).collect(Collectors.toSet());
+                final Set<String> sequencedPatients = Utils.sequencedPatientIds(runContexts);
                 LOGGER.info("Writing raw ecrf data for " + model.patientCount() + " patients.");
-                dbWriter.writeDrupEcrf(model, patientIds);
+                dbWriter.writeDrupEcrf(model, sequencedPatients);
                 LOGGER.info("Done writing raw ecrf data for " + model.patientCount() + " patients!");
             } else {
                 if (!runDirectory.exists()) {

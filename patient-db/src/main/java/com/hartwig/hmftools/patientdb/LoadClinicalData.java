@@ -115,8 +115,8 @@ public final class LoadClinicalData {
                     new PatientReader(model, new TreatmentCurator(treatmentMappingCsv), new TumorLocationCurator(tumorLocationMappingCsv),
                             lims);
 
-            final Set<String> cpctPatientIds = runContexts.stream()
-                    .map(runContext -> Utils.getPatientId(runContext.setName()))
+            final Set<String> cpctPatientIds = Utils.sequencedPatientIds(runContexts)
+                    .stream()
                     .filter(patientId -> patientId.startsWith("CPCT"))
                     .collect(Collectors.toSet());
             LOGGER.info("Writing CPCT clinical data for " + cpctPatientIds.size() + " patients.");
@@ -151,11 +151,10 @@ public final class LoadClinicalData {
             LOGGER.info("Loading ecrf model...");
             final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
-            final Set<String> cpctPatientIds =
-                    runContexts.stream().map(runContext -> Utils.getPatientId(runContext.setName())).collect(Collectors.toSet());
-            LOGGER.info("Writing raw ecrf data for " + cpctPatientIds.size() + " patients.");
-            dbWriter.writeCpctEcrf(model, cpctPatientIds);
-            LOGGER.info("Done writing raw ecrf data for " + cpctPatientIds.size() + " patients!");
+            final Set<String> sequencedPatients = Utils.sequencedPatientIds(runContexts);
+            LOGGER.info("Writing raw ecrf data for " + sequencedPatients.size() + " patients.");
+            dbWriter.writeCpctEcrf(model, sequencedPatients);
+            LOGGER.info("Done writing raw ecrf data for " + sequencedPatients.size() + " patients!");
         }
     }
 
