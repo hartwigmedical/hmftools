@@ -54,7 +54,6 @@ import org.jetbrains.annotations.NotNull;
 public final class PatientValidator {
 
     private static final String ECRF_LEVEL = "ecrf";
-    private static final long MAX_BIOPSY_DAYS_PRIOR_TO_REG_DATE = 30;
 
     private static final String FIELD_SEPARATOR = ";";
 
@@ -368,7 +367,7 @@ public final class PatientValidator {
             if (treatmentResponse.response() != null) {
                 findings.add(
                         ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_YN, "measurement done is no, but response filled in",
-                        treatmentResponse.formStatus(), treatmentResponse.formLocked()));
+                                treatmentResponse.formStatus(), treatmentResponse.formLocked()));
             }
         } else {
             findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_YN, "measurement done is not yes/no",
@@ -377,7 +376,7 @@ public final class PatientValidator {
         if (treatmentResponse.response() != null && treatmentResponse.assessmentDate() == null) {
             findings.add(
                     ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_ASSESSMENT_DATE, "response filled in, but no assessment date found",
-                    treatmentResponse.formStatus(), treatmentResponse.formLocked()));
+                            treatmentResponse.formStatus(), treatmentResponse.formLocked()));
         }
         return findings;
     }
@@ -410,7 +409,7 @@ public final class PatientValidator {
         if (registrationDate != null && !biopsies.isEmpty()) {
             final List<BiopsyData> biopsiesPriorToRegistration = biopsies.stream().filter(biopsy -> {
                 final LocalDate biopsyDate = biopsy.date();
-                return biopsyDate != null && biopsyDate.plusDays(MAX_BIOPSY_DAYS_PRIOR_TO_REG_DATE).isBefore(registrationDate);
+                return biopsyDate != null && biopsyDate.plusDays(Config.MAX_BIOPSY_DAYS_PRIOR_TO_REG_DATE).isBefore(registrationDate);
             }).collect(Collectors.toList());
             if (biopsiesPriorToRegistration.size() > 0) {
                 final String detailsMessage =
