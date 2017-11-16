@@ -54,6 +54,7 @@ import org.jetbrains.annotations.NotNull;
 public final class PatientValidator {
 
     private static final String ECRF_LEVEL = "ecrf";
+    private static final long MAX_BIOPSY_DAYS_PRIOR_TO_REG_DATE = 30;
 
     private static final String FIELD_SEPARATOR = ";";
 
@@ -402,7 +403,6 @@ public final class PatientValidator {
     }
 
     @NotNull
-    @VisibleForTesting
     static List<ValidationFinding> validateRegistrationDate(@NotNull final String patientId, @NotNull final PatientData patient,
             @NotNull final List<BiopsyData> biopsies) {
         final List<ValidationFinding> findings = Lists.newArrayList();
@@ -410,7 +410,7 @@ public final class PatientValidator {
         if (registrationDate != null && !biopsies.isEmpty()) {
             final List<BiopsyData> biopsiesPriorToRegistration = biopsies.stream().filter(biopsy -> {
                 final LocalDate biopsyDate = biopsy.date();
-                return biopsyDate != null && biopsyDate.isBefore(registrationDate);
+                return biopsyDate != null && biopsyDate.plusDays(MAX_BIOPSY_DAYS_PRIOR_TO_REG_DATE).isBefore(registrationDate);
             }).collect(Collectors.toList());
             if (biopsiesPriorToRegistration.size() > 0) {
                 final String detailsMessage =

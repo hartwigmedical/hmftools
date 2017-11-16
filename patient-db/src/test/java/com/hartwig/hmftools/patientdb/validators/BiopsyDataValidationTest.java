@@ -73,15 +73,20 @@ public class BiopsyDataValidationTest {
 
     @Test
     public void reportsBiopsyBeforeRegistration() {
-        final List<ValidationFinding> findings =
-                PatientValidator.validateRegistrationDate(CPCT_ID, ImmutablePatientData.builder().registrationDate(MAR2016).build(),
-                        Lists.newArrayList(BIOPSY_FEB1));
+        final List<ValidationFinding> findings = PatientValidator.validateRegistrationDate(CPCT_ID,
+                ImmutablePatientData.builder().cpctId(CPCT_ID).registrationDate(MAR2016).build(), Lists.newArrayList(BIOPSY_FEB1));
         assertEquals(3, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
         assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE2));
         assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE1));
         assertTrue(findingsFields.contains(FIELD_BIOPSY_DATE));
+
+        // KODU: DEV-251: Don't raise warning for a biopsy taken one day before registration.
+        final List<ValidationFinding> no_findings = PatientValidator.validateRegistrationDate(CPCT_ID,
+                ImmutablePatientData.builder().cpctId(CPCT_ID).registrationDate(FEB2015.plusDays(1)).build(),
+                Lists.newArrayList(BIOPSY_FEB1));
+        assertEquals(0, no_findings.size());
     }
 
     @Test
