@@ -8,7 +8,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.search.spell.SpellChecker;
 import org.jetbrains.annotations.NotNull;
 
-public class SpellCheckerTokenFilter extends TokenFilter {
+class SpellCheckerTokenFilter extends TokenFilter {
     private final SpellChecker spellChecker;
 
     SpellCheckerTokenFilter(@NotNull final TokenStream tokenStream, @NotNull final SpellChecker spellChecker) {
