@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
+import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
@@ -116,6 +117,18 @@ public class PurpleDatamodelTest {
                 .endPosition(endPosition)
                 .endOrientation(endOrientation)
                 .endHomology("");
+    }
+
+    @NotNull
+    public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, long position, double ratio) {
+        return ImmutableCobaltRatio.builder()
+                .chromosome(chromosome)
+                .position(position)
+                .tumorReadCount(0)
+                .referenceReadCount(0)
+                .referenceGCRatio(1)
+                .referenceGCDiploidRatio(1)
+                .tumorGCRatio(ratio);
     }
 
 }

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -14,15 +15,19 @@ import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ObservedRegionFactory {
 
+    private final int windowSize;
     private final Gender gender;
     private final ObservedRegionStatusFactory statusFactory;
 
-    public ObservedRegionFactory(final Gender gender) {
+    public ObservedRegionFactory(final int windowSize, final Gender gender) {
+        this.windowSize = windowSize;
         this.gender = gender;
         statusFactory = new ObservedRegionStatusFactory(gender);
     }
@@ -37,7 +42,7 @@ public class ObservedRegionFactory {
 
         for (final PurpleSegment region : regions) {
             final BAFAccumulator baf = new BAFAccumulator();
-            final CobaltAccumulator cobalt = new CobaltAccumulator();
+            final CobaltAccumulator cobalt = new CobaltAccumulator(windowSize, region);
 
             bafSelector.select(region, baf);
             cobaltSelector.select(region, cobalt);
@@ -87,30 +92,42 @@ public class ObservedRegionFactory {
         }
     }
 
-    private class CobaltAccumulator implements Consumer<CobaltRatio> {
+    @VisibleForTesting
+    static class CobaltAccumulator implements Consumer<CobaltRatio> {
+
+        private final Window window;
+        private final GenomeRegion region;
+
         private final RatioAccumulator referenceAccumulator = new RatioAccumulator();
         private final RatioAccumulator tumorAccumulator = new RatioAccumulator();
 
-        private double referenceMeanRatio() {
+        CobaltAccumulator(final int windowSize, final GenomeRegion region) {
+            this.window = new Window(windowSize);
+            this.region = region;
+        }
+
+        double referenceMeanRatio() {
             return referenceAccumulator.meanRatio();
         }
 
-        private double tumorMeanRatio() {
+        double tumorMeanRatio() {
             return tumorAccumulator.meanRatio();
         }
 
-        private int tumorCount() {
+        int tumorCount() {
             return tumorAccumulator.count();
         }
 
         @Override
         public void accept(final CobaltRatio ratio) {
-            referenceAccumulator.accept(ratio.referenceGCDiploidRatio());
-            tumorAccumulator.accept(ratio.tumorGCRatio());
+            if (window.end(ratio.position()) <= region.end() ) {
+                referenceAccumulator.accept(ratio.referenceGCDiploidRatio());
+                tumorAccumulator.accept(ratio.tumorGCRatio());
+            }
         }
     }
 
-    private class RatioAccumulator implements Consumer<Double> {
+    static private class RatioAccumulator implements Consumer<Double> {
         private double sumRatio;
         private int count;
 

@@ -7,10 +7,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -197,15 +197,7 @@ public class ClusterFactoryTest {
     }
 
     private static CobaltRatio ratio(long position, double ratio) {
-        return ImmutableCobaltRatio.builder()
-                .chromosome(CHROM)
-                .position(position)
-                .tumorReadCount(0)
-                .referenceReadCount(0)
-                .referenceGCRatio(1)
-                .referenceGCDiploidRatio(1)
-                .tumorGCRatio(ratio)
-                .build();
+        return PurpleDatamodelTest.cobalt(CHROM, position, ratio).build();
     }
 
     private static StructuralVariantPosition createSVPosition(long position) {

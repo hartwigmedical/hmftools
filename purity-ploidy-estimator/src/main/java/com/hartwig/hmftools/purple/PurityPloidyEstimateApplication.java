@@ -191,7 +191,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Mapping all observations to the segmented regions");
-            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(amberGender);
+            final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), amberGender);
             final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios);
 
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
