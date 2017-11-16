@@ -189,7 +189,7 @@ public class TreatmentValidationTest {
     @Test
     public void doesNotReportCorrectDeathTimeline() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateDeathDate(CPCT_ID, ImmutablePatientData.builder().deathDate(MAR2015).build(),
+                PatientValidator.validateDeathDate(CPCT_ID, ImmutablePatientData.builder().cpctId(CPCT_ID).deathDate(MAR2015).build(),
                         Lists.newArrayList(TREATMENT_JAN_JAN, TREATMENT_JAN_FEB));
         assertEquals(0, findings.size());
     }
@@ -197,7 +197,7 @@ public class TreatmentValidationTest {
     @Test
     public void reportsDeathDateBeforeEndOfTreatment() {
         final List<ValidationFinding> findings =
-                PatientValidator.validateDeathDate(CPCT_ID, ImmutablePatientData.builder().deathDate(MAR2015).build(),
+                PatientValidator.validateDeathDate(CPCT_ID, ImmutablePatientData.builder().cpctId(CPCT_ID).deathDate(MAR2015).build(),
                         Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
