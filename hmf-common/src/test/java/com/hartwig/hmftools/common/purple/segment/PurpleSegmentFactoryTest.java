@@ -13,113 +13,70 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ImmutableChromosomeLength;
+import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
+import com.hartwig.hmftools.common.pcf.PCFSource;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class PurpleSegmentFactoryTest {
-    private static final ChromosomeLength CHROM = ImmutableChromosomeLength.builder().chromosome("chromosome").position(10_000_000).build();
+    static final ChromosomeLength CHROMOSOME_LENGTH = ImmutableChromosomeLength.builder().chromosome("1").position(10_000_000).build();
 
     @Test
     public void testEmpty() {
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, Collections.emptyList());
+        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, Collections.emptyList());
         assertEquals(1, segments.size());
-        assertPurpleSegment(segments.get(0), 1, CHROM.position(), true, TELOMERE);
+        assertPurpleSegment(segments.get(0), 1, CHROMOSOME_LENGTH.position(), true, TELOMERE);
     }
 
     @Test
     public void testSingleSV() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
+        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).build());
+        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, clusters);
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROM.position(), false, BND);
-    }
-
-    @Ignore
-    public void testSingleSVWithRatioSupportAtStart() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
-        final List<GenomePosition> ratios = Lists.newArrayList(ratio(17050));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
-        assertEquals(2, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROM.position(), true, BND);
-    }
-
-    @Ignore
-    public void testSingleSVWithRatioBeforeStart() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
-        final List<GenomePosition> ratios = Lists.newArrayList(ratio(16001));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
-        assertEquals(3, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 16000, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 16001, 18880, true, NONE);
-        assertPurpleSegment(segments.get(2), 18881, CHROM.position(), false, BND);
-    }
-
-    @Ignore
-    public void testSingleSVWithRatioSupportAtEnd() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
-        final List<GenomePosition> ratios = Lists.newArrayList(ratio(19050));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
-        assertEquals(2, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROM.position(), true, BND);
-    }
-
-    @Ignore
-    public void testSingleSVWithRatioAfter() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build());
-        final List<GenomePosition> ratios = Lists.newArrayList(ratio(20001));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
-        assertEquals(3, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, 20000, false, BND);
-        assertPurpleSegment(segments.get(2), 20001, CHROM.position(), true, NONE);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), false, BND);
     }
 
     @Test
-    public void testMultipleSVAtSamePosition() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).addVariants(variant(18881)).build());
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
+    public void testSingleSVWithRatioSupport() {
+        final Cluster cluster = addRatios(cluster(17002, 18881), 17050, 19000).build();
+        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROM.position(), false, MULTIPLE);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, BND);
+    }
+
+
+    @Test
+    public void testMultipleSVAtSamePosition() {
+        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).addVariants(variant(18881)).build());
+        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, clusters);
+        assertEquals(2, segments.size());
+        assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), false, MULTIPLE);
     }
 
     @Test
     public void testMultipleSVInSameCluster() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).addVariants(variant(19991)).build());
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
+        final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).addVariants(variant(19991)).build());
+        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, clusters);
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, 19990, false, BND);
-        assertPurpleSegment(segments.get(2), 19991, CHROM.position(), false, BND);
+        assertPurpleSegment(segments.get(2), 19991, CHROMOSOME_LENGTH.position(), false, BND);
     }
 
-    @Ignore
-    public void testMultipleSVInSameClusterWithRatioSupport() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 21000).addVariants(variant(19991)).build());
-        final List<GenomePosition> ratios = Lists.newArrayList(ratio(20001));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
-        assertEquals(3, segments.size());
-        assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, 19990, true, BND);
-        assertPurpleSegment(segments.get(2), 19991, CHROM.position(), true, BND);
-    }
 
-    @Ignore
-    public void testMultipleClustersWithRatios() {
-        final List<Cluster> clusters = Lists.newArrayList(cluster(18881, 17001, 20000).build(), cluster(25551, 24001, 27000).build());
-        final List<GenomePosition> ratios = Lists.newArrayList(ratio(19001));
-        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROM, clusters);
-        assertEquals(3, segments.size());
+    @Test
+    public void testRatiosOnly() {
+        final Cluster cluster = addRatios(cluster(17002), 18881, 19000).build();
+        final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
+        assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, 25550, true, BND);
-        assertPurpleSegment(segments.get(2), 25551, CHROM.position(), false, BND);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, NONE);
     }
 
     private static void assertPurpleSegment(@NotNull final PurpleSegment victim, long start, long end, boolean ratioSupport,
@@ -130,13 +87,35 @@ public class PurpleSegmentFactoryTest {
         assertEquals(support, victim.support());
     }
 
-    private static ImmutableCluster.Builder cluster(long position, long start, long end) {
-        return ImmutableCluster.builder().chromosome(CHROM.chromosome()).start(start).end(end).addVariants(variant(position));
+    private static ImmutableCluster.Builder cluster(long start) {
+        return ImmutableCluster.builder().chromosome(CHROMOSOME_LENGTH.chromosome()).start(start).end(start);
+    }
+
+    private static ImmutableCluster.Builder cluster(long start, long... variants) {
+
+        ImmutableCluster.Builder builder = cluster(start);
+        for (long position : variants) {
+            builder.addVariants(variant(position));
+        }
+
+        return builder;
+    }
+
+    private static ImmutableCluster.Builder addRatios(ImmutableCluster.Builder builder, long... ratios) {
+        for (long position : ratios) {
+            builder.addPcfPositions(ImmutablePCFPosition.builder()
+                    .chromosome(CHROMOSOME_LENGTH.chromosome())
+                    .position(position)
+                    .source(PCFSource.TUMOR_RATIO)
+                    .build());
+        }
+
+        return builder;
     }
 
     private static StructuralVariantPosition variant(long position) {
         return ImmutableStructuralVariantPosition.builder()
-                .chromosome(CHROM.chromosome())
+                .chromosome(CHROMOSOME_LENGTH.chromosome())
                 .position(position)
                 .id("ID")
                 .type(StructuralVariantType.BND)
@@ -149,7 +128,7 @@ public class PurpleSegmentFactoryTest {
             @NotNull
             @Override
             public String chromosome() {
-                return CHROM.chromosome();
+                return CHROMOSOME_LENGTH.chromosome();
             }
 
             @Override

@@ -70,15 +70,10 @@ public class PurpleSegmentFactory {
 
                 final List<PCFPosition> pcfPositions = cluster.pcfPositions();
 
-                // DO FIRST AND LAST
+                // DO FIRST
                 final GenomePosition firstRatioBreak = pcfPositions.get(0);
                 result.add(setStatus(segment.setEnd(firstRatioBreak.position() - 1)));
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position());
-                if (pcfPositions.size() > 1) {
-                    final GenomePosition finalRatioPosition = pcfPositions.get(pcfPositions.size() - 1);
-                    result.add(setStatus(segment.setEnd(finalRatioPosition.position() - 1)));
-                    segment = create(firstRatioBreak.chromosome(), finalRatioPosition.position());
-                }
             }
         }
 
