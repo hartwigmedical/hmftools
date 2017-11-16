@@ -125,6 +125,7 @@ public class TreatmentCurator {
         return Lists.newArrayList(matchedTokens.values());
     }
 
+    @NotNull
     private static List<SearchToken> generateSearchTokens(@NotNull final String searchTerm) throws IOException {
         final Set<SearchToken> searchTokens = Sets.newHashSet();
         final TokenStream tokenStream = getSpellcheckedShingleStream(searchTerm);
@@ -136,9 +137,7 @@ public class TreatmentCurator {
         }
         tokenStream.end();
         tokenStream.close();
-        return searchTokens.stream()
-                .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
-                .collect(Collectors.toList());
+        return searchTokens.stream().sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset)).collect(Collectors.toList());
     }
 
     @NotNull
