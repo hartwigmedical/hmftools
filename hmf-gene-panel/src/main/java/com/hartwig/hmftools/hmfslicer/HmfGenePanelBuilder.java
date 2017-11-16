@@ -73,22 +73,13 @@ public class HmfGenePanelBuilder {
     }
 
     @NotNull
-    private static String generateQuery() throws IOException, EmptyFileException {
-        final String baseQuery = readEnsemblQuery();
-        final String groupByClause = "group by gene_name, exon_start";
-        final String orderByClause =
-                "order by if(cast(chromosome as SIGNED) = 0, ascii(chromosome), cast(chromosome as SIGNED)), exon_start";
-        return baseQuery + groupByClause + " " + orderByClause + ";";
-    }
-
-    @NotNull
     @VisibleForTesting
     static Result<Record> queryEnsembldb() throws SQLException, IOException, EmptyFileException {
         // MIVO: disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(ENSEMBLDB_URL, DB_USER, "");
         final DSLContext context = DSL.using(conn, SQLDialect.MYSQL);
-        final String query = generateQuery();
+        final String query = readEnsemblQuery();
         return context.fetch(query);
     }
 
