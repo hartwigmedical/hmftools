@@ -70,7 +70,7 @@ public class ClusterFactory {
             }
 
             final long start = start(position.position(), ratioIndex, ratios);
-            final long end = end(position.position(), ratioIndex, ratios);
+            final long end = position.position();
 
             if (segment == null || start > segment.end()) {
                 if (segment != null) {
@@ -99,12 +99,12 @@ public class ClusterFactory {
     @VisibleForTesting
     long start(long position, int index, @NotNull final List<CobaltRatio> ratios) {
         assert (index <= ratios.size());
-        final long min = window.start(position) - windowSize;
+        final long min = window.start(position) - windowSize + 1;
         if (!ratios.isEmpty()) {
             for (int i = index; i >= 0; i--) {
                 final CobaltRatio ratio = ratios.get(i);
                 if (ratio.position() <= min && Doubles.greaterThan(ratio.tumorGCRatio(), -1)) {
-                    return ratio.position();
+                    return ratio.position() + 1;
                 }
             }
         }
@@ -116,12 +116,12 @@ public class ClusterFactory {
     long end(long position, int index, @NotNull final List<CobaltRatio> ratios) {
         for (int i = index; i < ratios.size(); i++) {
             final CobaltRatio ratio = ratios.get(i);
-            if (ratio.position() > position && Doubles.greaterThan(ratio.tumorGCRatio(), -1)) {
+            if (ratio.position() >= position && Doubles.greaterThan(ratio.tumorGCRatio(), -1)) {
                 return ratio.position() + windowSize - 1;
             }
         }
 
-        return position / windowSize * windowSize + 2 * windowSize;
+        return window.end(position - 1) + windowSize;
     }
 
     private static Multimap<String, StructuralVariantPosition> asMap(@NotNull final List<StructuralVariantPosition> variants) {
