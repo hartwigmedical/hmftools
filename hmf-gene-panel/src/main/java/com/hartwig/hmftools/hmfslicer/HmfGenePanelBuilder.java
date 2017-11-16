@@ -56,7 +56,7 @@ public class HmfGenePanelBuilder {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(OUT_PATH, true, "Path towards the csv output file.");
+        options.addOption(OUT_PATH, true, "Path towards the tsv output file.");
         return options;
     }
 
@@ -94,7 +94,7 @@ public class HmfGenePanelBuilder {
 
     private static void writeFile(@NotNull final CommandLine cmd, @NotNull final Result<Record> records) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(OUT_PATH), false));
-        // MIVO: format as csv without header containing column names
+        // MIVO: format as tsv without header containing column names
         writer.write(records.formatCSV(false, '\t', ""));
         writer.close();
     }
