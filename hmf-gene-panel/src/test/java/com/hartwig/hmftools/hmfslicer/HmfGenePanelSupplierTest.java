@@ -18,10 +18,8 @@ public class HmfGenePanelSupplierTest {
     @Test
     public void canLoadGeneRegionsFromFile() throws IOException, EmptyFileException {
         final Set<String> panel = HmfGenePanelSupplier.geneSet();
-        final List<String> genes = HmfGenePanelBuilder.readGeneList();
-        assertEquals(panel.size(), genes.size());
         final List<HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.hmfGeneList();
-        assertEquals(genes.size(), geneRegions.size());
+        assertEquals(panel.size(), geneRegions.size());
     }
 
     @Test

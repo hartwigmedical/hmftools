@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Resources;
@@ -36,7 +35,6 @@ public class HmfGenePanelBuilder {
     private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
 
     private static final String OUT_PATH = "out";
-    private static final String ALL_GENES = "all_genes";
     private static final String DATABASE = "homo_sapiens_core_89_37";
     private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
     private static final String DB_USER = "anonymous";
@@ -49,7 +47,7 @@ public class HmfGenePanelBuilder {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("HmfGenePanelBuilder", options);
         } else {
-            final Result<Record> queryResults = queryEnsembldb(cmd.hasOption(ALL_GENES));
+            final Result<Record> queryResults = queryEnsembldb();
             writeFile(cmd, queryResults);
             LOGGER.info("Written output to " + new File(outputFilePath).getAbsolutePath());
         }
@@ -59,7 +57,6 @@ public class HmfGenePanelBuilder {
     private static Options createOptions() {
         final Options options = new Options();
         options.addOption(OUT_PATH, true, "Path towards the csv output file.");
-        options.addOption(ALL_GENES, false, "Build output for all genes.");
         return options;
     }
 
@@ -70,42 +67,28 @@ public class HmfGenePanelBuilder {
     }
 
     @NotNull
-    static List<String> readGeneList() throws IOException, EmptyFileException {
-        return Resources.readLines(Resources.getResource("gene_panel"), Charset.defaultCharset())
-                .stream()
-                .map(gene -> "\"" + gene + "\"")
-                .collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static String geneList() throws IOException, EmptyFileException {
-        return StringUtils.join(readGeneList().toArray(), ",");
-    }
-
-    @NotNull
     private static String readEnsemblQuery() throws IOException, EmptyFileException {
         final List<String> lines = Resources.readLines(Resources.getResource("ensembl_query.sql"), Charset.defaultCharset());
         return StringUtils.join(lines.toArray(), "\n");
     }
 
     @NotNull
-    private static String generateQuery(final boolean allGenes) throws IOException, EmptyFileException {
+    private static String generateQuery() throws IOException, EmptyFileException {
         final String baseQuery = readEnsemblQuery();
-        final String genes = geneList();
         final String groupByClause = "group by gene_name, exon_start";
         final String orderByClause =
                 "order by if(cast(chromosome as SIGNED) = 0, ascii(chromosome), cast(chromosome as SIGNED)), exon_start";
-        return baseQuery + (allGenes ? "" : " and display_xref.display_label in (" + genes + ") ") + groupByClause + " " + orderByClause + ";";
+        return baseQuery + groupByClause + " " + orderByClause + ";";
     }
 
     @NotNull
     @VisibleForTesting
-    static Result<Record> queryEnsembldb(final boolean allGenes) throws SQLException, IOException, EmptyFileException {
+    static Result<Record> queryEnsembldb() throws SQLException, IOException, EmptyFileException {
         // MIVO: disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(ENSEMBLDB_URL, DB_USER, "");
         final DSLContext context = DSL.using(conn, SQLDialect.MYSQL);
-        final String query = generateQuery(allGenes);
+        final String query = generateQuery();
         return context.fetch(query);
     }
 
