@@ -58,8 +58,14 @@ public class PurityAdjuster {
         return Doubles.isZero(tumorRatio) ? 0 : 2 * normalRatio + 2 * (tumorRatio - normalRatio * normFactor) / purity / normFactor;
     }
 
+    @Deprecated
     public double purityAdjustedVAF(final double copyNumber, final double observedFrequency) {
         return purityAdjustedFrequency(copyNumber, observedFrequency, 0);
+    }
+
+    public double purityAdjustedVAF(final String chromosome, final double copyNumber, final double observedFrequency) {
+        int normalCopyNumber = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 2 : 1;
+        return purityAdjustedFrequency(copyNumber, observedFrequency, normalCopyNumber, 0);
     }
 
     public double purityAdjustedBAF(final String chromosomeName, final double copyNumber, final double observedFrequency) {
@@ -96,15 +102,21 @@ public class PurityAdjuster {
         return Doubles.lessOrEqual(Doubles.distanceFromInteger(copyNumber), CLONAL_DISTANCE);
     }
 
+    @Deprecated
     private double purityAdjustedFrequency(final double copyNumber, final double observedFrequency, final double typicalFrequency) {
-        assert (greaterThan(copyNumber, 0));
+        return purityAdjustedFrequency(copyNumber, observedFrequency, 2, typicalFrequency);
+    }
+
+    private double purityAdjustedFrequency(final double tumorCopyNumber, final double observedFrequency, final int normalCopyNumber,
+            final double normalFrequency) {
+        assert (greaterThan(tumorCopyNumber, 0));
         assert (greaterThan(purity, 0));
 
-        double normalPloidy = 2 * (1 - purity);
-        double tumorPloidy = copyNumber * purity;
-        double normalAmount = 2 * (1 - purity) * typicalFrequency;
+        double normalTotalAllele = normalCopyNumber * (1 - purity);
+        double normalBetaAllele = normalTotalAllele * normalFrequency;
+        double tumorTotalAllele = tumorCopyNumber * purity;
 
-        return (observedFrequency * (normalPloidy + tumorPloidy) - normalAmount) / copyNumber / purity;
+        return (observedFrequency * (normalTotalAllele + tumorTotalAllele) - normalBetaAllele) / tumorCopyNumber / purity;
     }
 
 }

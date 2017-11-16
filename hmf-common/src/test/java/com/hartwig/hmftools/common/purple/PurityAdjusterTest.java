@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurityAdjusterTest {
@@ -63,6 +65,47 @@ public class PurityAdjusterTest {
         testPurityAdjustedBaf(purity, 4, 4);
         testPurityAdjustedBaf(purity, 5, 3);
         testPurityAdjustedBaf(purity, 5, 4);
+    }
+
+    @Test
+    public void testPurityAdjustedVAF() {
+        testPurityAdjustedVAF(Gender.MALE, "X", 0.3, 2, 2);
+        testPurityAdjustedVAF(Gender.MALE, "X", 0.3, 2, 1);
+        testPurityAdjustedVAF(Gender.FEMALE, "X", 0.3, 2, 1);
+        testPurityAdjustedVAF(Gender.FEMALE, "X", 0.4, 3, 1);
+        testPurityAdjustedVAF(Gender.FEMALE, "X", 0.4, 4, 1);
+        testPurityAdjustedVAF(Gender.FEMALE, "X", 0.4, 4, 2);
+    }
+
+    @Test
+    public void testObservedVAF() {
+        final double male = observedVAF(Gender.MALE, "1", 0.5, 2, 2);
+        final double maleX = observedVAF(Gender.MALE, "X", 0.5, 2, 1);
+        final double femaleX = observedVAF(Gender.FEMALE, "X", 0.5, 2, 1);
+
+        assertEquals(1/3d, maleX, EPSILON);
+        assertEquals(1/4d, femaleX, EPSILON);
+
+        assertEquals(1/2d, male, EPSILON);
+    }
+
+    private static double expectedFrequency(final int ploidy, final int alleleCount) {
+        return 1d * alleleCount / ploidy;
+    }
+
+    private static double observedVAF(@NotNull final Gender gender, @NotNull final String chromosome, final double purity, final int ploidy,
+            final int alleleCount) {
+        double expectedPurityAdjustedVAF = 1d * alleleCount / ploidy;
+        int normalCount = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 2 : 1;
+        return expectedPurityAdjustedVAF * ploidy * purity / (normalCount * (1 - purity) + ploidy * purity);
+    }
+
+    private void testPurityAdjustedVAF(@NotNull final Gender gender, @NotNull final String chromosome, final double purity, final int ploidy,
+            final int alleleCount) {
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, 1);
+        double expected = expectedFrequency(ploidy, alleleCount);
+        double observed = observedVAF(gender, chromosome, purity, ploidy, alleleCount);
+        assertEquals(expected, purityAdjuster.purityAdjustedVAF(chromosome, ploidy, observed), EPSILON);
     }
 
     private void testPurityAdjustedBaf(final double purity, final int ploidy, final int alleleCount) {
