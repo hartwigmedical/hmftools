@@ -66,8 +66,8 @@ public class PurpleCopyNumberFactory {
 
         if (experimental) {
             // New Method
-            StructuralVariantCopyNumber copyNumber = new StructuralVariantCopyNumber(structuralVariants);
-            smoothedRegions.addAll(copyNumber.calculateSVCopyNumber(newMethod).values());
+            StructuralVariantCopyNumber copyNumber = new StructuralVariantCopyNumber(purityAdjuster);
+            smoothedRegions.addAll(copyNumber.calculateSVCopyNumber(structuralVariants, newMethod).values());
         }
         Collections.sort(smoothedRegions);
     }

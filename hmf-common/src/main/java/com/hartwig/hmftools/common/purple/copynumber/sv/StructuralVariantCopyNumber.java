@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -24,14 +25,14 @@ public class StructuralVariantCopyNumber {
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantCopyNumber.class);
 
-    private final List<StructuralVariant> structuralVariants;
+    private final StructuralVariantPloidyFactory structuralVariantPloidyFactory;
 
-    public StructuralVariantCopyNumber(final List<StructuralVariant> structuralVariants) {
-        this.structuralVariants = structuralVariants;
+    public StructuralVariantCopyNumber(final PurityAdjuster purityAdjuster) {
+        this.structuralVariantPloidyFactory = new StructuralVariantPloidyFactory(purityAdjuster);
     }
 
     @NotNull
-    public ListMultimap<String, PurpleCopyNumber> calculateSVCopyNumber(@NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
+    public ListMultimap<String, PurpleCopyNumber> calculateSVCopyNumber(final List<StructuralVariant> structuralVariants, @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
 
         final ListMultimap<String, PurpleCopyNumber> result = ArrayListMultimap.create();
         result.putAll(copyNumbers);
@@ -40,7 +41,7 @@ public class StructuralVariantCopyNumber {
         long currentMissingCopyNumbers = missingCopyNumbers(result);
 
         while (currentMissingCopyNumbers < previousMissingCopyNumbers && currentMissingCopyNumbers > 0) {
-            final GenomePositionSelector<StructuralVariantPloidy> selector = GenomePositionSelectorFactory.create(createPloidies(result));
+            final GenomePositionSelector<StructuralVariantPloidy> selector = GenomePositionSelectorFactory.create(createPloidies(structuralVariants, result));
 
             for (Chromosome chromosome : HumanChromosome.values()) {
                 final String chromosomeName = chromosome.toString();
@@ -86,8 +87,8 @@ public class StructuralVariantCopyNumber {
     }
 
     @NotNull
-    private List<StructuralVariantPloidy> createPloidies(@NotNull ListMultimap<String, PurpleCopyNumber> copyNumbers) {
-        return StructuralVariantPloidyFactory.create(structuralVariants, copyNumbers);
+    private List<StructuralVariantPloidy> createPloidies(final List<StructuralVariant> structuralVariants, @NotNull ListMultimap<String, PurpleCopyNumber> copyNumbers) {
+        return structuralVariantPloidyFactory.create(structuralVariants, copyNumbers);
     }
 
     private long missingCopyNumbers(Multimap<String, PurpleCopyNumber> copyNumbers) {
