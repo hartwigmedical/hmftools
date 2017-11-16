@@ -128,7 +128,7 @@ public class TreatmentCurator {
     @NotNull
     private static List<SearchToken> generateSearchTokens(@NotNull final String searchTerm) throws IOException {
         final Set<SearchToken> searchTokens = Sets.newHashSet();
-        final TokenStream tokenStream = getSpellcheckedShingleStream(searchTerm);
+        final TokenStream tokenStream = getSpellCheckedShingleStream(searchTerm);
         tokenStream.reset();
         while (tokenStream.incrementToken()) {
             final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
@@ -141,7 +141,7 @@ public class TreatmentCurator {
     }
 
     @NotNull
-    private static TokenStream getSpellcheckedShingleStream(@NotNull final String searchTerm) {
+    private static TokenStream getSpellCheckedShingleStream(@NotNull final String searchTerm) {
         StringReader reader = new StringReader(searchTerm);
         final Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
         return analyzer.tokenStream(DRUG_NAME_FIELD, reader);
@@ -263,6 +263,7 @@ public class TreatmentCurator {
         };
     }
 
+    @NotNull
     private static TokenFilter defaultTokenFilter(@NotNull final Tokenizer source) {
         final TokenFilter filteredSource = new LowerCaseFilter(source);
         return new WordDelimiterGraphFilter(filteredSource, SPLIT_ON_NUMERICS | GENERATE_WORD_PARTS | GENERATE_NUMBER_PARTS, null);
