@@ -20,7 +20,7 @@ public final class HmfReporterDataLoader {
     @NotNull
     public static HmfReporterData buildFromFiles(@NotNull final String drupFilterFile, @NotNull final String cosmicFile,
             @NotNull final String fusionFile) throws IOException, HartwigException {
-        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.defaultMap());
+        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfGeneMap());
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
         final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
         final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromCSV(fusionFile);

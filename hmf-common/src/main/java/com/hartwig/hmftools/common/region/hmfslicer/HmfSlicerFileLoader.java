@@ -11,15 +11,15 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
-import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class HmfSlicerFileLoader {
-    private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger(HmfSlicerFileLoader.class);
 
     private static final String FIELD_SEPARATOR = "\t";
 
@@ -64,6 +64,10 @@ public final class HmfSlicerFileLoader {
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
             final String chromosome = values[CHROMOSOME_COLUMN].trim();
+            if (!HumanChromosome.contains(chromosome)) {
+                LOGGER.warn("skipping line due to unknown chromosome: {}", line);
+                continue;
+            }
 
             final long start = Long.valueOf(values[START_COLUMN].trim());
             final long end = Long.valueOf(values[END_COLUMN].trim());
@@ -73,7 +77,7 @@ public final class HmfSlicerFileLoader {
             } else {
                 if (builder == null || !gene.equals(values[GENE_COLUMN])) {
                     if (builder != null) {
-                        HmfGenomeRegion region = builder.build();
+                        final HmfGenomeRegion region = builder.build();
                         regionMap.put(region.chromosome(), region);
                     }
 

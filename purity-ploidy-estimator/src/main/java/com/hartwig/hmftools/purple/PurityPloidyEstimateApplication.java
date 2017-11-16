@@ -146,7 +146,7 @@ public class PurityPloidyEstimateApplication {
             // Read Gene Panel
             final List<HmfGenomeRegion> genePanel = cmd.hasOption(GENE_PANEL)
                     ? HmfGenePanelSupplier.fromFile(cmd.getOptionValue(GENE_PANEL))
-                    : HmfGenePanelSupplier.defaultList();
+                    : HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(configSupplier.bafConfig().bafFile().toString());

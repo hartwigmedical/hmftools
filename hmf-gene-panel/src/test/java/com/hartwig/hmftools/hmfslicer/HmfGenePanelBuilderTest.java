@@ -17,7 +17,7 @@ import org.junit.Test;
 public class HmfGenePanelBuilderTest {
     @Test
     public void canGenerateGeneRegionsFromDB() throws IOException, HartwigException, SQLException {
-        final Result<Record> queryResults = HmfGenePanelBuilder.queryEnsembldb();
+        final Result<Record> queryResults = HmfGenePanelBuilder.queryEnsembldb(false);
         final Set<Object> gene_names = queryResults.stream().map(x -> x.get("gene_name")).collect(Collectors.toSet());
         final List<String> genes = HmfGenePanelBuilder.readGeneList();
         assertEquals(genes.size(), gene_names.size());
