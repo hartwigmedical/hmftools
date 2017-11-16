@@ -24,16 +24,16 @@ public final class HmfSlicerFileLoader {
     private static final String FIELD_SEPARATOR = "\t";
 
     private static final int CHROMOSOME_COLUMN = 0;
-    private static final int START_COLUMN = 1;
-    private static final int END_COLUMN = 2;
-    private static final int TRANSCRIPT_ID_COLUMN = 3;
-    private static final int TRANSCRIPT_VERSION_COLUMN = 4;
-    private static final int GENE_COLUMN = 5;
-    private static final int GENE_ID_COLUMN = 6;
-    private static final int GENE_START_COLUMN = 7;
-    private static final int GENE_END_COLUMN = 8;
-    private static final int CHROMOSOME_BAND_COLUMN = 9;
-    private static final int ENTREZ_ID_COLUMN = 10;
+    private static final int GENE_START_COLUMN = 1;
+    private static final int GENE_END_COLUMN = 2;
+    private static final int GENE_ID_COLUMN = 3;
+    private static final int GENE_COLUMN = 4;
+    private static final int ENTREZ_ID_COLUMN = 5;
+    private static final int CHROMOSOME_BAND_COLUMN = 6;
+    private static final int TRANSCRIPT_ID_COLUMN = 7;
+    private static final int TRANSCRIPT_VERSION_COLUMN = 8;
+    private static final int START_COLUMN = 9;
+    private static final int END_COLUMN = 10;
     private static final int EXON_ID_COLUMN = 11;
     private static final int EXON_START_COLUMN = 12;
     private static final int EXON_END_COLUMN = 13;
