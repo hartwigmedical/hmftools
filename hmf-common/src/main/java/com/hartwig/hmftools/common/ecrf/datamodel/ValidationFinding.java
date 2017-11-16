@@ -30,14 +30,14 @@ public abstract class ValidationFinding {
     public abstract String details();
 
     @NotNull
-    public static ValidationFinding of(String level, String patientId, String ecrfItem, String message, String formStatus,
-            String formLocked, String details) {
+    public static ValidationFinding of(@NotNull String level, @NotNull String patientId, @NotNull String ecrfItem, @NotNull String message,
+            @NotNull String formStatus, @NotNull String formLocked, @NotNull String details) {
         return ImmutableValidationFinding.of(level, patientId, ecrfItem, message, formStatus, formLocked, details);
     }
 
     @NotNull
-    public static ValidationFinding of(String level, String patientId, String ecrfItem, String message, String formStatus,
-            String formLocked) {
+    public static ValidationFinding of(@NotNull String level, @NotNull String patientId, @NotNull String ecrfItem, @NotNull String message,
+            @NotNull String formStatus, @NotNull String formLocked) {
         return ImmutableValidationFinding.of(level, patientId, ecrfItem, message, formStatus, formLocked, "");
     }
 }
