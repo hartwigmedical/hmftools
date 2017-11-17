@@ -13,7 +13,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantImpliedCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -66,7 +66,7 @@ public class PurpleCopyNumberFactory {
 
         if (experimental) {
             // New Method
-            StructuralVariantCopyNumber copyNumber = new StructuralVariantCopyNumber(purityAdjuster);
+            StructuralVariantImpliedCopyNumber copyNumber = new StructuralVariantImpliedCopyNumber(purityAdjuster);
             smoothedRegions.addAll(copyNumber.calculateSVCopyNumber(structuralVariants, newMethod).values());
         }
         Collections.sort(smoothedRegions);

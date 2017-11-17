@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
@@ -21,18 +22,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class StructuralVariantCopyNumber {
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+public class StructuralVariantImpliedCopyNumber {
 
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantCopyNumber.class);
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantImpliedCopyNumber.class);
 
     private final StructuralVariantPloidyFactory structuralVariantPloidyFactory;
 
-    public StructuralVariantCopyNumber(final PurityAdjuster purityAdjuster) {
+    public StructuralVariantImpliedCopyNumber(final PurityAdjuster purityAdjuster) {
         this.structuralVariantPloidyFactory = new StructuralVariantPloidyFactory(purityAdjuster);
     }
 
     @NotNull
-    public ListMultimap<String, PurpleCopyNumber> calculateSVCopyNumber(final List<StructuralVariant> structuralVariants, @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
+    public ListMultimap<String, PurpleCopyNumber> calculateSVCopyNumber(final List<StructuralVariant> structuralVariants,
+            @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
 
         final ListMultimap<String, PurpleCopyNumber> result = ArrayListMultimap.create();
         result.putAll(copyNumbers);
@@ -41,7 +44,8 @@ public class StructuralVariantCopyNumber {
         long currentMissingCopyNumbers = missingCopyNumbers(result);
 
         while (currentMissingCopyNumbers < previousMissingCopyNumbers && currentMissingCopyNumbers > 0) {
-            final GenomePositionSelector<StructuralVariantPloidy> selector = GenomePositionSelectorFactory.create(createPloidies(structuralVariants, result));
+            final GenomePositionSelector<StructuralVariantPloidy> selector =
+                    GenomePositionSelectorFactory.create(createPloidies(structuralVariants, result));
 
             for (Chromosome chromosome : HumanChromosome.values()) {
                 final String chromosomeName = chromosome.toString();
@@ -56,26 +60,9 @@ public class StructuralVariantCopyNumber {
                                 selector.select(GenomePositions.create(chromosomeName, copyNumber.end() + 1));
 
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
-
-                            final double startWeight = optionalStart.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
-                            final double startCopyNumber = optionalStart.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);
-
-                            final double endWeight = optionalEnd.map(StructuralVariantPloidy::impliedLeftCopyNumberWeight).orElse(0d);
-                            final double endCopyNumber = optionalEnd.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
-
-                            final double newCopyNumber =
-                                    (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
-                            final PurpleCopyNumber newPurpleCopyNumber = ImmutablePurpleCopyNumber.builder()
-                                    .from(copyNumber)
-                                    .inferred(true)
-                                    .averageTumorCopyNumber(newCopyNumber)
-                                    .build();
-
-                            chromosomeCopyNumbers.set(i, newPurpleCopyNumber);
+                            chromosomeCopyNumbers.set(i, impliedCopyNumber(copyNumber, optionalStart, optionalEnd));
                         }
-
                     }
-
                 }
             }
 
@@ -86,8 +73,23 @@ public class StructuralVariantCopyNumber {
         return result;
     }
 
+    @VisibleForTesting
     @NotNull
-    private List<StructuralVariantPloidy> createPloidies(final List<StructuralVariant> structuralVariants, @NotNull ListMultimap<String, PurpleCopyNumber> copyNumbers) {
+    static PurpleCopyNumber impliedCopyNumber(final PurpleCopyNumber copyNumber, final Optional<StructuralVariantPloidy> start,
+            final Optional<StructuralVariantPloidy> end) {
+        final double startWeight = start.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
+        final double startCopyNumber = start.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);
+
+        final double endWeight = end.map(StructuralVariantPloidy::impliedLeftCopyNumberWeight).orElse(0d);
+        final double endCopyNumber = end.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
+
+        final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
+        return ImmutablePurpleCopyNumber.builder().from(copyNumber).inferred(true).averageTumorCopyNumber(newCopyNumber).build();
+    }
+
+    @NotNull
+    private List<StructuralVariantPloidy> createPloidies(final List<StructuralVariant> structuralVariants,
+            @NotNull ListMultimap<String, PurpleCopyNumber> copyNumbers) {
         return structuralVariantPloidyFactory.create(structuralVariants, copyNumbers);
     }
 

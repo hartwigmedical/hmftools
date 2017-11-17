@@ -32,6 +32,10 @@ public class Doubles {
         return Double.isNaN(value) ? 0d : value;
     }
 
+    public static boolean positive(double value) {
+        return greaterThan(value, 0);
+    }
+
     public static boolean positiveOrZero(double value) {
         return greaterOrEqual(value, 0);
     }

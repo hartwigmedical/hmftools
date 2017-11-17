@@ -59,7 +59,7 @@ public class StructuralVariantPloidyTest {
     }
 
     @NotNull
-    private StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
+    static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
         return ImmutableStructuralVariantPloidy.builder()
                 .chromosome(CHROMOSOME)
