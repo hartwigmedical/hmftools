@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.region;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -27,7 +28,19 @@ public class GenomeRegionSelectorFactory {
             chromosomeSelectors.put(chromosome, new GenomeRegionSelectorImpl<>(regions.get(chromosome)));
         }
 
-        return position -> chromosomeSelectors.getOrDefault(position.chromosome(), nullSelector).select(position);
+        return new GenomeRegionSelector<R>() {
+            @NotNull
+            @Override
+            public Optional<R> select(@NotNull final GenomePosition position) {
+                return chromosomeSelectors.getOrDefault(position.chromosome(), nullSelector).select(position);
+            }
+
+            @Override
+            public void select(@NotNull final GenomeRegion region, @NotNull final Consumer<R> handler) {
+                chromosomeSelectors.getOrDefault(region.chromosome(), nullSelector).select(region, handler);
+
+            }
+        };
     }
 
     private static class NullGenomeRegionSelector<R extends GenomeRegion> implements GenomeRegionSelector<R> {
@@ -36,6 +49,11 @@ public class GenomeRegionSelectorFactory {
         @Override
         public Optional<R> select(final GenomePosition position) {
             return Optional.empty();
+        }
+
+        @Override
+        public void select(@NotNull final GenomeRegion region, @NotNull final Consumer<R> handler) {
+
         }
     }
 }

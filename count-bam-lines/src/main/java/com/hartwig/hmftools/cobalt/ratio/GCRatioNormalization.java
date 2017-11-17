@@ -12,14 +12,11 @@ import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.gc.GCMedianReadCountBuilder;
 import com.hartwig.hmftools.common.gc.GCProfile;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
 class GCRatioNormalization {
-
-    private static final double MIN_MAPPABLE_PERCENTAGE = 0.85;
 
     private final GCMedianReadCountBuilder medianReadCountBuilder = new GCMedianReadCountBuilder();
     private final Multimap<String, ReadCountWithGCContent> entries = ArrayListMultimap.create();
@@ -95,7 +92,7 @@ class GCRatioNormalization {
         }
 
         private boolean isMappable() {
-            return Doubles.greaterOrEqual(gcProfile.mappablePercentage(), MIN_MAPPABLE_PERCENTAGE);
+            return gcProfile.isMappable();
         }
     }
 }

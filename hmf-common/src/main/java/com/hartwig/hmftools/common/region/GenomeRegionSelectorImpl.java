@@ -3,9 +3,11 @@ package com.hartwig.hmftools.common.region;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,18 +26,42 @@ public class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeR
         next = this.regions.hasNext() ? this.regions.next() : null;
     }
 
-    @NotNull
-    public Optional<R> select(@NotNull final GenomePosition variant) {
+    @Override
+    public void select(@NotNull final GenomeRegion region, @NotNull final Consumer<R> handler) {
+        select(GenomePositions.create(region.chromosome(), region.start()), handler);
+        select(GenomePositions.create(region.chromosome(), region.end()), handler);
+    }
 
-        if (lastPosition != null && variant.compareTo(lastPosition) < 0) {
+    private void select(@NotNull final GenomePosition position, @NotNull final Consumer<R> handler) {
+
+        if (lastPosition != null && position.compareTo(lastPosition) < 0) {
             throw new IllegalArgumentException("Selector only goes forward, never backwards!");
         }
-        lastPosition = variant;
-        while (next != null && compare(variant, next) > 0) {
+
+        while (next != null && compare(position, next) > 0) {
             next = regions.hasNext() ? this.regions.next() : null;
         }
 
-        return next != null && compare(variant, next) == 0 ? Optional.of(next) : Optional.empty();
+        while (next != null && compare(position, next) == 0) {
+            handler.accept(next);
+            next = regions.hasNext() ? this.regions.next() : null;
+        }
+
+        lastPosition = position;
+    }
+
+    @NotNull
+    public Optional<R> select(@NotNull final GenomePosition position) {
+
+        if (lastPosition != null && position.compareTo(lastPosition) < 0) {
+            throw new IllegalArgumentException("Selector only goes forward, never backwards!");
+        }
+        lastPosition = position;
+        while (next != null && compare(position, next) > 0) {
+            next = regions.hasNext() ? this.regions.next() : null;
+        }
+
+        return next != null && compare(position, next) == 0 ? Optional.of(next) : Optional.empty();
     }
 
     public static int compare(@NotNull final GenomePosition position, @NotNull final GenomeRegion region) {
