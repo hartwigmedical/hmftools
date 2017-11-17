@@ -28,26 +28,22 @@ public class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeR
 
     @Override
     public void select(@NotNull final GenomeRegion region, @NotNull final Consumer<R> handler) {
-        select(GenomePositions.create(region.chromosome(), region.start()), handler);
-        select(GenomePositions.create(region.chromosome(), region.end()), handler);
-    }
-
-    private void select(@NotNull final GenomePosition position, @NotNull final Consumer<R> handler) {
-
-        if (lastPosition != null && position.compareTo(lastPosition) < 0) {
+        final GenomePosition start = GenomePositions.create(region.chromosome(), region.start());
+        final GenomePosition end = GenomePositions.create(region.chromosome(), region.end());
+        if (lastPosition != null && start.compareTo(lastPosition) < 0) {
             throw new IllegalArgumentException("Selector only goes forward, never backwards!");
         }
 
-        while (next != null && compare(position, next) > 0) {
+        while (next != null && compare(start, next) > 0) {
             next = regions.hasNext() ? this.regions.next() : null;
         }
 
-        while (next != null && compare(position, next) == 0) {
+        while (next != null && compare(start, next) <= 0 && compare(end, next) >= 0 ) {
             handler.accept(next);
             next = regions.hasNext() ? this.regions.next() : null;
         }
 
-        lastPosition = position;
+        lastPosition = end;
     }
 
     @NotNull

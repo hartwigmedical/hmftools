@@ -22,20 +22,20 @@ public class GCAccumulatorTest {
 
     @Test
     public void testStandard() {
-        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1001, 3000);
+        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1001, 10000);
         final GCAccumulator victim = new GCAccumulator(region);
-        final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.90), unmappableProfile(2001, 0.91));
+        final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.30), profile(4001, 0.31), profile(9001, 0.35));
         selector.select(region, victim);
-        assertEquals(0.90, victim.averageGCContent(), EPSILON);
+        assertEquals(0.32, victim.averageGCContent(), EPSILON);
     }
 
     @Test
     public void testExcludeUnmappable() {
         final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1001, 3000);
         final GCAccumulator victim = new GCAccumulator(region);
-        final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.90), profile(2001, 0.91));
+        final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.90), unmappableProfile(2001, 0.91));
         selector.select(region, victim);
-        assertEquals(0.905, victim.averageGCContent(), EPSILON);
+        assertEquals(0.90, victim.averageGCContent(), EPSILON);
     }
 
     @Test
