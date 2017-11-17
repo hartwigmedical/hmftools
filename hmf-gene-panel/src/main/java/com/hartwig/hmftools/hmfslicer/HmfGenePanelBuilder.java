@@ -10,7 +10,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 
@@ -73,8 +72,7 @@ public class HmfGenePanelBuilder {
     }
 
     @NotNull
-    @VisibleForTesting
-    static Result<Record> queryEnsembldb() throws SQLException, IOException, EmptyFileException {
+    private static Result<Record> queryEnsembldb() throws SQLException, IOException, EmptyFileException {
         // MIVO: disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(ENSEMBLDB_URL, DB_USER, "");
