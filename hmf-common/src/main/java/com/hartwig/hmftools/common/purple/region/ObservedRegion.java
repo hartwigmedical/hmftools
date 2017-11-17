@@ -20,4 +20,6 @@ public interface ObservedRegion extends GenomeRegion {
     double observedNormalRatio();
 
     ObservedRegionStatus status();
+
+    double gcContent();
 }

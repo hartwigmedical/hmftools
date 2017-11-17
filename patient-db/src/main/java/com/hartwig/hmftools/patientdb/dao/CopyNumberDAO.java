@@ -82,6 +82,7 @@ class CopyNumberDAO {
                     .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
                     .observedNormalRatio(record.getValue(COPYNUMBERREGION.OBSERVEDNORMALRATIO))
                     .observedTumorRatioCount(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT))
+                    .gcContent(record.getValue(COPYNUMBERREGION.GCCONTENT))
                     .modelPloidy(record.getValue(COPYNUMBERREGION.MODELPLOIDY))
                     .modelBAF(record.getValue(COPYNUMBERREGION.MODELBAF))
                     .modelTumorRatio(record.getValue(COPYNUMBERREGION.MODELTUMORRATIO))
@@ -159,6 +160,7 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.OBSERVEDTUMORRATIO,
                     COPYNUMBERREGION.OBSERVEDNORMALRATIO,
                     COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT,
+                    COPYNUMBERREGION.GCCONTENT,
                     COPYNUMBERREGION.MODELPLOIDY,
                     COPYNUMBERREGION.MODELBAF,
                     COPYNUMBERREGION.MODELTUMORRATIO,
@@ -191,6 +193,7 @@ class CopyNumberDAO {
                 region.observedTumorRatio(),
                 region.observedNormalRatio(),
                 region.observedTumorRatioCount(),
+                region.gcContent(),
                 region.modelPloidy(),
                 region.modelBAF(),
                 region.modelTumorRatio(),

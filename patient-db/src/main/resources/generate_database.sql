@@ -191,6 +191,7 @@ CREATE TABLE copyNumberRegion
     observedTumorRatio DOUBLE PRECISION not null,
     observedNormalRatio DOUBLE PRECISION not null,
     observedTumorRatioCount int not null,
+    gcContent DOUBLE PRECISION not null,
     modelPloidy int not null,
     modelBaf DOUBLE PRECISION not null,
     modelTumorRatio DOUBLE PRECISION not null,

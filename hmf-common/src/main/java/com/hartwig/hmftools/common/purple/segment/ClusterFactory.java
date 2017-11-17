@@ -54,7 +54,6 @@ public class ClusterFactory {
     @NotNull
     List<Cluster> cluster(@NotNull final Collection<StructuralVariantPosition> variantPositions,
             @NotNull final Collection<PCFPosition> pcfPositions, @NotNull final List<CobaltRatio> ratios) {
-
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(variantPositions);
         allPositions.addAll(pcfPositions);
@@ -65,6 +64,10 @@ public class ClusterFactory {
         int ratioIndex = 0;
         ModifiableCluster segment = null;
         for (GenomePosition position : allPositions) {
+            if (position.position() == 1) {
+                continue;
+            }
+
             while (ratioIndex < ratios.size() - 1 && ratios.get(ratioIndex).position() < position.position()) {
                 ratioIndex++;
             }

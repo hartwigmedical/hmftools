@@ -88,7 +88,7 @@ public enum PurpleCopyNumberFile {
                 .averageActualBAF(Double.valueOf(values[6]))
                 .inferred(Boolean.valueOf(values[7]))
                 .segmentStartSupport(SegmentSupport.valueOf(values[8]))
-                .segmentEndSupport(SegmentSupport.NONE)
+                .segmentEndSupport(SegmentSupport.NONE) //TODO: INCLUDE
                 .build();
     }
 }

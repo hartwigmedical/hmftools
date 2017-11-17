@@ -25,6 +25,9 @@ public interface CommonConfig {
     @NotNull
     String amberDirectory();
 
+    @NotNull
+    String gcProfile();
+
     boolean forceSegmentation();
 
     default int windowSize() {

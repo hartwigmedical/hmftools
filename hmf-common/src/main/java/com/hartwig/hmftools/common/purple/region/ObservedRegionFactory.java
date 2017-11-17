@@ -10,12 +10,15 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.window.Window;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,18 +37,21 @@ public class ObservedRegionFactory {
 
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<String, AmberBAF> bafs,
-            @NotNull final Multimap<String, CobaltRatio> ratios) {
+            @NotNull final Multimap<String, CobaltRatio> ratios, @NotNull final Multimap<String, GCProfile> gcProfiles) {
         final List<ObservedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
         final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
+        final GenomeRegionSelector<GCProfile> gcSelector = GenomeRegionSelectorFactory.create(gcProfiles);
 
         for (final PurpleSegment region : regions) {
             final BAFAccumulator baf = new BAFAccumulator();
             final CobaltAccumulator cobalt = new CobaltAccumulator(windowSize, region);
+            final GCAccumulator gc = new GCAccumulator(region);
 
             bafSelector.select(region, baf);
             cobaltSelector.select(region, cobalt);
+            gcSelector.select(region, gc);
 
             double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
@@ -58,6 +64,7 @@ public class ObservedRegionFactory {
                     .ratioSupport(region.ratioSupport())
                     .support(region.support())
                     .observedTumorRatioCount(cobalt.tumorCount())
+                    .gcContent(gc.averageGCContent())
                     .status(statusFactory.status(region, normalRatio))
                     .build();
 
@@ -120,7 +127,7 @@ public class ObservedRegionFactory {
 
         @Override
         public void accept(final CobaltRatio ratio) {
-            if (window.end(ratio.position()) <= region.end() ) {
+            if (window.end(ratio.position()) <= region.end()) {
                 referenceAccumulator.accept(ratio.referenceGCDiploidRatio());
                 tumorAccumulator.accept(ratio.tumorGCRatio());
             }

@@ -31,11 +31,13 @@ public class ConfigSupplier {
     private static final String OUTPUT_DIRECTORY_DEFAULT = "purple";
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
+    private static final String GC_PROFILE = "gc_profile";
 
     private static final String STRUCTURAL_VARIANTS = "structural_vcf";
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
     private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
+
 
     public static void addOptions(Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
@@ -52,6 +54,7 @@ public class ConfigSupplier {
         options.addOption(CIRCOS, true, "Location of circos binary.");
         options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
         options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
+        options.addOption(GC_PROFILE, true, "Location of GC Profile.");
     }
 
     private final CommonConfig commonConfig;
@@ -65,6 +68,12 @@ public class ConfigSupplier {
         if (runDirectory == null) {
             printHelp(opt);
             throw new ParseException(RUN_DIRECTORY + " is a mandatory argument");
+        }
+
+        final String gcProfile = cmd.getOptionValue(GC_PROFILE);
+        if (gcProfile == null) {
+            printHelp(opt);
+            throw new ParseException(GC_PROFILE + " is a mandatory argument");
         }
 
         final String refSample;
@@ -89,6 +98,7 @@ public class ConfigSupplier {
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
                 .forceSegmentation(cmd.hasOption(FORCE))
+                .gcProfile(gcProfile)
                 .build();
 
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());

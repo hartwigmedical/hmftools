@@ -114,6 +114,7 @@ public enum FittedRegionFile {
                 .support(SegmentSupport.valueOf(values[21]))
                 .observedTumorRatioCount(Integer.valueOf(values[22]))
                 .tumorBAF(Double.valueOf(values[23]))
+                .gcContent(0) //TODO: INCLUDE
                 .build();
     }
 

@@ -56,6 +56,7 @@ public class PurpleDatamodelTest {
                 .observedNormalRatio(1)
                 .ratioSupport(true)
                 .status(ObservedRegionStatus.SOMATIC)
+                .gcContent(0.93)
                 .support(SegmentSupport.NONE);
     }
 

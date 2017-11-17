@@ -21,6 +21,8 @@ import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gc.GCProfile;
+import com.hartwig.hmftools.common.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
@@ -156,6 +158,9 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Reading cobalt ratios from {}", ratioFilename);
             final ListMultimap<String, CobaltRatio> ratios = CobaltRatioFile.read(ratioFilename);
 
+            LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
+            final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.gcProfile());
+
             // Gender
             final Gender amberGender = Gender.fromAmber(bafs);
             final Gender cobaltGender = Gender.fromCobalt(ratios);
@@ -192,7 +197,7 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Mapping all observations to the segmented regions");
             final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), amberGender);
-            final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios);
+            final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
 
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);

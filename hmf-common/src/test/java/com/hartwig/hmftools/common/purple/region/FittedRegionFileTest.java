@@ -42,6 +42,7 @@ public class FittedRegionFileTest {
                 .ratioSupport(random.nextBoolean())
                 .support(SegmentSupport.BND)
                 .observedTumorRatioCount(random.nextInt())
+                .gcContent(0.0)
                 .build();
     }
 
