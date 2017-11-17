@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 import static java.util.Collections.singleton;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
 import java.util.List;
@@ -65,8 +66,18 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @Test
+    public void testExludeNegativeAndZeroCopyNumbers() {
+        final StructuralVariantLeg positiveLeg = leg(1001, 1, 0.25);
+        final StructuralVariantLeg negativeLeg = leg(2001, -1, 0.25);
+        final PurpleCopyNumber left = copyNumber(1, 1000, -0.01);
+        final PurpleCopyNumber right = copyNumber(2001, 3000, 0);
+
+        assertFalse(PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).isPresent());
+        assertFalse(PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).isPresent());
+    }
+
+    @Test
     public void testSelectCorrectOrAlternativeCopyNumberForLeg() {
-        final StructuralVariantPloidyFactory pureFactory = new StructuralVariantPloidyFactory(PURE);
 
         final StructuralVariantLeg positiveLeg = leg(1001, 1, 0.25);
         final StructuralVariantLeg negativeLeg = leg(2001, -1, 0.25);
@@ -74,11 +85,11 @@ public class StructuralVariantPloidyFactoryTest {
         final PurpleCopyNumber middle = copyNumber(1001, 2000, 3);
         final PurpleCopyNumber right = copyNumber(2001, 3000, 4);
 
-        assertPloidy(1, false, pureFactory.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))));
-        assertPloidy(1, true, pureFactory.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(middle))));
+        assertPloidy(1, false, PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))));
+        assertPloidy(1, true, PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(middle))));
 
-        assertPloidy(1, true, pureFactory.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(middle))));
-        assertPloidy(1, false, pureFactory.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))));
+        assertPloidy(1, true, PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(middle))));
+        assertPloidy(1, false, PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))));
     }
 
     @Test

@@ -81,8 +81,8 @@ class StructuralVariantPloidyFactory {
             @NotNull final GenomeRegionSelector<PurpleCopyNumber> selector) {
 
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.position() - 1);
-        final Optional<PurpleCopyNumber> left = selector.select(svPositionLeft).filter(x -> !Doubles.isZero(x.averageTumorCopyNumber()));
-        final Optional<PurpleCopyNumber> right = selector.select(leg).filter(x -> !Doubles.isZero(x.averageTumorCopyNumber()));
+        final Optional<PurpleCopyNumber> left = selector.select(svPositionLeft).filter(x -> Doubles.positive(x.averageTumorCopyNumber()));
+        final Optional<PurpleCopyNumber> right = selector.select(leg).filter(x -> Doubles.positive(x.averageTumorCopyNumber()));
 
         final Optional<PurpleCopyNumber> correct;
         final Optional<PurpleCopyNumber> alternate;
@@ -107,7 +107,7 @@ class StructuralVariantPloidyFactory {
             weight = 1;
         } else {
             double copyNumber = alternate.get().averageTumorCopyNumber();
-            ploidy = purityAdjustedPloidy(leg.chromosome(), vaf / (1 - vaf) , copyNumber);
+            ploidy = purityAdjustedPloidy(leg.chromosome(), vaf / (1 - vaf), copyNumber);
             weight = 1 / (1 + Math.pow(Math.max(copyNumber, 2) / Math.min(Math.max(copyNumber, 0.01), 2), 2));
         }
 
@@ -122,6 +122,6 @@ class StructuralVariantPloidyFactory {
 
     private double purityAdjustedPloidy(String chromosome, double vaf, double copyNumber) {
         double adjustedVAF = purityAdjuster.purityAdjustedVAF(chromosome, copyNumber, vaf);
-        return  adjustedVAF * copyNumber;
+        return adjustedVAF * copyNumber;
     }
 }
