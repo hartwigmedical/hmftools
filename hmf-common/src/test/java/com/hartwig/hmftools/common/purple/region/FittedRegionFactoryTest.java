@@ -20,6 +20,31 @@ public class FittedRegionFactoryTest {
     private static final double EPSILON = 1e-10;
 
     @Test
+    public void useRefNormalisedCopyNumberForGermlineEvents() {
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.SOMATIC));
+        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HET_DELETION));
+        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HOM_DELETION));
+        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_AMPLIFICATION));
+        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_NOISE));
+
+    }
+
+    private void testTumorCopyNumber(double expectedCopyNumber, @NotNull ObservedRegion region) {
+        final FittedRegionFactory factory = new FittedRegionFactory(Gender.FEMALE, 10, 0.2, false, 1);
+        final FittedRegion fittedRegion = factory.fitRegion(0.5, 1, region);
+        assertEquals(expectedCopyNumber, fittedRegion.tumorCopyNumber(), EPSILON);
+    }
+
+    private static ObservedRegion observedRatio(double observedNormalRatio, double observedTumorRatio,
+            @NotNull final ObservedRegionStatus status) {
+        return PurpleDatamodelTest.createObservedRegion("1", 1, 2)
+                .observedNormalRatio(observedNormalRatio)
+                .observedTumorRatio(observedTumorRatio)
+                .status(status)
+                .build();
+    }
+
+    @Test
     public void expectedFit() {
         final FittedRegionFactory victim = new FittedRegionFactory(Gender.MALE, 12, 0.2, false, 1);
         final FittedRegion result = victim.fitRegion(0.8, 0.7, create(180d / 280d + 0.01, 0.98 - 0.01));

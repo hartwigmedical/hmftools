@@ -92,9 +92,8 @@ public class FittedRegionFactory {
             case GERMLINE_NOISE:
             case GERMLINE_HOM_DELETION:
             case GERMLINE_HET_DELETION:
-                return refNormalisedCopyNumber;
             case GERMLINE_AMPLIFICATION:
-                return refNormalisedCopyNumber / Math.ceil(2 * (region.observedNormalRatio()));
+                return refNormalisedCopyNumber;
         }
 
         return purityAdjustedCopyNumber;
