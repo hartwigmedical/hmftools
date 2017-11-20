@@ -3,13 +3,10 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
@@ -20,6 +17,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class SomaticExtension {
+
+    @NotNull
+    static List<FittedRegion> fittedRegions(@NotNull final PurityAdjuster adjuster, @NotNull final Collection<FittedRegion> fittedRegions) {
+        final SomaticExtension extension = new SomaticExtension(adjuster, fittedRegions);
+        return extension.fittedRegions();
+    }
+
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticExtension.class);
@@ -29,18 +33,18 @@ class SomaticExtension {
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    SomaticExtension(@NotNull final PurityAdjuster adjuster) {
+    private SomaticExtension(@NotNull final PurityAdjuster adjuster, @NotNull final Collection<FittedRegion> fittedRegions) {
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
+        somaticExtension(fittedRegions);
     }
 
     @NotNull
-    private List<FittedRegion> smoothedRegions() {
+    private List<FittedRegion> fittedRegions() {
         return regions.stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
     }
 
-    @NotNull
-    List<FittedRegion> smooth(@NotNull final Collection<FittedRegion> fittedRegions) {
+    private void somaticExtension(@NotNull final Collection<FittedRegion> fittedRegions) {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
         for (FittedRegion fittedRegion : fittedRegions) {
@@ -52,18 +56,17 @@ class SomaticExtension {
             final CombinedFittedRegion highestConfidence = regions.get(highestConfidenceIndex);
 
             LOGGER.debug("Selected region {}", toString(highestConfidence.region()));
-            smoothRight(highestConfidenceIndex);
-            smoothLeft(highestConfidenceIndex);
+            extendRight(highestConfidenceIndex);
+            extendLeft(highestConfidenceIndex);
 
             LOGGER.debug("Completed region {}", toString(highestConfidence.region()));
             highestConfidence.setModified();
             highestConfidenceIndex = nextIndex();
         }
 
-        return smoothedRegions();
     }
 
-    private void smoothRight(int startIndex) {
+    private void extendRight(int startIndex) {
         assert (startIndex < regions.size());
         final CombinedFittedRegion target = regions.get(startIndex);
         int targetIndex = startIndex + 1;
@@ -79,7 +82,7 @@ class SomaticExtension {
         }
     }
 
-    private void smoothLeft(int startIndex) {
+    private void extendLeft(int startIndex) {
         assert (startIndex < regions.size());
         final CombinedFittedRegion target = regions.get(startIndex);
 
@@ -96,7 +99,6 @@ class SomaticExtension {
         }
 
     }
-
 
     private boolean breakForCentromereStart(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.region().start() < neighbour.start()) {
@@ -120,12 +122,9 @@ class SomaticExtension {
             return false;
         }
 
-        final double neighbourCopyNumber = neighbour.tumorCopyNumber();
-        final double targetCopyNumber = target.region().tumorCopyNumber();
-        final boolean isTargetValid = isValidSomatic(target.region()) || isValidGermlineAmplification(neighbourCopyNumber, target.region());
-        final boolean isNeighbourValid = isValidSomatic(neighbour) || isValidGermlineAmplification(targetCopyNumber, neighbour);
+        final boolean isNeighbourValid = isValidSomatic(neighbour);
 
-        if (isTargetValid && !isNeighbourValid) {
+        if (!isNeighbourValid) {
             target.combine(neighbour, false);
             return true;
         } else if (inTolerance(target.region(), neighbour)) {
@@ -141,27 +140,11 @@ class SomaticExtension {
                 || region.observedTumorRatioCount() > 5);
     }
 
-    @VisibleForTesting
-    static boolean isValidGermlineAmplification(double neighbourCopyNumber, @NotNull final FittedRegion region) {
-
-        if (region.status() == ObservedRegionStatus.GERMLINE_AMPLIFICATION) {
-            double conservativeCopyNumber = region.tumorCopyNumber() / Math.ceil(2 * (region.observedNormalRatio()));
-            return Doubles.greaterOrEqual(conservativeCopyNumber, neighbourCopyNumber);
-        }
-
-        return false;
-    }
-
     private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
         return bafDeviation.inTolerance(left, right) && copyNumberDeviation.inTolerance(left, right);
     }
 
     private int nextIndex() {
-        int nextSomatic = nextIndex(x -> x == ObservedRegionStatus.SOMATIC);
-        return nextSomatic == -1 ? nextIndex(x -> true) : nextSomatic;
-    }
-
-    private int nextIndex(@NotNull final Predicate<ObservedRegionStatus> statusPredicate) {
 
         int indexOfLargestBaf = -1;
         int indexOfLargestLength = -1;
@@ -172,7 +155,7 @@ class SomaticExtension {
         for (int i = 0; i < regions.size(); i++) {
             final CombinedFittedRegion combined = regions.get(i);
             final FittedRegion region = combined.region();
-            if (!combined.isModified() && statusPredicate.test(region.status())) {
+            if (!combined.isModified() && region.status().equals(ObservedRegionStatus.SOMATIC)) {
 
                 if (region.bafCount() > largestBAFCount) {
                     largestBAFCount = region.bafCount();
