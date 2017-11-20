@@ -22,8 +22,6 @@ import org.jetbrains.annotations.NotNull;
 class PyramidSmoothing {
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
-    //
-
     private static final Logger LOGGER = LogManager.getLogger(PyramidSmoothing.class);
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
@@ -72,8 +70,7 @@ class PyramidSmoothing {
 
         while (targetIndex < regions.size()) {
             final FittedRegion neighbour = regions.get(targetIndex).region();
-            initialiseTarget(target, neighbour);
-            if (!mergeIfPossible(target, neighbour)) {
+            if (!merge(target, neighbour)) {
                 return;
             }
 
@@ -89,9 +86,7 @@ class PyramidSmoothing {
         int targetIndex = startIndex - 1;
         while (targetIndex >= 0) {
             final FittedRegion neighbour = regions.get(targetIndex).region();
-            initialiseTarget(target, neighbour);
-
-            if (!mergeIfPossible(target, neighbour)) {
+            if (!merge(target, neighbour)) {
                 return;
             }
 
@@ -102,13 +97,6 @@ class PyramidSmoothing {
 
     }
 
-    private void initialiseTarget(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
-        final FittedRegion targetRegion = target.region();
-        final double neighbourCopyNumber = neighbour.tumorCopyNumber();
-        if (!target.isModified() && !(isValidSomatic(targetRegion) || isValidGermlineAmplification(neighbourCopyNumber, targetRegion))) {
-            target.clearValues();
-        }
-    }
 
     private boolean breakForCentromereStart(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.region().start() < neighbour.start()) {
@@ -126,23 +114,26 @@ class PyramidSmoothing {
         return target.region().support() != SegmentSupport.NONE;
     }
 
-    private boolean mergeIfPossible(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+    private boolean merge(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
 
         if (breakForCentromereStart(target, neighbour) || breakForStructuralVariant(target, neighbour)) {
             return false;
         }
 
+        final double neighbourCopyNumber = neighbour.tumorCopyNumber();
         final double targetCopyNumber = target.region().tumorCopyNumber();
+        final boolean isTargetValid = isValidSomatic(target.region()) || isValidGermlineAmplification(neighbourCopyNumber, target.region());
         final boolean isNeighbourValid = isValidSomatic(neighbour) || isValidGermlineAmplification(targetCopyNumber, neighbour);
-        if (!isNeighbourValid) {
+
+        if (isTargetValid && !isNeighbourValid) {
             target.combine(neighbour, false);
+            return true;
         } else if (inTolerance(target.region(), neighbour)) {
             target.combine(neighbour, true);
-        } else {
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     private boolean isValidSomatic(@NotNull final FittedRegion region) {

@@ -24,7 +24,8 @@ class CombinedFittedRegion {
         }
     }
 
-    public void clearValues() {
+    @Deprecated
+    private void clearValues() {
         modified = true;
         combined.setRefNormalisedCopyNumber(0);
         combined.setObservedBAF(0);
