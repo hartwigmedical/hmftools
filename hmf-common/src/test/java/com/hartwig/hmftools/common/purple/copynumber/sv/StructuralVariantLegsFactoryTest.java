@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegsFactory.reduce;
+import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyTest.CHROMOSOME;
 
+import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -17,8 +19,6 @@ import org.junit.Test;
 
 public class StructuralVariantLegsFactoryTest {
 
-    private static final String CHROMOSOME = "1";
-    private static final double EPSILON = 1e-10;
 
     @Test
     public void testReduce() {
@@ -108,7 +108,7 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @NotNull
-    private StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
+    static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
         return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type).startAF(startAF).endAF(endAF).build();
     }
 

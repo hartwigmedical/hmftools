@@ -2,6 +2,10 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import static java.util.Collections.singleton;
 
+import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyTest.CHROMOSOME;
+import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyTest.PURE;
+
+import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -23,9 +27,6 @@ import org.junit.Test;
 
 public class StructuralVariantPloidyFactoryTest {
 
-    private static final String CHROMOSOME = "X";
-    private static final double EPSILON = 1e-10;
-    private static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
     private static final StructuralVariantPloidyFactory PURE_PLOIDY_FACTORY = new StructuralVariantPloidyFactory(PURE);
 
     @Test
@@ -132,12 +133,12 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @NotNull
-    private PurpleCopyNumber copyNumber(long start, long end, double copyNumber) {
+    static PurpleCopyNumber copyNumber(long start, long end, double copyNumber) {
         return PurpleDatamodelTest.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
     }
 
     @NotNull
-    private ListMultimap<String, PurpleCopyNumber> copyNumbers(PurpleCopyNumber... copyNumbers) {
+    static ListMultimap<String, PurpleCopyNumber> copyNumbers(PurpleCopyNumber... copyNumbers) {
         final ListMultimap<String, PurpleCopyNumber> result = ArrayListMultimap.create();
         result.putAll(CHROMOSOME, Lists.newArrayList(copyNumbers));
         return result;

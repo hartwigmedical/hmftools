@@ -4,15 +4,20 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.gender.Gender;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantPloidyTest {
 
-    private static final String CHROMOSOME = "1";
+    static final String CHROMOSOME = "X";
+    static final double EPSILON = 1e-10;
+    static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
     private static final double PLOIDY = 1;
-    private static final double EPSILON = 1e-10;
+
 
     @Test
     public void testCompleteImpliedCopyNumbers() {
