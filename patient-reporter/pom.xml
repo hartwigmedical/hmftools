@@ -10,7 +10,7 @@
 
     <artifactId>patient-reporter</artifactId>
     <packaging>jar</packaging>
-    <version>3.19</version>
+    <version>3.20</version>
     <name>HMF Tools - Patient Reporter</name>
 
     <dependencies>
