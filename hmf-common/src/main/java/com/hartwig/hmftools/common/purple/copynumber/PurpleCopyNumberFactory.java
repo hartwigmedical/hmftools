@@ -54,7 +54,7 @@ public class PurpleCopyNumberFactory {
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
-            final List<FittedRegion> smoothedV2 = new PyramidSmoothing(purityAdjuster).smooth(chromosomeFittedRegions);
+            final List<FittedRegion> smoothedV2 = new SomaticExtension(purityAdjuster).smooth(chromosomeFittedRegions);
 
             final List<PurpleCopyNumber> copyNumbers = toCopyNumber(smoothedV2);
             newMethod.putAll(chromosome, copyNumbers);

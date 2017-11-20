@@ -18,16 +18,16 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PyramidSmoothingTest {
+public class SomaticExtensionTest {
 
     private final static String CHROMOSOME = "1";
     private final static double EPSILON = 1e-10;
     private final static PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
-    private PyramidSmoothing victim;
+    private SomaticExtension victim;
 
     @Before
     public void setup() {
-        victim = new PyramidSmoothing(PURE);
+        victim = new SomaticExtension(PURE);
     }
 
     @Test
@@ -36,11 +36,11 @@ public class PyramidSmoothingTest {
         double normalRatio = 1.2;
         double expectedOKTumorCopyNumber = Math.ceil(2 * normalRatio) * neighbour;
 
-        assertTrue(PyramidSmoothing.isValidGermlineAmplification(neighbour,
+        assertTrue(SomaticExtension.isValidGermlineAmplification(neighbour,
                 createGermlineAmplified(expectedOKTumorCopyNumber + 0.01, normalRatio)));
-        assertTrue(PyramidSmoothing.isValidGermlineAmplification(neighbour,
+        assertTrue(SomaticExtension.isValidGermlineAmplification(neighbour,
                 createGermlineAmplified(expectedOKTumorCopyNumber, normalRatio)));
-        assertFalse(PyramidSmoothing.isValidGermlineAmplification(neighbour,
+        assertFalse(SomaticExtension.isValidGermlineAmplification(neighbour,
                 createGermlineAmplified(expectedOKTumorCopyNumber - 0.01, normalRatio)));
     }
 

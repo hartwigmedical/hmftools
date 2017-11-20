@@ -19,17 +19,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class PyramidSmoothing {
+class SomaticExtension {
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
-    private static final Logger LOGGER = LogManager.getLogger(PyramidSmoothing.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticExtension.class);
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     private List<CombinedFittedRegion> regions = Lists.newLinkedList();
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    PyramidSmoothing(@NotNull final PurityAdjuster adjuster) {
+    SomaticExtension(@NotNull final PurityAdjuster adjuster) {
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
     }
