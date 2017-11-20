@@ -57,8 +57,10 @@ public final class LimsFactory {
         jsonSamples.forEach(jsonSample -> {
             final JsonObject jsonSampleObject = jsonSample.getValue().getAsJsonObject();
             final String sampleLabel = jsonSampleObject.get("label").getAsString();
+            final String analysisType = jsonSampleObject.get("analysis_type").getAsString();
 
-            if (sampleLabel.equals("CPCT") || sampleLabel.equals("DRUP")) {
+            if ((sampleLabel.equals("CPCT") || sampleLabel.equals("DRUP")) && analysisType != null && analysisType.toLowerCase()
+                    .contains("somatic")) {
                 final LimsJsonData limsJsonData = gson.fromJson(jsonSample.getValue(), LimsJsonData.class);
                 limsDataPerSample.put(limsJsonData.sampleId(), limsJsonData);
             }
