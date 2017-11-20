@@ -22,6 +22,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jooq.CSVFormat;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -34,7 +35,7 @@ public class HmfGenePanelBuilder {
     private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
 
     private static final String OUT_PATH = "out";
-    private static final String DATABASE = "homo_sapiens_core_89_37";
+    private static final String DATABASE = "homo_sapiens_core_90_37";
     private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
     private static final String DB_USER = "anonymous";
 
@@ -84,7 +85,8 @@ public class HmfGenePanelBuilder {
     private static void writeFile(@NotNull final CommandLine cmd, @NotNull final Result<Record> records) throws IOException {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(OUT_PATH), false));
         // MIVO: format as tsv without header containing column names
-        writer.write(records.formatCSV(false, '\t', ""));
+        final CSVFormat format = new CSVFormat().header(false).delimiter('\t').nullString("").quoteString("");
+        writer.write(records.formatCSV(format));
         writer.close();
     }
 }

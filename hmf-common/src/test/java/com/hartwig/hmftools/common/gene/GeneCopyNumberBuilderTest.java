@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.gene;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
+
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
@@ -103,7 +105,7 @@ public class GeneCopyNumberBuilderTest {
                 .transcriptID("ID")
                 .transcriptVersion(1)
                 .chromosomeBand("BAND")
-                .entrezId("ID")
+                .entrezId(Collections.singletonList(1))
                 .geneID("ID")
                 .geneStart(start)
                 .geneEnd(end)

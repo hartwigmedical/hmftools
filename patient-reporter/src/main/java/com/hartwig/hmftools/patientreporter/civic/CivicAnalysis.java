@@ -56,16 +56,17 @@ public class CivicAnalysis {
         for (final VariantReport variantReport : reportedVariants) {
             for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
                 if (region.gene().equals(variantReport.gene())) {
-                    final int entrezId = Integer.parseInt(region.entrezId());
-                    try {
-                        final List<CivicVariant> civicVariants = civicApi.getVariantsForGene(entrezId).toList().blockingGet();
-                        final Alteration alteration = Alteration.from(variantReport, civicVariants, tumorSubtypesDoids);
-                        if (alteration.getMatches().size() > 0) {
-                            alterations.add(alteration);
+                    for (final int entrezId : region.entrezId()) {
+                        try {
+                            final List<CivicVariant> civicVariants = civicApi.getVariantsForGene(entrezId).toList().blockingGet();
+                            final Alteration alteration = Alteration.from(variantReport, civicVariants, tumorSubtypesDoids);
+                            if (alteration.getMatches().size() > 0) {
+                                alterations.add(alteration);
+                            }
+                        } catch (final Throwable throwable) {
+                            LOGGER.error("  Failed to get civic variants for variant: " + variantReport.variant().chromosomePosition()
+                                    + ". error message: " + throwable.getMessage());
                         }
-                    } catch (final Throwable throwable) {
-                        LOGGER.error("  Failed to get civic variants for variant: " + variantReport.variant().chromosomePosition()
-                                + ". error message: " + throwable.getMessage());
                     }
                 }
             }

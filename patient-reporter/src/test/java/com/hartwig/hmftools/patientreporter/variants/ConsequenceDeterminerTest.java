@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.VariantAnnotationTest.createVa
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class ConsequenceDeterminerTest {
     private static final String HGVS_PROTEIN = "p.RtoA";
 
     private static final String CHROMOSOME_BAND = "p1";
-    private static final String ENTREZ_ID = "11";
+    private static final List<Integer> ENTREZ_ID = Collections.singletonList(11);
     private static final String GENE_ID = "ENSG0000";
     private static final long GENE_START = 1;
     private static final long GENE_END = 42;

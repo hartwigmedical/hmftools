@@ -23,7 +23,7 @@ public abstract class HmfGenomeRegion implements GeneRegion {
     public abstract String chromosomeBand();
 
     @NotNull
-    public abstract String entrezId();
+    public abstract List<Integer> entrezId();
 
     @NotNull
     public abstract List<HmfExonRegion> exome();

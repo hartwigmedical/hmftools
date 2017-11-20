@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,6 +82,9 @@ public final class HmfSlicerFileLoader {
                         regionMap.put(region.chromosome(), region);
                     }
 
+                    final List<Integer> entrezIds =
+                            Arrays.stream(values[ENTREZ_ID_COLUMN].split(",")).map(Integer::parseInt).collect(Collectors.toList());
+
                     gene = values[GENE_COLUMN];
                     builder = ImmutableHmfGenomeRegion.builder()
                             .chromosome(chromosome)
@@ -89,7 +93,7 @@ public final class HmfSlicerFileLoader {
                             .transcriptID(values[TRANSCRIPT_ID_COLUMN])
                             .transcriptVersion(Integer.valueOf(values[TRANSCRIPT_VERSION_COLUMN]))
                             .chromosomeBand(values[CHROMOSOME_BAND_COLUMN])
-                            .entrezId(values[ENTREZ_ID_COLUMN])
+                            .entrezId(entrezIds)
                             .gene(gene)
                             .geneID(values[GENE_ID_COLUMN])
                             .geneStart(Long.valueOf(values[GENE_START_COLUMN]))
