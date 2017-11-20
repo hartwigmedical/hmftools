@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -18,17 +19,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class Smoothing {
+class PyramidSmoothing {
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
-    private static final Logger LOGGER = LogManager.getLogger(Smoothing.class);
+    //
+
+    private static final Logger LOGGER = LogManager.getLogger(PyramidSmoothing.class);
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     private List<CombinedFittedRegion> regions = Lists.newLinkedList();
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    Smoothing(@NotNull final PurityAdjuster adjuster) {
+    PyramidSmoothing(@NotNull final PurityAdjuster adjuster) {
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
     }
@@ -102,7 +105,7 @@ class Smoothing {
     private void initialiseTarget(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
         final FittedRegion targetRegion = target.region();
         final double neighbourCopyNumber = neighbour.tumorCopyNumber();
-        if (!target.isModified() && !(isValidSomatic(targetRegion) || isValidGermline(neighbourCopyNumber, targetRegion))) {
+        if (!target.isModified() && !(isValidSomatic(targetRegion) || isValidGermlineAmplification(neighbourCopyNumber, targetRegion))) {
             target.clearValues();
         }
     }
@@ -130,7 +133,7 @@ class Smoothing {
         }
 
         final double targetCopyNumber = target.region().tumorCopyNumber();
-        final boolean isNeighbourValid = isValidSomatic(neighbour) || isValidGermline(targetCopyNumber, neighbour);
+        final boolean isNeighbourValid = isValidSomatic(neighbour) || isValidGermlineAmplification(targetCopyNumber, neighbour);
         if (!isNeighbourValid) {
             target.combine(neighbour, false);
         } else if (inTolerance(target.region(), neighbour)) {
@@ -147,18 +150,15 @@ class Smoothing {
                 || region.observedTumorRatioCount() > 5);
     }
 
-    private boolean isValidGermline(double neighbourCopyNumber, @NotNull final FittedRegion region) {
-        return isValidGermlineHetrozygous(region) || isValidGermlineAmplification(neighbourCopyNumber, region);
-    }
+    @VisibleForTesting
+    static boolean isValidGermlineAmplification(double neighbourCopyNumber, @NotNull final FittedRegion region) {
 
-    private boolean isValidGermlineHetrozygous(@NotNull final FittedRegion region) {
+        if (region.status() == ObservedRegionStatus.GERMLINE_AMPLIFICATION) {
+            double conservativeCopyNumber = region.tumorCopyNumber() / Math.ceil(2 * (region.observedNormalRatio()));
+            return Doubles.greaterOrEqual(conservativeCopyNumber, neighbourCopyNumber);
+        }
+
         return false;
-        //        return region.status() == ObservedRegionStatus.GERMLINE_HET_DELETION && Doubles.lessThan(region.refNormalisedCopyNumber(), 0.5);
-    }
-
-    private boolean isValidGermlineAmplification(double neighbourCopyNumber, @NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.GERMLINE_AMPLIFICATION && Doubles.greaterThan(region.tumorCopyNumber(),
-                neighbourCopyNumber);
     }
 
     private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
