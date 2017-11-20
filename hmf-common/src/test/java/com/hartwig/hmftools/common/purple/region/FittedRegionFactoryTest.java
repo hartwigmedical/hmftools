@@ -20,13 +20,12 @@ public class FittedRegionFactoryTest {
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void useRefNormalisedCopyNumberForGermlineEvents() {
+    public void tumorCopyNumberDoesntChangeForObservedRegionStatus() {
         testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.SOMATIC));
-        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HET_DELETION));
-        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HOM_DELETION));
-        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_AMPLIFICATION));
-        testTumorCopyNumber(3.6, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_NOISE));
-
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HET_DELETION));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HOM_DELETION));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_AMPLIFICATION));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_NOISE));
     }
 
     private void testTumorCopyNumber(double expectedCopyNumber, @NotNull ObservedRegion region) {

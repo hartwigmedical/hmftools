@@ -47,8 +47,7 @@ public class FittedRegionFactory {
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double purityAdjustedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
-        double tumorCopyNumber = tumorCopyNumber(observedRegion, purityAdjustedCopyNumber, refNormalisedCopyNumber);
-        double tumorBAF = purityAdjuster.purityAdjustedBAF(observedRegion.chromosome(), tumorCopyNumber, observedBAF);
+        double tumorBAF = purityAdjuster.purityAdjustedBAF(observedRegion.chromosome(), purityAdjustedCopyNumber, observedBAF);
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
@@ -56,7 +55,7 @@ public class FittedRegionFactory {
                 .broadTumorCopyNumber(0)
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
-                .tumorCopyNumber(tumorCopyNumber)
+                .tumorCopyNumber(purityAdjustedCopyNumber)
                 .tumorBAF(tumorBAF)
                 .refNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber));
 
@@ -85,18 +84,6 @@ public class FittedRegionFactory {
         }
 
         return builder.build();
-    }
-
-    private double tumorCopyNumber(@NotNull final ObservedRegion region, double purityAdjustedCopyNumber, double refNormalisedCopyNumber) {
-        switch (region.status()) {
-            case GERMLINE_NOISE:
-            case GERMLINE_HOM_DELETION:
-            case GERMLINE_HET_DELETION:
-            case GERMLINE_AMPLIFICATION:
-                return refNormalisedCopyNumber;
-        }
-
-        return purityAdjustedCopyNumber;
     }
 
     @VisibleForTesting
