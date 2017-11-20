@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantImpliedCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -67,7 +68,7 @@ public class PurpleCopyNumberFactory {
         if (experimental) {
             // New Method
             StructuralVariantImpliedCopyNumber copyNumber = new StructuralVariantImpliedCopyNumber(purityAdjuster);
-            smoothedRegions.addAll(copyNumber.calculateSVCopyNumber(structuralVariants, newMethod).values());
+            smoothedRegions.addAll(copyNumber.svImpliedCopyNumber(structuralVariants, newMethod).values());
         }
         Collections.sort(smoothedRegions);
     }
@@ -113,7 +114,7 @@ public class PurpleCopyNumberFactory {
                 .averageObservedBAF(region.observedBAF())
                 .averageActualBAF(region.tumorBAF())
                 .averageTumorCopyNumber(region.tumorCopyNumber())
-                .inferred(false)
+                .inferred(region.status() == ObservedRegionStatus.CLUSTER)
                 .segmentStartSupport(region.support())
                 .segmentEndSupport(trailingSupport)
                 .build();

@@ -40,7 +40,7 @@ public class StructuralVariantImpliedCopyNumberTest {
         final ListMultimap<String, PurpleCopyNumber> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
 
         final StructuralVariantImpliedCopyNumber victim = new StructuralVariantImpliedCopyNumber(PURE);
-        final List<PurpleCopyNumber> result = victim.calculateSVCopyNumber(svs, copyNumbers).get(CHROMOSOME);
+        final List<PurpleCopyNumber> result = victim.svImpliedCopyNumber(svs, copyNumbers).get(CHROMOSOME);
         assertEquals(5, result.size());
         assertEquals(40.00, result.get(0).averageTumorCopyNumber(), EPSILON);
         assertEquals(33.75, result.get(1).averageTumorCopyNumber(), EPSILON);

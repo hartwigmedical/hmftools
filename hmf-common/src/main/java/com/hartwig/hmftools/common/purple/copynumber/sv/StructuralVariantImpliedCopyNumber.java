@@ -34,14 +34,14 @@ public class StructuralVariantImpliedCopyNumber {
     }
 
     @NotNull
-    public ListMultimap<String, PurpleCopyNumber> calculateSVCopyNumber(final List<StructuralVariant> structuralVariants,
+    public ListMultimap<String, PurpleCopyNumber> svImpliedCopyNumber(final List<StructuralVariant> structuralVariants,
             @NotNull final ListMultimap<String, PurpleCopyNumber> copyNumbers) {
 
         final ListMultimap<String, PurpleCopyNumber> result = ArrayListMultimap.create();
         result.putAll(copyNumbers);
 
         long previousMissingCopyNumbers = result.size();
-        long currentMissingCopyNumbers = missingCopyNumbers(result);
+        long currentMissingCopyNumbers = missingCopyNumberCount(result);
 
         while (currentMissingCopyNumbers < previousMissingCopyNumbers && currentMissingCopyNumbers > 0) {
             final GenomePositionSelector<StructuralVariantPloidy> selector =
@@ -52,7 +52,7 @@ public class StructuralVariantImpliedCopyNumber {
                 final List<PurpleCopyNumber> chromosomeCopyNumbers = result.get(chromosomeName);
                 for (int i = 0; i < chromosomeCopyNumbers.size(); i++) {
                     final PurpleCopyNumber copyNumber = chromosomeCopyNumbers.get(i);
-                    if (Doubles.isZero(copyNumber.averageTumorCopyNumber())) {
+                    if (implyCopyNumberFromSV(copyNumber)) {
                         final Optional<StructuralVariantPloidy> optionalStart =
                                 selector.select(GenomePositions.create(chromosomeName, copyNumber.start()));
 
@@ -67,7 +67,7 @@ public class StructuralVariantImpliedCopyNumber {
             }
 
             previousMissingCopyNumbers = currentMissingCopyNumbers;
-            currentMissingCopyNumbers = missingCopyNumbers(result);
+            currentMissingCopyNumbers = missingCopyNumberCount(result);
         }
 
         return result;
@@ -93,8 +93,11 @@ public class StructuralVariantImpliedCopyNumber {
         return structuralVariantPloidyFactory.create(structuralVariants, copyNumbers);
     }
 
-    private long missingCopyNumbers(Multimap<String, PurpleCopyNumber> copyNumbers) {
-        return copyNumbers.values().stream().filter(x -> Doubles.isZero(x.averageTumorCopyNumber())).count();
+    private long missingCopyNumberCount(Multimap<String, PurpleCopyNumber> copyNumbers) {
+        return copyNumbers.values().stream().filter(this::implyCopyNumberFromSV).count();
     }
 
+    private boolean implyCopyNumberFromSV(@NotNull final PurpleCopyNumber copyNumber) {
+        return Doubles.isZero(copyNumber.averageTumorCopyNumber()) && copyNumber.inferred();
+    }
 }
