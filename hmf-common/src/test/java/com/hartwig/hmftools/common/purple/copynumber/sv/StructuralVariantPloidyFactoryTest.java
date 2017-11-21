@@ -27,7 +27,8 @@ import org.junit.Test;
 
 public class StructuralVariantPloidyFactoryTest {
 
-    private static final StructuralVariantPloidyFactory PURE_PLOIDY_FACTORY = new StructuralVariantPloidyFactory(PURE);
+    private static final StructuralVariantPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY =
+            new StructuralVariantPloidyFactory<>(PURE, PurpleCopyNumber::averageTumorCopyNumber);
 
     @Test
     public void testSingleValidLeg() {
@@ -99,18 +100,20 @@ public class StructuralVariantPloidyFactoryTest {
         final StructuralVariantLeg leg = leg(1001, 1, 0.5);
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList(copyNumber(1, 1000, 2), copyNumber(1001, 200, 1));
 
-        final StructuralVariantPloidyFactory pureFactory = new StructuralVariantPloidyFactory(PURE);
-        Optional<ModifiableStructuralVariantPloidy> purePloidy = pureFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
+        Optional<ModifiableStructuralVariantPloidy> purePloidy =
+                PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1d, purePloidy);
 
         final PurityAdjuster diluted = new PurityAdjuster(Gender.FEMALE, 0.8, 1);
-        final StructuralVariantPloidyFactory dilutedFactory = new StructuralVariantPloidyFactory(diluted);
+        final StructuralVariantPloidyFactory<PurpleCopyNumber> dilutedFactory =
+                new StructuralVariantPloidyFactory<>(diluted, PurpleCopyNumber::averageTumorCopyNumber);
         Optional<ModifiableStructuralVariantPloidy> dilutedPloidy =
                 dilutedFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.25d, dilutedPloidy);
 
         final PurityAdjuster male = new PurityAdjuster(Gender.MALE, 0.8, 1);
-        final StructuralVariantPloidyFactory maleFactory = new StructuralVariantPloidyFactory(male);
+        final StructuralVariantPloidyFactory<PurpleCopyNumber> maleFactory =
+                new StructuralVariantPloidyFactory<>(male, PurpleCopyNumber::averageTumorCopyNumber);
         Optional<ModifiableStructuralVariantPloidy> malePloidy = maleFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.125d, malePloidy);
     }

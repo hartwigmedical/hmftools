@@ -60,7 +60,7 @@ class SomaticExtension {
             extendLeft(highestConfidenceIndex);
 
             LOGGER.debug("Completed region {}", toString(highestConfidence.region()));
-            highestConfidence.setModified();
+            highestConfidence.setProcessed();
             highestConfidenceIndex = nextIndex();
         }
 
@@ -155,7 +155,7 @@ class SomaticExtension {
         for (int i = 0; i < regions.size(); i++) {
             final CombinedFittedRegion combined = regions.get(i);
             final FittedRegion region = combined.region();
-            if (!combined.isModified() && region.status().equals(ObservedRegionStatus.SOMATIC)) {
+            if (!combined.isProcessed() && region.status().equals(ObservedRegionStatus.SOMATIC)) {
 
                 if (region.bafCount() > largestBAFCount) {
                     largestBAFCount = region.bafCount();

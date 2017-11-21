@@ -27,10 +27,10 @@ public class StructuralVariantImpliedCopyNumber {
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantImpliedCopyNumber.class);
 
-    private final StructuralVariantPloidyFactory structuralVariantPloidyFactory;
+    private final StructuralVariantPloidyFactory<PurpleCopyNumber> structuralVariantPloidyFactory;
 
     public StructuralVariantImpliedCopyNumber(final PurityAdjuster purityAdjuster) {
-        this.structuralVariantPloidyFactory = new StructuralVariantPloidyFactory(purityAdjuster);
+        this.structuralVariantPloidyFactory = new StructuralVariantPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
     }
 
     @NotNull

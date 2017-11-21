@@ -9,7 +9,7 @@ class CombinedFittedRegion {
 
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
-    private boolean modified = false;
+    private boolean processed = false;
 
     @Deprecated
     CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region) {
@@ -26,7 +26,7 @@ class CombinedFittedRegion {
 
     @Deprecated
     private void clearValues() {
-        modified = true;
+        processed = true;
         combined.setRefNormalisedCopyNumber(0);
         combined.setObservedBAF(0);
         combined.setObservedTumorRatioCount(0);
@@ -34,12 +34,12 @@ class CombinedFittedRegion {
         combined.setBafCount(0);
     }
 
-    public boolean isModified() {
-        return modified;
+    public boolean isProcessed() {
+        return processed;
     }
 
-    public void setModified() {
-        this.modified = true;
+    public void setProcessed() {
+        this.processed = true;
     }
 
     FittedRegion region() {
@@ -52,7 +52,7 @@ class CombinedFittedRegion {
     }
 
     void combine(final FittedRegion region, boolean includeFittedValues) {
-        modified = true;
+        processed = true;
         long currentBases = combined.bases();
 
         combined.setStart(Math.min(combined.start(), region.start()));
