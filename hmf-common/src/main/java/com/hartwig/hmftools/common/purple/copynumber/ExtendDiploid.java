@@ -16,31 +16,31 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class SomaticExtension {
+class ExtendDiploid {
 
     @NotNull
     static List<FittedRegion> fittedRegions(@NotNull final PurityAdjuster adjuster, @NotNull final Collection<FittedRegion> fittedRegions) {
-        final SomaticExtension extension = new SomaticExtension(adjuster, fittedRegions);
+        final ExtendDiploid extension = new ExtendDiploid(adjuster, fittedRegions);
         return extension.fittedRegions();
     }
 
     @NotNull
     static List<CombinedRegion> combinedRegions(@NotNull final PurityAdjuster adjuster,
             @NotNull final Collection<FittedRegion> fittedRegions) {
-        final SomaticExtension extension = new SomaticExtension(adjuster, fittedRegions);
+        final ExtendDiploid extension = new ExtendDiploid(adjuster, fittedRegions);
         return extension.regions;
     }
 
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
-    private static final Logger LOGGER = LogManager.getLogger(SomaticExtension.class);
+    private static final Logger LOGGER = LogManager.getLogger(ExtendDiploid.class);
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     private List<CombinedRegion> regions = Lists.newLinkedList();
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    private SomaticExtension(@NotNull final PurityAdjuster adjuster, @NotNull final Collection<FittedRegion> fittedRegions) {
+    private ExtendDiploid(@NotNull final PurityAdjuster adjuster, @NotNull final Collection<FittedRegion> fittedRegions) {
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
         somaticExtension(fittedRegions);
@@ -61,13 +61,13 @@ class SomaticExtension {
         int highestConfidenceIndex = nextIndex();
         while (highestConfidenceIndex > -1) {
             final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
+            highestConfidence.setMethod(CombinedRegionMethod.DIPLOID);
 
             LOGGER.debug("Selected region {}", toString(highestConfidence.region()));
             extendRight(highestConfidenceIndex);
             extendLeft(highestConfidenceIndex);
 
             LOGGER.debug("Completed region {}", toString(highestConfidence.region()));
-            highestConfidence.setProcessed();
             highestConfidenceIndex = nextIndex();
         }
 
@@ -107,35 +107,19 @@ class SomaticExtension {
 
     }
 
-    private boolean breakForCentromereStart(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
-        if (target.region().start() < neighbour.start()) {
-            return neighbour.support() == SegmentSupport.CENTROMERE;
-        }
-
-        return target.region().support() == SegmentSupport.CENTROMERE;
-    }
-
-    private boolean breakForStructuralVariant(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
-        if (target.region().start() < neighbour.start()) {
-            return neighbour.support() != SegmentSupport.NONE;
-        }
-
-        return target.region().support() != SegmentSupport.NONE;
-    }
-
     private boolean merge(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
 
-        if (breakForCentromereStart(target, neighbour) || breakForStructuralVariant(target, neighbour)) {
+        if (Extend.doNotExtend(target, neighbour)) {
             return false;
         }
 
         final boolean isNeighbourValid = isValidSomatic(neighbour);
 
         if (!isNeighbourValid) {
-            target.combine(neighbour, false);
+            target.extend(neighbour);
             return true;
         } else if (inTolerance(target.region(), neighbour)) {
-            target.combine(neighbour, true);
+            target.extendWithBAFWeightedAverage(neighbour);
             return true;
         }
 

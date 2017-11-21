@@ -16,7 +16,8 @@ class CombinedRegion implements GenomeRegion {
 
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
-    private boolean processed = false;
+    private CombinedRegionMethod method = CombinedRegionMethod.NONE;
+    private int unweightedCount = 0;
 
     @Deprecated
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
@@ -53,7 +54,6 @@ class CombinedRegion implements GenomeRegion {
 
     @Deprecated
     private void clearValues() {
-        processed = true;
         combined.setRefNormalisedCopyNumber(0);
         combined.setObservedBAF(0);
         combined.setObservedTumorRatioCount(0);
@@ -61,12 +61,16 @@ class CombinedRegion implements GenomeRegion {
         combined.setBafCount(0);
     }
 
-    public boolean isProcessed() {
-        return processed;
+    public CombinedRegionMethod method() {
+        return method;
     }
 
-    public void setProcessed() {
-        this.processed = true;
+    public boolean isProcessed() {
+        return method != CombinedRegionMethod.NONE;
+    }
+
+    public void setMethod(CombinedRegionMethod method) {
+        this.method = method;
     }
 
     FittedRegion region() {
@@ -75,13 +79,14 @@ class CombinedRegion implements GenomeRegion {
 
     @Deprecated
     void combine(final FittedRegion region) {
-        combine(region, region.status() == ObservedRegionStatus.SOMATIC);
+        if (region.status() == ObservedRegionStatus.SOMATIC) {
+            extendWithBAFWeightedAverage(region);
+        } else {
+            extend(region);
+        }
     }
 
-    void combine(final FittedRegion region, boolean includeFittedValues) {
-        processed = true;
-        long currentBases = combined.bases();
-
+    void extend(final FittedRegion region) {
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));
 
@@ -89,50 +94,62 @@ class CombinedRegion implements GenomeRegion {
             combined.setSupport(region.support());
             combined.setRatioSupport(region.ratioSupport());
         }
+    }
 
-        if (includeFittedValues) {
-            combined.setStatus(ObservedRegionStatus.SOMATIC);
-            combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
+    void extendWithUnweightedAverage(final FittedRegion region) {
+        extend(region);
+        applyWeightedAverage(region, unweightedCount, 1);
+        unweightedCount++;
+    }
 
-            final long currentWeight;
-            final long newWeight;
-            if (bafWeighted && (combined.bafCount() > 0 || region.bafCount() > 0)) {
-                currentWeight = combined.bafCount();
-                newWeight = region.bafCount();
-            } else {
-                currentWeight = currentBases;
-                newWeight = region.bases();
-            }
+    void extendWithBAFWeightedAverage(final FittedRegion region) {
+        long currentBases = combined.bases();
 
-            if (!Doubles.isZero(region.observedBAF())) {
-                combined.setObservedBAF(weightedAverage(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
-            }
+        extend(region);
 
-            if (!Doubles.isZero(region.tumorBAF())) {
-                combined.setTumorBAF(weightedAverage(currentWeight, combined.tumorBAF(), newWeight, region.tumorBAF()));
-            }
+        combined.setStatus(ObservedRegionStatus.SOMATIC);
+        combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
-            if (!Doubles.isZero(region.tumorCopyNumber())) {
-                combined.setTumorCopyNumber(weightedAverage(currentWeight,
-                        combined.tumorCopyNumber(),
-                        newWeight,
-                        region.tumorCopyNumber()));
-            }
-
-            if (!Doubles.isZero(region.refNormalisedCopyNumber())) {
-                combined.setRefNormalisedCopyNumber(weightedAverage(currentWeight,
-                        combined.refNormalisedCopyNumber(),
-                        newWeight,
-                        region.refNormalisedCopyNumber()));
-            }
-
-            combined.setBafCount(combined.bafCount() + region.bafCount());
+        final long currentWeight;
+        final long newWeight;
+        if (bafWeighted && (combined.bafCount() > 0 || region.bafCount() > 0)) {
+            currentWeight = combined.bafCount();
+            newWeight = region.bafCount();
+        } else {
+            currentWeight = currentBases;
+            newWeight = region.bases();
         }
+
+        applyWeightedAverage(region, currentWeight, newWeight);
+    }
+
+    private void applyWeightedAverage(final FittedRegion region, long currentWeight, long newWeight) {
+
+        if (!Doubles.isZero(region.observedBAF())) {
+            combined.setObservedBAF(weightedAverage(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
+        }
+
+        if (!Doubles.isZero(region.tumorBAF())) {
+            combined.setTumorBAF(weightedAverage(currentWeight, combined.tumorBAF(), newWeight, region.tumorBAF()));
+        }
+
+        if (!Doubles.isZero(region.tumorCopyNumber())) {
+            combined.setTumorCopyNumber(weightedAverage(currentWeight, combined.tumorCopyNumber(), newWeight, region.tumorCopyNumber()));
+        }
+
+        if (!Doubles.isZero(region.refNormalisedCopyNumber())) {
+            combined.setRefNormalisedCopyNumber(weightedAverage(currentWeight,
+                    combined.refNormalisedCopyNumber(),
+                    newWeight,
+                    region.refNormalisedCopyNumber()));
+        }
+
+        combined.setBafCount(combined.bafCount() + region.bafCount());
     }
 
     void inferCopyNumberFromStructuralVariants(final Optional<StructuralVariantPloidy> start, final Optional<StructuralVariantPloidy> end) {
         if (start.isPresent() || end.isPresent()) {
-            setProcessed();
+            setMethod(CombinedRegionMethod.STRUCTURAL_VARIANT);
 
             final double startWeight = start.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
             final double startCopyNumber = start.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);

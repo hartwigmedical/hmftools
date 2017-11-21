@@ -53,11 +53,11 @@ public class PurpleCopyNumberFactory {
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
-            somaticExtentions.putAll(chromosome, SomaticExtension.combinedRegions(purityAdjuster, chromosomeFittedRegions));
+            somaticExtentions.putAll(chromosome, ExtendDiploid.combinedRegions(purityAdjuster, chromosomeFittedRegions));
 
             // Old Method
             if (!experimental) {
-                smoothedRegions.addAll(RegionStepFilter.filter(toCopyNumber(smoothFittedRegions)));
+                smoothedRegions.addAll(RegionStepFilter.filter(toCopyNumberOld(smoothFittedRegions)));
             }
         }
 
@@ -69,10 +69,7 @@ public class PurpleCopyNumberFactory {
 
             for (HumanChromosome chromosome : HumanChromosome.values()) {
                 if (svImplied.containsKey(chromosome.toString())) {
-                    smoothedRegions.addAll(toCopyNumber(svImplied.get(chromosome.toString())
-                            .stream()
-                            .map(CombinedRegion::region)
-                            .collect(toList())));
+                    smoothedRegions.addAll(toCopyNumber(svImplied.get(chromosome.toString())));
                 }
             }
         }
@@ -96,7 +93,8 @@ public class PurpleCopyNumberFactory {
     }
 
     @NotNull
-    private List<PurpleCopyNumber> toCopyNumber(@NotNull final List<FittedRegion> regions) {
+    @Deprecated
+    private List<PurpleCopyNumber> toCopyNumberOld(@NotNull final List<FittedRegion> regions) {
         final List<PurpleCopyNumber> result = Lists.newArrayList();
         for (int i = 0; i < regions.size() - 1; i++) {
             final FittedRegion region = regions.get(i);
@@ -112,6 +110,23 @@ public class PurpleCopyNumberFactory {
     }
 
     @NotNull
+    private List<PurpleCopyNumber> toCopyNumber(@NotNull final List<CombinedRegion> regions) {
+        final List<PurpleCopyNumber> result = Lists.newArrayList();
+        for (int i = 0; i < regions.size() - 1; i++) {
+            final FittedRegion region = regions.get(i).region();
+            final FittedRegion next = regions.get(i + 1).region();
+            result.add(create(region, next.support()));
+        }
+
+        if (!regions.isEmpty()) {
+            result.add(create(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
+        }
+
+        return PurpleCopyNumberSmoothing.smooth(result);
+    }
+
+    @NotNull
+    @Deprecated
     private PurpleCopyNumber create(@NotNull final FittedRegion region, @NotNull final SegmentSupport trailingSupport) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(region.chromosome())
@@ -123,6 +138,22 @@ public class PurpleCopyNumberFactory {
                 .averageTumorCopyNumber(region.tumorCopyNumber())
                 .inferred(region.status() == ObservedRegionStatus.CLUSTER)
                 .segmentStartSupport(region.support())
+                .segmentEndSupport(trailingSupport)
+                .build();
+    }
+
+    @NotNull
+    private PurpleCopyNumber create(@NotNull final CombinedRegion region, @NotNull final SegmentSupport trailingSupport) {
+        return ImmutablePurpleCopyNumber.builder()
+                .chromosome(region.chromosome())
+                .start(region.start())
+                .end(region.end())
+                .bafCount(region.region().bafCount())
+                .averageObservedBAF(region.region().observedBAF())
+                .averageActualBAF(region.region().tumorBAF())
+                .averageTumorCopyNumber(region.tumorCopyNumber())
+                .inferred(region.method() != CombinedRegionMethod.DIPLOID)
+                .segmentStartSupport(region.region().support())
                 .segmentEndSupport(trailingSupport)
                 .build();
     }

@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class SomaticExtensionTest {
+public class ExtendDiploidTest {
 
     private final static String CHROMOSOME = "1";
     private final static double EPSILON = 1e-10;
@@ -29,7 +29,7 @@ public class SomaticExtensionTest {
                 createFittedRegion(10001, 20000, 4, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.NONE);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
-        final List<FittedRegion> result = SomaticExtension.fittedRegions(PURE, regions);
+        final List<FittedRegion> result = ExtendDiploid.fittedRegions(PURE, regions);
         assertEquals(1, result.size());
         assertRegion(1, 20000, 3, result.get(0));
     }
@@ -41,7 +41,7 @@ public class SomaticExtensionTest {
                 createFittedRegion(10001, 20000, 4.0, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.BND);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
-        final List<FittedRegion> result = SomaticExtension.fittedRegions(PURE, regions);
+        final List<FittedRegion> result = ExtendDiploid.fittedRegions(PURE, regions);
         assertEquals(2, result.size());
         assertRegion(1, 10000, 3, result.get(0));
         assertRegion(10001, 20000, 4, result.get(1));

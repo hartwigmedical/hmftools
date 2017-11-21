@@ -42,6 +42,7 @@ public class StructuralVariantImplied {
             for (Chromosome chromosome : HumanChromosome.values()) {
                 final String chromosomeName = chromosome.toString();
                 final List<CombinedRegion> chromosomeCopyNumbers = copyNumbers.get(chromosomeName);
+                boolean svInferred = false;
                 for (final CombinedRegion copyNumber : chromosomeCopyNumbers) {
                     if (implyCopyNumberFromSV(copyNumber)) {
                         final Optional<StructuralVariantPloidy> optionalStart =
@@ -51,9 +52,16 @@ public class StructuralVariantImplied {
                                 selector.select(GenomePositions.create(chromosomeName, copyNumber.end() + 1));
 
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
+                            svInferred = true;
+                            copyNumber.setMethod(CombinedRegionMethod.STRUCTURAL_VARIANT);
                             copyNumber.inferCopyNumberFromStructuralVariants(optionalStart, optionalEnd);
                         }
                     }
+                }
+
+                // Extend structural variant segments
+                if (svInferred) {
+                    ExtendStructuralVariant.extendStructuralVariants(chromosomeCopyNumbers);
                 }
             }
 
