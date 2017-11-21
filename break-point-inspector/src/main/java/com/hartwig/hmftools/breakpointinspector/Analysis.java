@@ -33,13 +33,15 @@ class Analysis {
     private final SamReader tumorReader;
 
     private final int range;
+    private final float contamination;
 
     private static final SAMRecordCoordinateComparator comparator = new SAMRecordCoordinateComparator();
 
-    Analysis(final SamReader refReader, final SamReader tumorReader, final int range) {
+    Analysis(final SamReader refReader, final SamReader tumorReader, final int range, final float contamination) {
         this.refReader = refReader;
         this.tumorReader = tumorReader;
         this.range = range;
+        this.contamination = contamination;
     }
 
     private static class PairedReads extends ArrayList<Pair<SAMRecord, SAMRecord>> {
@@ -449,6 +451,7 @@ class Analysis {
         return BreakpointResult.from(Pair.of(breakpoint1, breakpoint2));
     }
 
+    // basically, this will align to where we expect to see clipping
     private BreakpointResult determineBreakpoints(final HMFVariantContext ctx, final SamReader reader) {
         final int adj = ctx.BND ? 0 : 1;
         if (ctx.Imprecise) {
@@ -499,7 +502,7 @@ class Analysis {
         final SamReader SORTED_REF_READER = SamReaderFactory.makeDefault().open(TEMP_REF_BAM);
         final SamReader SORTED_TUMOR_READER = SamReaderFactory.makeDefault().open(TEMP_TUMOR_BAM);
 
-        BreakpointResult breakpoints = determineBreakpoints(ctx, SORTED_TUMOR_READER);
+        final BreakpointResult breakpoints = determineBreakpoints(ctx, SORTED_TUMOR_READER);
 
         final StructuralVariantResult result = new StructuralVariantResult();
         result.Breakpoints = breakpoints.Breakpoints;
@@ -516,7 +519,7 @@ class Analysis {
             SORTED_TUMOR_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));
             SORTED_REF_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.RefStats.Sample_Clipping.add(c)));
 
-            result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints);
+            result.Filters = Filter.getFilters(ctx, result.TumorStats, result.RefStats, result.Breakpoints, contamination);
 
             // adjust for homology
             final Location bp1 = result.Breakpoints.getLeft().add(ctx.OrientationBP1 > 0 ? 0 : -1);

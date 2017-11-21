@@ -6,6 +6,7 @@ class AnalysisBuilder {
     private SamReader refReader;
     private SamReader tumorReader;
     private int range = 500;
+    private float contamination = 0;
 
     AnalysisBuilder setRefReader(final SamReader refReader) {
         this.refReader = refReader;
@@ -22,7 +23,12 @@ class AnalysisBuilder {
         return this;
     }
 
+    AnalysisBuilder setContaminationFraction(final float fraction) {
+        this.contamination = fraction;
+        return this;
+    }
+
     Analysis createAnalysis() {
-        return new Analysis(refReader, tumorReader, range);
+        return new Analysis(refReader, tumorReader, range, contamination);
     }
 }

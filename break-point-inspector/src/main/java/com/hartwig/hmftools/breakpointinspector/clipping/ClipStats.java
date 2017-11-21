@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.breakpointinspector.clipping;
 
+import java.util.Set;
+
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.breakpointinspector.Location;
 
 import org.jetbrains.annotations.NotNull;
@@ -7,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class ClipStats implements Comparable<ClipStats> {
     public final Location Alignment;
     public String LongestClipSequence = "";
-    int Support = 1;
+    public Set<String> SupportingReads = Sets.newHashSet();
     public boolean Left = false;
     boolean Right = false;
 

@@ -31,40 +31,47 @@ public class Clipping {
             if (clip.Left != c.Left) {
                 continue;
             }
+
+            boolean addToExisting = false;
             if (clip.Left) {
                 if (c.LongestClipSequence.length() > clip.Sequence.length()) {
                     if (c.LongestClipSequence.endsWith(clip.Sequence)) {
-                        c.Support++;
-                        found = true;
+                        addToExisting = true;
                     }
                 } else if (clip.Sequence.endsWith(c.LongestClipSequence)) {
                     c.LongestClipSequence = clip.Sequence;
-                    c.Support++;
-                    found = true;
+                    addToExisting = true;
                 }
             } else if (clip.Right) {
                 if (c.LongestClipSequence.length() > clip.Sequence.length()) {
                     if (c.LongestClipSequence.startsWith(clip.Sequence)) {
-                        c.Support++;
-                        found = true;
+                        addToExisting = true;
                     }
                 } else if (clip.Sequence.startsWith(c.LongestClipSequence)) {
                     c.LongestClipSequence = clip.Sequence;
-                    c.Support++;
-                    found = true;
+                    addToExisting = true;
                 }
             }
 
+            if (addToExisting) {
+                c.SupportingReads.add(clip.Record.getReadName());
+                found = true;
+            }
             LocationMap.put(clip.Alignment, c);
         }
 
         if (!found) {
-            LocationMap.put(clip.Alignment, new ClipStats(clip.Alignment, clip.Sequence, clip.Left));
+            final ClipStats stats = new ClipStats(clip.Alignment, clip.Sequence, clip.Left);
+            stats.SupportingReads.add(clip.Record.getReadName());
+            LocationMap.put(clip.Alignment, stats);
         }
     }
 
     public List<ClipStats> getSequences() {
-        return LocationMap.values().stream().sorted((a, b) -> Integer.compare(b.Support, a.Support)).collect(Collectors.toList());
+        return LocationMap.values()
+                .stream()
+                .sorted((a, b) -> Integer.compare(b.SupportingReads.size(), a.SupportingReads.size()))
+                .collect(Collectors.toList());
     }
 
     public List<ClipStats> getSequencesAt(final Location location) {
@@ -72,7 +79,7 @@ public class Clipping {
     }
 
     public static ClipInfo getLeftClip(final SAMRecord read) {
-        final ClipInfo result = new ClipInfo();
+        final ClipInfo result = new ClipInfo(read);
         result.Left = true;
         final Cigar cigar = read.getCigar();
         if (cigar.isEmpty()) {
@@ -94,7 +101,7 @@ public class Clipping {
     }
 
     public static ClipInfo getRightClip(final SAMRecord read) {
-        final ClipInfo result = new ClipInfo();
+        final ClipInfo result = new ClipInfo(read);
         result.Right = true;
         final Cigar cigar = read.getCigar();
         if (cigar.isEmpty()) {

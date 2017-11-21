@@ -55,8 +55,16 @@ class Filter {
         return Collections.singletonList(Filters.BreakpointError.toString());
     }
 
+    private static int supportPR(final BreakpointStats s) {
+        return s.PR_SR_Support + s.PR_Only_Support;
+    }
+
+    private static int supportSR(final BreakpointStats s) {
+        return s.PR_SR_Support + s.SR_Only_Support;
+    }
+
     static Collection<String> getFilters(final HMFVariantContext ctx, final SampleStats tumorStats, final SampleStats refStats,
-            final Pair<Location, Location> breakpoints) {
+            final Pair<Location, Location> breakpoints, final float contamination) {
 
         final int MIN_ANCHOR_LENGTH = 30;
 
@@ -68,6 +76,8 @@ class Filter {
             filters.add(Filters.MinDepth);
         }
 
+        final int tumor_SR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(Filter::supportSR).sum();
+
         if (ctx.isInsert()) {
 
             // no PR/SR checks
@@ -75,8 +85,7 @@ class Filter {
         } else if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
             // short variant logic
 
-            final boolean bothSidesHaveSR =
-                    Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).allMatch(s -> s.PR_SR_Support + s.SR_Only_Support > 0);
+            final boolean bothSidesHaveSR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).allMatch(s -> supportSR(s) > 0);
             final boolean anchorLengthOkay = tumorStats.SR_Evidence.stream()
                     .anyMatch(p -> Stream.of(p.getLeft(), p.getRight())
                             .anyMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
@@ -88,13 +97,16 @@ class Filter {
             }
 
             // must not have SR support in normal
-            final int ref_SR = Stream.of(refStats.BP1_Stats, refStats.BP2_Stats).mapToInt(s -> s.PR_SR_Support + s.SR_Only_Support).sum();
-            if (ref_SR > 0) {
+            final int ref_SR = Stream.of(refStats.BP1_Stats, refStats.BP2_Stats).mapToInt(Filter::supportSR).sum();
+            final int allowableNormalSupport = (int) (contamination * tumor_SR);
+            if (ref_SR > allowableNormalSupport) {
                 filters.add(Filters.SRNormalSupport);
             }
         } else {
+
             // we only need to check BP1 as BP1 PR+PRSR == BP2 PR+PRSR
-            if (refStats.BP1_Stats.PR_Only_Support + refStats.BP1_Stats.PR_SR_Support > 0) {
+            final int allowableNormalSupport = (int) (contamination * supportPR(tumorStats.BP1_Stats));
+            if (supportPR(refStats.BP1_Stats) > allowableNormalSupport) {
                 filters.add(Filters.PRNormalSupport);
             }
 
@@ -103,7 +115,8 @@ class Filter {
                             .allMatch(r -> r.getAlignmentEnd() - r.getAlignmentStart() >= MIN_ANCHOR_LENGTH));
 
             // only applicable for longer variants
-            if (Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(s -> s.PR_Only_Support + s.PR_SR_Support).sum() == 0) {
+            final int tumor_PR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).mapToInt(Filter::supportPR).sum();
+            if (tumor_PR == 0) {
                 filters.add(Filters.PRSupportZero);
             } else if (!anchorLengthOkay) {
                 filters.add(Filters.MinAnchorLength);
@@ -114,8 +127,9 @@ class Filter {
         final List<Location> adjusted_bp =
                 Arrays.asList(breakpoints.getLeft().add(ctx.OrientationBP1), breakpoints.getRight().add(ctx.OrientationBP2));
 
-        boolean concordance = false;
+        final Set<String> concordant_reads = Sets.newHashSet();
         for (final Location bp : adjusted_bp) {
+
             for (final ClipStats t : tumorStats.Sample_Clipping.getSequencesAt(bp)) {
 
                 if (t.LongestClipSequence.length() < 5) {
@@ -135,15 +149,21 @@ class Filter {
                     }
 
                     if (t.Left) {
-                        concordance |= tumorSeq.equals(r.LongestClipSequence.substring(r.LongestClipSequence.length() - 5));
+                        if (tumorSeq.equals(r.LongestClipSequence.substring(r.LongestClipSequence.length() - 5))) {
+                            concordant_reads.addAll(r.SupportingReads);
+                        }
                     } else {
-                        concordance |= tumorSeq.equals(r.LongestClipSequence.substring(0, 5));
+                        if (tumorSeq.equals(r.LongestClipSequence.substring(0, 5))) {
+                            concordant_reads.addAll(r.SupportingReads);
+                        }
                     }
                 }
+
             }
+
         }
 
-        if (concordance) {
+        if (concordant_reads.size() > (int) (contamination * tumor_SR)) {
             filters.add(Filters.ClippingConcordance);
         }
 
