@@ -9,13 +9,13 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CombinedFittedRegionTest {
+public class CombinedRegionTest {
 
     private static final double EPSILON = 1e-10;
 
     @Test
     public void averageOnLengthUntilNonZeroBafCount() {
-        final CombinedFittedRegion region = createCombinedFittedRegion(1, 100_000_000, 3);
+        final CombinedRegion region = createCombinedFittedRegion(1, 100_000_000, 3);
         assertAverages(region, 0, 3);
 
         region.combine(create(100_000_001, 200_000_000, 4));
@@ -35,7 +35,7 @@ public class CombinedFittedRegionTest {
                 .status(ObservedRegionStatus.GERMLINE_AMPLIFICATION)
                 .build();
 
-        final CombinedFittedRegion region = new CombinedFittedRegion(true, startRegion);
+        final CombinedRegion region = new CombinedRegion(true, startRegion);
         assertEquals(0, region.region().observedTumorRatioCount());
 
         final FittedRegion germlineRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1001, 2000)
@@ -55,7 +55,7 @@ public class CombinedFittedRegionTest {
 
     @Test
     public void averageOnLengthForNonZeroRatio() {
-        CombinedFittedRegion builder = createCombinedFittedRegion(1, 100, 3);
+        CombinedRegion builder = createCombinedFittedRegion(1, 100, 3);
         assertAverages(builder, 0, 3);
 
         builder.combine(create(101, 200, 0));
@@ -65,14 +65,14 @@ public class CombinedFittedRegionTest {
     @Test
     public void doNotIncludeZeroCopyNumber() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        CombinedFittedRegion builder = new CombinedFittedRegion(true, startRegion);
+        CombinedRegion builder = new CombinedRegion(true, startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.combine(create(201, 300, 200, 1, 2));
         assertAverages(builder, 0.75, 2);
     }
 
-    private static void assertAverages(@NotNull CombinedFittedRegion victim, double expectedBAF, double expectedCopyNumber) {
+    private static void assertAverages(@NotNull CombinedRegion victim, double expectedBAF, double expectedCopyNumber) {
         assertAverages(victim.region(), expectedBAF, expectedCopyNumber);
     }
 
@@ -81,8 +81,8 @@ public class CombinedFittedRegionTest {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
     }
 
-    private CombinedFittedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
-        return new CombinedFittedRegion(true, create(start, end, copyNumber));
+    private CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
+        return new CombinedRegion(true, create(start, end, copyNumber));
     }
 
     private static FittedRegion create(long start, long end, double copyNumber) {

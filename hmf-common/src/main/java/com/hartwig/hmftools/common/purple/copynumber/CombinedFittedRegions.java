@@ -11,14 +11,14 @@ import org.jetbrains.annotations.NotNull;
 class CombinedFittedRegions {
 
     @NotNull
-    public static List<CombinedFittedRegion> mergeLeft(@NotNull final List<CombinedFittedRegion> regions,
-            @NotNull final BiPredicate<CombinedFittedRegion, CombinedFittedRegion> merge) {
-        final List<CombinedFittedRegion> result = Lists.newArrayList();
+    public static List<CombinedRegion> mergeLeft(@NotNull final List<CombinedRegion> regions,
+            @NotNull final BiPredicate<CombinedRegion, CombinedRegion> merge) {
+        final List<CombinedRegion> result = Lists.newArrayList();
 
         if (!regions.isEmpty()) {
-            CombinedFittedRegion left = regions.get(0);
+            CombinedRegion left = regions.get(0);
             for (int i = 1; i < regions.size(); i++) {
-                CombinedFittedRegion right = regions.get(i);
+                CombinedRegion right = regions.get(i);
                 if (merge.test(left, right)) {
                     left.combine(right.region());
                 } else {

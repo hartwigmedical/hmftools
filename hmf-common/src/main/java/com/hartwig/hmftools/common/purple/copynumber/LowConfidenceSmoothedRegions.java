@@ -17,7 +17,7 @@ class LowConfidenceSmoothedRegions {
     @NotNull
     private final List<FittedRegion> fittedRegions;
     @NotNull
-    private final List<CombinedFittedRegion> smoothedRegions = Lists.newArrayList();
+    private final List<CombinedRegion> smoothedRegions = Lists.newArrayList();
     private final CopyNumberDeviation deviation;
 
     LowConfidenceSmoothedRegions(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<FittedRegion> fittedRegions) {
@@ -28,23 +28,23 @@ class LowConfidenceSmoothedRegions {
 
     List<FittedRegion> smoothedRegions() {
         return finalPass(smoothedRegions).stream()
-                .map(CombinedFittedRegion::region)
+                .map(CombinedRegion::region)
                 .collect(Collectors.toList());
     }
 
     private void run() {
 
-        CombinedFittedRegion builder = null;
+        CombinedRegion builder = null;
         for (FittedRegion fittedRegion : fittedRegions) {
 
             if (builder == null) {
-                builder = new CombinedFittedRegion(false, fittedRegion);
+                builder = new CombinedRegion(false, fittedRegion);
             } else {
                 if (isSimilar(fittedRegion, builder.region())) {
                     builder.combine(fittedRegion);
                 } else {
                     smoothedRegions.add(builder);
-                    builder = new CombinedFittedRegion(false, fittedRegion);
+                    builder = new CombinedRegion(false, fittedRegion);
                 }
             }
         }
@@ -59,7 +59,7 @@ class LowConfidenceSmoothedRegions {
                 || Doubles.isZero(newRegion.tumorCopyNumber()) || Doubles.isZero(currentRegion.tumorCopyNumber());
     }
 
-    private List<CombinedFittedRegion> finalPass(List<CombinedFittedRegion> regions) {
+    private List<CombinedRegion> finalPass(List<CombinedRegion> regions) {
         return CombinedFittedRegions.mergeLeft(regions, (left, right) -> isSimilar(right.region(), left.region()));
     }
 }

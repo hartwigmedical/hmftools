@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@Deprecated
 public class StructuralVariantImpliedCopyNumber {
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantImpliedCopyNumber.class);

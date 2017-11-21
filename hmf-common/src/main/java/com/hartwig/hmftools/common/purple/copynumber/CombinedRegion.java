@@ -1,27 +1,54 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import java.util.Optional;
+
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidy;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 
-class CombinedFittedRegion {
+import org.jetbrains.annotations.NotNull;
+
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+class CombinedRegion implements GenomeRegion {
 
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
     private boolean processed = false;
 
     @Deprecated
-    CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region) {
+    CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
         this(bafWeighted, region, region.status() != ObservedRegionStatus.SOMATIC);
     }
 
-    CombinedFittedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearValues) {
+    CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearValues) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
         if (clearValues) {
             clearValues();
         }
+    }
+
+    @NotNull
+    @Override
+    public String chromosome() {
+        return combined.chromosome();
+    }
+
+    @Override
+    public long start() {
+        return combined.start();
+    }
+
+    @Override
+    public long end() {
+        return combined.end();
+    }
+
+    public double tumorCopyNumber() {
+        return combined.tumorCopyNumber();
     }
 
     @Deprecated
@@ -78,19 +105,22 @@ class CombinedFittedRegion {
             }
 
             if (!Doubles.isZero(region.observedBAF())) {
-                combined.setObservedBAF(newValue(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
+                combined.setObservedBAF(weightedAverage(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
             }
 
             if (!Doubles.isZero(region.tumorBAF())) {
-                combined.setTumorBAF(newValue(currentWeight, combined.tumorBAF(), newWeight, region.tumorBAF()));
+                combined.setTumorBAF(weightedAverage(currentWeight, combined.tumorBAF(), newWeight, region.tumorBAF()));
             }
 
             if (!Doubles.isZero(region.tumorCopyNumber())) {
-                combined.setTumorCopyNumber(newValue(currentWeight, combined.tumorCopyNumber(), newWeight, region.tumorCopyNumber()));
+                combined.setTumorCopyNumber(weightedAverage(currentWeight,
+                        combined.tumorCopyNumber(),
+                        newWeight,
+                        region.tumorCopyNumber()));
             }
 
             if (!Doubles.isZero(region.refNormalisedCopyNumber())) {
-                combined.setRefNormalisedCopyNumber(newValue(currentWeight,
+                combined.setRefNormalisedCopyNumber(weightedAverage(currentWeight,
                         combined.refNormalisedCopyNumber(),
                         newWeight,
                         region.refNormalisedCopyNumber()));
@@ -100,7 +130,22 @@ class CombinedFittedRegion {
         }
     }
 
-    private double newValue(long currentWeight, double currentValue, long newWeight, double newValue) {
+    void inferCopyNumberFromStructuralVariants(final Optional<StructuralVariantPloidy> start, final Optional<StructuralVariantPloidy> end) {
+        if (start.isPresent() || end.isPresent()) {
+            setProcessed();
+
+            final double startWeight = start.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
+            final double startCopyNumber = start.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);
+
+            final double endWeight = end.map(StructuralVariantPloidy::impliedLeftCopyNumberWeight).orElse(0d);
+            final double endCopyNumber = end.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
+
+            final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
+            combined.setTumorCopyNumber(newCopyNumber);
+        }
+    }
+
+    private double weightedAverage(long currentWeight, double currentValue, long newWeight, double newValue) {
         if (Doubles.isZero(currentValue)) {
             return newValue;
         }

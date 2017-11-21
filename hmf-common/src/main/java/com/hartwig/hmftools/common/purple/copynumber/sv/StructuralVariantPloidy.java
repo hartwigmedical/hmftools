@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class StructuralVariantPloidy implements GenomePosition {
+public abstract class StructuralVariantPloidy implements GenomePosition {
 
     public abstract int orientation();
 

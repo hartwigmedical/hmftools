@@ -21,7 +21,7 @@ class HighConfidenceRegions {
     @NotNull
     private final List<FittedRegion> result = Lists.newArrayList();
     @Nullable
-    private CombinedFittedRegion builder;
+    private CombinedRegion builder;
     @Nullable
     private FittedRegion last;
     private final double maxDeviation;
@@ -44,7 +44,7 @@ class HighConfidenceRegions {
     private void process(@NotNull final FittedRegion current) {
         if (builder == null || isNewChromosome(current, last) || isLargeDeviation(current)) {
             endRegion();
-            builder = new CombinedFittedRegion(true, current);
+            builder = new CombinedRegion(true, current);
         } else {
             assert builder != null;
             builder.combine(current);

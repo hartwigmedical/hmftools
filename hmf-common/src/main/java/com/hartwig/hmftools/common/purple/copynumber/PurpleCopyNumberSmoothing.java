@@ -17,6 +17,7 @@ class PurpleCopyNumberSmoothing {
     @NotNull
     static List<PurpleCopyNumber> smoothTelomeres(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         if (copyNumbers.size() > 1) {
+
             final PurpleCopyNumber telomere = copyNumbers.get(0);
             final PurpleCopyNumber neighbour = copyNumbers.get(1);
             if (Doubles.isZero(telomere.averageTumorCopyNumber())) {

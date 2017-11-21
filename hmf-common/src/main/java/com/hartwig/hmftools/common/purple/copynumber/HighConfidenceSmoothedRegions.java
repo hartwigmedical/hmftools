@@ -24,7 +24,7 @@ class HighConfidenceSmoothedRegions {
     @VisibleForTesting
     static final int MIN_RATIO_ONLY_TUMOR_RATIO_COUNT = 6;
 
-    private final List<CombinedFittedRegion> combinedRegions = Lists.newArrayList();
+    private final List<CombinedRegion> combinedRegions = Lists.newArrayList();
     private final List<? extends GenomeRegion> highConfidenceRegions;
     private final List<FittedRegion> fittedRegions;
     private final CopyNumberDeviation deviation;
@@ -43,14 +43,14 @@ class HighConfidenceSmoothedRegions {
     @NotNull
     List<FittedRegion> smoothedRegions() {
         return finalPass(removedLowObservedTumorRatioCount(combinedRegions)).stream()
-                .map(CombinedFittedRegion::region)
+                .map(CombinedRegion::region)
                 .collect(Collectors.toList());
     }
 
     private void run() {
         if (!highConfidenceRegions.isEmpty()) {
             int largestIncludedIndex = -1;
-            CombinedFittedRegion currentBuilder;
+            CombinedRegion currentBuilder;
 
             for (int i = 0; i < highConfidenceRegions.size(); i++) {
                 final GenomeRegion currentRegion = highConfidenceRegions.get(i);
@@ -58,7 +58,7 @@ class HighConfidenceSmoothedRegions {
                 int endOfRegionIndex = indexOfEnd(startOfRegionIndex, currentRegion);
 
                 // JOBA: Start new builder
-                currentBuilder = new CombinedFittedRegion(true, fittedRegions.get(startOfRegionIndex));
+                currentBuilder = new CombinedRegion(true, fittedRegions.get(startOfRegionIndex));
 
                 // JOBA: Go backwards to previous end
                 currentBuilder = backwards(startOfRegionIndex - 1, largestIncludedIndex + 1, currentBuilder);
@@ -79,7 +79,7 @@ class HighConfidenceSmoothedRegions {
         }
     }
 
-    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull CombinedFittedRegion builder) {
+    private int forwardsUntilDifferent(int startIndex, int endIndex, @NotNull CombinedRegion builder) {
 
         final List<FittedRegion> buffer = Lists.newArrayList();
 
@@ -111,15 +111,15 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private CombinedFittedRegion forwards(int startIndex, int endIndex, final @NotNull CombinedFittedRegion builder) {
-        CombinedFittedRegion current = builder;
+    private CombinedRegion forwards(int startIndex, int endIndex, final @NotNull CombinedRegion builder) {
+        CombinedRegion current = builder;
         for (int i = startIndex; i <= endIndex; i++) {
             FittedRegion copyNumber = fittedRegions.get(i);
             if (isSimilar(copyNumber, current)) {
                 current.combine(copyNumber);
             } else {
                 combinedRegions.add(current);
-                current = new CombinedFittedRegion(true, copyNumber);
+                current = new CombinedRegion(true, copyNumber);
             }
         }
 
@@ -127,9 +127,9 @@ class HighConfidenceSmoothedRegions {
     }
 
     @NotNull
-    private CombinedFittedRegion backwards(int startIndex, int endIndex, @NotNull final CombinedFittedRegion forwardBuilder) {
-        final Deque<CombinedFittedRegion> preRegions = new ArrayDeque<>();
-        CombinedFittedRegion reverseBuilder = forwardBuilder;
+    private CombinedRegion backwards(int startIndex, int endIndex, @NotNull final CombinedRegion forwardBuilder) {
+        final Deque<CombinedRegion> preRegions = new ArrayDeque<>();
+        CombinedRegion reverseBuilder = forwardBuilder;
 
         for (int i = startIndex; i >= endIndex; i--) {
             final FittedRegion copyNumber = fittedRegions.get(i);
@@ -139,7 +139,7 @@ class HighConfidenceSmoothedRegions {
                 if (reverseBuilder != forwardBuilder) {
                     preRegions.addFirst(reverseBuilder);
                 }
-                reverseBuilder = new CombinedFittedRegion(true, copyNumber);
+                reverseBuilder = new CombinedRegion(true, copyNumber);
             }
         }
 
@@ -155,7 +155,7 @@ class HighConfidenceSmoothedRegions {
         return !newRegion.status().equals(ObservedRegionStatus.SOMATIC);
     }
 
-    private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final CombinedFittedRegion builder) {
+    private boolean isSimilar(@NotNull final FittedRegion newRegion, @NotNull final CombinedRegion builder) {
         final FittedRegion combinedRegion = builder.region();
         if (isGermline(newRegion)) {
             return true;
@@ -184,11 +184,11 @@ class HighConfidenceSmoothedRegions {
         throw new IllegalArgumentException();
     }
 
-    private List<CombinedFittedRegion> removedLowObservedTumorRatioCount(List<CombinedFittedRegion> regions) {
-        final List<CombinedFittedRegion> result = Lists.newArrayList();
-        CombinedFittedRegion current = regions.get(0);
+    private List<CombinedRegion> removedLowObservedTumorRatioCount(List<CombinedRegion> regions) {
+        final List<CombinedRegion> result = Lists.newArrayList();
+        CombinedRegion current = regions.get(0);
         for (int i = 1; i < regions.size(); i++) {
-            CombinedFittedRegion next = regions.get(i);
+            CombinedRegion next = regions.get(i);
             if (next.region().support() == SegmentSupport.NONE
                     && next.region().observedTumorRatioCount() < MIN_RATIO_ONLY_TUMOR_RATIO_COUNT) {
                 current.combine(germinate(next.region()));
@@ -210,7 +210,7 @@ class HighConfidenceSmoothedRegions {
         return ImmutableFittedRegion.builder().from(region).status(ObservedRegionStatus.UNKNOWN).build();
     }
 
-    private List<CombinedFittedRegion> finalPass(List<CombinedFittedRegion> regions) {
+    private List<CombinedRegion> finalPass(List<CombinedRegion> regions) {
         return CombinedFittedRegions.mergeLeft(regions, (left, right) -> isSimilar(right.region(), left));
     }
 

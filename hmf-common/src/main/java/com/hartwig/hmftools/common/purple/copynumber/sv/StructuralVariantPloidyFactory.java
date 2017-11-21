@@ -19,18 +19,18 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class StructuralVariantPloidyFactory<T extends GenomeRegion> {
+public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
 
     private final PurityAdjuster purityAdjuster;
     private final Function<T, Double> copyNumberExtractor;
 
-    StructuralVariantPloidyFactory(final PurityAdjuster purityAdjuster, final Function<T, Double> copyNumberExtractor) {
+    public StructuralVariantPloidyFactory(final PurityAdjuster purityAdjuster, final Function<T, Double> copyNumberExtractor) {
         this.purityAdjuster = purityAdjuster;
         this.copyNumberExtractor = copyNumberExtractor;
     }
 
     @NotNull
-    List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> variants, @NotNull final Multimap<String, T> copyNumbers) {
+    public List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> variants, @NotNull final Multimap<String, T> copyNumbers) {
 
         final List<StructuralVariantPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variants);
@@ -80,8 +80,8 @@ class StructuralVariantPloidyFactory<T extends GenomeRegion> {
     Optional<ModifiableStructuralVariantPloidy> create(@NotNull StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
 
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.position() - 1);
-        final Optional<Double> left = selector.select(svPositionLeft).map(copyNumberExtractor).filter(Doubles::positive);
-        final Optional<Double> right = selector.select(leg).map(copyNumberExtractor).filter(Doubles::positive);
+        final Optional<Double> left = selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
+        final Optional<Double> right = selector.select(leg).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
 
         final Optional<Double> correct;
         final Optional<Double> alternate;

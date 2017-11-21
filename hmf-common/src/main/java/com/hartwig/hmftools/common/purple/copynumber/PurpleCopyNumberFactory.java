@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantImpliedCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -31,7 +31,6 @@ public class PurpleCopyNumberFactory {
     @NotNull
     private final List<PurpleCopyNumber> smoothedRegions;
 
-
     public PurpleCopyNumberFactory(boolean experimental, @NotNull final PurityAdjuster purityAdjuster,
             final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
         this.purityAdjuster = purityAdjuster;
@@ -41,7 +40,7 @@ public class PurpleCopyNumberFactory {
         final Set<String> orderedChromosomes =
                 fittedRegions.stream().map(GenomeRegion::chromosome).collect(Collectors.toCollection(LinkedHashSet::new));
 
-        final ListMultimap<String, PurpleCopyNumber> newMethod = ArrayListMultimap.create();
+        final ListMultimap<String, CombinedRegion> somaticExtentions = ArrayListMultimap.create();
 
         for (String chromosome : orderedChromosomes) {
             final List<FittedRegion> chromosomeFittedRegions =
@@ -54,10 +53,7 @@ public class PurpleCopyNumberFactory {
                     ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
                     : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
 
-            final List<FittedRegion> smoothedV2 = SomaticExtension.fittedRegions(purityAdjuster, chromosomeFittedRegions);
-
-            final List<PurpleCopyNumber> copyNumbers = toCopyNumber(smoothedV2);
-            newMethod.putAll(chromosome, copyNumbers);
+            somaticExtentions.putAll(chromosome, SomaticExtension.combinedRegions(purityAdjuster, chromosomeFittedRegions));
 
             // Old Method
             if (!experimental) {
@@ -66,10 +62,21 @@ public class PurpleCopyNumberFactory {
         }
 
         if (experimental) {
-            // New Method
-            StructuralVariantImpliedCopyNumber copyNumber = new StructuralVariantImpliedCopyNumber(purityAdjuster);
-            smoothedRegions.addAll(copyNumber.svImpliedCopyNumber(structuralVariants, newMethod).values());
+
+            final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(purityAdjuster);
+            final ListMultimap<String, CombinedRegion> svImplied =
+                    svImpliedFactory.svImpliedCopyNumber(structuralVariants, somaticExtentions);
+
+            for (HumanChromosome chromosome : HumanChromosome.values()) {
+                if (svImplied.containsKey(chromosome.toString())) {
+                    smoothedRegions.addAll(toCopyNumber(svImplied.get(chromosome.toString())
+                            .stream()
+                            .map(CombinedRegion::region)
+                            .collect(toList())));
+                }
+            }
         }
+
         Collections.sort(smoothedRegions);
     }
 

@@ -24,12 +24,19 @@ class SomaticExtension {
         return extension.fittedRegions();
     }
 
+    @NotNull
+    static List<CombinedRegion> combinedRegions(@NotNull final PurityAdjuster adjuster,
+            @NotNull final Collection<FittedRegion> fittedRegions) {
+        final SomaticExtension extension = new SomaticExtension(adjuster, fittedRegions);
+        return extension.regions;
+    }
+
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticExtension.class);
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
-    private List<CombinedFittedRegion> regions = Lists.newLinkedList();
+    private List<CombinedRegion> regions = Lists.newLinkedList();
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
@@ -41,19 +48,19 @@ class SomaticExtension {
 
     @NotNull
     private List<FittedRegion> fittedRegions() {
-        return regions.stream().map(CombinedFittedRegion::region).collect(Collectors.toList());
+        return regions.stream().map(CombinedRegion::region).collect(Collectors.toList());
     }
 
     private void somaticExtension(@NotNull final Collection<FittedRegion> fittedRegions) {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
         for (FittedRegion fittedRegion : fittedRegions) {
-            regions.add(new CombinedFittedRegion(bafWeighted, fittedRegion, false));
+            regions.add(new CombinedRegion(bafWeighted, fittedRegion, false));
         }
 
         int highestConfidenceIndex = nextIndex();
         while (highestConfidenceIndex > -1) {
-            final CombinedFittedRegion highestConfidence = regions.get(highestConfidenceIndex);
+            final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
 
             LOGGER.debug("Selected region {}", toString(highestConfidence.region()));
             extendRight(highestConfidenceIndex);
@@ -68,7 +75,7 @@ class SomaticExtension {
 
     private void extendRight(int startIndex) {
         assert (startIndex < regions.size());
-        final CombinedFittedRegion target = regions.get(startIndex);
+        final CombinedRegion target = regions.get(startIndex);
         int targetIndex = startIndex + 1;
 
         while (targetIndex < regions.size()) {
@@ -84,7 +91,7 @@ class SomaticExtension {
 
     private void extendLeft(int startIndex) {
         assert (startIndex < regions.size());
-        final CombinedFittedRegion target = regions.get(startIndex);
+        final CombinedRegion target = regions.get(startIndex);
 
         int targetIndex = startIndex - 1;
         while (targetIndex >= 0) {
@@ -100,7 +107,7 @@ class SomaticExtension {
 
     }
 
-    private boolean breakForCentromereStart(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+    private boolean breakForCentromereStart(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.region().start() < neighbour.start()) {
             return neighbour.support() == SegmentSupport.CENTROMERE;
         }
@@ -108,7 +115,7 @@ class SomaticExtension {
         return target.region().support() == SegmentSupport.CENTROMERE;
     }
 
-    private boolean breakForStructuralVariant(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+    private boolean breakForStructuralVariant(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.region().start() < neighbour.start()) {
             return neighbour.support() != SegmentSupport.NONE;
         }
@@ -116,7 +123,7 @@ class SomaticExtension {
         return target.region().support() != SegmentSupport.NONE;
     }
 
-    private boolean merge(@NotNull final CombinedFittedRegion target, @NotNull final FittedRegion neighbour) {
+    private boolean merge(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
 
         if (breakForCentromereStart(target, neighbour) || breakForStructuralVariant(target, neighbour)) {
             return false;
@@ -153,7 +160,7 @@ class SomaticExtension {
         long largestBases = 0;
 
         for (int i = 0; i < regions.size(); i++) {
-            final CombinedFittedRegion combined = regions.get(i);
+            final CombinedRegion combined = regions.get(i);
             final FittedRegion region = combined.region();
             if (!combined.isProcessed() && region.status().equals(ObservedRegionStatus.SOMATIC)) {
 
