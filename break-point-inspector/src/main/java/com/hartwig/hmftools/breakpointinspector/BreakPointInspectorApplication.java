@@ -48,6 +48,7 @@ public class BreakPointInspectorApplication {
     private static final String PROXIMITY = "proximity";
     private static final String VCF = "vcf";
     private static final String VCF_OUT = "output_vcf";
+    private static final String CONTAMINATION = "contamination_fraction";
 
     private static Options createOptions() {
         final Options options = new Options();
@@ -58,6 +59,8 @@ public class BreakPointInspectorApplication {
         options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to scan around breakpoint (optional, default=500)").build());
         options.addOption(Option.builder(VCF).required().hasArg().desc("Manta VCF file to batch inspect (required)").build());
         options.addOption(Option.builder(VCF_OUT).hasArg().desc("VCF output file (optional)").build());
+        options.addOption(
+                Option.builder(CONTAMINATION).hasArg().desc("fraction of allowable normal support per tumor support read").build());
         return options;
     }
 
@@ -87,6 +90,10 @@ public class BreakPointInspectorApplication {
 
             if (cmd.hasOption(PROXIMITY)) {
                 analysisBuilder.setRange(Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500")));
+            }
+
+            if (cmd.hasOption(CONTAMINATION)) {
+                analysisBuilder.setContaminationFraction(Float.parseFloat(cmd.getOptionValue(CONTAMINATION, "0")));
             }
 
             if (refPath == null || tumorPath == null || vcfPath == null) {
@@ -209,7 +216,12 @@ public class BreakPointInspectorApplication {
                 ctx.Uncertainty1 = uncertainty1;
                 ctx.Uncertainty2 = uncertainty2;
                 ctx.HomologySequence = variant.getAttributeAsString("HOMSEQ", "");
-                ctx.InsertSequence = variant.getAttributeAsString("SVINSSEQ", "");
+                if (variant.hasAttribute("LEFT_SVINSSEQ") && variant.hasAttribute("RIGHT_SVINSSEQ")) {
+                    ctx.InsertSequence =
+                            variant.getAttributeAsString("LEFT_SVINSSEQ", "") + "..." + variant.getAttributeAsString("RIGHT_SVINSSEQ", "");
+                } else {
+                    ctx.InsertSequence = variant.getAttributeAsString("SVINSSEQ", "");
+                }
                 ctx.BND = variant.getStructuralVariantType() == StructuralVariantType.BND;
 
                 switch (ctx.Type) {
