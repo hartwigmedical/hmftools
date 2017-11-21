@@ -59,6 +59,7 @@ public final class LimsFactory {
             final String sampleLabel = jsonSampleObject.get("label").getAsString();
             final String analysisType = jsonSampleObject.get("analysis_type").getAsString();
 
+            // KODU: Filter on somatic to get rid of RNA samples, see also DEV-252
             if ((sampleLabel.equals("CPCT") || sampleLabel.equals("DRUP")) && analysisType != null && analysisType.toLowerCase()
                     .contains("somatic")) {
                 final LimsJsonData limsJsonData = gson.fromJson(jsonSample.getValue(), LimsJsonData.class);
