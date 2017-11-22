@@ -213,7 +213,9 @@ class Analysis {
 
                     result.PR_Evidence.add(pair);
 
-                } else if (proper || secondary) {
+                }
+
+                if (proper || secondary) {
 
                     final boolean clip_bp1 =
                             exactlyClipsBreakpoint(ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), breakpoints.getLeft(),
