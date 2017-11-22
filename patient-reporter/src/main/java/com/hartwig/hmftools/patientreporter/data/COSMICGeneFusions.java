@@ -21,7 +21,8 @@ public class COSMICGeneFusions {
 
     private static final int FIVE_COLUMN = 0;
     private static final int THREE_COLUMN = 1;
-    private static final int FIELD_COUNT = 2;
+    private static final int URL_COLUMNN = 3;
+    private static final int FIELD_COUNT = 3;
 
     private static final String FIELD_SEPARATOR = ",";
 
