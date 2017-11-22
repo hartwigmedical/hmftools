@@ -71,7 +71,7 @@ public class ExtendLongArmTest {
         assertCombinedRegion(10001, 20000, 2, 0.5, CombinedRegionMethod.NONE, result.get(2));
     }
 
-    private void assertCombinedRegion(long start, long end, double expectedCopyNumber, double expectedBaf, CombinedRegionMethod expectedMethod,
+    static void assertCombinedRegion(long start, long end, double expectedCopyNumber, double expectedBaf, CombinedRegionMethod expectedMethod,
             CombinedRegion victim) {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
         assertEquals(expectedBaf, victim.tumorBAF(), EPSILON);
@@ -80,7 +80,7 @@ public class ExtendLongArmTest {
         assertEquals(end, victim.end());
     }
 
-    private CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support) {
+    static CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support) {
         final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(baf)
@@ -89,5 +89,4 @@ public class ExtendLongArmTest {
 
         return new CombinedRegion(true, region, false);
     }
-
 }

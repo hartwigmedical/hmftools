@@ -17,7 +17,7 @@ class CombinedRegion implements GenomeRegion {
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
     private CombinedRegionMethod method = CombinedRegionMethod.NONE;
-    private int unweightedCount = 0;
+    private int unweightedCount = 1;
 
     @Deprecated
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {

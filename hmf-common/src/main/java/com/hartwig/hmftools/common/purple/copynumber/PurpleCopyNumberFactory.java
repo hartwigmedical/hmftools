@@ -69,7 +69,9 @@ public class PurpleCopyNumberFactory {
 
             for (HumanChromosome chromosome : HumanChromosome.values()) {
                 if (svImplied.containsKey(chromosome.toString())) {
-                    smoothedRegions.addAll(toCopyNumber(svImplied.get(chromosome.toString())));
+                    final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied.get(chromosome.toString()));
+
+                    smoothedRegions.addAll(toCopyNumber(longArmExtended));
                 }
             }
         }
@@ -113,9 +115,9 @@ public class PurpleCopyNumberFactory {
     private List<PurpleCopyNumber> toCopyNumber(@NotNull final List<CombinedRegion> regions) {
         final List<PurpleCopyNumber> result = Lists.newArrayList();
         for (int i = 0; i < regions.size() - 1; i++) {
-            final FittedRegion region = regions.get(i).region();
-            final FittedRegion next = regions.get(i + 1).region();
-            result.add(create(region, next.support()));
+            final CombinedRegion region = regions.get(i);
+            final CombinedRegion next = regions.get(i + 1);
+            result.add(create(region, next.region().support()));
         }
 
         if (!regions.isEmpty()) {

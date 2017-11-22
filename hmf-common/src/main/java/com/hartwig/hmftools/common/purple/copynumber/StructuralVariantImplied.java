@@ -7,7 +7,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.position.GenomePositions;
@@ -19,17 +18,17 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class StructuralVariantImplied {
+class StructuralVariantImplied {
 
     private final StructuralVariantPloidyFactory<CombinedRegion> structuralVariantPloidyFactory;
 
-    public StructuralVariantImplied(final PurityAdjuster purityAdjuster) {
+    StructuralVariantImplied(final PurityAdjuster purityAdjuster) {
         this.structuralVariantPloidyFactory =
                 new StructuralVariantPloidyFactory<>(purityAdjuster, x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
     }
 
     @NotNull
-    public ListMultimap<String, CombinedRegion> svImpliedCopyNumber(final List<StructuralVariant> structuralVariants,
+    ListMultimap<String, CombinedRegion> svImpliedCopyNumber(final List<StructuralVariant> structuralVariants,
             @NotNull final ListMultimap<String, CombinedRegion> copyNumbers) {
 
         long previousMissingCopyNumbers = copyNumbers.size();
@@ -83,6 +82,6 @@ public class StructuralVariantImplied {
     }
 
     private boolean implyCopyNumberFromSV(@NotNull final CombinedRegion copyNumber) {
-        return Doubles.isZero(copyNumber.tumorCopyNumber()) && !copyNumber.isProcessed();
+        return !copyNumber.isProcessed();
     }
 }

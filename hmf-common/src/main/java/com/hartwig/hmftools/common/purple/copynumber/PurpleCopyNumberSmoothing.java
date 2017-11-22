@@ -11,27 +11,7 @@ class PurpleCopyNumberSmoothing {
 
     @NotNull
     static List<PurpleCopyNumber> smooth(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-        return smoothUnknownBAF(smoothTelomeres(copyNumbers));
-    }
-
-    @NotNull
-    static List<PurpleCopyNumber> smoothTelomeres(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-        if (copyNumbers.size() > 1) {
-
-            final PurpleCopyNumber telomere = copyNumbers.get(0);
-            final PurpleCopyNumber neighbour = copyNumbers.get(1);
-            if (Doubles.isZero(telomere.averageTumorCopyNumber())) {
-                final PurpleCopyNumber fixed = ImmutablePurpleCopyNumber.builder()
-                        .from(telomere)
-                        .averageTumorCopyNumber(neighbour.averageTumorCopyNumber())
-                        .averageActualBAF(neighbour.averageActualBAF())
-                        .inferred(true)
-                        .build();
-                copyNumbers.set(0, fixed);
-            }
-        }
-
-        return copyNumbers;
+        return smoothUnknownBAF(copyNumbers);
     }
 
     @NotNull
