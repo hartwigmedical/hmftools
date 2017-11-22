@@ -66,6 +66,10 @@
             <groupId>com.hartwig</groupId>
             <artifactId>strelka-post-process</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

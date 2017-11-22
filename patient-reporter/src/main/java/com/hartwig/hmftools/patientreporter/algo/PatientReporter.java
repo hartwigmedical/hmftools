@@ -85,7 +85,8 @@ public abstract class PatientReporter {
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations =
-                CivicAnalysis.run(variantAnalysis.findings(), reporterData().geneModel(), doidMapping.doidsForTumorType(tumorType));
+                CivicAnalysis.run(variantAnalysis.findings(), copyNumberAnalysis.findings(), reporterData().geneModel(),
+                        doidMapping.doidsForTumorType(tumorType));
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants: " + Integer.toString(totalVariantCount));

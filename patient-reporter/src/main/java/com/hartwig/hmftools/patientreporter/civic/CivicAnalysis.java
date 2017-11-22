@@ -10,6 +10,7 @@ import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.apiclients.diseaseontology.api.DiseaseOntologyApiWrapper;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -20,16 +21,20 @@ import org.jetbrains.annotations.NotNull;
 public class CivicAnalysis {
     private static final Logger LOGGER = LogManager.getLogger(CivicAnalysis.class);
 
-    public static List<Alteration> run(@NotNull final List<VariantReport> reportedVariants, @NotNull final GeneModel geneModel,
-            @NotNull final Set<String> tumorDoids) {
+    @NotNull
+    public static List<Alteration> run(@NotNull final List<VariantReport> reportedVariants,
+            @NotNull final List<CopyNumberReport> copyNumbers, @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) {
         LOGGER.info(" Analysing civic associations...");
         final Set<String> tumorSubtypesDoids = getTumorSubtypesDoids(tumorDoids);
         if (tumorSubtypesDoids.isEmpty()) {
             LOGGER.warn("  Disease-ontology id set for this tumor is empty!");
         }
-        return getCivicAlterations(reportedVariants, geneModel, tumorSubtypesDoids);
+        final List<Alteration> alterations = civicVariantAlterations(reportedVariants, geneModel, tumorSubtypesDoids);
+        alterations.addAll(civicCopyNumberAlterations(copyNumbers, geneModel, tumorSubtypesDoids));
+        return alterations;
     }
 
+    @NotNull
     private static Set<String> getTumorSubtypesDoids(@NotNull final Set<String> tumorDoids) {
         LOGGER.info("  Fetching tumor subtypes...");
         final Set<String> tumorSubtypesDoids = Sets.newHashSet();
@@ -48,9 +53,9 @@ public class CivicAnalysis {
     }
 
     @NotNull
-    private static List<Alteration> getCivicAlterations(@NotNull final List<VariantReport> reportedVariants,
+    private static List<Alteration> civicVariantAlterations(@NotNull final List<VariantReport> reportedVariants,
             @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorSubtypesDoids) {
-        LOGGER.info("  Fetching civic alterations...");
+        LOGGER.info("  Fetching civic variant alterations...");
         final List<Alteration> alterations = Lists.newArrayList();
         final CivicApiWrapper civicApi = new CivicApiWrapper();
         for (final VariantReport variantReport : reportedVariants) {
@@ -66,6 +71,34 @@ public class CivicAnalysis {
                         } catch (final Throwable throwable) {
                             LOGGER.error("  Failed to get civic variants for variant: " + variantReport.variant().chromosomePosition()
                                     + ". error message: " + throwable.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+        civicApi.releaseResources();
+        return alterations;
+    }
+
+    @NotNull
+    private static List<Alteration> civicCopyNumberAlterations(@NotNull final List<CopyNumberReport> copyNumbers,
+            @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorSubtypesDoids) {
+        LOGGER.info("  Fetching civic copy number alterations...");
+        final List<Alteration> alterations = Lists.newArrayList();
+        final CivicApiWrapper civicApi = new CivicApiWrapper();
+        for (final CopyNumberReport copyNumberReport : copyNumbers) {
+            for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
+                if (region.gene().equals(copyNumberReport.gene())) {
+                    for (final int entrezId : region.entrezId()) {
+                        try {
+                            final List<CivicVariant> civicVariants = civicApi.getVariantsForGene(entrezId).toList().blockingGet();
+                            final Alteration alteration = Alteration.from(copyNumberReport, civicVariants, tumorSubtypesDoids);
+                            if (alteration.getMatches().size() > 0) {
+                                alterations.add(alteration);
+                            }
+                        } catch (final Throwable throwable) {
+                            LOGGER.error("  Failed to get civic variants for copy number: {}. error message: {}", copyNumberReport.gene(),
+                                    throwable.getMessage());
                         }
                     }
                 }

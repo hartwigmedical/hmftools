@@ -78,7 +78,7 @@ public class PDFWriterTest {
 
         final SampleReport sampleReport = testSampleReport(0.6);
         final List<Alteration> alterations =
-                CivicAnalysis.run(variants, reporterData.geneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
+                CivicAnalysis.run(variants, copyNumbers, reporterData.geneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
 
         final SequencedPatientReport patientReport =
                 ImmutableSequencedPatientReport.of(sampleReport, variants, fusions, disruptions, copyNumbers, 361, "58%", alterations,
@@ -157,7 +157,10 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<CopyNumberReport> createTestCopyNumbers() {
-        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A")
+        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
+                .chromosome("9")
+                .chromosomeBand("p21.3")
+                .gene("CDKN2A")
                 .copyNumber(0)
                 .type(CopyNumberReportType.LOSS)
                 .build();

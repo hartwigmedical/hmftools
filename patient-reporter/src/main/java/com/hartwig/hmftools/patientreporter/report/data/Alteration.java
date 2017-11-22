@@ -18,6 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.patientreporter.civic.AdditionalCivicMatches;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -50,22 +52,43 @@ public abstract class Alteration {
             @NotNull final Set<String> tumorSubtypesDoids) {
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
-
         civicVariants.forEach(civicVariant -> {
             if (civicVariant.containsHgvsExpression(variantReport.hgvsProtein()) || civicVariant.coordinates()
                     .equals(variantReport.variant())) {
-                final Map<String, String> associationsPerSignificance =
-                        drugAssociationsPerSignificance(civicVariant.evidenceItems(), tumorSubtypesDoids);
-                for (final String significance : associationsPerSignificance.keySet()) {
-                    final String associations = associationsPerSignificance.get(significance);
-                    exactMatchEvidence.add(ImmutableAlterationEvidence.of(significance, associations, "CIViC", civicVariant.summaryUrl()));
-                }
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
                 matchingVariants.add(AlterationMatch.of("exact", civicVariant));
+            } else if (AdditionalCivicMatches.lossOfFunctionVariants(variantReport).contains(civicVariant.id())) {
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                matchingVariants.add(AlterationMatch.of("manual", civicVariant));
             } else if (civicVariant.coordinates().containsVariant(variantReport.variant())) {
                 matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
             }
         });
         return ImmutableAlteration.of(variantReport.gene(), variantReport.hgvsProtein(), exactMatchEvidence, matchingVariants);
+    }
+
+    @NotNull
+    public static Alteration from(@NotNull final CopyNumberReport copyNumberReport, @NotNull final List<CivicVariant> civicVariants,
+            @NotNull final Set<String> tumorSubtypesDoids) {
+        final List<AlterationMatch> matchingVariants = Lists.newArrayList();
+        final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
+        civicVariants.forEach(civicVariant -> {
+            if (AdditionalCivicMatches.copyNumberVariants(copyNumberReport).contains(civicVariant.id())) {
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                matchingVariants.add(AlterationMatch.of("manual", civicVariant));
+            }
+        });
+        return ImmutableAlteration.of(copyNumberReport.gene(), copyNumberReport.description(), exactMatchEvidence, matchingVariants);
+    }
+
+    @NotNull
+    private static List<AlterationEvidence> alterationEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
+            @NotNull final String civicUrl, @NotNull final Set<String> tumorSubtypesDoids) {
+        final Map<String, String> associationsPerSignificance = drugAssociationsPerSignificance(evidenceItems, tumorSubtypesDoids);
+        return associationsPerSignificance.keySet().stream().map(significance -> {
+            final String associations = associationsPerSignificance.get(significance);
+            return ImmutableAlterationEvidence.of(significance, associations, "CIViC", civicUrl);
+        }).collect(toList());
     }
 
     @NotNull
