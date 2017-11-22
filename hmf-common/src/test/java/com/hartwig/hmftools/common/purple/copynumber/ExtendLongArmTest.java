@@ -97,6 +97,6 @@ public class ExtendLongArmTest {
                 .support(support)
                 .build();
 
-        return new CombinedRegion(true, region, false, false);
+        return new CombinedRegion(true, region, false);
     }
 }

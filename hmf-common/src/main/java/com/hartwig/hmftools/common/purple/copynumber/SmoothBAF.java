@@ -20,7 +20,7 @@ class SmoothBAF {
             return 1;
         }
 
-        double neighbourMajorAllele = neighbourBAF * neighbourCopyNumber;
+        double neighbourMajorAllele = Math.min(1d, neighbourBAF) * neighbourCopyNumber;
 
         double regionMajorAllele = Math.max(0, neighbourMajorAllele - neighbourCopyNumber + copyNumber);
         double regionBAF = regionMajorAllele / copyNumber;

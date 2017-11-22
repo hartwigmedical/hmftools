@@ -55,7 +55,7 @@ class ExtendDiploid {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
         for (FittedRegion fittedRegion : fittedRegions) {
-            regions.add(new CombinedRegion(bafWeighted, fittedRegion, false, fittedRegion.status() != ObservedRegionStatus.SOMATIC));
+            regions.add(new CombinedRegion(bafWeighted, fittedRegion, false));
         }
 
         int highestConfidenceIndex = nextIndex();

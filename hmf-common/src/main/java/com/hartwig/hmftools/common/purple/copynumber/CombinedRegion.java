@@ -20,17 +20,17 @@ class CombinedRegion implements GenomeRegion {
 
     @Deprecated
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
-        this(bafWeighted, region, region.status() != ObservedRegionStatus.SOMATIC, region.status() != ObservedRegionStatus.SOMATIC);
+        this(bafWeighted, region, region.status() != ObservedRegionStatus.SOMATIC);
     }
 
-    CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearCopyNumber, final boolean clearBAF) {
+    CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearCopyNumber) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
         if (clearCopyNumber) {
             clearCopyNumber();
         }
 
-        if (clearBAF) {
+        if (region.status() != ObservedRegionStatus.SOMATIC) {
             clearBAFValues();
         }
     }
@@ -182,8 +182,6 @@ class CombinedRegion implements GenomeRegion {
     }
 
     private void clearBAFValues() {
-        combined.setObservedBAF(0);
-        combined.setTumorBAF(0);
         combined.setBafCount(0);
     }
 }
