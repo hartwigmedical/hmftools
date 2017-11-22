@@ -5,9 +5,9 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Extend {
+class Extend {
 
-    public static boolean doNotExtend(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
+    static boolean doNotExtend(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
         return breakForCentromereStart(target, neighbour) || breakForStructuralVariant(target, neighbour);
     }
 

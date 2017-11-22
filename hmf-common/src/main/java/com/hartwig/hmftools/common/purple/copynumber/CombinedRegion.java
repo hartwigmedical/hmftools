@@ -52,6 +52,10 @@ class CombinedRegion implements GenomeRegion {
         return combined.tumorCopyNumber();
     }
 
+    public double tumorBAF() {
+        return combined.tumorBAF();
+    }
+
     @Deprecated
     private void clearValues() {
         combined.setRefNormalisedCopyNumber(0);
@@ -160,6 +164,14 @@ class CombinedRegion implements GenomeRegion {
             final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
             combined.setTumorCopyNumber(newCopyNumber);
         }
+    }
+
+    void setCopyNumber(@NotNull final CombinedRegionMethod method, double copyNumber, double baf) {
+        setMethod(method);
+        combined.setTumorCopyNumber(copyNumber);
+        combined.setBafCount(0);
+        combined.setObservedBAF(0);
+        combined.setTumorBAF(baf);
     }
 
     private double weightedAverage(long currentWeight, double currentValue, long newWeight, double newValue) {

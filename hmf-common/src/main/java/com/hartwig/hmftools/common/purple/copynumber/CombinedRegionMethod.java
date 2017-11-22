@@ -4,5 +4,5 @@ public enum CombinedRegionMethod {
     NONE,
     DIPLOID,
     STRUCTURAL_VARIANT,
-    TELOMERE
+    LONG_ARM
 }
