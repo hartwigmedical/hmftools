@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 class PurpleCopyNumberSmoothing {
 
     @NotNull

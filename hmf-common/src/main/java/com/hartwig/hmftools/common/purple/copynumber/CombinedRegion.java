@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import java.util.Optional;
-
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidy;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
@@ -16,19 +13,25 @@ class CombinedRegion implements GenomeRegion {
 
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
-    private CombinedRegionMethod method = CombinedRegionMethod.NONE;
     private int unweightedCount = 1;
+
+    private CombinedRegionMethod copyNumberMethod = CombinedRegionMethod.NONE;
+    private boolean inferredBAF;
 
     @Deprecated
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
-        this(bafWeighted, region, region.status() != ObservedRegionStatus.SOMATIC);
+        this(bafWeighted, region, region.status() != ObservedRegionStatus.SOMATIC, region.status() != ObservedRegionStatus.SOMATIC);
     }
 
-    CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearValues) {
+    CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearCopyNumber, final boolean clearBAF) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
-        if (clearValues) {
-            clearValues();
+        if (clearCopyNumber) {
+            clearCopyNumber();
+        }
+
+        if (clearBAF) {
+            clearBAFValues();
         }
     }
 
@@ -48,6 +51,10 @@ class CombinedRegion implements GenomeRegion {
         return combined.end();
     }
 
+    boolean isInferredBAF() {
+        return inferredBAF;
+    }
+
     public double tumorCopyNumber() {
         return combined.tumorCopyNumber();
     }
@@ -56,25 +63,20 @@ class CombinedRegion implements GenomeRegion {
         return combined.tumorBAF();
     }
 
-    @Deprecated
-    private void clearValues() {
-        combined.setRefNormalisedCopyNumber(0);
-        combined.setObservedBAF(0);
-        combined.setObservedTumorRatioCount(0);
-        combined.setTumorCopyNumber(0);
-        combined.setBafCount(0);
+    public int bafCount() {
+        return region().bafCount();
     }
 
-    public CombinedRegionMethod method() {
-        return method;
+    CombinedRegionMethod copyNumberMethod() {
+        return copyNumberMethod;
     }
 
-    public boolean isProcessed() {
-        return method != CombinedRegionMethod.NONE;
+    boolean isProcessed() {
+        return copyNumberMethod != CombinedRegionMethod.NONE;
     }
 
-    public void setMethod(CombinedRegionMethod method) {
-        this.method = method;
+    void setCopyNumberMethod(CombinedRegionMethod copyNumberMethod) {
+        this.copyNumberMethod = copyNumberMethod;
     }
 
     FittedRegion region() {
@@ -111,7 +113,7 @@ class CombinedRegion implements GenomeRegion {
 
         extend(region);
 
-        combined.setStatus(ObservedRegionStatus.SOMATIC);
+        combined.setStatus(ObservedRegionStatus.SOMATIC); //TODO Remove this
         combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
         final long currentWeight;
@@ -151,27 +153,16 @@ class CombinedRegion implements GenomeRegion {
         combined.setBafCount(combined.bafCount() + region.bafCount());
     }
 
-    void inferCopyNumberFromStructuralVariants(final Optional<StructuralVariantPloidy> start, final Optional<StructuralVariantPloidy> end) {
-        if (start.isPresent() || end.isPresent()) {
-            setMethod(CombinedRegionMethod.STRUCTURAL_VARIANT);
-
-            final double startWeight = start.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
-            final double startCopyNumber = start.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);
-
-            final double endWeight = end.map(StructuralVariantPloidy::impliedLeftCopyNumberWeight).orElse(0d);
-            final double endCopyNumber = end.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
-
-            final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
-            combined.setTumorCopyNumber(newCopyNumber);
-        }
+    void setTumorCopyNumber(@NotNull final CombinedRegionMethod method, double copyNumber) {
+        setCopyNumberMethod(method);
+        combined.setTumorCopyNumber(copyNumber);
     }
 
-    void setCopyNumber(@NotNull final CombinedRegionMethod method, double copyNumber, double baf) {
-        setMethod(method);
-        combined.setTumorCopyNumber(copyNumber);
+    void setInferredTumorBAF(double baf) {
+        inferredBAF = true;
+        combined.setTumorBAF(baf);
         combined.setBafCount(0);
         combined.setObservedBAF(0);
-        combined.setTumorBAF(baf);
     }
 
     private double weightedAverage(long currentWeight, double currentValue, long newWeight, double newValue) {
@@ -181,5 +172,18 @@ class CombinedRegion implements GenomeRegion {
 
         long totalWeight = currentWeight + newWeight;
         return (currentWeight * currentValue + newWeight * newValue) / totalWeight;
+    }
+
+    @Deprecated
+    private void clearCopyNumber() {
+        combined.setRefNormalisedCopyNumber(0);
+        combined.setObservedTumorRatioCount(0);
+        combined.setTumorCopyNumber(0);
+    }
+
+    private void clearBAFValues() {
+        combined.setObservedBAF(0);
+        combined.setTumorBAF(0);
+        combined.setBafCount(0);
     }
 }

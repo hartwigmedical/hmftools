@@ -52,8 +52,7 @@ class StructuralVariantImplied {
 
                         if (optionalStart.isPresent() || optionalEnd.isPresent()) {
                             svInferred = true;
-                            copyNumber.setMethod(CombinedRegionMethod.STRUCTURAL_VARIANT);
-                            copyNumber.inferCopyNumberFromStructuralVariants(optionalStart, optionalEnd);
+                            inferCopyNumberFromStructuralVariants(copyNumber, optionalStart, optionalEnd);
                         }
                     }
                 }
@@ -69,6 +68,18 @@ class StructuralVariantImplied {
         }
 
         return copyNumbers;
+    }
+
+    private void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region, final Optional<StructuralVariantPloidy> start,
+            final Optional<StructuralVariantPloidy> end) {
+        final double startWeight = start.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
+        final double startCopyNumber = start.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);
+
+        final double endWeight = end.map(StructuralVariantPloidy::impliedLeftCopyNumberWeight).orElse(0d);
+        final double endCopyNumber = end.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
+
+        final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
+        region.setTumorCopyNumber(CombinedRegionMethod.STRUCTURAL_VARIANT, newCopyNumber);
     }
 
     @NotNull

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 public enum CombinedRegionMethod {
     NONE,
-    DIPLOID,
+    BAF_WEIGHTED,
     STRUCTURAL_VARIANT,
     LONG_ARM
 }

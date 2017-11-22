@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ExtendLongArm {
+class ExtendLongArm {
 
     @NotNull
     static List<CombinedRegion> extendLongArm(@NotNull final List<CombinedRegion> regions) {
@@ -35,7 +35,7 @@ public class ExtendLongArm {
             final CombinedRegion source = regions.get(startIndex);
             final CombinedRegion target = regions.get(startIndex - 1);
             if (!target.isProcessed()) {
-                target.setCopyNumber(CombinedRegionMethod.LONG_ARM, source.tumorCopyNumber(), source.tumorBAF());
+                target.setTumorCopyNumber(CombinedRegionMethod.LONG_ARM, source.tumorCopyNumber());
             } else {
                 return;
             }

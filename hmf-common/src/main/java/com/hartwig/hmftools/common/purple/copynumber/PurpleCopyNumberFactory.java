@@ -70,8 +70,9 @@ public class PurpleCopyNumberFactory {
             for (HumanChromosome chromosome : HumanChromosome.values()) {
                 if (svImplied.containsKey(chromosome.toString())) {
                     final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied.get(chromosome.toString()));
+                    final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(longArmExtended);
 
-                    smoothedRegions.addAll(toCopyNumber(longArmExtended));
+                    smoothedRegions.addAll(toCopyNumber(bafExtended));
                 }
             }
         }
@@ -108,7 +109,7 @@ public class PurpleCopyNumberFactory {
             result.add(create(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
         }
 
-        return PurpleCopyNumberSmoothing.smooth(result);
+        return result;
     }
 
     @NotNull
@@ -124,7 +125,7 @@ public class PurpleCopyNumberFactory {
             result.add(create(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
         }
 
-        return PurpleCopyNumberSmoothing.smooth(result);
+        return result;
     }
 
     @NotNull
@@ -150,11 +151,11 @@ public class PurpleCopyNumberFactory {
                 .chromosome(region.chromosome())
                 .start(region.start())
                 .end(region.end())
-                .bafCount(region.region().bafCount())
+                .bafCount(region.bafCount())
                 .averageObservedBAF(region.region().observedBAF())
-                .averageActualBAF(region.region().tumorBAF())
+                .averageActualBAF(region.tumorBAF())
                 .averageTumorCopyNumber(region.tumorCopyNumber())
-                .inferred(region.method() != CombinedRegionMethod.DIPLOID)
+                .inferred(region.copyNumberMethod() != CombinedRegionMethod.BAF_WEIGHTED)
                 .segmentStartSupport(region.region().support())
                 .segmentEndSupport(trailingSupport)
                 .build();

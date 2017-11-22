@@ -12,7 +12,7 @@ class Extend {
     }
 
     private static boolean breakForCentromereStart(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
-        if (target.region().start() < neighbour.start()) {
+        if (target.start() < neighbour.start()) {
             return neighbour.support() == SegmentSupport.CENTROMERE;
         }
 
@@ -20,7 +20,7 @@ class Extend {
     }
 
     private static boolean breakForStructuralVariant(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
-        if (target.region().start() < neighbour.start()) {
+        if (target.start() < neighbour.start()) {
             return neighbour.support() != SegmentSupport.NONE;
         }
 

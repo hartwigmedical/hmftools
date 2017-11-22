@@ -12,7 +12,7 @@ class ExtendStructuralVariant {
         for (int i = 0; i < regions.size(); i++) {
 
             CombinedRegion region = regions.get(i);
-            if (region.method() == CombinedRegionMethod.STRUCTURAL_VARIANT) {
+            if (region.copyNumberMethod() == CombinedRegionMethod.STRUCTURAL_VARIANT) {
                 extendRight(i, regions);
                 i -= extendLeft(i, regions);
             }
@@ -35,7 +35,7 @@ class ExtendStructuralVariant {
 
             if (!neighbour.isProcessed()) {
                 target.extend(neighbour.region());
-            } else if (neighbour.method() == CombinedRegionMethod.STRUCTURAL_VARIANT) {
+            } else if (neighbour.copyNumberMethod() == CombinedRegionMethod.STRUCTURAL_VARIANT) {
                 target.extendWithUnweightedAverage(neighbour.region());
             } else {
                 break;
@@ -58,7 +58,7 @@ class ExtendStructuralVariant {
 
             if (!neighbour.isProcessed()) {
                 target.extend(neighbour.region());
-            } else if (neighbour.method() == CombinedRegionMethod.STRUCTURAL_VARIANT) {
+            } else if (neighbour.copyNumberMethod() == CombinedRegionMethod.STRUCTURAL_VARIANT) {
                 target.extendWithUnweightedAverage(neighbour.region());
             } else {
                 break;

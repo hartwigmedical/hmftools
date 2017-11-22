@@ -26,8 +26,8 @@ public class ExtendStructuralVariantTest {
         final List<CombinedRegion> result = ExtendStructuralVariant.extendStructuralVariants(regions);
 
         assertEquals(2, result.size());
-        assertCombinedRegion(2001, 6000, 6, 0.9, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(0));
-        assertCombinedRegion(6001, 7000, 7, 1, CombinedRegionMethod.NONE, result.get(1));
+        assertCombinedRegion(2001, 6000, 6, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(0));
+        assertCombinedRegion(6001, 7000, 7, CombinedRegionMethod.NONE, result.get(1));
     }
 
     @Test
@@ -42,8 +42,8 @@ public class ExtendStructuralVariantTest {
         final List<CombinedRegion> result = ExtendStructuralVariant.extendStructuralVariants(regions);
 
         assertEquals(2, result.size());
-        assertCombinedRegion(2001, 6000, 4, 0.6, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(0));
-        assertCombinedRegion(6001, 7000, 7, 1, CombinedRegionMethod.NONE, result.get(1));
+        assertCombinedRegion(2001, 6000, 4, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(0));
+        assertCombinedRegion(6001, 7000, 7, CombinedRegionMethod.NONE, result.get(1));
     }
 
     @Test
@@ -58,13 +58,13 @@ public class ExtendStructuralVariantTest {
         final List<CombinedRegion> result = ExtendStructuralVariant.extendStructuralVariants(regions);
 
         assertEquals(2, result.size());
-        assertCombinedRegion(2001, 6000, 4.5, 0.7, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(0));
-        assertCombinedRegion(6001, 7000, 7, 1, CombinedRegionMethod.NONE, result.get(1));
+        assertCombinedRegion(2001, 6000, 4.5, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(0));
+        assertCombinedRegion(6001, 7000, 7, CombinedRegionMethod.NONE, result.get(1));
     }
 
     private static CombinedRegion createSVImplied(long start, long end, double copyNumber, double baf, SegmentSupport support) {
         final CombinedRegion region = createCombinedRegion(start, end, copyNumber, baf, support);
-        region.setMethod(CombinedRegionMethod.STRUCTURAL_VARIANT);
+        region.setCopyNumberMethod(CombinedRegionMethod.STRUCTURAL_VARIANT);
         return region;
     }
 

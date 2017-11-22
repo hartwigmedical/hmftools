@@ -55,13 +55,13 @@ class ExtendDiploid {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
         for (FittedRegion fittedRegion : fittedRegions) {
-            regions.add(new CombinedRegion(bafWeighted, fittedRegion, false));
+            regions.add(new CombinedRegion(bafWeighted, fittedRegion, false, fittedRegion.status() != ObservedRegionStatus.SOMATIC));
         }
 
         int highestConfidenceIndex = nextIndex();
         while (highestConfidenceIndex > -1) {
             final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
-            highestConfidence.setMethod(CombinedRegionMethod.DIPLOID);
+            highestConfidence.setCopyNumberMethod(CombinedRegionMethod.BAF_WEIGHTED);
 
             LOGGER.debug("Selected region {}", toString(highestConfidence.region()));
             extendRight(highestConfidenceIndex);
