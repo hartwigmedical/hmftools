@@ -12,9 +12,7 @@ class ExtendLongArm {
     static List<CombinedRegion> extendLongArm(@NotNull final List<CombinedRegion> regions) {
 
         final int centromereIndex = findCentromere(regions);
-        if (centromereIndex > 1) {
-            extendLeft(centromereIndex, regions);
-        }
+        extendLeft(centromereIndex, regions);
 
         return regions;
     }
@@ -31,7 +29,7 @@ class ExtendLongArm {
 
     private static void extendLeft(int startIndex, @NotNull final List<CombinedRegion> regions) {
         assert (startIndex < regions.size());
-        if (startIndex > 1) {
+        if (startIndex > 0) {
             final CombinedRegion source = regions.get(startIndex);
             final CombinedRegion target = regions.get(startIndex - 1);
             if (!target.isProcessed()) {

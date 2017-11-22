@@ -17,6 +17,18 @@ public class ExtendLongArmTest {
     private static final double EPSILON = 1e-10;
 
     @Test
+    public void testCentromereToTelomere() {
+        final CombinedRegion first = createCombinedRegion(1, 5000, 3, 0.3, SegmentSupport.NONE);
+        final CombinedRegion centromere = createCombinedRegion(5001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
+
+        final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, centromere));
+        assertEquals(2, result.size());
+
+        assertCombinedRegion(1, 5000, 2, CombinedRegionMethod.LONG_ARM, result.get(0));
+        assertCombinedRegion(5001, 20000, 2, CombinedRegionMethod.NONE, result.get(1));
+    }
+
+    @Test
     public void testDoesNotExtendRight() {
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
         final CombinedRegion unprocessedRight = createCombinedRegion(20001, 30000, 3, 0.3, SegmentSupport.NONE);

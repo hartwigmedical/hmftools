@@ -7,7 +7,7 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ExtendDiploidBAF {
+class ExtendDiploidBAF {
 
     @NotNull
     static List<CombinedRegion> extendBAF(@NotNull final List<CombinedRegion> regions) {
