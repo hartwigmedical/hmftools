@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.purple.plot.CopyNumberCharts.minorAllele;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -59,7 +60,7 @@ public class CopyNumberChartsTest {
                 .averageTumorCopyNumber(copyNumber)
                 .bafCount(10)
                 .averageObservedBAF(baf)
-                .inferred(false)
+                .method(CopyNumberMethod.UNKNOWN)
                 .segmentStartSupport(SegmentSupport.NONE)
                 .segmentEndSupport(SegmentSupport.NONE)
                 .averageActualBAF(baf).build();

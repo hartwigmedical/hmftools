@@ -123,13 +123,13 @@ CREATE TABLE copyNumber
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
-    inferred BOOLEAN NOT NULL,
     segmentStartSupport varchar(255) NOT NULL,
     segmentEndSupport varchar(255) NOT NULL,
     bafCount int not null,
     observedBaf DOUBLE PRECISION not null,
     actualBaf DOUBLE PRECISION not null,
     copyNumber DOUBLE PRECISION not null,
+    copyNumberMethod varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

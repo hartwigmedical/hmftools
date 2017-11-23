@@ -137,7 +137,7 @@ public class StructuralVariantPloidyFactoryTest {
 
     @NotNull
     static PurpleCopyNumber copyNumber(long start, long end, double copyNumber) {
-        return PurpleDatamodelTest.createCopyNumber(CHROMOSOME, start, end, copyNumber).inferred(true).build();
+        return PurpleDatamodelTest.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
     }
 
     @NotNull

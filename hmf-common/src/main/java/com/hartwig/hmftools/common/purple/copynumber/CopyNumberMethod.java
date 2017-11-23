@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
 public enum CopyNumberMethod {
-    NONE,
+    UNKNOWN,
     BAF_WEIGHTED,
     STRUCTURAL_VARIANT,
     LONG_ARM,

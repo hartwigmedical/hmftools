@@ -27,7 +27,7 @@ public class ExtendStructuralVariantTest {
 
         assertEquals(2, result.size());
         assertCombinedRegion(2001, 6000, 6, CopyNumberMethod.STRUCTURAL_VARIANT, result.get(0));
-        assertCombinedRegion(6001, 7000, 7, CopyNumberMethod.NONE, result.get(1));
+        assertCombinedRegion(6001, 7000, 7, CopyNumberMethod.UNKNOWN, result.get(1));
     }
 
     @Test
@@ -43,7 +43,7 @@ public class ExtendStructuralVariantTest {
 
         assertEquals(2, result.size());
         assertCombinedRegion(2001, 6000, 4, CopyNumberMethod.STRUCTURAL_VARIANT, result.get(0));
-        assertCombinedRegion(6001, 7000, 7, CopyNumberMethod.NONE, result.get(1));
+        assertCombinedRegion(6001, 7000, 7, CopyNumberMethod.UNKNOWN, result.get(1));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class ExtendStructuralVariantTest {
 
         assertEquals(2, result.size());
         assertCombinedRegion(2001, 6000, 4.5, CopyNumberMethod.STRUCTURAL_VARIANT, result.get(0));
-        assertCombinedRegion(6001, 7000, 7, CopyNumberMethod.NONE, result.get(1));
+        assertCombinedRegion(6001, 7000, 7, CopyNumberMethod.UNKNOWN, result.get(1));
     }
 
     private static CombinedRegion createSVImplied(long start, long end, double copyNumber, double baf, SegmentSupport support) {

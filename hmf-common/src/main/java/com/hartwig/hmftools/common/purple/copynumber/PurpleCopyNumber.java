@@ -14,8 +14,6 @@ public abstract class PurpleCopyNumber implements CopyNumber {
 
     public abstract int bafCount();
 
-    public abstract boolean inferred();
-
     public abstract double averageActualBAF();
 
     public abstract double averageObservedBAF();
@@ -25,6 +23,8 @@ public abstract class PurpleCopyNumber implements CopyNumber {
     public abstract SegmentSupport segmentStartSupport();
 
     public abstract SegmentSupport segmentEndSupport();
+
+    public abstract CopyNumberMethod method();
 
     public String descriptiveBAF() {
 

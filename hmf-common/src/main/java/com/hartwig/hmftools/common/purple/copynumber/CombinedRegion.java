@@ -17,7 +17,7 @@ class CombinedRegion implements GenomeRegion {
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
 
-    private CopyNumberMethod copyNumberMethod = CopyNumberMethod.NONE;
+    private CopyNumberMethod copyNumberMethod = CopyNumberMethod.UNKNOWN;
     private boolean inferredBAF;
     private List<FittedRegion> regions = Lists.newArrayList();
 
@@ -84,7 +84,7 @@ class CombinedRegion implements GenomeRegion {
     }
 
     boolean isProcessed() {
-        return copyNumberMethod != CopyNumberMethod.NONE;
+        return copyNumberMethod != CopyNumberMethod.UNKNOWN;
     }
 
     void setCopyNumberMethod(CopyNumberMethod copyNumberMethod) {

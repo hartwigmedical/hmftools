@@ -85,7 +85,7 @@ public class StructuralVariantImpliedCopyNumber {
         final double endCopyNumber = end.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
 
         final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
-        return ImmutablePurpleCopyNumber.builder().from(copyNumber).inferred(true).averageTumorCopyNumber(newCopyNumber).build();
+        return ImmutablePurpleCopyNumber.builder().from(copyNumber).averageTumorCopyNumber(newCopyNumber).build();
     }
 
     @NotNull
@@ -99,6 +99,6 @@ public class StructuralVariantImpliedCopyNumber {
     }
 
     private boolean implyCopyNumberFromSV(@NotNull final PurpleCopyNumber copyNumber) {
-        return Doubles.isZero(copyNumber.averageTumorCopyNumber()) && copyNumber.inferred();
+        return Doubles.isZero(copyNumber.averageTumorCopyNumber());
     }
 }

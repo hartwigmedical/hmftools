@@ -69,7 +69,7 @@ public enum PurpleCopyNumberFile {
                 .add(String.valueOf(copyNumber.bafCount()))
                 .add(String.valueOf(copyNumber.averageObservedBAF()))
                 .add(String.valueOf(copyNumber.averageActualBAF()))
-                .add(String.valueOf(copyNumber.inferred()))
+                .add(String.valueOf(false))
                 .add(String.valueOf(copyNumber.segmentStartSupport()))
 //                .add(String.valueOf(copyNumber.segmentEndSupport()))
                 .toString();
@@ -86,9 +86,9 @@ public enum PurpleCopyNumberFile {
                 .bafCount(Integer.valueOf(values[4]))
                 .averageObservedBAF(Double.valueOf(values[5]))
                 .averageActualBAF(Double.valueOf(values[6]))
-                .inferred(Boolean.valueOf(values[7]))
                 .segmentStartSupport(SegmentSupport.valueOf(values[8]))
                 .segmentEndSupport(SegmentSupport.NONE) //TODO: INCLUDE
+                .method(CopyNumberMethod.UNKNOWN) //TODO: INCLUDE
                 .build();
     }
 }

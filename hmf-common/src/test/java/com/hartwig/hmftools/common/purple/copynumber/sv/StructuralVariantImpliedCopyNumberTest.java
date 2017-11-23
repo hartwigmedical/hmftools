@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariant
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 
-import static junit.framework.TestCase.assertTrue;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -57,17 +55,14 @@ public class StructuralVariantImpliedCopyNumberTest {
 
         final PurpleCopyNumber bothKnown =
                 StructuralVariantImpliedCopyNumber.impliedCopyNumber(unknownCopyNumber, Optional.of(left), Optional.of(right));
-        assertTrue(bothKnown.inferred());
         assertEquals(3.5, bothKnown.averageTumorCopyNumber(), EPSILON);
 
         final PurpleCopyNumber leftKnown =
                 StructuralVariantImpliedCopyNumber.impliedCopyNumber(unknownCopyNumber, Optional.of(left), Optional.empty());
-        assertTrue(bothKnown.inferred());
         assertEquals(3, leftKnown.averageTumorCopyNumber(), EPSILON);
 
         final PurpleCopyNumber rightKnown =
                 StructuralVariantImpliedCopyNumber.impliedCopyNumber(unknownCopyNumber, Optional.empty(), Optional.of(right));
-        assertTrue(bothKnown.inferred());
         assertEquals(4, rightKnown.averageTumorCopyNumber(), EPSILON);
     }
 

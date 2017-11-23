@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -50,7 +51,7 @@ class CopyNumberDAO {
                     .start(record.getValue(COPYNUMBER.START))
                     .end(record.getValue(COPYNUMBER.END))
                     .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
-                    .inferred(false)
+                    .method(CopyNumberMethod.valueOf(record.getValue(COPYNUMBER.COPYNUMBERMETHOD)))
                     .segmentStartSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTSTARTSUPPORT)))
                     .segmentEndSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTENDSUPPORT)))
                     .averageActualBAF(record.getValue(COPYNUMBER.ACTUALBAF))
@@ -113,7 +114,7 @@ class CopyNumberDAO {
                     COPYNUMBER.CHROMOSOME,
                     COPYNUMBER.START,
                     COPYNUMBER.END,
-                    COPYNUMBER.INFERRED,
+                    COPYNUMBER.COPYNUMBERMETHOD,
                     COPYNUMBER.SEGMENTSTARTSUPPORT,
                     COPYNUMBER.SEGMENTENDSUPPORT,
                     COPYNUMBER.BAFCOUNT,
@@ -132,7 +133,7 @@ class CopyNumberDAO {
                 region.chromosome(),
                 region.start(),
                 region.end(),
-                region.inferred(),
+                region.method(),
                 region.segmentStartSupport(),
                 region.segmentEndSupport(),
                 region.bafCount(),
