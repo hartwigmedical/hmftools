@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED
 import static com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType.GAIN;
 import static com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType.LOSS;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -29,7 +28,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class AdditionalCivicMatches {
     private static final Logger LOGGER = LogManager.getLogger(AdditionalCivicMatches.class);
-    private static final String ADDITIONAL_VARIANTS_CSV = Resources.getResource("civic_additional_matches.csv").getPath();
+    private static final InputStream ADDITIONAL_MATCHES_CSV =
+            AdditionalCivicMatches.class.getResourceAsStream("/civic_additional_matches.csv");
     private static final Pattern variantIdPattern = Pattern.compile("/variants/([0-9]+)/");
     private static final String COPY_GAIN = "copy-gain";
     private static final String COPY_LOSS = "copy-loss";
@@ -39,8 +39,7 @@ public class AdditionalCivicMatches {
     static {
         additionalVariantsMapping = ArrayListMultimap.create();
         try {
-            final CSVParser parser =
-                    CSVParser.parse(new File(ADDITIONAL_VARIANTS_CSV), Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+            final CSVParser parser = CSVParser.parse(ADDITIONAL_MATCHES_CSV, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
             for (final CSVRecord record : parser) {
                 final String gene = record.get("gene").toLowerCase();
                 final List<Integer> copyGainVariants = variantIdsFromCsvEntry(record.get(COPY_GAIN));
