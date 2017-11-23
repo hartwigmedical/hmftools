@@ -22,8 +22,8 @@ public class ObservedRegionStatusFactoryTest {
     @Test
     public void testAutosome() {
         assertStatus("1", 0.00, UNKNOWN);
-        assertStatus("1", 0.19, GERMLINE_HOM_DELETION);
-        assertStatus("1", 0.20, GERMLINE_HET_DELETION);
+        assertStatus("1", 0.09, GERMLINE_HOM_DELETION);
+        assertStatus("1", 0.10, GERMLINE_HET_DELETION);
         assertStatus("1", 0.79, GERMLINE_HET_DELETION);
         assertStatus("1", 0.80, SOMATIC);
         assertStatus("1", 1.20, SOMATIC);
@@ -36,11 +36,11 @@ public class ObservedRegionStatusFactoryTest {
     public void testX() {
         assertStatus("X", 0.00, UNKNOWN);
 
-        assertStatus("X", 0.09, GERMLINE_HOM_DELETION, GERMLINE_HOM_DELETION);
-        assertStatus("X", 0.10, GERMLINE_HET_DELETION, GERMLINE_HOM_DELETION);
+        assertStatus("X", 0.049, GERMLINE_HOM_DELETION, GERMLINE_HOM_DELETION);
+        assertStatus("X", 0.05, GERMLINE_HET_DELETION, GERMLINE_HOM_DELETION);
 
-        assertStatus("X", 0.19, GERMLINE_HET_DELETION, GERMLINE_HOM_DELETION);
-        assertStatus("X", 0.20, GERMLINE_HET_DELETION, GERMLINE_HET_DELETION);
+        assertStatus("X", 0.09, GERMLINE_HET_DELETION, GERMLINE_HOM_DELETION);
+        assertStatus("X", 0.10, GERMLINE_HET_DELETION, GERMLINE_HET_DELETION);
 
         assertStatus("X", 0.39, GERMLINE_HET_DELETION, GERMLINE_HET_DELETION);
         assertStatus("X", 0.40, SOMATIC, GERMLINE_HET_DELETION);
@@ -62,8 +62,8 @@ public class ObservedRegionStatusFactoryTest {
     @Test
     public void testY() {
         assertStatus("Y", 0.00, UNKNOWN);
-        assertStatus("Y", 0.09, GERMLINE_HOM_DELETION);
-        assertStatus("Y", 0.10, GERMLINE_HET_DELETION);
+        assertStatus("Y", 0.049, GERMLINE_HOM_DELETION);
+        assertStatus("Y", 0.05, GERMLINE_HET_DELETION);
         assertStatus("Y", 0.39, GERMLINE_HET_DELETION);
         assertStatus("Y", 0.40, SOMATIC);
         assertStatus("Y", 0.60, SOMATIC);
@@ -73,15 +73,15 @@ public class ObservedRegionStatusFactoryTest {
     }
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final ObservedRegionStatus expected) {
-        assertEquals(expected, maleVictim.fromNormalRatio(chromosome, ratio));
-        assertEquals(expected, femaleVictim.fromNormalRatio(chromosome, ratio));
+        assertEquals(expected, maleVictim.fromRatio(chromosome, ratio, 0.01));
+        assertEquals(expected, femaleVictim.fromRatio(chromosome, ratio, 0.01));
 
     }
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final ObservedRegionStatus expectedMale,
             @NotNull final ObservedRegionStatus expectedFemale) {
-        assertEquals(expectedMale, maleVictim.fromNormalRatio(chromosome, ratio));
-        assertEquals(expectedFemale, femaleVictim.fromNormalRatio(chromosome, ratio));
+        assertEquals(expectedMale, maleVictim.fromRatio(chromosome, ratio, 0.01));
+        assertEquals(expectedFemale, femaleVictim.fromRatio(chromosome, ratio, 0.01));
 
     }
 

@@ -65,7 +65,7 @@ public class ObservedRegionFactory {
                     .support(region.support())
                     .observedTumorRatioCount(cobalt.tumorCount())
                     .gcContent(gc.averageGCContent())
-                    .status(statusFactory.status(region, normalRatio))
+                    .status(statusFactory.status(region, normalRatio, tumorRatio))
                     .build();
 
             result.add(copyNumber);
