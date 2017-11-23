@@ -33,7 +33,7 @@ class ExtendLongArm {
             final CombinedRegion source = regions.get(startIndex);
             final CombinedRegion target = regions.get(startIndex - 1);
             if (!target.isProcessed()) {
-                target.setTumorCopyNumber(CombinedRegionMethod.LONG_ARM, source.tumorCopyNumber());
+                target.setTumorCopyNumber(CopyNumberMethod.LONG_ARM, source.tumorCopyNumber());
             } else {
                 return;
             }

@@ -29,7 +29,7 @@ public class ExtendDiploidTest {
                 createFittedRegion(10001, 20000, 4, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.NONE);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
-        final List<FittedRegion> result = ExtendDiploid.fittedRegions(PURE, regions);
+        final List<CombinedRegion> result = ExtendDiploid.combinedRegions(PURE, regions);
         assertEquals(1, result.size());
         assertRegion(1, 20000, 3, result.get(0));
     }
@@ -41,13 +41,13 @@ public class ExtendDiploidTest {
                 createFittedRegion(10001, 20000, 4.0, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.BND);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
-        final List<FittedRegion> result = ExtendDiploid.fittedRegions(PURE, regions);
+        final List<CombinedRegion> result = ExtendDiploid.combinedRegions(PURE, regions);
         assertEquals(2, result.size());
         assertRegion(1, 10000, 3, result.get(0));
         assertRegion(10001, 20000, 4, result.get(1));
     }
 
-    private void assertRegion(long start, long end, double tumorCopyNumber, @NotNull final FittedRegion victim) {
+    private void assertRegion(long start, long end, double tumorCopyNumber, @NotNull final CombinedRegion victim) {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
         assertEquals(tumorCopyNumber, victim.tumorCopyNumber(), EPSILON);

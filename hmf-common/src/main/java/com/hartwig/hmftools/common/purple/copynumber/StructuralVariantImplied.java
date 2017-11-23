@@ -79,7 +79,7 @@ class StructuralVariantImplied {
         final double endCopyNumber = end.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
 
         final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
-        region.setTumorCopyNumber(CombinedRegionMethod.STRUCTURAL_VARIANT, newCopyNumber);
+        region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, newCopyNumber);
     }
 
     @NotNull

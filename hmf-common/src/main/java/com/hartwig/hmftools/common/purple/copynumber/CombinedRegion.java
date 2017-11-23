@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
@@ -13,10 +16,10 @@ class CombinedRegion implements GenomeRegion {
 
     private final boolean bafWeighted;
     private ModifiableFittedRegion combined;
-    private int unweightedCount = 1;
 
-    private CombinedRegionMethod copyNumberMethod = CombinedRegionMethod.NONE;
+    private CopyNumberMethod copyNumberMethod = CopyNumberMethod.NONE;
     private boolean inferredBAF;
+    private List<FittedRegion> regions = Lists.newArrayList();
 
     @Deprecated
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
@@ -33,6 +36,11 @@ class CombinedRegion implements GenomeRegion {
         if (region.status() != ObservedRegionStatus.SOMATIC) {
             clearBAFValues();
         }
+        regions.add(region);
+    }
+
+    public boolean isBafWeighted() {
+        return bafWeighted;
     }
 
     @NotNull
@@ -55,6 +63,10 @@ class CombinedRegion implements GenomeRegion {
         return inferredBAF;
     }
 
+    public List<FittedRegion> regions() {
+        return regions;
+    }
+
     public double tumorCopyNumber() {
         return combined.tumorCopyNumber();
     }
@@ -67,15 +79,15 @@ class CombinedRegion implements GenomeRegion {
         return region().bafCount();
     }
 
-    CombinedRegionMethod copyNumberMethod() {
+    CopyNumberMethod copyNumberMethod() {
         return copyNumberMethod;
     }
 
     boolean isProcessed() {
-        return copyNumberMethod != CombinedRegionMethod.NONE;
+        return copyNumberMethod != CopyNumberMethod.NONE;
     }
 
-    void setCopyNumberMethod(CombinedRegionMethod copyNumberMethod) {
+    void setCopyNumberMethod(CopyNumberMethod copyNumberMethod) {
         this.copyNumberMethod = copyNumberMethod;
     }
 
@@ -92,20 +104,23 @@ class CombinedRegion implements GenomeRegion {
         }
     }
 
+
     void extend(final FittedRegion region) {
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));
 
         if (region.start() <= combined.start()) {
+            regions.add(0, region);
             combined.setSupport(region.support());
             combined.setRatioSupport(region.ratioSupport());
+        } else {
+            regions.add(region);
         }
     }
 
     void extendWithUnweightedAverage(final FittedRegion region) {
         extend(region);
-        applyWeightedAverage(region, unweightedCount, 1);
-        unweightedCount++;
+        applyWeightedAverage(region, regions.size() - 1, 1);
     }
 
     void extendWithBAFWeightedAverage(final FittedRegion region) {
@@ -153,7 +168,7 @@ class CombinedRegion implements GenomeRegion {
         combined.setBafCount(combined.bafCount() + region.bafCount());
     }
 
-    void setTumorCopyNumber(@NotNull final CombinedRegionMethod method, double copyNumber) {
+    void setTumorCopyNumber(@NotNull final CopyNumberMethod method, double copyNumber) {
         setCopyNumberMethod(method);
         combined.setTumorCopyNumber(copyNumber);
     }

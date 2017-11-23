@@ -68,9 +68,14 @@ public class PurpleCopyNumberFactory {
                     svImpliedFactory.svImpliedCopyNumber(structuralVariants, somaticExtentions);
 
             for (HumanChromosome chromosome : HumanChromosome.values()) {
+                if (chromosome.equals(HumanChromosome._1)) {
+                    System.out.println("sdf");
+                }
+
                 if (svImplied.containsKey(chromosome.toString())) {
                     final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied.get(chromosome.toString()));
-                    final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(longArmExtended);
+                    final List<CombinedRegion> nonDiploid = ExtractNonDiploid.extractNonDiploid(longArmExtended);
+                    final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(nonDiploid);
 
                     smoothedRegions.addAll(toCopyNumber(bafExtended));
                 }
@@ -155,7 +160,7 @@ public class PurpleCopyNumberFactory {
                 .averageObservedBAF(region.region().observedBAF())
                 .averageActualBAF(region.tumorBAF())
                 .averageTumorCopyNumber(region.tumorCopyNumber())
-                .inferred(region.copyNumberMethod() != CombinedRegionMethod.BAF_WEIGHTED)
+                .inferred(region.copyNumberMethod() != CopyNumberMethod.BAF_WEIGHTED)
                 .segmentStartSupport(region.region().support())
                 .segmentEndSupport(trailingSupport)
                 .build();

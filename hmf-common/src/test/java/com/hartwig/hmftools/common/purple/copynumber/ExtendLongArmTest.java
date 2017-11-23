@@ -24,8 +24,8 @@ public class ExtendLongArmTest {
         final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, centromere));
         assertEquals(2, result.size());
 
-        assertCombinedRegion(1, 5000, 2, CombinedRegionMethod.LONG_ARM, result.get(0));
-        assertCombinedRegion(5001, 20000, 2, CombinedRegionMethod.NONE, result.get(1));
+        assertCombinedRegion(1, 5000, 2, CopyNumberMethod.LONG_ARM, result.get(0));
+        assertCombinedRegion(5001, 20000, 2, CopyNumberMethod.NONE, result.get(1));
     }
 
     @Test
@@ -36,8 +36,8 @@ public class ExtendLongArmTest {
         final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(centromere, unprocessedRight));
         assertEquals(2, result.size());
 
-        assertCombinedRegion(10001, 20000, 2, CombinedRegionMethod.NONE, result.get(0));
-        assertCombinedRegion(20001, 30000, 3, CombinedRegionMethod.NONE, result.get(1));
+        assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.NONE, result.get(0));
+        assertCombinedRegion(20001, 30000, 3, CopyNumberMethod.NONE, result.get(1));
     }
 
     @Test
@@ -49,8 +49,8 @@ public class ExtendLongArmTest {
         final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, second, centromere));
         assertEquals(2, result.size());
 
-        assertCombinedRegion(1, 10000, 2, CombinedRegionMethod.LONG_ARM, result.get(0));
-        assertCombinedRegion(10001, 20000, 2, CombinedRegionMethod.NONE, result.get(1));
+        assertCombinedRegion(1, 10000, 2, CopyNumberMethod.LONG_ARM, result.get(0));
+        assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.NONE, result.get(1));
     }
 
     @Test
@@ -58,14 +58,14 @@ public class ExtendLongArmTest {
         final CombinedRegion first = createCombinedRegion(1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion second = createCombinedRegion(5001, 10000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
-        first.setTumorCopyNumber(CombinedRegionMethod.STRUCTURAL_VARIANT, 3);
+        first.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, 3);
 
         final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, second, centromere));
         assertEquals(3, result.size());
 
-        assertCombinedRegion(1, 5000, 3, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(0));
-        assertCombinedRegion(5001, 10000, 2, CombinedRegionMethod.LONG_ARM, result.get(1));
-        assertCombinedRegion(10001, 20000, 2, CombinedRegionMethod.NONE, result.get(2));
+        assertCombinedRegion(1, 5000, 3, CopyNumberMethod.STRUCTURAL_VARIANT, result.get(0));
+        assertCombinedRegion(5001, 10000, 2, CopyNumberMethod.LONG_ARM, result.get(1));
+        assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.NONE, result.get(2));
     }
 
     @Test
@@ -73,17 +73,17 @@ public class ExtendLongArmTest {
         final CombinedRegion first = createCombinedRegion(1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion second = createCombinedRegion(5001, 10000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
-        second.setTumorCopyNumber(CombinedRegionMethod.STRUCTURAL_VARIANT, 3);
+        second.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, 3);
 
         final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, second, centromere));
         assertEquals(3, result.size());
 
-        assertCombinedRegion(1, 5000, 3, CombinedRegionMethod.NONE, result.get(0));
-        assertCombinedRegion(5001, 10000, 3, CombinedRegionMethod.STRUCTURAL_VARIANT, result.get(1));
-        assertCombinedRegion(10001, 20000, 2, CombinedRegionMethod.NONE, result.get(2));
+        assertCombinedRegion(1, 5000, 3, CopyNumberMethod.NONE, result.get(0));
+        assertCombinedRegion(5001, 10000, 3, CopyNumberMethod.STRUCTURAL_VARIANT, result.get(1));
+        assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.NONE, result.get(2));
     }
 
-    static void assertCombinedRegion(long start, long end, double expectedCopyNumber, CombinedRegionMethod expectedMethod, CombinedRegion victim) {
+    static void assertCombinedRegion(long start, long end, double expectedCopyNumber, CopyNumberMethod expectedMethod, CombinedRegion victim) {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
         assertEquals(expectedMethod, victim.copyNumberMethod());
         assertEquals(start, victim.start());

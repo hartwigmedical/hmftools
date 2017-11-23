@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -17,12 +16,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class ExtendDiploid {
-
-    @NotNull
-    static List<FittedRegion> fittedRegions(@NotNull final PurityAdjuster adjuster, @NotNull final Collection<FittedRegion> fittedRegions) {
-        final ExtendDiploid extension = new ExtendDiploid(adjuster, fittedRegions);
-        return extension.fittedRegions();
-    }
 
     @NotNull
     static List<CombinedRegion> combinedRegions(@NotNull final PurityAdjuster adjuster,
@@ -46,11 +39,6 @@ class ExtendDiploid {
         somaticExtension(fittedRegions);
     }
 
-    @NotNull
-    private List<FittedRegion> fittedRegions() {
-        return regions.stream().map(CombinedRegion::region).collect(Collectors.toList());
-    }
-
     private void somaticExtension(@NotNull final Collection<FittedRegion> fittedRegions) {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
 
@@ -61,7 +49,7 @@ class ExtendDiploid {
         int highestConfidenceIndex = nextIndex();
         while (highestConfidenceIndex > -1) {
             final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
-            highestConfidence.setCopyNumberMethod(CombinedRegionMethod.BAF_WEIGHTED);
+            highestConfidence.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
 
             LOGGER.debug("Selected region {}", toString(highestConfidence.region()));
             extendRight(highestConfidenceIndex);
