@@ -8,8 +8,10 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
@@ -19,8 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class HmfSlicerFileLoader {
-    private static final Logger LOGGER = LogManager.getLogger(HmfSlicerFileLoader.class);
+public final class HmfGenomeFileLoader {
+    private static final Logger LOGGER = LogManager.getLogger(HmfGenomeFileLoader.class);
 
     private static final String FIELD_SEPARATOR = "\t";
 
@@ -39,7 +41,7 @@ public final class HmfSlicerFileLoader {
     private static final int EXON_START_COLUMN = 12;
     private static final int EXON_END_COLUMN = 13;
 
-    private HmfSlicerFileLoader() {
+    private HmfGenomeFileLoader() {
     }
 
     @NotNull
@@ -57,11 +59,8 @@ public final class HmfSlicerFileLoader {
     @NotNull
     private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull final List<String> lines)
             throws IOException, EmptyFileException {
-        final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
 
-        String gene = "";
-        ImmutableHmfGenomeRegion.Builder builder = null;
-
+        final Map<String, ModifiableHmfGenomeRegion> geneMap = Maps.newLinkedHashMap();
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
             final String chromosome = values[CHROMOSOME_COLUMN].trim();
@@ -70,50 +69,53 @@ public final class HmfSlicerFileLoader {
                 continue;
             }
 
+            final String gene = values[GENE_COLUMN];
             final long start = Long.valueOf(values[START_COLUMN].trim());
             final long end = Long.valueOf(values[END_COLUMN].trim());
 
             if (end < start) {
                 LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
             } else {
-                if (builder == null || !gene.equals(values[GENE_COLUMN])) {
-                    if (builder != null) {
-                        final HmfGenomeRegion region = builder.build();
-                        regionMap.put(region.chromosome(), region);
-                    }
+                final ModifiableHmfGenomeRegion geneRegion =
+                        geneMap.computeIfAbsent(gene, x -> createRegion(chromosome, start, end, x, values));
 
-                    final List<Integer> entrezIds =
-                            Arrays.stream(values[ENTREZ_ID_COLUMN].split(",")).map(Integer::parseInt).collect(Collectors.toList());
-
-                    gene = values[GENE_COLUMN];
-                    builder = ImmutableHmfGenomeRegion.builder()
-                            .chromosome(chromosome)
-                            .start(start)
-                            .end(end)
-                            .transcriptID(values[TRANSCRIPT_ID_COLUMN])
-                            .transcriptVersion(Integer.valueOf(values[TRANSCRIPT_VERSION_COLUMN]))
-                            .chromosomeBand(values[CHROMOSOME_BAND_COLUMN])
-                            .entrezId(entrezIds)
-                            .gene(gene)
-                            .geneID(values[GENE_ID_COLUMN])
-                            .geneStart(Long.valueOf(values[GENE_START_COLUMN]))
-                            .geneEnd(Long.valueOf(values[GENE_END_COLUMN]));
-                }
-
-                builder.addExome(ImmutableHmfExonRegion.builder()
+                final HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
                         .exonID(values[EXON_ID_COLUMN])
                         .start(Long.valueOf(values[EXON_START_COLUMN]))
                         .end(Long.valueOf(values[EXON_END_COLUMN]))
-                        .build());
+                        .build();
+
+                geneRegion.addExome(exonRegion);
             }
         }
 
-        if (builder != null) {
-            final HmfGenomeRegion region = builder.build();
-            regionMap.put(region.chromosome(), region);
+        final SortedSetMultimap<String, HmfGenomeRegion> regionMap = TreeMultimap.create();
+        for (ModifiableHmfGenomeRegion geneRegion : geneMap.values()) {
+            regionMap.put(geneRegion.chromosome(), geneRegion);
         }
 
         return regionMap;
     }
+
+    private static ModifiableHmfGenomeRegion createRegion(final String chromosome, final long start, final long end,
+            @NotNull final String gene, @NotNull final String[] values) {
+
+        final List<Integer> entrezIds =
+                Arrays.stream(values[ENTREZ_ID_COLUMN].split(",")).map(Integer::parseInt).collect(Collectors.toList());
+
+        return ModifiableHmfGenomeRegion.create()
+                .setChromosome(chromosome)
+                .setStart(start)
+                .setEnd(end)
+                .setTranscriptID(values[TRANSCRIPT_ID_COLUMN])
+                .setTranscriptVersion(Integer.valueOf(values[TRANSCRIPT_VERSION_COLUMN]))
+                .setChromosomeBand(values[CHROMOSOME_BAND_COLUMN])
+                .setEntrezId(entrezIds)
+                .setGene(gene)
+                .setGeneID(values[GENE_ID_COLUMN])
+                .setGeneStart(Long.valueOf(values[GENE_START_COLUMN]))
+                .setGeneEnd(Long.valueOf(values[GENE_END_COLUMN]));
+    }
+
 }

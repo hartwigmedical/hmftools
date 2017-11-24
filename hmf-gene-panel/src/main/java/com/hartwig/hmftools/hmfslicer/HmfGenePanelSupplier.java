@@ -12,8 +12,8 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeFileLoader;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfSlicerFileLoader;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +28,7 @@ public enum HmfGenePanelSupplier {
     @NotNull
     public static SortedSetMultimap<String, HmfGenomeRegion> allGeneMap() throws IOException, EmptyFileException {
         final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/all_genes.tsv");
-        return HmfSlicerFileLoader.fromInputStream(inputStream);
+        return HmfGenomeFileLoader.fromInputStream(inputStream);
     }
 
     @NotNull
@@ -51,7 +51,7 @@ public enum HmfGenePanelSupplier {
 
     @NotNull
     public static List<HmfGenomeRegion> fromFile(@NotNull final String filename) throws IOException, EmptyFileException {
-        return toList(HmfSlicerFileLoader.fromFile(filename));
+        return toList(HmfGenomeFileLoader.fromFile(filename));
     }
 
     @NotNull
