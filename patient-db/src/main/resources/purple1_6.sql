@@ -32,8 +32,9 @@ CREATE TABLE copyNumberCluster
 ALTER TABLE copyNumberRegion ADD COLUMN gcContent DOUBLE PRECISION not null AFTER observedTumorRatioCount;
 
 
-ALTER TABLE copyNumber ADD COLUMN copyNumberMethod varchar(255) NOT NULL AFTER copyNumber;
-ALTER TABLE copyNumber DROP COLUMN inferred;
+ALTER TABLE copyNumber
+    ADD COLUMN copyNumberMethod varchar(255) NOT NULL AFTER copyNumber,
+    DROP COLUMN inferred;
 
 DROP TABLE IF EXISTS copyNumberGermline;
 CREATE TABLE copyNumberGermline

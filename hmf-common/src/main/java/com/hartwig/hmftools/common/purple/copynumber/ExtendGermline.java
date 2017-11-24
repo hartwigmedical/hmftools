@@ -25,15 +25,15 @@ class ExtendGermline {
 
     @NotNull
     List<CombinedRegion> extendGermlineAmplifications(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<ObservedRegionStatus> eligibleStatus = EnumSet.of(ObservedRegionStatus.GERMLINE_AMPLIFICATION,
-                ObservedRegionStatus.GERMLINE_HET_DELETION,
-                ObservedRegionStatus.GERMLINE_HOM_DELETION);
+        final EnumSet<ObservedRegionStatus> eligibleStatus = EnumSet.of(ObservedRegionStatus.GERMLINE_AMPLIFICATION);
         return extendGermline(eligibleStatus, regions);
     }
 
     @NotNull
     List<CombinedRegion> extendGermlineAmplificationsAndDeletions(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<ObservedRegionStatus> eligibleStatus = EnumSet.of(ObservedRegionStatus.GERMLINE_AMPLIFICATION);
+        final EnumSet<ObservedRegionStatus> eligibleStatus = EnumSet.of(ObservedRegionStatus.GERMLINE_AMPLIFICATION,
+                ObservedRegionStatus.GERMLINE_HET_DELETION,
+                ObservedRegionStatus.GERMLINE_HOM_DELETION);
         return extendGermline(eligibleStatus, regions);
     }
 
