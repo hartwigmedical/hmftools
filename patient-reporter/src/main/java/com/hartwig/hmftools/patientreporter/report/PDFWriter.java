@@ -513,7 +513,8 @@ public class PDFWriter implements ReportWriter {
                 "The data on which this report is based has passed all internal quality controls.",
                 "When no mutations are reported, the absence of mutations is not guaranteed.",
                 "The findings in this report are not meant to be used for clinical decision making without validation of "
-                        + "findings using certified assays.");
+                        + "findings using certified assays.",
+                "For feedback or complaints please contact qualitysystem@hartwigmedicalfoundation.nl.");
         //@formatter:on
         return toList("Disclaimer", lines);
     }
