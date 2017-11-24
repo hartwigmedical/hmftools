@@ -72,7 +72,7 @@ public class GeneCopyNumberBuilderTest {
 
     private void assertCopyNumber(int count, double expectedMin, double expectedMean, double expectedMax) {
         final GeneCopyNumber geneCopyNumber = victim.build();
-        assertEquals(count, geneCopyNumber.regions());
+        assertEquals(count, geneCopyNumber.somaticRegions());
         assertEquals(expectedMin, geneCopyNumber.minCopyNumber(), EPSILON);
         assertEquals(expectedMean, geneCopyNumber.meanCopyNumber(), EPSILON);
         assertEquals(expectedMax, geneCopyNumber.maxCopyNumber(), EPSILON);

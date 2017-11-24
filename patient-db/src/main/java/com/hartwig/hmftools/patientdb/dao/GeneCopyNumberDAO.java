@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep13;
+import org.jooq.InsertValuesStep15;
 
 class GeneCopyNumberDAO {
 
@@ -29,21 +29,43 @@ class GeneCopyNumberDAO {
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep13 inserter = context.insertInto(GENECOPYNUMBER, GENECOPYNUMBER.SAMPLEID,
-                    GENECOPYNUMBER.CHROMOSOME, GENECOPYNUMBER.START, GENECOPYNUMBER.END, GENECOPYNUMBER.GENE,
-                    GENECOPYNUMBER.MINCOPYNUMBER, GENECOPYNUMBER.MAXCOPYNUMBER, GENECOPYNUMBER.MEANCOPYNUMBER,
-                    GENECOPYNUMBER.REGIONS, GENECOPYNUMBER.TRANSCRIPTID, GENECOPYNUMBER.TRANSCRIPTVERSION,
-                    GENECOPYNUMBER.CHROMOSOMEBAND, COPYNUMBER.MODIFIED);
+            InsertValuesStep15 inserter = context.insertInto(GENECOPYNUMBER,
+                    GENECOPYNUMBER.SAMPLEID,
+                    GENECOPYNUMBER.CHROMOSOME,
+                    GENECOPYNUMBER.START,
+                    GENECOPYNUMBER.END,
+                    GENECOPYNUMBER.GENE,
+                    GENECOPYNUMBER.MINCOPYNUMBER,
+                    GENECOPYNUMBER.MAXCOPYNUMBER,
+                    GENECOPYNUMBER.MEANCOPYNUMBER,
+                    GENECOPYNUMBER.SOMATICREGIONS,
+                    GENECOPYNUMBER.GERMLINEHOMREGIONS,
+                    GENECOPYNUMBER.GERMLINEHETREGIONS,
+                    GENECOPYNUMBER.TRANSCRIPTID,
+                    GENECOPYNUMBER.TRANSCRIPTVERSION,
+                    GENECOPYNUMBER.CHROMOSOMEBAND,
+                    COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
 
     }
 
-    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep13 inserter, String sample,
-            GeneCopyNumber gene) {
-        inserter.values(sample, gene.chromosome(), gene.start(), gene.end(), gene.gene(), gene.minCopyNumber(),
-                gene.maxCopyNumber(), gene.meanCopyNumber(), gene.regions(), gene.transcriptID(),
-                gene.transcriptVersion(), gene.chromosomeBand(), timestamp);
+    private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep15 inserter, String sample, GeneCopyNumber gene) {
+        inserter.values(sample,
+                gene.chromosome(),
+                gene.start(),
+                gene.end(),
+                gene.gene(),
+                gene.minCopyNumber(),
+                gene.maxCopyNumber(),
+                gene.meanCopyNumber(),
+                gene.somaticRegions(),
+                gene.germlineHomRegions(),
+                gene.germlineHet2HomRegions(),
+                gene.transcriptID(),
+                gene.transcriptVersion(),
+                gene.chromosomeBand(),
+                timestamp);
     }
 }

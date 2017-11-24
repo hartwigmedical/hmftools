@@ -11,7 +11,8 @@ public enum SegmentSupport {
     MULTIPLE,
     CENTROMERE,
     TELOMERE,
-    NONE;
+    NONE,
+    UNKNOWN;
 
     public static SegmentSupport fromVariant(StructuralVariantType type) {
         return SegmentSupport.valueOf(type.toString());

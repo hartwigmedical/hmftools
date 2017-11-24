@@ -14,6 +14,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -28,13 +29,22 @@ public class PurpleCopyNumberFactory {
     @NotNull
     private final List<PurpleCopyNumber> highConfidenceRegions;
     @NotNull
-    private final List<PurpleCopyNumber> smoothedRegions;
+    private final List<PurpleCopyNumber> somatics;
+    @NotNull
+    private final List<PurpleCopyNumber> somaticsWithGermlineDeletions;
+    @NotNull
+    private final List<PurpleCopyNumber> germlineDeletions;
 
-    public PurpleCopyNumberFactory(boolean experimental, @NotNull final PurityAdjuster purityAdjuster,
+    private final ExtendGermline extendGermline;
+
+    public PurpleCopyNumberFactory(boolean experimental, @NotNull final Gender gender, @NotNull final PurityAdjuster purityAdjuster,
             final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
         this.purityAdjuster = purityAdjuster;
-        smoothedRegions = Lists.newArrayList();
+        somatics = Lists.newArrayList();
+        somaticsWithGermlineDeletions = Lists.newArrayList();
+        germlineDeletions = Lists.newArrayList();
         highConfidenceRegions = Lists.newArrayList();
+        extendGermline = new ExtendGermline(gender);
 
         final Set<String> orderedChromosomes =
                 fittedRegions.stream().map(GenomeRegion::chromosome).collect(Collectors.toCollection(LinkedHashSet::new));
@@ -56,7 +66,7 @@ public class PurpleCopyNumberFactory {
 
             // Old Method
             if (!experimental) {
-                smoothedRegions.addAll(RegionStepFilter.filter(toCopyNumberOld(smoothFittedRegions)));
+                somatics.addAll(RegionStepFilter.filter(toCopyNumberOld(smoothFittedRegions)));
             }
         }
 
@@ -67,29 +77,46 @@ public class PurpleCopyNumberFactory {
                     svImpliedFactory.svImpliedCopyNumber(structuralVariants, somaticExtentions);
 
             for (HumanChromosome chromosome : HumanChromosome.values()) {
-                if (chromosome.equals(HumanChromosome._1)) {
-                    System.out.println("sdf");
-                }
-
                 if (svImplied.containsKey(chromosome.toString())) {
                     final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied.get(chromosome.toString()));
-                    final List<CombinedRegion> nonDiploid = ExtractNonDiploid.extractNonDiploid(longArmExtended);
-                    final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(nonDiploid);
+                    final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(longArmExtended);
 
-                    smoothedRegions.addAll(toCopyNumber(bafExtended));
+                    final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
+                    final List<CombinedRegion> somaticsAndGermlineDeletions =
+                            extendGermline.extendGermlineAmplificationsAndDeletions(bafExtended);
+                    final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
+
+                    this.somatics.addAll(toCopyNumber(somatics));
+                    this.somaticsWithGermlineDeletions.addAll(toCopyNumber(somaticsAndGermlineDeletions));
+                    this.germlineDeletions.addAll(germlineDeletions.stream()
+                            .map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN))
+                            .collect(toList()));
                 }
             }
         }
 
-        Collections.sort(smoothedRegions);
+        Collections.sort(somatics);
     }
 
+    @NotNull
+    @Deprecated
     public List<PurpleCopyNumber> highConfidenceRegions() {
         return highConfidenceRegions;
     }
 
-    public List<PurpleCopyNumber> smoothedRegions() {
-        return smoothedRegions;
+    @NotNull
+    public List<PurpleCopyNumber> somaticCopyNumbers() {
+        return somatics;
+    }
+
+    @NotNull
+    public List<PurpleCopyNumber> germlineDeletions() {
+        return germlineDeletions;
+    }
+
+    @NotNull
+    public List<PurpleCopyNumber> somaticsWithGermlineDeletions() {
+        return somaticsWithGermlineDeletions;
     }
 
     private List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
@@ -122,11 +149,11 @@ public class PurpleCopyNumberFactory {
         for (int i = 0; i < regions.size() - 1; i++) {
             final CombinedRegion region = regions.get(i);
             final CombinedRegion next = regions.get(i + 1);
-            result.add(create(region, next.region().support()));
+            result.add(toCopyNumber(region, next.region().support()));
         }
 
         if (!regions.isEmpty()) {
-            result.add(create(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
+            result.add(toCopyNumber(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
         }
 
         return result;
@@ -150,7 +177,7 @@ public class PurpleCopyNumberFactory {
     }
 
     @NotNull
-    private PurpleCopyNumber create(@NotNull final CombinedRegion region, @NotNull final SegmentSupport trailingSupport) {
+    private PurpleCopyNumber toCopyNumber(@NotNull final CombinedRegion region, @NotNull final SegmentSupport trailingSupport) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(region.chromosome())
                 .start(region.start())

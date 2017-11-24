@@ -19,7 +19,11 @@ public interface GeneCopyNumber extends GeneRegion, CopyNumber {
 
     double meanCopyNumber();
 
-    int regions();
+    int somaticRegions();
+
+    int germlineHet2HomRegions();
+
+    int germlineHomRegions();
 
     @Override
     default int value() {

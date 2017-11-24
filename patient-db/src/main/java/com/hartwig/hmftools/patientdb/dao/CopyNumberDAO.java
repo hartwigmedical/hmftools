@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.COPYNUMBERCLUSTER;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.COPYNUMBERGERMLINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumberregion.COPYNUMBERREGION;
 
@@ -125,7 +126,30 @@ class CopyNumberDAO {
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
+    }
 
+
+    void writeGermlineCopyNumber(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+        context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
+
+        for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
+            InsertValuesStep12 inserter = context.insertInto(COPYNUMBERGERMLINE,
+                    COPYNUMBERGERMLINE.SAMPLEID,
+                    COPYNUMBERGERMLINE.CHROMOSOME,
+                    COPYNUMBERGERMLINE.START,
+                    COPYNUMBERGERMLINE.END,
+                    COPYNUMBERGERMLINE.COPYNUMBERMETHOD,
+                    COPYNUMBERGERMLINE.SEGMENTSTARTSUPPORT,
+                    COPYNUMBERGERMLINE.SEGMENTENDSUPPORT,
+                    COPYNUMBERGERMLINE.BAFCOUNT,
+                    COPYNUMBERGERMLINE.OBSERVEDBAF,
+                    COPYNUMBERGERMLINE.ACTUALBAF,
+                    COPYNUMBERGERMLINE.COPYNUMBER,
+                    COPYNUMBERGERMLINE.MODIFIED);
+            splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
+            inserter.execute();
+        }
     }
 
     private void addCopynumberRecord(Timestamp timestamp, InsertValuesStep12 inserter, String sample, PurpleCopyNumber region) {

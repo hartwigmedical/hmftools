@@ -13,7 +13,9 @@ class GeneCopyNumberBuilder {
 
     private double minCopyNumber = Double.MAX_VALUE;
     private double maxCopyNumber = -Double.MAX_VALUE;
-    private int count;
+    private int somaticCount;
+    private int homCount;
+    private int het2HomCount;
     private double cumulativeCopyNumber;
 
     private double previousCopyNumber;
@@ -50,7 +52,16 @@ class GeneCopyNumberBuilder {
             cumulativeCopyNumber += overlap * currentCopyNumber;
 
             if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
-                count++;
+                switch (copyNumber.method()) {
+                    case GERMLINE_HOM_DELETION:
+                        homCount++;
+                        break;
+                    case GERMLINE_HET2HOM_DELETION:
+                        het2HomCount++;
+                        break;
+                    default:
+                        somaticCount++;
+                }
             }
 
             previousCopyNumber = currentCopyNumber;
@@ -62,7 +73,9 @@ class GeneCopyNumberBuilder {
         return builder.maxCopyNumber(maxCopyNumber)
                 .minCopyNumber(minCopyNumber)
                 .meanCopyNumber(cumulativeCopyNumber / totalBases)
-                .regions(count)
+                .somaticRegions(somaticCount)
+                .germlineHomRegions(homCount)
+                .germlineHet2HomRegions(het2HomCount)
                 .build();
     }
 }

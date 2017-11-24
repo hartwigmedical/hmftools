@@ -134,6 +134,25 @@ CREATE TABLE copyNumber
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS copyNumberGermline;
+CREATE TABLE copyNumberGermline
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    start int not null,
+    end int not null,
+    segmentStartSupport varchar(255) NOT NULL,
+    segmentEndSupport varchar(255) NOT NULL,
+    bafCount int not null,
+    observedBaf DOUBLE PRECISION not null,
+    actualBaf DOUBLE PRECISION not null,
+    copyNumber DOUBLE PRECISION not null,
+    copyNumberMethod varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
 DROP TABLE IF EXISTS purityRange;
 CREATE TABLE purityRange
 (   id int NOT NULL AUTO_INCREMENT,
@@ -268,7 +287,9 @@ CREATE TABLE geneCopyNumber
     minCopyNumber DOUBLE PRECISION not null,
     maxCopyNumber DOUBLE PRECISION not null,
     meanCopyNumber DOUBLE PRECISION not null,
-    regions int not null,
+    somaticRegions int not null,
+    germlineHomRegions int not null,
+    germlineHetRegions int not null,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(gene)

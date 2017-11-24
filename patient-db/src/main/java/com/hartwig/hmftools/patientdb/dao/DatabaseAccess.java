@@ -104,6 +104,10 @@ public class DatabaseAccess {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
+    public void writeGermlineCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+        copyNumberDAO.writeGermlineCopyNumber(sample, copyNumbers);
+    }
+
     public void writeCopynumberRegions(@NotNull final String sample, @NotNull List<FittedRegion> regions) {
         copyNumberDAO.writeCopyNumberRegions(sample, regions);
     }
