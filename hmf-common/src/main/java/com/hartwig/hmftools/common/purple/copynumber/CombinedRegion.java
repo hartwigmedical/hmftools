@@ -20,6 +20,7 @@ class CombinedRegion implements GenomeRegion {
     private CopyNumberMethod copyNumberMethod = CopyNumberMethod.UNKNOWN;
     private boolean inferredBAF;
     private List<FittedRegion> regions = Lists.newArrayList();
+    private int unweightedCount = 1;
 
     @Deprecated
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
@@ -120,7 +121,8 @@ class CombinedRegion implements GenomeRegion {
 
     void extendWithUnweightedAverage(final FittedRegion region) {
         extend(region);
-        applyWeightedAverage(region, regions.size() - 1, 1);
+        applyWeightedAverage(region, unweightedCount, 1);
+        unweightedCount++;
     }
 
     void extendWithBAFWeightedAverage(final FittedRegion region) {
