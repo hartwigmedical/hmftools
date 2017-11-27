@@ -21,7 +21,7 @@ public class COSMICGeneFusions {
 
     private static final int FIVE_COLUMN = 0;
     private static final int THREE_COLUMN = 1;
-    private static final int URL_COLUMNN = 3;
+    private static final int URL_COLUMN = 2;
     private static final int FIELD_COUNT = 3;
 
     private static final String FIELD_SEPARATOR = ",";
@@ -56,7 +56,7 @@ public class COSMICGeneFusions {
             final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
                 items.add(ImmutableCOSMICGeneFusionData.of(gene(parts[FIVE_COLUMN]), transcript(parts[FIVE_COLUMN]),
-                        gene(parts[THREE_COLUMN]), transcript(parts[THREE_COLUMN])));
+                        gene(parts[THREE_COLUMN]), transcript(parts[THREE_COLUMN]), parts[URL_COLUMN]));
                 countFive.compute(gene(parts[FIVE_COLUMN]), (k, v) -> v == null ? 1 : v + 1);
                 countThree.compute(gene(parts[THREE_COLUMN]), (k, v) -> v == null ? 1 : v + 1);
             } else if (parts.length > 0) {

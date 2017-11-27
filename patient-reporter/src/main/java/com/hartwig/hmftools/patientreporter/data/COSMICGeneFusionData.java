@@ -19,4 +19,7 @@ public abstract class COSMICGeneFusionData {
 
     @Nullable
     public abstract String threeTranscript();
+
+    @NotNull
+    public abstract String cosmicURL();
 }

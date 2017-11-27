@@ -1,4 +1,4 @@
-5' Partner, 3' Partner
-EWSR1,ATF1
-EWSR1,ZNF444_ENST00000337080
-TMPRSS2,PNPLA7
+5' Partner, 3' Partner, URL
+EWSR1,ATF1,http://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=5874&gid=1541
+EWSR1,ZNF444_ENST00000337080,http://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=95119&gid=1541
+TMPRSS2,PNPLA7,http://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=95119&gid=1541
