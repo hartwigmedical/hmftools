@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
@@ -70,7 +71,14 @@ class StructuralVariantImplied {
         return copyNumbers;
     }
 
-    private void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region, final Optional<StructuralVariantPloidy> start,
+
+    private static void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region, final Optional<StructuralVariantPloidy> start,
+            final Optional<StructuralVariantPloidy> end) {
+        region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, inferCopyNumberFromStructuralVariants(start, end));
+    }
+
+    @VisibleForTesting
+    static double inferCopyNumberFromStructuralVariants(final Optional<StructuralVariantPloidy> start,
             final Optional<StructuralVariantPloidy> end) {
         final double startWeight = start.map(StructuralVariantPloidy::impliedRightCopyNumberWeight).orElse(0d);
         final double startCopyNumber = start.map(StructuralVariantPloidy::impliedRightCopyNumber).orElse(0d);
@@ -78,8 +86,7 @@ class StructuralVariantImplied {
         final double endWeight = end.map(StructuralVariantPloidy::impliedLeftCopyNumberWeight).orElse(0d);
         final double endCopyNumber = end.map(StructuralVariantPloidy::impliedLeftCopyNumber).orElse(0d);
 
-        final double newCopyNumber = (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
-        region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, newCopyNumber);
+        return (startCopyNumber * startWeight + endCopyNumber * endWeight) / (startWeight + endWeight);
     }
 
     @NotNull
