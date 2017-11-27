@@ -74,6 +74,10 @@ class Analysis {
                 && breakpoint.Position <= read.getAlignmentEnd();
     }
 
+    private static boolean overlap(final Pair<SAMRecord, SAMRecord> pair, final Location breakpoint) {
+        return stream(pair).anyMatch(r -> overlap(r, breakpoint));
+    }
+
     private static boolean clippedOnCorrectSide(final SAMRecord record, final int orientation) {
         return (orientation > 0 ? record.getCigar().isRightClipped() : record.getCigar().isLeftClipped());
     }
@@ -117,6 +121,9 @@ class Analysis {
 
     private SampleStats collectEvidence(final HMFVariantContext ctx, final SamReader reader, final Pair<Location, Location> breakpoints) {
 
+        final Location bp1 = breakpoints.getLeft();
+        final Location bp2 = breakpoints.getRight();
+
         final SampleStats result = new SampleStats();
         final Pair<Integer, Integer> ctxOrientation = Pair.of(ctx.OrientationBP1, ctx.OrientationBP2);
 
@@ -141,6 +148,15 @@ class Analysis {
                 currentReads.add(record);
             }
 
+            boolean pr_support = false;
+            boolean bp1_sr_support = false;
+            boolean bp2_sr_support = false;
+
+            boolean bp1_pr_normal = false;
+            boolean bp1_sr_normal = false;
+            boolean bp2_pr_normal = false;
+            boolean bp2_sr_normal = false;
+
             for (final Pair<SAMRecord, SAMRecord> pair : pairs) {
 
                 final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
@@ -152,112 +168,99 @@ class Analysis {
 
                 final int MAX_INTRA_PAIR_LENGTH = 400;
                 final boolean intraPairLength = (ctx.OrientationBP1 > 0
-                        ? breakpoints.getLeft().Position - pair.getLeft().getAlignmentEnd()
-                        : pair.getLeft().getAlignmentStart() - breakpoints.getLeft().Position) + (ctx.OrientationBP2 > 0
-                        ? breakpoints.getRight().Position - pair.getRight().getAlignmentEnd()
-                        : pair.getRight().getAlignmentStart() - breakpoints.getRight().Position) < MAX_INTRA_PAIR_LENGTH;
-
-                LOGGER.trace("collectEvidence {} {}->{} {} {}->{} correctOrientation({}) correctChromosome({}) correctPosition({})",
-                        pair.getLeft().getReadName(), pair.getLeft().getAlignmentStart(), pair.getLeft().getMateAlignmentStart(),
-                        pair.getRight().getReadName(), pair.getRight().getAlignmentStart(), pair.getRight().getMateAlignmentStart(),
-                        correctOrientation, correctChromosome, intraPairLength);
+                        ? bp1.Position - pair.getLeft().getAlignmentEnd()
+                        : pair.getLeft().getAlignmentStart() - bp1.Position) + (ctx.OrientationBP2 > 0 ? breakpoints.getRight().Position
+                        - pair.getRight().getAlignmentEnd() : pair.getRight().getAlignmentStart() - bp2.Position) < MAX_INTRA_PAIR_LENGTH;
 
                 boolean support = correctOrientation && correctChromosome && intraPairLength;
                 if (support) {
 
-                    final int left_outer = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 > 0).compareTo(breakpoints.getLeft());
-                    final int left_inner = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 < 0).compareTo(breakpoints.getLeft());
-                    final int right_outer =
-                            Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 > 0).compareTo(breakpoints.getRight());
-                    final int right_inner =
-                            Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 < 0).compareTo(breakpoints.getRight());
-
-                    LOGGER.trace("collectEvidence {} {}->{} {} {}->{} leftOuter({}) leftInner({}) rightInner({}) rightOuter({})",
-                            pair.getLeft().getReadName(), pair.getLeft().getAlignmentStart(), pair.getLeft().getMateAlignmentStart(),
-                            pair.getRight().getReadName(), pair.getRight().getAlignmentStart(), pair.getRight().getMateAlignmentStart(),
-                            left_outer, left_inner, right_inner, right_outer);
+                    final int left_outer = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 > 0).compareTo(bp1);
+                    final int right_outer = Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 > 0).compareTo(bp2);
 
                     if (ctx.OrientationBP1 > 0) {
                         support &= left_outer < 0;
-                        //support &= left_inner <= 0;
                     } else {
                         support &= left_outer > 0;
-                        //support &= left_inner >= 0;
                     }
                     if (ctx.OrientationBP2 > 0) {
                         support &= right_outer < 0;
-                        //support &= right_inner <= 0;
                     } else {
                         support &= right_outer > 0;
-                        //support &= right_inner >= 0;
                     }
 
                 }
 
+                pr_support |= support;
                 if (support) {
-
-                    final boolean clip_bp1 = exactlyClipsBreakpoint(pair.getLeft(), breakpoints.getLeft(), ctx.OrientationBP1);
-                    final boolean clip_bp2 = exactlyClipsBreakpoint(pair.getRight(), breakpoints.getRight(), ctx.OrientationBP2);
-
-                    if (clip_bp1) {
-                        result.BP1_Stats.PR_SR_Support++;
-                    } else {
-                        result.BP1_Stats.PR_Only_Support++;
-                    }
-
-                    if (clip_bp2) {
-                        result.BP2_Stats.PR_SR_Support++;
-                    } else {
-                        result.BP2_Stats.PR_Only_Support++;
-                    }
-
+                    bp1_sr_support |= exactlyClipsBreakpoint(pair.getLeft(), bp1, ctx.OrientationBP1);
+                    bp2_sr_support |= exactlyClipsBreakpoint(pair.getRight(), bp2, ctx.OrientationBP2);
                     result.PR_Evidence.add(pair);
-
                 }
 
                 if (proper || secondary) {
 
-                    final boolean clip_bp1 =
-                            exactlyClipsBreakpoint(ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), breakpoints.getLeft(),
-                                    ctx.OrientationBP1);
-                    final boolean clip_bp2 =
-                            exactlyClipsBreakpoint(ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), breakpoints.getRight(),
-                                    ctx.OrientationBP2);
+                    final boolean clips_bp1 =
+                            exactlyClipsBreakpoint(ctx.OrientationBP1 > 0 ? pair.getRight() : pair.getLeft(), bp1, ctx.OrientationBP1);
+                    final boolean clips_bp2 =
+                            exactlyClipsBreakpoint(ctx.OrientationBP2 > 0 ? pair.getRight() : pair.getLeft(), bp2, ctx.OrientationBP2);
 
-                    final boolean span_bp1 = span(pair, breakpoints.getLeft());
-                    final boolean span_bp2 = span(pair, breakpoints.getRight());
-                    final boolean overlap_bp1 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getLeft()));
-                    final boolean overlap_bp2 = stream(pair).anyMatch(r -> overlap(r, breakpoints.getRight()));
-
-                    if (clip_bp1) {
-                        result.BP1_Stats.SR_Only_Support++;
-                        result.SR_Evidence.add(pair);
-                        continue;
-                    }
-                    if (clip_bp2) {
-                        result.BP2_Stats.SR_Only_Support++;
-                        result.SR_Evidence.add(pair);
-                        continue;
-                    }
+                    final boolean span_bp1 = span(pair, bp1);
+                    final boolean span_bp2 = span(pair, bp2);
+                    final boolean overlap_bp1 = overlap(pair, bp1);
+                    final boolean overlap_bp2 = overlap(pair, bp2);
 
                     if (span_bp1) {
-                        if (overlap_bp1) {
-                            result.BP1_Stats.PR_SR_Normal++;
+                        if (clips_bp1) {
+                            bp1_sr_support = true;
+                        } else if (overlap_bp1) {
+                            bp1_pr_normal = true;
+                            bp1_sr_normal = true;
                         } else {
-                            result.BP1_Stats.PR_Only_Normal++;
+                            bp1_pr_normal = true;
                         }
                     }
                     if (span_bp2) {
-                        if (overlap_bp2) {
-                            result.BP2_Stats.PR_SR_Normal++;
+                        if (clips_bp2) {
+                            bp2_sr_support = true;
+                        } else if (overlap_bp2) {
+                            bp2_pr_normal = true;
+                            bp2_sr_normal = true;
                         } else {
-                            result.BP2_Stats.PR_Only_Normal++;
+                            bp2_pr_normal = true;
                         }
                     }
-
                 }
+
+            } // next pair in reads
+
+            // increment counts
+
+            if (bp1_sr_support && pr_support) {
+                result.BP1_Stats.PR_SR_Support++;
+            } else if (bp1_sr_support) {
+                result.BP1_Stats.SR_Only_Support++;
+            } else if (pr_support) {
+                result.BP1_Stats.PR_Only_Support++;
+            } else if (bp1_pr_normal && bp1_sr_normal) {
+                result.BP1_Stats.PR_SR_Normal++;
+            } else if (bp1_pr_normal) {
+                result.BP1_Stats.PR_Only_Normal++;
             }
-        }
+
+            if (bp2_sr_support && pr_support) {
+                result.BP2_Stats.PR_SR_Support++;
+            } else if (bp2_sr_support) {
+                result.BP2_Stats.SR_Only_Support++;
+            } else if (pr_support) {
+                result.BP2_Stats.PR_Only_Support++;
+            } else if (bp2_pr_normal && bp2_sr_normal) {
+                result.BP2_Stats.PR_SR_Normal++;
+            } else if (bp2_pr_normal) {
+                result.BP2_Stats.PR_Only_Normal++;
+            }
+
+        } // next read collection
 
         iterator.close();
         return result;
