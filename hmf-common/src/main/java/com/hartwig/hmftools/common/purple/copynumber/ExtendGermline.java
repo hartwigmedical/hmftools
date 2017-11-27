@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 class ExtendGermline {
 
-    private static final double AMPLIFICATION_TOLERANCE = 0.7;
+    private static final double AMPLIFICATION_TOLERANCE = 1;
 
     private final Gender gender;
 
