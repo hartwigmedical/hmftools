@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +37,7 @@ class ExtendDiploidBAF {
             if (target.bafCount() > 0 || target.isInferredBAF()) {
                 return;
             }
-            target.setInferredTumorBAF(SmoothBAF.estimateBAF(target.tumorCopyNumber(), source.tumorBAF(), source.tumorCopyNumber()));
+            target.setInferredTumorBAF(estimateBAF(target.tumorCopyNumber(), source.tumorBAF(), source.tumorCopyNumber()));
         }
     }
 
@@ -49,7 +50,7 @@ class ExtendDiploidBAF {
             if (target.bafCount() > 0 || target.isInferredBAF()) {
                 return;
             }
-            target.setInferredTumorBAF(SmoothBAF.estimateBAF(target.tumorCopyNumber(), source.tumorBAF(), source.tumorCopyNumber()));
+            target.setInferredTumorBAF(estimateBAF(target.tumorCopyNumber(), source.tumorBAF(), source.tumorCopyNumber()));
         }
     }
 
@@ -67,5 +68,23 @@ class ExtendDiploidBAF {
         }
 
         return indexOfLargestBaf;
+    }
+
+    static double estimateBAF(double copyNumber, double neighbourBAF, double neighbourCopyNumber) {
+
+        if (Doubles.isZero(copyNumber)) {
+            return 0;
+        }
+
+        if (Doubles.lessOrEqual(copyNumber, 1)) {
+            return 1;
+        }
+
+        double neighbourMajorAllele = Math.min(1d, neighbourBAF) * neighbourCopyNumber;
+
+        double regionMajorAllele = Math.max(0, neighbourMajorAllele - neighbourCopyNumber + copyNumber);
+        double regionBAF = regionMajorAllele / copyNumber;
+
+        return 0.5 + Math.abs(regionBAF - 0.5);
     }
 }

@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class SmoothBAFTest {
+public class ExtendDiploidBAFTest {
 
     private static final double EPSILON = 1e-10;
 
@@ -44,7 +44,7 @@ public class SmoothBAFTest {
     }
 
     private void assertBAF(double expectedBAF, double regionCopyNumber, double neighbourBAF, double neighbourCopyNumber) {
-        assertEquals(expectedBAF, SmoothBAF.estimateBAF(regionCopyNumber, neighbourBAF, neighbourCopyNumber), EPSILON);
+        assertEquals(expectedBAF, ExtendDiploidBAF.estimateBAF(regionCopyNumber, neighbourBAF, neighbourCopyNumber), EPSILON);
     }
 
 }

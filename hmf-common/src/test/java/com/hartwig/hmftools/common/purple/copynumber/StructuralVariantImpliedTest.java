@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class StructuralVariantImpliedTest {
@@ -30,17 +29,17 @@ public class StructuralVariantImpliedTest {
     private static final int PLOIDY = 1;
     private static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1, 1);
 
-    @Ignore
+    @Test
     public void testNonsymmetricMultipass() {
 
         final StructuralVariant firstSV = sv(1001, 4001, StructuralVariantType.DEL, 0.25, 0.25);
         final StructuralVariant secondSV = sv(2001, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
 
-        final CombinedRegion firstCN = copyNumber(1, 1000, 40);
-        final CombinedRegion secondCN = copyNumber(1001, 2000, 0);
-        final CombinedRegion thirdCN = copyNumber(2001, 3000, 0);
-        final CombinedRegion forthCN = copyNumber(3001, 4000, 0);
-        final CombinedRegion fifthCN = copyNumber(4001, 5000, 10);
+        final CombinedRegion firstCN = copyNumber(1, 1000, 40, SegmentSupport.NONE);
+        final CombinedRegion secondCN = copyNumber(1001, 2000, 0, SegmentSupport.DEL);
+        final CombinedRegion thirdCN = copyNumber(2001, 3000, 0, SegmentSupport.DEL);
+        final CombinedRegion forthCN = copyNumber(3001, 4000, 0, SegmentSupport.DEL);
+        final CombinedRegion fifthCN = copyNumber(4001, 5000, 10, SegmentSupport.NONE);
 
         final List<StructuralVariant> svs = Lists.newArrayList(firstSV, secondSV);
         final ListMultimap<String, CombinedRegion> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
@@ -53,6 +52,30 @@ public class StructuralVariantImpliedTest {
         assertEquals(12.50, result.get(2).tumorCopyNumber(), EPSILON);
         assertEquals(03.75, result.get(3).tumorCopyNumber(), EPSILON);
         assertEquals(10.00, result.get(4).tumorCopyNumber(), EPSILON);
+    }
+
+    @Test
+    public void testSVSmoothing() {
+
+        final StructuralVariant firstSV = sv(1001, 4001, StructuralVariantType.DEL, 0.25, 0.25);
+        final StructuralVariant secondSV = sv(2001, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
+
+        final CombinedRegion firstCN = copyNumber(1, 1000, 40, SegmentSupport.NONE);
+        final CombinedRegion secondCN = copyNumber(1001, 2000, 0, SegmentSupport.DEL);
+        final CombinedRegion thirdCN = copyNumber(2001, 3000, 0, SegmentSupport.NONE);
+        final CombinedRegion forthCN = copyNumber(3001, 4000, 0, SegmentSupport.DEL);
+        final CombinedRegion fifthCN = copyNumber(4001, 5000, 10, SegmentSupport.NONE);
+
+        final List<StructuralVariant> svs = Lists.newArrayList(firstSV, secondSV);
+        final ListMultimap<String, CombinedRegion> copyNumbers = copyNumbers(firstCN, secondCN, thirdCN, forthCN, fifthCN);
+
+        final StructuralVariantImplied victim = new StructuralVariantImplied(PURE);
+        final List<CombinedRegion> result = victim.svImpliedCopyNumber(svs, copyNumbers).get(CHROMOSOME);
+        assertEquals(4, result.size());
+        assertEquals(40.00, result.get(0).tumorCopyNumber(), EPSILON);
+        assertEquals(33.75, result.get(1).tumorCopyNumber(), EPSILON);
+        assertEquals(03.75, result.get(2).tumorCopyNumber(), EPSILON);
+        assertEquals(10.00, result.get(3).tumorCopyNumber(), EPSILON);
     }
 
     @Test
@@ -75,11 +98,11 @@ public class StructuralVariantImpliedTest {
         return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type).startAF(startAF).endAF(endAF).build();
     }
 
-    static CombinedRegion copyNumber(long start, long end, double copyNumber) {
+    static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support) {
         final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(0.5)
-                .support(SegmentSupport.NONE)
+                .support(support)
                 .build();
 
         final CombinedRegion result = new CombinedRegion(true, region, false);

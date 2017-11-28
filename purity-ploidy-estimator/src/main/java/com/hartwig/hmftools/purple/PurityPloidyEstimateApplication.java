@@ -228,15 +228,15 @@ public class PurityPloidyEstimateApplication {
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
             final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
-            final PurpleCopyNumberFactory purpleCopyNumberFactory =
-                    new PurpleCopyNumberFactory(experimental, amberGender, purityAdjuster, fittedRegions, structuralVariants);
-            final List<PurpleCopyNumber> highConfidence = purpleCopyNumberFactory.highConfidenceRegions();
-            final List<PurpleCopyNumber> somaticCopyNumbers = purpleCopyNumberFactory.somaticCopyNumbers();
-            final List<PurpleCopyNumber> germlineDeletions = purpleCopyNumberFactory.germlineDeletions();
-            final List<PurpleCopyNumber> somaticCopyNumbersWithGermlineDeletions = purpleCopyNumberFactory.somaticsWithGermlineDeletions();
-            final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(genePanel, somaticCopyNumbersWithGermlineDeletions);
+            final PurpleCopyNumberFactory copyNumberFactory =
+                    new PurpleCopyNumberFactory(amberGender, purityAdjuster, fittedRegions, structuralVariants);
+            final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
+            final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
+            final List<GeneCopyNumber> geneCopyNumbers =
+                    GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumberFactory.copyNumbersWithDeletions());
 
-            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, highConfidence, somaticCopyNumbers);
+            final List<FittedRegion> enrichedFittedRegions =
+                    updateRegionsWithCopyNumbers(fittedRegions, Collections.emptyList(), copyNumbers);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
                     .bestFit(bestFitFactory.bestFit())
@@ -244,16 +244,16 @@ public class PurityPloidyEstimateApplication {
                     .status(bestFitFactory.status())
                     .gender(amberGender)
                     .score(bestFitFactory.score())
-                    .polyClonalProportion(polyclonalProproption(somaticCopyNumbers))
+                    .polyClonalProportion(polyclonalProproption(copyNumbers))
                     .build();
 
             LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), somaticCopyNumbers, amberGender, cobaltGender);
+            final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), copyNumbers, amberGender, cobaltGender);
 
             if (cmd.hasOption(DB_ENABLED)) {
                 final DatabaseAccess dbAccess = databaseAccess(cmd);
                 dbAccess.writePurity(tumorSample, purityContext, qcChecks);
-                dbAccess.writeCopynumbers(tumorSample, somaticCopyNumbers);
+                dbAccess.writeCopynumbers(tumorSample, copyNumbers);
                 dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
                 dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
@@ -265,23 +265,23 @@ public class PurityPloidyEstimateApplication {
             version.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
-            PurpleCopyNumberFile.write(outputDirectory, tumorSample, somaticCopyNumbers);
+            PurpleCopyNumberFile.write(outputDirectory, tumorSample, copyNumbers);
             FittedRegionFile.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
 
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedPurpleSomaticVariantFactory(purityContext.bestFit(), somaticCopyNumbers).create(somaticVariants);
+                    new PurityAdjustedPurpleSomaticVariantFactory(purityContext.bestFit(), copyNumbers).create(somaticVariants);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
             new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(),
                     purityContext.score(),
-                    somaticCopyNumbers,
+                    copyNumbers,
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
             new GenerateCircosData(configSupplier, executorService).write(amberGender,
-                    somaticCopyNumbers,
+                    copyNumbers,
                     enrichedSomatics,
                     structuralVariants,
                     fittedRegions,

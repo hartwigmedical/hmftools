@@ -2,12 +2,8 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import static java.util.stream.Collectors.toList;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -25,87 +21,53 @@ import org.jetbrains.annotations.NotNull;
 public class PurpleCopyNumberFactory {
 
     @NotNull
-    private final PurityAdjuster purityAdjuster;
-    @NotNull
-    private final List<PurpleCopyNumber> highConfidenceRegions;
-    @NotNull
     private final List<PurpleCopyNumber> somatics;
     @NotNull
     private final List<PurpleCopyNumber> somaticsWithGermlineDeletions;
     @NotNull
     private final List<PurpleCopyNumber> germlineDeletions;
 
-    private final ExtendGermline extendGermline;
-
-    public PurpleCopyNumberFactory(boolean experimental, @NotNull final Gender gender, @NotNull final PurityAdjuster purityAdjuster,
+    public PurpleCopyNumberFactory(@NotNull final Gender gender, @NotNull final PurityAdjuster purityAdjuster,
             final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
-        this.purityAdjuster = purityAdjuster;
         somatics = Lists.newArrayList();
         somaticsWithGermlineDeletions = Lists.newArrayList();
         germlineDeletions = Lists.newArrayList();
-        highConfidenceRegions = Lists.newArrayList();
-        extendGermline = new ExtendGermline(gender);
 
-        final Set<String> orderedChromosomes =
-                fittedRegions.stream().map(GenomeRegion::chromosome).collect(Collectors.toCollection(LinkedHashSet::new));
+        final ExtendGermline extendGermline = new ExtendGermline(gender);
 
-        final ListMultimap<String, CombinedRegion> somaticExtentions = ArrayListMultimap.create();
-
-        for (String chromosome : orderedChromosomes) {
+        final ListMultimap<String, CombinedRegion> diploidExtension = ArrayListMultimap.create();
+        for (HumanChromosome chromosome : HumanChromosome.values()) {
             final List<FittedRegion> chromosomeFittedRegions =
-                    fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
-
-            final List<PurpleCopyNumber> highConfidence = highConfidence(chromosomeFittedRegions);
-            highConfidenceRegions.addAll(highConfidence);
-
-            final List<FittedRegion> smoothFittedRegions = highConfidence.isEmpty()
-                    ? new LowConfidenceSmoothedRegions(purityAdjuster, chromosomeFittedRegions).smoothedRegions()
-                    : new HighConfidenceSmoothedRegions(purityAdjuster, highConfidence, chromosomeFittedRegions).smoothedRegions();
-
-            somaticExtentions.putAll(chromosome, ExtendDiploid.combinedRegions(purityAdjuster, chromosomeFittedRegions));
-
-            // Old Method
-            if (!experimental) {
-                somatics.addAll(RegionStepFilter.filter(toCopyNumberOld(smoothFittedRegions)));
-            }
+                    fittedRegions.stream().filter(matchesChromosome(chromosome.toString())).collect(toList());
+            diploidExtension.putAll(chromosome.toString(), ExtendDiploid.combinedRegions(purityAdjuster, chromosomeFittedRegions));
         }
 
-        if (experimental) {
+        final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(purityAdjuster);
+        final ListMultimap<String, CombinedRegion> allSVImplied =
+                svImpliedFactory.svImpliedCopyNumber(structuralVariants, diploidExtension);
 
-            final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(purityAdjuster);
-            final ListMultimap<String, CombinedRegion> svImplied =
-                    svImpliedFactory.svImpliedCopyNumber(structuralVariants, somaticExtentions);
+        for (HumanChromosome chromosome : HumanChromosome.values()) {
+            if (allSVImplied.containsKey(chromosome.toString())) {
+                final List<CombinedRegion> svImplied = allSVImplied.get(chromosome.toString());
+                final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
+                final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(longArmExtended);
 
-            for (HumanChromosome chromosome : HumanChromosome.values()) {
-                if (svImplied.containsKey(chromosome.toString())) {
-                    final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied.get(chromosome.toString()));
-                    final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(longArmExtended);
+                final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
+                final List<CombinedRegion> somaticsAndGermlineDeletions =
+                        extendGermline.extendGermlineAmplificationsAndDeletions(bafExtended);
+                final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
 
-                    final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
-                    final List<CombinedRegion> somaticsAndGermlineDeletions =
-                            extendGermline.extendGermlineAmplificationsAndDeletions(bafExtended);
-                    final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
-
-                    this.somatics.addAll(toCopyNumber(somatics));
-                    this.somaticsWithGermlineDeletions.addAll(toCopyNumber(somaticsAndGermlineDeletions));
-                    this.germlineDeletions.addAll(germlineDeletions.stream()
-                            .map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN))
-                            .collect(toList()));
-                }
+                this.somatics.addAll(toCopyNumber(somatics));
+                this.somaticsWithGermlineDeletions.addAll(toCopyNumber(somaticsAndGermlineDeletions));
+                this.germlineDeletions.addAll(germlineDeletions.stream()
+                        .map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN))
+                        .collect(toList()));
             }
         }
-
-        Collections.sort(somatics);
     }
 
     @NotNull
-    @Deprecated
-    public List<PurpleCopyNumber> highConfidenceRegions() {
-        return highConfidenceRegions;
-    }
-
-    @NotNull
-    public List<PurpleCopyNumber> somaticCopyNumbers() {
+    public List<PurpleCopyNumber> copyNumbers() {
         return somatics;
     }
 
@@ -115,32 +77,8 @@ public class PurpleCopyNumberFactory {
     }
 
     @NotNull
-    public List<PurpleCopyNumber> somaticsWithGermlineDeletions() {
+    public List<PurpleCopyNumber> copyNumbersWithDeletions() {
         return somaticsWithGermlineDeletions;
-    }
-
-    private List<PurpleCopyNumber> highConfidence(@NotNull final List<FittedRegion> fittedRegions) {
-        return new HighConfidenceRegions(purityAdjuster).highConfidence(fittedRegions)
-                .stream()
-                .map(x -> create(x, SegmentSupport.NONE))
-                .collect(toList());
-    }
-
-    @NotNull
-    @Deprecated
-    private List<PurpleCopyNumber> toCopyNumberOld(@NotNull final List<FittedRegion> regions) {
-        final List<PurpleCopyNumber> result = Lists.newArrayList();
-        for (int i = 0; i < regions.size() - 1; i++) {
-            final FittedRegion region = regions.get(i);
-            final FittedRegion next = regions.get(i + 1);
-            result.add(create(region, next.support()));
-        }
-
-        if (!regions.isEmpty()) {
-            result.add(create(regions.get(regions.size() - 1), SegmentSupport.TELOMERE));
-        }
-
-        return result;
     }
 
     @NotNull
@@ -157,23 +95,6 @@ public class PurpleCopyNumberFactory {
         }
 
         return result;
-    }
-
-    @NotNull
-    @Deprecated
-    private PurpleCopyNumber create(@NotNull final FittedRegion region, @NotNull final SegmentSupport trailingSupport) {
-        return ImmutablePurpleCopyNumber.builder()
-                .chromosome(region.chromosome())
-                .start(region.start())
-                .end(region.end())
-                .bafCount(region.bafCount())
-                .averageObservedBAF(region.observedBAF())
-                .averageActualBAF(region.tumorBAF())
-                .averageTumorCopyNumber(region.tumorCopyNumber())
-                .segmentStartSupport(region.support())
-                .segmentEndSupport(trailingSupport)
-                .method(CopyNumberMethod.UNKNOWN)
-                .build();
     }
 
     @NotNull

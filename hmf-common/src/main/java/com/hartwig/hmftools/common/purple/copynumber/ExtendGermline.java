@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 
 import org.jetbrains.annotations.NotNull;
@@ -128,7 +129,7 @@ class ExtendGermline {
         long nextStart = parent.start();
         for (CombinedRegion child : children) {
             if (child.start() > nextStart) {
-                result.add(CombinedRegionFactory.reduce(parent, nextStart, child.start() - 1));
+                result.add(reduce(parent, nextStart, child.start() - 1));
             }
 
             result.add(child);
@@ -136,7 +137,7 @@ class ExtendGermline {
         }
 
         if (nextStart <= parent.end()) {
-            result.add(CombinedRegionFactory.reduce(parent, nextStart, parent.end()));
+            result.add(reduce(parent, nextStart, parent.end()));
         }
 
         return result;
@@ -171,5 +172,38 @@ class ExtendGermline {
         double expectedNormalRatio = HumanChromosome.fromString(region.chromosome()).isHomologous(gender) ? 1 : 0.5;
         return Math.min(region.tumorCopyNumber(), region.refNormalisedCopyNumber()) / (2 * Math.max(expectedNormalRatio,
                 region.observedNormalRatio()));
+    }
+
+    @NotNull
+    static CombinedRegion reduce(@NotNull final CombinedRegion parent, long start, long end) {
+        assert (start >= parent.start());
+        assert (end <= parent.end());
+
+        int bafCount = 0;
+        int observedTumorRatioCount = 0;
+        for (FittedRegion fittedRegion : parent.regions()) {
+            if (fittedRegion.start() >= start && fittedRegion.end() <= end) {
+                bafCount += fittedRegion.bafCount();
+                observedTumorRatioCount += fittedRegion.observedTumorRatioCount();
+            }
+        }
+
+        final ModifiableFittedRegion smallerRegion = ModifiableFittedRegion.create()
+                .from(parent.region())
+                .setStart(start)
+                .setEnd(end)
+                .setBafCount(bafCount)
+                .setObservedTumorRatioCount(observedTumorRatioCount);
+
+        CombinedRegion result = new CombinedRegion(parent.isBafWeighted(), smallerRegion, false);
+        result.setCopyNumberMethod(parent.copyNumberMethod());
+
+        for (FittedRegion fittedRegion : parent.regions()) {
+            if (fittedRegion.start() >= start && fittedRegion.end() <= end) {
+                result.extend(fittedRegion);
+            }
+        }
+
+        return result;
     }
 }
