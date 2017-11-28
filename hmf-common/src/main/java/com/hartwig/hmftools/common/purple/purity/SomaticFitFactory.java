@@ -15,8 +15,13 @@ class SomaticFitFactory {
     private static final Logger LOGGER = LogManager.getLogger(SomaticFitFactory.class);
     private static final int MIN_PEAK_COUNT = 100;
 
+    private final int minPeak;
 
-    static Optional<FittedPurity> fromSomatics(@NotNull final List<FittedPurity> candidates, @NotNull final List<PurpleSomaticVariant> variants) {
+    SomaticFitFactory(final int minPeak) {
+        this.minPeak = minPeak;
+    }
+
+    Optional<FittedPurity> fromSomatics(@NotNull final List<FittedPurity> candidates, @NotNull final List<PurpleSomaticVariant> variants) {
 
         double minPurity = candidates.stream().mapToDouble(FittedPurity::purity).min().orElse(0);
         double maxPurity = candidates.stream().mapToDouble(FittedPurity::purity).max().orElse(1);
@@ -27,7 +32,7 @@ class SomaticFitFactory {
         for (int i = peaks.size() - 1; i >= 0; i--) {
             SomaticPeak peak = peaks.get(i);
             double impliedPurity = peak.alleleFrequency() * 2;
-            if (Doubles.greaterOrEqual(impliedPurity, minPurity) && Doubles.lessOrEqual(impliedPurity, maxPurity) && peak.count() > MIN_PEAK_COUNT) {
+            if (Doubles.greaterOrEqual(impliedPurity, minPurity) && Doubles.lessOrEqual(impliedPurity, maxPurity) && peak.count() > minPeak) {
                 LOGGER.info("Somatic implied purity: {}", impliedPurity);
                 return Optional.of(closest(impliedPurity, candidates));
             }

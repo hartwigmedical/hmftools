@@ -206,7 +206,11 @@ public class PurityPloidyEstimateApplication {
                     fittedRegionFactory,
                     observedRegions);
 
-            final BestFitFactory bestFitFactory = new BestFitFactory(fittedPurityFactory.bestFitPerPurity(), somaticVariants);
+            final SomaticConfig somaticConfig = configSupplier.somaticConfig();
+            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
+                    somaticConfig.minPeakVariants(),
+                    fittedPurityFactory.bestFitPerPurity(),
+                    somaticVariants);
             final FittedPurity bestFit = bestFitFactory.bestFit();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
@@ -218,8 +222,7 @@ public class PurityPloidyEstimateApplication {
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumberFactory.copyNumbersWithDeletions());
 
-            final List<FittedRegion> enrichedFittedRegions =
-                    updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
+            final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
                     .bestFit(bestFitFactory.bestFit())

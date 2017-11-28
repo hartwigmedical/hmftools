@@ -31,6 +31,8 @@ Argument | Default | Description
 -cobalt | <run_dir>/cobalt | Location of cobalt directory.
 -threads | 2 | Number of threads to use.
 -somatic_vcf | None | Optional location of somatic variants vcf. Sample name should match <tumor_sample>. GZ files supported.
+-somatic_min_peak | 100 | Minimum number of somatic variants to consider a peak.
+-somatic_min_total | 1000 | Minimum number of somatic variants required to assist highly diploid fits.
 -structural_vcf | None | Optional location of structural variants vcf. Sample name should match <tumor_sample>. GZ files supported.
 -circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
 -db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).

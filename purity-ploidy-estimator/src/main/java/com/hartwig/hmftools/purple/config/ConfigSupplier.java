@@ -35,9 +35,13 @@ public class ConfigSupplier {
 
     private static final String STRUCTURAL_VARIANTS = "structural_vcf";
     private static final String SOMATIC_VARIANTS = "somatic_vcf";
+    private static final String SOMATIC_MIN_PEAK = "somatic_min_peak";
+    private static final String SOMATIC_MIN_TOTAL = "somatic_min_total";
+    private static final int SOMATIC_MIN_PEAK_DEFAULT = 100;
+    private static final int SOMATIC_MIN_TOTAL_DEFAULT = 1000;
+
     private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
-
 
     public static void addOptions(Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
@@ -55,6 +59,8 @@ public class ConfigSupplier {
         options.addOption(AMBER, true, "AMBER directory. Defaults to <run_dir>/amber");
         options.addOption(COBALT, true, "COBALT directory. Defaults to <run_dir>/cobalt");
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
+        options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak.");
+        options.addOption(SOMATIC_MIN_TOTAL, true, "Minimum number of somatic variants required to assist highly diploid fits.");
     }
 
     private final CommonConfig commonConfig;
@@ -154,7 +160,11 @@ public class ConfigSupplier {
             file = Optional.empty();
         }
 
-        return ImmutableSomaticConfig.builder().file(file).build();
+        return ImmutableSomaticConfig.builder()
+                .file(file)
+                .minTotalVariants(defaultIntValue(cmd, SOMATIC_MIN_TOTAL, SOMATIC_MIN_TOTAL_DEFAULT))
+                .minPeakVariants(defaultIntValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT))
+                .build();
     }
 
     @NotNull
@@ -217,6 +227,16 @@ public class ConfigSupplier {
     private static void printHelp(Options opt) {
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Purity Ploidy Estimator (PURPLE)", opt);
+    }
+
+    private static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
+        if (cmd.hasOption(opt)) {
+            final int result = Integer.valueOf(cmd.getOptionValue(opt));
+            LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            return result;
+        }
+
+        return defaultValue;
     }
 
 }
