@@ -177,8 +177,6 @@ public class PurityPloidyEstimateApplication {
             final Multimap<String, Cluster> clusterMap =
                     new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
             final List<PurpleSegment> segments = PurpleSegmentFactory.segment(clusterMap, lengths);
-            final List<Cluster> clusters = Lists.newArrayList(clusterMap.values());
-            Collections.sort(clusters);
 
             LOGGER.info("Mapping all observations to the segmented regions");
             final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), amberGender);
@@ -243,7 +241,6 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
                 dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
                 dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
-                dbAccess.writeClusters(tumorSample, clusters);
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);

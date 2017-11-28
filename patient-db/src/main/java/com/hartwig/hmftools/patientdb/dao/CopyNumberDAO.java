@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.Config.BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.COPYNUMBERCLUSTER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.COPYNUMBERGERMLINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumber.COPYNUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Copynumberregion.COPYNUMBERREGION;
 
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -20,13 +18,11 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
-import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep12;
-import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -234,52 +230,4 @@ class CopyNumberDAO {
                 region.segmentTumorCopyNumber(),
                 timestamp);
     }
-
-    void writeClusters(@NotNull final String sample, @NotNull final Collection<Cluster> clusters) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(COPYNUMBERCLUSTER).where(COPYNUMBERCLUSTER.SAMPLEID.eq(sample)).execute();
-
-        for (List<Cluster> batch : Iterables.partition(clusters, BATCH_INSERT_SIZE)) {
-            InsertValuesStep15 inserter = context.insertInto(COPYNUMBERCLUSTER,
-                    COPYNUMBERCLUSTER.SAMPLEID,
-                    COPYNUMBERCLUSTER.CHROMOSOME,
-                    COPYNUMBERCLUSTER.START,
-                    COPYNUMBERCLUSTER.END,
-                    COPYNUMBERCLUSTER.FIRSTVARIANT,
-                    COPYNUMBERCLUSTER.FINALVARIANT,
-                    COPYNUMBERCLUSTER.VARIANTCOUNT,
-                    COPYNUMBERCLUSTER.FIRSTRATIO,
-                    COPYNUMBERCLUSTER.FINALRATIO,
-                    COPYNUMBERCLUSTER.RATIOCOUNT,
-                    COPYNUMBERCLUSTER.FIRSTBAF,
-                    COPYNUMBERCLUSTER.FINALBAF,
-                    COPYNUMBERCLUSTER.BAFCOUNT,
-                    COPYNUMBERCLUSTER.TYPE,
-                    COPYNUMBERCLUSTER.MODIFIED);
-
-            batch.forEach(x -> addRecord(timestamp, inserter, sample, x));
-            //            batch.stream().filter(x -> x.variants().size() + x.ratios().size() > 1).forEach(x -> addRecord(timestamp, inserter, sample, x));
-            inserter.execute();
-        }
-
-    }
-
-    private void addRecord(Timestamp timestamp, InsertValuesStep15 inserter, String sample, Cluster cluster) {
-        inserter.values(sample,
-                cluster.chromosome(),
-                cluster.start(),
-                cluster.end(),
-                cluster.firstVariant(),
-                cluster.finalVariant(),
-                cluster.variants().size(),
-                cluster.firstRatio(),
-                cluster.finalRatio(),
-                cluster.ratios().size(),
-                cluster.firstBAF(),
-                cluster.finalBAF(),
-                cluster.bafs().size(),
-                cluster.type(),
-                timestamp);
-    }
-
 }
