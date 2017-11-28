@@ -220,8 +220,6 @@ CREATE TABLE copyNumberRegion
     cnvDeviation DOUBLE PRECISION not null,
     bafDeviation DOUBLE PRECISION not null,
     totalDeviation DOUBLE PRECISION not null,
-    highConfidenceBaf DOUBLE PRECISION not null,
-    highConfidenceCopyNumber DOUBLE PRECISION not null,
     fittedBaf DOUBLE PRECISION not null,
     fittedCopyNumber DOUBLE PRECISION not null,
     PRIMARY KEY (id),

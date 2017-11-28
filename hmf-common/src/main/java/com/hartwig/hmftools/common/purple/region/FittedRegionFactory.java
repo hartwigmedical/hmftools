@@ -51,8 +51,6 @@ public class FittedRegionFactory {
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)
-                .broadBAF(0)
-                .broadTumorCopyNumber(0)
                 .segmentBAF(0)
                 .segmentTumorCopyNumber(0)
                 .tumorCopyNumber(purityAdjustedCopyNumber)

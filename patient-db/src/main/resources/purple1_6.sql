@@ -34,8 +34,11 @@ CREATE TABLE copyNumberGermline
     INDEX(sampleId)
 );
 
-
 ALTER TABLE geneCopyNumber
     CHANGE regions somaticRegions int not null,
     ADD COLUMN germlineHomRegions int not null AFTER somaticRegions,
     ADD COLUMN germlineHetRegions int not null AFTER germlineHomRegions;
+
+ALTER TABLE copyNumberRegion
+    DROP COLUMN highConfidenceBaf,
+    DROP COLUMN highConfidenceCopyNumber;

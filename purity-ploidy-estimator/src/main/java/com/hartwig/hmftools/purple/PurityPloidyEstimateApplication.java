@@ -219,7 +219,7 @@ public class PurityPloidyEstimateApplication {
                     GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumberFactory.copyNumbersWithDeletions());
 
             final List<FittedRegion> enrichedFittedRegions =
-                    updateRegionsWithCopyNumbers(fittedRegions, Collections.emptyList(), copyNumbers);
+                    updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
                     .bestFit(bestFitFactory.bestFit())

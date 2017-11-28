@@ -34,15 +34,13 @@ public class FittedRegionFileTest {
                 .cnvDeviation(random.nextDouble())
                 .deviation(random.nextDouble())
                 .tumorCopyNumber(random.nextDouble())
-                .broadTumorCopyNumber(random.nextDouble())
-                .broadBAF(random.nextDouble())
                 .segmentTumorCopyNumber(random.nextDouble())
                 .segmentBAF(random.nextDouble())
                 .refNormalisedCopyNumber(random.nextDouble())
                 .ratioSupport(random.nextBoolean())
                 .support(SegmentSupport.BND)
                 .observedTumorRatioCount(random.nextInt())
-                .gcContent(0.0)
+                .gcContent(0.0) // TODO: Fix
                 .build();
     }
 

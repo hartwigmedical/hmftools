@@ -90,8 +90,6 @@ class CopyNumberDAO {
                     .cnvDeviation(record.getValue(COPYNUMBERREGION.CNVDEVIATION))
                     .deviation(record.getValue(COPYNUMBERREGION.TOTALDEVIATION))
                     .bafDeviation(record.getValue(COPYNUMBERREGION.BAFDEVIATION))
-                    .broadBAF(record.getValue(COPYNUMBERREGION.HIGHCONFIDENCEBAF))
-                    .broadTumorCopyNumber(record.getValue(COPYNUMBERREGION.HIGHCONFIDENCECOPYNUMBER))
                     .segmentBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
                     .segmentTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
                     .build());
@@ -123,7 +121,6 @@ class CopyNumberDAO {
             inserter.execute();
         }
     }
-
 
     void writeGermlineCopyNumber(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -191,8 +188,6 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.CNVDEVIATION,
                     COPYNUMBERREGION.BAFDEVIATION,
                     COPYNUMBERREGION.TOTALDEVIATION,
-                    COPYNUMBERREGION.HIGHCONFIDENCEBAF,
-                    COPYNUMBERREGION.HIGHCONFIDENCECOPYNUMBER,
                     COPYNUMBERREGION.FITTEDBAF,
                     COPYNUMBERREGION.FITTEDCOPYNUMBER,
                     COPYNUMBERREGION.MODIFIED);
@@ -224,8 +219,6 @@ class CopyNumberDAO {
                 region.cnvDeviation(),
                 region.bafDeviation(),
                 region.deviation(),
-                region.broadBAF(),
-                region.broadTumorCopyNumber(),
                 region.segmentBAF(),
                 region.segmentTumorCopyNumber(),
                 timestamp);

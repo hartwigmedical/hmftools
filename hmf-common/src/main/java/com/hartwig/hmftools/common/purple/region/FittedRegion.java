@@ -27,12 +27,6 @@ public abstract class FittedRegion implements ObservedRegion {
 
     public abstract double tumorBAF();
 
-    @Deprecated
-    public abstract double broadTumorCopyNumber();
-
-    @Deprecated
-    public abstract double broadBAF();
-
     public abstract double segmentTumorCopyNumber();
 
     public abstract double segmentBAF();
