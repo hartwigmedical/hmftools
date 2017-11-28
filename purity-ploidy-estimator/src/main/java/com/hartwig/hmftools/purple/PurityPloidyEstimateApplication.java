@@ -50,11 +50,9 @@ import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactoryOld;
 import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
 import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -70,7 +68,6 @@ import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
 import com.hartwig.hmftools.purple.ratio.ChromosomeLengthSupplier;
 import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
-import com.hartwig.hmftools.purple.segment.PCFSegmentSupplier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -176,24 +173,12 @@ public class PurityPloidyEstimateApplication {
 
             // JOBA: Ratio Segmentation
             final Map<String, ChromosomeLength> lengths = new ChromosomeLengthSupplier(config, ratios).get();
-            final List<PurpleSegment> segments;
-            final List<Cluster> clusters;
-
-            final boolean experimental = cmd.hasOption(EXPERIMENTAL);
-            if (experimental) {
-                final Multimap<String, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(config);
-                final Multimap<String, Cluster> clusterMap =
-                        new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
-                segments = PurpleSegmentFactory.segment(clusterMap, lengths);
-                clusters = Lists.newArrayList(clusterMap.values());
-                Collections.sort(clusters);
-            } else {
-
-                final List<GenomeRegion> regions = new PCFSegmentSupplier(executorService, config, lengths).get();
-                LOGGER.info("Merging structural variants into freec segmentation");
-                segments = PurpleSegmentFactoryOld.createSegments(regions, structuralVariants);
-                clusters = Collections.emptyList();
-            }
+            final Multimap<String, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(config);
+            final Multimap<String, Cluster> clusterMap =
+                    new ClusterFactory(config.windowSize()).cluster(structuralVariants, pcfPositions, ratios);
+            final List<PurpleSegment> segments = PurpleSegmentFactory.segment(clusterMap, lengths);
+            final List<Cluster> clusters = Lists.newArrayList(clusterMap.values());
+            Collections.sort(clusters);
 
             LOGGER.info("Mapping all observations to the segmented regions");
             final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), amberGender);
