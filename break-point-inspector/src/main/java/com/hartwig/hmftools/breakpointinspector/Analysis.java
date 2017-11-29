@@ -196,11 +196,13 @@ class Analysis {
 
                 }
 
-                if (isPairEvidence && !srOnly) {
-                    pr_support = true;
+                if (isPairEvidence) {
                     bp1_sr_support |= exactlyClipsBreakpoint(pair.getLeft(), bp1, ctx.OrientationBP1);
                     bp2_sr_support |= exactlyClipsBreakpoint(pair.getRight(), bp2, ctx.OrientationBP2);
-                    result.PR_Evidence.add(pair);
+                    if (!srOnly) {
+                        pr_support = true;
+                        result.PR_Evidence.add(pair);
+                    }
                 }
 
                 if (proper || secondary) {

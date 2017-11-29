@@ -20,6 +20,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.QueryInterval;
@@ -73,6 +74,20 @@ public class BreakPointInspectorApplication {
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Break-Point-Inspector", "A second layer of filtering on top of Manta", options, "", true);
         System.exit(1);
+    }
+
+    private static Range extractCIPOS(final VariantContext variant) {
+        final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
+        return CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
+    }
+
+    @NotNull
+    private static Range fixup(@NotNull final Range uncertainty1, final boolean imprecise, final boolean inversion) {
+        if (imprecise) {
+            return uncertainty1;
+        } else {
+            return inversion ? Range.invert(uncertainty1) : uncertainty1;
+        }
     }
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -139,10 +154,9 @@ public class BreakPointInspectorApplication {
                 final String location = variant.getContig() + ":" + Integer.toString(variant.getStart());
                 final Location location1 = Location.parseLocationString(location, tumorReader.getFileHeader().getSequenceDictionary());
 
-                final List<Integer> CIPOS = variant.getAttributeAsIntList("CIPOS", 0);
-                final Range uncertainty1 = CIPOS.size() == 2 ? new Range(CIPOS.get(0), CIPOS.get(1)) : new Range(0, 0);
+                final Range uncertainty1 = extractCIPOS(variant);
                 final List<Integer> CIEND = variant.getAttributeAsIntList("CIEND", 0);
-                Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : new Range(0, 0);
+                Range uncertainty2 = CIEND.size() == 2 ? new Range(CIEND.get(0), CIEND.get(1)) : null;
                 final boolean IMPRECISE = variant.hasAttribute("IMPRECISE");
 
                 HMFVariantType svType;
@@ -201,8 +215,7 @@ public class BreakPointInspectorApplication {
                         }
 
                         if (IMPRECISE) {
-                            final List<Integer> MATE_CIPOS = mateVariant.getAttributeAsIntList("CIPOS", 0);
-                            uncertainty2 = MATE_CIPOS.size() == 2 ? new Range(MATE_CIPOS.get(0), MATE_CIPOS.get(1)) : new Range(0, 0);
+                            uncertainty2 = extractCIPOS(mateVariant);
                         }
 
                         break;
@@ -214,7 +227,8 @@ public class BreakPointInspectorApplication {
                 final HMFVariantContext ctx = new HMFVariantContext(variant.getID(), location1, location2, svType, IMPRECISE);
                 ctx.Filter.addAll(variant.getFilters().stream().filter(s -> !s.startsWith("BPI")).collect(Collectors.toSet()));
                 ctx.Uncertainty1 = uncertainty1;
-                ctx.Uncertainty2 = uncertainty2;
+                ctx.Uncertainty2 = ObjectUtils.firstNonNull(uncertainty2,
+                        fixup(uncertainty1, IMPRECISE, svType == HMFVariantType.INV3 || svType == HMFVariantType.INV5));
                 ctx.HomologySequence = variant.getAttributeAsString("HOMSEQ", "");
                 if (variant.hasAttribute("LEFT_SVINSSEQ") && variant.hasAttribute("RIGHT_SVINSSEQ")) {
                     ctx.InsertSequence =
