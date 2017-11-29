@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.readers;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ public class BiopsyReaderTest {
     public void canFilterOutEmptyForms() {
         List<BiopsyData> biopsies = BiopsyReader.read(buildTestPatient());
         assertEquals(1, biopsies.size());
+        assertNotNull(biopsies.get(0).date());
     }
 
     @NotNull

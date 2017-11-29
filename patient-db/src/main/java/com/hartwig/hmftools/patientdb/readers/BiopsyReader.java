@@ -12,9 +12,13 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class BiopsyReader {
+
+    private static final Logger LOGGER = LogManager.getLogger(BiopsyReader.class);
 
     static final String STUDY_BIOPSY = "SE.BIOPSY";
     public static final String FORM_BIOPS = "FRM.BIOPS";
@@ -37,29 +41,22 @@ public final class BiopsyReader {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, false)) {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, false)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, false);
-                    final String site = itemGroup.readItemString(FIELD_SITE, 0, false);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, false);
-                    if (site == null || site.trim().toLowerCase().startsWith("other")) {
-                        final String site_other = itemGroup.readItemString(FIELD_SITE_OTHER, 0, false);
-                        biopsies.add(ImmutableBiopsyData.of(date, site_other, location, form.status(), form.locked()));
+
+                    final String site = itemGroup.readItemString(FIELD_SITE, 0, false);
+                    final String siteOther = itemGroup.readItemString(FIELD_SITE_OTHER, 0, false);
+                    final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
+
+                    BiopsyData biopsy = ImmutableBiopsyData.of(date, finalSite, location, form.status(), form.locked());
+                    if (isEmpty(biopsy)) {
+                        LOGGER.info("Filtered empty biopsy form for " + patient.patientId());
                     } else {
-                        biopsies.add(ImmutableBiopsyData.of(date, site, location, form.status(), form.locked()));
+                        biopsies.add(biopsy);
                     }
                 }
             }
         }
-        return filterEmptyBiopsyForms(biopsies);
-    }
-
-    @NotNull
-    private static List<BiopsyData> filterEmptyBiopsyForms(@NotNull List<BiopsyData> biopsies) {
-        final List<BiopsyData> finalBiopsies = Lists.newArrayList();
-        for (BiopsyData biopsy : biopsies) {
-            if (!isEmpty(biopsy)) {
-                finalBiopsies.add(biopsy);
-            }
-        }
-        return finalBiopsies;
+        return biopsies;
     }
 
     private static boolean isEmpty(@NotNull BiopsyData biopsy) {
