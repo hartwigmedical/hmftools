@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.ecrf.formstatus;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -12,14 +13,14 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
-public class FormStatusTest {
+public class FormStatusReaderTest {
 
     private static final String BASE_RESOURCE_DIR = Resources.getResource("ecrf").getPath();
     private static final String TEST_FILE = BASE_RESOURCE_DIR + File.separator + "formstatus" + File.separator + "formstatus.csv";
 
     @Test
     public void canLoadFromCsv() throws IOException, EmptyFileException {
-        final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(TEST_FILE);
+        final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(TEST_FILE);
 
         final Map<FormStatusKey, FormStatusData> formStatuses = formStatusModel.formStatuses();
         assertEquals(3, formStatuses.size());
@@ -32,12 +33,12 @@ public class FormStatusTest {
         assertTrue(formStatuses.containsKey(key2));
         assertTrue(formStatuses.containsKey(key3));
 
-        assertEquals("TRUE", formStatuses.get(key1).locked());
-        assertEquals("TRUE", formStatuses.get(key2).locked());
-        assertEquals("FALSE", formStatuses.get(key3).locked());
+        assertTrue(formStatuses.get(key1).locked());
+        assertTrue(formStatuses.get(key2).locked());
+        assertFalse(formStatuses.get(key3).locked());
 
-        assertEquals("1", formStatuses.get(key1).dataStatus());
-        assertEquals("3", formStatuses.get(key2).dataStatus());
-        assertEquals("4", formStatuses.get(key3).dataStatus());
+        assertEquals(FormStatusState.SUBMITTED, formStatuses.get(key1).state());
+        assertEquals(FormStatusState.SUBMITTED_WITH_MISSING, formStatuses.get(key2).state());
+        assertEquals(FormStatusState.VERIFIED, formStatuses.get(key3).state());
     }
 }

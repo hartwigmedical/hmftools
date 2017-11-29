@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
@@ -24,19 +25,19 @@ public class TreatmentMatcherTest {
     private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
 
     private final static BiopsyTreatmentData TREATMENT_FEB_JUL2015 =
-            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, JUL2015, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, JUL2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_MAY_SEP2015 =
-            ImmutableBiopsyTreatmentData.of("Yes", MAY2015, SEP2015, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", MAY2015, SEP2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData NO_TREATMENT_GIVEN =
-            ImmutableBiopsyTreatmentData.of("No", null, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("No", null, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_MAR_NULL =
-            ImmutableBiopsyTreatmentData.of("Yes", MAR2015, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", MAR2015, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
 
-    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "");
-    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "");
-    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "", "");
-    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "", "");
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "", "");
+    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", FormStatusState.UNKNOWN, false);
 
     // MIVO:    ---start(feb)-biopsy(mar)----end(jul)---
     @Test

@@ -63,12 +63,16 @@ class ClinicalDAO {
                     .returning(PATIENT.ID)
                     .fetchOne()
                     .getValue(PATIENT.ID);
-            writeFormStatus(patientId, PATIENT.getName(), "demography", patient.demographyStatus(), patient.demographyLocked());
-            writeFormStatus(patientId, PATIENT.getName(), "primaryTumor", patient.primaryTumorStatus(), patient.primaryTumorLocked());
-            writeFormStatus(patientId, PATIENT.getName(), "eligibility", patient.eligibilityStatus(), patient.eligibilityLocked());
-            writeFormStatus(patientId, PATIENT.getName(), "selectionCriteria", patient.selectionCriteriaStatus(),
-                    patient.selectionCriteriaLocked());
-            writeFormStatus(patientId, PATIENT.getName(), "death", patient.deathStatus(), patient.deathLocked());
+            writeFormStatus(patientId, PATIENT.getName(), "demography", patient.demographyStatus().stateString(),
+                    Boolean.toString(patient.demographyLocked()));
+            writeFormStatus(patientId, PATIENT.getName(), "primaryTumor", patient.primaryTumorStatus().stateString(),
+                    Boolean.toString(patient.primaryTumorLocked()));
+            writeFormStatus(patientId, PATIENT.getName(), "eligibility", patient.eligibilityStatus().stateString(),
+                    Boolean.toString(patient.eligibilityLocked()));
+            writeFormStatus(patientId, PATIENT.getName(), "selectionCriteria", patient.selectionCriteriaStatus().stateString(),
+                    Boolean.toString(patient.selectionCriteriaLocked()));
+            writeFormStatus(patientId, PATIENT.getName(), "death", patient.deathStatus().stateString(),
+                    Boolean.toString(patient.deathLocked()));
             return patientId;
         }
     }
@@ -85,7 +89,7 @@ class ClinicalDAO {
                 BIOPSY.BIOPSYDATE)
                 .values(biopsy.id(), biopsy.sampleId(), patientId, biopsy.site(), biopsy.location(), Utils.toSQLDate(biopsy.date()))
                 .execute();
-        writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus(), biopsy.formLocked());
+        writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus().stateString(), Boolean.toString(biopsy.formLocked()));
     }
 
     private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatment) {
@@ -94,8 +98,11 @@ class ClinicalDAO {
                 .values(treatment.id(), treatment.biopsyId(), patientId, treatment.treatmentGiven(), Utils.toSQLDate(treatment.startDate()),
                         Utils.toSQLDate(treatment.endDate()), treatment.treatmentName(), treatment.type())
                 .execute();
-        writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus(), treatment.formLocked());
-        treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus(), treatment.formLocked()));
+        writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus().stateString(),
+                Boolean.toString(treatment.formLocked()));
+        treatment.drugs()
+                .forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus().stateString(),
+                        Boolean.toString(treatment.formLocked())));
     }
 
     private void writeDrugData(final int patientId, final int treatmentId, @NotNull final BiopsyTreatmentDrugData drug,
@@ -119,8 +126,8 @@ class ClinicalDAO {
                 .returning(TREATMENTRESPONSE.ID)
                 .fetchOne()
                 .getValue(TREATMENTRESPONSE.ID);
-        writeFormStatus(id, TREATMENTRESPONSE.getName(), "treatmentResponse", treatmentResponse.formStatus(),
-                treatmentResponse.formLocked());
+        writeFormStatus(id, TREATMENTRESPONSE.getName(), "treatmentResponse", treatmentResponse.formStatus().stateString(),
+                Boolean.toString(treatmentResponse.formLocked()));
     }
 
     private void writeFormStatus(final int id, @NotNull final String tableName, @NotNull final String formName,

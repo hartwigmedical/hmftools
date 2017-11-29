@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
@@ -33,7 +34,7 @@ public final class TreatmentResponseMatcher {
             } else if (matchedTreatments.size() > 1) {
                 findings.add(
                         ValidationFinding.of("match", patientId, FORM_TUMOR_MEASUREMENT, "treatment response matches multiple treatments",
-                                "", "", "response: " + response + ". treatments: " + matchedTreatments.stream()
+                                FormStatusState.UNKNOWN, false, "response: " + response + ". treatments: " + matchedTreatments.stream()
                                         .map(BiopsyTreatmentData::toString)
                                         .collect(Collectors.toList())));
                 matchedResponses.add(response);

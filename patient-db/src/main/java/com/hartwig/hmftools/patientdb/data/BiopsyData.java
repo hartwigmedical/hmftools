@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb.data;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,10 +29,9 @@ public abstract class BiopsyData {
     public abstract String sampleId();
 
     @NotNull
-    public abstract String formStatus();
+    public abstract FormStatusState formStatus();
 
-    @NotNull
-    public abstract String formLocked();
+    public abstract boolean formLocked();
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
 
@@ -40,12 +41,12 @@ public abstract class BiopsyData {
 
     @NotNull
     public static BiopsyData of(@Nullable final LocalDate date, @Nullable final String site, @Nullable final String location,
-            @NotNull final String formStatus, @NotNull final String formLocked) {
+            @NotNull final FormStatusState formStatus, final boolean formLocked) {
         return ImmutableBiopsyData.of(createId(), date, site, location, null, formStatus, formLocked);
     }
 
     @Override
     public String toString() {
-        return site() + "(" + date() + ")";
+        return site() + " - " + location() + " (" + date() + ")";
     }
 }

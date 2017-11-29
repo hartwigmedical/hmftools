@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.ecrf.datamodel;
 
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,23 +23,22 @@ public abstract class ValidationFinding {
     public abstract String message();
 
     @NotNull
-    public abstract String formStatus();
+    public abstract FormStatusState formStatus();
 
-    @NotNull
-    public abstract String formLocked();
+    public abstract boolean formLocked();
 
     @NotNull
     public abstract String details();
 
     @NotNull
     public static ValidationFinding of(@NotNull String level, @NotNull String patientId, @NotNull String ecrfItem, @NotNull String message,
-            @NotNull String formStatus, @NotNull String formLocked, @NotNull String details) {
+            @NotNull FormStatusState formStatus, boolean formLocked, @NotNull String details) {
         return ImmutableValidationFinding.of(level, patientId, ecrfItem, message, formStatus, formLocked, details);
     }
 
     @NotNull
     public static ValidationFinding of(@NotNull String level, @NotNull String patientId, @NotNull String ecrfItem, @NotNull String message,
-            @NotNull String formStatus, @NotNull String formLocked) {
+            @NotNull FormStatusState formStatus, boolean formLocked) {
         return ImmutableValidationFinding.of(level, patientId, ecrfItem, message, formStatus, formLocked, "");
     }
 }

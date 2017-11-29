@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -110,7 +111,7 @@ public final class PatientValidator {
         final List<ValidationFinding> findings = Lists.newArrayList();
         biopsies.forEach(biopsy -> findings.addAll(validateBiopsyData(patientId, biopsy)));
         if (biopsies.isEmpty()) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FORM_BIOPS, "no biopsies found", "", ""));
+            findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FORM_BIOPS, "no biopsies found", FormStatusState.UNKNOWN, false));
         }
         if (biopsies.size() > 0 && treatments.size() > 0) {
             biopsies.sort(comparing(BiopsyData::date, nullsLast(naturalOrder())));
@@ -211,7 +212,7 @@ public final class PatientValidator {
     @NotNull
     @VisibleForTesting
     static List<ValidationFinding> validateDrugData(@NotNull final String patientId, @NotNull final BiopsyTreatmentDrugData drugData,
-            @NotNull final String formStatus, @NotNull final String formLocked) {
+            @NotNull final FormStatusState formStatus, final boolean formLocked) {
         final LocalDate drugStart = drugData.startDate();
         final List<ValidationFinding> findings = Lists.newArrayList();
         if (drugStart == null) {
@@ -290,7 +291,7 @@ public final class PatientValidator {
         if (treatments.isEmpty() && !responses.isEmpty()) {
             findings.add(
                     ValidationFinding.of(ECRF_LEVEL, patientId, FORM_TREATMENT, "treatment response filled in, but treatment data missing",
-                            "", ""));
+                            FormStatusState.UNKNOWN, false));
         }
         if (!treatments.isEmpty() && !responses.isEmpty()) {
             final LocalDate firstAssessmentDate = responses.get(0).assessmentDate();
@@ -310,7 +311,7 @@ public final class PatientValidator {
         if (treatmentsMissingResponse.size() > 0) {
             findings.add(
                     ValidationFinding.of(ECRF_LEVEL, patientId, FORM_TUMOR_MEASUREMENT, "no treatment response for at least 1 treatment",
-                            "", "", "treatments " + treatmentsMissingResponse.stream()
+                            FormStatusState.UNKNOWN, false, "treatments " + treatmentsMissingResponse.stream()
                                     .map(BiopsyTreatmentData::toString)
                                     .collect(Collectors.toList()) + " should have response since they lasted more than "
                                     + Config.IMMEDIATE_TREATMENT_END_THRESHOLD + " days and started more than "

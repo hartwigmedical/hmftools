@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
@@ -49,30 +50,30 @@ public class TreatmentValidationTest {
                     Lists.newArrayList(ImmutableCuratedTreatment.of("Drug1", "Type1", "Drug1")));
 
     private final static BiopsyTreatmentData TREATMENT_GIVEN_NULL =
-            ImmutableBiopsyTreatmentData.of(null, null, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of(null, null, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_GIVEN_EMPTY =
-            ImmutableBiopsyTreatmentData.of("Yes", null, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", null, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_NOTGIVEN_DATA =
-            ImmutableBiopsyTreatmentData.of("No", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB), "", "");
+            ImmutableBiopsyTreatmentData.of("No", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_GIVEN_GIBBERISH =
-            ImmutableBiopsyTreatmentData.of("mmm", null, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("mmm", null, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_WRONG_DRUG_DATA =
-            ImmutableBiopsyTreatmentData.of("Yes", null, null, Lists.newArrayList(DRUG_NULL, DRUG_WRONG), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", null, null, Lists.newArrayList(DRUG_NULL, DRUG_WRONG), FormStatusState.UNKNOWN, false);
 
     private final static BiopsyTreatmentData TREATMENT_JAN_JAN =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_JAN_JAN), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_JAN_JAN), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(DRUG_JAN_FEB), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_JAN_MAR =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, MAR2015, Lists.newArrayList(DRUG_JAN_MAR), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, MAR2015, Lists.newArrayList(DRUG_JAN_MAR), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_FEB_ONGOING =
-            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
 
     @Test
     public void reportsMissingDrugData() {
-        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_NULL, "1", "TRUE");
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_NULL, FormStatusState.SAVED, true);
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -82,7 +83,7 @@ public class TreatmentValidationTest {
 
     @Test
     public void reportsIncorrectDrugData() {
-        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_WRONG, "1", "TRUE");
+        final List<ValidationFinding> findings = PatientValidator.validateDrugData(CPCT_ID, DRUG_WRONG, FormStatusState.SAVED, true);
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
@@ -169,7 +170,8 @@ public class TreatmentValidationTest {
     @Test
     public void reportsMissingCuratedTreatment() {
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID, Lists.newArrayList(
-                ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY), "", "")));
+                ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY),
+                        FormStatusState.UNKNOWN, false)));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
@@ -179,7 +181,8 @@ public class TreatmentValidationTest {
     @Test
     public void reportsPartiallyCuratedTreatment() {
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(CPCT_ID, Lists.newArrayList(
-                ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY), "", "")));
+                ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY),
+                        FormStatusState.UNKNOWN, false)));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());

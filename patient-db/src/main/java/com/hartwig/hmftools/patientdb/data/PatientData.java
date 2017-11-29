@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,61 +38,56 @@ public abstract class PatientData {
 
     @NotNull
     @Value.Default
-    public String demographyStatus() {
-        return "";
+    public FormStatusState demographyStatus() {
+        return FormStatusState.UNKNOWN;
+    }
+
+    @Value.Default
+    public boolean demographyLocked() {
+        return false;
     }
 
     @NotNull
     @Value.Default
-    public String demographyLocked() {
-        return "";
+    public FormStatusState primaryTumorStatus() {
+        return FormStatusState.UNKNOWN;
+    }
+
+    @Value.Default
+    public boolean primaryTumorLocked() {
+        return false;
     }
 
     @NotNull
     @Value.Default
-    public String primaryTumorStatus() {
-        return "";
+    public FormStatusState eligibilityStatus() {
+        return FormStatusState.UNKNOWN;
+    }
+
+    @Value.Default
+    public boolean eligibilityLocked() {
+        return false;
     }
 
     @NotNull
     @Value.Default
-    public String primaryTumorLocked() {
-        return "";
+    public FormStatusState selectionCriteriaStatus() {
+        return FormStatusState.UNKNOWN;
+    }
+
+    @Value.Default
+    public boolean selectionCriteriaLocked() {
+        return false;
     }
 
     @NotNull
     @Value.Default
-    public String eligibilityStatus() {
-        return "";
+    public FormStatusState deathStatus() {
+        return FormStatusState.UNKNOWN;
     }
 
-    @NotNull
     @Value.Default
-    public String eligibilityLocked() {
-        return "";
-    }
-
-    @NotNull
-    @Value.Default
-    public String selectionCriteriaStatus() {
-        return "";
-    }
-
-    @NotNull
-    @Value.Default
-    public String selectionCriteriaLocked() {
-        return "";
-    }
-
-    @NotNull
-    @Value.Default
-    public String deathStatus() {
-        return "";
-    }
-
-    @NotNull
-    @Value.Default
-    public String deathLocked() {
-        return "";
+    public boolean deathLocked() {
+        return false;
     }
 }

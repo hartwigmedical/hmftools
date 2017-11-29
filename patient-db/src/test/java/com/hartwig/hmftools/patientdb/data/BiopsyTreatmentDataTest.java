@@ -6,8 +6,8 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class BiopsyTreatmentDataTest {
 
     @NotNull
     private static BiopsyTreatmentData withDrugs(@NotNull final List<BiopsyTreatmentDrugData> drugs) {
-        return ImmutableBiopsyTreatmentData.of(1, null, null, null, drugs, null, Strings.EMPTY, Strings.EMPTY);
+        return ImmutableBiopsyTreatmentData.of(1, null, null, null, drugs, null, FormStatusState.UNKNOWN, false);
     }
 
     @NotNull

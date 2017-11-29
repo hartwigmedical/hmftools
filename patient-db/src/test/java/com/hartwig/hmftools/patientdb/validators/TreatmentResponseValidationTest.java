@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
@@ -29,23 +30,23 @@ public class TreatmentResponseValidationTest {
     private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
 
     private final static BiopsyTreatmentData TREATMENT_JAN_MAR =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, MAR2015, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, MAR2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_JAN_ONGOING =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, null, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_JAN_JAN =
-            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(), "", "");
+            ImmutableBiopsyTreatmentData.of("Yes", JAN2015, JAN2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", "", "");
+            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 =
-            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", "", "");
+            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_NULL =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, null, null, "", "");
+            ImmutableBiopsyTreatmentResponseData.of(null, null, null, null, FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_ONLY =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", null, "", "");
+            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", null, FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_MISSING_DATA =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, null, "yes", "", "");
+            ImmutableBiopsyTreatmentResponseData.of(null, null, null, "yes", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_MEASUREMENT_NO_WITH_DATA =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "no", "", "");
+            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "no", FormStatusState.UNKNOWN, false);
 
     @Test
     public void reportsMeasurementDoneNull() {

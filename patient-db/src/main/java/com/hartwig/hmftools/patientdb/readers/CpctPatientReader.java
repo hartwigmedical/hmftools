@@ -83,11 +83,11 @@ public class CpctPatientReader {
 
     private static void setDeathData(@NotNull final ImmutablePatientData.Builder builder, @NotNull final EcrfPatient patient) {
         for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
-            for (final EcrfForm deathFrom : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
-                for (final EcrfItemGroup deathItemGroup : deathFrom.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
+            for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH, false)) {
+                for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH, false)) {
                     builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE, 0, DATE_FORMATTER, false));
-                    builder.deathStatus(deathFrom.status());
-                    builder.deathLocked(deathFrom.locked());
+                    builder.deathStatus(deathForm.status());
+                    builder.deathLocked(deathForm.locked());
                 }
             }
         }

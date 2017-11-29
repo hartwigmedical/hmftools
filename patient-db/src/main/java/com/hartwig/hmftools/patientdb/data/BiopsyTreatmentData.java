@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Utils;
 
 import org.immutables.value.Value;
@@ -40,10 +41,9 @@ public abstract class BiopsyTreatmentData {
     public abstract Integer biopsyId();
 
     @NotNull
-    public abstract String formStatus();
+    public abstract FormStatusState formStatus();
 
-    @NotNull
-    public abstract String formLocked();
+    public abstract boolean formLocked();
 
     @Value.Derived
     List<CuratedTreatment> curatedDrugs() {
@@ -58,9 +58,8 @@ public abstract class BiopsyTreatmentData {
 
     @NotNull
     public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @Nullable final LocalDate startDate,
-            @Nullable final LocalDate endDate, @NotNull final List<BiopsyTreatmentDrugData> drugs, @NotNull final String formStatus,
-            @NotNull final String formLocked) {
-
+            @Nullable final LocalDate endDate, @NotNull final List<BiopsyTreatmentDrugData> drugs,
+            @NotNull final FormStatusState formStatus, final boolean formLocked) {
         return ImmutableBiopsyTreatmentData.of(createId(), treatmentGiven, startDate, endDate, drugs, null, formStatus, formLocked);
     }
 

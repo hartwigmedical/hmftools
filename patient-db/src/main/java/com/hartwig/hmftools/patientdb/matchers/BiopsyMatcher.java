@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
@@ -27,7 +28,8 @@ public final class BiopsyMatcher {
         final List<BiopsyData> matchedBiopsies = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
         if (clinicalBiopsies.size() < sequencedBiopsies.size()) {
-            findings.add(ValidationFinding.of("match", patientId, FORM_BIOPS, "less ecrf biopsies than biopsies sequenced.", "", "",
+            findings.add(ValidationFinding.of("match", patientId, FORM_BIOPS, "less ecrf biopsies than biopsies sequenced.",
+                    FormStatusState.UNKNOWN, false,
                     "ecrf biopsies: " + clinicalBiopsies.size() + "; sequenced: " + sequencedBiopsies.size()));
         }
         List<BiopsyData> remainingBiopsies = clinicalBiopsies;
@@ -42,14 +44,15 @@ public final class BiopsyMatcher {
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
                 findings.add(
                         ValidationFinding.of("match", patientId, FORM_BIOPS, "could not match any clinical biopsy with sequenced sample.",
-                                "", "", "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
+                                FormStatusState.UNKNOWN, false,
+                                "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                         .map(BiopsyData::date)
                                         .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
                 // MIVO: abort finding new matches if we can't match one sequenced biopsy
                 return new MatchResult<>(clinicalBiopsies, findings);
             } else if (possibleMatches.size() > 1) {
                 findings.add(ValidationFinding.of("match", patientId, FORM_BIOPS,
-                        "more than 1 possible clinical biopsy match for sequenced sample.", "", "",
+                        "more than 1 possible clinical biopsy match for sequenced sample.", FormStatusState.UNKNOWN, false,
                         "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));

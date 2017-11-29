@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusData;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusKey;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusKey;
 
 import org.apache.logging.log4j.LogManager;
@@ -78,7 +79,7 @@ public final class XMLPatientReader extends EcrfReader {
         String currentItemGroupOID = Strings.EMPTY;
         String currentItemGroupIdx = Strings.EMPTY;
         EcrfStudyEvent currentStudy = new EcrfStudyEvent(patientId);
-        EcrfForm currentForm = new EcrfForm(patientId, "", "");
+        EcrfForm currentForm = new EcrfForm(patientId, FormStatusState.UNKNOWN, false);
         EcrfItemGroup currentItemGroup = new EcrfItemGroup(patientId);
         while (reader.hasNext() && !isPatientEnd(reader)) {
             if (isStudyEventStart(reader)) {
@@ -98,9 +99,9 @@ public final class XMLPatientReader extends EcrfReader {
                         new ImmutableFormStatusKey(patientId, formName, currentFormIdx, studyEventName, currentStudyEventIdx);
                 final FormStatusData formStatus = formStatusModel.formStatuses().get(formKey);
                 if (formStatus != null) {
-                    currentForm = new EcrfForm(patientId, formStatus.dataStatusString(), formStatus.locked());
+                    currentForm = new EcrfForm(patientId, formStatus.state(), formStatus.locked());
                 } else {
-                    currentForm = new EcrfForm(patientId, "", "");
+                    currentForm = new EcrfForm(patientId, FormStatusState.UNKNOWN, false);
                 }
                 currentStudy.addForm(currentFormOID, currentForm);
             } else if (isItemGroupStart(reader)) {
@@ -118,7 +119,8 @@ public final class XMLPatientReader extends EcrfReader {
                 }
                 currentItemGroup.addItem(OID, value);
                 fields.add(EcrfDataField.of(patientId, currentStudyEventOID, currentStudyEventIdx, currentFormOID, currentFormIdx,
-                        currentItemGroupOID, currentItemGroupIdx, OID, value, currentForm.status(), currentForm.locked()));
+                        currentItemGroupOID, currentItemGroupIdx, OID, value, currentForm.status().stateString(),
+                        Boolean.toString(currentForm.locked())));
             }
             reader.next();
         }

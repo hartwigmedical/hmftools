@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 
 import org.junit.Test;
 
@@ -20,7 +21,7 @@ public class EcrfPatientTest {
         final EcrfDatamodelField field = new ImmutableEcrfDatamodelField("1", "2", "3", "4", "5", Maps.newHashMap());
         final EcrfItemGroup itemGroup = new EcrfItemGroup(patientId);
         itemGroup.itemsPerOID().put("4", Lists.newArrayList("value1", "value2"));
-        final EcrfForm form = new EcrfForm(patientId, "", "");
+        final EcrfForm form = new EcrfForm(patientId, FormStatusState.UNKNOWN, false);
         form.itemGroupsPerOID().put("3", Lists.newArrayList(itemGroup));
         final EcrfStudyEvent study = new EcrfStudyEvent(patientId);
         study.formsPerOID().put("2", Lists.newArrayList(form));

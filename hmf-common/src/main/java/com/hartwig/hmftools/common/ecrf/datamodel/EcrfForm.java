@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,16 +17,15 @@ public class EcrfForm {
     @NotNull
     private final String patientId;
 
-    @NotNull
-    private final String locked;
+    private final boolean locked;
 
     @NotNull
-    private final String status;
+    private final FormStatusState status;
 
     @NotNull
     private final Map<String, List<EcrfItemGroup>> itemGroupsPerOID;
 
-    public EcrfForm(@NotNull final String patientId, @NotNull final String status, @NotNull final String locked) {
+    public EcrfForm(@NotNull final String patientId, @NotNull final FormStatusState status, final boolean locked) {
         this.patientId = patientId;
         this.status = status;
         this.locked = locked;
@@ -69,13 +69,12 @@ public class EcrfForm {
         return nonEmptyItemGroups;
     }
 
-    @NotNull
-    public String locked() {
+    public boolean locked() {
         return locked;
     }
 
     @NotNull
-    public String status() {
+    public FormStatusState status() {
         return status;
     }
 }

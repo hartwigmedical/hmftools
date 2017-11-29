@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.time.LocalDate;
 
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,15 +29,14 @@ public abstract class BiopsyTreatmentResponseData {
     public abstract String measurementDone();
 
     @NotNull
-    public abstract String formStatus();
+    public abstract FormStatusState formStatus();
 
-    @NotNull
-    public abstract String formLocked();
+    public abstract boolean formLocked();
 
     @NotNull
     public static BiopsyTreatmentResponseData of(@Nullable final LocalDate assessmentDate, @Nullable final LocalDate responseDate,
-            @Nullable final String response, @Nullable final String measurementDone, @NotNull final String formStatus,
-            @NotNull final String formLocked) {
+            @Nullable final String response, @Nullable final String measurementDone, @NotNull final FormStatusState formStatus,
+            final boolean formLocked) {
         return ImmutableBiopsyTreatmentResponseData.of(null, assessmentDate, responseDate, response, measurementDone, formStatus,
                 formLocked);
     }

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.Config;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -45,16 +46,18 @@ public final class TreatmentMatcher {
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(clinicalBiopsy.date(), treatment.startDate())));
             final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 0) {
-                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "no biopsy match for treatment", "", "",
-                        treatment.toString()));
+                findings.add(
+                        ValidationFinding.of("match", patientId, FORM_TREATMENT, "no biopsy match for treatment", FormStatusState.UNKNOWN,
+                                false, treatment.toString()));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.size() > 1) {
-                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "multiple biopsy matches for treatment", "", "",
+                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "multiple biopsy matches for treatment",
+                        FormStatusState.UNKNOWN, false,
                         treatment + ". biopsies:  " + possibleMatches.stream().map(BiopsyData::toString).collect(Collectors.toList())));
                 matchedTreatments.add(treatment);
             } else if (possibleMatches.get(0).date() == null) {
-                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "treatment matched biopsy with null date.", "", "",
-                        treatment.toString()));
+                findings.add(ValidationFinding.of("match", patientId, FORM_TREATMENT, "treatment matched biopsy with null date.",
+                        FormStatusState.UNKNOWN, false, treatment.toString()));
                 matchedTreatments.add(treatment);
             } else {
                 final BiopsyData clinicalBiopsy = possibleMatches.get(0);

@@ -15,9 +15,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class FormStatus {
+public final class FormStatusReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(FormStatus.class);
+    private static final Logger LOGGER = LogManager.getLogger(FormStatusReader.class);
 
     private static final int PATIENT_KEY_COLUMN = 0;
     private static final int PATIENT_ID_COLUMN = 1;
@@ -42,7 +42,7 @@ public final class FormStatus {
     private static final String FIELD_SEPARATOR = ",";
     private static final char QUOTE = '"';
 
-    private FormStatus() {
+    private FormStatusReader() {
     }
 
     @NotNull
@@ -55,8 +55,8 @@ public final class FormStatus {
                 final FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
                         removeParentheses(removeQuotes(parts[FORM_NAME_COLUMN])), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
                         removeParentheses(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
-                final FormStatusData formStatus =
-                        new ImmutableFormStatusData(removeQuotes(parts[DATA_STATUS_COLUMN]), removeQuotes(parts[LOCKED_COLUMN]));
+                final FormStatusData formStatus = new ImmutableFormStatusData(interpretState(removeQuotes(parts[DATA_STATUS_COLUMN])),
+                        interpretLocked(removeQuotes(parts[LOCKED_COLUMN])));
                 formStatuses.put(formKey, formStatus);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in form status csv: " + line);
@@ -89,6 +89,34 @@ public final class FormStatus {
             return matcher.group(0).trim();
         } else {
             return text;
+        }
+    }
+
+    private static boolean interpretLocked(@NotNull final String locked) {
+        if (!locked.equalsIgnoreCase("true") && !locked.equalsIgnoreCase("false")) {
+            LOGGER.warn("Undefined locked status - cannot convert to boolean: " + locked);
+        }
+
+        return locked.equalsIgnoreCase("true");
+    }
+
+    @NotNull
+    private static FormStatusState interpretState(@NotNull final String state) {
+        switch (state) {
+            case "0":
+                return FormStatusState.SAVED;
+            case "1":
+                return FormStatusState.SUBMITTED;
+            case "2":
+                return FormStatusState.SUBMITTED_WITH_DISCREPANCIES;
+            case "3":
+                return FormStatusState.SUBMITTED_WITH_MISSING;
+            case "4":
+                return FormStatusState.VERIFIED;
+            default: {
+                LOGGER.warn("Could not interpret data status: " + state);
+                return FormStatusState.UNKNOWN;
+            }
         }
     }
 }

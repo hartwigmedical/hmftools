@@ -12,9 +12,9 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusState;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -37,11 +37,11 @@ public class BiopsyReaderTest {
         biopsy1.addItem(BiopsyReader.FIELD_SITE, "other");
         biopsy1.addItem(BiopsyReader.FIELD_SITE_OTHER, "body");
 
-        EcrfForm form1 = new EcrfForm(patient, Strings.EMPTY, "TRUE");
+        EcrfForm form1 = new EcrfForm(patient, FormStatusState.SAVED, true);
         form1.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsy1);
 
         EcrfItemGroup biopsy2 = new EcrfItemGroup(patient);
-        EcrfForm form2 = new EcrfForm(patient, Strings.EMPTY, "TRUE");
+        EcrfForm form2 = new EcrfForm(patient, FormStatusState.SAVED, true);
         form2.addItemGroup(BiopsyReader.ITEMGROUP_BIOPSIES, biopsy2);
 
         EcrfStudyEvent studyEvent = new EcrfStudyEvent(patient);

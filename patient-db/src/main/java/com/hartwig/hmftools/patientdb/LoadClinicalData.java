@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -108,7 +108,7 @@ public final class LoadClinicalData {
         } else {
             LOGGER.info("Loading ecrf model...");
             dbWriter.clearClinicalTables();
-            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusCsv);
+            final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
             final PatientReader patientReader =
@@ -149,7 +149,7 @@ public final class LoadClinicalData {
         } else {
             dbWriter.clearCpctEcrf();
             LOGGER.info("Loading ecrf model...");
-            final FormStatusModel formStatusModel = FormStatus.buildModelFromCsv(formStatusPath);
+            final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusPath);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final Set<String> sequencedPatients = Utils.sequencedPatientIds(runContexts);
             LOGGER.info("Writing raw ecrf data for " + sequencedPatients.size() + " patients.");
