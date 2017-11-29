@@ -31,7 +31,7 @@ public class BiopsyMatcherTest {
     private final static SampleData LIMS_SAMPLE_SEP = ImmutableSampleData.of("sep-sample", SEP2015, null, 0D);
     private final static SampleData LIMS_SAMPLE_NOV = ImmutableSampleData.of("nov-sample", NOV2015, null, 0D);
 
-    private final static SampleData LIMS_ARRIVED_NOV_SAMPLED_FEB = ImmutableSampleData.of("feb-sample-arrived-nov", NOV2015, FEB2015, 0D);
+    private final static SampleData LIMS_ARRIVED_NOV_SAMPLED_MAR = ImmutableSampleData.of("mar-sample-arrived-nov", NOV2015, MAR2015, 0D);
 
     private final static BiopsyData ECRF_BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "");
     private final static BiopsyData ECRF_BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "");
@@ -62,10 +62,7 @@ public class BiopsyMatcherTest {
     public void biopsyBeforeSampleOutsideThresholdYieldsNoMatch() {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN);
-        final List<BiopsyData> matchedBiopsies =
-                BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
-        assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
-        assertEquals(null, matchedBiopsies.get(0).sampleId());
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
     // MIVO:    ---sample(aug)-biopsy(sep)---
@@ -164,12 +161,20 @@ public class BiopsyMatcherTest {
         runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null, null);
     }
 
-    // KODU: --biopsy(feb)-x-x-x-x-sample(nov)--
+    // KODU: --biopsy(mar)-x-x-x-x-sample(nov)--
     @Test
     public void biopsyArrivedInNovButSamplingDateKnownYieldsMatch() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_ARRIVED_NOV_SAMPLED_FEB);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB);
-        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, LIMS_ARRIVED_NOV_SAMPLED_FEB.sampleId());
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_ARRIVED_NOV_SAMPLED_MAR);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, LIMS_ARRIVED_NOV_SAMPLED_MAR.sampleId());
+    }
+
+    // KODU: --biopsy(jan)-x-sample(mar)-x-x-sample_arrived(nov)--
+    @Test
+    public void biopsyFromJanArrivedInNovButSamplingDateInMarYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_ARRIVED_NOV_SAMPLED_MAR);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
     }
 
     private static void runMatcherAndVerify(@NotNull List<SampleData> sequencedBiopsies, @NotNull List<BiopsyData> clinicalBiopsies,

@@ -72,17 +72,17 @@ public final class BiopsyMatcher {
 
     private static boolean isWithinThreshold(@NotNull final SampleData sequencedBiopsy, @NotNull final BiopsyData clinicalBiopsy) {
         final LocalDate biopsyDate = clinicalBiopsy.date();
-        if (biopsyDate != null && (biopsyDate.isBefore(sequencedBiopsy.date()) || biopsyDate.isEqual(sequencedBiopsy.date()))) {
-            final LocalDate limsSamplingDate = sequencedBiopsy.samplingDate();
-            if (limsSamplingDate != null) {
-                return Duration.between(biopsyDate.atStartOfDay(), limsSamplingDate.atStartOfDay()).toDays()
-                        < Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
-            } else {
-                return Duration.between(biopsyDate.atStartOfDay(), sequencedBiopsy.arrivalDate().atStartOfDay()).toDays()
-                        < Config.ARRIVAL_DATE_THRESHOLD;
-            }
+        assert biopsyDate != null;
+
+        final LocalDate samplingDate = sequencedBiopsy.samplingDate();
+        if (samplingDate != null) {
+            return Math.abs(Duration.between(biopsyDate.atStartOfDay(), samplingDate.atStartOfDay()).toDays())
+                    < Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
+        } else {
+            long daysFromBiopsyTakenToArrival =
+                    Duration.between(biopsyDate.atStartOfDay(), sequencedBiopsy.arrivalDate().atStartOfDay()).toDays();
+            return daysFromBiopsyTakenToArrival >= 0 && daysFromBiopsyTakenToArrival < Config.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
         }
-        return false;
     }
 
     @NotNull
@@ -90,6 +90,6 @@ public final class BiopsyMatcher {
         if (sampleData.samplingDate() != null) {
             return "sampling date " + sampleData.samplingDate() + " threshold: " + Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
         }
-        return "arrival date " + sampleData.arrivalDate() + " threshold: " + Config.ARRIVAL_DATE_THRESHOLD;
+        return "arrival date " + sampleData.arrivalDate() + " threshold: " + Config.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
     }
 }
