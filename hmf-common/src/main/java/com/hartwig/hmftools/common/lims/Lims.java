@@ -58,7 +58,7 @@ public class Lims {
         final LimsJsonData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             final LocalDate samplingDate = getNullableDate(sampleData.samplingDateString());
-            if (samplingDate == null) {
+            if (samplingDate == null && !sampleData.samplingDateString().equalsIgnoreCase("na")) {
                 LOGGER.warn("LIMS sampling date for " + sample + ": " + sampleData.samplingDateString() + " is not a valid date.");
             }
             return samplingDate;

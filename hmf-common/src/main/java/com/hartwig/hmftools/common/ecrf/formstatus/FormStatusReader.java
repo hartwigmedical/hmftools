@@ -49,6 +49,8 @@ public final class FormStatusReader {
     public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
         final Map<FormStatusKey, FormStatusData> formStatuses = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        // KODU: No need to read the header line
+        lines.remove(0);
         for (final String line : lines) {
             final String[] parts = splitCsvLine(line, FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
