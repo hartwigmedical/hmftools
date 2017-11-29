@@ -25,25 +25,24 @@ public class BiopsyMatcherTest {
     private final static LocalDate SEP2015 = LocalDate.parse("2015-09-01");
     private final static LocalDate NOV2015 = LocalDate.parse("2015-11-01");
 
-    private final static SampleData LIMS_BIOPSY_JUL = ImmutableSampleData.of("jul", JUL2015, null, 50.0);
-    private final static SampleData LIMS_BIOPSY_AUG = ImmutableSampleData.of("aug", AUG2015, null, 50.0);
-    private final static SampleData LIMS_BIOPSY_SEP = ImmutableSampleData.of("sep", SEP2015, null, 50.0);
-    private final static SampleData LIMS_BIOPSY_NOV = ImmutableSampleData.of("nov", NOV2015, null, 50.0);
+    private final static SampleData LIMS_SAMPLE_JUL = ImmutableSampleData.of("jul-sample", JUL2015, null, 0D);
+    private final static SampleData LIMS_SAMPLE_AUG = ImmutableSampleData.of("aug-sample", AUG2015, null, 0D);
+    private final static SampleData LIMS_SAMPLE_SEP = ImmutableSampleData.of("sep-sample", SEP2015, null, 0D);
+    private final static SampleData LIMS_SAMPLE_NOV = ImmutableSampleData.of("nov-sample", NOV2015, null, 0D);
 
-    private final static BiopsyData BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "");
-    private final static BiopsyData BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "");
-    private final static BiopsyData BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "", "");
-    private final static BiopsyData BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", "", "");
-
-    private final static BiopsyData BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "", "");
+    private final static BiopsyData ECRF_BIOPSY_JAN = ImmutableBiopsyData.of(JAN2015, "", "", "", "");
+    private final static BiopsyData ECRF_BIOPSY_FEB = ImmutableBiopsyData.of(FEB2015, "", "", "", "");
+    private final static BiopsyData ECRF_BIOPSY_MAR = ImmutableBiopsyData.of(MAR2015, "", "", "", "");
+    private final static BiopsyData ECRF_BIOPSY_JUL = ImmutableBiopsyData.of(JUL2015, "", "", "", "");
+    private final static BiopsyData ECRF_BIOPSY_SEP = ImmutableBiopsyData.of(SEP2015, "", "", "", "");
 
     private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, "", "", "", "");
 
     // MIVO:    ---biopsy(jul)/sample(jul)---
     @Test
-    public void testBiopsyAndSampleSameDate() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JUL);
+    public void biopsyAndSampleSameDateYieldsMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JUL);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
@@ -52,9 +51,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(mar)-x-x-x-sample(jul)---
     @Test
-    public void test1BiopsyBefore1SampleWithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR);
+    public void biopsyBeforeSampleWithinThresholdYieldsMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
@@ -63,9 +62,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(jan)-x-x-x-x-x-sample(jul)---
     @Test
-    public void test1BiopsyBefore1SampleOutsideThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN);
+    public void biopsyBeforeSampleOutsideThresholdYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
@@ -74,9 +73,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---sample(aug)-biopsy(sep)---
     @Test
-    public void test1BiopsiesAfter1Sample() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_SEP);
+    public void biopsyTakenAfterSampleArrivedYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_SEP);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
@@ -85,9 +84,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(feb)-biopsy(mar)-x-x-x-sample(jul)---
     @Test
-    public void test2BiopsiesBefore1Sample2WithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_MAR);
+    public void twoBiopsiesBeforeSampleWithinThresholdYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB, ECRF_BIOPSY_MAR);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -98,9 +97,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(feb)-x-x-null(?)-x-sample(jul)---
     @Test
-    public void test1Biopsy1NullBefore1SampleWithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_NULL);
+    public void twoBiopsiesSecondNullBeforeSampleWithinThresholdYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB, BIOPSY_NULL);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -111,9 +110,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---null(?)-biopsy(feb)-x-x-x-x-sample(jul)---
     @Test
-    public void test1Null1BiopsyBefore1SampleWithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB);
+    public void twoBiopsiesFirstNullBeforeSampleWithinThresholdYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_NULL, ECRF_BIOPSY_FEB);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -124,9 +123,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(jan)-x-biopsy(mar)-x-x-x-sample(jul)---
     @Test
-    public void test2BiopsiesBefore1Sample1WithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_MAR);
+    public void twoBiopsiesBeforeSampleOneWithinThresholdYieldsMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN, ECRF_BIOPSY_MAR);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -137,9 +136,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(jan)-x-biopsy(mar)-x-x-x-sample(jul)---
     @Test
-    public void test2BiopsiesBefore1Sample1WithinThresholdOutOfOrder() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_JAN);
+    public void twoBiopsiesBeforeSample1WithinThresholdOutOfOrderYieldsMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR, ECRF_BIOPSY_JAN);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -150,9 +149,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(jan)-biopsy(feb)-x-x-x-x-x-x-sample(sep)---
     @Test
-    public void test2BiopsiesBefore1Sample2OutsideThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_SEP);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_FEB);
+    public void twoBiopsiesBeforeSampleOutsideThresholdYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_SEP);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN, ECRF_BIOPSY_FEB);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -163,9 +162,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(feb)-x-x-x-x-sample(jul)-sample(aug)---
     @Test
-    public void test1BiopsyBefore2SamplesWithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL, LIMS_BIOPSY_AUG);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB);
+    public void biopsyBefore2SamplesWithinThresholdYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL, LIMS_SAMPLE_AUG);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
@@ -174,9 +173,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(mar)-x-x-x-sample(jul)-x-biopsy(sep)---
     @Test
-    public void test1SampleBetween2BiopsiesWithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_JUL);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_SEP);
+    public void oneSampleBetween2BiopsiesWithinThresholdYieldsMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_JUL);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR, ECRF_BIOPSY_SEP);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -187,9 +186,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(feb)-biopsy(mar)-x-x-x-x-sample(aug)-sample(sep)---
     @Test
-    public void test2SamplesAfter2Biopsies() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG, LIMS_BIOPSY_SEP);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_FEB, BIOPSY_MAR);
+    public void twoSamplesAfterTwoBiopsiesYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG, LIMS_SAMPLE_SEP);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_FEB, ECRF_BIOPSY_MAR);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -200,9 +199,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(mar)-x-x-x-x-sample(aug)-biopsy(sep)-x-sample(nov)---
     @Test
-    public void test2SamplesBetween2BiopsiesWithinThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG, LIMS_BIOPSY_NOV);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_MAR, BIOPSY_SEP);
+    public void twoSamplesBetweenTwoBiopsiesWithinThresholdYieldsMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG, LIMS_SAMPLE_NOV);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_MAR, ECRF_BIOPSY_SEP);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
@@ -213,9 +212,9 @@ public class BiopsyMatcherTest {
 
     // MIVO:    ---biopsy(jan)-x-x-x-x-x-x-sample(aug)-biopsy(sep)-x-sample(nov)---
     @Test
-    public void test2SamplesBetween2Biopsies1OutsideThreshold() {
-        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_BIOPSY_AUG, LIMS_BIOPSY_NOV);
-        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
+    public void twoSamplesBetweenTwoBiopsiesOneOutsideThresholdYieldsNoMatch() {
+        final List<SampleData> sequencedBiopsies = Lists.newArrayList(LIMS_SAMPLE_AUG, LIMS_SAMPLE_NOV);
+        final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(ECRF_BIOPSY_JAN, ECRF_BIOPSY_SEP);
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
         matchedBiopsies.sort(CLINICAL_DATA_COMPARATOR);
