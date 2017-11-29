@@ -36,21 +36,21 @@ public final class BiopsyMatcher {
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));
             final List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 1 && possibleMatches.get(0).date() != null) {
-                final BiopsyData clinicalBiopsy = partitions.get(true).get(0);
+                final BiopsyData clinicalBiopsy = possibleMatches.get(0);
                 matchedBiopsies.add(ImmutableBiopsyData.builder().from(clinicalBiopsy).sampleId(sequencedBiopsy.sampleId()).build());
                 remainingBiopsies = partitions.get(false);
             } else if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
                 findings.add(
-                        ValidationFinding.of("match", patientId, FORM_BIOPS, "could not match any clinical biopsy with sequenced biopsy.",
-                                "", "", "biopsy: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
+                        ValidationFinding.of("match", patientId, FORM_BIOPS, "could not match any clinical biopsy with sequenced sample.",
+                                "", "", "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                         .map(BiopsyData::date)
                                         .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
                 // MIVO: abort finding new matches if we can't match one sequenced biopsy
                 return new MatchResult<>(clinicalBiopsies, findings);
             } else if (possibleMatches.size() > 1) {
                 findings.add(ValidationFinding.of("match", patientId, FORM_BIOPS,
-                        "more than 1 possible clinical biopsy match for sequenced biopsy.", "", "",
-                        "biopsy: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
+                        "more than 1 possible clinical biopsy match for sequenced sample.", "", "",
+                        "sample: " + sampleDataToString(sequencedBiopsy) + "; ecrf biopsies: " + clinicalBiopsies.stream()
                                 .map(BiopsyData::date)
                                 .collect(Collectors.toList()) + ". match criteria: " + getMatchDateCriteria(sequencedBiopsy)));
                 // MIVO: abort finding new matches if we can't match one sequenced biopsy
@@ -63,7 +63,7 @@ public final class BiopsyMatcher {
 
     @NotNull
     private static String sampleDataToString(@NotNull final SampleData sampleData) {
-        return sampleData.sampleId() + "(s:" + sampleData.samplingDate() + ",a:" + sampleData.arrivalDate() + ")";
+        return sampleData.sampleId() + "(S:" + sampleData.samplingDate() + ", A:" + sampleData.arrivalDate() + ")";
     }
 
     private static boolean isPossibleMatch(@NotNull final SampleData sequencedBiopsy, @NotNull final BiopsyData clinicalBiopsy) {
