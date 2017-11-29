@@ -14,20 +14,15 @@ class AlleleFrequency {
         header.addMetaDataLine(new VCFInfoHeaderLine(VCF_INFO_TAG, 2, VCFHeaderLineType.Float, "AF at each breakpoint"));
     }
 
-    private static Double calculate(final HMFVariantContext ctx, final BreakpointStats bp) {
-        if (ctx.isShortDelete() || ctx.isShortDuplicate() || ctx.isInsert()) {
-            final double support = bp.SR_Only_Support + bp.PR_SR_Support;
-            final double total = bp.PR_SR_Normal + support;
-            return total > 0 ? support / total : 0.0;
-        }
-
-        final double support = bp.PR_SR_Support + bp.PR_Only_Support + bp.SR_Only_Support;
-        final double total = bp.PR_SR_Normal + bp.PR_Only_Normal + support;
-        return total > 0 ? support / total : 0.0;
+    private static Double calculate(final BreakpointStats bp, final double support) {
+        final double total = bp.PR_Only_Normal + bp.PR_SR_Normal + support;
+        return total > 0.0 ? support / total : 0.0;
     }
 
-    static Pair<Double, Double> calculate(final HMFVariantContext ctx, final SampleStats tumorResult) {
-        return Pair.of(calculate(ctx, tumorResult.BP1_Stats), calculate(ctx, tumorResult.BP2_Stats));
+    static Pair<Double, Double> calculate(final SampleStats stats) {
+        final BreakpointStats bp1 = stats.BP1_Stats, bp2 = stats.BP2_Stats;
+        final double support = bp1.PR_SR_Support + bp1.PR_Only_Support + bp1.SR_Only_Support + bp2.SR_Only_Support;
+        return Pair.of(calculate(stats.BP1_Stats, support), calculate(stats.BP2_Stats, support));
     }
 
 }

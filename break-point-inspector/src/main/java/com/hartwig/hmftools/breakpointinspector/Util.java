@@ -71,18 +71,22 @@ class HMFVariantContext {
         Imprecise = imprecise;
     }
 
-    boolean isShortDelete() {
+    private boolean isShortDelete() {
         boolean b = Type == HMFVariantType.DEL;
         b &= MantaBP1.ReferenceIndex == MantaBP2.ReferenceIndex;
         b &= (MantaBP2.Position - MantaBP1.Position) < SHORT_VARIANT_LENGTH;
         return b;
     }
 
-    boolean isShortDuplicate() {
+    private boolean isShortDuplicate() {
         boolean b = Type == HMFVariantType.DUP;
         b &= MantaBP1.ReferenceIndex == MantaBP2.ReferenceIndex;
         b &= (MantaBP2.Position - MantaBP1.Position) < SHORT_VARIANT_LENGTH;
         return b;
+    }
+
+    boolean isShortVariant() {
+        return isShortDelete() || isShortDuplicate();
     }
 
     boolean isInsert() {

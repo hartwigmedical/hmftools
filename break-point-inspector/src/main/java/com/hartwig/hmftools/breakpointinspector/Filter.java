@@ -82,7 +82,7 @@ class Filter {
 
             // no PR/SR checks
 
-        } else if (ctx.isShortDelete() || ctx.isShortDuplicate()) {
+        } else if (ctx.isShortVariant()) {
             // short variant logic
 
             final boolean bothSidesHaveSR = Stream.of(tumorStats.BP1_Stats, tumorStats.BP2_Stats).allMatch(s -> supportSR(s) > 0);

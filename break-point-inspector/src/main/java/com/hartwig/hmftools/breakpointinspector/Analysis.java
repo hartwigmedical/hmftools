@@ -130,6 +130,10 @@ class Analysis {
         final List<SAMRecord> currentReads = Lists.newArrayList();
         final SAMRecordIterator iterator = reader.iterator();
 
+        final boolean srOnly = ctx.isShortVariant() || ctx.isInsert();
+
+        // iterate through all records in the bam
+        // then go through alignments of a read pair-wise
         while (iterator.hasNext() || !currentReads.isEmpty()) {
 
             final SAMRecord record = iterator.hasNext() ? iterator.next() : null;
@@ -161,6 +165,7 @@ class Analysis {
 
                 final boolean proper = stream(pair).anyMatch(SAMRecord::getProperPairFlag);
                 final boolean secondary = stream(pair).anyMatch(SAMRecord::isSecondaryOrSupplementary);
+
                 final boolean correctOrientation = orientation(pair).equals(ctxOrientation);
                 final boolean correctChromosome =
                         Location.fromSAMRecord(pair.getLeft()).sameChromosomeAs(ctx.MantaBP1) && Location.fromSAMRecord(pair.getRight())
@@ -172,27 +177,27 @@ class Analysis {
                         : pair.getLeft().getAlignmentStart() - bp1.Position) + (ctx.OrientationBP2 > 0 ? breakpoints.getRight().Position
                         - pair.getRight().getAlignmentEnd() : pair.getRight().getAlignmentStart() - bp2.Position) < MAX_INTRA_PAIR_LENGTH;
 
-                boolean support = correctOrientation && correctChromosome && intraPairLength;
-                if (support) {
+                boolean isPairEvidence = correctOrientation && correctChromosome && intraPairLength;
+                if (isPairEvidence) {
 
                     final int left_outer = Location.fromSAMRecord(pair.getLeft(), ctx.OrientationBP1 > 0).compareTo(bp1);
                     final int right_outer = Location.fromSAMRecord(pair.getRight(), ctx.OrientationBP2 > 0).compareTo(bp2);
 
                     if (ctx.OrientationBP1 > 0) {
-                        support &= left_outer < 0;
+                        isPairEvidence &= left_outer < 0;
                     } else {
-                        support &= left_outer > 0;
+                        isPairEvidence &= left_outer > 0;
                     }
                     if (ctx.OrientationBP2 > 0) {
-                        support &= right_outer < 0;
+                        isPairEvidence &= right_outer < 0;
                     } else {
-                        support &= right_outer > 0;
+                        isPairEvidence &= right_outer > 0;
                     }
 
                 }
 
-                pr_support |= support;
-                if (support) {
+                if (isPairEvidence && !srOnly) {
+                    pr_support = true;
                     bp1_sr_support |= exactlyClipsBreakpoint(pair.getLeft(), bp1, ctx.OrientationBP1);
                     bp2_sr_support |= exactlyClipsBreakpoint(pair.getRight(), bp2, ctx.OrientationBP2);
                     result.PR_Evidence.add(pair);
@@ -210,53 +215,59 @@ class Analysis {
                     final boolean overlap_bp1 = overlap(pair, bp1);
                     final boolean overlap_bp2 = overlap(pair, bp2);
 
+                    boolean addToSR = false;
                     if (span_bp1) {
                         if (clips_bp1) {
-                            bp1_sr_support = true;
+                            bp1_sr_support = addToSR = true;
                         } else if (overlap_bp1) {
-                            bp1_pr_normal = true;
-                            bp1_sr_normal = true;
+                            bp1_pr_normal = bp1_sr_normal = addToSR = true;
                         } else {
                             bp1_pr_normal = true;
                         }
                     }
                     if (span_bp2) {
                         if (clips_bp2) {
-                            bp2_sr_support = true;
+                            bp2_sr_support = addToSR = true;
                         } else if (overlap_bp2) {
-                            bp2_pr_normal = true;
-                            bp2_sr_normal = true;
+                            bp2_pr_normal = bp2_sr_normal = addToSR = true;
                         } else {
                             bp2_pr_normal = true;
                         }
+                    }
+
+                    if (addToSR) {
+                        result.SR_Evidence.add(pair);
                     }
                 }
 
             } // next pair in reads
 
-            // increment counts
+            // increment read counts
+            final boolean sr_support = bp1_sr_support || bp2_sr_support;
 
-            if (bp1_sr_support && pr_support) {
+            if (sr_support && pr_support) {
                 result.BP1_Stats.PR_SR_Support++;
             } else if (bp1_sr_support) {
                 result.BP1_Stats.SR_Only_Support++;
             } else if (pr_support) {
                 result.BP1_Stats.PR_Only_Support++;
-            } else if (bp1_pr_normal && bp1_sr_normal) {
+            }
+            if (bp1_pr_normal && bp1_sr_normal) {
                 result.BP1_Stats.PR_SR_Normal++;
-            } else if (bp1_pr_normal) {
+            } else if (bp1_pr_normal && !srOnly) {
                 result.BP1_Stats.PR_Only_Normal++;
             }
 
-            if (bp2_sr_support && pr_support) {
+            if (sr_support && pr_support) {
                 result.BP2_Stats.PR_SR_Support++;
             } else if (bp2_sr_support) {
                 result.BP2_Stats.SR_Only_Support++;
             } else if (pr_support) {
                 result.BP2_Stats.PR_Only_Support++;
-            } else if (bp2_pr_normal && bp2_sr_normal) {
+            }
+            if (bp2_pr_normal && bp2_sr_normal) {
                 result.BP2_Stats.PR_SR_Normal++;
-            } else if (bp2_pr_normal) {
+            } else if (bp2_pr_normal && !srOnly) {
                 result.BP2_Stats.PR_Only_Normal++;
             }
 
@@ -469,6 +480,7 @@ class Analysis {
             return BreakpointResult.from(Pair.of(bp1, bp2));
         } else {
             final Location bp1 = ctx.MantaBP1.add(ctx.OrientationBP1 > 0 ? 0 : adj); // ignore homology when we have an insert
+            // TODO: double check adding uncertainty on bp2?
             final Location bp2 = ctx.MantaBP2.add(ctx.OrientationBP2 > 0 ? ctx.Uncertainty2.End : ctx.Uncertainty2.Start + adj);
             return BreakpointResult.from(Pair.of(bp1, bp2));
         }
@@ -518,7 +530,7 @@ class Analysis {
         } else {
             result.TumorStats = collectEvidence(ctx, SORTED_TUMOR_READER, result.Breakpoints);
             result.RefStats = collectEvidence(ctx, SORTED_REF_READER, result.Breakpoints);
-            result.AlleleFrequency = AlleleFrequency.calculate(ctx, result.TumorStats);
+            result.AlleleFrequency = AlleleFrequency.calculate(result.TumorStats);
 
             // load sample clipping
             SORTED_TUMOR_READER.forEach(r -> Clipping.getClips(r).forEach(c -> result.TumorStats.Sample_Clipping.add(c)));
