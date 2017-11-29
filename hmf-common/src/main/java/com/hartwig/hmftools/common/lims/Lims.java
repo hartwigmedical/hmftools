@@ -41,7 +41,7 @@ public class Lims {
         if (sampleData != null) {
             arrivalDate = getNullableDate(sampleData.arrivalDateString());
             if (arrivalDate == null) {
-                LOGGER.warn("LIMS arrival date: " + sampleData.arrivalDateString() + " is not a valid date.");
+                LOGGER.warn("LIMS arrival date for " + sample + ": " + sampleData.arrivalDateString() + " is not a valid date.");
             }
         } else {
             arrivalDate = preLimsArrivalDates.get(sample);
@@ -59,11 +59,10 @@ public class Lims {
         if (sampleData != null) {
             final LocalDate samplingDate = getNullableDate(sampleData.samplingDateString());
             if (samplingDate == null) {
-                LOGGER.warn("LIMS sampling date: " + sampleData.samplingDateString() + " is not a valid date.");
+                LOGGER.warn("LIMS sampling date for " + sample + ": " + sampleData.samplingDateString() + " is not a valid date.");
             }
             return samplingDate;
         }
-        LOGGER.warn("Could not find sampling date for sample: " + sample + " in LIMS");
         return null;
     }
 
@@ -77,7 +76,6 @@ public class Lims {
                 return null;
             }
         }
-        LOGGER.warn("Could not find tumor percentage for sample: " + sample + " in LIMS");
         return null;
     }
 
