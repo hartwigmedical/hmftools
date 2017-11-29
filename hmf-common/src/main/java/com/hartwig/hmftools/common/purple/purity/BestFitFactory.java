@@ -20,14 +20,15 @@ public class BestFitFactory {
     private static final double HIGHLY_DIPLOID_PERCENTAGE = 0.98;
     private static final double ALL_CANDIDATES_MIN_PURITY = 0.15;
     private static final double LOWEST_SCORE_MIN_PURITY = 0.15;
-    private static final int MIN_VARIANTS = 1000;
 
     private final FittedPurity bestFit;
     private final FittedPurityScore score;
     private final FittedPurityStatus status;
+    private final int minVariants;
 
-    public BestFitFactory(final List<FittedPurity> fittedPurities, List<PurpleSomaticVariant> somatics) {
+    public BestFitFactory(int minVariants, int minPeak, final List<FittedPurity> fittedPurities, List<PurpleSomaticVariant> somatics) {
         assert (!fittedPurities.isEmpty());
+        this.minVariants = minVariants;
 
         Collections.sort(fittedPurities);
         FittedPurity lowestScore = fittedPurities.get(0);
@@ -35,12 +36,13 @@ public class BestFitFactory {
         final List<FittedPurity> candidates = candidates(lowestScore.score(), fittedPurities);
         score = FittedPurityScoreFactory.score(candidates);
 
+        //todo: chane range to greater > 10
         if (Doubles.lessOrEqual(score.minPurity(), ALL_CANDIDATES_MIN_PURITY) && isHighlyDiploid(score)) {
             if (noDetectableTumor(somatics.size())) {
                 status = FittedPurityStatus.NO_TUMOR;
                 bestFit = lowestScore;
             } else {
-                final Optional<FittedPurity> somaticFit = SomaticFitFactory.fromSomatics(candidates, somatics);
+                final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(candidates, somatics);
                 if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
                     status = FittedPurityStatus.HIGHLY_DIPLOID;
                     bestFit = lowestScore;
@@ -57,7 +59,7 @@ public class BestFitFactory {
     }
 
     private boolean noDetectableTumor(int somaticCount) {
-        return somaticCount > 0 && somaticCount < MIN_VARIANTS;
+        return somaticCount > 0 && somaticCount < minVariants;
     }
 
     private boolean somaticsWontHelp(int somaticCount, double lowestScoringPurity, @NotNull final Optional<FittedPurity> somaticFit) {
