@@ -27,10 +27,12 @@ import org.junit.Test;
 public class PatientDataValidationTest {
     private final String CPCT_ID = "CPCT01020000";
     private final String HOSPITAL = "Test Hospital";
-    private final PatientData PATIENT_DATA =
+
+    private final PatientData EMPTY_PATIENT_DATA =
             ImmutablePatientData.of(CPCT_ID, null, null, HOSPITAL, null, ImmutableCuratedTumorLocation.of(null, null, null), null,
                     FormStatusState.UNKNOWN, false, FormStatusState.UNKNOWN, false, FormStatusState.UNKNOWN, false, FormStatusState.UNKNOWN,
                     false, FormStatusState.UNKNOWN, false);
+
     private final PatientData PATIENT_DATA_MISSING_LOCATION_MAPPING =
             ImmutablePatientData.of(CPCT_ID, null, null, HOSPITAL, null, ImmutableCuratedTumorLocation.of(null, null, "some_location"),
                     null, FormStatusState.UNKNOWN, false, FormStatusState.UNKNOWN, false, FormStatusState.UNKNOWN, false,
@@ -38,15 +40,13 @@ public class PatientDataValidationTest {
 
     @Test
     public void reportsMissingFields() {
-        final List<ValidationFinding> findings = PatientValidator.validatePatientData(PATIENT_DATA);
-        assertEquals(6, findings.size());
+        final List<ValidationFinding> findings = PatientValidator.validatePatientData(EMPTY_PATIENT_DATA);
+        assertEquals(4, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE2));
-        assertTrue(findingsFields.contains(FIELD_REGISTRATION_DATE1));
+        assertTrue(findingsFields.contains(fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2)));
         assertTrue(findingsFields.contains(FIELD_SEX));
-        assertTrue(findingsFields.contains(FIELD_BIRTH_YEAR1));
-        assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
+        assertTrue(findingsFields.contains(fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3)));
         assertTrue(findingsFields.contains(fields(FIELD_PRIMARY_TUMOR_LOCATION, FIELD_PRIMARY_TUMOR_LOCATION_OTHER)));
     }
 

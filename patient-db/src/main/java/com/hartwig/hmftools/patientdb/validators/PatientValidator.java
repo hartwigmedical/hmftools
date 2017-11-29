@@ -90,7 +90,7 @@ public final class PatientValidator {
                     patientData.demographyLocked()));
         }
         if (patientData.registrationDate() == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, fields(FIELD_REGISTRATION_DATE2, FIELD_REGISTRATION_DATE1),
+            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2),
                     "registration date empty or in wrong format",
                     FormStatusState.best(patientData.selectionCriteriaStatus(), patientData.eligibilityStatus()),
                     patientData.selectionCriteriaLocked() || patientData.eligibilityLocked()));
@@ -296,7 +296,7 @@ public final class PatientValidator {
             final LocalDate firstAssessmentDate = responses.get(0).assessmentDate();
             final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (firstAssessmentDate != null && firstTreatmentStart != null && firstAssessmentDate.isAfter(firstTreatmentStart)) {
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FORM_TREATMENT,
+                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, fields(FORM_TREATMENT, FORM_TUMOR_MEASUREMENT),
                         "first (baseline) measurement date is after first treatment start",
                         FormStatusState.best(treatments.get(0).formStatus(), responses.get(0).formStatus()),
                         treatments.get(0).formLocked() || responses.get(0).formLocked()));
@@ -391,8 +391,8 @@ public final class PatientValidator {
             final BiopsyTreatmentData lastTreatment = treatments.get(treatments.size() - 1);
             final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
             if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_DEATH_DATE, "death date before end of last treatment",
-                        FormStatusState.best(patient.deathStatus(), lastTreatment.formStatus()),
+                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, fields(FIELD_DEATH_DATE, FORM_TREATMENT),
+                        "death date before end of last treatment", FormStatusState.best(patient.deathStatus(), lastTreatment.formStatus()),
                         patient.deathLocked() || lastTreatment.formLocked()));
             }
         }

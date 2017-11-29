@@ -202,10 +202,9 @@ public class TreatmentValidationTest {
         final List<ValidationFinding> findings =
                 PatientValidator.validateDeathDate(CPCT_ID, ImmutablePatientData.builder().cpctId(CPCT_ID).deathDate(MAR2015).build(),
                         Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
-        assertEquals(2, findings.size());
+        assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientId).forEach(id -> assertEquals(CPCT_ID, id));
         final List<String> findingsFields = findings.stream().map(ValidationFinding::ecrfItem).collect(Collectors.toList());
-        assertTrue(findingsFields.contains(FIELD_DEATH_DATE));
-        assertTrue(findingsFields.contains(FORM_TREATMENT));
+        assertTrue(findingsFields.contains(fields(FIELD_DEATH_DATE, FORM_TREATMENT)));
     }
 }
