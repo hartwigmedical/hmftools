@@ -17,14 +17,10 @@ import com.hartwig.hmftools.patientdb.data.CuratedTreatment;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentDrugData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class BiopsyTreatmentReader {
-    private static final Logger LOGGER = LogManager.getLogger(BiopsyTreatmentReader.class);
-
     private static final String STUDY_AFTERBIOPT = "SE.AFTERBIOPT";
     public static final String FORM_TREATMENT = "FRM.TRTAFTER";
     private static final String ITEMGROUP_TREATMENT_AFTER = "GRP.TRTAFTER.TRTAFTER";

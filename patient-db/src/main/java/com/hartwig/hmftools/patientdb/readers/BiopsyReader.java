@@ -15,9 +15,10 @@ import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import org.jetbrains.annotations.NotNull;
 
 public final class BiopsyReader {
-    private static final String STUDY_BIOPSY = "SE.BIOPSY";
+
+    static final String STUDY_BIOPSY = "SE.BIOPSY";
     public static final String FORM_BIOPS = "FRM.BIOPS";
-    private static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
+    static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
 
     public static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
     public static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
@@ -47,6 +48,21 @@ public final class BiopsyReader {
                 }
             }
         }
-        return biopsies;
+        return filterEmptyBiopsyForms(biopsies);
+    }
+
+    @NotNull
+    private static List<BiopsyData> filterEmptyBiopsyForms(@NotNull List<BiopsyData> biopsies) {
+        final List<BiopsyData> finalBiopsies = Lists.newArrayList();
+        for (BiopsyData biopsy : biopsies) {
+            if (!isEmpty(biopsy)) {
+                finalBiopsies.add(biopsy);
+            }
+        }
+        return finalBiopsies;
+    }
+
+    private static boolean isEmpty(@NotNull BiopsyData biopsy) {
+        return (biopsy.date() == null && biopsy.location() == null && biopsy.site() == null && biopsy.formLocked().equals("TRUE"));
     }
 }
