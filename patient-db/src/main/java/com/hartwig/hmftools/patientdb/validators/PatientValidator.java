@@ -90,16 +90,16 @@ public final class PatientValidator {
                     patientData.demographyLocked()));
         }
         if (patientData.registrationDate() == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, FIELD_REGISTRATION_DATE2, "registration date empty or in wrong format",
-                    patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
-            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, FIELD_REGISTRATION_DATE1, "registration date empty or in wrong format",
-                    patientData.eligibilityStatus(), patientData.eligibilityLocked()));
+            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, fields(FIELD_REGISTRATION_DATE2, FIELD_REGISTRATION_DATE1),
+                    "registration date empty or in wrong format",
+                    FormStatusState.best(patientData.selectionCriteriaStatus(), patientData.eligibilityStatus()),
+                    patientData.selectionCriteriaLocked() || patientData.eligibilityLocked()));
         }
         if (patientData.birthYear() == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, FIELD_BIRTH_YEAR1, "birth year could not be determined",
-                    patientData.selectionCriteriaStatus(), patientData.selectionCriteriaLocked()));
-            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, fields(FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
-                    "birth year could not be determined", patientData.eligibilityStatus(), patientData.eligibilityLocked()));
+            findings.add(ValidationFinding.of(ECRF_LEVEL, cpctId, fields(FIELD_BIRTH_YEAR1, FIELD_BIRTH_YEAR2, FIELD_BIRTH_YEAR3),
+                    "birth year could not be determined",
+                    FormStatusState.best(patientData.eligibilityStatus(), patientData.selectionCriteriaStatus()),
+                    patientData.eligibilityLocked() || patientData.selectionCriteriaLocked()));
         }
         return findings;
     }
@@ -119,11 +119,10 @@ public final class PatientValidator {
             final LocalDate firstBiopsyDate = biopsies.get(0).date();
             final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (firstBiopsyDate != null && firstTreatmentStart != null && firstTreatmentStart.isBefore(firstBiopsyDate)) {
-                findings.add(
-                        ValidationFinding.of(ECRF_LEVEL, patientId, FORM_TREATMENT, "first treatment start is before first biopsy date",
-                                biopsies.get(0).formStatus(), biopsies.get(0).formLocked()));
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FORM_BIOPS, "first treatment start is before first biopsy date",
-                        treatments.get(0).formStatus(), treatments.get(0).formLocked()));
+                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, fields(FORM_TREATMENT, FORM_BIOPS),
+                        "first treatment start is before first biopsy date",
+                        FormStatusState.best(biopsies.get(0).formStatus(), treatments.get(0).formStatus()),
+                        biopsies.get(0).formLocked() || treatments.get(0).formLocked()));
             }
         }
         return findings;
@@ -298,11 +297,10 @@ public final class PatientValidator {
             final LocalDate firstTreatmentStart = treatments.get(0).startDate();
             if (firstAssessmentDate != null && firstTreatmentStart != null && firstAssessmentDate.isAfter(firstTreatmentStart)) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FORM_TREATMENT,
-                        "first (baseline) measurement date is after first treatment start", treatments.get(0).formStatus(),
-                        treatments.get(0).formLocked()));
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FORM_TUMOR_MEASUREMENT,
-                        "first (baseline) measurement date is after first treatment start", responses.get(0).formStatus(),
-                        responses.get(0).formLocked()));
+                        "first (baseline) measurement date is after first treatment start",
+                        FormStatusState.best(treatments.get(0).formStatus(), responses.get(0).formStatus()),
+                        treatments.get(0).formLocked() || responses.get(0).formLocked()));
+
             }
         }
         final List<BiopsyTreatmentData> treatmentsMissingResponse = treatments.stream()
@@ -394,9 +392,8 @@ public final class PatientValidator {
             final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
             if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_DEATH_DATE, "death date before end of last treatment",
-                        patient.deathStatus(), patient.deathLocked()));
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FORM_TREATMENT, "death date before end of last treatment",
-                        lastTreatment.formStatus(), lastTreatment.formLocked()));
+                        FormStatusState.best(patient.deathStatus(), lastTreatment.formStatus()),
+                        patient.deathLocked() || lastTreatment.formLocked()));
             }
         }
         return findings;
@@ -417,15 +414,16 @@ public final class PatientValidator {
                         "registrationDate: " + registrationDate + ". biopsies: " + biopsiesPriorToRegistration.stream()
                                 .map(BiopsyData::toString)
                                 .collect(Collectors.toList());
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_REGISTRATION_DATE2,
-                        "at least 1 biopsy date prior to registration date", patient.selectionCriteriaStatus(),
-                        patient.selectionCriteriaLocked(), detailsMessage));
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_REGISTRATION_DATE1,
-                        "at least 1 biopsy date prior to registration date", patient.eligibilityStatus(), patient.eligibilityLocked(),
-                        detailsMessage));
-                biopsiesPriorToRegistration.forEach(biopsy -> findings.add(
-                        ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_BIOPSY_DATE, "at least 1 biopsy date prior to registration date",
-                                biopsy.formStatus(), biopsy.formLocked(), detailsMessage)));
+
+                FormStatusState best = FormStatusState.best(patient.selectionCriteriaStatus(), patient.eligibilityStatus());
+                boolean locked = patient.selectionCriteriaLocked() || patient.eligibilityLocked();
+                for (BiopsyData biopsy : biopsies) {
+                    best = FormStatusState.best(best, biopsy.formStatus());
+                    locked = locked || biopsy.formLocked();
+                }
+                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId,
+                        fields(FIELD_REGISTRATION_DATE1, FIELD_REGISTRATION_DATE2, FIELD_BIOPSY_DATE),
+                        "at least 1 biopsy date prior to registration date", best, locked, detailsMessage));
             }
         }
         return findings;
