@@ -56,10 +56,13 @@ public class ConfigSupplier {
     private static final String MAX_NORM_FACTOR = "max_norm_factor";
     private static final String NORM_FACTOR_INCREMENTS = "norm_factor_increment";
 
-    private static final double MIN_PURITY_DEFAULT = 0.08;
-    private static final double MAX_PURITY_DEFAULT = 1.0;
-    private static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
-    private static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
+    private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
+    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
+
+    static final double MIN_PURITY_DEFAULT = 0.08;
+    static final double MAX_PURITY_DEFAULT = 1.0;
+    static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
+    static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
     private static final double PURITY_INCREMENT_DEFAULT = 0.01;
     private static final double NORM_FACTOR_INCREMENTS_DEFAULT = 0.01;
 
@@ -94,6 +97,10 @@ public class ConfigSupplier {
         options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
         options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
         options.addOption(NORM_FACTOR_INCREMENTS, true, "Norm factor increments (default 0.01)");
+
+        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT,
+                true,
+                "Minimum ratio count while smoothing before diploid regions become suspect.");
     }
 
     private final CommonConfig commonConfig;
@@ -103,6 +110,7 @@ public class ConfigSupplier {
     private final CircosConfig circosConfig;
     private final DBConfig dbConfig;
     private final FittingConfig fittingConfig;
+    private final SmoothingConfig smoothingConfig;
 
     public ConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -155,6 +163,10 @@ public class ConfigSupplier {
             LOGGER.info("No structural vcf supplied");
         }
 
+        smoothingConfig = ImmutableSmoothingConfig.builder()
+                .minDiploidTumorRatioCount(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT, MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT))
+                .build();
+
         bafConfig = createBAFConfig(cmd, opt, commonConfig);
         circosConfig = createCircosConfig(cmd, commonConfig);
         dbConfig = createDBConfig(cmd);
@@ -187,6 +199,10 @@ public class ConfigSupplier {
 
     public FittingConfig fittingConfig() {
         return fittingConfig;
+    }
+
+    public SmoothingConfig smoothingConfig() {
+        return smoothingConfig;
     }
 
     @NotNull

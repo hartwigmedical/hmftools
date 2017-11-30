@@ -171,8 +171,11 @@ public class PurityPloidyEstimateApplication {
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-            final FittedRegionFactory fittedRegionFactory =
-                    new FittedRegionFactory(amberGender, fittingConfig.maxPloidy(), cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
+            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(amberGender,
+                    fittingConfig.maxPloidy(),
+                    cnvRatioWeight,
+                    ploidyPenaltyExperiment,
+                    observedBafExponent);
 
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     fittingConfig.maxPloidy(),
@@ -195,7 +198,11 @@ public class PurityPloidyEstimateApplication {
 
             final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
             final PurpleCopyNumberFactory copyNumberFactory =
-                    new PurpleCopyNumberFactory(amberGender, purityAdjuster, fittedRegions, structuralVariants);
+                    new PurpleCopyNumberFactory(configSupplier.smoothingConfig().minDiploidTumorRatioCount(),
+                            amberGender,
+                            purityAdjuster,
+                            fittedRegions,
+                            structuralVariants);
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
             final List<GeneCopyNumber> geneCopyNumbers =
