@@ -34,12 +34,13 @@ public class PurpleCopyNumberFactory {
         germlineDeletions = Lists.newArrayList();
 
         final ExtendGermline extendGermline = new ExtendGermline(gender);
+        final ExtendDiploid extendDiploid = new ExtendDiploid(purityAdjuster, 30);
 
         final ListMultimap<String, CombinedRegion> diploidExtension = ArrayListMultimap.create();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
             final List<FittedRegion> chromosomeFittedRegions =
                     fittedRegions.stream().filter(matchesChromosome(chromosome.toString())).collect(toList());
-            diploidExtension.putAll(chromosome.toString(), ExtendDiploid.combinedRegions(purityAdjuster, chromosomeFittedRegions));
+            diploidExtension.putAll(chromosome.toString(), extendDiploid.extendDiploid(chromosomeFittedRegions));
         }
 
         final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(purityAdjuster);

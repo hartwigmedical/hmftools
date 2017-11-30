@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.copynumber;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.IntUnaryOperator;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -17,92 +18,111 @@ import org.jetbrains.annotations.NotNull;
 
 class ExtendDiploid {
 
-    @NotNull
-    static List<CombinedRegion> combinedRegions(@NotNull final PurityAdjuster adjuster,
-            @NotNull final Collection<FittedRegion> fittedRegions) {
-        final ExtendDiploid extension = new ExtendDiploid(adjuster, fittedRegions);
-        return extension.regions;
+    private enum Direction {
+        LEFT(index -> index - 1),
+        RIGHT(index -> index + 1);
+
+        private final IntUnaryOperator indexOperator;
+
+        Direction(final IntUnaryOperator indexOperator) {
+            this.indexOperator = indexOperator;
+        }
+
+        int moveIndex(int index) {
+            return indexOperator.applyAsInt(index);
+        }
+
     }
 
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
-
     private static final Logger LOGGER = LogManager.getLogger(ExtendDiploid.class);
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
-    private List<CombinedRegion> regions = Lists.newLinkedList();
+    private final int minTumorCount;
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    private ExtendDiploid(@NotNull final PurityAdjuster adjuster, @NotNull final Collection<FittedRegion> fittedRegions) {
+    ExtendDiploid(@NotNull final PurityAdjuster adjuster, final int minTumorCount) {
+        this.minTumorCount = minTumorCount;
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
-        somaticExtension(fittedRegions);
     }
 
-    private void somaticExtension(@NotNull final Collection<FittedRegion> fittedRegions) {
+    @NotNull
+    List<CombinedRegion> extendDiploid(@NotNull final Collection<FittedRegion> fittedRegions) {
         final boolean bafWeighted = fittedRegions.stream().anyMatch(x -> x.bafCount() >= MIN_BAF_COUNT_TO_WEIGH_WITH_BAF);
+
+        final List<CombinedRegion> regions = Lists.newLinkedList();
 
         for (FittedRegion fittedRegion : fittedRegions) {
             regions.add(new CombinedRegion(bafWeighted, fittedRegion, false));
         }
 
-        int highestConfidenceIndex = nextIndex();
+        int highestConfidenceIndex = nextIndex(regions);
         while (highestConfidenceIndex > -1) {
             final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
             highestConfidence.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
 
             LOGGER.debug("Selected region {}", toString(highestConfidence.region()));
-            extendRight(highestConfidenceIndex);
-            extendLeft(highestConfidenceIndex);
+            extendRight(regions, highestConfidenceIndex);
+            extendLeft(regions, highestConfidenceIndex);
 
             LOGGER.debug("Completed region {}", toString(highestConfidence.region()));
-            highestConfidenceIndex = nextIndex();
+            highestConfidenceIndex = nextIndex(regions);
         }
 
+        return regions;
     }
 
-    private void extendRight(int startIndex) {
-        assert (startIndex < regions.size());
-        final CombinedRegion target = regions.get(startIndex);
-        int targetIndex = startIndex + 1;
+    private void extendRight(@NotNull final List<CombinedRegion> regions, int targetIndex) {
+        assert (targetIndex < regions.size());
+        int neighbourIndex = targetIndex + 1;
 
-        while (targetIndex < regions.size()) {
-            final FittedRegion neighbour = regions.get(targetIndex).region();
-            if (!merge(target, neighbour)) {
+        while (neighbourIndex < regions.size()) {
+            if (!merge(regions, Direction.RIGHT, targetIndex)) {
                 return;
             }
-
-            regions.remove(targetIndex);
-            LOGGER.debug("Merged in right region {}", toString(neighbour));
+            regions.remove(neighbourIndex);
         }
     }
 
-    private void extendLeft(int startIndex) {
-        assert (startIndex < regions.size());
-        final CombinedRegion target = regions.get(startIndex);
+    private void extendLeft(@NotNull final List<CombinedRegion> regions, final int targetIndex) {
+        assert (targetIndex < regions.size());
+        int neighbourIndex = targetIndex - 1;
 
-        int targetIndex = startIndex - 1;
-        while (targetIndex >= 0) {
-            final FittedRegion neighbour = regions.get(targetIndex).region();
-            if (!merge(target, neighbour)) {
+        while (neighbourIndex >= 0) {
+            if (!merge(regions, Direction.LEFT, neighbourIndex + 1)) {
                 return;
             }
-
-            regions.remove(targetIndex);
-            LOGGER.debug("Merged in left region {}", toString(neighbour));
-            targetIndex--;
+            regions.remove(neighbourIndex);
+            neighbourIndex--;
         }
-
     }
 
-    private boolean merge(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
+    private boolean merge(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction, int targetIndex) {
+
+        final CombinedRegion target = regions.get(targetIndex);
+        final FittedRegion neighbour = regions.get(direction.moveIndex(targetIndex)).region();
 
         if (Extend.doNotExtend(target, neighbour)) {
             return false;
         }
 
-        final boolean isNeighbourValid = isValidSomatic(neighbour);
+        final boolean isNeighbourDubious = isDubious(neighbour);
+        if (isNeighbourDubious) {
+            if (inTolerance(target.region(), neighbour)) {
+                target.extendWithBAFWeightedAverage(neighbour);
+                return true;
+            }
+            else if (pushThroughDubiousRegion(regions, direction, targetIndex)) {
+                target.extend(neighbour);
+                return true;
+            } else {
+                return false;
+            }
+        }
 
+        final boolean isNeighbourValid = isValid(neighbour);
         if (!isNeighbourValid) {
             target.extend(neighbour);
             return true;
@@ -114,16 +134,49 @@ class ExtendDiploid {
         return false;
     }
 
-    private boolean isValidSomatic(@NotNull final FittedRegion region) {
+    private boolean isValid(@NotNull final FittedRegion region) {
         return region.status() == ObservedRegionStatus.SOMATIC && (region.support() != SegmentSupport.NONE
-                || region.observedTumorRatioCount() > 5);
+                || region.observedTumorRatioCount() >= minTumorCount);
+    }
+
+    private boolean isDubious(@NotNull final FittedRegion region) {
+        return region.status() == ObservedRegionStatus.SOMATIC && region.support() == SegmentSupport.NONE
+                && region.observedTumorRatioCount() < minTumorCount;
+    }
+
+    private boolean pushThroughDubiousRegion(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction,
+            int targetIndex) {
+
+        int dubiousCount = 0;
+        final CombinedRegion target = regions.get(targetIndex);
+        for (int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i)) {
+            final FittedRegion neighbour = regions.get(i).region();
+
+            if (Extend.doNotExtend(target, neighbour)) {
+                return false;
+            }
+
+            if (isDubious(neighbour)) {
+                dubiousCount += neighbour.observedTumorRatioCount();
+            }
+
+            if (dubiousCount >= minTumorCount) {
+                return false;
+            }
+
+            if (isValid(neighbour)) {
+                return inTolerance(target.region(), neighbour);
+            }
+        }
+
+        return false;
     }
 
     private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
         return bafDeviation.inTolerance(left, right) && copyNumberDeviation.inTolerance(left, right);
     }
 
-    private int nextIndex() {
+    private static int nextIndex(@NotNull final List<CombinedRegion> regions) {
 
         int indexOfLargestBaf = -1;
         int indexOfLargestLength = -1;
@@ -151,7 +204,7 @@ class ExtendDiploid {
         return indexOfLargestBaf > -1 ? indexOfLargestBaf : indexOfLargestLength;
     }
 
-    private String toString(FittedRegion region) {
+    private static String toString(FittedRegion region) {
         return MoreObjects.toStringHelper("FittedRegion")
                 .omitNullValues()
                 .add("chromosome", region.chromosome())
