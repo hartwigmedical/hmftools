@@ -27,12 +27,12 @@ public class ObservedRegionFactory {
 
     private final int windowSize;
     private final Gender gender;
-    private final ObservedRegionStatusFactory statusFactory;
+    private final GermlineStatusFactory statusFactory;
 
     public ObservedRegionFactory(final int windowSize, final Gender gender) {
         this.windowSize = windowSize;
         this.gender = gender;
-        statusFactory = new ObservedRegionStatusFactory(gender);
+        statusFactory = new GermlineStatusFactory(gender);
     }
 
     @NotNull
@@ -66,6 +66,7 @@ public class ObservedRegionFactory {
                     .observedTumorRatioCount(cobalt.tumorCount())
                     .gcContent(gc.averageGCContent())
                     .status(statusFactory.status(region, normalRatio, tumorRatio))
+                    .svCluster(region.svCluster())
                     .build();
 
             result.add(copyNumber);

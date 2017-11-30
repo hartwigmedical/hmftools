@@ -93,7 +93,7 @@ public enum FittedRegionFile {
                 .chromosome(values[0])
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
-                .status(ObservedRegionStatus.fromString(values[3]))
+                .status(GermlineStatus.fromString(values[3]))
                 .modelPloidy(Integer.valueOf(values[4]))
                 .bafCount(Integer.valueOf(values[5]))
                 .observedBAF(Double.valueOf(values[6]))
@@ -112,6 +112,7 @@ public enum FittedRegionFile {
                 .support(SegmentSupport.valueOf(values[21]))
                 .observedTumorRatioCount(Integer.valueOf(values[22]))
                 .tumorBAF(Double.valueOf(values[23]))
+                .svCluster(false)
                 .gcContent(0) //TODO: INCLUDE
                 .build();
     }

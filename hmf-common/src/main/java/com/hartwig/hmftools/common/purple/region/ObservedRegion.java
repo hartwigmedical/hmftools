@@ -19,7 +19,9 @@ public interface ObservedRegion extends GenomeRegion {
 
     double observedNormalRatio();
 
-    ObservedRegionStatus status();
+    GermlineStatus status();
+
+    boolean svCluster();
 
     double gcContent();
 }

@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -85,8 +85,8 @@ public class ExtendDiploidTest {
 
     @Test
     public void testInvalidGermlineGetsIgnored() {
-        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, ObservedRegionStatus.DIPLOID, SegmentSupport.BND);
-        final FittedRegion germline = createFittedRegion(10001, 20000, 4, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.NONE);
+        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, GermlineStatus.DIPLOID, SegmentSupport.BND);
+        final FittedRegion germline = createFittedRegion(10001, 20000, 4, GermlineStatus.AMPLIFICATION, SegmentSupport.NONE);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(regions);
@@ -96,9 +96,9 @@ public class ExtendDiploidTest {
 
     @Test
     public void testInvalidGermlineIsKeptWithSVSupport() {
-        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, ObservedRegionStatus.DIPLOID, SegmentSupport.BND);
+        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, GermlineStatus.DIPLOID, SegmentSupport.BND);
         final FittedRegion germline =
-                createFittedRegion(10001, 20000, 4.0, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.BND);
+                createFittedRegion(10001, 20000, 4.0, GermlineStatus.AMPLIFICATION, SegmentSupport.BND);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(regions);
@@ -113,14 +113,14 @@ public class ExtendDiploidTest {
         assertEquals(tumorCopyNumber, victim.tumorCopyNumber(), EPSILON);
     }
 
-    private FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, ObservedRegionStatus status,
+    private FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, GermlineStatus status,
             SegmentSupport support) {
         return createFittedRegion(start, end, tumorCopyNumber, 1.1, status, support);
     }
 
     private FittedRegion createValidSomatic(long start, long end, double copyNumber, int bafCount, SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
-                .status(ObservedRegionStatus.DIPLOID)
+                .status(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
                 .observedNormalRatio(0.5)
@@ -132,7 +132,7 @@ public class ExtendDiploidTest {
 
     private FittedRegion createDubiousRegion(long start, long end, double copyNumber, int ratioCount) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
-                .status(ObservedRegionStatus.DIPLOID)
+                .status(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
                 .observedNormalRatio(0.5)
@@ -143,7 +143,7 @@ public class ExtendDiploidTest {
     }
 
     private FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, double observedNormalRatio,
-            ObservedRegionStatus status, SegmentSupport support) {
+            GermlineStatus status, SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(status)
                 .tumorCopyNumber(tumorCopyNumber)

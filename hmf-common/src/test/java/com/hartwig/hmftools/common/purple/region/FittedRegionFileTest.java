@@ -21,7 +21,7 @@ public class FittedRegionFileTest {
                 .chromosome("X")
                 .start(random.nextLong())
                 .end(random.nextLong())
-                .status(ObservedRegionStatus.DIPLOID)
+                .status(GermlineStatus.DIPLOID)
                 .modelPloidy(random.nextInt())
                 .bafCount(random.nextInt())
                 .observedBAF(random.nextDouble())
@@ -40,6 +40,7 @@ public class FittedRegionFileTest {
                 .ratioSupport(random.nextBoolean())
                 .support(SegmentSupport.BND)
                 .observedTumorRatioCount(random.nextInt())
+                .svCluster(false)
                 .gcContent(0.0) // TODO: Fix
                 .build();
     }

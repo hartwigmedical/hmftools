@@ -5,8 +5,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,11 +22,6 @@ class CombinedRegion implements GenomeRegion {
     private List<FittedRegion> regions = Lists.newArrayList();
     private int unweightedCount = 1;
 
-    @Deprecated
-    CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
-        this(bafWeighted, region, region.status() != ObservedRegionStatus.DIPLOID);
-    }
-
     CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearCopyNumber) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
@@ -34,7 +29,7 @@ class CombinedRegion implements GenomeRegion {
             clearCopyNumber();
         }
 
-        if (region.status() != ObservedRegionStatus.DIPLOID) {
+        if (region.status() != GermlineStatus.DIPLOID) {
             clearBAFValues();
         }
         regions.add(region);
@@ -120,7 +115,7 @@ class CombinedRegion implements GenomeRegion {
 
         extend(region);
 
-        combined.setStatus(ObservedRegionStatus.DIPLOID); //TODO Remove this
+        combined.setStatus(GermlineStatus.DIPLOID); //TODO Remove this
         combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
         final long currentWeight;

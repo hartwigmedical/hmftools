@@ -19,8 +19,8 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -70,7 +70,7 @@ public class FittedPurityFactory {
             final Chromosome chromosome = HumanChromosome.valueOf(region);
 
             if (region.bafCount() > 0 && positiveOrZero(region.observedTumorRatio()) && chromosome.isAutosome()
-                    && region.status() == ObservedRegionStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
+                    && region.status() == GermlineStatus.DIPLOID && Doubles.lessOrEqual(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT)) {
                 totalBAFCount += region.bafCount();
                 filteredRegions.add(region);
             }

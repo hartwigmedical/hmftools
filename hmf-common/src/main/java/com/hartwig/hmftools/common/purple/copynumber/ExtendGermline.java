@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,22 +26,22 @@ class ExtendGermline {
 
     @NotNull
     List<CombinedRegion> extendGermlineAmplifications(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<ObservedRegionStatus> eligibleStatus = EnumSet.of(ObservedRegionStatus.GERMLINE_AMPLIFICATION);
+        final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.AMPLIFICATION);
         return extendGermline(eligibleStatus, regions);
     }
 
     @NotNull
     List<CombinedRegion> extendGermlineAmplificationsAndDeletions(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<ObservedRegionStatus> eligibleStatus = EnumSet.of(ObservedRegionStatus.GERMLINE_AMPLIFICATION,
-                ObservedRegionStatus.GERMLINE_HET_DELETION,
-                ObservedRegionStatus.GERMLINE_HOM_DELETION);
+        final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.AMPLIFICATION,
+                GermlineStatus.HET_DELETION,
+                GermlineStatus.HOM_DELETION);
         return extendGermline(eligibleStatus, regions);
     }
 
     @NotNull
     List<CombinedRegion> extractGermlineDeletions(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<ObservedRegionStatus> eligibleStatus =
-                EnumSet.of(ObservedRegionStatus.GERMLINE_HET_DELETION, ObservedRegionStatus.GERMLINE_HOM_DELETION);
+        final EnumSet<GermlineStatus> eligibleStatus =
+                EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
 
         final List<CombinedRegion> result = Lists.newArrayList();
         for (CombinedRegion parent : regions) {
@@ -52,7 +52,7 @@ class ExtendGermline {
     }
 
     @NotNull
-    private List<CombinedRegion> extendGermline(@NotNull final EnumSet<ObservedRegionStatus> eligbleStatus,
+    private List<CombinedRegion> extendGermline(@NotNull final EnumSet<GermlineStatus> eligbleStatus,
             @NotNull final List<CombinedRegion> regions) {
 
         final List<CombinedRegion> result = Lists.newArrayList();
@@ -68,7 +68,7 @@ class ExtendGermline {
     }
 
     @NotNull
-    private List<CombinedRegion> extractChildren(@NotNull final EnumSet<ObservedRegionStatus> eligbleStatus,
+    private List<CombinedRegion> extractChildren(@NotNull final EnumSet<GermlineStatus> eligbleStatus,
             @NotNull final CombinedRegion parent) {
         final List<CombinedRegion> children = Lists.newArrayList();
 
@@ -76,21 +76,21 @@ class ExtendGermline {
         double copyNumber = parent.tumorCopyNumber();
         for (final FittedRegion fittedRegion : parent.regions()) {
             if (eligbleStatus.contains(fittedRegion.status())) {
-                if (fittedRegion.status().equals(ObservedRegionStatus.GERMLINE_AMPLIFICATION)) {
+                if (fittedRegion.status().equals(GermlineStatus.AMPLIFICATION)) {
                     final double lowerBound = lowerBound(fittedRegion);
                     if (Doubles.greaterThan(lowerBound, copyNumber + AMPLIFICATION_TOLERANCE)) {
                         children.add(createChild(fittedRegion, lowerBound, baf));
                     }
                 }
 
-                if (fittedRegion.status().equals(ObservedRegionStatus.GERMLINE_HET_DELETION)) {
+                if (fittedRegion.status().equals(GermlineStatus.HET_DELETION)) {
                     final double upperBound = upperBound(fittedRegion);
                     if (Doubles.lessThan(upperBound, Math.min(0.5, copyNumber))) {
                         children.add(createChild(fittedRegion, upperBound, baf));
                     }
                 }
 
-                if (fittedRegion.status().equals(ObservedRegionStatus.GERMLINE_HOM_DELETION)) {
+                if (fittedRegion.status().equals(GermlineStatus.HOM_DELETION)) {
                     children.add(createChild(fittedRegion, fittedRegion.refNormalisedCopyNumber(), baf));
                 }
             }
@@ -110,9 +110,9 @@ class ExtendGermline {
     @NotNull
     private static CopyNumberMethod method(@NotNull final FittedRegion child) {
         switch (child.status()) {
-            case GERMLINE_HET_DELETION:
+            case HET_DELETION:
                 return CopyNumberMethod.GERMLINE_HET2HOM_DELETION;
-            case GERMLINE_HOM_DELETION:
+            case HOM_DELETION:
                 return CopyNumberMethod.GERMLINE_HOM_DELETION;
             default:
                 return CopyNumberMethod.GERMLINE_AMPLIFICATION;

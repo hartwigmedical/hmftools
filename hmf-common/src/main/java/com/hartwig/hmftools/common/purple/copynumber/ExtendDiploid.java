@@ -9,7 +9,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.apache.logging.log4j.LogManager;
@@ -135,12 +135,12 @@ class ExtendDiploid {
     }
 
     private boolean isValid(@NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.DIPLOID && (region.support() != SegmentSupport.NONE
+        return region.status() == GermlineStatus.DIPLOID && (region.support() != SegmentSupport.NONE
                 || region.observedTumorRatioCount() >= minTumorCount);
     }
 
     private boolean isDubious(@NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.DIPLOID && region.support() == SegmentSupport.NONE
+        return region.status() == GermlineStatus.DIPLOID && region.support() == SegmentSupport.NONE
                 && region.observedTumorRatioCount() < minTumorCount;
     }
 
@@ -187,7 +187,7 @@ class ExtendDiploid {
         for (int i = 0; i < regions.size(); i++) {
             final CombinedRegion combined = regions.get(i);
             final FittedRegion region = combined.region();
-            if (!combined.isProcessed() && region.status().equals(ObservedRegionStatus.DIPLOID)) {
+            if (!combined.isProcessed() && region.status().equals(GermlineStatus.DIPLOID)) {
 
                 if (region.bafCount() > largestBAFCount) {
                     largestBAFCount = region.bafCount();

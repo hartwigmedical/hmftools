@@ -42,3 +42,7 @@ ALTER TABLE geneCopyNumber
 ALTER TABLE copyNumberRegion
     DROP COLUMN highConfidenceBaf,
     DROP COLUMN highConfidenceCopyNumber;
+
+ALTER TABLE copyNumberRegion
+    CHANGE status germlineStatus varchar(255) NOT NULL,
+    ADD COLUMN svCluster BOOLEAN NOT NULL AFTER germlineStatus;

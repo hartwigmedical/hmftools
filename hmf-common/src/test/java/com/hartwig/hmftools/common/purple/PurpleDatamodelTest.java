@@ -3,10 +3,10 @@ package com.hartwig.hmftools.common.purple;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -56,7 +56,8 @@ public class PurpleDatamodelTest {
                 .observedTumorRatioCount(1)
                 .observedNormalRatio(1)
                 .ratioSupport(true)
-                .status(ObservedRegionStatus.DIPLOID)
+                .svCluster(false)
+                .status(GermlineStatus.DIPLOID)
                 .gcContent(0.93)
                 .support(SegmentSupport.NONE);
     }

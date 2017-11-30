@@ -16,8 +16,8 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
-import com.hartwig.hmftools.common.purple.region.ObservedRegionStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -72,7 +72,8 @@ class CopyNumberDAO {
                     .chromosome(record.getValue(COPYNUMBERREGION.CHROMOSOME))
                     .start(record.getValue(COPYNUMBERREGION.START))
                     .end(record.getValue(COPYNUMBERREGION.END))
-                    .status(ObservedRegionStatus.valueOf(record.getValue(COPYNUMBERREGION.STATUS)))
+                    .status(GermlineStatus.valueOf(record.getValue(COPYNUMBERREGION.GERMLINESTATUS)))
+                    .svCluster(false)
                     .ratioSupport(true)
                     .support(SegmentSupport.valueOf(record.getValue(COPYNUMBERREGION.SEGMENTSTARTSUPPORT)))
                     .bafCount(record.getValue(COPYNUMBERREGION.BAFCOUNT))
@@ -170,7 +171,8 @@ class CopyNumberDAO {
                     COPYNUMBERREGION.CHROMOSOME,
                     COPYNUMBERREGION.START,
                     COPYNUMBERREGION.END,
-                    COPYNUMBERREGION.STATUS,
+                    COPYNUMBERREGION.GERMLINESTATUS,
+                    COPYNUMBERREGION.SVCLUSTER,
                     COPYNUMBERREGION.RATIOSUPPORT,
                     COPYNUMBERREGION.SEGMENTSTARTSUPPORT,
                     COPYNUMBERREGION.BAFCOUNT,
@@ -202,6 +204,7 @@ class CopyNumberDAO {
                 region.start(),
                 region.end(),
                 region.status(),
+                region.svCluster(),
                 region.ratioSupport(),
                 region.support(),
                 region.bafCount(),

@@ -21,11 +21,11 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void tumorCopyNumberDoesntChangeForObservedRegionStatus() {
-        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.DIPLOID));
-        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HET_DELETION));
-        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HOM_DELETION));
-        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_AMPLIFICATION));
-        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_NOISE));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, GermlineStatus.DIPLOID));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, GermlineStatus.HET_DELETION));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, GermlineStatus.HOM_DELETION));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, GermlineStatus.AMPLIFICATION));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, GermlineStatus.NOISE));
     }
 
     private void testTumorCopyNumber(double expectedCopyNumber, @NotNull ObservedRegion region) {
@@ -35,7 +35,7 @@ public class FittedRegionFactoryTest {
     }
 
     private static ObservedRegion observedRatio(double observedNormalRatio, double observedTumorRatio,
-            @NotNull final ObservedRegionStatus status) {
+            @NotNull final GermlineStatus status) {
         return PurpleDatamodelTest.createObservedRegion("1", 1, 2)
                 .observedNormalRatio(observedNormalRatio)
                 .observedTumorRatio(observedTumorRatio)
