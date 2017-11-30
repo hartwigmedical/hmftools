@@ -24,4 +24,14 @@ public enum CommandLineUtil {
 
         return defaultValue;
     }
+
+    public static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
+        if (cmd.hasOption(opt)) {
+            final int result = Integer.valueOf(cmd.getOptionValue(opt));
+            LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            return result;
+        }
+
+        return defaultValue;
+    }
 }

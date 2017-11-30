@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
 
 import java.io.File;
@@ -48,6 +49,20 @@ public class ConfigSupplier {
     private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
 
+    private static final String MIN_PURITY = "min_purity";
+    private static final String MAX_PURITY = "max_purity";
+    private static final String PURITY_INCREMENT = "purity_increment";
+    private static final String MIN_NORM_FACTOR = "min_norm_factor";
+    private static final String MAX_NORM_FACTOR = "max_norm_factor";
+    private static final String NORM_FACTOR_INCREMENTS = "norm_factor_increment";
+
+    private static final double MIN_PURITY_DEFAULT = 0.08;
+    private static final double MAX_PURITY_DEFAULT = 1.0;
+    private static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
+    private static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
+    private static final double PURITY_INCREMENT_DEFAULT = 0.01;
+    private static final double NORM_FACTOR_INCREMENTS_DEFAULT = 0.01;
+
     public static void addOptions(Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
         options.addOption(TUMOR_SAMPLE, true, "The tumor sample name. Defaults to value in metadata.");
@@ -71,6 +86,14 @@ public class ConfigSupplier {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+
+        options.addOption(MIN_PURITY, true, "Minimum purity (default 0.05)");
+        options.addOption(MAX_PURITY, true, "Maximum purity (default 1.0)");
+        options.addOption(PURITY_INCREMENT, true, "Purity increment (default 0.01)");
+
+        options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
+        options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
+        options.addOption(NORM_FACTOR_INCREMENTS, true, "Norm factor increments (default 0.01)");
     }
 
     private final CommonConfig commonConfig;
@@ -79,6 +102,7 @@ public class ConfigSupplier {
     private final BAFConfig bafConfig;
     private final CircosConfig circosConfig;
     private final DBConfig dbConfig;
+    private final FittingConfig fittingConfig;
 
     public ConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -133,7 +157,8 @@ public class ConfigSupplier {
 
         bafConfig = createBAFConfig(cmd, opt, commonConfig);
         circosConfig = createCircosConfig(cmd, commonConfig);
-        dbConfig = createDBConfig(cmd, opt);
+        dbConfig = createDBConfig(cmd);
+        fittingConfig = createFittingConfig(cmd);
     }
 
     public CommonConfig commonConfig() {
@@ -158,6 +183,10 @@ public class ConfigSupplier {
 
     public DBConfig dbConfig() {
         return dbConfig;
+    }
+
+    public FittingConfig fittingConfig() {
+        return fittingConfig;
     }
 
     @NotNull
@@ -242,29 +271,39 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    private static DBConfig createDBConfig(@NotNull final CommandLine cmd, @NotNull final Options opt) {
+    private static DBConfig createDBConfig(@NotNull final CommandLine cmd) {
         boolean enabled = cmd.hasOption(DB_ENABLED);
         return ImmutableDBConfig.builder()
                 .enabled(enabled)
                 .user(enabled ? cmd.getOptionValue(DB_USER) : "")
                 .password(enabled ? cmd.getOptionValue(DB_PASS) : "")
-                .url("jdbc:" +(enabled ? cmd.getOptionValue(DB_URL) : ""))
+                .url("jdbc:" + (enabled ? cmd.getOptionValue(DB_URL) : ""))
                 .build();
+    }
+
+    @NotNull
+    private static FittingConfig createFittingConfig(@NotNull final CommandLine cmd) {
+        final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
+        final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
+        final double purityIncrement = defaultValue(cmd, PURITY_INCREMENT, PURITY_INCREMENT_DEFAULT);
+        final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
+        final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
+        final double normFactorIncrement = defaultValue(cmd, NORM_FACTOR_INCREMENTS, NORM_FACTOR_INCREMENTS_DEFAULT);
+
+        return ImmutableFittingConfig.builder()
+                .minPurity(minPurity)
+                .maxPurity(maxPurity)
+                .purityIncrement(purityIncrement)
+                .minNormFactor(minNormFactor)
+                .maxNormFactor(maxNormFactor)
+                .normFactorIncrement(normFactorIncrement)
+                .build();
+
     }
 
     private static void printHelp(Options opt) {
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Purity Ploidy Estimator (PURPLE)", opt);
-    }
-
-    private static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final int result = Integer.valueOf(cmd.getOptionValue(opt));
-            LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            return result;
-        }
-
-        return defaultValue;
     }
 
 }

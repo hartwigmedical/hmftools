@@ -64,6 +64,7 @@ import com.hartwig.hmftools.purple.config.CircosConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.DBConfig;
+import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
@@ -83,24 +84,10 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    static final double MIN_PURITY_DEFAULT = 0.08;
-    static final double MAX_PURITY_DEFAULT = 1.0;
-    static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
-    static final double MAX_NORM_FACTOR_DEFAULT = 2.0;
-
     private static final int MAX_PLOIDY = 20;
-
-    private static final double PURITY_INCREMENT_DEFAULT = 0.01;
-    private static final double NORM_FACTOR_INCREMENTS_DEFAULT = 0.01;
     private static final int THREADS_DEFAULT = 2;
 
     private static final String THREADS = "threads";
-    private static final String MIN_PURITY = "min_purity";
-    private static final String MAX_PURITY = "max_purity";
-    private static final String PURITY_INCREMENT = "purity_increment";
-    private static final String MIN_NORM_FACTOR = "min_norm_factor";
-    private static final String MAX_NORM_FACTOR = "max_norm_factor";
-    private static final String NORM_FACTOR_INCREMENTS = "norm_factor_increment";
     private static final String EXPERIMENTAL = "experimental";
     private static final String VERSION = "version";
     private static final String GENE_PANEL = "gene_panel";
@@ -179,27 +166,22 @@ public class PurityPloidyEstimateApplication {
             final ObservedRegionFactory observedRegionFactory = new ObservedRegionFactory(config.windowSize(), amberGender);
             final List<ObservedRegion> observedRegions = observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
 
+            LOGGER.info("Fitting purity");
+            final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
             final FittedRegionFactory fittedRegionFactory =
-                    new FittedRegionFactory(amberGender, MAX_PLOIDY, cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
+                    new FittedRegionFactory(amberGender, fittingConfig.maxPloidy(), cnvRatioWeight, ploidyPenaltyExperiment, observedBafExponent);
 
-            LOGGER.info("Fitting purity");
-            final double minPurity = defaultValue(cmd, MIN_PURITY, MIN_PURITY_DEFAULT);
-            final double maxPurity = defaultValue(cmd, MAX_PURITY, MAX_PURITY_DEFAULT);
-            final double purityIncrement = defaultValue(cmd, PURITY_INCREMENT, PURITY_INCREMENT_DEFAULT);
-            final double minNormFactor = defaultValue(cmd, MIN_NORM_FACTOR, MIN_NORM_FACTOR_DEFAULT);
-            final double maxNormFactor = defaultValue(cmd, MAX_NORM_FACTOR, MAX_NORM_FACTOR_DEFAULT);
-            final double normFactorIncrement = defaultValue(cmd, NORM_FACTOR_INCREMENTS, NORM_FACTOR_INCREMENTS_DEFAULT);
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                    MAX_PLOIDY,
-                    minPurity,
-                    maxPurity,
-                    purityIncrement,
-                    minNormFactor,
-                    maxNormFactor,
-                    normFactorIncrement,
+                    fittingConfig.maxPloidy(),
+                    fittingConfig.minPurity(),
+                    fittingConfig.maxPurity(),
+                    fittingConfig.purityIncrement(),
+                    fittingConfig.minNormFactor(),
+                    fittingConfig.maxNormFactor(),
+                    fittingConfig.normFactorIncrement(),
                     fittedRegionFactory,
                     observedRegions);
 
@@ -320,14 +302,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
         options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
         options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling.");
-
-        options.addOption(MIN_PURITY, true, "Minimum purity (default 0.05)");
-        options.addOption(MAX_PURITY, true, "Maximum purity (default 1.0)");
-        options.addOption(PURITY_INCREMENT, true, "Purity increment (default 0.01)");
-
-        options.addOption(MIN_NORM_FACTOR, true, "Minimum norm factor (default 0.33)");
-        options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
-        options.addOption(NORM_FACTOR_INCREMENTS, true, "Norm factor increments (default 0.01)");
 
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
