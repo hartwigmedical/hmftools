@@ -110,16 +110,14 @@ class ExtendGermline {
         return extendRight(children);
     }
 
-    private boolean isValidAmplification(double parentCopyNumber, double lowerBound, @NotNull final FittedRegion child,
+    static boolean isValidAmplification(double parentCopyNumber, double lowerBound, @NotNull final FittedRegion child,
             @Nullable final FittedRegion next) {
 
         boolean adjacentToCentromere =
-                child.support() == SegmentSupport.CENTROMERE || (next != null && next.support() != SegmentSupport.CENTROMERE);
+                child.support() == SegmentSupport.CENTROMERE || (next != null && next.support() == SegmentSupport.CENTROMERE);
         boolean adjacentToSV = child.support().isSV() || (next != null && next.support().isSV());
-        return (child.observedTumorRatioCount() >= MIN_AMPLIFICATION_TUMOR_RATIO_COUNT || adjacentToSV)
-                && !adjacentToCentromere
-                && Doubles.greaterOrEqual(lowerBound, MIN_AMPLIFICATION_COPYNUMBER)
-                && Doubles.greaterThan(lowerBound, parentCopyNumber + AMPLIFICATION_TOLERANCE);
+        return adjacentToSV && !adjacentToCentromere && Doubles.greaterOrEqual(lowerBound, MIN_AMPLIFICATION_COPYNUMBER)
+                && Doubles.greaterOrEqual(lowerBound, parentCopyNumber + AMPLIFICATION_TOLERANCE);
 
     }
 
