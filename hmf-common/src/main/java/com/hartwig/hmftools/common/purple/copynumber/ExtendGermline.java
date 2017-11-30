@@ -11,12 +11,16 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class ExtendGermline {
 
     private static final double AMPLIFICATION_TOLERANCE = 1;
+    private static final double MIN_AMPLIFICATION_COPYNUMBER = 5;
+    private static final int MIN_AMPLIFICATION_TUMOR_RATIO_COUNT = 5;
 
     private final Gender gender;
 
@@ -32,32 +36,34 @@ class ExtendGermline {
 
     @NotNull
     List<CombinedRegion> extendGermlineAmplificationsAndDeletions(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.AMPLIFICATION,
-                GermlineStatus.HET_DELETION,
-                GermlineStatus.HOM_DELETION);
+        final EnumSet<GermlineStatus> eligibleStatus =
+                EnumSet.of(GermlineStatus.AMPLIFICATION, GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
         return extendGermline(eligibleStatus, regions);
     }
 
     @NotNull
     List<CombinedRegion> extractGermlineDeletions(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<GermlineStatus> eligibleStatus =
-                EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
+        final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
 
         final List<CombinedRegion> result = Lists.newArrayList();
-        for (CombinedRegion parent : regions) {
-            result.addAll(extractChildren(eligibleStatus, parent));
+        for (int i = 0; i < regions.size(); i++) {
+            final CombinedRegion parent = regions.get(i);
+            final CombinedRegion neighbour = i + 1 == regions.size() ? null : regions.get(i + 1);
+            result.addAll(extractChildren(eligibleStatus, parent, neighbour));
         }
 
         return result;
     }
 
     @NotNull
-    private List<CombinedRegion> extendGermline(@NotNull final EnumSet<GermlineStatus> eligbleStatus,
+    private List<CombinedRegion> extendGermline(@NotNull final EnumSet<GermlineStatus> eligibleStatus,
             @NotNull final List<CombinedRegion> regions) {
 
         final List<CombinedRegion> result = Lists.newArrayList();
-        for (CombinedRegion parent : regions) {
-            final List<CombinedRegion> children = extractChildren(eligbleStatus, parent);
+        for (int i = 0; i < regions.size(); i++) {
+            final CombinedRegion parent = regions.get(i);
+            final CombinedRegion neighbour = i + 1 == regions.size() ? null : regions.get(i + 1);
+            final List<CombinedRegion> children = extractChildren(eligibleStatus, parent, neighbour);
             if (children.isEmpty()) {
                 result.add(parent);
             } else {
@@ -68,30 +74,35 @@ class ExtendGermline {
     }
 
     @NotNull
-    private List<CombinedRegion> extractChildren(@NotNull final EnumSet<GermlineStatus> eligbleStatus,
-            @NotNull final CombinedRegion parent) {
+    private List<CombinedRegion> extractChildren(@NotNull final EnumSet<GermlineStatus> eligibleStatus,
+            @NotNull final CombinedRegion parent, @Nullable final CombinedRegion neighbour) {
         final List<CombinedRegion> children = Lists.newArrayList();
 
         double baf = parent.tumorBAF();
         double copyNumber = parent.tumorCopyNumber();
-        for (final FittedRegion fittedRegion : parent.regions()) {
-            if (eligbleStatus.contains(fittedRegion.status())) {
-                if (fittedRegion.status().equals(GermlineStatus.AMPLIFICATION)) {
-                    final double lowerBound = lowerBound(fittedRegion);
-                    if (Doubles.greaterThan(lowerBound, copyNumber + AMPLIFICATION_TOLERANCE)) {
-                        children.add(createChild(fittedRegion, lowerBound, baf));
+        for (int i = 0; i < parent.regions().size(); i++) {
+            final FittedRegion child = parent.regions().get(i);
+            final FittedRegion next = i + 1 == parent.regions().size()
+                    ? (neighbour == null ? null : neighbour.regions().get(0))
+                    : parent.regions().get(i + 1);
+
+            if (eligibleStatus.contains(child.status())) {
+                if (child.status().equals(GermlineStatus.AMPLIFICATION)) {
+                    final double lowerBound = lowerBound(child);
+                    if (isValidAmplification(copyNumber, lowerBound, child, next)) {
+                        children.add(createChild(child, lowerBound, baf));
                     }
                 }
 
-                if (fittedRegion.status().equals(GermlineStatus.HET_DELETION)) {
-                    final double upperBound = upperBound(fittedRegion);
+                if (child.status().equals(GermlineStatus.HET_DELETION)) {
+                    final double upperBound = upperBound(child);
                     if (Doubles.lessThan(upperBound, Math.min(0.5, copyNumber))) {
-                        children.add(createChild(fittedRegion, upperBound, baf));
+                        children.add(createChild(child, upperBound, baf));
                     }
                 }
 
-                if (fittedRegion.status().equals(GermlineStatus.HOM_DELETION)) {
-                    children.add(createChild(fittedRegion, fittedRegion.refNormalisedCopyNumber(), baf));
+                if (child.status().equals(GermlineStatus.HOM_DELETION)) {
+                    children.add(createChild(child, child.refNormalisedCopyNumber(), baf));
                 }
             }
         }
@@ -99,8 +110,21 @@ class ExtendGermline {
         return extendRight(children);
     }
 
+    private boolean isValidAmplification(double parentCopyNumber, double lowerBound, @NotNull final FittedRegion child,
+            @Nullable final FittedRegion next) {
+
+        boolean adjacentToCentromere =
+                child.support() == SegmentSupport.CENTROMERE || (next != null && next.support() != SegmentSupport.CENTROMERE);
+        boolean adjacentToSV = child.support().isSV() || (next != null && next.support().isSV());
+        return (child.observedTumorRatioCount() >= MIN_AMPLIFICATION_TUMOR_RATIO_COUNT || adjacentToSV)
+                && !adjacentToCentromere
+                && Doubles.greaterOrEqual(lowerBound, MIN_AMPLIFICATION_COPYNUMBER)
+                && Doubles.greaterThan(lowerBound, parentCopyNumber + AMPLIFICATION_TOLERANCE);
+
+    }
+
     @NotNull
-    static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf) {
+    private static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf) {
         final CombinedRegion result = new CombinedRegion(false, child, false);
         result.setTumorCopyNumber(method(child), newCopyNumber);
         result.setInferredTumorBAF(newBaf);
@@ -175,7 +199,7 @@ class ExtendGermline {
     }
 
     @NotNull
-    static CombinedRegion reduce(@NotNull final CombinedRegion parent, long start, long end) {
+    private static CombinedRegion reduce(@NotNull final CombinedRegion parent, long start, long end) {
         assert (start >= parent.start());
         assert (end <= parent.end());
 
