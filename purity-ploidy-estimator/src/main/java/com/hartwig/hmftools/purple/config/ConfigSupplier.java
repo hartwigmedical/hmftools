@@ -40,6 +40,11 @@ public class ConfigSupplier {
     private static final int SOMATIC_MIN_PEAK_DEFAULT = 100;
     private static final int SOMATIC_MIN_TOTAL_DEFAULT = 1000;
 
+    private static final String DB_ENABLED = "db_enabled";
+    private static final String DB_USER = "db_user";
+    private static final String DB_PASS = "db_pass";
+    private static final String DB_URL = "db_url";
+
     private static final String BAF = "baf";
     private static final String CIRCOS = "circos";
 
@@ -61,6 +66,11 @@ public class ConfigSupplier {
         options.addOption(GC_PROFILE, true, "Location of GC Profile.");
         options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak.");
         options.addOption(SOMATIC_MIN_TOTAL, true, "Minimum number of somatic variants required to assist highly diploid fits.");
+
+        options.addOption(DB_ENABLED, false, "Persist data to DB.");
+        options.addOption(DB_USER, true, "Database user name.");
+        options.addOption(DB_PASS, true, "Database password.");
+        options.addOption(DB_URL, true, "Database url.");
     }
 
     private final CommonConfig commonConfig;
@@ -68,6 +78,7 @@ public class ConfigSupplier {
     private final StructuralVariantConfig structuralVariantConfig;
     private final BAFConfig bafConfig;
     private final CircosConfig circosConfig;
+    private final DBConfig dbConfig;
 
     public ConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
@@ -122,6 +133,7 @@ public class ConfigSupplier {
 
         bafConfig = createBAFConfig(cmd, opt, commonConfig);
         circosConfig = createCircosConfig(cmd, commonConfig);
+        dbConfig = createDBConfig(cmd, opt);
     }
 
     public CommonConfig commonConfig() {
@@ -142,6 +154,10 @@ public class ConfigSupplier {
 
     public CircosConfig circosConfig() {
         return circosConfig;
+    }
+
+    public DBConfig dbConfig() {
+        return dbConfig;
     }
 
     @NotNull
@@ -196,7 +212,8 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    private static BAFConfig createBAFConfig(CommandLine cmd, Options opt, CommonConfig config) throws ParseException {
+    private static BAFConfig createBAFConfig(@NotNull final CommandLine cmd, Options opt, @NotNull final CommonConfig config)
+            throws ParseException {
 
         if (cmd.hasOption(BAF)) {
             final String filename = cmd.getOptionValue(BAF);
@@ -222,6 +239,17 @@ public class ConfigSupplier {
 
         printHelp(opt);
         throw new ParseException("Baf file " + amberBaf + " not found. Please supply -baf argument.");
+    }
+
+    @NotNull
+    private static DBConfig createDBConfig(@NotNull final CommandLine cmd, @NotNull final Options opt) {
+        boolean enabled = cmd.hasOption(DB_ENABLED);
+        return ImmutableDBConfig.builder()
+                .enabled(enabled)
+                .user(enabled ? cmd.getOptionValue(DB_USER) : "")
+                .password(enabled ? cmd.getOptionValue(DB_PASS) : "")
+                .url("jdbc:" +(enabled ? cmd.getOptionValue(DB_URL) : ""))
+                .build();
     }
 
     private static void printHelp(Options opt) {

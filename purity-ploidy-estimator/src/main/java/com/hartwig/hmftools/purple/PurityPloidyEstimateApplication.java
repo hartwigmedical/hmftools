@@ -63,6 +63,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CircosConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
+import com.hartwig.hmftools.purple.config.DBConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
@@ -100,10 +101,6 @@ public class PurityPloidyEstimateApplication {
     private static final String MIN_NORM_FACTOR = "min_norm_factor";
     private static final String MAX_NORM_FACTOR = "max_norm_factor";
     private static final String NORM_FACTOR_INCREMENTS = "norm_factor_increment";
-    private static final String DB_ENABLED = "db_enabled";
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
     private static final String EXPERIMENTAL = "experimental";
     private static final String VERSION = "version";
     private static final String GENE_PANEL = "gene_panel";
@@ -236,8 +233,9 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), copyNumbers, amberGender, cobaltGender);
 
-            if (cmd.hasOption(DB_ENABLED)) {
-                final DatabaseAccess dbAccess = databaseAccess(cmd);
+            final DBConfig dbConfig = configSupplier.dbConfig();
+            if (dbConfig.enabled()) {
+                final DatabaseAccess dbAccess = databaseAccess(dbConfig);
                 dbAccess.writePurity(tumorSample, purityContext, qcChecks);
                 dbAccess.writeCopynumbers(tumorSample, copyNumbers);
                 dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
@@ -331,10 +329,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
         options.addOption(NORM_FACTOR_INCREMENTS, true, "Norm factor increments (default 0.01)");
 
-        options.addOption(DB_ENABLED, false, "Persist data to DB.");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
@@ -350,11 +344,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
+    private static DatabaseAccess databaseAccess(@NotNull final DBConfig dbConfig) throws SQLException {
+        return new DatabaseAccess(dbConfig.user(), dbConfig.password(), dbConfig.url());
     }
 }
