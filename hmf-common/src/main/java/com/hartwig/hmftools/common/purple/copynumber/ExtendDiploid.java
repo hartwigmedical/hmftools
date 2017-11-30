@@ -135,12 +135,12 @@ class ExtendDiploid {
     }
 
     private boolean isValid(@NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.SOMATIC && (region.support() != SegmentSupport.NONE
+        return region.status() == ObservedRegionStatus.DIPLOID && (region.support() != SegmentSupport.NONE
                 || region.observedTumorRatioCount() >= minTumorCount);
     }
 
     private boolean isDubious(@NotNull final FittedRegion region) {
-        return region.status() == ObservedRegionStatus.SOMATIC && region.support() == SegmentSupport.NONE
+        return region.status() == ObservedRegionStatus.DIPLOID && region.support() == SegmentSupport.NONE
                 && region.observedTumorRatioCount() < minTumorCount;
     }
 
@@ -187,7 +187,7 @@ class ExtendDiploid {
         for (int i = 0; i < regions.size(); i++) {
             final CombinedRegion combined = regions.get(i);
             final FittedRegion region = combined.region();
-            if (!combined.isProcessed() && region.status().equals(ObservedRegionStatus.SOMATIC)) {
+            if (!combined.isProcessed() && region.status().equals(ObservedRegionStatus.DIPLOID)) {
 
                 if (region.bafCount() > largestBAFCount) {
                     largestBAFCount = region.bafCount();

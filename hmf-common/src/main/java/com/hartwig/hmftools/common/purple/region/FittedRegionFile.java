@@ -93,7 +93,7 @@ public enum FittedRegionFile {
                 .chromosome(values[0])
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
-                .status(ObservedRegionStatus.valueOf(values[3]))
+                .status(ObservedRegionStatus.fromString(values[3]))
                 .modelPloidy(Integer.valueOf(values[4]))
                 .bafCount(Integer.valueOf(values[5]))
                 .observedBAF(Double.valueOf(values[6]))

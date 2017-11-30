@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.common.purple.region;
 
+import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.DIPLOID;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_HET_DELETION;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_HOM_DELETION;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_NOISE;
-import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.SOMATIC;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.UNKNOWN;
 
 import static org.junit.Assert.assertEquals;
@@ -25,8 +25,8 @@ public class ObservedRegionStatusFactoryTest {
         assertStatus("1", 0.09, GERMLINE_HOM_DELETION);
         assertStatus("1", 0.10, GERMLINE_HET_DELETION);
         assertStatus("1", 0.79, GERMLINE_HET_DELETION);
-        assertStatus("1", 0.80, SOMATIC);
-        assertStatus("1", 1.20, SOMATIC);
+        assertStatus("1", 0.80, DIPLOID);
+        assertStatus("1", 1.20, DIPLOID);
         assertStatus("1", 1.21, GERMLINE_AMPLIFICATION);
         assertStatus("1", 2.20, GERMLINE_AMPLIFICATION);
         assertStatus("1", 2.21, GERMLINE_NOISE);
@@ -43,17 +43,17 @@ public class ObservedRegionStatusFactoryTest {
         assertStatus("X", 0.10, GERMLINE_HET_DELETION, GERMLINE_HET_DELETION);
 
         assertStatus("X", 0.39, GERMLINE_HET_DELETION, GERMLINE_HET_DELETION);
-        assertStatus("X", 0.40, SOMATIC, GERMLINE_HET_DELETION);
+        assertStatus("X", 0.40, DIPLOID, GERMLINE_HET_DELETION);
 
-        assertStatus("X", 0.59, SOMATIC, GERMLINE_HET_DELETION);
-        assertStatus("X", 0.60, SOMATIC, GERMLINE_HET_DELETION);
+        assertStatus("X", 0.59, DIPLOID, GERMLINE_HET_DELETION);
+        assertStatus("X", 0.60, DIPLOID, GERMLINE_HET_DELETION);
         assertStatus("X", 0.61, GERMLINE_AMPLIFICATION, GERMLINE_HET_DELETION);
 
         assertStatus("X", 0.79, GERMLINE_AMPLIFICATION, GERMLINE_HET_DELETION);
-        assertStatus("X", 0.80, GERMLINE_AMPLIFICATION, SOMATIC);
+        assertStatus("X", 0.80, GERMLINE_AMPLIFICATION, DIPLOID);
 
-        assertStatus("X", 1.10, GERMLINE_AMPLIFICATION, SOMATIC);
-        assertStatus("X", 1.11, GERMLINE_NOISE, SOMATIC);
+        assertStatus("X", 1.10, GERMLINE_AMPLIFICATION, DIPLOID);
+        assertStatus("X", 1.11, GERMLINE_NOISE, DIPLOID);
         assertStatus("X", 1.21, GERMLINE_NOISE, GERMLINE_AMPLIFICATION);
         assertStatus("X", 2.20, GERMLINE_NOISE, GERMLINE_AMPLIFICATION);
         assertStatus("X", 2.21, GERMLINE_NOISE, GERMLINE_NOISE);
@@ -65,8 +65,8 @@ public class ObservedRegionStatusFactoryTest {
         assertStatus("Y", 0.049, GERMLINE_HOM_DELETION);
         assertStatus("Y", 0.05, GERMLINE_HET_DELETION);
         assertStatus("Y", 0.39, GERMLINE_HET_DELETION);
-        assertStatus("Y", 0.40, SOMATIC);
-        assertStatus("Y", 0.60, SOMATIC);
+        assertStatus("Y", 0.40, DIPLOID);
+        assertStatus("Y", 0.60, DIPLOID);
         assertStatus("Y", 0.61, GERMLINE_AMPLIFICATION);
         assertStatus("Y", 1.10, GERMLINE_AMPLIFICATION);
         assertStatus("Y", 1.11, GERMLINE_NOISE);

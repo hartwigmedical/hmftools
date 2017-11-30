@@ -21,7 +21,7 @@ public class FittedRegionFactoryTest {
 
     @Test
     public void tumorCopyNumberDoesntChangeForObservedRegionStatus() {
-        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.SOMATIC));
+        testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.DIPLOID));
         testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HET_DELETION));
         testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_HOM_DELETION));
         testTumorCopyNumber(4, observedRatio(1.2, 1.5, ObservedRegionStatus.GERMLINE_AMPLIFICATION));

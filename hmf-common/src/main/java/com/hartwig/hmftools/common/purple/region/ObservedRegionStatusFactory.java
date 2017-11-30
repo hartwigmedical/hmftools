@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.common.purple.region;
 
+import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.DIPLOID;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_HET_DELETION;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_HOM_DELETION;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.GERMLINE_NOISE;
-import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.SOMATIC;
 import static com.hartwig.hmftools.common.purple.region.ObservedRegionStatus.UNKNOWN;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -57,6 +57,6 @@ class ObservedRegionStatusFactory {
             return GERMLINE_AMPLIFICATION;
         }
 
-        return SOMATIC;
+        return DIPLOID;
     }
 }

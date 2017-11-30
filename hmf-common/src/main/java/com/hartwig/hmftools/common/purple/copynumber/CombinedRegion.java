@@ -24,7 +24,7 @@ class CombinedRegion implements GenomeRegion {
 
     @Deprecated
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
-        this(bafWeighted, region, region.status() != ObservedRegionStatus.SOMATIC);
+        this(bafWeighted, region, region.status() != ObservedRegionStatus.DIPLOID);
     }
 
     CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearCopyNumber) {
@@ -34,7 +34,7 @@ class CombinedRegion implements GenomeRegion {
             clearCopyNumber();
         }
 
-        if (region.status() != ObservedRegionStatus.SOMATIC) {
+        if (region.status() != ObservedRegionStatus.DIPLOID) {
             clearBAFValues();
         }
         regions.add(region);
@@ -96,16 +96,6 @@ class CombinedRegion implements GenomeRegion {
         return combined;
     }
 
-    @Deprecated
-    void combine(final FittedRegion region) {
-        if (region.status() == ObservedRegionStatus.SOMATIC) {
-            extendWithBAFWeightedAverage(region);
-        } else {
-            extend(region);
-        }
-    }
-
-
     void extend(final FittedRegion region) {
         combined.setStart(Math.min(combined.start(), region.start()));
         combined.setEnd(Math.max(combined.end(), region.end()));
@@ -130,7 +120,7 @@ class CombinedRegion implements GenomeRegion {
 
         extend(region);
 
-        combined.setStatus(ObservedRegionStatus.SOMATIC); //TODO Remove this
+        combined.setStatus(ObservedRegionStatus.DIPLOID); //TODO Remove this
         combined.setObservedTumorRatioCount(combined.observedTumorRatioCount() + region.observedTumorRatioCount());
 
         final long currentWeight;

@@ -56,7 +56,7 @@ public class PurpleDatamodelTest {
                 .observedTumorRatioCount(1)
                 .observedNormalRatio(1)
                 .ratioSupport(true)
-                .status(ObservedRegionStatus.SOMATIC)
+                .status(ObservedRegionStatus.DIPLOID)
                 .gcContent(0.93)
                 .support(SegmentSupport.NONE);
     }

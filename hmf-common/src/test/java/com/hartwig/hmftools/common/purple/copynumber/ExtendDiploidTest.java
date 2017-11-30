@@ -85,7 +85,7 @@ public class ExtendDiploidTest {
 
     @Test
     public void testInvalidGermlineGetsIgnored() {
-        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, ObservedRegionStatus.SOMATIC, SegmentSupport.BND);
+        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, ObservedRegionStatus.DIPLOID, SegmentSupport.BND);
         final FittedRegion germline = createFittedRegion(10001, 20000, 4, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.NONE);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
 
@@ -96,7 +96,7 @@ public class ExtendDiploidTest {
 
     @Test
     public void testInvalidGermlineIsKeptWithSVSupport() {
-        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, ObservedRegionStatus.SOMATIC, SegmentSupport.BND);
+        final FittedRegion somatic = createFittedRegion(1, 10000, 3.0, ObservedRegionStatus.DIPLOID, SegmentSupport.BND);
         final FittedRegion germline =
                 createFittedRegion(10001, 20000, 4.0, ObservedRegionStatus.GERMLINE_AMPLIFICATION, SegmentSupport.BND);
         final List<FittedRegion> regions = Lists.newArrayList(somatic, germline);
@@ -120,7 +120,7 @@ public class ExtendDiploidTest {
 
     private FittedRegion createValidSomatic(long start, long end, double copyNumber, int bafCount, SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
-                .status(ObservedRegionStatus.SOMATIC)
+                .status(ObservedRegionStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
                 .observedNormalRatio(0.5)
@@ -132,7 +132,7 @@ public class ExtendDiploidTest {
 
     private FittedRegion createDubiousRegion(long start, long end, double copyNumber, int ratioCount) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
-                .status(ObservedRegionStatus.SOMATIC)
+                .status(ObservedRegionStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
                 .observedNormalRatio(0.5)

@@ -18,13 +18,13 @@ public class CombinedRegionTest {
         final CombinedRegion region = createCombinedFittedRegion(1, 100_000_000, 3);
         assertAverages(region, 0, 3);
 
-        region.combine(create(100_000_001, 200_000_000, 4));
+        region.extendWithBAFWeightedAverage(create(100_000_001, 200_000_000, 4));
         assertAverages(region, 0, 3.5);
 
-        region.combine(create(200_000_001, 200_000_010, 1, 0.5, 3));
+        region.extendWithBAFWeightedAverage(create(200_000_001, 200_000_010, 1, 0.5, 3));
         assertAverages(region, 0.5, 3);
 
-        region.combine(create(200_000_011, 300_000_000, 3, 1, 4d));
+        region.extendWithBAFWeightedAverage(create(200_000_011, 300_000_000, 3, 1, 4d));
         assertAverages(region, 0.875, 3.75);
     }
 
@@ -42,14 +42,14 @@ public class CombinedRegionTest {
                 .observedTumorRatioCount(2)
                 .status(ObservedRegionStatus.GERMLINE_AMPLIFICATION)
                 .build();
-        region.combine(germlineRegion);
+        region.extend(germlineRegion);
         assertEquals(0, region.region().observedTumorRatioCount());
 
         final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
                 .observedTumorRatioCount(2)
-                .status(ObservedRegionStatus.SOMATIC)
+                .status(ObservedRegionStatus.DIPLOID)
                 .build();
-        region.combine(somaticRegion);
+        region.extendWithBAFWeightedAverage(somaticRegion);
         assertEquals(2, region.region().observedTumorRatioCount());
     }
 
@@ -58,7 +58,7 @@ public class CombinedRegionTest {
         CombinedRegion builder = createCombinedFittedRegion(1, 100, 3);
         assertAverages(builder, 0, 3);
 
-        builder.combine(create(101, 200, 0));
+        builder.extendWithBAFWeightedAverage(create(101, 200, 0));
         assertAverages(builder, 0, 3);
     }
 
