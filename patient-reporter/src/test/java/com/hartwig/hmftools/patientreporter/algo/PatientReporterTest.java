@@ -19,13 +19,13 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
-import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusions;
-import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusions;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
-import com.hartwig.hmftools.svannotation.Breakend;
-import com.hartwig.hmftools.svannotation.GeneAnnotation;
-import com.hartwig.hmftools.svannotation.Transcript;
-import com.hartwig.hmftools.svannotation.VariantAnnotation;
+import com.hartwig.hmftools.svannotation.annotations.Breakend;
+import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
+import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
+import com.hartwig.hmftools.svannotation.annotations.Transcript;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 
 import org.junit.Test;
@@ -40,10 +40,10 @@ public class PatientReporterTest {
     private static class TestAnnotator implements VariantAnnotator {
 
         @Override
-        public List<VariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
-            final List<VariantAnnotation> result = Lists.newArrayList();
+        public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
+            final List<StructuralVariantAnnotation> result = Lists.newArrayList();
             for (final StructuralVariant sv : variants) {
-                final VariantAnnotation ann = new VariantAnnotation(sv);
+                final StructuralVariantAnnotation ann = new StructuralVariantAnnotation(sv);
 
                 final Breakend b1 = new Breakend(ann, sv.startChromosome(), sv.startPosition(), sv.startOrientation(), sv.startAF());
                 final GeneAnnotation g1 = new GeneAnnotation(b1, "PNPLA7", Collections.singletonList("PNPLA7"), "ENSG00000130653", -1);
@@ -63,7 +63,7 @@ public class PatientReporterTest {
         }
 
         @Override
-        public VariantAnnotation annotateRegion(final GenomeRegion region) {
+        public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
             return null;
         }
     }

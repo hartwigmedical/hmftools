@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.data;
+package com.hartwig.hmftools.common.cosmicfusions;
 
 import java.io.File;
 import java.io.IOException;

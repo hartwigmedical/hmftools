@@ -2,11 +2,10 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 class GenomeAnalysis {
     @NotNull

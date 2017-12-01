@@ -23,7 +23,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
-import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
 import com.hartwig.hmftools.svannotation.NullAnnotator;

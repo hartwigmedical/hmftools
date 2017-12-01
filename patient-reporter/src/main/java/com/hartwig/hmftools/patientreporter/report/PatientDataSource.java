@@ -6,8 +6,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
-import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
+import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -81,7 +82,7 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromGeneFusions(@NotNull List<StructuralVariantAnalysis.GeneFusion> fusions) {
+    static JRDataSource fromGeneFusions(@NotNull List<GeneFusion> fusions) {
 
         final DRDataSource dataSource =
                 new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), POSITION_FIELD.getName(), SV_GENE_CONTEXT.getName(),
@@ -96,7 +97,7 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromGeneDisruptions(@NotNull List<StructuralVariantAnalysis.GeneDisruption> disruptions) {
+    static JRDataSource fromGeneDisruptions(@NotNull List<GeneDisruption> disruptions) {
 
         final DRDataSource dataSource =
                 new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), POSITION_FIELD.getName(), SV_TYPE_FIELD.getName(),

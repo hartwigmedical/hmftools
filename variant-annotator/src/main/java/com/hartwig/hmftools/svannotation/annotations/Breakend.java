@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.svannotation.annotations;
 
 import java.util.List;
 
@@ -7,14 +7,14 @@ import com.google.common.collect.Lists;
 
 public class Breakend {
 
-    private final VariantAnnotation parent;
+    private final StructuralVariantAnnotation parent;
     private final String chromosome;
     private final long position;
     private final int orientation;
     private final Double alleleFrequency;
     private final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
-    public Breakend(final VariantAnnotation parent) {
+    public Breakend(final StructuralVariantAnnotation parent) {
         this.parent = parent;
         this.chromosome = "ERR";
         this.position = 0;
@@ -22,7 +22,7 @@ public class Breakend {
         this.alleleFrequency = null;
     }
 
-    public Breakend(final VariantAnnotation parent, final String chromosome, final long position, final int orientation,
+    public Breakend(final StructuralVariantAnnotation parent, final String chromosome, final long position, final int orientation,
             final Double alleleFrequency) {
         this.parent = parent;
         this.chromosome = chromosome;
@@ -35,7 +35,7 @@ public class Breakend {
         geneAnnotations.add(geneAnnotation);
     }
 
-    public VariantAnnotation getStructuralVariant() {
+    public StructuralVariantAnnotation getStructuralVariant() {
         return parent;
     }
 

@@ -19,6 +19,10 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.svannotation.annotations.Breakend;
+import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
+import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
+import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
@@ -67,12 +71,12 @@ public class MySQLAnnotator implements VariantAnnotator {
     }
 
     @Override
-    public List<VariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
+    public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
-    private VariantAnnotation annotateVariant(final StructuralVariant variant) {
-        final VariantAnnotation annotation = new VariantAnnotation(variant);
+    private StructuralVariantAnnotation annotateVariant(final StructuralVariant variant) {
+        final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(variant);
 
         annotation.setBreakendAnnotations(
                 annotateBreakend(annotation, variant.startChromosome(), variant.startPosition(), variant.startOrientation(),
@@ -83,8 +87,8 @@ public class MySQLAnnotator implements VariantAnnotator {
     }
 
     @Override
-    public VariantAnnotation annotateRegion(final GenomeRegion region) {
-        final VariantAnnotation annotation = new VariantAnnotation(null);
+    public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
+        final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(null);
 
         annotation.setBreakendAnnotations(annotateBreakend(annotation, region.chromosome(), region.start(), 1, 0.0),
                 annotateBreakend(annotation, region.chromosome(), region.end(), -1, 0.0));
@@ -92,7 +96,7 @@ public class MySQLAnnotator implements VariantAnnotator {
         return annotation;
     }
 
-    private Breakend annotateBreakend(final VariantAnnotation parent, String chromosome, final long position, final int orientation,
+    private Breakend annotateBreakend(final StructuralVariantAnnotation parent, String chromosome, final long position, final int orientation,
             final Double alleleFrequency) {
         final Breakend breakend = new Breakend(parent, chromosome, position, orientation, alleleFrequency);
 

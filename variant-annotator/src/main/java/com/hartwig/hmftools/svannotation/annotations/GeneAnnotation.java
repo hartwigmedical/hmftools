@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.svannotation.annotations;
 
 import java.util.List;
 

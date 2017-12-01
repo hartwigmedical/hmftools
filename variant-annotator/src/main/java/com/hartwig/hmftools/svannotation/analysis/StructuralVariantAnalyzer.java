@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants;
+package com.hartwig.hmftools.svannotation.analysis;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -8,18 +8,22 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionData;
+import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionData;
-import com.hartwig.hmftools.patientreporter.data.COSMICGeneFusionModel;
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
-import com.hartwig.hmftools.svannotation.GeneAnnotation;
-import com.hartwig.hmftools.svannotation.Transcript;
-import com.hartwig.hmftools.svannotation.VariantAnnotation;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
+import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
+import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneFusion;
+import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
+import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantAnalyzer {
 
@@ -91,12 +95,12 @@ public class StructuralVariantAnalyzer {
         }
     }
 
-    private List<StructuralVariantAnalysis.GeneFusion> processFusions(final List<VariantAnnotation> annotations) {
+    private List<GeneFusion> processFusions(final List<StructuralVariantAnnotation> annotations) {
 
         // left is upstream, right is downstream
         final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
 
-        for (final VariantAnnotation sv : annotations) {
+        for (final StructuralVariantAnnotation sv : annotations) {
 
             final List<Pair<Transcript, Transcript>> svFusions = Lists.newArrayList();
 
@@ -162,7 +166,7 @@ public class StructuralVariantAnalyzer {
 
         // transform results to reported details
 
-        final List<StructuralVariantAnalysis.GeneFusion> result = Lists.newArrayList();
+        final List<GeneFusion> result = Lists.newArrayList();
         for (final Pair<Transcript, Transcript> fusion : fusions) {
             final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
             final boolean sameGene = upstream.getGeneName().equals(downstream.getGeneName());
@@ -184,7 +188,7 @@ public class StructuralVariantAnalyzer {
             final Double fiveAF = upstream.getBreakend().getAlleleFrequency();
             final Double threeAF = downstream.getBreakend().getAlleleFrequency();
 
-            final StructuralVariantAnalysis.GeneFusion details = ImmutableGeneFusion.builder()
+            final GeneFusion details = ImmutableGeneFusion.builder()
                     .type(upstream.getBreakend().getStructuralVariant().getVariant().type().toString())
                     .start(upstream.getBreakend().getPositionString())
                     .geneStart(upstream.getGeneName())
@@ -194,7 +198,7 @@ public class StructuralVariantAnalyzer {
                     .geneEnd(downstream.getGeneName())
                     .geneContextEnd(exonDescription(downstream, false))
                     .transcriptEnd(downstream.getTranscriptId())
-                    .vaf(PatientReportFormat.formatNullablePercent(fiveAF) + " " + PatientReportFormat.formatNullablePercent(threeAF))
+                    .vaf(formatNullablePercent(fiveAF) + " " + formatNullablePercent(threeAF))
                     .build();
 
             result.add(details);
@@ -204,10 +208,10 @@ public class StructuralVariantAnalyzer {
         return result;
     }
 
-    private List<StructuralVariantAnalysis.GeneDisruption> processDisruptions(final List<VariantAnnotation> annotations) {
+    private List<GeneDisruption> processDisruptions(final List<StructuralVariantAnnotation> annotations) {
 
         final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
-        for (final VariantAnnotation sv : annotations) {
+        for (final StructuralVariantAnnotation sv : annotations) {
 
             final boolean intronicExists = sv.getStart()
                     .getGeneAnnotations()
@@ -234,7 +238,7 @@ public class StructuralVariantAnalyzer {
             geneMap.put(g.getGeneName(), g);
         }
 
-        final List<StructuralVariantAnalysis.GeneDisruption> disruptions = Lists.newArrayList();
+        final List<GeneDisruption> disruptions = Lists.newArrayList();
         for (final String geneName : geneMap.keySet()) {
             for (final GeneAnnotation g : geneMap.get(geneName)) {
 
@@ -243,7 +247,7 @@ public class StructuralVariantAnalyzer {
                     continue;
                 }
 
-                final StructuralVariantAnalysis.GeneDisruption disruption = ImmutableGeneDisruption.builder()
+                final GeneDisruption disruption = ImmutableGeneDisruption.builder()
                         .geneName(geneName)
                         .location(g.getBreakend().getPositionString())
                         .geneContext(exonDescription(g.getCanonical(), true))
@@ -251,7 +255,7 @@ public class StructuralVariantAnalyzer {
                         .partner(g.getOtherBreakend().getPositionString())
                         .type(g.getBreakend().getStructuralVariant().getVariant().type().toString())
                         .orientation(g.getBreakend().getOrientation() > 0 ? "5'" : "3'")
-                        .vaf(PatientReportFormat.formatNullablePercent(g.getBreakend().getAlleleFrequency()))
+                        .vaf(formatNullablePercent(g.getBreakend().getAlleleFrequency()))
                         .build();
 
                 disruptions.add(disruption);
@@ -263,11 +267,21 @@ public class StructuralVariantAnalyzer {
     }
 
     @NotNull
+    private static String formatNullablePercent(final @Nullable Double percentage) {
+        return percentage == null ? "Na" : formatPercent(percentage);
+    }
+
+    @NotNull
+    private static String formatPercent(final double percentage) {
+        return Long.toString(Math.round(percentage * 100D)) + "%";
+    }
+
+    @NotNull
     public StructuralVariantAnalysis run(@NotNull final List<StructuralVariant> variants) {
 
-        final List<VariantAnnotation> annotations = annotator.annotateVariants(variants);
-        final List<StructuralVariantAnalysis.GeneFusion> fusions = processFusions(annotations);
-        final List<StructuralVariantAnalysis.GeneDisruption> disruptions = processDisruptions(annotations);
+        final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
+        final List<GeneFusion> fusions = processFusions(annotations);
+        final List<GeneDisruption> disruptions = processDisruptions(annotations);
 
         return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
     }

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 
 public class NullAnnotator implements VariantAnnotator {
 
@@ -13,12 +14,12 @@ public class NullAnnotator implements VariantAnnotator {
     }
 
     @Override
-    public List<VariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
-        return variants.stream().map(VariantAnnotation::new).collect(Collectors.toList());
+    public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
+        return variants.stream().map(StructuralVariantAnnotation::new).collect(Collectors.toList());
     }
 
     @Override
-    public VariantAnnotation annotateRegion(final GenomeRegion region) {
-        return new VariantAnnotation(null);
+    public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
+        return new StructuralVariantAnnotation(null);
     }
 }

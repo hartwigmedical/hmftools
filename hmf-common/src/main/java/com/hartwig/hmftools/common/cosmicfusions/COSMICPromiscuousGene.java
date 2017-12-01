@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.data;
+package com.hartwig.hmftools.common.cosmicfusions;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

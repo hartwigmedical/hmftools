@@ -40,11 +40,12 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
-import com.hartwig.hmftools.patientreporter.variants.StructuralVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
+import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.ImmutableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -73,8 +74,8 @@ public class PDFWriterTest {
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
         final List<CopyNumberReport> copyNumbers = createTestCopyNumbers();
 
-        final List<StructuralVariantAnalysis.GeneFusion> fusions = createTestFusions();
-        final List<StructuralVariantAnalysis.GeneDisruption> disruptions = createTestDisruptions();
+        final List<GeneFusion> fusions = createTestFusions();
+        final List<GeneDisruption> disruptions = createTestDisruptions();
 
         final SampleReport sampleReport = testSampleReport(0.6);
         final List<Alteration> alterations =
@@ -175,7 +176,7 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<StructuralVariantAnalysis.GeneFusion> createTestFusions() {
+    private static List<GeneFusion> createTestFusions() {
         return Collections.singletonList(ImmutableGeneFusion.builder()
                 .start("chr21:42872140")
                 .geneStart("TMPRSS2")
@@ -191,8 +192,8 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static List<StructuralVariantAnalysis.GeneDisruption> createTestDisruptions() {
-        final StructuralVariantAnalysis.GeneDisruption disruption1 = ImmutableGeneDisruption.builder()
+    private static List<GeneDisruption> createTestDisruptions() {
+        final GeneDisruption disruption1 = ImmutableGeneDisruption.builder()
                 .geneName("ERBB4")
                 .transcript("ENST00000342788")
                 .location("chr2:212381802")
@@ -203,7 +204,7 @@ public class PDFWriterTest {
                 .vaf("19%")
                 .build();
 
-        final StructuralVariantAnalysis.GeneDisruption disruption2 = ImmutableGeneDisruption.builder()
+        final GeneDisruption disruption2 = ImmutableGeneDisruption.builder()
                 .geneName("ERBB4")
                 .transcript("ENST00000342788")
                 .location("chr2:212643300")
@@ -214,7 +215,7 @@ public class PDFWriterTest {
                 .vaf("22%")
                 .build();
 
-        final StructuralVariantAnalysis.GeneDisruption disruption3 = ImmutableGeneDisruption.builder()
+        final GeneDisruption disruption3 = ImmutableGeneDisruption.builder()
                 .geneName("NRG1")
                 .transcript("ENST00000356819")
                 .location("chr8:32440124")
@@ -225,7 +226,7 @@ public class PDFWriterTest {
                 .vaf("7%")
                 .build();
 
-        final StructuralVariantAnalysis.GeneDisruption disruption4 = ImmutableGeneDisruption.builder()
+        final GeneDisruption disruption4 = ImmutableGeneDisruption.builder()
                 .geneName("NRG1")
                 .transcript("ENST00000356819")
                 .location("chr8:32440762")
@@ -236,7 +237,7 @@ public class PDFWriterTest {
                 .vaf("9%")
                 .build();
 
-        final StructuralVariantAnalysis.GeneDisruption disruption5 = ImmutableGeneDisruption.builder()
+        final GeneDisruption disruption5 = ImmutableGeneDisruption.builder()
                 .geneName("PIK3CB")
                 .transcript("ENST00000477593")
                 .location("chr3:138513398")
@@ -247,7 +248,7 @@ public class PDFWriterTest {
                 .vaf("20%")
                 .build();
 
-        final StructuralVariantAnalysis.GeneDisruption disruption6 = ImmutableGeneDisruption.builder()
+        final GeneDisruption disruption6 = ImmutableGeneDisruption.builder()
                 .geneName("CDK12")
                 .transcript("ENST00000447079")
                 .location("chr17:37681264")
