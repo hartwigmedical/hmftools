@@ -27,14 +27,15 @@ public class PurpleCopyNumberFactory {
     @NotNull
     private final List<PurpleCopyNumber> germlineDeletions;
 
-    public PurpleCopyNumberFactory(int minTumorRatioCount, @NotNull final Gender gender, @NotNull final PurityAdjuster purityAdjuster,
-            final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants) {
+    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentomere, @NotNull final Gender gender,
+            @NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
+            final List<StructuralVariant> structuralVariants) {
         somatics = Lists.newArrayList();
         somaticsWithGermlineDeletions = Lists.newArrayList();
         germlineDeletions = Lists.newArrayList();
 
         final ExtendGermline extendGermline = new ExtendGermline(gender);
-        final ExtendDiploid extendDiploid = new ExtendDiploid(purityAdjuster, minTumorRatioCount);
+        final ExtendDiploid extendDiploid = new ExtendDiploid(purityAdjuster, minTumorRatioCount, minTumorRatioCountAtCentomere);
 
         final ListMultimap<String, CombinedRegion> diploidExtension = ArrayListMultimap.create();
         for (HumanChromosome chromosome : HumanChromosome.values()) {

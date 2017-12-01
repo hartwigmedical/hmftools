@@ -18,10 +18,11 @@ import org.junit.Test;
 public class ExtendDiploidTest {
 
     private final static int MIN_TUMOR_COUNT = 30;
+    private final static int MIN_TUMOR_COUNT_AT_CENTROMERE = 50;
     private final static String CHROMOSOME = "1";
     private final static double EPSILON = 1e-10;
     private final static PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
-    private final static ExtendDiploid PURE_VICTIM = new ExtendDiploid(PURE, MIN_TUMOR_COUNT);
+    private final static ExtendDiploid PURE_VICTIM = new ExtendDiploid(PURE, MIN_TUMOR_COUNT, MIN_TUMOR_COUNT_AT_CENTROMERE);
 
     @Test
     public void testDubiousRegionGetsIncludedFromLeft() {
@@ -75,6 +76,35 @@ public class ExtendDiploidTest {
         final FittedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 10);
         final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 10);
         final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.NONE);
+
+        final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
+        assertEquals(3, result.size());
+        assertRegion(1, 10000, 3, result.get(0));
+        assertRegion(10001, 20000, 2, result.get(1));
+        assertRegion(20001, 30000, 3, result.get(2));
+    }
+
+    @Test
+    public void testTowardsCentromere() {
+        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final FittedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 11);
+        final FittedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 11);
+        final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 11);
+        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
+
+        final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
+        assertEquals(2, result.size());
+        assertRegion(1, 20000, 3, result.get(0));
+        assertRegion(20001, 30000, 3, result.get(1));
+    }
+
+    @Test
+    public void testTooBigTowardsCentromere() {
+        final FittedRegion somaticLeft = createValidSomatic(1, 10000, 3.0, 50, SegmentSupport.BND);
+        final FittedRegion dubious1 = createDubiousRegion(10001, 11000, 2.0, 21);
+        final FittedRegion dubious2 = createDubiousRegion(11001, 12000, 2.0, 21);
+        final FittedRegion dubious3 = createDubiousRegion(12001, 20000, 2.0, 21);
+        final FittedRegion somaticRight = createValidSomatic(20001, 30000, 3.0, 40, SegmentSupport.CENTROMERE);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(somaticLeft, dubious1, dubious2, dubious3, somaticRight));
         assertEquals(3, result.size());

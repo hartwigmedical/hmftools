@@ -59,6 +59,9 @@ public class ConfigSupplier {
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
 
+    private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
+    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 50;
+
     static final double MIN_PURITY_DEFAULT = 0.08;
     static final double MAX_PURITY_DEFAULT = 1.0;
     static final double MIN_NORM_FACTOR_DEFAULT = 0.33;
@@ -101,6 +104,10 @@ public class ConfigSupplier {
         options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT,
                 true,
                 "Minimum ratio count while smoothing before diploid regions become suspect.");
+
+        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
+                true,
+                "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere.");
     }
 
     private final CommonConfig commonConfig;
@@ -165,6 +172,7 @@ public class ConfigSupplier {
 
         smoothingConfig = ImmutableSmoothingConfig.builder()
                 .minDiploidTumorRatioCount(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT, MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT))
+                .minDiploidTumorRatioCountAtCentromere(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE, MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT))
                 .build();
 
         bafConfig = createBAFConfig(cmd, opt, commonConfig);

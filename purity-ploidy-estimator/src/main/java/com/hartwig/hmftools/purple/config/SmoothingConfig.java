@@ -9,4 +9,6 @@ import org.jetbrains.annotations.Nullable;
 public interface SmoothingConfig {
 
     int minDiploidTumorRatioCount();
+
+    int minDiploidTumorRatioCountAtCentromere();
 }

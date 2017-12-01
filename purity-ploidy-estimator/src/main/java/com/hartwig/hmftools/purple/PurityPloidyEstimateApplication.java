@@ -65,6 +65,7 @@ import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.DBConfig;
 import com.hartwig.hmftools.purple.config.FittingConfig;
+import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.ChartWriter;
@@ -197,12 +198,14 @@ public class PurityPloidyEstimateApplication {
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
             final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
-            final PurpleCopyNumberFactory copyNumberFactory =
-                    new PurpleCopyNumberFactory(configSupplier.smoothingConfig().minDiploidTumorRatioCount(),
-                            amberGender,
-                            purityAdjuster,
-                            fittedRegions,
-                            structuralVariants);
+
+            final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
+            final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
+                    smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
+                    amberGender,
+                    purityAdjuster,
+                    fittedRegions,
+                    structuralVariants);
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
             final List<GeneCopyNumber> geneCopyNumbers =

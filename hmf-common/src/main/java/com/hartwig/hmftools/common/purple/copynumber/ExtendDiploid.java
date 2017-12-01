@@ -39,11 +39,13 @@ class ExtendDiploid {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     private final int minTumorCount;
+    private final int minTumorCountAtCentromere;
     private final BAFDeviation bafDeviation;
     private final CopyNumberDeviation copyNumberDeviation;
 
-    ExtendDiploid(@NotNull final PurityAdjuster adjuster, final int minTumorCount) {
+    ExtendDiploid(@NotNull final PurityAdjuster adjuster, final int minTumorCount, final int minTumorCountAtCentromere) {
         this.minTumorCount = minTumorCount;
+        this.minTumorCountAtCentromere = minTumorCountAtCentromere;
         this.bafDeviation = new BAFDeviation();
         this.copyNumberDeviation = new CopyNumberDeviation(adjuster);
     }
@@ -110,11 +112,11 @@ class ExtendDiploid {
 
         final boolean isNeighbourDubious = isDubious(neighbour);
         if (isNeighbourDubious) {
+            int minTumorCount = nextBigBreakIsCentromere(regions, direction, targetIndex) ? minTumorCountAtCentromere : this.minTumorCount;
             if (inTolerance(target.region(), neighbour)) {
                 target.extendWithBAFWeightedAverage(neighbour);
                 return true;
-            }
-            else if (pushThroughDubiousRegion(regions, direction, targetIndex)) {
+            } else if (pushThroughDubiousRegion(minTumorCount, regions, direction, targetIndex)) {
                 target.extend(neighbour);
                 return true;
             } else {
@@ -144,15 +146,34 @@ class ExtendDiploid {
                 && region.observedTumorRatioCount() < minTumorCount;
     }
 
-    private boolean pushThroughDubiousRegion(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction,
+    private boolean nextBigBreakIsCentromere(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction,
             int targetIndex) {
+        for (int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i)) {
+            final FittedRegion neighbour = regions.get(i).region();
+            if (neighbour.support() == SegmentSupport.CENTROMERE) {
+                return true;
+            }
+            if (neighbour.support().isSV()) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean pushThroughDubiousRegion(int minTumorCount, @NotNull final List<CombinedRegion> regions,
+            @NotNull final Direction direction, int targetIndex) {
 
         int dubiousCount = 0;
         final CombinedRegion target = regions.get(targetIndex);
         for (int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i)) {
             final FittedRegion neighbour = regions.get(i).region();
 
-            if (Extend.doNotExtend(target, neighbour)) {
+            if (Extend.breakForCentromereStart(target, neighbour)) {
+                return dubiousCount < minTumorCount;
+            }
+
+            if (Extend.breakForStructuralVariant(target, neighbour)) {
                 return false;
             }
 
