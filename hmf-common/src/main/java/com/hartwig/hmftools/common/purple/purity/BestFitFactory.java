@@ -18,8 +18,8 @@ public class BestFitFactory {
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
     private static final double HIGHLY_DIPLOID_PERCENTAGE = 0.98;
-    private static final double ALL_CANDIDATES_MIN_PURITY = 0.15;
     private static final double LOWEST_SCORE_MIN_PURITY = 0.15;
+    private static final double MIN_PURITY_SPREAD = 0.15;
 
     private final FittedPurity bestFit;
     private final FittedPurityScore score;
@@ -36,8 +36,7 @@ public class BestFitFactory {
         final List<FittedPurity> candidates = candidates(lowestScore.score(), fittedPurities);
         score = FittedPurityScoreFactory.score(candidates);
 
-        //todo: chane range to greater > 10
-        if (Doubles.lessOrEqual(score.minPurity(), ALL_CANDIDATES_MIN_PURITY) && isHighlyDiploid(score)) {
+        if (Doubles.greaterOrEqual(score.puritySpread(), MIN_PURITY_SPREAD) && isHighlyDiploid(score)) {
             if (noDetectableTumor(somatics.size())) {
                 status = FittedPurityStatus.NO_TUMOR;
                 bestFit = lowestScore;

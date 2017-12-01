@@ -16,4 +16,9 @@ public abstract class FittedPurityScore {
     public abstract double minDiploidProportion();
 
     public abstract double maxDiploidProportion();
+
+    public double puritySpread() {
+        return maxPurity() - minPurity();
+    }
+
 }
