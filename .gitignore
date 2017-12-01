@@ -4,6 +4,7 @@
 .project
 .classpath
 .settings/
+.attach_pid*
 
 # Ignore target directies
 target
