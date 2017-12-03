@@ -218,7 +218,6 @@ public class PurityPloidyEstimateApplication {
                 dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
                 dbAccess.writeCopynumberRegions(tumorSample, enrichedFittedRegions);
                 dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
-                dbAccess.writeStructuralVariants(tumorSample, structuralVariants);
             }
 
             LOGGER.info("Writing purple data to: {}", outputDirectory);
