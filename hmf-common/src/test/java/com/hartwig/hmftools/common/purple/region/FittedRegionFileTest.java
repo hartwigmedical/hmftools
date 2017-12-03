@@ -18,7 +18,7 @@ public class FittedRegionFileTest {
 
     private static FittedRegion createRandom(final Random random) {
         return ImmutableFittedRegion.builder()
-                .chromosome("X")
+                .chromosome("XYZ" + random.nextInt())
                 .start(random.nextLong())
                 .end(random.nextLong())
                 .status(GermlineStatus.DIPLOID)
@@ -40,9 +40,8 @@ public class FittedRegionFileTest {
                 .ratioSupport(random.nextBoolean())
                 .support(SegmentSupport.BND)
                 .observedTumorRatioCount(random.nextInt())
-                .svCluster(false)
-                .gcContent(0.0) // TODO: Fix
+                .svCluster(random.nextBoolean())
+                .gcContent(random.nextDouble())
                 .build();
     }
-
 }

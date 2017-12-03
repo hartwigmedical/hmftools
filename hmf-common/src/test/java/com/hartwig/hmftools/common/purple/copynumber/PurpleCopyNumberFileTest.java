@@ -55,7 +55,9 @@ public class PurpleCopyNumberFileTest {
                 .bafCount(random.nextInt())
                 .averageObservedBAF(random.nextDouble())
                 .averageActualBAF(random.nextDouble())
-                .segmentEndSupport(SegmentSupport.NONE)
+                .segmentStartSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
+                .segmentEndSupport(SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)])
+                .method(CopyNumberMethod.values()[random.nextInt(CopyNumberMethod.values().length)])
                 .build();
     }
 }

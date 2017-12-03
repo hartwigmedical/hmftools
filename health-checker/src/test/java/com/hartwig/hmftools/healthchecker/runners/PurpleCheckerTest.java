@@ -35,7 +35,7 @@ public class PurpleCheckerTest {
 
         assertCheck(checks, PurpleCheck.AMBER_GENDER.toString(), "MALE");
         assertCheck(checks, PurpleCheck.COBALT_GENDER.toString(), "FEMALE");
-        assertCheck(checks, PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), "88");
+        assertCheck(checks, PurpleCheck.PURPLE_SEGMENT_SCORE.toString(), "199");
     }
 
     @Test

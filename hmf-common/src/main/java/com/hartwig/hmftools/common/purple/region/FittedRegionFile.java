@@ -33,7 +33,7 @@ public enum FittedRegionFile {
         return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("chromosome")
                 .add("start")
                 .add("end")
-                .add("status")
+                .add("germlineStatus")
                 .add("fittedPloidy")
                 .add("bafCount")
                 .add("observedBAF")
@@ -45,8 +45,6 @@ public enum FittedRegionFile {
                 .add("cnvDeviation")
                 .add("deviation")
                 .add("tumorCopyNumber")
-                .add("broadTumorCopyNumber")
-                .add("broadBAF")
                 .add("segmentTumorCopyNumber")
                 .add("segmentBAF")
                 .add("refNormalisedCopyNumber")
@@ -54,6 +52,8 @@ public enum FittedRegionFile {
                 .add("support")
                 .add("observedTumorRatioCount")
                 .add("tumorBAF")
+                .add("gcContent")
+                .add("svCluster")
                 .toString();
     }
 
@@ -74,8 +74,6 @@ public enum FittedRegionFile {
                 .add(String.valueOf(copyNumber.cnvDeviation()))
                 .add(String.valueOf(copyNumber.deviation()))
                 .add(String.valueOf(copyNumber.tumorCopyNumber()))
-                .add(String.valueOf(0))
-                .add(String.valueOf(0)) //TODO: FIX
                 .add(String.valueOf(copyNumber.segmentTumorCopyNumber()))
                 .add(String.valueOf(copyNumber.segmentBAF()))
                 .add(String.valueOf(copyNumber.refNormalisedCopyNumber()))
@@ -83,6 +81,8 @@ public enum FittedRegionFile {
                 .add(String.valueOf(copyNumber.support()))
                 .add(String.valueOf(copyNumber.observedTumorRatioCount()))
                 .add(String.valueOf(copyNumber.tumorBAF()))
+                .add(String.valueOf(copyNumber.gcContent()))
+                .add(String.valueOf(copyNumber.svCluster()))
                 .toString();
     }
 
@@ -105,16 +105,15 @@ public enum FittedRegionFile {
                 .cnvDeviation(Double.valueOf(values[12]))
                 .deviation(Double.valueOf(values[13]))
                 .tumorCopyNumber(Double.valueOf(values[14]))
-                .segmentTumorCopyNumber(Double.valueOf(values[17]))
-                .segmentBAF(Double.valueOf(values[18]))
-                .refNormalisedCopyNumber(Double.valueOf(values[19]))
-                .ratioSupport(Boolean.valueOf(values[20]))
-                .support(SegmentSupport.valueOf(values[21]))
-                .observedTumorRatioCount(Integer.valueOf(values[22]))
-                .tumorBAF(Double.valueOf(values[23]))
-                .svCluster(false)
-                .gcContent(0) //TODO: INCLUDE
+                .segmentTumorCopyNumber(Double.valueOf(values[15]))
+                .segmentBAF(Double.valueOf(values[16]))
+                .refNormalisedCopyNumber(Double.valueOf(values[17]))
+                .ratioSupport(Boolean.valueOf(values[18]))
+                .support(SegmentSupport.valueOf(values[19]))
+                .observedTumorRatioCount(Integer.valueOf(values[20]))
+                .tumorBAF(Double.valueOf(values[21]))
+                .gcContent(Double.valueOf(values[22]))
+                .svCluster(Boolean.valueOf(values[23]))
                 .build();
     }
-
 }

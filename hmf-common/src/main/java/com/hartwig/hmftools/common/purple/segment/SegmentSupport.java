@@ -28,23 +28,4 @@ public enum SegmentSupport {
         return SegmentSupport.valueOf(type.toString());
     }
 
-    public static SegmentSupport fromSVSupport(StructuralVariantSupport support) {
-        switch (support) {
-            case BND:
-                return BND;
-            case INV:
-                return INV;
-            case DEL:
-                return DEL;
-            case INS:
-                return INS;
-            case DUP:
-                return DUP;
-            case MULTIPLE:
-                return MULTIPLE;
-            default:
-                return NONE;
-        }
-    }
-
 }

@@ -54,9 +54,9 @@ public enum PurpleCopyNumberFile {
                 .add("bafCount")
                 .add("observedBAF")
                 .add("actualBAF")
-                .add("inferred")
                 .add("segmentStartSupport")
-//                .add("segmentEndSupport")
+                .add("segmentEndSupport")
+                .add("method")
                 .toString();
     }
 
@@ -69,9 +69,9 @@ public enum PurpleCopyNumberFile {
                 .add(String.valueOf(copyNumber.bafCount()))
                 .add(String.valueOf(copyNumber.averageObservedBAF()))
                 .add(String.valueOf(copyNumber.averageActualBAF()))
-                .add(String.valueOf(false))
                 .add(String.valueOf(copyNumber.segmentStartSupport()))
-//                .add(String.valueOf(copyNumber.segmentEndSupport()))
+                .add(String.valueOf(copyNumber.segmentEndSupport()))
+                .add(String.valueOf(copyNumber.method()))
                 .toString();
     }
 
@@ -86,9 +86,9 @@ public enum PurpleCopyNumberFile {
                 .bafCount(Integer.valueOf(values[4]))
                 .averageObservedBAF(Double.valueOf(values[5]))
                 .averageActualBAF(Double.valueOf(values[6]))
-                .segmentStartSupport(SegmentSupport.valueOf(values[8]))
-                .segmentEndSupport(SegmentSupport.NONE) //TODO: INCLUDE
-                .method(CopyNumberMethod.UNKNOWN) //TODO: INCLUDE
+                .segmentStartSupport(SegmentSupport.valueOf(values[7]))
+                .segmentEndSupport(SegmentSupport.valueOf(values[8]))
+                .method(CopyNumberMethod.valueOf(values[9]))
                 .build();
     }
 }
