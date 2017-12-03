@@ -19,8 +19,7 @@ public class PurpleQCFileTest {
 
     private static PurpleQC create() {
         return ImmutablePurpleQC.builder()
-                .trailingSegments(90)
-                .ratioSegments(34)
+                .unsupportedSegments(90)
                 .ploidy(3.17)
                 .amberGender(Gender.MALE)
                 .cobaltGender(Gender.FEMALE)

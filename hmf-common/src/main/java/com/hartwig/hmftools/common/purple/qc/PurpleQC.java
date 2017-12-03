@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleQC {
 
-    private static final int SEGMENT_THRESHOLD = 150;
+    private static final int SEGMENT_THRESHOLD = 120;
 
     @NotNull
     public PurpleQCStatus status() {
@@ -34,12 +34,10 @@ public abstract class PurpleQC {
     }
 
     public int segmentScore() {
-        return (int) Math.round(Math.pow(ratioSegments(), 3) / Math.pow(trailingSegments(), 2) / ploidy());
+        return (int) Math.round(unsupportedSegments() / ploidy());
     }
 
-    public abstract int ratioSegments();
-
-    public abstract int trailingSegments();
+    public abstract int unsupportedSegments();
 
     public abstract double ploidy();
 
