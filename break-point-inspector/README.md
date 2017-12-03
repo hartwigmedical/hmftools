@@ -36,6 +36,13 @@ java -jar break-point-inspector-x.y-with-dependencies.jar
 > bpi_stats.tsv
 ``` 
 
+## Optional Arguments
+
+```
+    -contaminationFraction 0.03
+```
+Defaults to 0. For every 1 supporting read in the tumor, allow *contaminationFraction* reads in the normal.
+
 ### Notes
 * BPI makes use of the temp directory, this can be modified with **-Djava.io.tmpdir=/path/to/tmp**
 * You can slice the BAM files with **-tumor_slice tumor_slice.bam** **-ref_slice ref_slice.bam**
