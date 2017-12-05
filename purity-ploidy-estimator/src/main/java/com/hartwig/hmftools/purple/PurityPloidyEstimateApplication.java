@@ -119,7 +119,6 @@ public class PurityPloidyEstimateApplication {
         final int threads = cmd.hasOption(THREADS) ? Integer.valueOf(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
         try {
-
             // JOBA: Get common config
             final ConfigSupplier configSupplier = new ConfigSupplier(cmd, options);
             final CommonConfig config = configSupplier.commonConfig();
@@ -171,28 +170,18 @@ public class PurityPloidyEstimateApplication {
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(amberGender,
-                    fittingConfig.maxPloidy(),
-                    cnvRatioWeight,
-                    ploidyPenaltyExperiment,
-                    observedBafExponent);
+            final FittedRegionFactory fittedRegionFactory =
+                    new FittedRegionFactory(amberGender, fittingConfig.maxPloidy(), cnvRatioWeight, ploidyPenaltyExperiment,
+                            observedBafExponent);
 
-            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                    fittingConfig.maxPloidy(),
-                    fittingConfig.minPurity(),
-                    fittingConfig.maxPurity(),
-                    fittingConfig.purityIncrement(),
-                    fittingConfig.minNormFactor(),
-                    fittingConfig.maxNormFactor(),
-                    fittingConfig.normFactorIncrement(),
-                    fittedRegionFactory,
-                    observedRegions);
+            final FittedPurityFactory fittedPurityFactory =
+                    new FittedPurityFactory(executorService, fittingConfig.maxPloidy(), fittingConfig.minPurity(),
+                            fittingConfig.maxPurity(), fittingConfig.purityIncrement(), fittingConfig.minNormFactor(),
+                            fittingConfig.maxNormFactor(), fittingConfig.normFactorIncrement(), fittedRegionFactory, observedRegions);
 
             final SomaticConfig somaticConfig = configSupplier.somaticConfig();
-            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
-                    somaticConfig.minPeakVariants(),
-                    fittedPurityFactory.bestFitPerPurity(),
-                    somaticVariants);
+            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(), somaticConfig.minPeakVariants(),
+                    fittedPurityFactory.bestFitPerPurity(), somaticVariants);
             final FittedPurity bestFit = bestFitFactory.bestFit();
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
@@ -200,10 +189,7 @@ public class PurityPloidyEstimateApplication {
 
             final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
-                    smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
-                    amberGender,
-                    purityAdjuster,
-                    fittedRegions,
+                    smoothingConfig.minDiploidTumorRatioCountAtCentromere(), amberGender, purityAdjuster, fittedRegions,
                     structuralVariants);
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
@@ -248,19 +234,12 @@ public class PurityPloidyEstimateApplication {
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
-            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(),
-                    purityContext.score(),
-                    copyNumbers,
+            new ChartWriter(tumorSample, circosConfig.plotDirectory()).write(purityContext.bestFit(), purityContext.score(), copyNumbers,
                     enrichedSomatics);
 
             LOGGER.info("Writing circos data to: {}", circosConfig.circosDirectory());
-            new GenerateCircosData(configSupplier, executorService).write(amberGender,
-                    copyNumbers,
-                    enrichedSomatics,
-                    structuralVariants,
-                    fittedRegions,
-                    Lists.newArrayList(bafs.values()));
-
+            new GenerateCircosData(configSupplier, executorService).write(amberGender, copyNumbers, enrichedSomatics, structuralVariants,
+                    fittedRegions, Lists.newArrayList(bafs.values()));
         } finally {
             executorService.shutdown();
         }
@@ -268,7 +247,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private List<StructuralVariant> structuralVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
+    private static List<StructuralVariant> structuralVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
         final StructuralVariantConfig config = configSupplier.structuralVariantConfig();
         if (config.file().isPresent()) {
             final String filePath = config.file().get().toString();
@@ -281,7 +260,8 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private List<PurpleSomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException, HartwigException {
+    private static List<PurpleSomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier)
+            throws IOException, HartwigException {
         final SomaticConfig config = configSupplier.somaticConfig();
         if (config.file().isPresent()) {
             String filename = config.file().get().toString();

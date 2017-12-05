@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceRecord;
 
-public class ChromosomeLengthFactory {
+public final class ChromosomeLengthFactory {
 
     @NotNull
     public static <T extends GenomePosition> Map<String, ChromosomeLength> create(int windowSize,
@@ -50,5 +50,4 @@ public class ChromosomeLengthFactory {
 
         return results;
     }
-
 }
