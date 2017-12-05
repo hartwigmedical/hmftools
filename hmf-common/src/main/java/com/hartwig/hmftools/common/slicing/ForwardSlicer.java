@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 class ForwardSlicer implements Slicer {
 
     @NotNull
-    final Multimap<String, GenomeRegion> regions;
+    private final Multimap<String, GenomeRegion> regions;
 
     @NotNull
     private final GenomeRegionSelector<GenomeRegion> selector;

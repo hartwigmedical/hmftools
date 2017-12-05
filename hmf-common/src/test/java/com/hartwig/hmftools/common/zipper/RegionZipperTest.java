@@ -18,7 +18,6 @@ public class RegionZipperTest {
 
     @Test
     public void testZipper() {
-
         final List<GenomeRegion> primary = Lists.newArrayList(GenomeRegionFactory.create("1", 1, 100),
                 GenomeRegionFactory.create("1", 500, 1000),
                 GenomeRegionFactory.create("2", 500, 1000),
@@ -45,5 +44,4 @@ public class RegionZipperTest {
 
         RegionZipper.zip(primary, secondary, handler);
     }
-
 }

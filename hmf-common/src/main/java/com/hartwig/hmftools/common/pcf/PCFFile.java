@@ -13,7 +13,7 @@ import com.hartwig.hmftools.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PCFFile {
+public final class PCFFile {
 
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "sampleID";
@@ -30,6 +30,7 @@ public class PCFFile {
         return basePath + File.separator + sample + BAF_EXTENSION;
     }
 
+    @NotNull
     public static ListMultimap<String, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source, @NotNull final String filename)
             throws IOException {
         ListMultimap<String, PCFPosition> result = ArrayListMultimap.create();
@@ -78,8 +79,8 @@ public class PCFFile {
                 .build();
     }
 
+    @NotNull
     private static PCFPosition position(@NotNull final String chromosome, long pos, @NotNull final PCFSource source) {
         return ImmutablePCFPosition.builder().chromosome(chromosome).position(pos).source(source).build();
     }
-
 }

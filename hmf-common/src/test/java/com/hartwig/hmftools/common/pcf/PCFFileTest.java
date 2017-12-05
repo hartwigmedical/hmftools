@@ -39,11 +39,9 @@ public class PCFFileTest {
         assertPosition(2584001, results.get(2));
         assertPosition(2695001, results.get(3));
         assertPosition(4363001, results.get(4));
-
     }
 
-    private void assertPosition(long position, @NotNull final PCFPosition victim) {
+    private static void assertPosition(long position, @NotNull final PCFPosition victim) {
         assertEquals(position, victim.position());
     }
-
 }

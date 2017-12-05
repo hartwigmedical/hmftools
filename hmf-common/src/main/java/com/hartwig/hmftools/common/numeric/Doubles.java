@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.numeric;
 
-public class Doubles {
+public final class Doubles {
 
     private static final double EPSILON = 1e-10;
 

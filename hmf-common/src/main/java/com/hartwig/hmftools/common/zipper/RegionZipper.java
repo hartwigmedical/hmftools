@@ -5,11 +5,12 @@ import java.util.List;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
-public class RegionZipper {
+import org.jetbrains.annotations.NotNull;
+
+public final class RegionZipper {
 
     public static <S extends GenomeRegion, T extends GenomeRegion> void zip(List<S> primary, List<T> secondary,
             RegionZipperHandler<S, T> handler) {
-
         String chromosome = "";
 
         int i = 0, j = 0;
@@ -19,6 +20,7 @@ public class RegionZipper {
             T rightRegion = j < secondary.size() ? secondary.get(j) : null;
 
             if (leftRegion == null || (rightRegion != null && compare(leftRegion, rightRegion) > 0)) {
+                assert rightRegion != null;
                 if (!rightRegion.chromosome().equals(chromosome)) {
                     chromosome = rightRegion.chromosome();
                     handler.enterChromosome(chromosome);
@@ -36,7 +38,7 @@ public class RegionZipper {
         }
     }
 
-    private static int compare(GenomeRegion position, GenomeRegion region) {
+    private static int compare(@NotNull GenomeRegion position, @NotNull GenomeRegion region) {
         int positionChromosome = HumanChromosome.fromString(position.chromosome()).intValue();
         int regionChromosome = HumanChromosome.fromString(region.chromosome()).intValue();
         if (positionChromosome < regionChromosome) {
