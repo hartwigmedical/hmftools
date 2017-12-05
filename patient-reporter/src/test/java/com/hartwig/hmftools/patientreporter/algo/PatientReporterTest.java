@@ -22,7 +22,6 @@ import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusions;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
-import com.hartwig.hmftools.svannotation.annotations.Breakend;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
@@ -44,28 +43,19 @@ public class PatientReporterTest {
             final List<StructuralVariantAnnotation> result = Lists.newArrayList();
             for (final StructuralVariant sv : variants) {
                 final StructuralVariantAnnotation ann = new StructuralVariantAnnotation(sv);
+                final GeneAnnotation g1 = new GeneAnnotation(ann, true,"PNPLA7", Collections.singletonList("PNPLA7"), "ENSG00000130653", -1);
+                g1.addTranscript(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 37, true));
+                ann.getAnnotations().add(g1);
 
-                final Breakend b1 = new Breakend(ann, sv.startChromosome(), sv.startPosition(), sv.startOrientation(), sv.startAF());
-                final GeneAnnotation g1 = new GeneAnnotation(b1, "PNPLA7", Collections.singletonList("PNPLA7"), "ENSG00000130653", -1);
-                g1.addTranscriptAnnotation(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 37, true));
-                b1.addGeneAnnotation(g1);
-
-                final Breakend b2 = new Breakend(ann, sv.endChromosome(), sv.endPosition(), sv.endOrientation(), sv.endAF());
-                final GeneAnnotation g2 = new GeneAnnotation(b2, "TMPRSS2", Collections.singletonList("TMPRSS2"), "ENSG00000184012", -1);
-                g2.addTranscriptAnnotation(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 14, true));
-                b2.addGeneAnnotation(g2);
-
-                ann.setBreakendAnnotations(b1, b2);
+                final GeneAnnotation g2 = new GeneAnnotation(ann, false, "TMPRSS2", Collections.singletonList("TMPRSS2"), "ENSG00000184012", -1);
+                g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 14, true));
+                ann.getAnnotations().add(g2);
 
                 result.add(ann);
             }
             return result;
         }
 
-        @Override
-        public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
-            return null;
-        }
     }
 
     @Test

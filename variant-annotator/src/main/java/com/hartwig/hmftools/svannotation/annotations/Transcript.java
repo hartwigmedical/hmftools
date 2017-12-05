@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.svannotation.annotations;
 
+import java.sql.Struct;
+
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+
 import org.jetbrains.annotations.NotNull;
 
 public class Transcript {
@@ -51,12 +55,10 @@ public class Transcript {
         return geneAnnotation;
     }
 
+    public StructuralVariant getVariant() { return geneAnnotation.getVariant(); }
+
     public String getGeneName() {
         return geneAnnotation.getGeneName();
-    }
-
-    public Breakend getBreakend() {
-        return geneAnnotation.getBreakend();
     }
 
     public int getStrand() {

@@ -17,9 +17,4 @@ public class NullAnnotator implements VariantAnnotator {
     public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
         return variants.stream().map(StructuralVariantAnnotation::new).collect(Collectors.toList());
     }
-
-    @Override
-    public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
-        return new StructuralVariantAnnotation(null);
-    }
 }

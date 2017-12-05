@@ -6,9 +6,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
-import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -82,22 +82,22 @@ class PatientDataSource {
     }
 
     @NotNull
-    static JRDataSource fromGeneFusions(@NotNull List<GeneFusion> fusions) {
+    static JRDataSource fromGeneFusions(@NotNull List<GeneFusionData> fusions) {
 
         final DRDataSource dataSource =
                 new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), POSITION_FIELD.getName(), SV_GENE_CONTEXT.getName(),
                         SV_PARTNER_GENE_FIELD.getName(), SV_PARTNER_TRANSCRIPT_FIELD.getName(), SV_PARTNER_POSITION_FIELD.getName(),
-                        SV_PARTNER_CONTEXT_FIELD.getName(), SV_TYPE_FIELD.getName(), SV_VAF.getName());
+                        SV_PARTNER_CONTEXT_FIELD.getName(), SV_TYPE_FIELD.getName(), SV_VAF.getName(), COSMIC_FIELD.getName());
 
         fusions.forEach(
                 g -> dataSource.add(g.geneStart(), g.transcriptStart(), g.start(), g.geneContextStart(), g.geneEnd(), g.transcriptEnd(),
-                        g.end(), g.geneContextEnd(), g.type(), g.vaf()));
+                        g.end(), g.geneContextEnd(), g.type(), g.vaf(), g.cosmicURL()));
 
         return dataSource;
     }
 
     @NotNull
-    static JRDataSource fromGeneDisruptions(@NotNull List<GeneDisruption> disruptions) {
+    static JRDataSource fromGeneDisruptions(@NotNull List<GeneDisruptionData> disruptions) {
 
         final DRDataSource dataSource =
                 new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), POSITION_FIELD.getName(), SV_TYPE_FIELD.getName(),
@@ -134,7 +134,7 @@ class PatientDataSource {
     @NotNull
     static FieldBuilder<?>[] geneFusionFields() {
         return new FieldBuilder<?>[] { GENE_FIELD, TRANSCRIPT_FIELD, POSITION_FIELD, SV_GENE_CONTEXT, SV_PARTNER_GENE_FIELD,
-                SV_PARTNER_TRANSCRIPT_FIELD, SV_PARTNER_POSITION_FIELD, SV_PARTNER_CONTEXT_FIELD, SV_TYPE_FIELD, SV_VAF };
+                SV_PARTNER_TRANSCRIPT_FIELD, SV_PARTNER_POSITION_FIELD, SV_PARTNER_CONTEXT_FIELD, SV_TYPE_FIELD, SV_VAF, COSMIC_FIELD };
     }
 
     @NotNull

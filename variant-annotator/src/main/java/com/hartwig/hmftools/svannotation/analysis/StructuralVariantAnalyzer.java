@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -53,8 +54,8 @@ public class StructuralVariantAnalyzer {
         return fiveValid && threeValid;
     }
 
-    private boolean transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
-        return fusionModel.fusions().stream().anyMatch(f -> transcriptsMatchKnownFusion(f, five, three));
+    private COSMICGeneFusionData transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
+        return fusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
     }
 
     private boolean isPromiscuous(final GeneAnnotation gene) {
@@ -83,16 +84,13 @@ public class StructuralVariantAnalyzer {
         return sameTranscript && bothIntronic && sameExonUpstream;
     }
 
-    private String exonDescription(final Transcript t, final boolean upstream) {
-        if (t.isPromoter()) {
-            return "Promoter Region";
-        } else if (t.isExonic()) {
-            return String.format("Exon %d", upstream ? t.getExonUpstream() : t.getExonDownstream());
-        } else if (t.isIntronic()) {
-            return String.format("Intron %d", t.getExonUpstream());
-        } else {
-            return String.format("Error up(%d) down(%d)", t.getExonUpstream(), t.getExonDownstream());
-        }
+    private static int orientation(final GeneAnnotation g) {
+        final StructuralVariant sv = g.getVariant();
+        return g.isStart() ? sv.startOrientation() : sv.endOrientation();
+    }
+
+    private static List<Transcript> intronic(final List<Transcript> list) {
+        return list.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
     }
 
     private List<GeneFusion> processFusions(final List<StructuralVariantAnnotation> annotations) {
@@ -104,26 +102,19 @@ public class StructuralVariantAnalyzer {
 
             final List<Pair<Transcript, Transcript>> svFusions = Lists.newArrayList();
 
-            for (final GeneAnnotation g : sv.getStart().getGeneAnnotations()) {
+            for (final GeneAnnotation g : sv.getStart()) {
 
-                final boolean g_upstream = g.getStrand() * g.getBreakend().getOrientation() > 0;
+                final boolean g_upstream = g.getStrand() * orientation(g) > 0;
 
-                for (final GeneAnnotation o : sv.getEnd().getGeneAnnotations()) {
+                for (final GeneAnnotation o : sv.getEnd()) {
 
-                    final boolean o_upstream = o.getStrand() * o.getBreakend().getOrientation() > 0;
+                    final boolean o_upstream = o.getStrand() * orientation(o) > 0;
                     if (g_upstream == o_upstream) {
                         continue;
                     }
 
-                    for (final Transcript t1 : g.getTranscripts()) {
-                        if (!t1.isIntronic()) {
-                            continue;
-                        }
-
-                        for (final Transcript t2 : o.getTranscripts()) {
-                            if (!t2.isIntronic()) {
-                                continue;
-                            }
+                    for (final Transcript t1 : intronic(g.getTranscripts())) {
+                        for (final Transcript t2 : intronic(o.getTranscripts())) {
 
                             if (g_upstream && t1.getExonUpstreamPhase() == t2.getExonDownstreamPhase()) {
                                 svFusions.add(Pair.of(t1, t2));
@@ -139,6 +130,8 @@ public class StructuralVariantAnalyzer {
             // from here, select either the canonical -> canonical transcript fusion
             // then the longest where one end is canonical
             // then the longest combined transcript
+
+            // TODO: should we create a GeneFusion for every compatible transcript pairing and mark only the longest here as reportable?
 
             Optional<Pair<Transcript, Transcript>> fusion =
                     svFusions.stream().filter(p -> p.getLeft().isCanonical() && p.getRight().isCanonical()).findFirst();
@@ -171,38 +164,29 @@ public class StructuralVariantAnalyzer {
             final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
             final boolean sameGene = upstream.getGeneName().equals(downstream.getGeneName());
 
+            final COSMICGeneFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
+            boolean promiscuousEnd = false;
+
             if (sameGene) {
                 if (!intronicDisruption(upstream, downstream) && isPromiscuous(upstream.getGeneAnnotation())) {
                     // okay
                 } else {
                     continue;
                 }
-            } else if (transcriptsMatchKnownFusion(upstream, downstream)) {
+            } else if (cosmic != null) {
                 // in cosmic fusion list
-            } else if (oneEndPromiscuous(upstream, downstream)) {
+            } else if (promiscuousEnd = oneEndPromiscuous(upstream, downstream)) {
                 // one end is promiscuous
-            } else {
-                continue;
             }
 
-            final Double fiveAF = upstream.getBreakend().getAlleleFrequency();
-            final Double threeAF = downstream.getBreakend().getAlleleFrequency();
-
             final GeneFusion details = ImmutableGeneFusion.builder()
-                    .type(upstream.getBreakend().getStructuralVariant().getVariant().type().toString())
-                    .start(upstream.getBreakend().getPositionString())
-                    .geneStart(upstream.getGeneName())
-                    .geneContextStart(exonDescription(upstream, true))
-                    .transcriptStart(upstream.getTranscriptId())
-                    .end(downstream.getBreakend().getPositionString())
-                    .geneEnd(downstream.getGeneName())
-                    .geneContextEnd(exonDescription(downstream, false))
-                    .transcriptEnd(downstream.getTranscriptId())
-                    .vaf(formatNullablePercent(fiveAF) + " " + formatNullablePercent(threeAF))
+                    .reportable(cosmic != null || promiscuousEnd)
+                    .upstreamLinkedAnnotation(upstream)
+                    .downstreamLinkedAnnotation(downstream)
+                    .cosmicURL(cosmic != null ? cosmic.cosmicURL() : "")
                     .build();
 
             result.add(details);
-            annotations.remove(upstream.getBreakend().getStructuralVariant());
         }
 
         return result;
@@ -214,11 +198,9 @@ public class StructuralVariantAnalyzer {
         for (final StructuralVariantAnnotation sv : annotations) {
 
             final boolean intronicExists = sv.getStart()
-                    .getGeneAnnotations()
                     .stream()
                     .filter(g -> g.getCanonical() != null)
                     .anyMatch(g -> sv.getEnd()
-                            .getGeneAnnotations()
                             .stream()
                             .filter(o -> o.getCanonical() != null)
                             .anyMatch(o -> intronicDisruption(g.getCanonical(), o.getCanonical())));
@@ -226,40 +208,25 @@ public class StructuralVariantAnalyzer {
                 continue;
             }
 
-            geneAnnotations.addAll(sv.getStart().getGeneAnnotations());
-            geneAnnotations.addAll(sv.getEnd().getGeneAnnotations());
+            geneAnnotations.addAll(sv.getAnnotations());
         }
 
         final ArrayListMultimap<String, GeneAnnotation> geneMap = ArrayListMultimap.create();
-        for (final GeneAnnotation g : geneAnnotations) {
-            if (!inHmfPanel(g)) {
-                continue;
-            }
-            geneMap.put(g.getGeneName(), g);
-        }
+        geneAnnotations.forEach(g -> geneMap.put(g.getGeneName(), g));
 
         final List<GeneDisruption> disruptions = Lists.newArrayList();
         for (final String geneName : geneMap.keySet()) {
             for (final GeneAnnotation g : geneMap.get(geneName)) {
 
-                // don't care if we aren't in the canonical transcript
-                if (g.getCanonical() == null) {
-                    continue;
+                for (final Transcript transcript : g.getTranscripts()) {
+
+                    final GeneDisruption disruption = ImmutableGeneDisruption.builder()
+                            .reportable(inHmfPanel(g) && transcript.isCanonical())
+                            .linkedAnnotation(transcript)
+                            .build();
+
+                    disruptions.add(disruption);
                 }
-
-                final GeneDisruption disruption = ImmutableGeneDisruption.builder()
-                        .geneName(geneName)
-                        .location(g.getBreakend().getPositionString())
-                        .geneContext(exonDescription(g.getCanonical(), true))
-                        .transcript(g.getCanonical().getTranscriptId())
-                        .partner(g.getOtherBreakend().getPositionString())
-                        .type(g.getBreakend().getStructuralVariant().getVariant().type().toString())
-                        .orientation(g.getBreakend().getOrientation() > 0 ? "5'" : "3'")
-                        .vaf(formatNullablePercent(g.getBreakend().getAlleleFrequency()))
-                        .build();
-
-                disruptions.add(disruption);
-                annotations.remove(g.getBreakend().getStructuralVariant());
             }
         }
 
@@ -267,21 +234,13 @@ public class StructuralVariantAnalyzer {
     }
 
     @NotNull
-    private static String formatNullablePercent(final @Nullable Double percentage) {
-        return percentage == null ? "Na" : formatPercent(percentage);
-    }
-
-    @NotNull
-    private static String formatPercent(final double percentage) {
-        return Long.toString(Math.round(percentage * 100D)) + "%";
-    }
-
-    @NotNull
     public StructuralVariantAnalysis run(@NotNull final List<StructuralVariant> variants) {
 
         final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
-        final List<GeneFusion> fusions = processFusions(annotations);
-        final List<GeneDisruption> disruptions = processDisruptions(annotations);
+
+        final List<StructuralVariantAnnotation> copy = Lists.newArrayList(annotations);
+        final List<GeneFusion> fusions = processFusions(copy);
+        final List<GeneDisruption> disruptions = processDisruptions(copy);
 
         return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
     }

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svannotation;
 import static org.ensembl.database.homo_sapiens_core.Tables.COORD_SYSTEM;
 import static org.ensembl.database.homo_sapiens_core.Tables.EXON;
 import static org.ensembl.database.homo_sapiens_core.Tables.EXON_TRANSCRIPT;
-import static org.ensembl.database.homo_sapiens_core.Tables.EXTERNAL_DB;
 import static org.ensembl.database.homo_sapiens_core.Tables.GENE;
 import static org.ensembl.database.homo_sapiens_core.Tables.OBJECT_XREF;
 import static org.ensembl.database.homo_sapiens_core.Tables.SEQ_REGION;
@@ -17,9 +16,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.svannotation.annotations.Breakend;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
@@ -37,7 +35,6 @@ public class MySQLAnnotator implements VariantAnnotator {
 
     private final DSLContext context;
     private final UInteger coord_system_id;
-    private final UInteger entrez_db_id;
 
     public static VariantAnnotator make(final String url) throws SQLException {
         return new MySQLAnnotator(url);
@@ -48,7 +45,6 @@ public class MySQLAnnotator implements VariantAnnotator {
         final Connection conn = DriverManager.getConnection(url);
         context = DSL.using(conn, SQLDialect.MYSQL);
         coord_system_id = findCoordSystemId();
-        entrez_db_id = findEntrezDatabaeId();
     }
 
     private UInteger findCoordSystemId() {
@@ -61,15 +57,6 @@ public class MySQLAnnotator implements VariantAnnotator {
                 .value1();
     }
 
-    private UInteger findEntrezDatabaeId() {
-        return context.select(EXTERNAL_DB.EXTERNAL_DB_ID)
-                .from(EXTERNAL_DB)
-                .where(EXTERNAL_DB.DB_NAME.eq("EntrezGene"))
-                .limit(1)
-                .fetchOne()
-                .value1();
-    }
-
     @Override
     public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
@@ -77,32 +64,18 @@ public class MySQLAnnotator implements VariantAnnotator {
 
     private StructuralVariantAnnotation annotateVariant(final StructuralVariant variant) {
         final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(variant);
-
-        annotation.setBreakendAnnotations(
-                annotateBreakend(annotation, variant.startChromosome(), variant.startPosition(), variant.startOrientation(),
-                        variant.startAF()),
-                annotateBreakend(annotation, variant.endChromosome(), variant.endPosition(), variant.endOrientation(), variant.endAF()));
-
+        annotation.getAnnotations().addAll(annotateBreakend(annotation, true, variant.startChromosome(), variant.startPosition()));
+        annotation.getAnnotations().addAll(annotateBreakend(annotation, false, variant.endChromosome(), variant.endPosition()));
         return annotation;
     }
 
-    @Override
-    public StructuralVariantAnnotation annotateRegion(final GenomeRegion region) {
-        final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(null);
+    private List<GeneAnnotation> annotateBreakend(final StructuralVariantAnnotation parent, final boolean isStart, final String chromosome,
+            final long position) {
 
-        annotation.setBreakendAnnotations(annotateBreakend(annotation, region.chromosome(), region.start(), 1, 0.0),
-                annotateBreakend(annotation, region.chromosome(), region.end(), -1, 0.0));
-
-        return annotation;
-    }
-
-    private Breakend annotateBreakend(final StructuralVariantAnnotation parent, String chromosome, final long position, final int orientation,
-            final Double alleleFrequency) {
-        final Breakend breakend = new Breakend(parent, chromosome, position, orientation, alleleFrequency);
+        final List<GeneAnnotation> result = Lists.newArrayList();
 
         final int PROMOTER_DISTANCE = 10000;
         final byte zero = 0;
-        final UInteger uzero = UInteger.valueOf(0);
 
         // start with the overlapping genes
         final Result<?> genes =
@@ -143,7 +116,7 @@ public class MySQLAnnotator implements VariantAnnotator {
                     .map(r -> r.get(XREF.DBPRIMARY_ACC))
                     .collect(Collectors.toList());
 
-            final GeneAnnotation geneAnnotation = new GeneAnnotation(breakend, gene_name, synonyms, gene_stable_id, gene_strand);
+            final GeneAnnotation geneAnnotation = new GeneAnnotation(parent, isStart, gene_name, synonyms, gene_stable_id, gene_strand);
 
             final Result<?> transcripts = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID)
                     .from(TRANSCRIPT)
@@ -210,14 +183,14 @@ public class MySQLAnnotator implements VariantAnnotator {
                 final Transcript transcript =
                         new Transcript(geneAnnotation, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
                                 exon_downstream_phase, exon_max, canonical);
-                geneAnnotation.addTranscriptAnnotation(transcript);
+                geneAnnotation.addTranscript(transcript);
             }
 
             if (!geneAnnotation.getTranscripts().isEmpty()) {
-                breakend.addGeneAnnotation(geneAnnotation);
+                result.add(geneAnnotation);
             }
         }
 
-        return breakend;
+        return result;
     }
 }

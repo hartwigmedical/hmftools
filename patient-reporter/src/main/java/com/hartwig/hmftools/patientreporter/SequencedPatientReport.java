@@ -5,9 +5,9 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
+import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
-import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
-import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -25,10 +25,10 @@ public abstract class SequencedPatientReport implements PatientReport {
     public abstract List<VariantReport> variants();
 
     @NotNull
-    public abstract List<GeneFusion> geneFusions();
+    public abstract List<GeneFusionData> geneFusions();
 
     @NotNull
-    public abstract List<GeneDisruption> geneDisruptions();
+    public abstract List<GeneDisruptionData> geneDisruptions();
 
     @NotNull
     public abstract List<CopyNumberReport> copyNumbers();

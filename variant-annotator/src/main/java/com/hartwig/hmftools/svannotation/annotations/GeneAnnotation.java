@@ -4,33 +4,40 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.Nullable;
 
 public class GeneAnnotation {
 
-    private final Breakend breakend;
+    private final StructuralVariantAnnotation parent;
+    private final boolean isStart;
     private final String geneName;
     private final String stableId;
     private final int strand;
     private final List<Transcript> transcripts = Lists.newArrayList();
     private final List<String> synonyms;
 
-    public GeneAnnotation(final Breakend breakend, final String geneName, final List<String> synonyms, final String stableId, final int strand) {
-        this.breakend = breakend;
+    public GeneAnnotation(final StructuralVariantAnnotation parent, final boolean isStart, final String geneName,
+            final List<String> synonyms, final String stableId, final int strand) {
+        this.parent = parent;
+        this.isStart = isStart;
         this.geneName = geneName;
         this.synonyms = synonyms;
         this.stableId = stableId;
         this.strand = strand;
     }
 
-    public Breakend getBreakend() {
-        return breakend;
+    public StructuralVariantAnnotation getAnnotation() {
+        return parent;
     }
 
-    public Breakend getOtherBreakend() {
-        final Breakend start = breakend.getStructuralVariant().getStart();
-        return breakend == start ? breakend.getStructuralVariant().getEnd() : start;
+    public StructuralVariant getVariant() {
+        return parent.getVariant();
+    }
+
+    public boolean isStart() {
+        return isStart;
     }
 
     public String getGeneName() {
@@ -45,7 +52,7 @@ public class GeneAnnotation {
         return strand;
     }
 
-    public void addTranscriptAnnotation(final Transcript a) {
+    public void addTranscript(final Transcript a) {
         transcripts.add(a);
     }
 

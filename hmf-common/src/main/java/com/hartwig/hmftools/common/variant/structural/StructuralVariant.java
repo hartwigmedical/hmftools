@@ -7,6 +7,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class StructuralVariant {
+    ;
+
+    @Nullable
+    public abstract Integer primaryKey();
 
     public abstract String id();
 
@@ -17,9 +21,17 @@ public abstract class StructuralVariant {
 
     public abstract String endChromosome();
 
+    public String chromosome(final boolean isStart) {
+        return isStart ? startChromosome() : endChromosome();
+    }
+
     public abstract long startPosition();
 
     public abstract long endPosition();
+
+    public long position(final boolean isStart) {
+        return isStart ? startPosition() : endPosition();
+    }
 
     public abstract byte startOrientation();
 

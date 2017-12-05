@@ -8,23 +8,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneFusion {
-    public abstract String type();
 
-    public abstract String start();
+    public abstract boolean reportable();
 
-    public abstract String geneStart();
+    public abstract Transcript upstreamLinkedAnnotation();
 
-    public abstract String geneContextStart();
+    public abstract Transcript downstreamLinkedAnnotation();
 
-    public abstract String transcriptStart();
-
-    public abstract String end();
-
-    public abstract String geneEnd();
-
-    public abstract String geneContextEnd();
-
-    public abstract String transcriptEnd();
-
-    public abstract String vaf();
+    public abstract String cosmicURL();
 }

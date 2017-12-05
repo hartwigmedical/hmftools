@@ -53,8 +53,6 @@ CREATE TABLE treatment
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
-SET FOREIGN_KEY_CHECKS = 1;
-
 DROP TABLE IF EXISTS drug;
 CREATE TABLE drug
 (   id int NOT NULL AUTO_INCREMENT,
@@ -248,9 +246,6 @@ CREATE TABLE structuralVariant
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS structuralVariantCluster;
-DROP TABLE IF EXISTS copyNumberCluster;
-
 DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
 (   id int NOT NULL AUTO_INCREMENT,
@@ -373,3 +368,51 @@ CREATE TABLE drupEcrfDatamodel
     codeList varchar(5000),
     relevant varchar(5)
 );
+
+DROP TABLE IF EXISTS structuralVariantDisruption;
+DROP TABLE IF EXISTS structuralVariantFusion;
+DROP TABLE IF EXISTS structuralVariantBreakend;
+
+CREATE TABLE structuralVariantBreakend
+(   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    structuralVariantId INT NOT NULL,
+    isStartEnd BOOLEAN NOT NULL,
+    gene VARCHAR(512) NOT NULL, # length here comes from ensembl db schema
+    geneId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
+    transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
+    isCanonicalTranscript BOOLEAN NOT NULL,
+    strand TINYINT NOT NULL,
+    exonRankUpstream TINYINT UNSIGNED,
+    exonRankDownstream TINYINT UNSIGNED,
+    exonPhaseUpstream TINYINT,
+    exonPhaseDownstream TINYINT,
+    exonMax TINYINT NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(structuralVariantId),
+    INDEX(gene),
+    INDEX(geneId),
+    INDEX(transcriptId)
+);
+
+CREATE TABLE structuralVariantDisruption
+(
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    breakendId INT UNSIGNED NOT NULL,
+    isReported BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(breakendId)
+);
+
+CREATE TABLE structuralVariantFusion
+(
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    fivePrimeBreakendId INT UNSIGNED NOT NULL,
+    threePrimeBreakendId INT UNSIGNED NOT NULL,
+    isReported BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(fivePrimeBreakendId),
+    INDEX(threePrimeBreakendId)
+);
+
+SET FOREIGN_KEY_CHECKS = 1;

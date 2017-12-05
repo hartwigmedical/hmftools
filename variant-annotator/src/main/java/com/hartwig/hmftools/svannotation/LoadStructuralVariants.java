@@ -1,11 +1,19 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.svannotation;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
+import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionModel;
+import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,10 +31,12 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class LoadStructuralVariants {
 
-    private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoadStructuralVariants.class);
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
+    private static final String ENSEMBL_DB = "ensembl_db";
+    private static final String FUSION_CSV = "fusion_csv";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -42,13 +52,28 @@ public class LoadStructuralVariants {
 
         LOGGER.info("Reading VCF File");
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
-                new VCFCodec(),
-                false)) {
+                new VCFCodec(), false)) {
             reader.iterator().forEach(factory::addVariantContext);
         }
 
         LOGGER.info("Persisting variants to database");
         dbAccess.writeStructuralVariants(tumorSample, factory.results());
+
+        LOGGER.info("Reading back...");
+        final List<StructuralVariant> structuralVariantList = dbAccess.readStructuralVariants(tumorSample);
+
+        final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
+        final COSMICGeneFusionModel cosmicGeneFusions = COSMICGeneFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
+
+        LOGGER.info("Annotating...");
+        final StructuralVariantAnalyzer analyzer =
+                new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfGeneList(), cosmicGeneFusions);
+        final StructuralVariantAnalysis analysis = analyzer.run(structuralVariantList);
+
+        final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
+
+        LOGGER.info("Persisting annotations to database...");
+        annotationDAO.write(analysis);
 
         LOGGER.info("Complete");
     }
@@ -61,6 +86,8 @@ public class LoadStructuralVariants {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
+        options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         return options;
     }
 

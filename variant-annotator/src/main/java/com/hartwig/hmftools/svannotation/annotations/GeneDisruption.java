@@ -8,19 +8,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneDisruption {
-    public abstract String geneName();
 
-    public abstract String location();
+    public abstract boolean reportable();
 
-    public abstract String geneContext();
-
-    public abstract String transcript();
-
-    public abstract String partner();
-
-    public abstract String type();
-
-    public abstract String orientation();
-
-    public abstract String vaf();
+    public abstract Transcript linkedAnnotation();
 }

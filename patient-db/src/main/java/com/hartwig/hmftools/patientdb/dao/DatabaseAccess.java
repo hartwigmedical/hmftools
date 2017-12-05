@@ -70,6 +70,11 @@ public class DatabaseAccess {
         validationFindingsDAO = new ValidationFindingDAO(context);
     }
 
+    @NotNull
+    public DSLContext getContext() {
+        return context;
+    }
+
     @Nullable
     private Settings settings(final String catalog) {
         return !catalog.equals(DEV_CATALOG) ? new Settings().withRenderMapping(
@@ -92,6 +97,11 @@ public class DatabaseAccess {
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<StructuralVariant> variants) {
         structuralVariantDAO.write(sampleId, variants);
+    }
+
+    @NotNull
+    public List<StructuralVariant> readStructuralVariants(@NotNull final String sample) {
+        return structuralVariantDAO.read(sample);
     }
 
     public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {

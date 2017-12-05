@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
@@ -31,12 +32,14 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
+import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,6 +77,10 @@ public abstract class PatientReporter {
         final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
         final StructuralVariantAnalysis svAnalysis = genomeAnalysis.structuralVariantAnalysis();
+        final List<GeneFusionData> reportableFusions =
+                svAnalysis.reportableFusions().stream().map(GeneFusionData::from).collect(Collectors.toList());
+        final List<GeneDisruptionData> reportableDisruptions =
+                svAnalysis.reportableDisruptions().stream().map(GeneDisruptionData::from).collect(Collectors.toList());
 
         final int totalVariantCount = variantAnalysis.allVariants().size();
         final int passedVariantCount = variantAnalysis.passedVariants().size();
@@ -101,8 +108,8 @@ public abstract class PatientReporter {
         LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
         LOGGER.info("  Number of unreported structural variants : " + Integer.toString(svCount));
-        LOGGER.info("  Number of gene fusions to report : " + Integer.toString(svAnalysis.fusions().size()));
-        LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(svAnalysis.disruptions().size()));
+        LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
+        LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
 
         final Lims lims = baseReporterData().limsModel();
@@ -112,7 +119,7 @@ public abstract class PatientReporter {
         final SampleReport sampleReport =
                 ImmutableSampleReport.of(tumorSample, tumorType, tumorPercentage, lims.arrivalDateForSample(tumorSample),
                         lims.arrivalDateForSample(run.refSample()), lims.labProceduresForSample(tumorSample), sampleRecipient);
-        return ImmutableSequencedPatientReport.of(sampleReport, purpleEnrichedVariants, svAnalysis.fusions(), svAnalysis.disruptions(),
+        return ImmutableSequencedPatientReport.of(sampleReport, purpleEnrichedVariants, reportableFusions, reportableDisruptions,
                 copyNumberAnalysis.findings(), mutationalLoad, purpleAnalysis.purityString(), alterations, Optional.ofNullable(comments),
                 baseReporterData().signaturePath());
     }
