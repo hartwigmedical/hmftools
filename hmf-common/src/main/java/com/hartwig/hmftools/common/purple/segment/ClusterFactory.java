@@ -36,9 +36,8 @@ public class ClusterFactory {
     }
 
     @NotNull
-    public ListMultimap<String, Cluster> cluster(@NotNull final Multimap<String, StructuralVariantPosition> variantPositions,
+    private ListMultimap<String, Cluster> cluster(@NotNull final Multimap<String, StructuralVariantPosition> variantPositions,
             @NotNull final Multimap<String, PCFPosition> pcfPositions, @NotNull final ListMultimap<String, CobaltRatio> ratios) {
-
         ListMultimap<String, Cluster> clusters = ArrayListMultimap.create();
         for (String chromosome : pcfPositions.keySet()) {
             final Collection<PCFPosition> chromosomeRatioPositions = pcfPositions.get(chromosome);
@@ -52,6 +51,7 @@ public class ClusterFactory {
     }
 
     @NotNull
+    @VisibleForTesting
     List<Cluster> cluster(@NotNull final Collection<StructuralVariantPosition> variantPositions,
             @NotNull final Collection<PCFPosition> pcfPositions, @NotNull final List<CobaltRatio> ratios) {
         final List<GenomePosition> allPositions = Lists.newArrayList();
@@ -127,6 +127,7 @@ public class ClusterFactory {
         return window.end(position - 1) + windowSize;
     }
 
+    @NotNull
     private static Multimap<String, StructuralVariantPosition> asMap(@NotNull final List<StructuralVariantPosition> variants) {
         final Multimap<String, StructuralVariantPosition> result = ArrayListMultimap.create();
 

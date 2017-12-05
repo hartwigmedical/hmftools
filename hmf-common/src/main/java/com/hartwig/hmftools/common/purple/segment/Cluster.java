@@ -63,6 +63,7 @@ public abstract class Cluster implements GenomeRegion {
         return bafs().isEmpty() ? null : bafs().get(bafs().size() - 1).position();
     }
 
+    @NotNull
     public StructuralVariantSupport type() {
         if (variants().isEmpty()) {
             return StructuralVariantSupport.NONE;
