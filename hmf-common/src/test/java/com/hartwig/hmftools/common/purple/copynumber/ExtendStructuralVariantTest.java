@@ -10,6 +10,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ExtendStructuralVariantTest {
@@ -62,10 +63,10 @@ public class ExtendStructuralVariantTest {
         assertCombinedRegion(6001, 7000, 7, CopyNumberMethod.UNKNOWN, result.get(1));
     }
 
+    @NotNull
     private static CombinedRegion createSVImplied(long start, long end, double copyNumber, double baf, SegmentSupport support) {
         final CombinedRegion region = createCombinedRegion(start, end, copyNumber, baf, support);
         region.setCopyNumberMethod(CopyNumberMethod.STRUCTURAL_VARIANT);
         return region;
     }
-
 }

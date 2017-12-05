@@ -46,5 +46,4 @@ public class PloidyPenaltyTest {
         int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
         assertEquals(expectedResult, PloidyPenalty.penalty(ploidy, major), EPSILON);
     }
-
 }

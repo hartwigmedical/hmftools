@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
+import static org.junit.Assert.assertNotNull;
+
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
@@ -20,12 +22,12 @@ public class PurpleDatamodelTest {
 
     @Test
     public void testDefaultFittedRegion() {
-        createDefaultFittedRegion(CHROMOSOME, 1, 100).build();
+        assertNotNull(createDefaultFittedRegion(CHROMOSOME, 1, 100).build());
     }
 
     @Test
     public void testDefaultCopyNumber() {
-        createCopyNumber(CHROMOSOME, 1, 100, 2).build();
+        assertNotNull(createCopyNumber(CHROMOSOME, 1, 100, 2).build());
     }
 
     @NotNull
@@ -131,5 +133,4 @@ public class PurpleDatamodelTest {
                 .referenceGCDiploidRatio(1)
                 .tumorGCRatio(ratio);
     }
-
 }

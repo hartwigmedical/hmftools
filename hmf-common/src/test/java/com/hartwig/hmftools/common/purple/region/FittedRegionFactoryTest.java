@@ -34,8 +34,8 @@ public class FittedRegionFactoryTest {
         assertEquals(expectedCopyNumber, fittedRegion.tumorCopyNumber(), EPSILON);
     }
 
-    private static ObservedRegion observedRatio(double observedNormalRatio, double observedTumorRatio,
-            @NotNull final GermlineStatus status) {
+    @NotNull
+    private static ObservedRegion observedRatio(double observedNormalRatio, double observedTumorRatio, @NotNull final GermlineStatus status) {
         return PurpleDatamodelTest.createObservedRegion("1", 1, 2)
                 .observedNormalRatio(observedNormalRatio)
                 .observedTumorRatio(observedTumorRatio)

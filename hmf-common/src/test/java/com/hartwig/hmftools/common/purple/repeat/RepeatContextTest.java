@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.repeat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
@@ -9,7 +10,6 @@ import org.junit.Test;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class RepeatContextTest {
-
 
     @Test
     public void testSymmetric() {
@@ -24,7 +24,6 @@ public class RepeatContextTest {
         assertEquals(Optional.empty(), RepeatContextFactory.repeats(9, sequence));
         assertEquals(Optional.empty(), RepeatContextFactory.repeats(10, sequence));
         assertRepeats("B", 4, RepeatContextFactory.repeats(11, sequence));
-
     }
 
     private void assertRepeats(final String expectedSequence, final int expectedCount, @NotNull final String victim) {
@@ -34,6 +33,7 @@ public class RepeatContextTest {
     }
 
     private void assertRepeats(final String expectedSequence, final int expectedCount, @NotNull final Optional<RepeatContext> victim) {
+        assertTrue(victim.isPresent());
         assertEquals(expectedSequence, victim.get().sequence());
         assertEquals(expectedCount, victim.get().count());
     }
@@ -63,5 +63,4 @@ public class RepeatContextTest {
         assertEquals(2, RepeatContextFactory.backwardRepeats("AC", "ACAC"));
         assertEquals(2, RepeatContextFactory.backwardRepeats("AC", "AACAC"));
     }
-
 }

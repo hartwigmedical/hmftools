@@ -50,7 +50,7 @@ public class PurpleCopyNumberFileTest {
     }
 
     @NotNull
-    private PurpleCopyNumber createRandom(@NotNull Random random) {
+    private static PurpleCopyNumber createRandom(@NotNull Random random) {
         return PurpleDatamodelTest.createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), random.nextDouble())
                 .bafCount(random.nextInt())
                 .averageObservedBAF(random.nextDouble())

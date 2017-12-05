@@ -52,7 +52,7 @@ public class PurpleCopyNumberTest {
     }
 
     @NotNull
-    private String createBAFString(double actualBaf, double copyNumber) {
+    private static String createBAFString(double actualBaf, double copyNumber) {
         return PurpleDatamodelTest.createCopyNumber("1", 1, 100, copyNumber)
                 .averageObservedBAF(actualBaf)
                 .averageActualBAF(actualBaf)

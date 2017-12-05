@@ -6,9 +6,11 @@ import java.util.Random;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FittedRegionFileTest {
+
     @Test
     public void testToFromString() {
         final FittedRegion expected = createRandom(new Random());
@@ -16,7 +18,8 @@ public class FittedRegionFileTest {
         assertEquals(expected, decoded);
     }
 
-    private static FittedRegion createRandom(final Random random) {
+    @NotNull
+    private static FittedRegion createRandom(@NotNull final Random random) {
         return ImmutableFittedRegion.builder()
                 .chromosome("XYZ" + random.nextInt())
                 .start(random.nextLong())

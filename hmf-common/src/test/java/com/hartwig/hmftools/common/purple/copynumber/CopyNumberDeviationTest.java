@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CopyNumberDeviationTest {
@@ -34,8 +35,8 @@ public class CopyNumberDeviationTest {
         assertEquals(LC_MAX_COPY_NUMBER_TOLERANCE, CopyNumberDeviation.maxCopyNumberDeviation(secondWithoutSV, thirdWithoutSV), EPSILON);
     }
 
+    @NotNull
     private static FittedRegion create(long start, long end, SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", start, end).bafCount(0).support(support).build();
     }
-
 }

@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantImpliedTest {
 
     private static final String CHROMOSOME = "1";
@@ -30,8 +31,7 @@ public class StructuralVariantImpliedTest {
     private static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1, 1);
 
     @Test
-    public void testNonsymmetricMultipass() {
-
+    public void testNonSymmetricMultiPass() {
         final StructuralVariant firstSV = sv(1001, 4001, StructuralVariantType.DEL, 0.25, 0.25);
         final StructuralVariant secondSV = sv(2001, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
 
@@ -56,7 +56,6 @@ public class StructuralVariantImpliedTest {
 
     @Test
     public void testSVSmoothing() {
-
         final StructuralVariant firstSV = sv(1001, 4001, StructuralVariantType.DEL, 0.25, 0.25);
         final StructuralVariant secondSV = sv(2001, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
 
@@ -94,11 +93,12 @@ public class StructuralVariantImpliedTest {
     }
 
     @NotNull
-    static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
+    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
         return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type).startAF(startAF).endAF(endAF).build();
     }
 
-    static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support) {
+    @NotNull
+    private static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support) {
         final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(0.5)
@@ -114,15 +114,14 @@ public class StructuralVariantImpliedTest {
     }
 
     @NotNull
-    static ListMultimap<String, CombinedRegion> copyNumbers(CombinedRegion... copyNumbers) {
+    private static ListMultimap<String, CombinedRegion> copyNumbers(CombinedRegion... copyNumbers) {
         final ListMultimap<String, CombinedRegion> result = ArrayListMultimap.create();
         result.putAll(CHROMOSOME, Lists.newArrayList(copyNumbers));
         return result;
     }
 
     @NotNull
-    static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
-            @NotNull final Optional<Double> rightCopyNumber) {
+    private static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber, @NotNull final Optional<Double> rightCopyNumber) {
         return ImmutableStructuralVariantPloidy.builder()
                 .chromosome(CHROMOSOME)
                 .position(1)
@@ -135,5 +134,4 @@ public class StructuralVariantImpliedTest {
                 .rightCopyNumber(rightCopyNumber)
                 .build();
     }
-
 }

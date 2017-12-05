@@ -19,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 public class CobaltRatioFile {
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
 
-
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".cobalt";
 
@@ -44,7 +43,7 @@ public class CobaltRatioFile {
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<CobaltRatio> ratio) {
+    private static List<String> toLines(@NotNull final List<CobaltRatio> ratio) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         ratio.stream().map(CobaltRatioFile::toString).forEach(lines::add);
@@ -77,12 +76,11 @@ public class CobaltRatioFile {
 
     @NotNull
     private static ListMultimap<String, CobaltRatio> fromLines(@NotNull final List<String> lines) {
-
         final ListMultimap<String, CobaltRatio> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith("Ch")) {
-                final CobaltRatio position = fromLine(line);
-                result.put(position.chromosome(), position);
+                final CobaltRatio ratio = fromLine(line);
+                result.put(ratio.chromosome(), ratio);
             }
         }
 
@@ -106,5 +104,4 @@ public class CobaltRatioFile {
                 .referenceGCDiploidRatio(Double.valueOf(values[6].trim()))
                 .build();
     }
-
 }

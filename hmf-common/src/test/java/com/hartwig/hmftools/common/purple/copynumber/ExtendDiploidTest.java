@@ -143,12 +143,14 @@ public class ExtendDiploidTest {
         assertEquals(tumorCopyNumber, victim.tumorCopyNumber(), EPSILON);
     }
 
-    private FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, GermlineStatus status,
+    @NotNull
+    private static FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, GermlineStatus status,
             SegmentSupport support) {
         return createFittedRegion(start, end, tumorCopyNumber, 1.1, status, support);
     }
 
-    private FittedRegion createValidSomatic(long start, long end, double copyNumber, int bafCount, SegmentSupport support) {
+    @NotNull
+    private static FittedRegion createValidSomatic(long start, long end, double copyNumber, int bafCount, SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
@@ -160,7 +162,8 @@ public class ExtendDiploidTest {
                 .build();
     }
 
-    private FittedRegion createDubiousRegion(long start, long end, double copyNumber, int ratioCount) {
+    @NotNull
+    private static FittedRegion createDubiousRegion(long start, long end, double copyNumber, int ratioCount) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
@@ -172,7 +175,8 @@ public class ExtendDiploidTest {
                 .build();
     }
 
-    private FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, double observedNormalRatio,
+    @NotNull
+    private static FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, double observedNormalRatio,
             GermlineStatus status, SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(status)
@@ -183,5 +187,4 @@ public class ExtendDiploidTest {
                 .support(support)
                 .build();
     }
-
 }

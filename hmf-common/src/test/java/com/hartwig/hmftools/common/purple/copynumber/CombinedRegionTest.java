@@ -81,14 +81,17 @@ public class CombinedRegionTest {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
     }
 
-    private CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
+    @NotNull
+    private static CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
         return new CombinedRegion(true, create(start, end, copyNumber), false);
     }
 
+    @NotNull
     private static FittedRegion create(long start, long end, double copyNumber) {
         return create("1", start, end, 0, 0, copyNumber);
     }
 
+    @NotNull
     private static FittedRegion create(long start, long end, int bafCount, double baf, double copyNumber) {
         return create("1", start, end, bafCount, baf, copyNumber);
     }

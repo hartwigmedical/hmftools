@@ -30,7 +30,6 @@ public class ClusterFactoryTest {
 
     @Test
     public void testBoundaries() {
-
         final List<StructuralVariantPosition> sv = variants(37383599, 37387153);
         final List<PCFPosition> ratios = createRatioBreaks(36965001, 37381001, 37382001, 37384001, 37387001, 37389001);
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
@@ -211,7 +210,7 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    static List<CobaltRatio> cobalt(long startPosition, boolean... usable) {
+    private static List<CobaltRatio> cobalt(long startPosition, boolean... usable) {
         final List<CobaltRatio> result = Lists.newArrayList();
         int offset = 0;
         for (boolean isUsable : usable) {

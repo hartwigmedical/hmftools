@@ -29,9 +29,8 @@ public class ExtendGermlineTest {
         assertFalse(ExtendGermline.isValidAmplification(4.1, 5, create(SegmentSupport.BND), create(SegmentSupport.NONE)));
     }
 
-
+    @NotNull
     private static FittedRegion create(@NotNull final SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).support(support).build();
     }
-
 }

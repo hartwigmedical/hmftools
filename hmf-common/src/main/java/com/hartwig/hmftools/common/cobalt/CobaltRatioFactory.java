@@ -8,12 +8,11 @@ import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CobaltRatioFactory {
+public final class CobaltRatioFactory {
 
-    public static Multimap<Chromosome, CobaltRatio> merge(@NotNull final Multimap<Chromosome, CobaltCount> counts,
-            @NotNull final Multimap<String, ReadRatio> referenceGCRatio, @NotNull final Multimap<String, ReadRatio> tumorGCRatio,
+    @NotNull
+    public static Multimap<Chromosome, CobaltRatio> merge(@NotNull final Multimap<Chromosome, CobaltCount> counts, @NotNull final Multimap<String, ReadRatio> referenceGCRatio, @NotNull final Multimap<String, ReadRatio> tumorGCRatio,
             @NotNull final Multimap<String, ReadRatio> referenceGCDiploidRatio) {
-
         final Multimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
         final GenomePositionSelector<ReadRatio> tumorGCRatioSelector = GenomePositionSelectorFactory.create(tumorGCRatio);
         final GenomePositionSelector<ReadRatio> referenceGCRatioSelector = GenomePositionSelectorFactory.create(referenceGCRatio);

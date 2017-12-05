@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariant
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -18,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class StructuralVariantLegsFactoryTest {
-
 
     @Test
     public void testReduce() {
@@ -55,6 +55,12 @@ public class StructuralVariantLegsFactoryTest {
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
         assertEquals(2, legs.size());
+
+        assertTrue(legs.get(0).start().isPresent());
+        assertTrue(legs.get(0).end().isPresent());
+        assertTrue(legs.get(1).start().isPresent());
+        assertTrue(legs.get(1).end().isPresent());
+
         assertLeg(1, 0.25, legs.get(0).start().get());
         assertLeg(1, 0.25, legs.get(0).end().get());
         assertLeg(1, 0.25, legs.get(1).start().get());
@@ -69,9 +75,12 @@ public class StructuralVariantLegsFactoryTest {
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
         assertEquals(2, legs.size());
+        assertTrue(legs.get(0).start().isPresent());
         assertLeg(1, 0.25, legs.get(0).start().get());
         assertFalse(legs.get(0).end().isPresent());
+        assertTrue(legs.get(1).start().isPresent());
         assertLeg(1, 0.4, legs.get(1).start().get());
+        assertTrue(legs.get(1).end().isPresent());
         assertLeg(1, 0.25, legs.get(1).end().get());
     }
 
@@ -83,14 +92,18 @@ public class StructuralVariantLegsFactoryTest {
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(variants);
         assertEquals(3, legs.size());
+        assertTrue(legs.get(0).start().isPresent());
         assertLeg(1, 0.25, legs.get(0).start().get());
         assertFalse(legs.get(0).end().isPresent());
         assertFalse(legs.get(1).start().isPresent());
+        assertTrue(legs.get(1).end().isPresent());
         assertLeg(1, 0.25, legs.get(1).end().get());
+        assertTrue(legs.get(2).start().isPresent());
         assertLeg(-1, 0.15, legs.get(2).start().get());
         assertFalse(legs.get(2).end().isPresent());
 
     }
+
     private void assertLeg(int orientation, double vaf, @NotNull final StructuralVariantLeg victim) {
         assertEquals(vaf, victim.vaf(), EPSILON);
         assertEquals(orientation, victim.orientation());
@@ -103,17 +116,17 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @NotNull
-    private StructuralVariantLeg createLeg(int orientation, double vaf) {
+    private static StructuralVariantLeg createLeg(int orientation, double vaf) {
         return createLeg(1, orientation, vaf);
     }
 
     @NotNull
-    static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
+    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
         return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type).startAF(startAF).endAF(endAF).build();
     }
 
     @NotNull
-    private StructuralVariantLeg createLeg(long position, int orientation, double vaf) {
+    private static StructuralVariantLeg createLeg(long position, int orientation, double vaf) {
         return ImmutableStructuralVariantLeg.builder().chromosome(CHROMOSOME).position(position).orientation(orientation).vaf(vaf).build();
     }
 }

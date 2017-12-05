@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantPloidyFactoryTest {
 
     private static final StructuralVariantPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY =
@@ -80,7 +81,6 @@ public class StructuralVariantPloidyFactoryTest {
 
     @Test
     public void testSelectCorrectOrAlternativeCopyNumberForLeg() {
-
         final StructuralVariantLeg positiveLeg = leg(1001, 1, 0.25);
         final StructuralVariantLeg negativeLeg = leg(2001, -1, 0.25);
         final PurpleCopyNumber left = copyNumber(1, 1000, 4);
@@ -96,24 +96,19 @@ public class StructuralVariantPloidyFactoryTest {
 
     @Test
     public void testPurityAdjustedPloidy() {
-
         final StructuralVariantLeg leg = leg(1001, 1, 0.5);
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList(copyNumber(1, 1000, 2), copyNumber(1001, 200, 1));
 
-        Optional<ModifiableStructuralVariantPloidy> purePloidy =
-                PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
+        Optional<ModifiableStructuralVariantPloidy> purePloidy = PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1d, purePloidy);
 
         final PurityAdjuster diluted = new PurityAdjuster(Gender.FEMALE, 0.8, 1);
-        final StructuralVariantPloidyFactory<PurpleCopyNumber> dilutedFactory =
-                new StructuralVariantPloidyFactory<>(diluted, PurpleCopyNumber::averageTumorCopyNumber);
-        Optional<ModifiableStructuralVariantPloidy> dilutedPloidy =
-                dilutedFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
+        final StructuralVariantPloidyFactory<PurpleCopyNumber> dilutedFactory = new StructuralVariantPloidyFactory<>(diluted, PurpleCopyNumber::averageTumorCopyNumber);
+        Optional<ModifiableStructuralVariantPloidy> dilutedPloidy = dilutedFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.25d, dilutedPloidy);
 
         final PurityAdjuster male = new PurityAdjuster(Gender.MALE, 0.8, 1);
-        final StructuralVariantPloidyFactory<PurpleCopyNumber> maleFactory =
-                new StructuralVariantPloidyFactory<>(male, PurpleCopyNumber::averageTumorCopyNumber);
+        final StructuralVariantPloidyFactory<PurpleCopyNumber> maleFactory = new StructuralVariantPloidyFactory<>(male, PurpleCopyNumber::averageTumorCopyNumber);
         Optional<ModifiableStructuralVariantPloidy> malePloidy = maleFactory.create(leg, GenomeRegionSelectorFactory.create(copyNumbers));
         assertPloidy(1.125d, malePloidy);
     }
@@ -136,15 +131,14 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @NotNull
-    static PurpleCopyNumber copyNumber(long start, long end, double copyNumber) {
+    private static PurpleCopyNumber copyNumber(long start, long end, double copyNumber) {
         return PurpleDatamodelTest.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
     }
 
     @NotNull
-    static ListMultimap<String, PurpleCopyNumber> copyNumbers(PurpleCopyNumber... copyNumbers) {
+    private static ListMultimap<String, PurpleCopyNumber> copyNumbers(@NotNull PurpleCopyNumber... copyNumbers) {
         final ListMultimap<String, PurpleCopyNumber> result = ArrayListMultimap.create();
         result.putAll(CHROMOSOME, Lists.newArrayList(copyNumbers));
         return result;
     }
-
 }

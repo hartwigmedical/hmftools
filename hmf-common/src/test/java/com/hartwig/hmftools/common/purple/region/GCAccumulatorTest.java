@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GCAccumulatorTest {
@@ -65,20 +66,23 @@ public class GCAccumulatorTest {
         assertEquals(0, victim.averageGCContent(), EPSILON);
     }
 
-
+    @NotNull
     private static GenomeRegionSelector<GCProfile> selector(GCProfile... profiles) {
         List<GCProfile> list = Lists.newArrayList(profiles);
         return GenomeRegionSelectorFactory.create(list);
     }
 
+    @NotNull
     private static GCProfile unmappableProfile(long start, double gcContent) {
         return create(start, GCProfile.MIN_MAPPABLE_PERCENTAGE - 0.1, gcContent);
     }
 
+    @NotNull
     private static GCProfile profile(long start, double gcContent) {
         return create(start, GCProfile.MIN_MAPPABLE_PERCENTAGE, gcContent);
     }
 
+    @NotNull
     private static GCProfile create(long start, double mappability, double gcContent) {
         return ImmutableGCProfile.builder()
                 .chromosome(CHROMOSOME)

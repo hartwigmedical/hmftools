@@ -9,7 +9,7 @@ public class ExtendDiploidBAFTest {
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testNeighbourIsHetrozygousDiploid() {
+    public void testNeighbourIsHeterozygousDiploid() {
         assertBAF(1.0, 0.9, 0.5, 2);
         assertBAF(1.0, 1.0, 0.5, 2);
         assertBAF(2/3d, 1.5, 0.5, 2);
@@ -46,5 +46,4 @@ public class ExtendDiploidBAFTest {
     private void assertBAF(double expectedBAF, double regionCopyNumber, double neighbourBAF, double neighbourCopyNumber) {
         assertEquals(expectedBAF, ExtendDiploidBAF.estimateBAF(regionCopyNumber, neighbourBAF, neighbourCopyNumber), EPSILON);
     }
-
 }

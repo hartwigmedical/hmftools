@@ -71,5 +71,4 @@ public class FittedPurityFileTest {
                 .ploidy(random.nextDouble())
                 .build();
     }
-
 }

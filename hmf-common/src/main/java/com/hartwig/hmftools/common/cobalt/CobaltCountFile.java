@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CobaltCountFile {
+public final class CobaltCountFile {
 
     @NotNull
     public static Multimap<Chromosome, CobaltCount> read(@NotNull final String filename) throws IOException {

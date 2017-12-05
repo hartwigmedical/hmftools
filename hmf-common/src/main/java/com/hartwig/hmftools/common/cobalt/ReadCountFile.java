@@ -40,7 +40,7 @@ public class ReadCountFile {
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<ReadCount> readCounts) {
+    private static List<String> toLines(@NotNull final List<ReadCount> readCounts) {
         final List<String> lines = Lists.newArrayList();
         readCounts.stream().map(ReadCountFile::toString).forEach(lines::add);
         return lines;
@@ -66,7 +66,6 @@ public class ReadCountFile {
 
     @NotNull
     private static Multimap<String, ReadCount> fromLines(@NotNull final List<String> lines) {
-
         final Multimap<String, ReadCount> result = ArrayListMultimap.create();
         for (String line : lines) {
             if (!line.startsWith(HEADER_PREFIX)) {
@@ -88,5 +87,4 @@ public class ReadCountFile {
 
         return ImmutableReadCount.builder().chromosome(chromosome).position(position).readCount(readCount).build();
     }
-
 }

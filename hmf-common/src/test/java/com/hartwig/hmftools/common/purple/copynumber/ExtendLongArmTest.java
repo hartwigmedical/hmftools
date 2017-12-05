@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ExtendLongArmTest {
@@ -83,13 +84,15 @@ public class ExtendLongArmTest {
         assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(2));
     }
 
-    static void assertCombinedRegion(long start, long end, double expectedCopyNumber, CopyNumberMethod expectedMethod, CombinedRegion victim) {
+    static void assertCombinedRegion(long start, long end, double expectedCopyNumber, CopyNumberMethod expectedMethod,
+            CombinedRegion victim) {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
         assertEquals(expectedMethod, victim.copyNumberMethod());
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
     }
 
+    @NotNull
     static CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support) {
         final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
                 .tumorCopyNumber(copyNumber)

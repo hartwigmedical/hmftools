@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CobaltAccumulatorTest {
@@ -42,7 +43,8 @@ public class CobaltAccumulatorTest {
         assertEquals(expectedCount, accumulator.tumorCount());
     }
 
-    private GenomePositionSelector<CobaltRatio> createSelector(long... ratioPositions) {
+    @NotNull
+    private static GenomePositionSelector<CobaltRatio> createSelector(long... ratioPositions) {
         List<CobaltRatio> ratios = Lists.newArrayList();
         for (long ratioPosition : ratioPositions) {
             ratios.add(ratio(ratioPosition));
@@ -51,7 +53,8 @@ public class CobaltAccumulatorTest {
         return GenomePositionSelectorFactory.create(ratios);
     }
 
-    private CobaltRatio ratio(long position) {
+    @NotNull
+    private static CobaltRatio ratio(long position) {
         return PurpleDatamodelTest.cobalt(CHROMOSOME, position, (double) 1).build();
     }
 }

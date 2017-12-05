@@ -38,5 +38,4 @@ public class BAFUtilsTest {
         assertEquals(NORMAL_BAF, modelBAF(0.5, 0, 0), EPSILON);
         assertEquals(NORMAL_BAF, modelBAF(1, 0, 0), EPSILON);
     }
-
 }

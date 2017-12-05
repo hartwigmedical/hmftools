@@ -148,9 +148,4 @@ public class PurityAdjusterTest {
         final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
         assertEquals(expectedAdjustedCopyNumber, purityAdjuster.purityAdjustedCopyNumber("1", ratio), EPSILON);
     }
-
-    private PurityAdjuster adjuster(final double purity, final double normFactor) {
-        return new PurityAdjuster(Gender.MALE, purity, normFactor);
-    }
-
 }

@@ -15,14 +15,14 @@ import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ImmutableChromosomeLength;
 import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
-import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleSegmentFactoryTest {
-    static final ChromosomeLength CHROMOSOME_LENGTH = ImmutableChromosomeLength.builder().chromosome("1").position(10_000_000).build();
+    private static final ChromosomeLength CHROMOSOME_LENGTH =
+            ImmutableChromosomeLength.builder().chromosome("1").position(10_000_000).build();
 
     @Test
     public void testEmpty() {
@@ -49,7 +49,6 @@ public class PurpleSegmentFactoryTest {
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, BND);
     }
 
-
     @Test
     public void testMultipleSVAtSamePosition() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(17001, 18881).addVariants(variant(18881)).build());
@@ -69,7 +68,6 @@ public class PurpleSegmentFactoryTest {
         assertPurpleSegment(segments.get(2), 19991, CHROMOSOME_LENGTH.position(), false, BND);
     }
 
-
     @Test
     public void testRatiosOnly() {
         final Cluster cluster = addRatios(cluster(17002), 18881, 19000).build();
@@ -87,12 +85,13 @@ public class PurpleSegmentFactoryTest {
         assertEquals(support, victim.support());
     }
 
+    @NotNull
     private static ImmutableCluster.Builder cluster(long start) {
         return ImmutableCluster.builder().chromosome(CHROMOSOME_LENGTH.chromosome()).start(start).end(start);
     }
 
+    @NotNull
     private static ImmutableCluster.Builder cluster(long start, long... variants) {
-
         ImmutableCluster.Builder builder = cluster(start);
         for (long position : variants) {
             builder.addVariants(variant(position));
@@ -101,6 +100,7 @@ public class PurpleSegmentFactoryTest {
         return builder;
     }
 
+    @NotNull
     private static ImmutableCluster.Builder addRatios(ImmutableCluster.Builder builder, long... ratios) {
         for (long position : ratios) {
             builder.addPcfPositions(ImmutablePCFPosition.builder()
@@ -113,6 +113,7 @@ public class PurpleSegmentFactoryTest {
         return builder;
     }
 
+    @NotNull
     private static StructuralVariantPosition variant(long position) {
         return ImmutableStructuralVariantPosition.builder()
                 .chromosome(CHROMOSOME_LENGTH.chromosome())
@@ -122,20 +123,4 @@ public class PurpleSegmentFactoryTest {
                 .orientation((byte) 1)
                 .build();
     }
-
-    private static GenomePosition ratio(final long position) {
-        return new GenomePosition() {
-            @NotNull
-            @Override
-            public String chromosome() {
-                return CHROMOSOME_LENGTH.chromosome();
-            }
-
-            @Override
-            public long position() {
-                return position;
-            }
-        };
-    }
-
 }

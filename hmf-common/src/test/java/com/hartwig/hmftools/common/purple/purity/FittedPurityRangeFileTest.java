@@ -36,7 +36,7 @@ public class FittedPurityRangeFileTest {
     }
 
     @NotNull
-    private List<FittedPurity> create(int count) {
+    private static List<FittedPurity> create(int count) {
         Random random = new Random();
         final List<FittedPurity> result = Lists.newArrayList();
         for (int i = 0; i < count; i++) {

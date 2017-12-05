@@ -27,6 +27,7 @@ public class PurpleQCTest {
         assertEquals(PurpleQCStatus.FAIL_GENDER, create(Gender.FEMALE, Gender.MALE).status());
     }
 
+    @NotNull
     private static PurpleQC create(int unsupportedSegments, double ploidy) {
         return ImmutablePurpleQC.builder()
                 .unsupportedSegments(unsupportedSegments)
@@ -36,14 +37,8 @@ public class PurpleQCTest {
                 .build();
     }
 
+    @NotNull
     private static PurpleQC create(@NotNull final Gender amberGender, @NotNull final Gender cobaltGender) {
-        return ImmutablePurpleQC.builder()
-                .unsupportedSegments(1)
-                .ploidy(1)
-                .amberGender(amberGender)
-                .cobaltGender(cobaltGender)
-                .build();
+        return ImmutablePurpleQC.builder().unsupportedSegments(1).ploidy(1).amberGender(amberGender).cobaltGender(cobaltGender).build();
     }
-
-
 }

@@ -14,10 +14,10 @@ import org.junit.Test;
 public class StructuralVariantPloidyTest {
 
     static final String CHROMOSOME = "X";
-    static final double EPSILON = 1e-10;
     static final PurityAdjuster PURE = new PurityAdjuster(Gender.FEMALE, 1d, 1d);
-    private static final double PLOIDY = 1;
 
+    private static final double EPSILON = 1e-10;
+    private static final double PLOIDY = 1;
 
     @Test
     public void testCompleteImpliedCopyNumbers() {
@@ -52,19 +52,18 @@ public class StructuralVariantPloidyTest {
         assertRight(4d, 1d, negative);
     }
 
-
-    private void assertLeft(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantPloidy ploidy) {
+    private static void assertLeft(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantPloidy ploidy) {
         assertEquals(expectedCopyNumber, ploidy.impliedLeftCopyNumber(), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedLeftCopyNumberWeight(), EPSILON);
     }
 
-    private void assertRight(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantPloidy ploidy) {
+    private static void assertRight(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantPloidy ploidy) {
         assertEquals(expectedCopyNumber, ploidy.impliedRightCopyNumber(), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedRightCopyNumberWeight(), EPSILON);
     }
 
     @NotNull
-    static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
+    private static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
         return ImmutableStructuralVariantPloidy.builder()
                 .chromosome(CHROMOSOME)

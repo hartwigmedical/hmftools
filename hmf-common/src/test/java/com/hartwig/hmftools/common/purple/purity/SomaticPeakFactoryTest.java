@@ -15,7 +15,6 @@ public class SomaticPeakFactoryTest {
 
     @Test
     public void testFindPeaks() {
-
         List<Double> sample = Lists.newArrayList();
         for (int i = 0; i < 100; i++) {
             sample.add(i / 100d);
@@ -31,14 +30,12 @@ public class SomaticPeakFactoryTest {
         assertEquals(2, peaks.size());
         assertPeak(peaks.get(0), 0.2, 13);
         assertPeak(peaks.get(1), 0.4, 13);
-
     }
 
     private static void assertPeak(@NotNull SomaticPeak victim, double vaf, int count) {
         assertEquals(vaf, victim.alleleFrequency(), EPSILON);
         assertEquals(count, victim.count());
     }
-
 }
 
 
