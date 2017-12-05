@@ -29,7 +29,6 @@ public enum GCProfileFactory {
 
     @NotNull
     private static Multimap<String, GCProfile> loadGCContent(@NotNull final List<String> lines) {
-
         final Multimap<String, GCProfile> result = ArrayListMultimap.create();
         for (String line : lines) {
             final GCProfile gcProfile = fromLine(line);

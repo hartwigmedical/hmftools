@@ -62,5 +62,4 @@ public class ReadCountMedianTest {
     private void assertMedian(int expectedMedian) {
         assertEquals(expectedMedian, victim.median());
     }
-
 }

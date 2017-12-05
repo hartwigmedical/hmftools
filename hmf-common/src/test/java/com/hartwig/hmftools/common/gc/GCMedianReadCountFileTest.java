@@ -16,7 +16,7 @@ public class GCMedianReadCountFileTest {
     private static final String BASE_PATH = Resources.getResource("gc").getPath() + File.separator;
 
     @Test
-    public void canLoadWithouExtendingRegion() throws IOException, HartwigException {
+    public void canLoadWithoutExtendingRegion() throws IOException, HartwigException {
         final GCMedianReadCount readCount = GCMedianReadCountFile.read(false, BASE_PATH + "EXAMPLE.purple.gc.median");
         testMinMax(readCount, -1, -1);
     }
@@ -27,8 +27,8 @@ public class GCMedianReadCountFileTest {
         testMinMax(readCount, 1144, 880);
     }
 
-    private static void testMinMax(@NotNull final GCMedianReadCount victim, int expectedMin, int expectedMax) throws IOException, HartwigException {
-
+    private static void testMinMax(@NotNull final GCMedianReadCount victim, int expectedMin, int expectedMax)
+            throws IOException, HartwigException {
         for (int i = 0; i < 20; i++) {
             assertEquals(expectedMin, victim.medianReadCount(new ImmutableGCBucket(i)));
         }
@@ -43,5 +43,4 @@ public class GCMedianReadCountFileTest {
             assertEquals(expectedMax, victim.medianReadCount(new ImmutableGCBucket(i)));
         }
     }
-
 }
