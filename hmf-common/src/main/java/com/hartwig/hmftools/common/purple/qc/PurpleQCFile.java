@@ -7,13 +7,14 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.exception.MalformedFileException;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleQCFile {
+public final class PurpleQCFile {
 
     private static final NumberFormat formatter = new DecimalFormat("#0.00");
     private static final String DELIMITER = "\t";
@@ -24,6 +25,7 @@ public class PurpleQCFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
+    @NotNull
     public static PurpleQC read(@NotNull final String filename) throws IOException, MalformedFileException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
@@ -52,6 +54,7 @@ public class PurpleQCFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static List<String> toLines(@NotNull final PurpleQC check) {
         final List<String> result = Lists.newArrayList();
 

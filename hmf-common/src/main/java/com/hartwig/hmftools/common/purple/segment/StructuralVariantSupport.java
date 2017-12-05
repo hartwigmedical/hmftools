@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.purple.segment;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import org.jetbrains.annotations.NotNull;
+
 public enum StructuralVariantSupport {
     BND,
     INV,
@@ -11,7 +13,8 @@ public enum StructuralVariantSupport {
     MULTIPLE,
     NONE;
 
-    public static StructuralVariantSupport fromVariant(StructuralVariantType type) {
+    @NotNull
+    public static StructuralVariantSupport fromVariant(@NotNull StructuralVariantType type) {
         return StructuralVariantSupport.valueOf(type.toString());
     }
 }

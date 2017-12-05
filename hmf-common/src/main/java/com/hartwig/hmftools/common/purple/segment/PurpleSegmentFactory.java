@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -31,9 +32,8 @@ public class PurpleSegmentFactory {
     }
 
     @NotNull
-    static Multimap<String, PurpleSegment> segmentMap(@NotNull final Multimap<String, Cluster> clusters,
+    private static Multimap<String, PurpleSegment> segmentMap(@NotNull final Multimap<String, Cluster> clusters,
             @NotNull final Map<String, ChromosomeLength> lengths) {
-
         final Multimap<String, PurpleSegment> segments = ArrayListMultimap.create();
         for (String chromosome : lengths.keySet()) {
             if (HumanChromosome.contains(chromosome)) {
@@ -46,13 +46,12 @@ public class PurpleSegmentFactory {
     }
 
     @NotNull
-    public static List<PurpleSegment> create(@NotNull final ChromosomeLength chromosome, @NotNull final Collection<Cluster> clusters) {
-
+    @VisibleForTesting
+    static List<PurpleSegment> create(@NotNull final ChromosomeLength chromosome, @NotNull final Collection<Cluster> clusters) {
         final List<PurpleSegment> result = Lists.newArrayList();
         ModifiablePurpleSegment segment = create(chromosome.chromosome(), 1).setSupport(SegmentSupport.TELOMERE);
 
         for (final Cluster cluster : clusters) {
-
             boolean ratioSupport = !cluster.ratios().isEmpty();
 
             final List<StructuralVariantPosition> variants = cluster.variants();
@@ -70,7 +69,7 @@ public class PurpleSegmentFactory {
 
                 final List<PCFPosition> pcfPositions = cluster.pcfPositions();
 
-                // DO FIRST
+                // JOBA: DO FIRST
                 final GenomePosition firstRatioBreak = pcfPositions.get(0);
                 result.add(setStatus(segment.setEnd(firstRatioBreak.position() - 1)));
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position());
@@ -81,7 +80,8 @@ public class PurpleSegmentFactory {
         return result;
     }
 
-    private static ModifiablePurpleSegment create(String chromosome, long start) {
+    @NotNull
+    private static ModifiablePurpleSegment create(@NotNull String chromosome, long start) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(chromosome)
                 .setRatioSupport(true)
@@ -91,7 +91,9 @@ public class PurpleSegmentFactory {
                 .setSupport(SegmentSupport.NONE);
     }
 
-    private static ModifiablePurpleSegment createFromCluster(Cluster cluster, StructuralVariantPosition variant, boolean ratioSupport) {
+    @NotNull
+    private static ModifiablePurpleSegment createFromCluster(@NotNull Cluster cluster, @NotNull StructuralVariantPosition variant,
+            boolean ratioSupport) {
         return ModifiablePurpleSegment.create()
                 .setChromosome(cluster.chromosome())
                 .setRatioSupport(ratioSupport)
@@ -101,6 +103,7 @@ public class PurpleSegmentFactory {
                 .setSupport(SegmentSupport.fromVariant(variant.type()));
     }
 
+    @NotNull
     private static ModifiablePurpleSegment setStatus(@NotNull ModifiablePurpleSegment segment) {
         final GenomeRegion centromere = CENTROMERES.get(segment.chromosome());
         if (centromere != null && centromere.overlaps(segment)) {

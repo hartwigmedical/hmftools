@@ -23,5 +23,4 @@ public class BAFUtils {
 
         return Math.max(NORMAL_BAF, betaObservations / totalObservations);
     }
-
 }

@@ -20,6 +20,11 @@ public class PurpleQCFileTest {
 
     @NotNull
     private static PurpleQC create() {
-        return ImmutablePurpleQC.builder().unsupportedSegments(90).ploidy(3.17).amberGender(Gender.MALE).cobaltGender(Gender.FEMALE).build();
+        return ImmutablePurpleQC.builder()
+                .unsupportedSegments(90)
+                .ploidy(3.17)
+                .amberGender(Gender.MALE)
+                .cobaltGender(Gender.FEMALE)
+                .build();
     }
 }

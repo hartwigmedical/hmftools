@@ -9,7 +9,7 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RepeatContextFactory {
+public final class RepeatContextFactory {
 
     private static final int MIN_COUNT = 4;
     private static final int MAX_LENGTH = 6;
@@ -29,7 +29,9 @@ public class RepeatContextFactory {
         return ref.length() != alt.length();
     }
 
-    public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
+    @NotNull
+    @VisibleForTesting
+    static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
         final Map<String, Integer> result = Maps.newHashMap();
 
         for (int start = Math.max(0, index - MAX_LENGTH); start <= index; start++) {
@@ -55,6 +57,7 @@ public class RepeatContextFactory {
         return result.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).map(RepeatContextFactory::create);
     }
 
+    @NotNull
     private static RepeatContext create(Map.Entry<String, Integer> entry) {
         return ImmutableRepeatContext.builder().sequence(entry.getKey()).count(entry.getValue()).build();
     }
@@ -89,5 +92,4 @@ public class RepeatContextFactory {
 
         return count;
     }
-
 }

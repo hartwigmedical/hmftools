@@ -41,6 +41,7 @@ public class PurpleSomaticVariantFactory {
         this.filter = filter;
     }
 
+    @NotNull
     public List<PurpleSomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
         final List<PurpleSomaticVariant> variants = Lists.newArrayList();
 

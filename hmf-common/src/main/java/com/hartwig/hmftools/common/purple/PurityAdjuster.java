@@ -119,5 +119,4 @@ public class PurityAdjuster {
 
         return (observedFrequency * (normalTotalAllele + tumorTotalAllele) - normalBetaAllele) / tumorCopyNumber / purity;
     }
-
 }

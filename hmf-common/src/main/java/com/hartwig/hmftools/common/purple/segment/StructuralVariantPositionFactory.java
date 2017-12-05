@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-class StructuralVariantPositionFactory {
+final class StructuralVariantPositionFactory {
 
     private static final long MIN_BASES = 1000;
 
@@ -26,7 +26,6 @@ class StructuralVariantPositionFactory {
         for (StructuralVariant variant : variants) {
 
             if (variant.type() != StructuralVariantType.INS) {
-
                 positions.add(ImmutableStructuralVariantPosition.builder()
                         .id(variant.id())
                         .chromosome(variant.startChromosome())
@@ -51,11 +50,11 @@ class StructuralVariantPositionFactory {
         return positions;
     }
 
-    private static boolean include(StructuralVariant variant) {
+    private static boolean include(@NotNull StructuralVariant variant) {
         return !variant.startChromosome().equals(variant.endChromosome()) || bases(variant) > MIN_BASES;
     }
 
-    private static long bases(StructuralVariant variant) {
+    private static long bases(@NotNull StructuralVariant variant) {
         return 1 + variant.endPosition() - variant.startPosition();
     }
 }
