@@ -30,7 +30,6 @@ class BAFFactory {
 
     @NotNull
     List<AmberBAF> create(@NotNull final List<Pileup> normalPileup, @NotNull final List<Pileup> tumorPileup) {
-
         final GenomePositionSelector<Pileup> tumorSelector = GenomePositionSelectorFactory.create(tumorPileup);
 
         int medianDepth = medianReadCount(normalPileup);
@@ -43,8 +42,8 @@ class BAFFactory {
             final int readCount = normal.readCount();
             final int altCount = maxMismatchReadCount(normal);
 
-            if (normal.indels() == 0 && between(readCount, minDepth, maxDepth) && isHetrozygousRef(normal.referenceCount(), readCount)
-                    && isHetrozygousAlt(altCount, readCount)) {
+            if (normal.indels() == 0 && between(readCount, minDepth, maxDepth) && isHeterozygousRef(normal.referenceCount(), readCount)
+                    && isHeterozygousAlt(altCount, readCount)) {
 
                 final Character alt = alt(altCount, normal);
                 tumorSelector.select(normal).filter(x -> x.indels() == 0).map(x -> create(alt, normal, x)).ifPresent(result::add);
@@ -52,7 +51,6 @@ class BAFFactory {
         }
 
         return result;
-
     }
 
     @VisibleForTesting
@@ -87,13 +85,13 @@ class BAFFactory {
         throw new IllegalArgumentException("unable to find count");
     }
 
-    private boolean isHetrozygousRef(int refCount, int totalCount) {
+    private boolean isHeterozygousRef(int refCount, int totalCount) {
         final int minCount = (int) Math.round((1 - maxHetAFPercentage) * totalCount);
         final int maxCount = (int) Math.round((1 - minHetAFPercentage) * totalCount);
         return between(refCount, minCount, maxCount);
     }
 
-    private boolean isHetrozygousAlt(int altCount, int totalCount) {
+    private boolean isHeterozygousAlt(int altCount, int totalCount) {
         final int minCount = (int) Math.round(minHetAFPercentage * totalCount);
         final int maxCount = (int) Math.round(maxHetAFPercentage * totalCount);
         return between(altCount, minCount, maxCount);

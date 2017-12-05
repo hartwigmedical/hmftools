@@ -27,8 +27,7 @@ class RatioSegmentation {
         this.executorService = executorService;
     }
 
-    void applySegmentation(@NotNull final String reference, @NotNull final String tumor)
-            throws ExecutionException, InterruptedException {
+    void applySegmentation(@NotNull final String reference, @NotNull final String tumor) throws ExecutionException, InterruptedException {
         final String ratioFile = CobaltRatioFile.generateFilename(outputDirectory, tumor);
         final List<Future<Object>> futures = Lists.newArrayList();
         futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, reference, "ReferenceGCDiploidRatio")));
@@ -41,7 +40,8 @@ class RatioSegmentation {
         LOGGER.info("Segmentation Complete");
     }
 
-    private Object ratioSegmentation(@NotNull final String ratioFile, @NotNull final String sample, @NotNull final String column) throws IOException, InterruptedException {
+    private Object ratioSegmentation(@NotNull final String ratioFile, @NotNull final String sample, @NotNull final String column)
+            throws IOException, InterruptedException {
         final String pcfFile = PCFFile.generateRatioFilename(outputDirectory, sample);
         int result = RExecutor.executeFromClasspath("r/ratioSegmentation.R", ratioFile, column, pcfFile);
         if (result != 0) {
@@ -50,5 +50,4 @@ class RatioSegmentation {
 
         return null;
     }
-
 }

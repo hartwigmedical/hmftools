@@ -35,18 +35,19 @@ class GCRatioNormalization {
         return medianReadCountBuilder.build();
     }
 
+    @NotNull
     ListMultimap<String, ReadRatio> build(@NotNull final GCMedianReadCount gcMedianReadCount) {
         final ListMultimap<String, ReadRatio> result = ArrayListMultimap.create();
         for (String chromosome : entries.keySet()) {
-            final List<ReadRatio> normalisedRatio =
-                    entries.get(chromosome).stream().map(x -> create(gcMedianReadCount, x)).collect(Collectors.toList());
+            final List<ReadRatio> normalisedRatio = entries.get(chromosome).stream().map(x -> create(gcMedianReadCount, x)).collect(Collectors.toList());
             result.replaceValues(chromosome, normalisedRatio);
         }
 
         return result;
     }
 
-    private ReadRatio create(GCMedianReadCount medians, ReadCountWithGCContent readCount) {
+    @NotNull
+    private static ReadRatio create(GCMedianReadCount medians, ReadCountWithGCContent readCount) {
         int gcMedianCount = medians.medianReadCount(readCount.gcProfile());
         final double ratio;
 
@@ -59,7 +60,6 @@ class GCRatioNormalization {
         }
 
         return ImmutableReadRatio.builder().from(readCount).ratio(ratio).build();
-
     }
 
     private class ReadCountWithGCContent implements GenomePosition {
@@ -87,7 +87,7 @@ class GCRatioNormalization {
             return readCount;
         }
 
-        public GCProfile gcProfile() {
+        GCProfile gcProfile() {
             return gcProfile;
         }
 

@@ -57,7 +57,7 @@ public class DiploidRatioNormalizationTest {
         assertRatio(input.get(4), output.get(4), 1.0);
     }
 
-    private void assertRatio(@NotNull final ReadRatio input, @NotNull final ReadRatio output, double median) {
+    private static void assertRatio(@NotNull final ReadRatio input, @NotNull final ReadRatio output, double median) {
         assertEquals(input.position(), output.position());
         assertEquals(input.ratio() / median, output.ratio(), EPSILON);
     }
@@ -71,5 +71,4 @@ public class DiploidRatioNormalizationTest {
     private static ImmutableReadRatio.Builder createReadRatio(@NotNull final String chromosome, final long position, final double ratio) {
         return ImmutableReadRatio.builder().chromosome(chromosome).position(position).ratio(ratio);
     }
-
 }

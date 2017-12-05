@@ -14,9 +14,11 @@ import org.jetbrains.annotations.NotNull;
 class BAFSegmentation {
 
     private static final Logger LOGGER = LogManager.getLogger(BAFSegmentation.class);
+
+    @NotNull
     private final String outputDirectory;
 
-    BAFSegmentation(final String outputDirectory) {
+    BAFSegmentation(@NotNull final String outputDirectory) {
         this.outputDirectory = outputDirectory;
     }
 
@@ -33,5 +35,4 @@ class BAFSegmentation {
             throw new IOException("R execution failed. Unable to complete segmentation.");
         }
     }
-
 }

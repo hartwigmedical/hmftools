@@ -47,5 +47,4 @@ public class RollingMedianTest {
     private void assertMedian(double expected) {
         assertEquals(expected, victim.median(), EPSILON);
     }
-
 }

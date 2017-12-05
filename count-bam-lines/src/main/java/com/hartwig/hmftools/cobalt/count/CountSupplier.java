@@ -111,6 +111,7 @@ public class CountSupplier {
         return futures;
     }
 
+    @NotNull
     private static Multimap<String, ReadCount> fromFutures(List<Future<ChromosomeReadCount>> futures)
             throws ExecutionException, InterruptedException {
         final ListMultimap<String, ReadCount> readCounts = ArrayListMultimap.create();

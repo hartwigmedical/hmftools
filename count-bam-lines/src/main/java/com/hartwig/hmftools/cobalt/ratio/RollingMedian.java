@@ -8,7 +8,7 @@ class RollingMedian {
     private PriorityQueue<Double> minheap = new PriorityQueue<>(new MinHeapComparator());
     private PriorityQueue<Double> maxheap = new PriorityQueue<>(new MaxHeapComparator());
 
-    public void add(double n) {
+    void add(double n) {
         if (isEmpty()) {
             minheap.add(n);
         } else {
@@ -21,7 +21,7 @@ class RollingMedian {
         fixChaos();
     }
 
-    public void remove(double n) {
+    void remove(double n) {
         if (!isEmpty()) {
             if (Double.compare(n, median()) <= 0) {
                 maxheap.remove(n);
@@ -32,11 +32,11 @@ class RollingMedian {
         fixChaos();
     }
 
-    public int size() {
+    int size() {
         return maxheap.size() + minheap.size();
     }
 
-    public boolean isEmpty() {
+    private boolean isEmpty() {
         return size() == 0;
     }
 
@@ -52,7 +52,7 @@ class RollingMedian {
         }
     }
 
-    public double median() {
+    double median() {
         if (isEmpty()) {
             return 0;
         }
@@ -79,5 +79,4 @@ class RollingMedian {
             return -1 * Double.compare(i, j);
         }
     }
-
 }

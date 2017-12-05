@@ -21,5 +21,4 @@ public class BAFFactoryTest {
         assertEquals(normal.readCount(), victim.normalDepth());
         assertEquals(tumor.readCount(), victim.tumorDepth());
     }
-
 }

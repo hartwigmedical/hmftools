@@ -39,7 +39,8 @@ class DiploidRatioNormalization {
         }
     }
 
-    public List<ReadRatio> get() {
+    @NotNull
+    List<ReadRatio> get() {
         return result;
     }
 
