@@ -279,12 +279,6 @@ public class ConfigSupplier {
             return ImmutableBAFConfig.builder().bafFile(amberFile).build();
         }
 
-        final String purpleBaf = AmberBAFFile.generatePurpleFilename(config.outputDirectory(), config.tumorSample());
-        final File purpleFile = new File(purpleBaf);
-        if (purpleFile.exists()) {
-            return ImmutableBAFConfig.builder().bafFile(purpleFile).build();
-        }
-
         printHelp(opt);
         throw new ParseException("Baf file " + amberBaf + " not found. Please supply -baf argument.");
     }

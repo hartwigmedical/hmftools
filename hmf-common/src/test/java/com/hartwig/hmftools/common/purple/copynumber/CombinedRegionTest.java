@@ -30,26 +30,27 @@ public class CombinedRegionTest {
 
     @Test
     public void testObservedTumorRatioCountSummationOnlyAppliesToSomatic() {
-        final FittedRegion startRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
+
+        final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
+                .observedTumorRatioCount(2)
+                .status(GermlineStatus.DIPLOID)
+                .build();
+        final CombinedRegion region = new CombinedRegion(true, somaticRegion);
+        assertEquals(2, region.region().observedTumorRatioCount());
+
+        final FittedRegion amplificationRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
                 .observedTumorRatioCount(2)
                 .status(GermlineStatus.AMPLIFICATION)
                 .build();
 
-        final CombinedRegion region = new CombinedRegion(true, startRegion, startRegion.status() != GermlineStatus.DIPLOID);
-        assertEquals(0, region.region().observedTumorRatioCount());
+        region.extend(amplificationRegion);
+        assertEquals(2, region.region().observedTumorRatioCount());
 
         final FittedRegion germlineRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1001, 2000)
                 .observedTumorRatioCount(2)
                 .status(GermlineStatus.AMPLIFICATION)
                 .build();
         region.extend(germlineRegion);
-        assertEquals(0, region.region().observedTumorRatioCount());
-
-        final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
-                .observedTumorRatioCount(2)
-                .status(GermlineStatus.DIPLOID)
-                .build();
-        region.extendWithBAFWeightedAverage(somaticRegion);
         assertEquals(2, region.region().observedTumorRatioCount());
     }
 
@@ -65,7 +66,7 @@ public class CombinedRegionTest {
     @Test
     public void doNotIncludeZeroCopyNumber() {
         final FittedRegion startRegion = create(1, 100, 200, 0.5, 0);
-        CombinedRegion builder = new CombinedRegion(true, startRegion, startRegion.status() != GermlineStatus.DIPLOID);
+        CombinedRegion builder = new CombinedRegion(true, startRegion);
         assertAverages(builder, 0.5, 0);
 
         builder.extendWithBAFWeightedAverage(create(201, 300, 200, 1, 2));
@@ -83,7 +84,7 @@ public class CombinedRegionTest {
 
     @NotNull
     private static CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber) {
-        return new CombinedRegion(true, create(start, end, copyNumber), false);
+        return new CombinedRegion(true, create(start, end, copyNumber));
     }
 
     @NotNull

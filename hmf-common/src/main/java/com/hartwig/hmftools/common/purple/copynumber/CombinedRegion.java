@@ -22,12 +22,9 @@ class CombinedRegion implements GenomeRegion {
     private List<FittedRegion> regions = Lists.newArrayList();
     private int unweightedCount = 1;
 
-    CombinedRegion(final boolean bafWeighted, final FittedRegion region, final boolean clearCopyNumber) {
+    CombinedRegion(final boolean bafWeighted, final FittedRegion region) {
         this.bafWeighted = bafWeighted;
         this.combined = ModifiableFittedRegion.create().from(region);
-        if (clearCopyNumber) {
-            clearCopyNumber();
-        }
 
         if (region.status() != GermlineStatus.DIPLOID) {
             clearBAFValues();
@@ -174,13 +171,6 @@ class CombinedRegion implements GenomeRegion {
 
         long totalWeight = currentWeight + newWeight;
         return (currentWeight * currentValue + newWeight * newValue) / totalWeight;
-    }
-
-    @Deprecated
-    private void clearCopyNumber() {
-        combined.setRefNormalisedCopyNumber(0);
-        combined.setObservedTumorRatioCount(0);
-        combined.setTumorCopyNumber(0);
     }
 
     private void clearBAFValues() {

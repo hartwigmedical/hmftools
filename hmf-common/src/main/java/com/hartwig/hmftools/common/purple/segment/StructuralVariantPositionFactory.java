@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.purple.segment;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -13,12 +12,6 @@ import org.jetbrains.annotations.NotNull;
 final class StructuralVariantPositionFactory {
 
     private static final long MIN_BASES = 1000;
-
-    @Deprecated
-    @NotNull
-    static List<StructuralVariantPosition> createMinBaseFiltered(@NotNull final List<StructuralVariant> variants) {
-        return create(variants.stream().filter(StructuralVariantPositionFactory::include).collect(Collectors.toList()));
-    }
 
     @NotNull
     public static List<StructuralVariantPosition> create(@NotNull final List<StructuralVariant> variants) {
