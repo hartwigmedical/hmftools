@@ -23,11 +23,11 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.report.ReportWriter;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
 import com.hartwig.hmftools.svannotation.NullAnnotator;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
+import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -48,7 +48,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // KODU: For testing
-    //    public static final String VERSION = "3.22";
+    //    public static final String VERSION = "3.23";
 
     private static final String CPCT_ECRF = "cpct_ecrf";
     private static final String LIMS_JSON = "lims_json";
