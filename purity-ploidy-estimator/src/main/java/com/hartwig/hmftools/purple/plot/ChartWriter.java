@@ -36,8 +36,8 @@ public class ChartWriter {
     }
 
     public void write(@NotNull final FittedPurity purity, @NotNull FittedPurityScore score,
-            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<PurityAdjustedSomaticVariant> variants) throws IOException {
-
+            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<PurityAdjustedSomaticVariant> variants)
+            throws IOException {
         final List<PurpleCopyNumber> filteredCopyNumber =
                 copyNumbers.stream().filter(ChartWriter::isAutosome).filter(x -> x.bafCount() > 0).collect(Collectors.toList());
 
@@ -51,17 +51,14 @@ public class ChartWriter {
         somaticPloidyPDF(subtitle, filteredSomaticVariants);
     }
 
-    private static String subtitle(@NotNull final String sample, @NotNull final FittedPurity purity, @NotNull final FittedPurityScore score) {
-        return String.format("%s PUR:%.0f%% (%.0f%%-%.0f%%) PLE:%.2f (%.2f-%.2f)",
-                sample,
-                purity.purity() * 100,
-                score.minPurity() * 100,
-                score.maxPurity() * 100,
-                purity.ploidy(),
-                score.minPloidy(),
-                score.maxPloidy());
+    @NotNull
+    private static String subtitle(@NotNull final String sample, @NotNull final FittedPurity purity,
+            @NotNull final FittedPurityScore score) {
+        return String.format("%s PUR:%.0f%% (%.0f%%-%.0f%%) PLE:%.2f (%.2f-%.2f)", sample, purity.purity() * 100, score.minPurity() * 100,
+                score.maxPurity() * 100, purity.ploidy(), score.minPloidy(), score.maxPloidy());
     }
 
+    @NotNull
     static String subtitle(@NotNull final String sample, final double purity, final double ploidy) {
         return String.format("%s PUR:%.0f%% PLE:%.2f", sample, purity * 100, ploidy);
     }
@@ -79,7 +76,8 @@ public class ChartWriter {
         ChartUtilities.saveChartAsPNG(new File(fileName), chart, 500, 300);
     }
 
-    private void somaticPloidyPDF(@NotNull final String subtitle, @NotNull final List<PurityAdjustedSomaticVariant> variants) throws IOException {
+    private void somaticPloidyPDF(@NotNull final String subtitle, @NotNull final List<PurityAdjustedSomaticVariant> variants)
+            throws IOException {
         String fileName = outputDirectory + File.separator + sample + ".variant.png";
         JFreeChart chart = CopyNumberCharts.somaticPloidyPDF(variants);
         chart.addSubtitle(new TextTitle(subtitle));
@@ -94,12 +92,11 @@ public class ChartWriter {
         ChartUtilities.saveChartAsPNG(new File(fileName), chart, 500, 300);
     }
 
-    private static boolean isAutosome(GenomeRegion region) {
+    private static boolean isAutosome(@NotNull GenomeRegion region) {
         return HumanChromosome.contains(region.chromosome()) && HumanChromosome.valueOf(region).isAutosome();
     }
 
-    private static boolean isAutosome(GenomePosition position) {
+    private static boolean isAutosome(@NotNull GenomePosition position) {
         return HumanChromosome.contains(position.chromosome()) && HumanChromosome.valueOf(position).isAutosome();
     }
-
 }

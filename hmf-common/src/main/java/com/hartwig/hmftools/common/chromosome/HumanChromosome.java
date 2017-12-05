@@ -54,14 +54,6 @@ public enum HumanChromosome implements Chromosome {
         return isAllosome;
     }
 
-    public static Set<HumanChromosome> autosomes() {
-        return EnumSet.complementOf(EnumSet.of(HumanChromosome._X, HumanChromosome._Y, HumanChromosome._MT));
-    }
-
-    public static Set<HumanChromosome> allosomes() {
-        return EnumSet.of(HumanChromosome._X, HumanChromosome._Y);
-    }
-
     public static Set<HumanChromosome> female() {
         return EnumSet.complementOf(EnumSet.of(HumanChromosome._Y, HumanChromosome._MT));
     }

@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -36,6 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.util.CollectionUtil;
 
@@ -72,29 +74,30 @@ class GenerateCircosData {
             @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
             throws IOException, InterruptedException, ExecutionException {
-
         createDirectory(config.plotDirectory());
         createDirectory(config.circosDirectory());
 
         writeConfig(gender);
         writeCopyNumbers(copyNumber);
         writeEnrichedSomatics(somaticVariants);
-        writeStructualVariants(structuralVariants);
+        writeStructuralVariants(structuralVariants);
         writeFittedRegions(downsample(regions));
         writeBafs(downsample(bafs));
 
         final List<Future<Object>> futures = Lists.newArrayList();
-        if (config.circosBinary().isPresent()) {
-            futures.add(executorService.submit(() -> generateCircos(config.circosBinary().get(), "input")));
-            futures.add(executorService.submit(() -> generateCircos(config.circosBinary().get(), "circos")));
+        final Optional<String> circosBinary = config.circosBinary();
+        if (circosBinary.isPresent()) {
+            futures.add(executorService.submit(() -> generateCircos(circosBinary.get(), "input")));
+            futures.add(executorService.submit(() -> generateCircos(circosBinary.get(), "circos")));
         }
 
         for (final Future<Object> future : futures) {
-            // Note: this (intentionally) has side effect of alerting users to any exceptions
+            // JOBA: This (intentionally) has side effect of alerting users to any exceptions
             future.get();
         }
     }
 
+    @Nullable
     private Object generateCircos(@NotNull final String executable, @NotNull final String type) throws IOException, InterruptedException {
         final File errorFile = file(type, "error");
         final File outputFile = file(type, "out");
@@ -110,8 +113,8 @@ class GenerateCircosData {
         command[6] = "-outputfile";
         command[7] = plotFileName;
 
-        LOGGER.info(String.format("Generating " + type.toUpperCase() + " via command: %s",
-                CollectionUtil.join(Arrays.asList(command), " ")));
+        LOGGER.info(
+                String.format("Generating " + type.toUpperCase() + " via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
         if (result != 0) {
             LOGGER.warn("Error creating circos plot. Examine error file {} for details.", errorFile.toString());
@@ -130,7 +133,7 @@ class GenerateCircosData {
         return new File(baseCircosTumorSample + "." + type + "." + extension);
     }
 
-    private void writeStructualVariants(@NotNull final List<StructuralVariant> structuralVariants) throws IOException {
+    private void writeStructuralVariants(@NotNull final List<StructuralVariant> structuralVariants) throws IOException {
         CircosLinkWriter.writeVariants(baseCircosTumorSample + ".link.circos", structuralVariants);
     }
 
@@ -184,6 +187,7 @@ class GenerateCircosData {
         Files.write(new File(outputFilename).toPath(), content.getBytes(charset));
     }
 
+    @NotNull
     private String readResource(@NotNull final String resource) throws IOException {
         InputStream in = getClass().getResourceAsStream(resource);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -198,7 +202,8 @@ class GenerateCircosData {
                 .collect(Collectors.toList());
     }
 
-    private static <T> List<T> downsample(List<T> variants) {
+    @NotNull
+    private static <T> List<T> downsample(@NotNull List<T> variants) {
         if (variants.size() <= MAX_PLOT_POINTS) {
             return variants;
         }

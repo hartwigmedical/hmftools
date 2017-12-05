@@ -56,7 +56,7 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
     }
 
     @NotNull
-    static List<FittedRegion> insertSmoothRegions(@NotNull final List<PurpleCopyNumber> smoothRegions,
+    private static List<FittedRegion> insertSmoothRegions(@NotNull final List<PurpleCopyNumber> smoothRegions,
             @NotNull final List<FittedRegion> fittedRegions) {
         BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform =
                 (consolidatedRegion, copyNumber) -> ImmutableFittedRegion.builder()
@@ -69,5 +69,4 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
         RegionZipper.zip(smoothRegions, fittedRegions, zipper);
         return zipper.result();
     }
-
 }

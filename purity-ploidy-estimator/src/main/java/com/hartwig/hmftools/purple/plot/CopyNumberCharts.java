@@ -31,7 +31,7 @@ class CopyNumberCharts {
 
     private static final int MAX_COPY_NUMBER_SERIES = 6;
 
-    // http://colorbrewer2.org/
+    // JOBA: http://colorbrewer2.org/
     private static final Color COPY_NUMBER_1 = new Color(255, 26, 28);
     private static final Color COPY_NUMBER_2 = new Color(77, 175, 74);
     private static final Color COPY_NUMBER_3 = new Color(55, 126, 184);
@@ -39,16 +39,12 @@ class CopyNumberCharts {
     private static final Color COPY_NUMBER_5 = new Color(255, 127, 0);
     private static final Color COPY_NUMBER_6 = new Color(255, 255, 51);
 
+    @NotNull
     static JFreeChart copyNumberCDF(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         final XYDataset dataset = CopyNumberCharts.createDataset(copyNumbers);
-        JFreeChart chart = ChartFactory.createScatterPlot("Copy Number CDF",
-                "BAF Weighting (CDF)",
-                "Ploidy",
-                dataset,
-                PlotOrientation.VERTICAL,
-                false,
-                false,
-                false);
+        JFreeChart chart =
+                ChartFactory.createScatterPlot("Copy Number CDF", "BAF Weighting (CDF)", "Ploidy", dataset, PlotOrientation.VERTICAL, false,
+                        false, false);
         XYPlot xyPlot = (XYPlot) chart.getPlot();
         XYItemRenderer renderer = ((XYPlot) chart.getPlot()).getRenderer();
         Shape shape = new Ellipse2D.Double(0, 0, 4, 4);
@@ -58,16 +54,12 @@ class CopyNumberCharts {
         return chart;
     }
 
+    @NotNull
     static JFreeChart copyNumberPDF(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-        final XYDataset dataset = ploidyPDF(100, copyNumbers, PurpleCopyNumber::averageTumorCopyNumber, PurpleCopyNumber::bafCount);
-        JFreeChart chart = ChartFactory.createScatterPlot("Copy Number PDF",
-                "Ploidy",
-                "BAF Count",
-                dataset,
-                PlotOrientation.VERTICAL,
-                false,
-                false,
-                false);
+        final XYDataset dataset = ploidyPDF(copyNumbers, PurpleCopyNumber::averageTumorCopyNumber, PurpleCopyNumber::bafCount);
+        JFreeChart chart =
+                ChartFactory.createScatterPlot("Copy Number PDF", "Ploidy", "BAF Count", dataset, PlotOrientation.VERTICAL, false, false,
+                        false);
 
         XYBarRenderer renderer = new XYBarRenderer(0.9);
         renderer.setShadowVisible(false);
@@ -80,18 +72,12 @@ class CopyNumberCharts {
         return chart;
     }
 
+    @NotNull
     static JFreeChart minorAllelePDF(@NotNull final List<PurpleCopyNumber> variants) {
-
         final CategoryTableXYDataset dataset = minorAllele(variants);
-        final JFreeChart chart = ChartFactory.createXYBarChart("Minor Allele Ploidy PDF",
-                "Ploidy",
-                false,
-                "BAF Count",
-                dataset,
-                PlotOrientation.VERTICAL,
-                true,
-                false,
-                false);
+        final JFreeChart chart =
+                ChartFactory.createXYBarChart("Minor Allele Ploidy PDF", "Ploidy", false, "BAF Count", dataset, PlotOrientation.VERTICAL,
+                        true, false, false);
 
         StackedXYBarRenderer renderer = new StackedXYBarRenderer();
         renderer.setBarPainter(new StandardXYBarPainter());
@@ -107,17 +93,12 @@ class CopyNumberCharts {
         return chart;
     }
 
+    @NotNull
     static JFreeChart somaticPloidyPDF(@NotNull final List<PurityAdjustedSomaticVariant> variants) {
         final CategoryTableXYDataset dataset = variants(variants);
-        final JFreeChart chart = ChartFactory.createXYBarChart("Somatic Variant Ploidy PDF",
-                "Ploidy",
-                false,
-                "Count",
-                dataset,
-                PlotOrientation.VERTICAL,
-                true,
-                false,
-                false);
+        final JFreeChart chart =
+                ChartFactory.createXYBarChart("Somatic Variant Ploidy PDF", "Ploidy", false, "Count", dataset, PlotOrientation.VERTICAL,
+                        true, false, false);
 
         StackedXYBarRenderer renderer = new StackedXYBarRenderer();
         renderer.setBarPainter(new StandardXYBarPainter());
@@ -131,8 +112,8 @@ class CopyNumberCharts {
         return chart;
     }
 
+    @NotNull
     private static XYDataset createDataset(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-
         final List<PurpleCopyNumber> sortedCopyNumbers = Lists.newArrayList(copyNumbers);
         sortedCopyNumbers.sort(Comparator.comparingDouble(PurpleCopyNumber::averageTumorCopyNumber));
 
@@ -148,8 +129,10 @@ class CopyNumberCharts {
         return new XYSeriesCollection(series);
     }
 
-    private static <T> XYDataset ploidyPDF(int bucketCount, List<T> events, ToDoubleFunction<T> function, ToDoubleFunction<T> increment) {
-
+    @NotNull
+    private static <T> XYDataset ploidyPDF(@NotNull List<T> events, @NotNull ToDoubleFunction<T> function,
+            @NotNull ToDoubleFunction<T> increment) {
+        final int bucketCount = 100;
         double[] buckets = new double[bucketCount];
         for (T event : events) {
             double value = function.applyAsDouble(event);
@@ -165,8 +148,8 @@ class CopyNumberCharts {
         return new XYSeriesCollection(series);
     }
 
+    @NotNull
     private static CategoryTableXYDataset variants(@NotNull final List<PurityAdjustedSomaticVariant> variants) {
-
         int maxPloidy = 6;
         int maxBuckets = maxPloidy * 10;
 
@@ -194,8 +177,8 @@ class CopyNumberCharts {
     }
 
     @VisibleForTesting
+    @NotNull
     static CategoryTableXYDataset minorAllele(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-
         int positivePloidy = 5;
         int positiveBuckets = positivePloidy * 10;
         int negativePloidy = 1;
@@ -250,5 +233,4 @@ class CopyNumberCharts {
 
         return Color.BLACK;
     }
-
 }

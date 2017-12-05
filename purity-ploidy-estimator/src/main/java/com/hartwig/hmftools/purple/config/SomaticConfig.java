@@ -11,10 +11,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface SomaticConfig {
 
-    default boolean enabled() {
-        return file().isPresent();
-    }
-
     Optional<File> file();
 
     int minTotalVariants();

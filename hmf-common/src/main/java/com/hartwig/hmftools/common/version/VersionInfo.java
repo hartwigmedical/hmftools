@@ -14,16 +14,19 @@ import org.jetbrains.annotations.NotNull;
 
 public class VersionInfo {
 
+    @NotNull
     private final String resource;
 
-    public VersionInfo(final String resource) {
+    public VersionInfo(@NotNull final String resource) {
         this.resource = resource;
     }
 
+    @NotNull
     public String version() throws IOException {
         return value("version=", "UNKNOWN");
     }
 
+    @NotNull
     public String value(@NotNull final String key, @NotNull final String defaultValue) {
         try {
             for (String entry : readResource().split("\n")) {

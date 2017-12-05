@@ -20,12 +20,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class PCFPositionsSupplier {
+public final class PCFPositionsSupplier {
     private static final Logger LOGGER = LogManager.getLogger(PCFPositionsSupplier.class);
 
     @NotNull
     public static Multimap<String, PCFPosition> createPositions(@NotNull final CommonConfig config) throws IOException {
-
         final String referenceFile = PCFFile.generateRatioFilename(config.cobaltDirectory(), config.refSample());
         LOGGER.info("Loading reference ratio PCF segments from {}", referenceFile);
         final Multimap<String, PCFPosition> referenceBreakPoint =
@@ -43,6 +42,7 @@ public class PCFPositionsSupplier {
         return union(union(union(referenceBreakPoint, tumorBreakPoints), tumorBAF), centromeres(config.windowSize()));
     }
 
+    @NotNull
     private static Multimap<String, PCFPosition> centromeres(int windowSize) {
         final Window window = new Window(windowSize);
 
@@ -56,6 +56,7 @@ public class PCFPositionsSupplier {
         return result;
     }
 
+    @NotNull
     private static PCFPosition create(@NotNull final String chromosome, long position) {
         return ImmutablePCFPosition.builder().chromosome(chromosome).position(position).source(PCFSource.REFERENCE_RATIO).build();
     }

@@ -24,7 +24,6 @@ public class ConfigSupplier {
     private static final Logger LOGGER = LogManager.getLogger(CommonConfig.class);
 
     private static final String FORCE = "force";
-    private static final String FREEC_DIRECTORY = "freec_dir";
     private static final String REF_SAMPLE = "ref_sample";
     private static final String TUMOR_SAMPLE = "tumor_sample";
     private static final String RUN_DIRECTORY = "run_dir";
@@ -74,7 +73,6 @@ public class ConfigSupplier {
         options.addOption(TUMOR_SAMPLE, true, "The tumor sample name. Defaults to value in metadata.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
         options.addOption(OUTPUT_DIRECTORY, true, "The output path. Defaults to run_dir/purple/");
-        options.addOption(FREEC_DIRECTORY, true, "The freec data path. Defaults to run_dir/copyNumber/refSample_tumorSample/freec/");
         options.addOption(FORCE, false, "Force recalculation of data. Do not use cached results");
 
         options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation.");
@@ -101,12 +99,10 @@ public class ConfigSupplier {
         options.addOption(MAX_NORM_FACTOR, true, "Maximum norm factor (default 2.0)");
         options.addOption(NORM_FACTOR_INCREMENTS, true, "Norm factor increments (default 0.01)");
 
-        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT,
-                true,
+        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT, true,
                 "Minimum ratio count while smoothing before diploid regions become suspect.");
 
-        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
-                true,
+        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE, true,
                 "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere.");
     }
 
@@ -119,7 +115,7 @@ public class ConfigSupplier {
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
 
-    public ConfigSupplier(CommandLine cmd, Options opt) throws ParseException, HartwigException {
+    public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, HartwigException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         if (runDirectory == null) {
             printHelp(opt);
@@ -172,7 +168,8 @@ public class ConfigSupplier {
 
         smoothingConfig = ImmutableSmoothingConfig.builder()
                 .minDiploidTumorRatioCount(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT, MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT))
-                .minDiploidTumorRatioCountAtCentromere(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE, MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT))
+                .minDiploidTumorRatioCountAtCentromere(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
+                        MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT))
                 .build();
 
         bafConfig = createBAFConfig(cmd, opt, commonConfig);
@@ -214,8 +211,7 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    private static SomaticConfig createSomaticConfig(CommandLine cmd, Options opt) throws ParseException {
-
+    private static SomaticConfig createSomaticConfig(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException {
         final Optional<File> file;
         if (cmd.hasOption(SOMATIC_VARIANTS)) {
             final String somaticFilename = cmd.getOptionValue(SOMATIC_VARIANTS);
@@ -237,8 +233,8 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    private static StructuralVariantConfig createStructuralVariantConfig(CommandLine cmd, Options opt) throws ParseException {
-
+    private static StructuralVariantConfig createStructuralVariantConfig(@NotNull CommandLine cmd, @NotNull Options opt)
+            throws ParseException {
         final Optional<File> file;
         if (cmd.hasOption(STRUCTURAL_VARIANTS)) {
             final String somaticFilename = cmd.getOptionValue(STRUCTURAL_VARIANTS);
@@ -256,7 +252,7 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    private static CircosConfig createCircosConfig(CommandLine cmd, CommonConfig config) {
+    private static CircosConfig createCircosConfig(@NotNull CommandLine cmd, @NotNull CommonConfig config) {
         return ImmutableCircosConfig.builder()
                 .plotDirectory(config.outputDirectory() + File.separator + "plot")
                 .circosDirectory(config.outputDirectory() + File.separator + "circos")
@@ -267,7 +263,6 @@ public class ConfigSupplier {
     @NotNull
     private static BAFConfig createBAFConfig(@NotNull final CommandLine cmd, Options opt, @NotNull final CommonConfig config)
             throws ParseException {
-
         if (cmd.hasOption(BAF)) {
             final String filename = cmd.getOptionValue(BAF);
             final File file = new File(filename);
@@ -325,9 +320,8 @@ public class ConfigSupplier {
 
     }
 
-    private static void printHelp(Options opt) {
+    private static void printHelp(@NotNull Options opt) {
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Purity Ploidy Estimator (PURPLE)", opt);
     }
-
 }

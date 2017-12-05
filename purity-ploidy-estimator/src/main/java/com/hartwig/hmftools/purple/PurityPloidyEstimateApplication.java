@@ -85,7 +85,6 @@ public class PurityPloidyEstimateApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
 
-    private static final int MAX_PLOIDY = 20;
     private static final int THREADS_DEFAULT = 2;
 
     private static final String THREADS = "threads";
@@ -127,7 +126,7 @@ public class PurityPloidyEstimateApplication {
             final String outputDirectory = config.outputDirectory();
             final String tumorSample = config.tumorSample();
 
-            // Read Gene Panel
+            // JOBA: Read Gene Panel
             final List<HmfGenomeRegion> genePanel = cmd.hasOption(GENE_PANEL)
                     ? HmfGenePanelSupplier.fromFile(cmd.getOptionValue(GENE_PANEL))
                     : HmfGenePanelSupplier.allGeneList();
@@ -143,7 +142,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
             final Multimap<String, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.gcProfile());
 
-            // Gender
+            // JOBA: Gender
             final Gender amberGender = Gender.fromAmber(bafs);
             final Gender cobaltGender = Gender.fromCobalt(ratios);
             if (amberGender.equals(cobaltGender)) {

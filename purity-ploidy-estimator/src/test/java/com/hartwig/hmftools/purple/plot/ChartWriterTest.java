@@ -12,5 +12,4 @@ public class ChartWriterTest {
         assertEquals("CPCT012345 PUR:83% PLE:1.10", ChartWriter.subtitle("CPCT012345", 0.83, 1.10));
         assertEquals("CPCT012345 PUR:83% PLE:1.10", ChartWriter.subtitle("CPCT012345", 0.83, 1.10));
     }
-
 }

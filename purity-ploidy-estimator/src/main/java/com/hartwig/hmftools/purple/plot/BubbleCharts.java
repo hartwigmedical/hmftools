@@ -21,12 +21,13 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.MatrixSeriesCollection;
 import org.jfree.data.xy.NormalizedMatrixSeries;
 
-class BubbleCharts {
+final class BubbleCharts {
 
     private static final double MAX_COPY_NUMBER = 5;
     private static final double MAX_VARIANT_PLOIDY = 5;
     private static final double MAX_BUBBLE_SIZE = 15;
 
+    @NotNull
     public static JFreeChart createCopyNumberBubblePlot(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         final MatrixSeriesCollection dataset = createBubbleSet(copyNumbers);
         JFreeChart chart =
@@ -41,10 +42,12 @@ class BubbleCharts {
         return chart;
     }
 
+    @NotNull
     public static JFreeChart createVariantBubblePlot(@NotNull final List<EnrichedSomaticVariant> copyNumbers) {
         final MatrixSeriesCollection dataset = createVariantBubbleSet(copyNumbers);
         JFreeChart chart =
-                ChartFactory.createBubbleChart("Variant Ploidy vs VAF ", "VAF (%)", "Variant Ploidy", dataset, PlotOrientation.VERTICAL, false, false, false);
+                ChartFactory.createBubbleChart("Variant Ploidy vs VAF ", "VAF (%)", "Variant Ploidy", dataset, PlotOrientation.VERTICAL,
+                        false, false, false);
 
         chart.getXYPlot().getRenderer(0).setSeriesPaint(0, new Color(140, 140, 100));
 
@@ -55,6 +58,7 @@ class BubbleCharts {
         return chart;
     }
 
+    @NotNull
     private static NumberAxis ploidyAxis(double max) {
         final NumberFormat numberFormat = new DecimalFormat("##");
         List<String> labels = Lists.newArrayList();
@@ -68,8 +72,8 @@ class BubbleCharts {
         return axis;
     }
 
+    @NotNull
     private static MatrixSeriesCollection createBubbleSet(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-
         double maxAbsoluteValue = 0;
         int maxX = bubbleBafIndex(1);
         int maxY = bubbleCopyNumberIndex(MAX_COPY_NUMBER);
@@ -77,8 +81,7 @@ class BubbleCharts {
         NormalizedMatrixSeries series = new NormalizedMatrixSeries("Bubble", maxY + 1, maxX + 1);
 
         for (PurpleCopyNumber copyNumber : copyNumbers) {
-            if (Doubles.greaterOrEqual(copyNumber.averageTumorCopyNumber(), 0) && Doubles.greaterOrEqual(copyNumber.averageActualBAF(),
-                    0.4)) {
+            if (Doubles.greaterOrEqual(copyNumber.averageTumorCopyNumber(), 0) && Doubles.greaterOrEqual(copyNumber.averageActualBAF(), 0.4)) {
                 int x = bubbleBafIndex(Math.min(1, copyNumber.averageActualBAF()));
                 int y = bubbleCopyNumberIndex(Math.min(MAX_COPY_NUMBER, copyNumber.averageTumorCopyNumber()));
 
@@ -93,8 +96,8 @@ class BubbleCharts {
         return new MatrixSeriesCollection(series);
     }
 
+    @NotNull
     private static MatrixSeriesCollection createVariantBubbleSet(@NotNull final List<EnrichedSomaticVariant> variants) {
-
         double maxAbsoluteValue = 0;
         int maxX = bubbleBafIndex(1.1);
         int maxY = bubbleCopyNumberIndex(MAX_VARIANT_PLOIDY);
@@ -102,7 +105,6 @@ class BubbleCharts {
         NormalizedMatrixSeries series = new NormalizedMatrixSeries("Bubble", maxY + 1, maxX + 1);
 
         for (EnrichedSomaticVariant variant : variants) {
-
             int x = bubbleBafIndex(Math.max(0, Math.min(1.1, variant.adjustedVAF())));
             int y = bubbleCopyNumberIndex(Math.min(MAX_VARIANT_PLOIDY, variant.adjustedVAF() * Math.round(variant.adjustedCopyNumber())));
 
@@ -116,11 +118,11 @@ class BubbleCharts {
         return new MatrixSeriesCollection(series);
     }
 
-    static int bubbleCopyNumberIndex(double copyNumber) {
+    private static int bubbleCopyNumberIndex(double copyNumber) {
         return (int) Math.round(copyNumber * 10);
     }
 
-    static int bubbleBafIndex(double copyNumber) {
+    private static int bubbleBafIndex(double copyNumber) {
         return (int) Math.round(copyNumber * 100);
     }
 

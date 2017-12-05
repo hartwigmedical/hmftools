@@ -16,16 +16,17 @@ import com.hartwig.hmftools.purple.config.CommonConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class ChromosomeLengthSupplier implements Supplier<Map<String, ChromosomeLength>> {
 
     private static final Logger LOGGER = LogManager.getLogger(ChromosomeLengthSupplier.class);
 
-
+    @NotNull
     private final Map<String, ChromosomeLength> chromosomeLengths;
 
-    public ChromosomeLengthSupplier(final CommonConfig config, Multimap<String, CobaltRatio> cobaltRatios) throws IOException, HartwigException {
-
+    public ChromosomeLengthSupplier(@NotNull final CommonConfig config, @NotNull Multimap<String, CobaltRatio> cobaltRatios)
+            throws IOException, HartwigException {
         final String chrLengthFile = ChromosomeLengthFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
         if (new File(chrLengthFile).exists()) {
             LOGGER.info("Loading chromosome lengths from {}", chrLengthFile);
@@ -38,6 +39,7 @@ public class ChromosomeLengthSupplier implements Supplier<Map<String, Chromosome
     }
 
     @Override
+    @NotNull
     public Map<String, ChromosomeLength> get() {
         return chromosomeLengths;
     }

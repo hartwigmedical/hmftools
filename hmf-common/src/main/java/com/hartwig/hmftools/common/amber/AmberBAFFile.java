@@ -23,8 +23,6 @@ public enum AmberBAFFile {
     private static final String PURPLE_EXTENSION = ".purple.baf";
     private static final String AMBER_EXTENSION = ".amber.baf";
 
-
-
     @Deprecated
     public static String generatePurpleFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + PURPLE_EXTENSION;
