@@ -7,9 +7,6 @@ import org.jetbrains.annotations.NotNull;
 public class SomaticTruthSetVariant implements Variant {
 
     @NotNull
-    private final String originalVCFLine;
-    
-    @NotNull
     private final VariantType type;
     @NotNull
     private final String chromosome;
@@ -21,10 +18,9 @@ public class SomaticTruthSetVariant implements Variant {
     @NotNull
     private final String filter;
 
-    public SomaticTruthSetVariant(@NotNull final String originalVCFLine, @NotNull final VariantType type, 
+    private SomaticTruthSetVariant(@NotNull final VariantType type,
             @NotNull final String chromosome, final long position, @NotNull final String ref, 
             @NotNull final String alt, @NotNull final String filter) {
-        this.originalVCFLine = originalVCFLine;
         this.type = type;
         this.chromosome = chromosome;
         this.position = position;
@@ -32,33 +28,33 @@ public class SomaticTruthSetVariant implements Variant {
         this.alt = alt;
         this.filter = filter;
     }
-    
-    @NotNull
-    String originalVCFLine() {
-        return originalVCFLine;
-    }
-    
+
     @Override
+    @NotNull
     public String ref() {
         return ref;
     }
 
     @Override
+    @NotNull
     public String alt() {
         return alt;
     }
 
     @Override
+    @NotNull
     public VariantType type() {
         return type;
     }
 
     @Override
+    @NotNull
     public String filter() {
         return filter;
     }
 
     @Override
+    @NotNull
     public String chromosome() {
         return chromosome;
     }
@@ -75,9 +71,6 @@ public class SomaticTruthSetVariant implements Variant {
     
     public static class Builder implements VariantBuilder<SomaticTruthSetVariant> {
         @NotNull
-        private String originalVCFLine = Strings.EMPTY;
-
-        @NotNull
         private VariantType type = VariantType.UNDEFINED;
         @NotNull
         private String chromosome = Strings.EMPTY;
@@ -88,17 +81,10 @@ public class SomaticTruthSetVariant implements Variant {
         private String alt = Strings.EMPTY;
         @NotNull
         private String filter = Strings.EMPTY;
-        
-        @NotNull
-        static SomaticTruthSetVariant.Builder fromVCF(@NotNull final String vcfLine) {
-            final SomaticTruthSetVariant.Builder builder = new SomaticTruthSetVariant.Builder();
-            builder.originalVCFLine(vcfLine);
-            return builder;
-        }
 
         @NotNull
         public static SomaticTruthSetVariant.Builder fromVariant(@NotNull final SomaticVariant variant) {
-            final SomaticTruthSetVariant.Builder builder = fromVCF(variant.originalVCFLine());
+            final SomaticTruthSetVariant.Builder builder = new SomaticTruthSetVariant.Builder();
             builder.type(variant.type());
             builder.chromosome(variant.chromosome());
             builder.position(variant.position());
@@ -109,10 +95,6 @@ public class SomaticTruthSetVariant implements Variant {
         }
 
         public Builder() {
-        }
-
-        private void originalVCFLine(@NotNull final String originalVCFLine) {
-            this.originalVCFLine = originalVCFLine;
         }
 
         @NotNull
@@ -154,7 +136,7 @@ public class SomaticTruthSetVariant implements Variant {
         @NotNull
         @Override
         public SomaticTruthSetVariant build() {
-            return new SomaticTruthSetVariant(originalVCFLine, type, chromosome, position, ref, alt, filter);
+            return new SomaticTruthSetVariant(type, chromosome, position, ref, alt, filter);
         }
     }
 }

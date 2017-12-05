@@ -97,7 +97,7 @@ public final class SomaticVariantFactory {
 
     @NotNull
     public static SomaticTruthSetVariant fromTruthSetVCFLine(@NotNull final String line) {
-        final SomaticTruthSetVariant.Builder builder = SomaticTruthSetVariant.Builder.fromVCF(line);
+        final SomaticTruthSetVariant.Builder builder = new SomaticTruthSetVariant.Builder();
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
         VariantFactory.withLine(builder, values);
         return builder.build();
