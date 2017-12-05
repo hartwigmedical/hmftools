@@ -8,8 +8,9 @@ import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Centromeres {
+public final class Centromeres {
 
+    @NotNull
     public static Map<String, GenomeRegion> grch37() {
         final Map<String, GenomeRegion> result = Maps.newHashMap();
         addCentromere(result, "1", 121535434, 124535434);
@@ -40,8 +41,8 @@ public class Centromeres {
         return result;
     }
 
-    private static void addCentromere(@NotNull final Map<String, GenomeRegion> map, @NotNull final String chromsome, final long start,
+    private static void addCentromere(@NotNull final Map<String, GenomeRegion> map, @NotNull final String chromosome, final long start,
             final long end) {
-        map.put(chromsome, GenomeRegionFactory.create(chromsome, start, end));
+        map.put(chromosome, GenomeRegionFactory.create(chromosome, start, end));
     }
 }
