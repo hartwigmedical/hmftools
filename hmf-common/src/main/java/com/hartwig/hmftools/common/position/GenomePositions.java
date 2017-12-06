@@ -28,7 +28,6 @@ public enum GenomePositions {
     @NotNull
     public static <S, T extends GenomePosition> Multimap<S, T> union(@NotNull final Multimap<S, T> first,
             @NotNull final Multimap<S, T> second) {
-
         final Multimap<S, T> union = ArrayListMultimap.create();
         final Set<S> keys = Sets.newHashSet();
         keys.addAll(first.keySet());
@@ -52,7 +51,6 @@ public enum GenomePositions {
 
     @NotNull
     public static <T extends GenomePosition> List<T> union(@NotNull final Collection<T> first, @NotNull final Collection<T> second) {
-
         final List<T> merged = Lists.newArrayList();
         final Iterator<T> firstIterator = first.iterator();
         final Iterator<T> secondIterator = second.iterator();
@@ -76,5 +74,4 @@ public enum GenomePositions {
 
         return merged;
     }
-
 }

@@ -45,6 +45,7 @@ public class PurityAdjuster {
     }
 
     public double impliedPloidy() {
+        // KODU: Dont delete per request of Mr Jon Baber!!!
         return (1 - normFactor()) / purity() / normFactor() * 2 + 2;
     }
 
