@@ -26,13 +26,15 @@ import org.jetbrains.annotations.NotNull;
 public class ObservedRegionFactory {
 
     private final int windowSize;
+    @NotNull
     private final Gender gender;
+    @NotNull
     private final GermlineStatusFactory statusFactory;
 
-    public ObservedRegionFactory(final int windowSize, final Gender gender) {
+    public ObservedRegionFactory(final int windowSize, @NotNull final Gender gender) {
         this.windowSize = windowSize;
         this.gender = gender;
-        statusFactory = new GermlineStatusFactory(gender);
+        this.statusFactory = new GermlineStatusFactory(gender);
     }
 
     @NotNull

@@ -4,8 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class PileupFileTest
-{
+public class PileupFileTest {
 
     @Test
     public void testIndelSize() {

@@ -27,8 +27,8 @@ public class GenomePositionSelectorImpl<P extends GenomePosition> implements Gen
     }
 
     @Override
+    @NotNull
     public Optional<P> select(@NotNull final GenomePosition position) {
-
         while (next != null && next.compareTo(position) < 0) {
             next = positions.hasNext() ? this.positions.next() : null;
         }
@@ -56,5 +56,4 @@ public class GenomePositionSelectorImpl<P extends GenomePosition> implements Gen
             next = positions.hasNext() ? this.positions.next() : null;
         }
     }
-
 }

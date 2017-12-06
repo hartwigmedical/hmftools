@@ -10,7 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PileupFile {
+public final class PileupFile {
 
     private static final String DELIMITER = "\t";
 

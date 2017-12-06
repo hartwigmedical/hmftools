@@ -80,7 +80,6 @@ public class ClusterFactory {
                     result.add(segment);
                 }
                 segment = ModifiableCluster.create().setChromosome(position.chromosome()).setStart(start).setEnd(end);
-
             } else {
                 segment.setEnd(end);
             }
@@ -90,7 +89,6 @@ public class ClusterFactory {
             } else {
                 segment.addPcfPositions((PCFPosition) position);
             }
-
         }
         if (segment != null) {
             result.add(segment);

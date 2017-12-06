@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GenomePositionSelectorFactory {
+public final class GenomePositionSelectorFactory {
 
     @NotNull
     public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Collection<P> positions) {
