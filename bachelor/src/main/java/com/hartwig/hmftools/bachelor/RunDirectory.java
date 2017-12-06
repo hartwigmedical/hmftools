@@ -74,4 +74,10 @@ class RunDirectory {
             return null;
         }
     }
+
+    public String getPatientID() {
+        final String[] split = prefix.getFileName().toString().split("_");
+        final String patient = split[split.length - 1];
+        return patient;
+    }
 }

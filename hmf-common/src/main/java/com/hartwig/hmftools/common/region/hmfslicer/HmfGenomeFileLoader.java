@@ -15,7 +15,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,20 +44,17 @@ public final class HmfGenomeFileLoader {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream inputStream)
-            throws IOException, EmptyFileException {
+    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream inputStream) {
         return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromFile(@NotNull final String filename)
-            throws IOException, EmptyFileException {
+    public static SortedSetMultimap<String, HmfGenomeRegion> fromFile(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull final List<String> lines)
-            throws IOException, EmptyFileException {
+    private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull final List<String> lines) {
 
         final Map<String, ModifiableHmfGenomeRegion> geneMap = Maps.newLinkedHashMap();
         for (final String line : lines) {

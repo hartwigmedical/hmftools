@@ -12,6 +12,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 
 import nl.hartwigmedicalfoundation.bachelor.Effect;
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
@@ -24,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -31,8 +36,29 @@ import htsjdk.variant.vcf.VCFFileReader;
 class BachelorEligibility {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
+    private static final SortedSetMultimap<String, HmfGenomeRegion> allGenesByChromosomeMap = HmfGenePanelSupplier.allGeneMap();
+    private static final Multimap<String, HmfGenomeRegion> allGenesMap = makeGeneNameMap();
+    private static final Map<String, HmfGenomeRegion> allTranscriptsMap = makeTranscriptMap();
 
     private final Map<String, Predicate<VariantModel>> programs = Maps.newHashMap();
+    private final Map<String, HmfGenomeRegion> querySet = Maps.newHashMap();
+    private boolean iterateAllGenes = false;
+
+    private static Multimap<String, HmfGenomeRegion> makeGeneNameMap() {
+        final Multimap<String, HmfGenomeRegion> result = TreeMultimap.create();
+        for (final HmfGenomeRegion region : allGenesByChromosomeMap.values()) {
+            result.put(region.gene(), region);
+        }
+        return result;
+    }
+
+    private static Map<String, HmfGenomeRegion> makeTranscriptMap() {
+        final Map<String, HmfGenomeRegion> result = Maps.newHashMap();
+        for (final HmfGenomeRegion region : allGenesByChromosomeMap.values()) {
+            result.put(region.transcriptID(), region);
+        }
+        return result;
+    }
 
     private BachelorEligibility() {
     }
@@ -61,6 +87,24 @@ class BachelorEligibility {
                                         .anyMatch(a -> a.Transcript.equals(p.getEnsembl()) && a.Effects.stream()
                                                 .anyMatch(effects::contains)));
                 panelPredicates.add(panelPredicate);
+
+                // update query targets
+                result.iterateAllGenes |= allGene;
+                for (final GeneIdentifier g : genes) {
+                    final HmfGenomeRegion region = allTranscriptsMap.get(g.getEnsembl());
+                    if (region == null) {
+                        final Collection<HmfGenomeRegion> matchesByName = allGenesMap.get(g.getName());
+                        if (matchesByName.isEmpty()) {
+                            LOGGER.warn("Program {} gene {} non-canonical transcript {}. Performance may be degraded.", program.getName(),
+                                    g.getName(), g.getEnsembl());
+                            result.iterateAllGenes = true;
+                        } else {
+                            matchesByName.forEach(r -> result.querySet.put(r.transcriptID(), r));
+                        }
+                    } else {
+                        result.querySet.put(g.getEnsembl(), region);
+                    }
+                }
             }
 
             final Predicate<VariantModel> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
@@ -112,35 +156,57 @@ class BachelorEligibility {
         return result;
     }
 
+    private void processVariant(final Map<String, ImmutableEligibilityReport.Builder> results, final VariantContext variant,
+            final String patient, final String sample, final String tag) {
+        if (variant.isFiltered()) {
+            return;
+        }
+
+        // we will skip when an ALT is not present in the sample
+        final Genotype genotype = variant.getGenotype(sample);
+        if (genotype == null || !(genotype.isHomVar() || genotype.isHet())) {
+            return;
+        }
+
+        // TODO: do we need to verify specific ALTS have specific SnpEff effects
+
+        final VariantModel model = VariantModel.from(variant);
+
+        final List<String> matchingPrograms = programs.entrySet()
+                .stream()
+                .filter(program -> program.getValue().test(model))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        for (final String p : matchingPrograms) {
+            results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().patient(patient).program(p).tag(tag)).addVariants(model);
+        }
+    }
+
     @NotNull
     Collection<EligibilityReport> processVCF(final String patient, final String sample, final String tag, final VCFFileReader reader) {
 
         final Map<String, ImmutableEligibilityReport.Builder> results = Maps.newHashMap();
-        for (final VariantContext variant : reader) {
 
-            if (variant.isFiltered()) {
-                continue;
+        if (iterateAllGenes) {
+            for (final HmfGenomeRegion region : allGenesMap.values()) {
+                final CloseableIterator<VariantContext> query =
+                        reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
+                while (query.hasNext()) {
+                    final VariantContext variant = query.next();
+                    processVariant(results, variant, patient, sample, tag);
+                }
+                query.close();
             }
-
-            // we will skip when an ALT is not present in the sample
-            final Genotype genotype = variant.getGenotype(sample);
-            if (genotype == null || !(genotype.isHomVar() || genotype.isHet())) {
-                continue;
-            }
-
-            // TODO: do we need to verify specific ALTS have specific SnpEff effects
-
-            final VariantModel model = VariantModel.from(variant);
-
-            final List<String> matchingPrograms = programs.entrySet()
-                    .stream()
-                    .filter(program -> program.getValue().test(model))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
-
-            for (final String p : matchingPrograms) {
-                results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().patient(patient).program(p).tag(tag))
-                        .addVariants(model);
+        } else {
+            for (final HmfGenomeRegion region : querySet.values()) {
+                final CloseableIterator<VariantContext> query =
+                        reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
+                while (query.hasNext()) {
+                    final VariantContext variant = query.next();
+                    processVariant(results, variant, patient, sample, tag);
+                }
+                query.close();
             }
         }
 

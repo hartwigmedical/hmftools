@@ -78,7 +78,7 @@ public class BachelorApplication {
         final String tag = isGermline ? "germline" : "somatic";
         LOGGER.info("process {} vcf: {}", tag, vcf.getPath());
 
-        try (final VCFFileReader reader = new VCFFileReader(vcf, false)) {
+        try (final VCFFileReader reader = new VCFFileReader(vcf, true)) {
             // TODO: always correct? germline has R,T somatic has just T
             final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
             return eligibility.processVCF(patient, sample, tag, reader);
@@ -100,16 +100,18 @@ public class BachelorApplication {
 
     private static File process(final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
             final boolean somatic) {
-        final String[] split = run.prefix.getFileName().toString().split("_");
-        final String patient = split[split.length - 1];
+
+        final String patient = run.getPatientID();
+        final boolean doGermline = run.germline != null && germline;
+        final boolean doSomatic = run.somatic != null && somatic;
 
         LOGGER.info("processing run: {}", patient);
 
         final List<EligibilityReport> result = Lists.newArrayList();
-        if (run.germline != null) {
+        if (doGermline) {
             result.addAll(processVCF(patient, true, run.germline, eligibility));
         }
-        if (run.somatic != null) {
+        if (doSomatic) {
             result.addAll(processVCF(patient, false, run.somatic, eligibility));
         }
         if (run.copyNumber != null) {
