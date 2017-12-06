@@ -11,9 +11,9 @@ public enum Clonality {
 
     private static final int TRIALS = 100_000;
 
+    @NotNull
     public static Clonality fromSample(double copyNumber, double purity, @NotNull final AllelicDepth depth) {
-
-        // Note: this assume normal is diploid
+        // JOBA: Note: this assume normal is diploid
         double monoploidProbability = purity / (purity * copyNumber + 2 * (1 - purity));
         double monoploidSamples = depth.totalReadCount() * monoploidProbability;
         double inconsistentSamples = Math.max(copyNumber, 0) * monoploidSamples;

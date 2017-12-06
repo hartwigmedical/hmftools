@@ -9,11 +9,8 @@ public class MicrohomologyTest {
 
     @Test
     public void testRepeats() {
-        assertHomology("GTAACCAGGAGTGTATT",
-                0,
-                "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG",
-                "CGTAACCAGGAGTGTATT",
-                "C");
+        assertHomology("GTAACCAGGAGTGTATT", 0, "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG",
+                "CGTAACCAGGAGTGTATT", "C");
     }
 
     @Test
@@ -25,8 +22,8 @@ public class MicrohomologyTest {
         assertHomology("TATC", 9, "GCACTGTATCCACTTGATATCATTAT", "CCACTTGATATC", "C");
     }
 
-    private void assertHomology(@NotNull final String expected, int position, @NotNull final String sequence, @NotNull final String ref,
-            @NotNull final String alt) {
+    private static void assertHomology(@NotNull final String expected, int position, @NotNull final String sequence,
+            @NotNull final String ref, @NotNull final String alt) {
         assertEquals(expected, Microhomology.microhomology(position, sequence, ref, alt));
     }
 }

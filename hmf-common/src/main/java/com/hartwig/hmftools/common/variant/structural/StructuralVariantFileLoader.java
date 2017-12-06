@@ -10,10 +10,10 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class StructuralVariantFileLoader {
+public final class StructuralVariantFileLoader {
 
     @NotNull
-    public static List<StructuralVariant> fromFile(final String vcfFileLocation) throws IOException {
+    public static List<StructuralVariant> fromFile(@NotNull final String vcfFileLocation) throws IOException {
         final StructuralVariantFactory factory = new StructuralVariantFactory();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
@@ -23,5 +23,4 @@ public class StructuralVariantFileLoader {
 
         return factory.results();
     }
-
 }

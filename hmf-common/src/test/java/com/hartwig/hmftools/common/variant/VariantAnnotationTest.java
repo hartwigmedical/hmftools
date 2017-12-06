@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class VariantAnnotationTest {
@@ -28,7 +29,8 @@ public class VariantAnnotationTest {
         assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(), twoConsequencesIgnoreOne.consequenceString());
     }
 
-    public static ImmutableVariantAnnotation.Builder createVariantAnnotationBuilder(VariantConsequence... consequences) {
+    @NotNull
+    public static ImmutableVariantAnnotation.Builder createVariantAnnotationBuilder(@NotNull VariantConsequence... consequences) {
         return ImmutableVariantAnnotation.builder()
                 .allele(Strings.EMPTY)
                 .severity(Strings.EMPTY)

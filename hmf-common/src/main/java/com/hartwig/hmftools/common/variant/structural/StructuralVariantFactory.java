@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.ChromosomeFilter;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -26,10 +26,12 @@ public class StructuralVariantFactory {
     private final static String BPI_END = "BPI_END";
     private final static String BPI_AF = "BPI_AF";
 
-    private final Map<String, VariantContext> unmatched = new HashMap<>();
+    @NotNull
+    private final Map<String, VariantContext> unmatched = Maps.newHashMap();
+    @NotNull
     private final List<StructuralVariant> results = Lists.newArrayList();
+    @NotNull
     private final VariantContextFilter filter;
-    private final Set<String> samples = Sets.newHashSet();
 
     public StructuralVariantFactory() {
         final CompoundFilter filter = new CompoundFilter(true);
@@ -38,9 +40,8 @@ public class StructuralVariantFactory {
         this.filter = filter;
     }
 
-    public void addVariantContext(VariantContext context) {
+    public void addVariantContext(@NotNull VariantContext context) {
         if (filter.test(context)) {
-            samples.addAll(context.getSampleNames());
             final StructuralVariantType type = type(context);
             if (type.equals(StructuralVariantType.BND)) {
                 final String mate = (String) context.getAttribute(MATE_ID);
@@ -55,19 +56,13 @@ public class StructuralVariantFactory {
         }
     }
 
-    public Map<String, VariantContext> unmatched() {
-        return unmatched;
-    }
-
+    @NotNull
     public List<StructuralVariant> results() {
         return results;
     }
 
-    public Set<String> sampleNames() {
-        return samples;
-    }
-
-    private static StructuralVariant create(VariantContext context) {
+    @NotNull
+    private static StructuralVariant create(@NotNull VariantContext context) {
         final StructuralVariantType type = type(context);
         Preconditions.checkArgument(!StructuralVariantType.BND.equals(type));
 
@@ -115,7 +110,8 @@ public class StructuralVariantFactory {
                 .build();
     }
 
-    private static StructuralVariant create(VariantContext first, VariantContext second) {
+    @NotNull
+    private static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second) {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(first)));
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(second)));
 
@@ -161,7 +157,8 @@ public class StructuralVariantFactory {
                 .build();
     }
 
-    private static StructuralVariantType type(VariantContext context) {
+    @NotNull
+    private static StructuralVariantType type(@NotNull VariantContext context) {
         return StructuralVariantType.fromAttribute((String) context.getAttribute(TYPE));
     }
 }

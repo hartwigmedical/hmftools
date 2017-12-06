@@ -49,17 +49,17 @@ public final class VariantPredicates {
     }
 
     @NotNull
-    public static Predicate<SomaticVariant> inCOSMIC() {
+    public static Predicate<SomaticVariant> inDBSNPAndNotInCOSMIC() {
+        return and(inDBSNP(), not(inCOSMIC()));
+    }
+
+    @NotNull
+    private static Predicate<SomaticVariant> inCOSMIC() {
         return SomaticVariant::isCOSMIC;
     }
 
     @NotNull
-    public static Predicate<SomaticVariant> inDBSNP() {
+    private static Predicate<SomaticVariant> inDBSNP() {
         return SomaticVariant::isDBSNP;
-    }
-
-    @NotNull
-    public static Predicate<SomaticVariant> inDBSNPAndNotInCOSMIC() {
-        return and(inDBSNP(), not(inCOSMIC()));
     }
 }

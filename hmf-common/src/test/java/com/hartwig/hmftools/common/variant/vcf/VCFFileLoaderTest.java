@@ -14,8 +14,6 @@ public class VCFFileLoaderTest {
 
     private static final String VARIANT_PATH = Resources.getResource("variants").getPath();
     private static final String SOMATIC_EXTENSION = "somatics.vcf";
-    private static final String SOMATIC_GERMLINE_EXTENSION = "somatic_germline.vcf";
-    private static final String SINGLE_SAMPLE_EXTENSION = "single_sample_germline.vcf";
 
     @Test
     public void canLoadSomaticVCFFromBasePath() throws IOException, HartwigException {

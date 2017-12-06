@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertEquals;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ClonalityTest {
@@ -14,7 +15,7 @@ public class ClonalityTest {
         assertEquals(Clonality.INCONSISTENT, Clonality.fromSample(3, 0.3, create(61, 100)));
     }
 
-
+    @NotNull
     private static AllelicDepth create(final int alleleReadCount, final int totalReadCount) {
         return new AllelicDepth() {
             @Override
@@ -28,5 +29,4 @@ public class ClonalityTest {
             }
         };
     }
-
 }

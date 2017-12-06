@@ -13,8 +13,6 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticTruthSetVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
@@ -44,11 +42,6 @@ public final class VCFFileLoader {
     }
 
     @NotNull
-    public static VCFGermlineFile loadGermlineVCF(@NotNull final String file) throws IOException, HartwigException {
-        return toVCFGermlineFile(loadAllLinesFromVCF(file));
-    }
-
-    @NotNull
     private static VCFSomaticFile toVCFSomaticFile(@NotNull final List<String> lines) {
         final List<String> metaInformationLines = extractMetaInformation(lines);
         final String header = extractHeader(lines);
@@ -70,22 +63,6 @@ public final class VCFFileLoader {
         final List<SomaticTruthSetVariant> variants = variants(lines, SomaticVariantFactory::fromTruthSetVCFLine);
         return ImmutableVCFSomaticTruthSetFile.builder()
                 .sample(sample)
-                .originalMetaInformationLines(metaInformationLines)
-                .originalHeaderLine(header)
-                .variants(variants)
-                .build();
-    }
-
-    @NotNull
-    private static VCFGermlineFile toVCFGermlineFile(@NotNull final List<String> lines) {
-        final List<String> metaInformationLines = extractMetaInformation(lines);
-        final String header = extractHeader(lines);
-        final String refSample = GermlineVariantFactory.refSampleFromHeaderLine(header);
-        final String tumorSample = GermlineVariantFactory.tumorSampleFromHeaderLine(header);
-        final List<GermlineVariant> variants = variants(lines, GermlineVariantFactory::fromVCFLine);
-        return ImmutableVCFGermlineFile.builder()
-                .refSample(refSample)
-                .tumorSample(tumorSample)
                 .originalMetaInformationLines(metaInformationLines)
                 .originalHeaderLine(header)
                 .variants(variants)

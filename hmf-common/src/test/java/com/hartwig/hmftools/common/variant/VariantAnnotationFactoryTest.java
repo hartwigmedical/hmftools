@@ -27,8 +27,7 @@ public class VariantAnnotationFactoryTest {
     @Test
     public void canLoadFromTrivialVCFInfoField() {
         final String info = "ANN=allele|consequence|severity|gene|geneID|featureType|featureID|"
-                + "transcriptBioType|rank|hgvsCoding|hgvsProtein|cDNAPosAndLength|cdsPosAndLength|"
-                + "aaPosAndLength|distance|addition";
+                + "transcriptBioType|rank|hgvsCoding|hgvsProtein|cDNAPosAndLength|cdsPosAndLength|" + "aaPosAndLength|distance|addition";
         final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromVCFInfoField(info);
         assertEquals(1, annotations.size());
         final VariantAnnotation annotation = annotations.get(0);

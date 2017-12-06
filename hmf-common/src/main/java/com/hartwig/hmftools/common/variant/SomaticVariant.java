@@ -112,7 +112,7 @@ public abstract class SomaticVariant implements Variant, AllelicDepth {
         return false;
     }
 
-    public long callerCount() {
+    long callerCount() {
         return callers().size();
     }
 

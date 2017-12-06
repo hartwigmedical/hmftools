@@ -14,7 +14,7 @@ abstract class StructuralVariantPosition implements GenomePosition {
 
     public abstract String id();
 
-    public abstract  byte orientation();
+    public abstract byte orientation();
 
     @Nullable
     public abstract Double alleleFrequency();

@@ -3,8 +3,9 @@ package com.hartwig.hmftools.common.variant;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-class Microhomology {
+final class Microhomology {
 
+    @NotNull
     static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref, @NotNull final String alt) {
         String result =
                 commonPrefix(sequence.substring(position + 1), sequence.substring(position + 1 + ref.length() - 1), ref.length() - 1);
@@ -22,6 +23,7 @@ class Microhomology {
         return result;
     }
 
+    @NotNull
     private static String commonPrefix(String normal, String tumor, int maxLength) {
         int minLength = Math.min(maxLength, Math.min(tumor.length(), normal.length()));
         if (minLength == 0) {

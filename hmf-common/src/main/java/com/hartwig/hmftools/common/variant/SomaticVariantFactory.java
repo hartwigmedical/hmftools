@@ -47,7 +47,7 @@ public final class SomaticVariantFactory {
     }
 
     @NotNull
-    public static String toVCFLine(@NotNull final SomaticVariant variant) {
+    static String toVCFLine(@NotNull final SomaticVariant variant) {
         final String[] values = variant.originalVCFLine().split(VCF_COLUMN_SEPARATOR);
         // KODU: Currently assume only the filter value could change, but this is potentially wrong!
         if (!values[FILTER_COLUMN].trim().equals(variant.filter())) {

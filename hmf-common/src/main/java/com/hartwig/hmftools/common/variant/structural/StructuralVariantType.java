@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-public enum StructuralVariantType {
+import org.jetbrains.annotations.NotNull;
 
+public enum StructuralVariantType {
     BND,
     INV,
     DEL,
@@ -9,7 +10,8 @@ public enum StructuralVariantType {
     DUP,
     UNKNOWN;
 
-    public static StructuralVariantType fromAttribute(String svType) {
+    @NotNull
+    public static StructuralVariantType fromAttribute(@NotNull String svType) {
         if (svType.startsWith("DUP")) {
             return DUP;
         }

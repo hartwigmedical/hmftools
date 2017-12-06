@@ -27,7 +27,6 @@ public class EnrichedSomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
 
-
     @NotNull
     private final PurityAdjuster purityAdjuster;
     @NotNull
@@ -49,7 +48,6 @@ public class EnrichedSomaticVariantFactory {
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<SomaticVariant> variants) {
-
         final List<EnrichedSomaticVariant> result = variants.stream().map(this::enrich).collect(Collectors.toList());
         if (unmatchedAnnotations > 0) {
             LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
@@ -58,6 +56,7 @@ public class EnrichedSomaticVariantFactory {
         return result;
     }
 
+    @NotNull
     private EnrichedSomaticVariant enrich(@NotNull final SomaticVariant variant) {
         final Builder builder = createBuilder(variant);
 
@@ -77,7 +76,7 @@ public class EnrichedSomaticVariantFactory {
         return builder.build();
     }
 
-    private Builder addAnnotations(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+    private void addAnnotations(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
         final List<VariantAnnotation> annotations = variant.annotations();
         if (!annotations.isEmpty()) {
             // MIVO: get the first annotation for now, eventually we will want all
@@ -92,10 +91,10 @@ public class EnrichedSomaticVariantFactory {
             builder.gene(variantAnnotation.gene());
             builder.effect(variantAnnotation.consequenceString());
         }
-        return builder;
     }
 
-    private Builder createBuilder(@NotNull final SomaticVariant variant) {
+    @NotNull
+    private static Builder createBuilder(@NotNull final SomaticVariant variant) {
         String cosmicId = variant.cosmicID();
         String dbsnpId = variant.dbsnpID();
 
@@ -118,7 +117,7 @@ public class EnrichedSomaticVariantFactory {
                 .adjustedVAF(0);
     }
 
-    private Builder addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+    private void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
         long positionBeforeEvent = variant.position();
         long start = Math.max(positionBeforeEvent - 100, 1);
         long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
@@ -132,15 +131,14 @@ public class EnrichedSomaticVariantFactory {
 
         if (variant.ref().length() != variant.alt().length()) {
             final String microhomology = Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt());
-            return builder.microhomology(microhomology);
+            builder.microhomology(microhomology);
         }
-        return builder;
     }
 
-    private Builder addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+    private void addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
         final ReferenceSequence sequence =
                 reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
-        return builder.trinucleotideContext(sequence.getBaseString());
+        builder.trinucleotideContext(sequence.getBaseString());
     }
 
     private Builder inHighConfidenceRegion(@NotNull final Builder builder) {
