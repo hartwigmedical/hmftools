@@ -68,7 +68,7 @@ public class ConfigSupplier {
     private static final double PURITY_INCREMENT_DEFAULT = 0.01;
     private static final double NORM_FACTOR_INCREMENTS_DEFAULT = 0.01;
 
-    public static void addOptions(Options options) {
+    public static void addOptions(@NotNull Options options) {
         options.addOption(REF_SAMPLE, true, "The reference sample name. Defaults to value in metadata.");
         options.addOption(TUMOR_SAMPLE, true, "The tumor sample name. Defaults to value in metadata.");
         options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run.");
@@ -178,34 +178,42 @@ public class ConfigSupplier {
         fittingConfig = createFittingConfig(cmd);
     }
 
+    @NotNull
     public CommonConfig commonConfig() {
         return commonConfig;
     }
 
+    @NotNull
     public SomaticConfig somaticConfig() {
         return somaticConfig;
     }
 
+    @NotNull
     public StructuralVariantConfig structuralVariantConfig() {
         return structuralVariantConfig;
     }
 
+    @NotNull
     public BAFConfig bafConfig() {
         return bafConfig;
     }
 
+    @NotNull
     public CircosConfig circosConfig() {
         return circosConfig;
     }
 
+    @NotNull
     public DBConfig dbConfig() {
         return dbConfig;
     }
 
+    @NotNull
     public FittingConfig fittingConfig() {
         return fittingConfig;
     }
 
+    @NotNull
     public SmoothingConfig smoothingConfig() {
         return smoothingConfig;
     }
