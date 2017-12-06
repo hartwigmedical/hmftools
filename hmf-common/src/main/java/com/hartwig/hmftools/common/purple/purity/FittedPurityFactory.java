@@ -92,14 +92,15 @@ public class FittedPurityFactory {
         Collections.sort(bestScoringPerPurity);
     }
 
+    @NotNull
     private Callable<List<FittedPurity>> callableFitPurity(final double purity, final double totalBAFCount,
             @NotNull final Collection<ObservedRegion> observedRegions) {
         return () -> fitPurity(purity, totalBAFCount, observedRegions);
     }
 
+    @NotNull
     private List<FittedPurity> fitPurity(final double purity, final double totalBAFCount,
             @NotNull final Collection<ObservedRegion> observedRegions) {
-
         final List<FittedPurity> fittedPurities = Lists.newArrayList();
         for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
             double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);

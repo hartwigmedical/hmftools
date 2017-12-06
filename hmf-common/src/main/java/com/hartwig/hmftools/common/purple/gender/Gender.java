@@ -22,7 +22,9 @@ public enum Gender {
 
     @NotNull
     public static Gender fromAmber(@NotNull final Multimap<String, AmberBAF> bafs) {
-        return bafs.get("X").stream().filter(x -> x.position() > 2_699_520 && x.position() < 155_260_560).count() > MIN_BAF_COUNT ? FEMALE : MALE;
+        return bafs.get("X").stream().filter(x -> x.position() > 2_699_520 && x.position() < 155_260_560).count() > MIN_BAF_COUNT
+                ? FEMALE
+                : MALE;
     }
 
     @NotNull

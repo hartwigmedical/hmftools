@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -17,7 +18,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-class StructuralVariantLegsFactory {
+final class StructuralVariantLegsFactory {
 
     @NotNull
     static List<StructuralVariantLegs> create(@NotNull List<StructuralVariant> variants) {
@@ -27,16 +28,20 @@ class StructuralVariantLegsFactory {
             final StructuralVariantLeg approvedLeg = reduce(duplicatePosition, duplicates.get(duplicatePosition));
             boolean match = false;
             for (ModifiableStructuralVariantLegs legs : duplicates.get(duplicatePosition)) {
-                if (legs.start().filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
-                    if (legs.start().get().equals(approvedLeg)) {
+                Optional<StructuralVariantLeg> start = legs.start();
+                if (start.filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
+                    assert start.isPresent();
+                    if (start.get().equals(approvedLeg)) {
                         match = true;
                     } else {
                         legs.setStart(Optional.empty());
                     }
                 }
 
-                if (legs.end().filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
-                    if (legs.end().get().equals(approvedLeg)) {
+                Optional<StructuralVariantLeg> end = legs.end();
+                if (end.filter(x -> isDuplicate(duplicatePosition, x)).isPresent()) {
+                    assert end.isPresent();
+                    if (end.get().equals(approvedLeg)) {
                         match = true;
                     } else {
                         legs.setEnd(Optional.empty());
@@ -69,8 +74,8 @@ class StructuralVariantLegsFactory {
     }
 
     @NotNull
+    @VisibleForTesting
     static StructuralVariantLeg reduce(@NotNull final List<StructuralVariantLeg> legs) {
-
         double maxPositive = 0;
         double maxNegative = 0;
 
@@ -106,7 +111,6 @@ class StructuralVariantLegsFactory {
     @NotNull
     private static Multimap<GenomePosition, ModifiableStructuralVariantLegs> findDuplicates(
             @NotNull final Collection<ModifiableStructuralVariantLegs> legs) {
-
         final ListMultimap<GenomePosition, ModifiableStructuralVariantLegs> result = ArrayListMultimap.create();
         for (ModifiableStructuralVariantLegs leg : legs) {
             leg.start().ifPresent(x -> result.put(GenomePositions.create(x), leg));
@@ -137,10 +141,11 @@ class StructuralVariantLegsFactory {
                 }
             }
         }
-        return result;
 
+        return result;
     }
 
+    @NotNull
     private static StructuralVariantLeg create(@NotNull String chromosome, long position, int orientation, double vaf) {
         return ImmutableStructuralVariantLeg.builder().chromosome(chromosome).position(position).orientation(orientation).vaf(vaf).build();
     }

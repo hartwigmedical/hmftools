@@ -44,6 +44,7 @@ public class PurityAdjuster {
         return normFactor;
     }
 
+    @SuppressWarnings("unused")
     public double impliedPloidy() {
         // KODU: Dont delete per request of Mr Jon Baber!!!
         return (1 - normFactor()) / purity() / normFactor() * 2 + 2;
@@ -64,12 +65,12 @@ public class PurityAdjuster {
         return purityAdjustedFrequency(copyNumber, observedFrequency, 0);
     }
 
-    public double purityAdjustedVAF(final String chromosome, final double copyNumber, final double observedFrequency) {
+    public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
         int normalCopyNumber = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 2 : 1;
         return purityAdjustedFrequency(copyNumber, observedFrequency, normalCopyNumber, 0);
     }
 
-    public double purityAdjustedBAF(final String chromosomeName, final double copyNumber, final double observedFrequency) {
+    public double purityAdjustedBAF(@NotNull final String chromosomeName, final double copyNumber, final double observedFrequency) {
         final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
 
         if (!chromosome.isHomologous(gender) || (Doubles.positive(observedFrequency) && Doubles.lessOrEqual(copyNumber, 1))) {

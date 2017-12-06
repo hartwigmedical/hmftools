@@ -31,7 +31,6 @@ class ExtendDiploid {
         int moveIndex(int index) {
             return indexOperator.applyAsInt(index);
         }
-
     }
 
     private static final int MIN_BAF_COUNT_TO_WEIGH_WITH_BAF = 50;
@@ -102,7 +101,6 @@ class ExtendDiploid {
     }
 
     private boolean merge(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction, int targetIndex) {
-
         final CombinedRegion target = regions.get(targetIndex);
         final FittedRegion neighbour = regions.get(direction.moveIndex(targetIndex)).region();
 
@@ -163,7 +161,6 @@ class ExtendDiploid {
 
     private boolean pushThroughDubiousRegion(int minTumorCount, @NotNull final List<CombinedRegion> regions,
             @NotNull final Direction direction, int targetIndex) {
-
         int dubiousCount = 0;
         final CombinedRegion target = regions.get(targetIndex);
         for (int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i)) {
@@ -198,7 +195,6 @@ class ExtendDiploid {
     }
 
     private static int nextIndex(@NotNull final List<CombinedRegion> regions) {
-
         int indexOfLargestBaf = -1;
         int indexOfLargestLength = -1;
 
@@ -225,7 +221,8 @@ class ExtendDiploid {
         return indexOfLargestBaf > -1 ? indexOfLargestBaf : indexOfLargestLength;
     }
 
-    private static String toString(FittedRegion region) {
+    @NotNull
+    private static String toString(@NotNull FittedRegion region) {
         return MoreObjects.toStringHelper("FittedRegion")
                 .omitNullValues()
                 .add("chromosome", region.chromosome())

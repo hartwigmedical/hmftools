@@ -21,7 +21,6 @@ public enum FittedPurityFile {
 
     @NotNull
     public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-
         final String[] values = values(basePath, sample);
         return ImmutablePurityContext.builder()
                 .bestPerPurity(FittedPurityRangeFile.read(basePath, sample))
@@ -31,7 +30,6 @@ public enum FittedPurityFile {
                 .status(status(values))
                 .polyClonalProportion(polyClonalProportion(values))
                 .build();
-
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)

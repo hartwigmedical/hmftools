@@ -58,7 +58,6 @@ class ExtendGermline {
     @NotNull
     private List<CombinedRegion> extendGermline(@NotNull final EnumSet<GermlineStatus> eligibleStatus,
             @NotNull final List<CombinedRegion> regions) {
-
         final List<CombinedRegion> result = Lists.newArrayList();
         for (int i = 0; i < regions.size(); i++) {
             final CombinedRegion parent = regions.get(i);
@@ -112,13 +111,11 @@ class ExtendGermline {
 
     static boolean isValidAmplification(double parentCopyNumber, double lowerBound, @NotNull final FittedRegion child,
             @Nullable final FittedRegion next) {
-
         boolean adjacentToCentromere =
                 child.support() == SegmentSupport.CENTROMERE || (next != null && next.support() == SegmentSupport.CENTROMERE);
         boolean adjacentToSV = child.support().isSV() || (next != null && next.support().isSV());
         return adjacentToSV && !adjacentToCentromere && Doubles.greaterOrEqual(lowerBound, MIN_AMPLIFICATION_COPYNUMBER)
                 && Doubles.greaterOrEqual(lowerBound, parentCopyNumber + AMPLIFICATION_TOLERANCE);
-
     }
 
     @NotNull
@@ -167,7 +164,6 @@ class ExtendGermline {
 
     @NotNull
     private static List<CombinedRegion> extendRight(@NotNull final List<CombinedRegion> children) {
-
         int i = 0;
         while (i < children.size() - 1) {
             final CombinedRegion target = children.get(i);

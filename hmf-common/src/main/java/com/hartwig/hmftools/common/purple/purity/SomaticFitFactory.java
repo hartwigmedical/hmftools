@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 class SomaticFitFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticFitFactory.class);
-    private static final int MIN_PEAK_COUNT = 100;
 
     private final int minPeak;
 
@@ -21,8 +20,8 @@ class SomaticFitFactory {
         this.minPeak = minPeak;
     }
 
+    @NotNull
     Optional<FittedPurity> fromSomatics(@NotNull final List<FittedPurity> candidates, @NotNull final List<PurpleSomaticVariant> variants) {
-
         double minPurity = candidates.stream().mapToDouble(FittedPurity::purity).min().orElse(0);
         double maxPurity = candidates.stream().mapToDouble(FittedPurity::purity).max().orElse(1);
 
@@ -42,6 +41,7 @@ class SomaticFitFactory {
         return Optional.empty();
     }
 
+    @NotNull
     private static FittedPurity closest(double impliedPurity, @NotNull final List<FittedPurity> candidates) {
         FittedPurity closest = candidates.get(0);
         double closestDistance = Math.abs(closest.purity() - impliedPurity);

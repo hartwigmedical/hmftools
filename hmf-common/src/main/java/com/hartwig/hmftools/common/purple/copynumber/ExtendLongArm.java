@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-class ExtendLongArm {
+final class ExtendLongArm {
 
     @NotNull
     static List<CombinedRegion> extendLongArm(@NotNull final List<CombinedRegion> regions) {
@@ -51,7 +51,5 @@ class ExtendLongArm {
                 targetIndex--;
             }
         }
-
     }
-
 }

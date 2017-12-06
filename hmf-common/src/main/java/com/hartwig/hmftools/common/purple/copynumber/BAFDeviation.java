@@ -20,7 +20,7 @@ class BAFDeviation {
         return true;
     }
 
-    static double allowedBAFDeviation(int bafCount) {
+    private static double allowedBAFDeviation(int bafCount) {
         return 1d / Math.max(1, bafCount) * 0.35 + 0.03;
     }
 }

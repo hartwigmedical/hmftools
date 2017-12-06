@@ -21,17 +21,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
 
+    @NotNull
     private final PurityAdjuster purityAdjuster;
+    @NotNull
     private final Function<T, Double> copyNumberExtractor;
 
-    public StructuralVariantPloidyFactory(final PurityAdjuster purityAdjuster, final Function<T, Double> copyNumberExtractor) {
+    public StructuralVariantPloidyFactory(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final Function<T, Double> copyNumberExtractor) {
         this.purityAdjuster = purityAdjuster;
         this.copyNumberExtractor = copyNumberExtractor;
     }
 
     @NotNull
-    public List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> variants, @NotNull final Multimap<String, T> copyNumbers) {
-
+    public List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> variants,
+            @NotNull final Multimap<String, T> copyNumbers) {
         final List<StructuralVariantPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variants);
 
@@ -65,11 +68,11 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
         double totalWeight = startWeight + endWeight;
         double averagePloidy = (startWeight * startPloidy + endWeight * endPloidy) / totalWeight;
 
-        start.ifPresent(modifiableStructuralVariantPloidy -> result.add(modifiableStructuralVariantPloidy.setWeight(totalWeight)
-                .setAverageImpliedPloidy(averagePloidy)));
+        start.ifPresent(modifiableStructuralVariantPloidy -> result.add(
+                modifiableStructuralVariantPloidy.setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy)));
 
-        end.ifPresent(modifiableStructuralVariantPloidy -> result.add(modifiableStructuralVariantPloidy.setWeight(totalWeight)
-                .setAverageImpliedPloidy(averagePloidy)));
+        end.ifPresent(modifiableStructuralVariantPloidy -> result.add(
+                modifiableStructuralVariantPloidy.setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy)));
 
         Collections.sort(result);
         return result;
@@ -78,10 +81,11 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
     @VisibleForTesting
     @NotNull
     Optional<ModifiableStructuralVariantPloidy> create(@NotNull StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
-
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.position() - 1);
-        final Optional<Double> left = selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
-        final Optional<Double> right = selector.select(leg).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
+        final Optional<Double> left =
+                selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
+        final Optional<Double> right =
+                selector.select(leg).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
 
         final Optional<Double> correct;
         final Optional<Double> alternate;
@@ -119,7 +123,7 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
                 .setWeight(weight));
     }
 
-    private double purityAdjustedPloidy(String chromosome, double vaf, double copyNumber) {
+    private double purityAdjustedPloidy(@NotNull String chromosome, double vaf, double copyNumber) {
         double adjustedVAF = purityAdjuster.purityAdjustedVAF(chromosome, copyNumber, vaf);
         return adjustedVAF * copyNumber;
     }

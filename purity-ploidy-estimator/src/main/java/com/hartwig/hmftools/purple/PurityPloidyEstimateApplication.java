@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProproption;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
 import java.io.IOException;
@@ -202,9 +202,7 @@ public class PurityPloidyEstimateApplication {
                     .bestFit(bestFitFactory.bestFit())
                     .bestPerPurity(fittedPurityFactory.bestFitPerPurity())
                     .status(bestFitFactory.status())
-                    .gender(amberGender)
-                    .score(bestFitFactory.score())
-                    .polyClonalProportion(polyclonalProproption(copyNumbers))
+                    .gender(amberGender).score(bestFitFactory.score()).polyClonalProportion(polyclonalProportion(copyNumbers))
                     .build();
 
             LOGGER.info("Generating QC Stats");

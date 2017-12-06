@@ -30,7 +30,6 @@ public class CombinedRegionTest {
 
     @Test
     public void testObservedTumorRatioCountSummationOnlyAppliesToSomatic() {
-
         final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
                 .observedTumorRatioCount(2)
                 .status(GermlineStatus.DIPLOID)

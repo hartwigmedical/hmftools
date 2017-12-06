@@ -47,6 +47,7 @@ public class BestFitFactory {
                     bestFit = lowestScore;
                 } else {
                     status = FittedPurityStatus.SOMATIC;
+                    assert somaticFit.isPresent();
                     bestFit = somaticFit.get();
                 }
             }

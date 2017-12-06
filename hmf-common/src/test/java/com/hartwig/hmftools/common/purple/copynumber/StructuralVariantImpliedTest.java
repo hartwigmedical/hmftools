@@ -121,7 +121,8 @@ public class StructuralVariantImpliedTest {
     }
 
     @NotNull
-    private static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber, @NotNull final Optional<Double> rightCopyNumber) {
+    private static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
+            @NotNull final Optional<Double> rightCopyNumber) {
         return ImmutableStructuralVariantPloidy.builder()
                 .chromosome(CHROMOSOME)
                 .position(1)

@@ -32,7 +32,7 @@ class CombinedRegion implements GenomeRegion {
         regions.add(region);
     }
 
-    public boolean isBafWeighted() {
+    boolean isBafWeighted() {
         return bafWeighted;
     }
 
@@ -129,7 +129,6 @@ class CombinedRegion implements GenomeRegion {
     }
 
     private void applyWeightedAverage(final FittedRegion region, long currentWeight, long newWeight) {
-
         if (!Doubles.isZero(region.observedBAF())) {
             combined.setObservedBAF(weightedAverage(currentWeight, combined.observedBAF(), newWeight, region.observedBAF()));
         }

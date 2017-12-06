@@ -14,16 +14,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-
-class SomaticPeakFactory {
+final class SomaticPeakFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticPeakFactory.class);
     private static final double KERNEL_BANDWIDTH = 0.03;
 
+    @NotNull
     static List<SomaticPeak> findSomaticPeaks(@NotNull final List<? extends AllelicDepth> variants) {
         return findPeaks(variants.stream().map(AllelicDepth::alleleFrequency).collect(Collectors.toList()));
     }
 
+    @NotNull
     static List<SomaticPeak> findPeaks(@NotNull final List<Double> sample) {
         final KernelEstimator estimator = new KernelEstimator(0.001, KERNEL_BANDWIDTH);
         sample.forEach(x -> estimator.addValue(x, 1.0D));

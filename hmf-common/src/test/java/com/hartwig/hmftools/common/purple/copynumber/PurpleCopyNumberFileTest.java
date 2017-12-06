@@ -40,7 +40,7 @@ public class PurpleCopyNumberFileTest {
     }
 
     @NotNull
-    private List<PurpleCopyNumber> create(int count) {
+    private static List<PurpleCopyNumber> create(int count) {
         Random random = new Random();
         final List<PurpleCopyNumber> result = Lists.newArrayList();
         for (int i = 0; i < count; i++) {

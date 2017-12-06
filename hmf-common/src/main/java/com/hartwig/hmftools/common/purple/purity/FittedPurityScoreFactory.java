@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FittedPurityScoreFactory {
+public final class FittedPurityScoreFactory {
 
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
@@ -38,7 +38,7 @@ public class FittedPurityScoreFactory {
         return builder.build();
     }
 
-    public static double polyclonalProproption(@NotNull final Collection<PurpleCopyNumber> regions) {
+    public static double polyclonalProportion(@NotNull final Collection<PurpleCopyNumber> regions) {
         int polyclonalCount = 0;
         int totalCount = 0;
 
