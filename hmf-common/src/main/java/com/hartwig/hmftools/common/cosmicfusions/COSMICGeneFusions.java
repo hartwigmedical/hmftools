@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class COSMICGeneFusions {
 
@@ -35,6 +36,7 @@ public class COSMICGeneFusions {
         return input.contains("_") ? input.split("_")[0] : input;
     }
 
+    @Nullable
     private static String transcript(final String input) {
         if (input.contains("_")) {
             final String transcript = input.split("_", 2)[1];

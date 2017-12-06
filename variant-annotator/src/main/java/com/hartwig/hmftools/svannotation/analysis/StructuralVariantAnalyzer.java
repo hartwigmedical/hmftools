@@ -24,7 +24,6 @@ import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class StructuralVariantAnalyzer {
 
@@ -96,11 +95,11 @@ public class StructuralVariantAnalyzer {
     private List<GeneFusion> processFusions(final List<StructuralVariantAnnotation> annotations) {
 
         // left is upstream, right is downstream
-        final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
 
+        final List<List<Pair<Transcript, Transcript>>> fusionsPerVariant = Lists.newArrayList();
         for (final StructuralVariantAnnotation sv : annotations) {
 
-            final List<Pair<Transcript, Transcript>> svFusions = Lists.newArrayList();
+            final List<Pair<Transcript, Transcript>> fusions = Lists.newArrayList();
 
             for (final GeneAnnotation g : sv.getStart()) {
 
@@ -116,10 +115,22 @@ public class StructuralVariantAnalyzer {
                     for (final Transcript t1 : intronic(g.getTranscripts())) {
                         for (final Transcript t2 : intronic(o.getTranscripts())) {
 
+                            final boolean sameGene = t1.getGeneName().equals(t2.getGeneName());
+                            if (sameGene) {
+                                // skip fusions between different transcripts in the same gene,
+                                if (!t1.getTranscriptId().equals(t2.getTranscriptId())) {
+                                    continue;
+                                }
+                                // skip fusions within the same intron
+                                if (intronicDisruption(t1, t2)) {
+                                    continue;
+                                }
+                            }
+
                             if (g_upstream && t1.getExonUpstreamPhase() == t2.getExonDownstreamPhase()) {
-                                svFusions.add(Pair.of(t1, t2));
+                                fusions.add(Pair.of(t1, t2));
                             } else if (!g_upstream && t2.getExonUpstreamPhase() == t1.getExonDownstreamPhase()) {
-                                svFusions.add(Pair.of(t2, t1));
+                                fusions.add(Pair.of(t2, t1));
                             }
 
                         }
@@ -127,66 +138,52 @@ public class StructuralVariantAnalyzer {
                 }
             }
 
-            // from here, select either the canonical -> canonical transcript fusion
-            // then the longest where one end is canonical
-            // then the longest combined transcript
-
-            // TODO: should we create a GeneFusion for every compatible transcript pairing and mark only the longest here as reportable?
-
-            Optional<Pair<Transcript, Transcript>> fusion =
-                    svFusions.stream().filter(p -> p.getLeft().isCanonical() && p.getRight().isCanonical()).findFirst();
-
-            if (fusion.isPresent()) {
-                fusions.add(fusion.get());
-                continue;
-            }
-
-            fusion = svFusions.stream()
-                    .filter(p -> p.getLeft().isCanonical() || p.getRight().isCanonical())
-                    .sorted(Comparator.comparingInt(a -> a.getLeft().getExonMax() + a.getRight().getExonMax()))
-                    .reduce((a, b) -> b); // get longest
-
-            if (fusion.isPresent()) {
-                fusions.add(fusion.get());
-                continue;
-            }
-
-            svFusions.stream()
-                    .sorted(Comparator.comparingInt(a -> a.getLeft().getExonMax() + a.getRight().getExonMax()))
-                    .reduce((a, b) -> b) // get longest
-                    .ifPresent(fusions::add);
+            fusionsPerVariant.add(fusions);
         }
 
         // transform results to reported details
 
         final List<GeneFusion> result = Lists.newArrayList();
-        for (final Pair<Transcript, Transcript> fusion : fusions) {
-            final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
-            final boolean sameGene = upstream.getGeneName().equals(downstream.getGeneName());
+        for (final List<Pair<Transcript, Transcript>> fusions : fusionsPerVariant) {
 
-            final COSMICGeneFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
-            boolean promiscuousEnd = false;
+            // from here, select either the canonical -> canonical transcript fusion
+            // then the longest where one end is canonical
+            // then the longest combined transcript
 
-            if (sameGene) {
-                if (!intronicDisruption(upstream, downstream) && isPromiscuous(upstream.getGeneAnnotation())) {
-                    // okay
-                } else {
-                    continue;
-                }
-            } else if (cosmic != null) {
-                // in cosmic fusion list
-            } else if (promiscuousEnd = oneEndPromiscuous(upstream, downstream)) {
-                // one end is promiscuous
+            Optional<Pair<Transcript, Transcript>> reportableFusion =
+                    fusions.stream().filter(p -> p.getLeft().isCanonical() && p.getRight().isCanonical()).findFirst();
+
+            if (!reportableFusion.isPresent()) {
+                reportableFusion = fusions.stream()
+                        .filter(p -> p.getLeft().isCanonical() || p.getRight().isCanonical())
+                        .sorted(Comparator.comparingInt(a -> a.getLeft().getExonMax() + a.getRight().getExonMax()))
+                        .reduce((a, b) -> b); // get longest
             }
 
-            final GeneFusion details = ImmutableGeneFusion.builder()
-                    .reportable(cosmic != null || promiscuousEnd)
-                    .upstreamLinkedAnnotation(upstream)
-                    .downstreamLinkedAnnotation(downstream)
-                    .cosmicURL(cosmic != null ? cosmic.cosmicURL() : "")
-                    .build();
+            if (!reportableFusion.isPresent()) {
+                reportableFusion = fusions.stream()
+                        .sorted(Comparator.comparingInt(a -> a.getLeft().getExonMax() + a.getRight().getExonMax()))
+                        .reduce((a, b) -> b); // get longest
+            }
 
-            result.add(details);
+            for (final Pair<Transcript, Transcript> fusion : fusions) {
+                final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
+
+                final COSMICGeneFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
+                final boolean promiscuousEnd = oneEndPromiscuous(upstream, downstream);
+                final boolean reportable =
+                        reportableFusion.isPresent() && reportableFusion.get() == fusion && (cosmic != null || promiscuousEnd);
+
+                final GeneFusion details = ImmutableGeneFusion.builder()
+                        .reportable(reportable)
+                        .upstreamLinkedAnnotation(upstream)
+                        .downstreamLinkedAnnotation(downstream)
+                        .cosmicURL(cosmic != null ? cosmic.cosmicURL() : "")
+                        .build();
+
+                result.add(details);
+            }
+
         }
 
         return result;
