@@ -21,55 +21,57 @@ public class StructuralVariantPloidyTest {
 
     @Test
     public void testCompleteImpliedCopyNumbers() {
-        final StructuralVariantPloidy positive = create(1, Optional.of(4d), Optional.of(3d));
+        final StructuralVariantLegPloidy positive = create(1, Optional.of(4d), Optional.of(3d));
         assertLeft(4d, 1d, positive);
         assertRight(3d, 1d, positive);
 
-        final StructuralVariantPloidy negative = create(-1, Optional.of(3d), Optional.of(4d));
+        final StructuralVariantLegPloidy negative = create(-1, Optional.of(3d), Optional.of(4d));
         assertLeft(3d, 1d, negative);
         assertRight(4d, 1d, negative);
     }
 
     @Test
     public void testImpliedCopyNumberMissingLeft() {
-        final StructuralVariantPloidy positive = create(1, Optional.empty(), Optional.of(3d));
+        final StructuralVariantLegPloidy positive = create(1, Optional.empty(), Optional.of(3d));
         assertLeft(4d, 1d, positive);
         assertRight(0d, 0d, positive);
 
-        final StructuralVariantPloidy negative = create(-1, Optional.empty(), Optional.of(4d));
+        final StructuralVariantLegPloidy negative = create(-1, Optional.empty(), Optional.of(4d));
         assertLeft(3d, 1d, negative);
         assertRight(0d, 0d, negative);
     }
 
     @Test
     public void testImpliedCopyNumberMissingRight() {
-        final StructuralVariantPloidy positive = create(1, Optional.of(4d), Optional.empty());
+        final StructuralVariantLegPloidy positive = create(1, Optional.of(4d), Optional.empty());
         assertLeft(0d, 0d, positive);
         assertRight(3d, 1d, positive);
 
-        final StructuralVariantPloidy negative = create(-1, Optional.of(3d), Optional.empty());
+        final StructuralVariantLegPloidy negative = create(-1, Optional.of(3d), Optional.empty());
         assertLeft(0d, 0d, negative);
         assertRight(4d, 1d, negative);
     }
 
-    private static void assertLeft(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantPloidy ploidy) {
+    private static void assertLeft(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantLegPloidy ploidy) {
         assertEquals(expectedCopyNumber, ploidy.impliedLeftCopyNumber(), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedLeftCopyNumberWeight(), EPSILON);
     }
 
-    private static void assertRight(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantPloidy ploidy) {
+    private static void assertRight(double expectedCopyNumber, double expectedWeight, @NotNull final StructuralVariantLegPloidy ploidy) {
         assertEquals(expectedCopyNumber, ploidy.impliedRightCopyNumber(), EPSILON);
         assertEquals(expectedWeight, ploidy.impliedRightCopyNumberWeight(), EPSILON);
     }
 
     @NotNull
-    private static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
+    private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
-        return ImmutableStructuralVariantPloidy.builder()
+        return ImmutableStructuralVariantLegPloidy.builder()
                 .chromosome(CHROMOSOME)
                 .position(1)
-                .orientation(orientation)
+                .orientation((byte)orientation)
                 .vaf(0.5)
+                .alleleFrequency(0.5)
+                .homology("")
                 .weight(1)
                 .averageImpliedPloidy(PLOIDY)
                 .unweightedImpliedPloidy(PLOIDY)

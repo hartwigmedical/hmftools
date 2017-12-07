@@ -7,8 +7,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyFactory;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,8 +19,8 @@ public class EnrichedStructuralVariantFactory {
     public static List<EnrichedStructuralVariant> enrich(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final List<StructuralVariant> variants) {
 
-        final StructuralVariantPloidyFactory<PurpleCopyNumber> ploidyFactory =
-                new StructuralVariantPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+        final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
+                new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
         for (final StructuralVariant variant : variants) {
@@ -31,15 +31,15 @@ public class EnrichedStructuralVariantFactory {
             final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder =
                     ImmutableEnrichedStructuralVariantLeg.builder().from(variant.end());
 
-            final List<StructuralVariantPloidy> ploidies = ploidyFactory.create(Collections.singletonList(variant), copyNumbers);
+            final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(Collections.singletonList(variant), copyNumbers);
             if (!ploidies.isEmpty()) {
                 double roundedPloidy = round(ploidies.get(0).averageImpliedPloidy());
                 builder.ploidy(roundedPloidy);
             }
 
             if (ploidies.size() == 2) {
-                final StructuralVariantPloidy start = ploidies.get(0);
-                final StructuralVariantPloidy end = ploidies.get(1);
+                final StructuralVariantLegPloidy start = ploidies.get(0);
+                final StructuralVariantLegPloidy end = ploidies.get(1);
 
                 startBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, start)));
                 startBuilder.adjustedCopyNumber(round(adjustedCopyNumber(start)));
@@ -63,13 +63,13 @@ public class EnrichedStructuralVariantFactory {
     }
 
     @Nullable
-    private static Double adjustedVAF(@NotNull final PurityAdjuster purityAdjuster, @NotNull final StructuralVariantPloidy ploidy) {
+    private static Double adjustedVAF(@NotNull final PurityAdjuster purityAdjuster, @NotNull final StructuralVariantLegPloidy ploidy) {
         final Double adjustedCopyNumber = adjustedCopyNumber(ploidy);
         return adjustedCopyNumber == null ? null : purityAdjuster.purityAdjustedVAF(ploidy.chromosome(), adjustedCopyNumber, ploidy.vaf());
     }
 
     @Nullable
-    private static Double adjustedCopyNumber(@NotNull final StructuralVariantPloidy ploidy) {
+    private static Double adjustedCopyNumber(@NotNull final StructuralVariantLegPloidy ploidy) {
 
         if (ploidy.orientation() == 1) {
             return ploidy.leftCopyNumber().orElse(null);
@@ -79,7 +79,7 @@ public class EnrichedStructuralVariantFactory {
     }
 
     @Nullable
-    private static Double adjustedCopyNumberChange(@NotNull final StructuralVariantPloidy ploidy) {
+    private static Double adjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
 
         if (ploidy.leftCopyNumber().isPresent() && ploidy.rightCopyNumber().isPresent()) {
             return ploidy.orientation() == 1

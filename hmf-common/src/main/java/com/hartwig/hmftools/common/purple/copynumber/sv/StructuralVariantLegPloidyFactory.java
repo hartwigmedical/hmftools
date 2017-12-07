@@ -20,23 +20,23 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 
-public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
+public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
     @NotNull
     private final Function<T, Double> copyNumberExtractor;
 
-    public StructuralVariantPloidyFactory(@NotNull final PurityAdjuster purityAdjuster,
+    public StructuralVariantLegPloidyFactory(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Function<T, Double> copyNumberExtractor) {
         this.purityAdjuster = purityAdjuster;
         this.copyNumberExtractor = copyNumberExtractor;
     }
 
     @NotNull
-    public List<StructuralVariantPloidy> create(@NotNull final List<StructuralVariant> variants,
+    public List<StructuralVariantLegPloidy> create(@NotNull final List<StructuralVariant> variants,
             @NotNull final Multimap<String, T> copyNumbers) {
-        final List<StructuralVariantPloidy> result = Lists.newArrayList();
+        final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variants);
 
         for (StructuralVariantLegs leg : allLegs) {
@@ -49,22 +49,22 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
 
     @VisibleForTesting
     @NotNull
-    List<StructuralVariantPloidy> create(@NotNull final StructuralVariantLegs legs, @NotNull final Multimap<String, T> copyNumbers) {
-        final Optional<ModifiableStructuralVariantPloidy> start =
+    List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs, @NotNull final Multimap<String, T> copyNumbers) {
+        final Optional<ModifiableStructuralVariantLegPloidy> start =
                 legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.create(copyNumbers)));
 
-        final Optional<ModifiableStructuralVariantPloidy> end =
+        final Optional<ModifiableStructuralVariantLegPloidy> end =
                 legs.end().flatMap(x -> create(x, GenomeRegionSelectorFactory.create(copyNumbers)));
 
         if (!start.isPresent() && !end.isPresent()) {
             return Collections.emptyList();
         }
 
-        final List<StructuralVariantPloidy> result = Lists.newArrayList();
-        double startWeight = start.map(ModifiableStructuralVariantPloidy::weight).orElse(0D);
-        double startPloidy = start.map(ModifiableStructuralVariantPloidy::unweightedImpliedPloidy).orElse(0D);
-        double endWeight = end.map(ModifiableStructuralVariantPloidy::weight).orElse(0D);
-        double endPloidy = end.map(ModifiableStructuralVariantPloidy::unweightedImpliedPloidy).orElse(0D);
+        final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
+        double startWeight = start.map(ModifiableStructuralVariantLegPloidy::weight).orElse(0D);
+        double startPloidy = start.map(ModifiableStructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D);
+        double endWeight = end.map(ModifiableStructuralVariantLegPloidy::weight).orElse(0D);
+        double endPloidy = end.map(ModifiableStructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D);
 
         double totalWeight = startWeight + endWeight;
         double averagePloidy = (startWeight * startPloidy + endWeight * endPloidy) / totalWeight;
@@ -81,7 +81,7 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
 
     @VisibleForTesting
     @NotNull
-    Optional<ModifiableStructuralVariantPloidy> create(@NotNull StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
+    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.position() - 1);
         final Optional<Double> left =
                 selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);
@@ -115,7 +115,7 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
             weight = 1 / (1 + Math.pow(Math.max(copyNumber, 2) / Math.min(Math.max(copyNumber, 0.01), 2), 2));
         }
 
-        return Optional.of(ModifiableStructuralVariantPloidy.create()
+        return Optional.of(ModifiableStructuralVariantLegPloidy.create()
                 .from(leg)
                 .setVaf(vaf)
                 .setOrientation(leg.orientation())

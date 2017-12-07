@@ -12,8 +12,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
-import com.hartwig.hmftools.common.purple.copynumber.sv.ImmutableStructuralVariantPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidy;
+import com.hartwig.hmftools.common.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -79,8 +79,8 @@ public class StructuralVariantImpliedTest {
 
     @Test
     public void testImpliedCopyNumber() {
-        final StructuralVariantPloidy left = create(1, Optional.of(4d), Optional.empty());
-        final StructuralVariantPloidy right = create(-1, Optional.empty(), Optional.of(5d));
+        final StructuralVariantLegPloidy left = create(1, Optional.of(4d), Optional.empty());
+        final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(5d));
 
         final double bothKnown = StructuralVariantImplied.inferCopyNumberFromStructuralVariants(Optional.of(left), Optional.of(right));
         assertEquals(3.5, bothKnown, EPSILON);
@@ -121,13 +121,15 @@ public class StructuralVariantImpliedTest {
     }
 
     @NotNull
-    private static StructuralVariantPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
+    private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
-        return ImmutableStructuralVariantPloidy.builder()
+        return ImmutableStructuralVariantLegPloidy.builder()
                 .chromosome(CHROMOSOME)
                 .position(1)
-                .orientation(orientation)
+                .orientation((byte) orientation)
                 .vaf(0.5)
+                .alleleFrequency(0.5)
+                .homology("")
                 .weight(1)
                 .averageImpliedPloidy(PLOIDY)
                 .unweightedImpliedPloidy(PLOIDY)
