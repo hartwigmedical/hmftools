@@ -95,11 +95,6 @@ public class DatabaseAccess {
         return purityDAO.readPurityContext(sampleId);
     }
 
-    @Nullable
-    public FittedPurity readFittedPurity(@NotNull final String sampleId) {
-        return purityDAO.readFittedPurity(sampleId);
-    }
-
     public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
     }

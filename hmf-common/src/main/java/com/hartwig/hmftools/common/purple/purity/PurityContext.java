@@ -7,6 +7,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 public abstract class PurityContext {
 
+    public abstract String version();
+    
     public abstract Gender gender();
 
     public abstract FittedPurity bestFit();

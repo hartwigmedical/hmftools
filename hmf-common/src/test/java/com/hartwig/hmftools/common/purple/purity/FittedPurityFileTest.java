@@ -1,12 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.DELIMITER;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.HEADER_PREFIX;
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.bestFit;
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.gender;
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.polyClonalProportion;
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.score;
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.status;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.fromLine;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.toLines;
 
 import static org.junit.Assert.assertEquals;
@@ -22,12 +17,11 @@ import org.junit.Test;
 
 public class FittedPurityFileTest {
 
-    private static final double EPSILON = 1e-10;
-
     @Test
     public void testInputAndOutput() {
         final Random random = new Random();
-        final PurityContext context = ImmutablePurityContext.builder()
+        final PurityContext input = ImmutablePurityContext.builder()
+                .version(random.nextInt() + "a")
                 .bestFit(createRandomPurity(random))
                 .score(createRandomScore(random))
                 .gender(Gender.values()[random.nextInt(Gender.values().length)])
@@ -35,16 +29,12 @@ public class FittedPurityFileTest {
                 .polyClonalProportion(random.nextDouble())
                 .build();
 
-        final List<String> lines = toLines(context);
+        final List<String> lines = toLines(input);
         assertEquals(2, lines.size());
         assertTrue(lines.get(0).startsWith(HEADER_PREFIX));
 
-        final String[] values = lines.get(1).split(DELIMITER);
-        assertEquals(context.bestFit(), bestFit(values));
-        assertEquals(context.score(), score(values));
-        assertEquals(context.gender(), gender(values));
-        assertEquals(context.status(), status(values));
-        assertEquals(context.polyClonalProportion(), polyClonalProportion(values), EPSILON);
+        final PurityContext output = fromLine(lines.get(1));
+        assertEquals(input, output);
     }
 
     @NotNull

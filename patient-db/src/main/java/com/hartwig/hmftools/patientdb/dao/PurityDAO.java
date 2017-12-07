@@ -33,21 +33,6 @@ class PurityDAO {
     }
 
     @Nullable
-    FittedPurity readFittedPurity(@NotNull final String sample) {
-        @Nullable
-        Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
-        return result == null
-                ? null
-                : ImmutableFittedPurity.builder()
-                        .purity(result.getValue(PURITY.PURITY_))
-                        .normFactor(result.getValue(PURITY.NORMFACTOR))
-                        .score(result.getValue(PURITY.SCORE))
-                        .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
-                        .ploidy(result.getValue(PURITY.PLOIDY))
-                        .build();
-    }
-
-    @Nullable
     PurityContext readPurityContext(@NotNull final String sample) {
         @Nullable
         Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
@@ -75,6 +60,7 @@ class PurityDAO {
         return ImmutablePurityContext.builder()
                 .bestFit(purity)
                 .score(score)
+                .version(result.getValue(PURITY.VERSION))
                 .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
                 .status(FittedPurityStatus.valueOf(result.getValue(PURITY.STATUS)))
@@ -90,6 +76,7 @@ class PurityDAO {
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
 
         context.insertInto(PURITY,
+                PURITY.VERSION,
                 PURITY.SAMPLEID,
                 PURITY.PURITY_,
                 PURITY.GENDER,
@@ -107,7 +94,8 @@ class PurityDAO {
                 PURITY.MAXPLOIDY,
                 PURITY.POLYCLONALPROPORTION,
                 PURITY.MODIFIED)
-                .values(sample,
+                .values(purity.version(),
+                        sample,
                         bestFit.purity(),
                         purity.gender().toString(),
                         purity.status().toString(),

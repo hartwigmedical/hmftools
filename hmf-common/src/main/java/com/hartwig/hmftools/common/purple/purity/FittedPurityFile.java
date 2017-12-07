@@ -21,13 +21,21 @@ public enum FittedPurityFile {
 
     @NotNull
     public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String[] values = values(basePath, sample);
+        final String filePath = basePath + File.separator + sample + EXTENSION;
+        final String line =  Files.readAllLines(new File(filePath).toPath()).get(1);
+        return fromLine(line);
+    }
+
+    @NotNull
+    static PurityContext fromLine(@NotNull String line) {
+        final String[] values = line.split(DELIMITER);
         return ImmutablePurityContext.builder()
                 .score(score(values))
                 .bestFit(bestFit(values))
                 .gender(gender(values))
                 .status(status(values))
                 .polyClonalProportion(polyClonalProportion(values))
+                .version(values[14])
                 .build();
     }
 
@@ -40,12 +48,6 @@ public enum FittedPurityFile {
             throws IOException {
         final String filePath = basePath + File.separator + sample + EXTENSION;
         Files.write(new File(filePath).toPath(), toLines(context));
-    }
-
-    @NotNull
-    private static String[] values(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
-        return Files.readAllLines(new File(filePath).toPath()).get(1).split(DELIMITER);
     }
 
     @NotNull
@@ -69,6 +71,7 @@ public enum FittedPurityFile {
                 .add("MaxPloidy")
                 .add("MinDiploidProportion")
                 .add("MaxDiploidProportion")
+                .add("Version")
                 .toString();
     }
 
@@ -90,6 +93,7 @@ public enum FittedPurityFile {
                 .add(String.valueOf(score.maxPloidy()))
                 .add(String.valueOf(score.minDiploidProportion()))
                 .add(String.valueOf(score.maxDiploidProportion()))
+                .add(String.valueOf(context.version()))
                 .toString();
     }
 

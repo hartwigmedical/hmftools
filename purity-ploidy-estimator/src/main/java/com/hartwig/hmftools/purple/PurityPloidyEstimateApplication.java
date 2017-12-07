@@ -215,6 +215,7 @@ public class PurityPloidyEstimateApplication {
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
+                    .version(version.version())
                     .bestFit(bestFitFactory.bestFit())
                     .status(bestFitFactory.status())
                     .gender(amberGender)

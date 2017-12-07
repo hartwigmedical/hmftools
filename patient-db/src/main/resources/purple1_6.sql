@@ -53,3 +53,7 @@ ALTER TABLE structuralVariant
     ADD COLUMN adjustedEndCopyNumber DOUBLE PRECISION AFTER adjustedStartCopyNumber,
     ADD COLUMN adjustedStartCopyNumberChange DOUBLE PRECISION AFTER adjustedEndCopyNumber,
     ADD COLUMN adjustedEndCopyNumberChange DOUBLE PRECISION AFTER adjustedStartCopyNumberChange;
+
+
+ALTER TABLE purity
+    ADD COLUMN version VARCHAR(255) NOT NULL AFTER modified;
