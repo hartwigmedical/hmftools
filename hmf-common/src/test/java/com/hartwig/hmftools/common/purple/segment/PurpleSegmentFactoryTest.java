@@ -22,13 +22,13 @@ import org.junit.Test;
 
 public class PurpleSegmentFactoryTest {
     private static final ChromosomeLength CHROMOSOME_LENGTH =
-            ImmutableChromosomeLength.builder().chromosome("1").position(10_000_000).build();
+            ImmutableChromosomeLength.builder().chromosome("1").length(10_000_000).build();
 
     @Test
     public void testEmpty() {
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, Collections.emptyList());
         assertEquals(1, segments.size());
-        assertPurpleSegment(segments.get(0), 1, CHROMOSOME_LENGTH.position(), true, TELOMERE);
+        assertPurpleSegment(segments.get(0), 1, CHROMOSOME_LENGTH.length(), true, TELOMERE);
     }
 
     @Test
@@ -37,7 +37,7 @@ public class PurpleSegmentFactoryTest {
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, clusters);
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), false, BND);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.length(), false, BND);
     }
 
     @Test
@@ -46,7 +46,7 @@ public class PurpleSegmentFactoryTest {
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, BND);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.length(), true, BND);
     }
 
     @Test
@@ -55,7 +55,7 @@ public class PurpleSegmentFactoryTest {
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, clusters);
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), false, MULTIPLE);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.length(), false, MULTIPLE);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class PurpleSegmentFactoryTest {
         assertEquals(3, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, 19990, false, BND);
-        assertPurpleSegment(segments.get(2), 19991, CHROMOSOME_LENGTH.position(), false, BND);
+        assertPurpleSegment(segments.get(2), 19991, CHROMOSOME_LENGTH.length(), false, BND);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class PurpleSegmentFactoryTest {
         final List<PurpleSegment> segments = PurpleSegmentFactory.create(CHROMOSOME_LENGTH, Lists.newArrayList(cluster));
         assertEquals(2, segments.size());
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
-        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.position(), true, NONE);
+        assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_LENGTH.length(), true, NONE);
     }
 
     private static void assertPurpleSegment(@NotNull final PurpleSegment victim, long start, long end, boolean ratioSupport,

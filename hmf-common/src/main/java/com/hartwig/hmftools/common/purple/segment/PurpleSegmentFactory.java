@@ -76,7 +76,7 @@ public final class PurpleSegmentFactory {
             }
         }
 
-        result.add(segment.setEnd(chromosome.position()));
+        result.add(segment.setEnd(chromosome.length()));
         return result;
     }
 

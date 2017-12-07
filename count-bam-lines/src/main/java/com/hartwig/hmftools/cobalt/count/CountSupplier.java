@@ -103,7 +103,7 @@ public class CountSupplier {
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for (ChromosomeLength chromosome : lengths) {
             final ChromosomeReadCount callable =
-                    new ChromosomeReadCount(file, readerFactory, chromosome.chromosome(), chromosome.position(), windowSize,
+                    new ChromosomeReadCount(file, readerFactory, chromosome.chromosome(), chromosome.length(), windowSize,
                             minMappingQuality);
             futures.add(executorService.submit(callable));
         }

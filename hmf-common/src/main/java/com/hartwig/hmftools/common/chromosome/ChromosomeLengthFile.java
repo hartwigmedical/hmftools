@@ -45,11 +45,11 @@ public class ChromosomeLengthFile {
     @NotNull
     private static ChromosomeLength fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableChromosomeLength.builder().chromosome(values[0]).position(Long.valueOf(values[1])).build();
+        return ImmutableChromosomeLength.builder().chromosome(values[0]).length(Long.valueOf(values[1])).build();
     }
 
     @NotNull
     private static String toString(@NotNull final ChromosomeLength ratio) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome())).add(String.valueOf(ratio.position())).toString();
+        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome())).add(String.valueOf(ratio.length())).toString();
     }
 }

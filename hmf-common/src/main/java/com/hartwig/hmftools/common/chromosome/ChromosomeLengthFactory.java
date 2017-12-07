@@ -23,7 +23,7 @@ public final class ChromosomeLengthFactory {
         final Map<String, ChromosomeLength> result = Maps.newHashMap();
         for (String chromosome : position.keySet()) {
             long max = position.get(chromosome).stream().mapToLong(x -> x.position() + windowSize - 1).max().orElse(0L);
-            result.put(chromosome, ImmutableChromosomeLength.builder().chromosome(chromosome).position(max).build());
+            result.put(chromosome, ImmutableChromosomeLength.builder().chromosome(chromosome).length(max).build());
         }
 
         return result;
@@ -43,7 +43,7 @@ public final class ChromosomeLengthFactory {
             if (!excludedSequences.contains(chromosome)) {
                 results.add(ImmutableChromosomeLength.builder()
                         .chromosome(chromosome)
-                        .position(samSequenceRecord.getSequenceLength())
+                        .length(samSequenceRecord.getSequenceLength())
                         .build());
             }
         }
