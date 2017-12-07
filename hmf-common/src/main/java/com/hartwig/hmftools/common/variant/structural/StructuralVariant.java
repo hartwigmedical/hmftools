@@ -15,38 +15,22 @@ public interface StructuralVariant {
     String mateId();
 
     @NotNull
-    String startChromosome();
+    StructuralVariantLeg start();
 
     @NotNull
-    String endChromosome();
+    StructuralVariantLeg end();
 
     default String chromosome(final boolean isStart) {
-        return isStart ? startChromosome() : endChromosome();
+        return isStart ? start().chromosome() : end().chromosome();
     }
-
-    long startPosition();
-
-    long endPosition();
 
     default long position(final boolean isStart) {
-        return isStart ? startPosition() : endPosition();
+        return isStart ? start().position() : end().position();
     }
 
-    byte startOrientation();
-
-    byte endOrientation();
-
-    @NotNull
-    String startHomology();
-
-    @NotNull
-    String endHomology();
-
-    @Nullable
-    Double startAF();
-
-    @Nullable
-    Double endAF();
+    default byte orientation(final boolean isStart) {
+        return  isStart ? start().orientation() : end().orientation();
+    }
 
     @NotNull
     String insertSequence();

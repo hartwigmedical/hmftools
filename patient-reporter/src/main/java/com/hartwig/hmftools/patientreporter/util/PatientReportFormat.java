@@ -27,7 +27,7 @@ public enum PatientReportFormat {
 
     @NotNull
     public static String positionString(@NotNull final StructuralVariant sv, final boolean start) {
-        return String.format("chr%s:%d", start ? sv.startChromosome() : sv.endChromosome(), sv.position(start));
+        return String.format("chr%s:%d", sv.chromosome(start), sv.position(start));
     }
 
     @NotNull
@@ -45,6 +45,6 @@ public enum PatientReportFormat {
 
     @Nullable
     public static Double alleleFrequency(@NotNull final GeneAnnotation g) {
-        return g.isStart() ? g.getVariant().startAF() : g.getVariant().endAF();
+        return g.isStart() ? g.getVariant().start().alleleFrequency() : g.getVariant().end().alleleFrequency();
     }
 }

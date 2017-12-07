@@ -13,6 +13,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -105,13 +106,13 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     private void assertLeg(int orientation, double vaf, @NotNull final StructuralVariantLeg victim) {
-        assertEquals(vaf, victim.vaf(), EPSILON);
+        assertEquals(vaf, victim.alleleFrequency(), EPSILON);
         assertEquals(orientation, victim.orientation());
     }
 
     private void assertReduce(@NotNull final StructuralVariantLeg expected, @NotNull final List<StructuralVariantLeg> legs) {
         final StructuralVariantLeg result = reduce(legs);
-        assertEquals(expected.vaf(), result.vaf(), EPSILON);
+        assertEquals(expected.alleleFrequency(), result.alleleFrequency(), EPSILON);
         assertEquals(expected.orientation(), result.orientation());
     }
 
@@ -122,11 +123,15 @@ public class StructuralVariantLegsFactoryTest {
 
     @NotNull
     private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
-        return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type).startAF(startAF).endAF(endAF).build();
+        return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type, startAF, endAF).build();
     }
 
     @NotNull
-    private static StructuralVariantLeg createLeg(long position, int orientation, double vaf) {
-        return ImmutableStructuralVariantLeg.builder().chromosome(CHROMOSOME).position(position).orientation(orientation).vaf(vaf).build();
+    static StructuralVariantLeg createLeg(long position, int orientation, double vaf) {
+        return PurpleDatamodelTest.createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
+                .orientation((byte) orientation)
+                .alleleFrequency(vaf)
+                .build();
+
     }
 }

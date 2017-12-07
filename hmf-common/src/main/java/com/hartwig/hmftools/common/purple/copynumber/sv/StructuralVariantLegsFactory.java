@@ -13,7 +13,9 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -81,15 +83,15 @@ final class StructuralVariantLegsFactory {
 
         for (StructuralVariantLeg leg : legs) {
             if (leg.orientation() == 1) {
-                maxPositive = Math.max(maxPositive, leg.vaf());
+                maxPositive = Math.max(maxPositive, leg.alleleFrequency());
             } else {
-                maxNegative = Math.max(maxNegative, leg.vaf());
+                maxNegative = Math.max(maxNegative, leg.alleleFrequency());
             }
         }
 
         if (Doubles.isZero(maxNegative)) {
             for (StructuralVariantLeg leg : legs) {
-                if (Doubles.equal(maxPositive, leg.vaf())) {
+                if (Doubles.equal(maxPositive, leg.alleleFrequency())) {
                     return leg;
                 }
             }
@@ -97,15 +99,15 @@ final class StructuralVariantLegsFactory {
 
         if (Doubles.isZero(maxPositive)) {
             for (StructuralVariantLeg leg : legs) {
-                if (Doubles.equal(maxNegative, leg.vaf())) {
+                if (Doubles.equal(maxNegative, leg.alleleFrequency())) {
                     return leg;
                 }
             }
         }
 
-        int orientation = Doubles.greaterThan(maxPositive, maxNegative) ? 1 : -1;
+        byte orientation = (byte) (Doubles.greaterThan(maxPositive, maxNegative) ? 1 : -1);
         double vaf = Math.abs(maxPositive - maxNegative);
-        return ImmutableStructuralVariantLeg.builder().from(legs.get(0)).orientation(orientation).vaf(vaf).build();
+        return ImmutableStructuralVariantLegImpl.builder().from(legs.get(0)).orientation(orientation).alleleFrequency(vaf).build();
     }
 
     @NotNull
@@ -128,12 +130,8 @@ final class StructuralVariantLegsFactory {
         for (StructuralVariant variant : variants) {
 
             if (variant.type() != StructuralVariantType.INS) {
-
-                final Optional<StructuralVariantLeg> start = Optional.ofNullable(variant.startAF())
-                        .map(startVaf -> create(variant.startChromosome(), variant.startPosition(), variant.startOrientation(), startVaf));
-
-                final Optional<StructuralVariantLeg> end = Optional.ofNullable(variant.endAF())
-                        .map(endVaf -> create(variant.endChromosome(), variant.endPosition(), variant.endOrientation(), endVaf));
+                final Optional<StructuralVariantLeg> start = Optional.of(variant.start()).filter(x -> x.alleleFrequency() != null);
+                final Optional<StructuralVariantLeg> end = Optional.of(variant.end()).filter(x -> x.alleleFrequency() != null);
 
                 if (start.isPresent() || end.isPresent()) {
                     final ModifiableStructuralVariantLegs legs = ModifiableStructuralVariantLegs.create().setStart(start).setEnd(end);
@@ -145,8 +143,4 @@ final class StructuralVariantLegsFactory {
         return result;
     }
 
-    @NotNull
-    private static StructuralVariantLeg create(@NotNull String chromosome, long position, int orientation, double vaf) {
-        return ImmutableStructuralVariantLeg.builder().chromosome(chromosome).position(position).orientation(orientation).vaf(vaf).build();
-    }
 }

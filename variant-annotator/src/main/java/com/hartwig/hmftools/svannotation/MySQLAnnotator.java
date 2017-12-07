@@ -64,8 +64,8 @@ public class MySQLAnnotator implements VariantAnnotator {
 
     private StructuralVariantAnnotation annotateVariant(final StructuralVariant variant) {
         final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(variant);
-        annotation.getAnnotations().addAll(annotateBreakend(annotation, true, variant.startChromosome(), variant.startPosition()));
-        annotation.getAnnotations().addAll(annotateBreakend(annotation, false, variant.endChromosome(), variant.endPosition()));
+        annotation.getAnnotations().addAll(annotateBreakend(annotation, true, variant.start().chromosome(), variant.start().position()));
+        annotation.getAnnotations().addAll(annotateBreakend(annotation, false, variant.end().chromosome(), variant.end().position()));
         return annotation;
     }
 

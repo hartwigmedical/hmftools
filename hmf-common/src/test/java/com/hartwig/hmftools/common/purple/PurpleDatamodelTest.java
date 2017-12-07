@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -86,40 +87,79 @@ public class PurpleDatamodelTest {
     }
 
     @NotNull
-    public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
-            final long startPosition, @NotNull final String endChromosome, final long endPosition,
+    public static ImmutableStructuralVariantLegImpl.Builder createStartLeg(@NotNull final String startChromosome, final long startPosition,
             @NotNull final StructuralVariantType type) {
 
         final byte startOrientation;
-        final byte endOrientation;
         switch (type) {
             case DUP:
                 startOrientation = -1;
-                endOrientation = 1;
                 break;
             case BND:
             case INV:
                 startOrientation = 1;
-                endOrientation = 1;
                 break;
             default:
                 startOrientation = 1;
+                break;
+        }
+
+        return ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(startChromosome)
+                .position(startPosition)
+                .homology("")
+                .orientation(startOrientation);
+    }
+
+    @NotNull
+    public static ImmutableStructuralVariantLegImpl.Builder createEndLeg(@NotNull final String endChromosome, final long endPosition,
+            @NotNull final StructuralVariantType type) {
+
+        final byte endOrientation;
+        switch (type) {
+            case DUP:
+                endOrientation = 1;
+                break;
+            case BND:
+            case INV:
+                endOrientation = 1;
+                break;
+            default:
                 endOrientation = -1;
                 break;
         }
+
+        return ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(endChromosome)
+                .position(endPosition)
+                .orientation(endOrientation)
+                .homology("");
+    }
+
+    @NotNull
+    public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
+            final long startPosition, @NotNull final String endChromosome, final long endPosition,
+            @NotNull final StructuralVariantType type, double startVaf, double endVaf) {
 
         return ImmutableStructuralVariantImpl.builder()
                 .id("")
                 .insertSequence("")
                 .type(type)
-                .startChromosome(startChromosome)
-                .startPosition(startPosition)
-                .startOrientation(startOrientation)
-                .startHomology("")
-                .endChromosome(endChromosome)
-                .endPosition(endPosition)
-                .endOrientation(endOrientation)
-                .endHomology("");
+                .start(createStartLeg(startChromosome, startPosition, type).alleleFrequency(startVaf).build())
+                .end(createEndLeg(endChromosome, endPosition, type).alleleFrequency(endVaf).build());
+    }
+
+    @NotNull
+    public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
+            final long startPosition, @NotNull final String endChromosome, final long endPosition,
+            @NotNull final StructuralVariantType type) {
+
+        return ImmutableStructuralVariantImpl.builder()
+                .id("")
+                .insertSequence("")
+                .type(type)
+                .start(createStartLeg(startChromosome, startPosition, type).build())
+                .end(createEndLeg(endChromosome, endPosition, type).build());
     }
 
     @NotNull

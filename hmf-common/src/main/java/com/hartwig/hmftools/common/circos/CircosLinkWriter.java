@@ -27,12 +27,12 @@ public class CircosLinkWriter {
     }
 
     private static String toString(StructuralVariant variant) {
-        return new StringJoiner("\t").add("hs" + variant.startChromosome())
-                .add(String.valueOf(variant.startPosition()))
-                .add(String.valueOf(variant.startPosition()))
-                .add("hs" + variant.endChromosome())
-                .add(String.valueOf(variant.endPosition()))
-                .add(String.valueOf(variant.endPosition()))
+        return new StringJoiner("\t").add("hs" + variant.chromosome(true))
+                .add(String.valueOf(variant.position(true)))
+                .add(String.valueOf(variant.position(true)))
+                .add("hs" + variant.chromosome(false))
+                .add(String.valueOf(variant.position(false)))
+                .add(String.valueOf(variant.position(false)))
                 .add("color=" + color(variant))
                 .toString();
     }

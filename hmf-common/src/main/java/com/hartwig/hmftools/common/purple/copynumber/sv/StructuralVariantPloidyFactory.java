@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -68,11 +69,11 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
         double totalWeight = startWeight + endWeight;
         double averagePloidy = (startWeight * startPloidy + endWeight * endPloidy) / totalWeight;
 
-        start.ifPresent(modifiableStructuralVariantPloidy -> result.add(
-                modifiableStructuralVariantPloidy.setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy)));
+        start.ifPresent(modifiableStructuralVariantPloidy -> result.add(modifiableStructuralVariantPloidy.setWeight(totalWeight)
+                .setAverageImpliedPloidy(averagePloidy)));
 
-        end.ifPresent(modifiableStructuralVariantPloidy -> result.add(
-                modifiableStructuralVariantPloidy.setWeight(totalWeight).setAverageImpliedPloidy(averagePloidy)));
+        end.ifPresent(modifiableStructuralVariantPloidy -> result.add(modifiableStructuralVariantPloidy.setWeight(totalWeight)
+                .setAverageImpliedPloidy(averagePloidy)));
 
         Collections.sort(result);
         return result;
@@ -101,7 +102,7 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
             return Optional.empty();
         }
 
-        final double vaf = leg.vaf();
+        final double vaf = leg.alleleFrequency();
         final double ploidy;
         final double weight;
         if (correct.isPresent()) {

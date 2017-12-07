@@ -26,6 +26,10 @@ public class EnrichedStructuralVariantFactory {
         for (final StructuralVariant variant : variants) {
 
             final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder().from(variant);
+            final ImmutableEnrichedStructuralVariantLeg.Builder startBuilder =
+                    ImmutableEnrichedStructuralVariantLeg.builder().from(variant.start());
+            final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder =
+                    ImmutableEnrichedStructuralVariantLeg.builder().from(variant.end());
 
             final List<StructuralVariantPloidy> ploidies = ploidyFactory.create(Collections.singletonList(variant), copyNumbers);
             if (!ploidies.isEmpty()) {
@@ -37,15 +41,16 @@ public class EnrichedStructuralVariantFactory {
                 final StructuralVariantPloidy start = ploidies.get(0);
                 final StructuralVariantPloidy end = ploidies.get(1);
 
-                builder.adjustedStartAF(round(adjustedVAF(purityAdjuster, start)));
-                builder.adjustedStartCopyNumber(round(adjustedCopyNumber(start)));
-                builder.adjustedStartCopyNumberChange(round(adjustedCopyNumberChange(start)));
-                builder.adjustedEndAF(round(adjustedVAF(purityAdjuster, end)));
-                builder.adjustedEndCopyNumber(round(adjustedCopyNumber(end)));
-                builder.adjustedEndCopyNumberChange(round(adjustedCopyNumberChange(end)));
+                startBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, start)));
+                startBuilder.adjustedCopyNumber(round(adjustedCopyNumber(start)));
+                startBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(start)));
+
+                endBuilder.adjustedAlleleFrequency(round(adjustedVAF(purityAdjuster, end)));
+                endBuilder.adjustedCopyNumber(round(adjustedCopyNumber(end)));
+                endBuilder.adjustedCopyNumberChange(round(adjustedCopyNumberChange(end)));
             }
 
-            result.add(builder.build());
+            result.add(builder.start(startBuilder.build()).end(endBuilder.build()).build());
 
         }
 

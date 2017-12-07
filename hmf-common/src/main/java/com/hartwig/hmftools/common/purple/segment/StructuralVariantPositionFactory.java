@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,20 +18,20 @@ final class StructuralVariantPositionFactory {
         for (StructuralVariant variant : variants) {
 
             if (variant.type() != StructuralVariantType.INS) {
+                final StructuralVariantLeg start = variant.start();
                 positions.add(ImmutableStructuralVariantPosition.builder()
-                        .chromosome(variant.startChromosome())
-                        .position(variant.startPosition())
+                        .from(start)
                         .type(variant.type())
-                        .orientation(variant.startOrientation())
-                        .alleleFrequency(variant.startAF())
+                        .orientation(start.orientation())
+                        .alleleFrequency(start.alleleFrequency())
                         .build());
 
+                final StructuralVariantLeg end = variant.end();
                 positions.add(ImmutableStructuralVariantPosition.builder()
-                        .chromosome(variant.endChromosome())
-                        .position(variant.endPosition())
+                        .from(end)
                         .type(variant.type())
-                        .orientation(variant.endOrientation())
-                        .alleleFrequency(variant.endAF())
+                        .orientation(end.orientation())
+                        .alleleFrequency(end.alleleFrequency())
                         .build());
             }
         }

@@ -93,18 +93,26 @@ public class StructuralVariantFactory {
                 break;
         }
 
+        final StructuralVariantLeg startLeg = ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(context.getContig())
+                .position(start)
+                .orientation(startOrientation)
+                .homology(context.getAttributeAsString(HOM_SEQ, ""))
+                .alleleFrequency(af.size() == 2 ? af.get(0) : null)
+                .build();
+
+        final StructuralVariantLeg endLeg = ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(context.getContig())
+                .position(end)
+                .orientation(endOrientation)
+                .homology("")
+                .alleleFrequency(af.size() == 2 ? af.get(1) : null)
+                .build();
+
         return ImmutableStructuralVariantImpl.builder()
                 .id(context.getID())
-                .startChromosome(context.getContig())
-                .startPosition(start)
-                .startOrientation(startOrientation)
-                .startHomology(context.getAttributeAsString(HOM_SEQ, ""))
-                .startAF(af.size() == 2 ? af.get(0) : null)
-                .endChromosome(context.getContig())
-                .endPosition(end)
-                .endOrientation(endOrientation)
-                .endHomology("")
-                .endAF(af.size() == 2 ? af.get(1) : null)
+                .start(startLeg)
+                .end(endLeg)
                 .insertSequence(context.getAttributeAsString(INS_SEQ, ""))
                 .type(type)
                 .build();
@@ -139,19 +147,27 @@ public class StructuralVariantFactory {
             }
         }
 
+        final StructuralVariantLeg startLeg = ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(first.getContig())
+                .position(start)
+                .orientation(startOrientation)
+                .homology(first.getAttributeAsString(HOM_SEQ, ""))
+                .alleleFrequency(af.size() == 2 ? af.get(0) : null)
+                .build();
+
+        final StructuralVariantLeg endLeg = ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(second.getContig())
+                .position(end)
+                .orientation(endOrientation)
+                .homology(second.getAttributeAsString(HOM_SEQ, ""))
+                .alleleFrequency(af.size() == 2 ? af.get(1) : null)
+                .build();
+
         return ImmutableStructuralVariantImpl.builder()
                 .id(first.getID())
+                .start(startLeg)
+                .end(endLeg)
                 .mateId(second.getID())
-                .startChromosome(first.getContig())
-                .startPosition(start)
-                .startOrientation(startOrientation)
-                .startHomology(first.getAttributeAsString(HOM_SEQ, ""))
-                .startAF(af.size() == 2 ? af.get(0) : null)
-                .endChromosome(second.getContig())
-                .endPosition(end)
-                .endOrientation(endOrientation)
-                .endHomology(second.getAttributeAsString(HOM_SEQ, ""))
-                .endAF(af.size() == 2 ? af.get(1) : null)
                 .insertSequence(first.getAttributeAsString(INS_SEQ, ""))
                 .type(StructuralVariantType.BND)
                 .build();

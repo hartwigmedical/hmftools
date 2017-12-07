@@ -16,7 +16,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,21 +43,29 @@ class StructuralVariantDAO {
 
         for (Record record : result) {
 
+            final StructuralVariantLeg start = ImmutableStructuralVariantLegImpl.builder()
+                    .chromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
+                    .position(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
+                    .orientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
+                    .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
+                    .alleleFrequency(record.getValue(STRUCTURALVARIANT.STARTAF))
+                    .build();
+
+            final StructuralVariantLeg end = ImmutableStructuralVariantLegImpl.builder()
+                    .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
+                    .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
+                    .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                    .homology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
+                    .alleleFrequency(record.getValue(STRUCTURALVARIANT.ENDAF))
+                    .build();
+
             final StructuralVariant variant = ImmutableStructuralVariantImpl.builder()
                     .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
                     .id(record.getValue(STRUCTURALVARIANT.ID).toString())
-                    .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
-                    .endChromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
-                    .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
-                    .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
-                    .startOrientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
-                    .endOrientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
-                    .startHomology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
-                    .endHomology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
+                    .start(start)
+                    .end(end)
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
-                    .startAF(record.getValue(STRUCTURALVARIANT.STARTAF))
-                    .endAF(record.getValue(STRUCTURALVARIANT.ENDAF))
                     .build();
 
             regions.add(variant);
@@ -117,24 +127,24 @@ class StructuralVariantDAO {
 
     private void addRecord(Timestamp timestamp, InsertValuesStep21 inserter, String sample, EnrichedStructuralVariant region) {
         inserter.values(sample,
-                region.startChromosome(),
-                region.endChromosome(),
-                region.startPosition(),
-                region.endPosition(),
-                region.startOrientation(),
-                region.endOrientation(),
-                region.startHomology(),
-                region.endHomology(),
+                region.start().chromosome(),
+                region.end().chromosome(),
+                region.start().position(),
+                region.end().position(),
+                region.start().orientation(),
+                region.end().orientation(),
+                region.start().homology(),
+                region.end().homology(),
                 region.insertSequence(),
                 region.type(),
-                region.startAF(),
-                region.adjustedStartAF(),
-                region.adjustedStartCopyNumber(),
-                region.adjustedStartCopyNumberChange(),
-                region.endAF(),
-                region.adjustedEndAF(),
-                region.adjustedEndCopyNumber(),
-                region.adjustedEndCopyNumberChange(),
+                region.start().alleleFrequency(),
+                region.start().adjustedAlleleFrequency(),
+                region.start().adjustedCopyNumber(),
+                region.start().adjustedCopyNumberChange(),
+                region.end().alleleFrequency(),
+                region.end().adjustedAlleleFrequency(),
+                region.end().adjustedCopyNumber(),
+                region.end().adjustedCopyNumberChange(),
                 region.ploidy(),
                 timestamp);
     }

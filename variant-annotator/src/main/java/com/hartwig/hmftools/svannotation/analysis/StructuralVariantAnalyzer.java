@@ -85,7 +85,7 @@ public class StructuralVariantAnalyzer {
 
     private static int orientation(final GeneAnnotation g) {
         final StructuralVariant sv = g.getVariant();
-        return g.isStart() ? sv.startOrientation() : sv.endOrientation();
+        return  sv.orientation(g.isStart());
     }
 
     private static List<Transcript> intronic(final List<Transcript> list) {

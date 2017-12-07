@@ -38,7 +38,7 @@ public abstract class GeneDisruptionData {
     public static GeneDisruptionData from(@NotNull final GeneDisruption disruption) {
         final Transcript transcript = disruption.linkedAnnotation();
         final GeneAnnotation g = transcript.getGeneAnnotation();
-        final int variantOrientation = g.isStart() ? g.getVariant().startOrientation() : g.getVariant().endOrientation();
+        final int variantOrientation = g.getVariant().orientation(g.isStart());
 
         return ImmutableGeneDisruptionData.builder()
                 .geneName(disruption.linkedAnnotation().getGeneName())
