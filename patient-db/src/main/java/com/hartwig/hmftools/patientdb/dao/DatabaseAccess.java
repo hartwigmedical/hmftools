@@ -83,7 +83,15 @@ public class DatabaseAccess {
 
     public void writePurity(@NotNull final String sampleId, @NotNull final PurityContext context, @NotNull final PurpleQC checks) {
         purityDAO.write(sampleId, context, checks);
-        purityDAO.write(sampleId, context.bestPerPurity());
+    }
+
+    public void writeBestFitPerPurity(@NotNull final String sampleId, @NotNull final List<FittedPurity> bestFitPerPurity) {
+        purityDAO.write(sampleId, bestFitPerPurity);
+    }
+
+    @Nullable
+    public PurityContext readPurityContext(@NotNull final String sampleId) {
+        return purityDAO.readPurityContext(sampleId);
     }
 
     @Nullable

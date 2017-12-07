@@ -7,10 +7,13 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 
@@ -45,19 +48,37 @@ class PurityDAO {
     }
 
     @Nullable
-    FittedPurityScore readFittedPurityScore(@NotNull final String sample) {
+    PurityContext readPurityContext(@NotNull final String sample) {
         @Nullable
         Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
-        return result == null
-                ? null
-                : ImmutableFittedPurityScore.builder()
-                        .minPurity(result.getValue(PURITY.MINPURITY))
-                        .maxPurity(result.getValue(PURITY.MAXPURITY))
-                        .minPloidy(result.getValue(PURITY.MINPLOIDY))
-                        .maxPloidy(result.getValue(PURITY.MAXPLOIDY))
-                        .minDiploidProportion(result.getValue(PURITY.MINDIPLOIDPROPORTION))
-                        .maxDiploidProportion(result.getValue(PURITY.MAXDIPLOIDPROPORTION))
-                        .build();
+        if (result == null) {
+            return null;
+        }
+
+        final FittedPurity purity = ImmutableFittedPurity.builder()
+                .purity(result.getValue(PURITY.PURITY_))
+                .normFactor(result.getValue(PURITY.NORMFACTOR))
+                .score(result.getValue(PURITY.SCORE))
+                .diploidProportion(result.getValue(PURITY.DIPLOIDPROPORTION))
+                .ploidy(result.getValue(PURITY.PLOIDY))
+                .build();
+
+        final FittedPurityScore score = ImmutableFittedPurityScore.builder()
+                .minPurity(result.getValue(PURITY.MINPURITY))
+                .maxPurity(result.getValue(PURITY.MAXPURITY))
+                .minPloidy(result.getValue(PURITY.MINPLOIDY))
+                .maxPloidy(result.getValue(PURITY.MAXPLOIDY))
+                .minDiploidProportion(result.getValue(PURITY.MINDIPLOIDPROPORTION))
+                .maxDiploidProportion(result.getValue(PURITY.MAXDIPLOIDPROPORTION))
+                .build();
+
+        return ImmutablePurityContext.builder()
+                .bestFit(purity)
+                .score(score)
+                .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
+                .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
+                .status(FittedPurityStatus.valueOf(result.getValue(PURITY.STATUS)))
+                .build();
     }
 
     void write(@NotNull final String sample, @NotNull final PurityContext purity, @NotNull final PurpleQC checks) {

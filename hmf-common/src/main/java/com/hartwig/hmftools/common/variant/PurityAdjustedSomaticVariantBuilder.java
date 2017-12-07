@@ -21,7 +21,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
     default PurityAdjustedSomaticVariantBuilder purityAdjustment(@NotNull PurityAdjuster purityAdjuster,
             @NotNull final PurpleCopyNumber copyNumber, @NotNull final AllelicDepth depth) {
         double adjustedCopyNumber = copyNumber.averageTumorCopyNumber();
-        double adjustedVAF = purityAdjuster.purityAdjustedVAF(Math.max(0.001, adjustedCopyNumber), depth.alleleFrequency());
+        double adjustedVAF = purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(), Math.max(0.001, adjustedCopyNumber), depth.alleleFrequency());
         double variantPloidy = adjustedCopyNumber * adjustedVAF;
         boolean loh = Doubles.lessOrEqual(adjustedCopyNumber, 0) || Doubles.greaterOrEqual(variantPloidy, adjustedCopyNumber - 0.5);
         return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(loh);

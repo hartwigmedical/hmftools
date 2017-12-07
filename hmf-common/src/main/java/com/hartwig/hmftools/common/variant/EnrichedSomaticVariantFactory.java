@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
@@ -38,9 +37,9 @@ public class EnrichedSomaticVariantFactory {
 
     private int unmatchedAnnotations;
 
-    public EnrichedSomaticVariantFactory(double purity, double normFactor, @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
+    public EnrichedSomaticVariantFactory(@NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference) {
-        purityAdjuster = new PurityAdjuster(Gender.MALE, purity, normFactor);
+        this.purityAdjuster = purityAdjuster;
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
         this.reference = reference;

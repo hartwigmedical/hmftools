@@ -8,8 +8,10 @@ import java.util.List;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -60,20 +62,22 @@ public class LoadSomaticVariants {
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
         LOGGER.info("Querying purple database");
-        final FittedPurity fittedPurity = dbAccess.readFittedPurity(sample);
+        final PurityContext purityContext = dbAccess.readPurityContext(sample);
 
-        if (fittedPurity == null) {
+        if (purityContext == null) {
             LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }
-        final double purity = fittedPurity == null ? 1 : fittedPurity.purity();
-        final double normFactor = fittedPurity == null ? 1 : fittedPurity.normFactor();
+
+        final PurityAdjuster purityAdjuster = purityContext == null
+                ? new PurityAdjuster(Gender.FEMALE, 1, 1)
+                : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
         final Multimap<String, PurpleCopyNumber> copyNumbers =
                 Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
 
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
-                new EnrichedSomaticVariantFactory(purity, normFactor, highConfidenceRegions, copyNumbers, indexedFastaSequenceFile);
+                new EnrichedSomaticVariantFactory(purityAdjuster, highConfidenceRegions, copyNumbers, indexedFastaSequenceFile);
         final List<EnrichedSomaticVariant> variants = enrichedSomaticVariantFactory.enrich(vcfFile.variants());
 
         LOGGER.info("Persisting variants to database");

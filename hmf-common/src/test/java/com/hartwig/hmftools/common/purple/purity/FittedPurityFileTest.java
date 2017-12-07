@@ -15,7 +15,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.Random;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +29,6 @@ public class FittedPurityFileTest {
         final Random random = new Random();
         final PurityContext context = ImmutablePurityContext.builder()
                 .bestFit(createRandomPurity(random))
-                .bestPerPurity(Lists.newArrayList())
                 .score(createRandomScore(random))
                 .gender(Gender.values()[random.nextInt(Gender.values().length)])
                 .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])

@@ -9,7 +9,9 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
@@ -45,7 +47,9 @@ public class LoadPurpleData {
         LOGGER.info("Persisting purity data");
         final PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
         final PurityContext purityContext = FittedPurityFile.read(purplePath, tumorSample);
+        final List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.read(purplePath, tumorSample);
         dbAccess.writePurity(tumorSample, purityContext, purpleQC);
+        dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
 
         LOGGER.info("Persisting copy numbers");
         final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purplePath, tumorSample);

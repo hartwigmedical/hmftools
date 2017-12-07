@@ -23,7 +23,6 @@ public enum FittedPurityFile {
     public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
         final String[] values = values(basePath, sample);
         return ImmutablePurityContext.builder()
-                .bestPerPurity(FittedPurityRangeFile.read(basePath, sample))
                 .score(score(values))
                 .bestFit(bestFit(values))
                 .gender(gender(values))
@@ -35,7 +34,6 @@ public enum FittedPurityFile {
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
             throws IOException {
         writeBestPurity(basePath, sample, context);
-        FittedPurityRangeFile.write(basePath, sample, context.bestPerPurity());
     }
 
     private static void writeBestPurity(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)

@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-enum FittedPurityRangeFile {
+public enum FittedPurityRangeFile {
     ;
 
     private static final int MAX_RECORDS = 100;
