@@ -58,7 +58,7 @@ public final class PurpleSegmentFactory {
             if (!variants.isEmpty()) {
                 for (final StructuralVariantPosition variant : variants) {
                     if (variant.position() != segment.start()) {
-                        result.add(setStatus(segment.setEnd(variant.position() - 1)));
+                        result.add(updatedStatusForCentromere(segment.setEnd(variant.position() - 1)));
                         segment = createFromCluster(cluster, variant, ratioSupport);
                     } else {
                         segment.setSupport(SegmentSupport.MULTIPLE);
@@ -71,7 +71,7 @@ public final class PurpleSegmentFactory {
 
                 // JOBA: DO FIRST
                 final GenomePosition firstRatioBreak = pcfPositions.get(0);
-                result.add(setStatus(segment.setEnd(firstRatioBreak.position() - 1)));
+                result.add(updatedStatusForCentromere(segment.setEnd(firstRatioBreak.position() - 1)));
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position());
             }
         }
@@ -104,7 +104,7 @@ public final class PurpleSegmentFactory {
     }
 
     @NotNull
-    private static ModifiablePurpleSegment setStatus(@NotNull ModifiablePurpleSegment segment) {
+    private static ModifiablePurpleSegment updatedStatusForCentromere(@NotNull ModifiablePurpleSegment segment) {
         final GenomeRegion centromere = CENTROMERES.get(segment.chromosome());
         if (centromere != null && centromere.overlaps(segment)) {
             segment.setSupport(SegmentSupport.CENTROMERE);
