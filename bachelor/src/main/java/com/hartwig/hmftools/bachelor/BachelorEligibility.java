@@ -63,6 +63,11 @@ class BachelorEligibility {
     private BachelorEligibility() {
     }
 
+    private static boolean atPosition(final VariantContext v, final String position) {
+        // TODO: robust enough check?
+        return position.equals(v.getContig() + ":" + v.getStart());
+    }
+
     static BachelorEligibility fromMap(final Map<String, Program> input) {
         final BachelorEligibility result = new BachelorEligibility();
 
@@ -95,14 +100,14 @@ class BachelorEligibility {
                     if (region == null) {
                         final Collection<HmfGenomeRegion> matchesByName = allGenesMap.get(g.getName());
                         if (matchesByName.isEmpty()) {
-                            LOGGER.warn("Program {} gene {} non-canonical transcript {}. Performance may be degraded.", program.getName(),
-                                    g.getName(), g.getEnsembl());
+                            LOGGER.warn("Program {} gene {} non-canonical transcript {} couldn't find region. Performance may be degraded.",
+                                    program.getName(), g.getName(), g.getEnsembl());
                             result.iterateAllGenes = true;
                         } else {
                             matchesByName.forEach(r -> result.querySet.put(r.transcriptID(), r));
                         }
                     } else {
-                        result.querySet.put(g.getEnsembl(), region);
+                        result.querySet.put(region.transcriptID(), region);
                     }
                 }
             }
@@ -117,12 +122,14 @@ class BachelorEligibility {
             final Predicate<VariantModel> inBlacklist = v -> blacklist.stream().anyMatch(b -> {
                 for (final SnpEff annotation : v.Annotations) {
                     final boolean transcriptMatches = geneToEnsemblMap.values().contains(annotation.Transcript);
-                    if (transcriptMatches && !annotation.HGVSp.isEmpty()) {
-                        if (b.getHGVSP() != null && b.getHGVSP().equals(annotation.HGVSp)) {
+                    if (transcriptMatches) {
+                        if (b.getHGVSP() != null && !annotation.HGVSp.isEmpty() && b.getHGVSP().equals(annotation.HGVSp)) {
                             return true;
-                        } else if (b.getHGVSC() != null && b.getHGVSC().equals(annotation.HGVSc)) {
+                        } else if (b.getHGVSC() != null && !annotation.HGVSc.isEmpty() && b.getHGVSC().equals(annotation.HGVSc)) {
                             return true;
                         } else if (b.getMinCodon() != null && b.getMinCodon().intValue() <= annotation.ProteinPosition.get(0)) {
+                            return true;
+                        } else if (b.getPosition() != null && atPosition(v.Context, b.getPosition())) {
                             return true;
                         }
                     }
