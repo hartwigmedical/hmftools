@@ -118,7 +118,6 @@ public class PurpleSegmentFactoryTest {
         return ImmutableStructuralVariantPosition.builder()
                 .chromosome(CHROMOSOME_LENGTH.chromosome())
                 .position(position)
-                .id("ID")
                 .type(StructuralVariantType.BND)
                 .orientation((byte) 1)
                 .build();

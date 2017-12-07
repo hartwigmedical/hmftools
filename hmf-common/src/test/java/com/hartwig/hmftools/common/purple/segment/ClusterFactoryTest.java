@@ -203,7 +203,6 @@ public class ClusterFactoryTest {
         return ImmutableStructuralVariantPosition.builder()
                 .chromosome(CHROM)
                 .position(position)
-                .id("ID")
                 .type(StructuralVariantType.BND)
                 .orientation((byte) 1)
                 .build();

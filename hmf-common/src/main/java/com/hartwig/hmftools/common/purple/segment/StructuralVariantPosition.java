@@ -12,8 +12,6 @@ import org.jetbrains.annotations.Nullable;
 abstract class StructuralVariantPosition implements GenomePosition {
     public abstract StructuralVariantType type();
 
-    public abstract String id();
-
     public abstract byte orientation();
 
     @Nullable
