@@ -119,7 +119,7 @@ public class PDFWriterTest {
                 .alleleReadCount(18)
                 .totalReadCount(99)
                 .baf("AAAB")
-                .impliedVAF(purityAdjuster.purityAdjustedVAF(4, 0.18 / 0.99))
+                .impliedVAF(purityAdjuster.purityAdjustedVAF("7",4, 0.18 / 0.99))
                 .build();
 
         final VariantReport variant2 = ImmutableVariantReport.builder()
@@ -132,7 +132,7 @@ public class PDFWriterTest {
                 .cosmicID("")
                 .alleleReadCount(20)
                 .totalReadCount(88)
-                .impliedVAF(purityAdjuster.purityAdjustedVAF(2, 0.2 / 0.88))
+                .impliedVAF(purityAdjuster.purityAdjustedVAF("8",2, 0.2 / 0.88))
                 .baf("AB")
                 .build();
 
@@ -145,7 +145,7 @@ public class PDFWriterTest {
                 .consequence("inframe deletion")
                 .alleleReadCount(20)
                 .totalReadCount(87)
-                .impliedVAF(purityAdjuster.purityAdjustedVAF(3, 0.20 / 0.87))
+                .impliedVAF(purityAdjuster.purityAdjustedVAF("17",3, 0.20 / 0.87))
                 .baf("AAA")
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3);

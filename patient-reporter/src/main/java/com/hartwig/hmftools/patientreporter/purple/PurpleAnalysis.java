@@ -24,9 +24,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleAnalysis {
+
+    @NotNull
+    public abstract Gender gender();
 
     @NotNull
     public abstract FittedPurityStatus status();
@@ -51,7 +53,7 @@ public abstract class PurpleAnalysis {
     @NotNull
     public List<VariantReport> enrich(@NotNull final List<VariantReport> variantReports) {
         final List<VariantReport> result = Lists.newArrayList();
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity());
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
         final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
 
         for (final VariantReport variantReport : variantReports) {
@@ -59,7 +61,7 @@ public abstract class PurpleAnalysis {
             if (optionalCopyNumber.isPresent()) {
                 final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
                 double adjustedVAF =
-                        Math.min(1, purityAdjuster.purityAdjustedVAF(copyNumber.averageTumorCopyNumber(), variantReport.alleleFrequency()));
+                        Math.min(1, purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(), copyNumber.averageTumorCopyNumber(), variantReport.alleleFrequency()));
                 result.add(ImmutableVariantReport.builder()
                         .from(variantReport)
                         .baf(copyNumber.descriptiveBAF())

@@ -91,9 +91,10 @@ public abstract class PatientReporter {
         final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), tumorSample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-        final List<Alteration> alterations =
-                CivicAnalysis.run(variantAnalysis.findings(), copyNumberAnalysis.findings(), reporterData().geneModel(),
-                        doidMapping.doidsForTumorType(tumorType));
+        final List<Alteration> alterations = CivicAnalysis.run(variantAnalysis.findings(),
+                copyNumberAnalysis.findings(),
+                reporterData().geneModel(),
+                doidMapping.doidsForTumorType(tumorType));
 
         LOGGER.info(" Printing analysis results:");
         LOGGER.info("  Number of variants: " + Integer.toString(totalVariantCount));
@@ -116,11 +117,22 @@ public abstract class PatientReporter {
         final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
         final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
-        final SampleReport sampleReport =
-                ImmutableSampleReport.of(tumorSample, tumorType, tumorPercentage, lims.arrivalDateForSample(tumorSample),
-                        lims.arrivalDateForSample(run.refSample()), lims.labProceduresForSample(tumorSample), sampleRecipient);
-        return ImmutableSequencedPatientReport.of(sampleReport, purpleEnrichedVariants, reportableFusions, reportableDisruptions,
-                copyNumberAnalysis.findings(), mutationalLoad, purpleAnalysis.purityString(), alterations, Optional.ofNullable(comments),
+        final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
+                tumorType,
+                tumorPercentage,
+                lims.arrivalDateForSample(tumorSample),
+                lims.arrivalDateForSample(run.refSample()),
+                lims.labProceduresForSample(tumorSample),
+                sampleRecipient);
+        return ImmutableSequencedPatientReport.of(sampleReport,
+                purpleEnrichedVariants,
+                reportableFusions,
+                reportableDisruptions,
+                copyNumberAnalysis.findings(),
+                mutationalLoad,
+                purpleAnalysis.purityString(),
+                alterations,
+                Optional.ofNullable(comments),
                 baseReporterData().signaturePath());
     }
 
@@ -145,8 +157,14 @@ public abstract class PatientReporter {
         final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
         LOGGER.info(" Analyzing purple somatic copy numbers...");
-        final PurpleAnalysis purpleAnalysis =
-                ImmutablePurpleAnalysis.of(context.status(), purity, purityScore, purpleCopyNumbers, geneCopyNumbers);
+        final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.builder()
+                .gender(context.gender())
+                .status(context.status())
+                .fittedPurity(purity)
+                .fittedScorePurity(purityScore)
+                .copyNumbers(purpleCopyNumbers)
+                .geneCopyNumbers(geneCopyNumbers)
+                .build();
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())
                     + ") range exceeds 5%. Proceed with caution.");

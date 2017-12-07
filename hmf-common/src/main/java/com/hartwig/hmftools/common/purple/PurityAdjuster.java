@@ -64,11 +64,6 @@ public class PurityAdjuster {
         return Doubles.isZero(tumorRatio) ? 0 : 2 * normalRatio + 2 * (tumorRatio - normalRatio * normFactor) / purity / normFactor;
     }
 
-    @Deprecated
-    public double purityAdjustedVAF(final double copyNumber, final double observedFrequency) {
-        return purityAdjustedFrequency(copyNumber, observedFrequency, 0);
-    }
-
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
         int typicalCopyNumber = typicalCopyNumber(chromosome);
         return purityAdjustedFrequency(copyNumber, observedFrequency, typicalCopyNumber, 0);
@@ -107,11 +102,6 @@ public class PurityAdjuster {
     @VisibleForTesting
     static boolean isClonal(final double copyNumber) {
         return Doubles.lessOrEqual(Doubles.distanceFromInteger(copyNumber), CLONAL_DISTANCE);
-    }
-
-    @Deprecated
-    private double purityAdjustedFrequency(final double copyNumber, final double observedFrequency, final double typicalFrequency) {
-        return purityAdjustedFrequency(copyNumber, observedFrequency, 2, typicalFrequency);
     }
 
     private double purityAdjustedFrequency(final double tumorCopyNumber, final double observedFrequency, final int normalCopyNumber,
