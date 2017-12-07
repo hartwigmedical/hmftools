@@ -19,6 +19,17 @@ public enum PurpleCopyNumberFile {
     private static final String DELIMITER = "\t";
     static final String HEADER_PREFIX = "#";
     private static final String EXTENSION = ".purple.cnv";
+    private static final String GERMLINE_EXTENSION = ".purple.germline.cnv";
+
+    @NotNull
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + EXTENSION;
+    }
+
+    @NotNull
+    public static String generateGermlineFilename(@NotNull final String basePath, @NotNull final String sample) {
+        return basePath + File.separator + sample + GERMLINE_EXTENSION;
+    }
 
     @NotNull
     public static List<PurpleCopyNumber> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
@@ -26,10 +37,9 @@ public enum PurpleCopyNumberFile {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers)
+    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers)
             throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
-        Files.write(new File(filePath).toPath(), toLines(copyNumbers));
+        Files.write(new File(filename).toPath(), toLines(copyNumbers));
     }
 
     @NotNull
