@@ -116,6 +116,7 @@ public class StructuralVariantPloidyFactory<T extends GenomeRegion> {
 
         return Optional.of(ModifiableStructuralVariantPloidy.create()
                 .from(leg)
+                .setVaf(vaf)
                 .setOrientation(leg.orientation())
                 .setUnweightedImpliedPloidy(ploidy)
                 .setLeftCopyNumber(left)

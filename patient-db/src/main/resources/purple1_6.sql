@@ -44,3 +44,12 @@ ALTER TABLE copyNumberRegion
     DROP COLUMN highConfidenceCopyNumber,
     CHANGE status germlineStatus varchar(255) NOT NULL,
     ADD COLUMN svCluster BOOLEAN NOT NULL AFTER germlineStatus;
+
+ALTER TABLE structuralVariant
+    ADD COLUMN ploidy DOUBLE PRECISION AFTER endAF,
+    ADD COLUMN adjustedStartAF DOUBLE PRECISION AFTER ploidy,
+    ADD COLUMN adjustedEndAF DOUBLE PRECISION AFTER adjustedStartAF,
+    ADD COLUMN adjustedStartCopyNumber DOUBLE PRECISION AFTER adjustedEndAF,
+    ADD COLUMN adjustedEndCopyNumber DOUBLE PRECISION AFTER adjustedStartCopyNumber,
+    ADD COLUMN adjustedStartCopyNumberChange DOUBLE PRECISION AFTER adjustedEndCopyNumber,
+    ADD COLUMN adjustedEndCopyNumberChange DOUBLE PRECISION AFTER adjustedStartCopyNumberChange;

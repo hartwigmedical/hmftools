@@ -14,13 +14,14 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep14;
+import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -40,7 +41,7 @@ class StructuralVariantDAO {
 
         for (Record record : result) {
 
-            final StructuralVariant variant = ImmutableStructuralVariant.builder()
+            final StructuralVariant variant = ImmutableStructuralVariantImpl.builder()
                     .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
                     .id(record.getValue(STRUCTURALVARIANT.ID).toString())
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
@@ -63,7 +64,7 @@ class StructuralVariantDAO {
         return regions;
     }
 
-    void write(@NotNull final String sample, @NotNull final List<StructuralVariant> regions) {
+    void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> regions) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(STRUCTURALVARIANTDISRUPTION)
                 .where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(select(STRUCTURALVARIANTBREAKEND.ID).from(STRUCTURALVARIANTBREAKEND)
@@ -80,27 +81,61 @@ class StructuralVariantDAO {
                 .execute();
 
         context.delete(STRUCTURALVARIANTBREAKEND)
-                .where(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID.in(
-                        select(STRUCTURALVARIANT.ID).from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample))))
+                .where(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID.in(select(STRUCTURALVARIANT.ID).from(STRUCTURALVARIANT)
+                        .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))))
                 .execute();
 
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
-        for (List<StructuralVariant> batch : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep14 inserter =
-                    context.insertInto(STRUCTURALVARIANT, STRUCTURALVARIANT.SAMPLEID, STRUCTURALVARIANT.STARTCHROMOSOME,
-                            STRUCTURALVARIANT.ENDCHROMOSOME, STRUCTURALVARIANT.STARTPOSITION, STRUCTURALVARIANT.ENDPOSITION,
-                            STRUCTURALVARIANT.STARTORIENTATION, STRUCTURALVARIANT.ENDORIENTATION, STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE,
-                            STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE, STRUCTURALVARIANT.INSERTSEQUENCE, STRUCTURALVARIANT.TYPE,
-                            STRUCTURALVARIANT.STARTAF, STRUCTURALVARIANT.ENDAF, STRUCTURALVARIANT.MODIFIED);
+        for (List<EnrichedStructuralVariant> batch : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
+            InsertValuesStep21 inserter = context.insertInto(STRUCTURALVARIANT,
+                    STRUCTURALVARIANT.SAMPLEID,
+                    STRUCTURALVARIANT.STARTCHROMOSOME,
+                    STRUCTURALVARIANT.ENDCHROMOSOME,
+                    STRUCTURALVARIANT.STARTPOSITION,
+                    STRUCTURALVARIANT.ENDPOSITION,
+                    STRUCTURALVARIANT.STARTORIENTATION,
+                    STRUCTURALVARIANT.ENDORIENTATION,
+                    STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE,
+                    STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE,
+                    STRUCTURALVARIANT.INSERTSEQUENCE,
+                    STRUCTURALVARIANT.TYPE,
+                    STRUCTURALVARIANT.STARTAF,
+                    STRUCTURALVARIANT.ADJUSTEDSTARTAF,
+                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER,
+                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE,
+                    STRUCTURALVARIANT.ENDAF,
+                    STRUCTURALVARIANT.ADJUSTEDENDAF,
+                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER,
+                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
+                    STRUCTURALVARIANT.PLOIDY,
+                    STRUCTURALVARIANT.MODIFIED);
             batch.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep14 inserter, String sample, StructuralVariant region) {
-        inserter.values(sample, region.startChromosome(), region.endChromosome(), region.startPosition(), region.endPosition(),
-                region.startOrientation(), region.endOrientation(), region.startHomology(), region.endHomology(), region.insertSequence(),
-                region.type(), region.startAF(), region.endAF(), timestamp);
+    private void addRecord(Timestamp timestamp, InsertValuesStep21 inserter, String sample, EnrichedStructuralVariant region) {
+        inserter.values(sample,
+                region.startChromosome(),
+                region.endChromosome(),
+                region.startPosition(),
+                region.endPosition(),
+                region.startOrientation(),
+                region.endOrientation(),
+                region.startHomology(),
+                region.endHomology(),
+                region.insertSequence(),
+                region.type(),
+                region.startAF(),
+                region.adjustedStartAF(),
+                region.adjustedStartCopyNumber(),
+                region.adjustedStartCopyNumberChange(),
+                region.endAF(),
+                region.adjustedEndAF(),
+                region.adjustedEndCopyNumber(),
+                region.adjustedEndCopyNumberChange(),
+                region.ploidy(),
+                timestamp);
     }
 }

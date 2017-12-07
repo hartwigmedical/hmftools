@@ -4,9 +4,17 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionModel;
 import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
@@ -52,12 +60,28 @@ public class LoadStructuralVariants {
 
         LOGGER.info("Reading VCF File");
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
-                new VCFCodec(), false)) {
+                new VCFCodec(),
+                false)) {
             reader.iterator().forEach(factory::addVariantContext);
         }
 
+        LOGGER.info("Querying purple database");
+        final PurityContext purityContext = dbAccess.readPurityContext(tumorSample);
+
+        if (purityContext == null) {
+            LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
+        }
+
+        final PurityAdjuster purityAdjuster = purityContext == null
+                ? new PurityAdjuster(Gender.FEMALE, 1, 1)
+                : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
+
+        final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(tumorSample);
+        final Multimap<String, PurpleCopyNumber> copyNumbers = Multimaps.index(copyNumberList, PurpleCopyNumber::chromosome);
+        List<EnrichedStructuralVariant> enriched = EnrichedStructuralVariantFactory.enrich(purityAdjuster, copyNumbers, factory.results());
+
         LOGGER.info("Persisting variants to database");
-        dbAccess.writeStructuralVariants(tumorSample, factory.results());
+        dbAccess.writeStructuralVariants(tumorSample, enriched);
 
         LOGGER.info("Reading back...");
         final List<StructuralVariant> structuralVariantList = dbAccess.readStructuralVariants(tumorSample);

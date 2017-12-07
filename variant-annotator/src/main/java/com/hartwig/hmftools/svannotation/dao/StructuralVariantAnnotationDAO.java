@@ -41,17 +41,34 @@ public class StructuralVariantAnnotationDAO {
         // load transcript annotations
         for (final StructuralVariantAnnotation annotation : analysis.annotations()) {
             for (final GeneAnnotation g : annotation.getAnnotations()) {
-                final InsertValuesStep13 inserter = context.insertInto(STRUCTURALVARIANTBREAKEND, STRUCTURALVARIANTBREAKEND.MODIFIED,
-                        STRUCTURALVARIANTBREAKEND.ISSTARTEND, STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID, STRUCTURALVARIANTBREAKEND.GENE,
-                        STRUCTURALVARIANTBREAKEND.GENEID, STRUCTURALVARIANTBREAKEND.TRANSCRIPTID,
-                        STRUCTURALVARIANTBREAKEND.ISCANONICALTRANSCRIPT, STRUCTURALVARIANTBREAKEND.STRAND,
-                        STRUCTURALVARIANTBREAKEND.EXONRANKUPSTREAM, STRUCTURALVARIANTBREAKEND.EXONPHASEUPSTREAM,
-                        STRUCTURALVARIANTBREAKEND.EXONRANKDOWNSTREAM, STRUCTURALVARIANTBREAKEND.EXONPHASEDOWNSTREAM,
+                final InsertValuesStep13 inserter = context.insertInto(STRUCTURALVARIANTBREAKEND,
+                        STRUCTURALVARIANTBREAKEND.MODIFIED,
+                        STRUCTURALVARIANTBREAKEND.ISSTARTEND,
+                        STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID,
+                        STRUCTURALVARIANTBREAKEND.GENE,
+                        STRUCTURALVARIANTBREAKEND.GENEID,
+                        STRUCTURALVARIANTBREAKEND.TRANSCRIPTID,
+                        STRUCTURALVARIANTBREAKEND.ISCANONICALTRANSCRIPT,
+                        STRUCTURALVARIANTBREAKEND.STRAND,
+                        STRUCTURALVARIANTBREAKEND.EXONRANKUPSTREAM,
+                        STRUCTURALVARIANTBREAKEND.EXONPHASEUPSTREAM,
+                        STRUCTURALVARIANTBREAKEND.EXONRANKDOWNSTREAM,
+                        STRUCTURALVARIANTBREAKEND.EXONPHASEDOWNSTREAM,
                         STRUCTURALVARIANTBREAKEND.EXONMAX);
                 for (final Transcript t : g.getTranscripts()) {
-                    inserter.values(timestamp, g.isStart(), t.getVariant().primaryKey(), g.getGeneName(), g.getStableId(),
-                            t.getTranscriptId(), t.isCanonical(), g.getStrand(), t.getExonUpstream(), t.getExonUpstreamPhase(),
-                            t.getExonDownstream(), t.getExonDownstreamPhase(), t.getExonMax());
+                    inserter.values(timestamp,
+                            g.isStart(),
+                            t.getVariant().primaryKey(),
+                            g.getGeneName(),
+                            g.getStableId(),
+                            t.getTranscriptId(),
+                            t.isCanonical(),
+                            g.getStrand(),
+                            t.getExonUpstream(),
+                            t.getExonUpstreamPhase(),
+                            t.getExonDownstream(),
+                            t.getExonDownstreamPhase(),
+                            t.getExonMax());
                 }
 
                 final List<UInteger> ids = inserter.returning(STRUCTURALVARIANTBREAKEND.ID).fetch().getValues(0, UInteger.class);
@@ -67,17 +84,20 @@ public class StructuralVariantAnnotationDAO {
 
         // load fusions
 
-        final InsertValuesStep3 fusionInserter =
-                context.insertInto(STRUCTURALVARIANTFUSION, STRUCTURALVARIANTFUSION.ISREPORTED, STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
-                        STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
+        final InsertValuesStep3 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
+                STRUCTURALVARIANTFUSION.ISREPORTED,
+                STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
+                STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
         for (final GeneFusion fusion : analysis.fusions()) {
-            fusionInserter.values(fusion.reportable(), id.get(fusion.upstreamLinkedAnnotation()),
+            fusionInserter.values(fusion.reportable(),
+                    id.get(fusion.upstreamLinkedAnnotation()),
                     id.get(fusion.downstreamLinkedAnnotation()));
         }
         fusionInserter.execute();
 
         // load disruptions
-        final InsertValuesStep2 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION, STRUCTURALVARIANTDISRUPTION.ISREPORTED,
+        final InsertValuesStep2 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
+                STRUCTURALVARIANTDISRUPTION.ISREPORTED,
                 STRUCTURALVARIANTDISRUPTION.BREAKENDID);
         for (final GeneDisruption disruption : analysis.disruptions()) {
             disruptionInserter.values(disruption.reportable(), id.get(disruption.linkedAnnotation()));

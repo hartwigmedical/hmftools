@@ -93,7 +93,7 @@ public class StructuralVariantFactory {
                 break;
         }
 
-        return ImmutableStructuralVariant.builder()
+        return ImmutableStructuralVariantImpl.builder()
                 .id(context.getID())
                 .startChromosome(context.getContig())
                 .startPosition(start)
@@ -139,7 +139,7 @@ public class StructuralVariantFactory {
             }
         }
 
-        return ImmutableStructuralVariant.builder()
+        return ImmutableStructuralVariantImpl.builder()
                 .id(first.getID())
                 .mateId(second.getID())
                 .startChromosome(first.getContig())

@@ -1,53 +1,56 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class StructuralVariant {
-    ;
+public interface StructuralVariant {
 
     @Nullable
-    public abstract Integer primaryKey();
+    Integer primaryKey();
 
-    public abstract String id();
+    @NotNull
+    String id();
 
     @Nullable
-    public abstract String mateId();
+    String mateId();
 
-    public abstract String startChromosome();
+    @NotNull
+    String startChromosome();
 
-    public abstract String endChromosome();
+    @NotNull
+    String endChromosome();
 
-    public String chromosome(final boolean isStart) {
+    default String chromosome(final boolean isStart) {
         return isStart ? startChromosome() : endChromosome();
     }
 
-    public abstract long startPosition();
+    long startPosition();
 
-    public abstract long endPosition();
+    long endPosition();
 
-    public long position(final boolean isStart) {
+    default long position(final boolean isStart) {
         return isStart ? startPosition() : endPosition();
     }
 
-    public abstract byte startOrientation();
+    byte startOrientation();
 
-    public abstract byte endOrientation();
+    byte endOrientation();
 
-    public abstract String startHomology();
+    @NotNull
+    String startHomology();
 
-    public abstract String endHomology();
+    @NotNull
+    String endHomology();
 
     @Nullable
-    public abstract Double startAF();
+    Double startAF();
 
     @Nullable
-    public abstract Double endAF();
+    Double endAF();
 
-    public abstract String insertSequence();
+    @NotNull
+    String insertSequence();
 
-    public abstract StructuralVariantType type();
+    @NotNull
+    StructuralVariantType type();
 }

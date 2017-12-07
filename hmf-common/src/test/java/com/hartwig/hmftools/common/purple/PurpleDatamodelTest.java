@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -86,7 +86,7 @@ public class PurpleDatamodelTest {
     }
 
     @NotNull
-    public static ImmutableStructuralVariant.Builder createStructuralVariant(@NotNull final String startChromosome,
+    public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
             final long startPosition, @NotNull final String endChromosome, final long endPosition,
             @NotNull final StructuralVariantType type) {
 
@@ -108,7 +108,7 @@ public class PurpleDatamodelTest {
                 break;
         }
 
-        return ImmutableStructuralVariant.builder()
+        return ImmutableStructuralVariantImpl.builder()
                 .id("")
                 .insertSequence("")
                 .type(type)

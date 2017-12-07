@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
@@ -103,7 +104,7 @@ public class DatabaseAccess {
         somaticVariantDAO.write(sampleId, variants);
     }
 
-    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<StructuralVariant> variants) {
+    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
         structuralVariantDAO.write(sampleId, variants);
     }
 
