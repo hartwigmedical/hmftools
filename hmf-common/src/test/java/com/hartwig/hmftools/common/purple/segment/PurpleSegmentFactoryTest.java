@@ -114,10 +114,11 @@ public class PurpleSegmentFactoryTest {
     }
 
     @NotNull
-    private static StructuralVariantPosition variant(long position) {
-        return ImmutableStructuralVariantPosition.builder()
+    private static ClusterVariantLeg variant(long position) {
+        return ImmutableClusterVariantLeg.builder()
                 .chromosome(CHROMOSOME_LENGTH.chromosome())
                 .position(position)
+                .homology("")
                 .type(StructuralVariantType.BND)
                 .orientation((byte) 1)
                 .build();

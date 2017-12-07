@@ -30,7 +30,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testBoundaries() {
-        final List<StructuralVariantPosition> sv = variants(37383599, 37387153);
+        final List<ClusterVariantLeg> sv = variants(37383599, 37387153);
         final List<PCFPosition> ratios = createRatioBreaks(36965001, 37381001, 37382001, 37384001, 37387001, 37389001);
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
 
@@ -38,8 +38,8 @@ public class ClusterFactoryTest {
         assertEquals(4, clusters.size());
         assertRatioInCluster(clusters.get(0), 36964002, 36965001);
         assertRatioInCluster(clusters.get(1), 37380002, 37381001, 37382001);
-        assertCluster(clusters.get(2), 37382002L, 37383599L, 37383599L, 37384001L, 37384001L, StructuralVariantSupport.BND);
-        assertCluster(clusters.get(3), 37386002L, 37387153L, 37387153L, 37387001L, 37389001L, StructuralVariantSupport.BND);
+        assertCluster(clusters.get(2), 37382002L, 37383599L, 37383599L, 37384001L, 37384001L);
+        assertCluster(clusters.get(3), 37386002L, 37387153L, 37387153L, 37387001L, 37389001L);
     }
 
     @Test
@@ -119,7 +119,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testDefaultClusterBounds() {
-        final StructuralVariantPosition sv = createSVPosition(15532);
+        final ClusterVariantLeg sv = createSVPosition(15532);
         final List<Cluster> clusters = victim.cluster(Lists.newArrayList(sv), Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
         assertVariantInCluster(clusters.get(0), 14002, 15532);
@@ -127,7 +127,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testClusterBoundsWithRatios() {
-        final List<StructuralVariantPosition> sv = variants(15532);
+        final List<ClusterVariantLeg> sv = variants(15532);
         final List<CobaltRatio> ratios = createRatios();
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
         assertEquals(1, clusters.size());
@@ -136,7 +136,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testTwoSVInsideCluster() {
-        final List<StructuralVariantPosition> sv = variants(15532, 16771);
+        final List<ClusterVariantLeg> sv = variants(15532, 16771);
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
         assertVariantsInCluster(clusters.get(0), 14002, 15532, 16771);
@@ -144,7 +144,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testTwoSVOutsideCluster() {
-        final List<StructuralVariantPosition> sv = variants(15532, 17881);
+        final List<ClusterVariantLeg> sv = variants(15532, 17881);
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(2, clusters.size());
         assertVariantInCluster(clusters.get(0), 14002, 15532);
@@ -153,7 +153,7 @@ public class ClusterFactoryTest {
 
     @Test
     public void testTwoSVInsideClusterWithRatio() {
-        final List<StructuralVariantPosition> sv = variants(15532, 18881);
+        final List<ClusterVariantLeg> sv = variants(15532, 18881);
         final List<CobaltRatio> ratios = createRatios();
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
         assertEquals(1, clusters.size());
@@ -165,30 +165,29 @@ public class ClusterFactoryTest {
     }
 
     private static void assertCluster(final Cluster cluster, long start, Long firstVariant, Long finalVariant, Long firstRatio,
-            Long finalRatio, StructuralVariantSupport variantSupport) {
+            Long finalRatio) {
         assertEquals(start, cluster.start());
         assertEquals(Math.max(finalVariant == null ? 0 : finalVariant, finalRatio == null ? 0 : finalRatio), cluster.end());
         assertEquals(firstVariant, cluster.firstVariant());
         assertEquals(finalVariant, cluster.finalVariant());
         assertEquals(firstRatio, cluster.firstRatio());
         assertEquals(finalRatio, cluster.finalRatio());
-        assertEquals(variantSupport, cluster.type());
     }
 
     private static void assertRatioInCluster(final Cluster cluster, long start, long position) {
-        assertCluster(cluster, start, null, null, position, position, StructuralVariantSupport.NONE);
+        assertCluster(cluster, start, null, null, position, position);
     }
 
     private static void assertRatioInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition) {
-        assertCluster(cluster, start, null, null, firstPosition, finalPosition, StructuralVariantSupport.NONE);
+        assertCluster(cluster, start, null, null, firstPosition, finalPosition);
     }
 
     private static void assertVariantInCluster(final Cluster cluster, long start, long position) {
-        assertCluster(cluster, start, position, position, null, null, StructuralVariantSupport.BND);
+        assertCluster(cluster, start, position, position, null, null);
     }
 
     private static void assertVariantsInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition) {
-        assertCluster(cluster, start, firstPosition, finalPosition, null, null, StructuralVariantSupport.MULTIPLE);
+        assertCluster(cluster, start, firstPosition, finalPosition, null, null);
     }
 
     private static CobaltRatio cobalt(long position, boolean useable) {
@@ -199,11 +198,12 @@ public class ClusterFactoryTest {
         return PurpleDatamodelTest.cobalt(CHROM, position, ratio).build();
     }
 
-    private static StructuralVariantPosition createSVPosition(long position) {
-        return ImmutableStructuralVariantPosition.builder()
+    private static ClusterVariantLeg createSVPosition(long position) {
+        return ImmutableClusterVariantLeg.builder()
                 .chromosome(CHROM)
                 .position(position)
                 .type(StructuralVariantType.BND)
+                .homology("")
                 .orientation((byte) 1)
                 .build();
     }
@@ -220,8 +220,8 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    private static List<StructuralVariantPosition> variants(long... positions) {
-        final List<StructuralVariantPosition> result = Lists.newArrayList();
+    private static List<ClusterVariantLeg> variants(long... positions) {
+        final List<ClusterVariantLeg> result = Lists.newArrayList();
         for (long position : positions) {
             result.add(createSVPosition(position));
         }

@@ -16,6 +16,6 @@ public class StructuralVariantPositionFactoryTest {
         final StructuralVariant variant =
                 PurpleDatamodelTest.createStructuralVariant("1", 1001, "1", 1001, StructuralVariantType.INS).build();
 
-        assertEquals(0, StructuralVariantPositionFactory.create(Lists.newArrayList(variant)).size());
+        assertEquals(0, ClusterVariantLegFactory.create(Lists.newArrayList(variant)).size());
     }
 }
