@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
 import com.hartwig.hmftools.common.pileup.Pileup;
@@ -42,15 +43,27 @@ class BAFFactory {
             final int readCount = normal.readCount();
             final int altCount = maxMismatchReadCount(normal);
 
-            if (normal.indels() == 0 && between(readCount, minDepth, maxDepth) && isHeterozygousRef(normal.referenceCount(), readCount)
+            if (isValidPileup(normal) && between(readCount, minDepth, maxDepth) && isHeterozygousRef(normal.referenceCount(), readCount)
                     && isHeterozygousAlt(altCount, readCount)) {
 
                 final Character alt = alt(altCount, normal);
-                tumorSelector.select(normal).filter(x -> x.indels() == 0).map(x -> create(alt, normal, x)).ifPresent(result::add);
+                tumorSelector.select(normal)
+                        .filter(BAFFactory::isValidPileup)
+                        .map(x -> create(alt, normal, x))
+                        .filter(BAFFactory::isValidBAF)
+                        .ifPresent(result::add);
             }
         }
 
         return result;
+    }
+
+    private static boolean isValidPileup(@NotNull final Pileup pileup) {
+        return pileup.indels() == 0 && pileup.readCount() > 0;
+    }
+
+    private static boolean isValidBAF(@NotNull final AmberBAF baf) {
+        return Doubles.isFinite(baf.tumorBAF());
     }
 
     @VisibleForTesting

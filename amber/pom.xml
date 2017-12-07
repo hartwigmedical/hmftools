@@ -10,7 +10,7 @@
 
     <artifactId>amber</artifactId>
     <packaging>jar</packaging>
-    <version>1.4</version>
+    <version>1.5</version>
     <name>HMF Tools - AMBER</name>
 
     <dependencies>

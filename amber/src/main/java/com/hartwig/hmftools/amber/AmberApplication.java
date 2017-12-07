@@ -37,10 +37,10 @@ public class AmberApplication {
     private static final String MIN_DEPTH_PERCENTAGE = "min_depth_percent";
     private static final String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
 
-    private static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
-    private static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
-    private static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
-    private static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
+    static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
+    static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
+    static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
+    static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
 
     public static void main(final String... args) throws ParseException, IOException, ExecutionException, InterruptedException {
         new AmberApplication(args);
