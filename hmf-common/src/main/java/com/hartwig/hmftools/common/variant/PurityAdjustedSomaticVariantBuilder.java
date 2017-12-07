@@ -27,7 +27,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
         return adjustedCopyNumber(adjustedCopyNumber).adjustedVAF(adjustedVAF).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(loh);
     }
 
-    default PurityAdjustedSomaticVariantBuilder clonality(double copyNumber, double purity, @NotNull final AllelicDepth depth) {
-        return clonality(Clonality.fromSample(copyNumber, purity, depth));
+    default PurityAdjustedSomaticVariantBuilder clonality(@NotNull final PurityAdjuster purityAdjuster, @NotNull final PurpleCopyNumber copyNumber, @NotNull final AllelicDepth depth) {
+        return clonality(Clonality.fromSample(purityAdjuster, copyNumber, depth));
     }
 }

@@ -44,6 +44,10 @@ public class PurityAdjuster {
         return normFactor;
     }
 
+    public int typicalCopyNumber(@NotNull String chromosome) {
+        return HumanChromosome.fromString(chromosome).isHomologous(gender) ? 2 : 1;
+    }
+
     @SuppressWarnings("unused")
     public double impliedPloidy() {
         // KODU: Dont delete per request of Mr Jon Baber!!!
@@ -66,14 +70,14 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedVAF(@NotNull final String chromosome, final double copyNumber, final double observedFrequency) {
-        int normalCopyNumber = HumanChromosome.fromString(chromosome).isHomologous(gender) ? 2 : 1;
-        return purityAdjustedFrequency(copyNumber, observedFrequency, normalCopyNumber, 0);
+        int typicalCopyNumber = typicalCopyNumber(chromosome);
+        return purityAdjustedFrequency(copyNumber, observedFrequency, typicalCopyNumber, 0);
     }
 
     public double purityAdjustedBAF(@NotNull final String chromosomeName, final double copyNumber, final double observedFrequency) {
-        final Chromosome chromosome = HumanChromosome.fromString(chromosomeName);
 
-        if (!chromosome.isHomologous(gender) || (Doubles.positive(observedFrequency) && Doubles.lessOrEqual(copyNumber, 1))) {
+        int normalCopyNumber = typicalCopyNumber(chromosomeName);
+        if (normalCopyNumber == 1 || (Doubles.positive(observedFrequency) && Doubles.lessOrEqual(copyNumber, 1))) {
             return 1;
         }
 
@@ -82,7 +86,7 @@ public class PurityAdjuster {
         }
 
         double typicalFrequency = 0.5;
-        double rawAdjustedBaf = purityAdjustedFrequency(copyNumber, observedFrequency, typicalFrequency);
+        double rawAdjustedBaf = purityAdjustedFrequency(copyNumber, observedFrequency, normalCopyNumber, typicalFrequency);
 
         int ploidy = (int) Math.round(copyNumber);
         if (Doubles.lessOrEqual(observedFrequency, AMBIGUOUS_BAF) && isClonal(copyNumber) && ploidy > 0) {

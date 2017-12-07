@@ -65,7 +65,7 @@ public class EnrichedSomaticVariantFactory {
         if (optionalCopyNumber.isPresent()) {
             final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
             builder.purityAdjustment(purityAdjuster, copyNumber, variant);
-            builder.clonality(copyNumber.averageTumorCopyNumber(), purityAdjuster.purity(), variant);
+            builder.clonality(purityAdjuster, copyNumber, variant);
         }
 
         addAnnotations(builder, variant);
