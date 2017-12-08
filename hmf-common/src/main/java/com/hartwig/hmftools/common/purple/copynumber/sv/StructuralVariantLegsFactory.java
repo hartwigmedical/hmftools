@@ -2,8 +2,10 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -23,8 +25,14 @@ import org.jetbrains.annotations.NotNull;
 final class StructuralVariantLegsFactory {
 
     @NotNull
-    static List<StructuralVariantLegs> create(@NotNull List<StructuralVariant> variants) {
-        final List<ModifiableStructuralVariantLegs> result = createLegs(variants);
+    static List<StructuralVariantLegs> create(@NotNull final StructuralVariant variants) {
+        final List<ModifiableStructuralVariantLegs> legs = createLegs(true, Collections.singletonList(variants));
+        return legs.stream().map(x -> (StructuralVariantLegs) x).collect(Collectors.toList());
+    }
+
+    @NotNull
+    static List<StructuralVariantLegs> create(@NotNull final List<StructuralVariant> variants) {
+        final List<ModifiableStructuralVariantLegs> result = createLegs(false, variants);
         final Multimap<GenomePosition, ModifiableStructuralVariantLegs> duplicates = findDuplicates(result);
         for (GenomePosition duplicatePosition : duplicates.keySet()) {
             final StructuralVariantLeg approvedLeg = reduce(duplicatePosition, duplicates.get(duplicatePosition));
@@ -124,12 +132,12 @@ final class StructuralVariantLegsFactory {
     }
 
     @NotNull
-    private static List<ModifiableStructuralVariantLegs> createLegs(@NotNull final List<StructuralVariant> variants) {
+    private static List<ModifiableStructuralVariantLegs> createLegs(boolean allowInserts, @NotNull final List<StructuralVariant> variants) {
         final List<ModifiableStructuralVariantLegs> result = Lists.newArrayList();
 
         for (StructuralVariant variant : variants) {
 
-            if (variant.type() != StructuralVariantType.INS) {
+            if (allowInserts || variant.type() != StructuralVariantType.INS) {
                 final Optional<StructuralVariantLeg> start = Optional.of(variant.start()).filter(x -> x.alleleFrequency() != null);
                 final Optional<StructuralVariantLeg> end = Optional.of(variant.end()).filter(x -> x.alleleFrequency() != null);
 

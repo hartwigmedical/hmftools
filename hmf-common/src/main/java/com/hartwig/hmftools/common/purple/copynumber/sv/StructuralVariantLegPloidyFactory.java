@@ -34,6 +34,20 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
     }
 
     @NotNull
+    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariant variant,
+            @NotNull final Multimap<String, T> copyNumbers) {
+        final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
+        final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variant);
+
+        for (StructuralVariantLegs leg : allLegs) {
+            result.addAll(create(leg, copyNumbers));
+        }
+
+        Collections.sort(result);
+        return result;
+    }
+
+    @NotNull
     public List<StructuralVariantLegPloidy> create(@NotNull final List<StructuralVariant> variants,
             @NotNull final Multimap<String, T> copyNumbers) {
         final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
@@ -81,7 +95,8 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @VisibleForTesting
     @NotNull
-    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
+    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull StructuralVariantLeg leg,
+            @NotNull final GenomeRegionSelector<T> selector) {
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.position() - 1);
         final Optional<Double> left =
                 selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).filter(Doubles::positive);

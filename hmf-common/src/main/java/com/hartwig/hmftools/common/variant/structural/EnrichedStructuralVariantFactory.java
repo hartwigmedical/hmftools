@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant.structural;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -31,7 +30,7 @@ public class EnrichedStructuralVariantFactory {
             final ImmutableEnrichedStructuralVariantLeg.Builder endBuilder =
                     ImmutableEnrichedStructuralVariantLeg.builder().from(variant.end());
 
-            final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(Collections.singletonList(variant), copyNumbers);
+            final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
                 double roundedPloidy = round(ploidies.get(0).averageImpliedPloidy());
                 builder.ploidy(roundedPloidy);
