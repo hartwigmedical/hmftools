@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
-import com.google.common.collect.TreeMultimap;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 
@@ -35,17 +36,18 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 class BachelorEligibility {
 
+    private static final double MIN_COPY_NUMBER_FOR_LOSS = 0.5;
+
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
     private static final SortedSetMultimap<String, HmfGenomeRegion> allGenesByChromosomeMap = HmfGenePanelSupplier.allGeneMap();
-    private static final Multimap<String, HmfGenomeRegion> allGenesMap = makeGeneNameMap();
+    private static final Map<String, HmfGenomeRegion> allGenesMap = makeGeneNameMap();
     private static final Map<String, HmfGenomeRegion> allTranscriptsMap = makeTranscriptMap();
 
     private final Map<String, Predicate<VariantModel>> programs = Maps.newHashMap();
     private final Map<String, HmfGenomeRegion> querySet = Maps.newHashMap();
-    private boolean iterateAllGenes = false;
 
-    private static Multimap<String, HmfGenomeRegion> makeGeneNameMap() {
-        final Multimap<String, HmfGenomeRegion> result = TreeMultimap.create();
+    private static Map<String, HmfGenomeRegion> makeGeneNameMap() {
+        final Map<String, HmfGenomeRegion> result = Maps.newHashMap();
         for (final HmfGenomeRegion region : allGenesByChromosomeMap.values()) {
             result.put(region.gene(), region);
         }
@@ -70,6 +72,7 @@ class BachelorEligibility {
 
     static BachelorEligibility fromMap(final Map<String, Program> input) {
         final BachelorEligibility result = new BachelorEligibility();
+        boolean iterateAllGenes = false;
 
         for (final Program program : input.values()) {
 
@@ -94,17 +97,17 @@ class BachelorEligibility {
                 panelPredicates.add(panelPredicate);
 
                 // update query targets
-                result.iterateAllGenes |= allGene;
+                iterateAllGenes |= allGene;
                 for (final GeneIdentifier g : genes) {
                     final HmfGenomeRegion region = allTranscriptsMap.get(g.getEnsembl());
                     if (region == null) {
-                        final Collection<HmfGenomeRegion> matchesByName = allGenesMap.get(g.getName());
-                        if (matchesByName.isEmpty()) {
+                        final HmfGenomeRegion namedRegion = allGenesMap.get(g.getName());
+                        if (namedRegion == null) {
                             LOGGER.warn("Program {} gene {} non-canonical transcript {} couldn't find region. Performance may be degraded.",
                                     program.getName(), g.getName(), g.getEnsembl());
-                            result.iterateAllGenes = true;
+                            iterateAllGenes = true;
                         } else {
-                            matchesByName.forEach(r -> result.querySet.put(r.transcriptID(), r));
+                            result.querySet.put(namedRegion.transcriptID(), namedRegion);
                         }
                     } else {
                         result.querySet.put(region.transcriptID(), region);
@@ -127,7 +130,8 @@ class BachelorEligibility {
                             return true;
                         } else if (b.getHGVSC() != null && !annotation.HGVSc.isEmpty() && b.getHGVSC().equals(annotation.HGVSc)) {
                             return true;
-                        } else if (b.getMinCodon() != null && b.getMinCodon().intValue() <= annotation.ProteinPosition.get(0)) {
+                        } else if (b.getMinCodon() != null && !annotation.ProteinPosition.isEmpty() // TODO: stronger check here?
+                                && b.getMinCodon().intValue() <= annotation.ProteinPosition.get(0)) {
                             return true;
                         } else if (b.getPosition() != null && atPosition(v.Context, b.getPosition())) {
                             return true;
@@ -160,11 +164,16 @@ class BachelorEligibility {
             result.programs.put(program.getName(), predicate);
         }
 
+        if (iterateAllGenes) {
+            result.querySet.putAll(allTranscriptsMap);
+        }
+
         return result;
     }
 
     private void processVariant(final Map<String, ImmutableEligibilityReport.Builder> results, final VariantContext variant,
             final String patient, final String sample, final String tag) {
+
         if (variant.isFiltered()) {
             return;
         }
@@ -186,8 +195,10 @@ class BachelorEligibility {
                 .collect(Collectors.toList());
 
         for (final String p : matchingPrograms) {
+            // TODO: only add matching annotations of variant
             results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().patient(patient).program(p).tag(tag)).addVariants(model);
         }
+
     }
 
     @NotNull
@@ -195,28 +206,28 @@ class BachelorEligibility {
 
         final Map<String, ImmutableEligibilityReport.Builder> results = Maps.newHashMap();
 
-        if (iterateAllGenes) {
-            for (final HmfGenomeRegion region : allGenesMap.values()) {
-                final CloseableIterator<VariantContext> query =
-                        reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
-                while (query.hasNext()) {
-                    final VariantContext variant = query.next();
-                    processVariant(results, variant, patient, sample, tag);
-                }
-                query.close();
+        for (final HmfGenomeRegion region : querySet.values()) {
+            final CloseableIterator<VariantContext> query =
+                    reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
+            while (query.hasNext()) {
+                final VariantContext variant = query.next();
+                processVariant(results, variant, patient, sample, tag);
             }
-        } else {
-            for (final HmfGenomeRegion region : querySet.values()) {
-                final CloseableIterator<VariantContext> query =
-                        reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
-                while (query.hasNext()) {
-                    final VariantContext variant = query.next();
-                    processVariant(results, variant, patient, sample, tag);
-                }
-                query.close();
-            }
+            query.close();
         }
 
         return results.values().stream().map(ImmutableEligibilityReport.Builder::build).collect(Collectors.toList());
+    }
+
+    @NotNull
+    public Collection<EligibilityReport> processCopyNumbers(final String patient, final List<GeneCopyNumber> copyNumbers) {
+        for (final GeneCopyNumber copyNumber : copyNumbers) {
+            final boolean germline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
+            if (copyNumber.value() < MIN_COPY_NUMBER_FOR_LOSS) {
+
+            }
+        }
+
+        return Collections.emptyList();
     }
 }

@@ -57,7 +57,7 @@ class RunDirectory {
     private File findCopyNumber() {
         try {
             try (final Stream<Path> stream = Files.walk(prefix, FileVisitOption.FOLLOW_LINKS)) {
-                return stream.filter(p -> p.toString().endsWith("purple.cnv")).map(Path::toFile).findFirst().orElse(null);
+                return stream.filter(p -> p.toString().endsWith("purple.gene.cnv")).map(Path::toFile).findFirst().orElse(null);
             }
         } catch (final IOException e) {
             return null;

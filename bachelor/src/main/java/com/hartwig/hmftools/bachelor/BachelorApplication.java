@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
 
@@ -90,7 +92,13 @@ public class BachelorApplication {
 
     private static Collection<EligibilityReport> processPurpleCNV(final File cnv, final BachelorEligibility eligibility) {
         LOGGER.info("process cnv: {}", cnv.getPath());
-        return Collections.emptyList();
+        try {
+            final List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(cnv);
+            return eligibility.processCopyNumbers(copyNumbers);
+        } catch (final IOException e) {
+            LOGGER.error("error with CNV file {}: {}", cnv.getPath(), e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     private static Collection<EligibilityReport> processSV(final File vcf, final BachelorEligibility eligibility) {

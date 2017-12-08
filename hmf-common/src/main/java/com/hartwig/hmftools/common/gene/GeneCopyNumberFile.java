@@ -27,7 +27,12 @@ public class GeneCopyNumberFile {
 
     @NotNull
     public static List<GeneCopyNumber> read(@NotNull final String fileName) throws IOException {
-        return fromLines(Files.readAllLines(new File(fileName).toPath()));
+        return read(new File(fileName));
+    }
+
+    @NotNull
+    public static List<GeneCopyNumber> read(@NotNull final File file) throws IOException {
+        return fromLines(Files.readAllLines(file.toPath()));
     }
 
     public static void write(@NotNull final String fileName, @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
