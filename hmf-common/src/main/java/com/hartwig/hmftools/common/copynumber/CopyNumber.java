@@ -9,12 +9,4 @@ public interface CopyNumber extends GenomeRegion {
     default CopyNumberAlteration alteration() {
         return CopyNumberAlteration.fromCopyNumber(value());
     }
-
-    default boolean isGain() {
-        return alteration().equals(CopyNumberAlteration.GAIN);
-    }
-
-    default boolean isLoss() {
-        return alteration().equals(CopyNumberAlteration.LOSS);
-    }
 }

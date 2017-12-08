@@ -2,7 +2,6 @@ package com.hartwig.hmftools.healthchecker.report;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.GenerateReportException;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 
@@ -13,5 +12,5 @@ public interface Report {
     void addResult(@NotNull BaseResult result);
 
     @NotNull
-    Optional<String> generateReport(@NotNull RunContext runContext, @NotNull String fileName) throws GenerateReportException;
+    Optional<String> generateReport(@NotNull String fileName) throws GenerateReportException;
 }

@@ -99,7 +99,7 @@ public final class HealthChecksApplication {
         }
 
         try {
-            final Optional<String> reportPath = report.generateReport(runContext, reportFilePath);
+            final Optional<String> reportPath = report.generateReport(reportFilePath);
             reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
         } catch (final GenerateReportException e) {
             LOGGER.log(Level.ERROR, e.getMessage());

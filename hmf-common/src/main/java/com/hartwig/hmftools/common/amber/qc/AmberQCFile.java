@@ -32,7 +32,7 @@ public class AmberQCFile {
     }
 
     @NotNull
-    private static AmberQC fromLines(@NotNull final List<String> lines) throws IOException, MalformedFileException {
+    private static AmberQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
             return ImmutableAmberQC.builder()
                     .meanBAF(Double.valueOf(getValue(lines.get(1))))

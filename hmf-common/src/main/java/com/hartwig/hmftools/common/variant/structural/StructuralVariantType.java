@@ -7,8 +7,7 @@ public enum StructuralVariantType {
     INV,
     DEL,
     INS,
-    DUP,
-    UNKNOWN;
+    DUP;
 
     @NotNull
     public static StructuralVariantType fromAttribute(@NotNull String svType) {

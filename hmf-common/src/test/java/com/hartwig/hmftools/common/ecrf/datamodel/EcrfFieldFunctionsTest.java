@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class EcrfFieldFunctionsTest {
+
     @Test
     public void canConvertToName() {
         final String studyEventOID = "SE.Study";

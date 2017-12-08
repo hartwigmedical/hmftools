@@ -28,7 +28,7 @@ public class MainPageTopSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage) throws IOException {
+            @NotNull final String tumorPercentage) {
         // @formatter:off
         final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
                 cmp.verticalList(

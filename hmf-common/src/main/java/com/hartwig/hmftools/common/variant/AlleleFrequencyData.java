@@ -17,8 +17,4 @@ public class AlleleFrequencyData {
     public int totalReadCount() {
         return totalReadCount;
     }
-
-    public double alleleFrequency() {
-        return (double) alleleReadCount() / totalReadCount();
-    }
 }

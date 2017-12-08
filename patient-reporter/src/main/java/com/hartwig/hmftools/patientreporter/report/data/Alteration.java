@@ -43,10 +43,6 @@ public abstract class Alteration {
 
     public abstract List<AlterationMatch> getMatches();
 
-    public String getAlteration() {
-        return getGene() + "\n" + getPredictedEffect();
-    }
-
     @NotNull
     public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants,
             @NotNull final Set<String> tumorSubtypesDoids) {

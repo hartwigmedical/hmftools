@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -22,7 +21,7 @@ public final class RunsFolderReader {
     }
 
     @NotNull
-    public static List<RunContext> getRunContexts(@NotNull final File dir) throws IOException, ParseException {
+    public static List<RunContext> getRunContexts(@NotNull final File dir) throws IOException {
         final List<RunContext> runContexts = Lists.newArrayList();
         final File[] folders = dir.listFiles(File::isDirectory);
         if (folders == null) {

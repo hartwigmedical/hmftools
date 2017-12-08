@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svannotation;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 

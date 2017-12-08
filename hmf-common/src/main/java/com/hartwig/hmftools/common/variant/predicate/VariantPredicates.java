@@ -25,19 +25,6 @@ public final class VariantPredicates {
         };
     }
 
-    @SafeVarargs
-    @NotNull
-    public static Predicate<SomaticVariant> or(@NotNull final Predicate<SomaticVariant>... predicates) {
-        return variant -> {
-            for (final Predicate<SomaticVariant> predicate : predicates) {
-                if (predicate.test(variant)) {
-                    return true;
-                }
-            }
-            return false;
-        };
-    }
-
     @NotNull
     public static Predicate<SomaticVariant> not(@NotNull final Predicate<SomaticVariant> predicate) {
         return variant -> !predicate.test(variant);

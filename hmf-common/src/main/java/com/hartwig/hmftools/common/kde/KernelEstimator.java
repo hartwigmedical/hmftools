@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.kde;
 
-
-// This is a modified version of the WEKA KernelEstimator
+// JOBA: This is a modified version of the WEKA KernelEstimator
 public class KernelEstimator   {
     private double[] m_Values = new double[50];
     private double[] m_Weights = new double[50];
@@ -9,7 +8,7 @@ public class KernelEstimator   {
     private double m_SumOfWeights = 0.0D;
     private final double m_StandardDev;
     private double m_Precision;
-    private static double MAX_ERROR = 0.01D;
+    private static final double MAX_ERROR = 0.01D;
 
     public KernelEstimator(double precision, double bandwidth) {
         this.m_Precision = precision;
@@ -52,12 +51,11 @@ public class KernelEstimator   {
     }
 
     public double getProbability(double data) {
-
-        double delta = 0.0D;
+        double delta;
         double sum = 0.0D;
-        double currentProb = 0.0D;
-        double zLower = 0.0D;
-        double zUpper = 0.0D;
+        double currentProb;
+        double zLower;
+        double zUpper;
         if(this.m_NumValues == 0) {
             zLower = (data - this.m_Precision / 2.0D) / this.m_StandardDev;
             zUpper = (data + this.m_Precision / 2.0D) / this.m_StandardDev;
@@ -119,6 +117,4 @@ public class KernelEstimator   {
     private double round(double data) {
         return Math.rint(data / this.m_Precision) * this.m_Precision;
     }
-
-
 }

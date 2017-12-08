@@ -13,18 +13,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class GeneCopyNumberFactory implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion> {
 
-    private GeneCopyNumberBuilder builder;
+    @NotNull
+    private final GeneCopyNumberBuilder builder;
 
+    @NotNull
     public static List<GeneCopyNumber> geneCopyNumbers(List<HmfGenomeRegion> genes, List<PurpleCopyNumber> copyNumbers) {
         return genes.stream().map(x -> new GeneCopyNumberFactory(x, copyNumbers).geneCopyNumber()).collect(Collectors.toList());
     }
 
-    GeneCopyNumberFactory(@NotNull final HmfGenomeRegion gene, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+    private GeneCopyNumberFactory(@NotNull final HmfGenomeRegion gene, @NotNull final List<PurpleCopyNumber> copyNumbers) {
         builder = new GeneCopyNumberBuilder(gene);
         RegionZipper.zip(copyNumbers, gene.exome(), this);
     }
 
-    GeneCopyNumber geneCopyNumber() {
+    private GeneCopyNumber geneCopyNumber() {
         return builder.build();
     }
 

@@ -31,15 +31,9 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
 
     @NotNull
     @Override
-    public CheckType checkType() {
-        return CheckType.SOMATIC_VARIANTS;
-    }
-
-    @NotNull
-    @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         if (!runContext.isSomaticRun()) {
-            return new NoResult(checkType());
+            return new NoResult(CheckType.SOMATIC_VARIANTS);
         }
         final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runContext.runDirectory(), SOMATICS_EXTENSION);
 
@@ -83,13 +77,13 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
 
             return toMultiValueResult(checks);
         } else {
-            return new NoResult(checkType());
+            return new NoResult(CheckType.SOMATIC_VARIANTS);
         }
     }
 
     @NotNull
     private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
         HealthCheck.log(LOGGER, checks);
-        return new MultiValueResult(checkType(), checks);
+        return new MultiValueResult(CheckType.SOMATIC_VARIANTS, checks);
     }
 }

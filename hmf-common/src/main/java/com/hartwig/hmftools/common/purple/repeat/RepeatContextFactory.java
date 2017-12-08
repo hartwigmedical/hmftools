@@ -14,15 +14,13 @@ public final class RepeatContextFactory {
     private static final int MIN_COUNT = 4;
     private static final int MAX_LENGTH = 6;
 
-    public static Optional<RepeatContext> repeats(int position, @NotNull final String refGenome, @NotNull final String ref, @NotNull final String alt) {
+    @NotNull
+    public static Optional<RepeatContext> repeats(int position, @NotNull final String refGenome, @NotNull final String ref,
+            @NotNull final String alt) {
         if (isIndel(ref, alt)) {
             return repeats(position + 1, refGenome);
         }
         return Optional.empty();
-    }
-
-    private static boolean isDelete(@NotNull final String ref, @NotNull final String alt) {
-        return alt.length() == 1 && ref.length() > 1;
     }
 
     private static boolean isIndel(@NotNull final String ref, @NotNull final String alt) {
@@ -58,7 +56,7 @@ public final class RepeatContextFactory {
     }
 
     @NotNull
-    private static RepeatContext create(Map.Entry<String, Integer> entry) {
+    private static RepeatContext create(@NotNull Map.Entry<String, Integer> entry) {
         return ImmutableRepeatContext.builder().sequence(entry.getKey()).count(entry.getValue()).build();
     }
 

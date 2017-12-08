@@ -63,12 +63,6 @@ public class ChartWriter {
         return String.format("%s PUR:%.0f%% PLE:%.2f", sample, purity * 100, ploidy);
     }
 
-    private void copyNumberCDF(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
-        String fileName = outputDirectory + File.separator + sample + ".copyNumber_CDF.png";
-        JFreeChart cumulativePloidyChart = CopyNumberCharts.copyNumberCDF(copyNumbers);
-        ChartUtilities.saveChartAsPNG(new File(fileName), cumulativePloidyChart, 500, 300);
-    }
-
     private void copyNumberPDF(@NotNull final String subtitle, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
         String fileName = outputDirectory + File.separator + sample + ".copyNumber.png";
         JFreeChart chart = CopyNumberCharts.copyNumberPDF(copyNumbers);

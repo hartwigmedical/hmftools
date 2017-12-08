@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.lims.Lims;
@@ -14,8 +13,6 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import net.sf.dynamicreports.report.exception.DRException;
-
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
@@ -25,7 +22,7 @@ public abstract class NotSequenceableReporter {
     abstract BaseReporterData baseReporterData();
 
     public NotSequencedPatientReport run(@NotNull final String sample, @NotNull final NotSequenceableReason reason,
-            @Nullable final String comments) throws IOException, DRException {
+            @Nullable final String comments) {
         final NotSequenceableStudy study = NotSequenceableStudy.fromSample(sample);
         assert study != null;
         final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), sample);

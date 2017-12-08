@@ -35,7 +35,7 @@ public final class PurpleQCFile {
     }
 
     @NotNull
-    static PurpleQC fromLines(@NotNull final List<String> lines) throws IOException, MalformedFileException {
+    static PurpleQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
             return ImmutablePurpleQC.builder()
                     .unsupportedSegments(Integer.valueOf(getValue(lines.get(4))))

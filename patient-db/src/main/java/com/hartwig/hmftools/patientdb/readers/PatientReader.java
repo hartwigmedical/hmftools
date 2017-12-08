@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
@@ -37,15 +36,14 @@ public class PatientReader {
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
     public PatientReader(@NotNull final CpctEcrfModel model, @NotNull final TreatmentCurator treatmentCurator,
-            @NotNull final TumorLocationCurator tumorLocationCurator, @NotNull final Lims lims) throws IOException, HartwigException {
+            @NotNull final TumorLocationCurator tumorLocationCurator, @NotNull final Lims lims) {
         cpctPatientReader = new CpctPatientReader(model, tumorLocationCurator);
         limsSampleReader = new LimsSampleReader(lims);
         biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentCurator);
     }
 
     @NotNull
-    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<String> tumorSamplesForPatient)
-            throws IOException, HartwigException {
+    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<String> tumorSamplesForPatient) throws IOException {
         LOGGER.info("Analyzing patient " + ecrfPatient.patientId() + " with samples: " + tumorSamplesForPatient);
 
         final List<SampleData> sequencedBiopsies = limsSampleReader.read(tumorSamplesForPatient);

@@ -85,8 +85,7 @@ public class StrelkaPostProcessApplication {
     }
 
     private static void processVariants(@NotNull final String filePath, @NotNull final Slicer highConfidenceSlicer,
-            @NotNull final String outputVcf, @NotNull final String sampleName, @NotNull final String tumorBam)
-            throws IOException, HartwigException {
+            @NotNull final String outputVcf, @NotNull final String sampleName, @NotNull final String tumorBam) throws HartwigException {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
         final VCFHeader outputHeader = generateOutputHeader(vcfReader.getFileHeader(), sampleName);
         final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVcf)
@@ -112,10 +111,12 @@ public class StrelkaPostProcessApplication {
     @NotNull
     private static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
         final VCFHeader outputVCFHeader = new VCFHeader(header.getMetaDataInInputOrder(), Sets.newHashSet(sampleName));
-        outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
-                "Allelic depths for the ref and alt alleles in the order listed"));
+        outputVCFHeader.addMetaDataLine(
+                new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
+                        "Allelic depths for the ref and alt alleles in the order listed"));
         outputVCFHeader.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.GENOTYPE_KEY, 1, VCFHeaderLineType.String, "Genotype"));
-        outputVCFHeader.addMetaDataLine(new VCFHeaderLine("StrelkaGATKCompatibility", "Added GT fields to strelka calls for gatk compatibility."));
+        outputVCFHeader.addMetaDataLine(
+                new VCFHeaderLine("StrelkaGATKCompatibility", "Added GT fields to strelka calls for gatk compatibility."));
         return outputVCFHeader;
     }
 }

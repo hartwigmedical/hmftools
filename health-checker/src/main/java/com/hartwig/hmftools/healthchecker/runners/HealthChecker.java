@@ -8,8 +8,5 @@ import org.jetbrains.annotations.NotNull;
 public interface HealthChecker {
 
     @NotNull
-    CheckType checkType();
-
-    @NotNull
     BaseResult run(@NotNull RunContext runContext);
 }

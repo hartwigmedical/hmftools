@@ -54,7 +54,7 @@ class GenerateCircosData {
     private final String baseCircosTumorSample;
     private final String baseCircosReferenceSample;
 
-    GenerateCircosData(final ConfigSupplier configSupplier, final ExecutorService executorService) throws IOException {
+    GenerateCircosData(final ConfigSupplier configSupplier, final ExecutorService executorService) {
         this.tumorSample = configSupplier.commonConfig().tumorSample();
         this.referenceSample = configSupplier.commonConfig().refSample();
         this.config = configSupplier.circosConfig();

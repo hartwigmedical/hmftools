@@ -23,12 +23,6 @@ public class PurpleChecker extends ErrorHandlingChecker {
 
     @NotNull
     @Override
-    public CheckType checkType() {
-        return CheckType.PURPLE;
-    }
-
-    @NotNull
-    @Override
     protected BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final String purpleDirectory = runContext.runDirectory() + File.separator + "purple";
         final PurpleQC qcCheck = PurpleQCFile.read(PurpleQCFile.generateFilename(purpleDirectory, runContext.tumorSample()));
@@ -55,13 +49,13 @@ public class PurpleChecker extends ErrorHandlingChecker {
 
             return toMultiValueResult(checks);
         } else {
-            return new NoResult(checkType());
+            return new NoResult(CheckType.PURPLE);
         }
     }
 
     @NotNull
     private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
         HealthCheck.log(LOGGER, checks);
-        return new MultiValueResult(checkType(), checks);
+        return new MultiValueResult(CheckType.PURPLE, checks);
     }
 }

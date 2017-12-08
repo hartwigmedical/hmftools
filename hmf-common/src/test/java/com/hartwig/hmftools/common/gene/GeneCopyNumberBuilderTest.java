@@ -20,12 +20,11 @@ public class GeneCopyNumberBuilderTest {
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1E-10;
 
-    private HmfGenomeRegion gene;
     private GeneCopyNumberBuilder victim;
 
     @Before
     public void setup() {
-        gene = create(1001, 10000);
+        HmfGenomeRegion gene = create(1001, 10000);
         victim = new GeneCopyNumberBuilder(gene);
     }
 
@@ -96,6 +95,7 @@ public class GeneCopyNumberBuilderTest {
         return ImmutableHmfExonRegion.builder().exonID("ID").chromosome(CHROMOSOME).start(start).end(end).build();
     }
 
+    @NotNull
     private static HmfGenomeRegion create(long start, long end) {
         return ImmutableHmfGenomeRegion.builder()
                 .chromosome(CHROMOSOME)
@@ -111,5 +111,4 @@ public class GeneCopyNumberBuilderTest {
                 .geneEnd(end)
                 .build();
     }
-
 }

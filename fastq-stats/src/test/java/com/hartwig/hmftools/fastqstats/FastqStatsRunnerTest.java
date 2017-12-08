@@ -10,7 +10,7 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class FastqStatsRunnerTest {
-    private static String RUN_DIR_PATH = Resources.getResource("170101_TEST_000_TESTFLOWCELL").getPath();
+    private static final String RUN_DIR_PATH = Resources.getResource("170101_TEST_000_TESTFLOWCELL").getPath();
 
     @Test
     public void extractsCorrectFlowcellName() {

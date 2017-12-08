@@ -69,7 +69,7 @@ public class MNVDetectorApplication {
     }
 
     private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String outputBed)
-            throws IOException, HartwigException {
+            throws IOException {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
         final BufferedWriter bedWriter = new BufferedWriter(new FileWriter(outputBed, false));
         final VariantContextWriter vcfWriter = new VariantContextWriterBuilder().setOutputFile(outputVcf)

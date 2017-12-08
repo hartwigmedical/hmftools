@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.ecrf.datamodel;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class EcrfFieldFunctions {
+final class EcrfFieldFunctions {
 
     private static final String OID_SEPARATOR = ".";
 
@@ -10,7 +10,7 @@ public final class EcrfFieldFunctions {
     }
 
     @NotNull
-    public static String name(@NotNull String studyEventOID, @NotNull String formOID, @NotNull String itemGroupOID,
+    static String name(@NotNull String studyEventOID, @NotNull String formOID, @NotNull String itemGroupOID,
             @NotNull String itemOID) {
         String study = lastElement(studyEventOID);
         String form = lastElement(formOID);

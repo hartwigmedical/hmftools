@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class HmfGenomeFileLoaderTest {
     private static final String BASE_PATH = Resources.getResource("gene").getPath() + File.separator;
-    private static final double EPSILON = 1e-4;
 
     @Test
     public void testFileLoading() throws IOException, EmptyFileException {
@@ -22,5 +21,4 @@ public class HmfGenomeFileLoaderTest {
         assertEquals(27, regions.first().exome().size());
         assertEquals(7, regions.last().exome().size());
     }
-
 }

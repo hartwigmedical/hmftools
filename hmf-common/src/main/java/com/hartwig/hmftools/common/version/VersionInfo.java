@@ -22,7 +22,7 @@ public class VersionInfo {
     }
 
     @NotNull
-    public String version() throws IOException {
+    public String version() {
         return value("version=", "UNKNOWN");
     }
 

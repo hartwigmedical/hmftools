@@ -24,10 +24,6 @@ public enum FormStatusState {
         return stateString;
     }
 
-    int rank() {
-        return rank;
-    }
-
     @NotNull
     public static FormStatusState best(@NotNull FormStatusState... states) {
         assert states.length >= 1;

@@ -63,7 +63,7 @@ class EvidenceReport {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> alterationEvidenceTable() throws IOException, DRException {
+    private static ComponentBuilder<?, ?> alterationEvidenceTable() {
         final int ALTERATION_WIDTH = 130;
         final int SIGNIFICANCE_WIDTH = 100;
         final int SOURCE_WIDTH = 70;
@@ -95,7 +95,7 @@ class EvidenceReport {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> civicMatchingVariantsTable() throws IOException, DRException {
+    private static ComponentBuilder<?, ?> civicMatchingVariantsTable() {
         final int ALTERATION_WIDTH = 75;
 
         //@formatter:off

@@ -91,8 +91,7 @@ final class StrelkaPostProcess {
         }
     }
 
-    private static double readAf(@NotNull final VariantContext variant, final int tierIndex, @NotNull Function<Allele, String> alleleKey)
-            throws HartwigException {
+    private static double readAf(@NotNull final VariantContext variant, final int tierIndex, @NotNull Function<Allele, String> alleleKey) {
         final Genotype tumorGenotype = variant.getGenotype(TUMOR_GENOTYPE);
         final String altField = tumorGenotype.getExtendedAttribute(alleleKey.apply(variant.getAlternateAllele(0))).toString();
         final String refField = tumorGenotype.getExtendedAttribute(alleleKey.apply(variant.getReference())).toString();

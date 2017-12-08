@@ -116,6 +116,7 @@ class MNVMerger {
                 if (value instanceof Comparable && mergedAttributes.get(key) instanceof Comparable) {
                     final Comparable entryValue = (Comparable) value;
                     final Comparable mergedValue = (Comparable) mergedAttributes.get(key);
+                    //noinspection unchecked
                     if (entryValue.compareTo(mergedValue) < 1) {
                         mergedAttributes.put(key, value);
                     }

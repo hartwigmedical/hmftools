@@ -7,8 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class SingleValueResult extends AbstractResult {
 
-    private static final long serialVersionUID = -5744830259786248569L;
-
     @NotNull
     private final HealthCheck check;
 

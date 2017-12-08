@@ -37,12 +37,6 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
 
     @NotNull
     @Override
-    public CheckType checkType() {
-        return CheckType.COVERAGE;
-    }
-
-    @NotNull
-    @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final List<HealthCheck> refChecks = extractChecksForSample(runContext.runDirectory(), runContext.refSample());
         if (runContext.isSomaticRun()) {
@@ -78,14 +72,14 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
         HealthCheck.log(LOGGER, refChecks);
         HealthCheck.log(LOGGER, tumorChecks);
 
-        return new PatientResult(checkType(), refChecks, tumorChecks);
+        return new PatientResult(CheckType.COVERAGE, refChecks, tumorChecks);
     }
 
     @NotNull
     private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
         HealthCheck.log(LOGGER, checks);
 
-        return new MultiValueResult(checkType(), checks);
+        return new MultiValueResult(CheckType.COVERAGE, checks);
     }
 
     @NotNull

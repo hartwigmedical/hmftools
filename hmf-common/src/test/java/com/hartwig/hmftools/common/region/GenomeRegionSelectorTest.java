@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.region;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +16,6 @@ import org.junit.Test;
 
 public class GenomeRegionSelectorTest {
 
-    private List<GenomeRegion> regions;
     private GenomeRegionSelector<GenomeRegion> standardSelector;
     private GenomeRegionSelector<GenomeRegion> chromosomeSelector;
 
@@ -27,7 +27,7 @@ public class GenomeRegionSelectorTest {
 
     @Before
     public void setup() {
-        regions = Lists.newArrayList(region1, region2, region3, region4, region5);
+        List<GenomeRegion> regions = Lists.newArrayList(region1, region2, region3, region4, region5);
         standardSelector = GenomeRegionSelectorFactory.create(regions);
         chromosomeSelector = GenomeRegionSelectorFactory.create(Multimaps.index(regions, GenomeRegion::chromosome));
     }
@@ -41,22 +41,22 @@ public class GenomeRegionSelectorTest {
         assertSelection(region2, createPosition("1", 101));
         assertSelection(region2, createPosition("1", 200));
 
-        assertAbsense(createPosition("1", 201));
-        assertAbsense(createPosition("1", 300));
-        assertAbsense(createPosition("1", 350));
-        assertAbsense(createPosition("2", 300));
+        assertAbsence(createPosition("1", 201));
+        assertAbsence(createPosition("1", 300));
+        assertAbsence(createPosition("1", 350));
+        assertAbsence(createPosition("2", 300));
 
         assertSelection(region3, createPosition("2", 301));
         assertSelection(region3, createPosition("2", 400));
 
-        assertAbsense(createPosition("2", 401));
-        assertAbsense(createPosition("2", 500));
+        assertAbsence(createPosition("2", 401));
+        assertAbsence(createPosition("2", 500));
 
         assertSelection(region4, createPosition("2", 501));
         assertSelection(region4, createPosition("2", 600));
 
-        assertAbsense(createPosition("2", 601));
-        assertAbsense(createPosition("3", 600));
+        assertAbsence(createPosition("2", 601));
+        assertAbsence(createPosition("3", 600));
 
         assertSelection(region5, createPosition("3", 601));
         assertSelection(region5, createPosition("3", 700));
@@ -64,7 +64,7 @@ public class GenomeRegionSelectorTest {
 
     @Test
     public void testChromosomeNotAvailable() {
-        assertAbsense(createPosition("4", 601));
+        assertAbsence(createPosition("4", 601));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -79,12 +79,17 @@ public class GenomeRegionSelectorTest {
         assertEquals(Optional.empty(), chromosomeSelector.select(createPosition("1", 999)));
     }
 
-    private void assertSelection(final GenomeRegion expected, final GenomePosition position) {
-        assertEquals(expected, chromosomeSelector.select(position).get());
-        assertEquals(expected, standardSelector.select(position).get());
+    private void assertSelection(@NotNull final GenomeRegion expected, @NotNull final GenomePosition position) {
+        Optional<GenomeRegion> chromRegion = chromosomeSelector.select(position);
+        assertTrue(chromRegion.isPresent());
+        assertEquals(expected, chromRegion.get());
+
+        Optional<GenomeRegion> standardRegion = standardSelector.select(position);
+        assertTrue(standardRegion.isPresent());
+        assertEquals(expected, standardRegion.get());
     }
 
-    private void assertAbsense(final GenomePosition position) {
+    private void assertAbsence(final GenomePosition position) {
         assertEquals(Optional.empty(), chromosomeSelector.select(position));
         assertEquals(Optional.empty(), standardSelector.select(position));
     }

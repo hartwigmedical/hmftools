@@ -67,7 +67,7 @@ public class HmfGenePanelBuilder {
     }
 
     @NotNull
-    private static String readEnsemblQuery() throws IOException, EmptyFileException {
+    private static String readEnsemblQuery() throws IOException {
         final List<String> lines = Resources.readLines(Resources.getResource("ensembl_query.sql"), Charset.defaultCharset());
         return StringUtils.join(lines.toArray(), "\n");
     }

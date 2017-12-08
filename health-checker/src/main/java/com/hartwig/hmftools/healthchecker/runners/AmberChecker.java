@@ -21,12 +21,6 @@ public class AmberChecker extends ErrorHandlingChecker {
 
     @NotNull
     @Override
-    public CheckType checkType() {
-        return CheckType.AMBER;
-    }
-
-    @NotNull
-    @Override
     protected BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         final String amberDirectory = runContext.runDirectory() + File.separator + "amber";
         final AmberQC qcCheck = AmberQCFile.read(AmberQCFile.generateFilename(amberDirectory, runContext.tumorSample()));
@@ -44,13 +38,13 @@ public class AmberChecker extends ErrorHandlingChecker {
                     new HealthCheck(runContext.tumorSample(), AmberCheck.MEAN_BAF.toString(), HealthCheckConstants.ERROR_VALUE);
             return toSingleValueResult(healthCheck);
         } else {
-            return new NoResult(checkType());
+            return new NoResult(CheckType.AMBER);
         }
     }
 
     @NotNull
     private BaseResult toSingleValueResult(@NotNull final HealthCheck check) {
         check.log(LOGGER);
-        return new SingleValueResult(checkType(), check);
+        return new SingleValueResult(CheckType.AMBER, check);
     }
 }

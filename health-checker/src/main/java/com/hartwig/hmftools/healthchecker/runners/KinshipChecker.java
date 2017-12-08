@@ -34,15 +34,9 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
 
     @NotNull
     @Override
-    public CheckType checkType() {
-        return CheckType.KINSHIP;
-    }
-
-    @NotNull
-    @Override
     public BaseResult tryRun(@NotNull final RunContext runContext) throws IOException, HartwigException {
         if (!runContext.isSomaticRun()) {
-            return new NoResult(checkType());
+            return new NoResult(CheckType.KINSHIP);
         }
         final Path kinshipPath = PathExtensionFinder.build().findPath(runContext.runDirectory(), KINSHIP_EXTENSION);
         final List<String> kinshipLines = FileReader.build().readLines(kinshipPath);
@@ -69,13 +63,13 @@ public class KinshipChecker extends ErrorHandlingChecker implements HealthChecke
             return toSingleValueResult(new HealthCheck(runContext.tumorSample(), KinshipCheck.KINSHIP_TEST.toString(),
                     HealthCheckConstants.ERROR_VALUE));
         } else {
-            return new NoResult(checkType());
+            return new NoResult(CheckType.KINSHIP);
         }
     }
 
     @NotNull
     private BaseResult toSingleValueResult(@NotNull final HealthCheck check) {
         check.log(LOGGER);
-        return new SingleValueResult(checkType(), check);
+        return new SingleValueResult(CheckType.KINSHIP, check);
     }
 }

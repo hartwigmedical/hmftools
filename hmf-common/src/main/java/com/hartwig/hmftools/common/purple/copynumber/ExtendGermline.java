@@ -20,7 +20,6 @@ class ExtendGermline {
 
     private static final double AMPLIFICATION_TOLERANCE = 1;
     private static final double MIN_AMPLIFICATION_COPYNUMBER = 5;
-    private static final int MIN_AMPLIFICATION_TUMOR_RATIO_COUNT = 5;
 
     private final Gender gender;
 

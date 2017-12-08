@@ -15,11 +15,11 @@ import org.jetbrains.annotations.NotNull;
 class CombinedRegion implements GenomeRegion {
 
     private final boolean bafWeighted;
-    private ModifiableFittedRegion combined;
+    private final ModifiableFittedRegion combined;
 
     private CopyNumberMethod copyNumberMethod = CopyNumberMethod.UNKNOWN;
     private boolean inferredBAF;
-    private List<FittedRegion> regions = Lists.newArrayList();
+    private final List<FittedRegion> regions = Lists.newArrayList();
     private int unweightedCount = 1;
 
     CombinedRegion(final boolean bafWeighted, final FittedRegion region) {

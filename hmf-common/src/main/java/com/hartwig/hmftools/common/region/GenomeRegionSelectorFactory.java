@@ -47,7 +47,7 @@ public class GenomeRegionSelectorFactory {
 
         @NotNull
         @Override
-        public Optional<R> select(final GenomePosition position) {
+        public Optional<R> select(@NotNull final GenomePosition position) {
             return Optional.empty();
         }
 

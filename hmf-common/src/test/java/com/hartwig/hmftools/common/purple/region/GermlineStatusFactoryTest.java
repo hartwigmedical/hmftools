@@ -16,8 +16,8 @@ import org.junit.Test;
 
 public class GermlineStatusFactoryTest {
 
-    private GermlineStatusFactory maleVictim = new GermlineStatusFactory(Gender.MALE);
-    private GermlineStatusFactory femaleVictim = new GermlineStatusFactory(Gender.FEMALE);
+    private final GermlineStatusFactory maleVictim = new GermlineStatusFactory(Gender.MALE);
+    private final GermlineStatusFactory femaleVictim = new GermlineStatusFactory(Gender.FEMALE);
 
     @Test
     public void testAutosome() {

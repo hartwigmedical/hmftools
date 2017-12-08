@@ -9,8 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class PatientResult extends AbstractResult {
 
-    private static final long serialVersionUID = -3227613309511119840L;
-
     @NotNull
     private final List<HealthCheck> refSampleChecks;
     @NotNull

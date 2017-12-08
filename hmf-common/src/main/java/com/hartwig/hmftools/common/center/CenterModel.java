@@ -33,11 +33,6 @@ public abstract class CenterModel {
     }
 
     @Nullable
-    public String getCpctRecipientsFromSample(@NotNull final String sample) {
-        return getCpctRecipients(getCenterIdFromSample(sample));
-    }
-
-    @Nullable
     String getDrupRecipients(@NotNull final String centerId) {
         final CenterData center = centerPerId().get(centerId);
         if (center == null) {
@@ -49,11 +44,6 @@ public abstract class CenterModel {
             return center.cpctRecipients();
         }
         return drupRecipients;
-    }
-
-    @Nullable
-    public String getDrupRecipientsFromSample(@NotNull final String sample) {
-        return getDrupRecipients(getCenterIdFromSample(sample));
     }
 
     @Nullable

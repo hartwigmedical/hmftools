@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.ecrf.reader;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface OIDObject {
+interface OIDObject {
 
     @NotNull
     String oid();

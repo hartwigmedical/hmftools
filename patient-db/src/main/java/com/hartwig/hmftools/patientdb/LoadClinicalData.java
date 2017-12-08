@@ -93,8 +93,7 @@ public final class LoadClinicalData {
 
     private static void writeClinicalData(@NotNull final Options clinicalOptions, @NotNull final CommandLine cmd,
             @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
-            HartwigException {
+            throws IOException, XMLStreamException, HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_MAPPING_CSV);
         final String tumorLocationMappingCsv = cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV);
@@ -139,8 +138,7 @@ public final class LoadClinicalData {
 
     private static void writeRawEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
             @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
-            throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
-            HartwigException {
+            throws IOException, HartwigException, XMLStreamException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String formStatusPath = cmd.getOptionValue(FORM_STATUS_CSV);
         if (Utils.anyNull(ecrfFilePath, formStatusPath)) {

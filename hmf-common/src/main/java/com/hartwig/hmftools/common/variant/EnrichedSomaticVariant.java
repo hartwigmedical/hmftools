@@ -40,8 +40,4 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     @Override
     public abstract double adjustedVAF();
-
-    public double alleleFrequency() {
-        return (double) alleleReadCount() / totalReadCount();
-    }
 }

@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 
@@ -15,7 +14,7 @@ public enum SlicerFactory {
     ;
 
     @NotNull
-    public static Slicer fromBedFile(@NotNull String bedFile) throws IOException, EmptyFileException {
+    public static Slicer fromBedFile(@NotNull String bedFile) throws IOException {
         return new BidirectionalSlicer(BEDFileLoader.fromBedFile(bedFile));
     }
 

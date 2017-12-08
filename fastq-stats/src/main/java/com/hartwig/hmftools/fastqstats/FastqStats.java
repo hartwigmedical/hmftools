@@ -38,7 +38,7 @@ class FastqStats {
 
     @NotNull
     static FastqTracker processFastqs(@NotNull final Multimap<String, File> fastqsPerSample, final int threadCount)
-            throws IOException, InterruptedException {
+            throws InterruptedException {
         LOGGER.info("Using " + threadCount + " threads. Processing " + fastqsPerSample.size() + " fastQ files.");
         final FastqTrackerWrapper tracker = new FastqTrackerWrapper();
         final ListeningExecutorService threadPool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
@@ -100,7 +100,7 @@ class FastqStats {
     }
 
     @NotNull
-    static Multimap<String, File> getSingleFastq(@NotNull final String filePath) throws IOException {
+    static Multimap<String, File> getSingleFastq(@NotNull final String filePath) {
         final Multimap<String, File> fastqsPerSample = ArrayListMultimap.create();
         final File file = new File(filePath);
         fastqsPerSample.put(file.getName(), file);

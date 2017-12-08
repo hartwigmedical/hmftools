@@ -48,12 +48,12 @@ public abstract class TumorLocationDoidMapping {
     }
 
     @NotNull
-    public static TumorLocationDoidMapping fromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+    static TumorLocationDoidMapping fromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
         return fromLines(FileReader.build().readLines(new File(pathToCsv).toPath()));
     }
 
     @NotNull
-    public static TumorLocationDoidMapping fromResource(@NotNull final String name) throws IOException, EmptyFileException {
+    public static TumorLocationDoidMapping fromResource(@NotNull final String name) {
         final InputStream inputStream = TumorLocationDoidMapping.class.getResourceAsStream(name);
         return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
     }

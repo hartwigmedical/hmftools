@@ -35,13 +35,12 @@ public class PloidyPenaltyTest {
         assertNew(4.0, "AAABBB");
     }
 
-    private void assertOld(double expectedResult, @NotNull final String descriptiveBAF) {
+    private static void assertOld(double expectedResult, @NotNull final String descriptiveBAF) {
         int ploidy = descriptiveBAF.length();
-        int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
         assertEquals(expectedResult, PloidyPenalty.penalty(ploidy), EPSILON);
     }
 
-    private void assertNew(double expectedResult, @NotNull final String descriptiveBAF) {
+    private static void assertNew(double expectedResult, @NotNull final String descriptiveBAF) {
         int ploidy = descriptiveBAF.length();
         int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
         assertEquals(expectedResult, PloidyPenalty.penalty(ploidy, major), EPSILON);

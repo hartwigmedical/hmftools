@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.amber;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.pcf.PCFFile;
@@ -22,7 +21,7 @@ class BAFSegmentation {
         this.outputDirectory = outputDirectory;
     }
 
-    void applySegmentation(@NotNull final String tumor) throws ExecutionException, InterruptedException, IOException {
+    void applySegmentation(@NotNull final String tumor) throws InterruptedException, IOException {
         final String ratioFile = AmberBAFFile.generateAmberFilename(outputDirectory, tumor);
         bafSegmentation(ratioFile, tumor);
         LOGGER.info("BAFSegmentation Complete");

@@ -32,7 +32,7 @@ public enum GCMedianReadCountFile {
     }
 
     @NotNull
-    private static GCMedianReadCount fromLines(boolean extendRange, @NotNull final List<String> lines) throws IOException {
+    private static GCMedianReadCount fromLines(boolean extendRange, @NotNull final List<String> lines) {
         int mean = 0;
         int median = 0;
         if (lines.size() >= 2) {

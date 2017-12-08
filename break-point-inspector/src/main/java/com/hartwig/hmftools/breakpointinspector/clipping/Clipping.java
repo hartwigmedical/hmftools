@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.breakpointinspector.Location;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -17,10 +18,10 @@ import htsjdk.samtools.SAMRecord;
 
 public class Clipping {
 
-    private TreeMultimap<Location, ClipStats> LocationMap = TreeMultimap.create(Comparator.naturalOrder(), Comparator.naturalOrder());
+    @NotNull
+    private final TreeMultimap<Location, ClipStats> LocationMap = TreeMultimap.create(Comparator.naturalOrder(), Comparator.naturalOrder());
 
     public void add(@Nullable final ClipInfo clip) {
-
         if (clip == null) {
             return;
         }
@@ -67,6 +68,7 @@ public class Clipping {
         }
     }
 
+    @NotNull
     public List<ClipStats> getSequences() {
         return LocationMap.values()
                 .stream()
@@ -74,10 +76,12 @@ public class Clipping {
                 .collect(Collectors.toList());
     }
 
+    @NotNull
     public List<ClipStats> getSequencesAt(final Location location) {
         return Lists.newArrayList(LocationMap.get(location));
     }
 
+    @Nullable
     public static ClipInfo getLeftClip(final SAMRecord read) {
         final ClipInfo result = new ClipInfo(read);
         result.Left = true;
@@ -100,6 +104,7 @@ public class Clipping {
         return null;
     }
 
+    @Nullable
     public static ClipInfo getRightClip(final SAMRecord read) {
         final ClipInfo result = new ClipInfo(read);
         result.Right = true;
@@ -122,6 +127,7 @@ public class Clipping {
         return null;
     }
 
+    @NotNull
     public static Stream<ClipInfo> getClips(final SAMRecord read) {
         return Stream.of(getLeftClip(read), getRightClip(read));
     }

@@ -36,7 +36,7 @@ public interface PathsExtensionFinder {
     static List<Path> getPath(@NotNull final String path, @NotNull final String extension) throws IOException {
         try (Stream<Path> paths = Files.walk(new File(path).toPath())) {
             return paths.filter(filePath -> filePath.getFileName().toString().endsWith(extension)).sorted()
-                            .collect(toCollection(ArrayList<Path>::new));
+                    .collect(toCollection(ArrayList::new));
         }
     }
 }

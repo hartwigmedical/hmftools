@@ -32,11 +32,11 @@ class BreakpointStats {
 }
 
 class SampleStats {
-    BreakpointStats BP1_Stats = new BreakpointStats();
-    BreakpointStats BP2_Stats = new BreakpointStats();
-    Clipping Sample_Clipping = new Clipping();
-    List<Pair<SAMRecord, SAMRecord>> PR_Evidence = Lists.newArrayList();
-    List<Pair<SAMRecord, SAMRecord>> SR_Evidence = Lists.newArrayList();
+    final BreakpointStats BP1_Stats = new BreakpointStats();
+    final BreakpointStats BP2_Stats = new BreakpointStats();
+    final Clipping Sample_Clipping = new Clipping();
+    final List<Pair<SAMRecord, SAMRecord>> PR_Evidence = Lists.newArrayList();
+    final List<Pair<SAMRecord, SAMRecord>> SR_Evidence = Lists.newArrayList();
 
     static List<String> GetHeader() {
         final List<String> header = Lists.newArrayList();

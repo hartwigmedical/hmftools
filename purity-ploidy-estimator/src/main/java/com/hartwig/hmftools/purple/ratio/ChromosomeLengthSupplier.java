@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +25,7 @@ public class ChromosomeLengthSupplier implements Supplier<Map<String, Chromosome
     private final Map<String, ChromosomeLength> chromosomeLengths;
 
     public ChromosomeLengthSupplier(@NotNull final CommonConfig config, @NotNull Multimap<String, CobaltRatio> cobaltRatios)
-            throws IOException, HartwigException {
+            throws IOException {
         final String chrLengthFile = ChromosomeLengthFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
         if (new File(chrLengthFile).exists()) {
             LOGGER.info("Loading chromosome lengths from {}", chrLengthFile);

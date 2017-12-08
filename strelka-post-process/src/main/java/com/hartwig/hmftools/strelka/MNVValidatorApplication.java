@@ -68,8 +68,7 @@ public class MNVValidatorApplication {
         return parser.parse(options, args);
     }
 
-    private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String tumorBam)
-            throws IOException, HartwigException {
+    private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String tumorBam) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
         final VariantContextWriter vcfWriter = new VariantContextWriterBuilder().setOutputFile(outputVcf)
                 .setReferenceDictionary(vcfReader.getFileHeader().getSequenceDictionary())

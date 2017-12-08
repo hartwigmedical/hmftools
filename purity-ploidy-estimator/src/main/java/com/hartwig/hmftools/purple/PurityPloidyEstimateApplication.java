@@ -284,8 +284,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static List<PurpleSomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier)
-            throws IOException, HartwigException {
+    private static List<PurpleSomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
         final SomaticConfig config = configSupplier.somaticConfig();
         if (config.file().isPresent()) {
             String filename = config.file().get().toString();

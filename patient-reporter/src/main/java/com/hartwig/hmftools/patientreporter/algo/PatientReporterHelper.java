@@ -41,21 +41,21 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static PurityContext loadPurity(@NotNull final String runDirectory, @NotNull final String sample) throws IOException, HartwigException {
+    static PurityContext loadPurity(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return FittedPurityFile.read(cnvBasePath, sample);
     }
 
     @NotNull
     static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException, HartwigException {
+            throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         return PurpleCopyNumberFile.read(cnvBasePath, sample);
     }
 
     @NotNull
     static List<GeneCopyNumber> loadPurpleGeneCopyNumbers(@NotNull final String runDirectory, @NotNull final String sample)
-            throws IOException, HartwigException {
+            throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
         final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
         return GeneCopyNumberFile.read(fileName);
