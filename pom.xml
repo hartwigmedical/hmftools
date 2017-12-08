@@ -20,7 +20,6 @@
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
         <module>hmf-gene-panel</module>
-        <module>rups-checker</module>
         <module>strelka-post-process</module>
         <module>api-clients</module>
         <module>ensembl-db</module>
