@@ -91,61 +91,35 @@ class StructuralVariantDAO {
                 .execute();
 
         context.delete(STRUCTURALVARIANTBREAKEND)
-                .where(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID.in(select(STRUCTURALVARIANT.ID).from(STRUCTURALVARIANT)
-                        .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))))
+                .where(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID.in(
+                        select(STRUCTURALVARIANT.ID).from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample))))
                 .execute();
 
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedStructuralVariant> batch : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter = context.insertInto(STRUCTURALVARIANT,
-                    STRUCTURALVARIANT.SAMPLEID,
-                    STRUCTURALVARIANT.STARTCHROMOSOME,
-                    STRUCTURALVARIANT.ENDCHROMOSOME,
-                    STRUCTURALVARIANT.STARTPOSITION,
-                    STRUCTURALVARIANT.ENDPOSITION,
-                    STRUCTURALVARIANT.STARTORIENTATION,
-                    STRUCTURALVARIANT.ENDORIENTATION,
-                    STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE,
-                    STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE,
-                    STRUCTURALVARIANT.INSERTSEQUENCE,
-                    STRUCTURALVARIANT.TYPE,
-                    STRUCTURALVARIANT.STARTAF,
-                    STRUCTURALVARIANT.ADJUSTEDSTARTAF,
-                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER,
-                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE,
-                    STRUCTURALVARIANT.ENDAF,
-                    STRUCTURALVARIANT.ADJUSTEDENDAF,
-                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER,
-                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
-                    STRUCTURALVARIANT.PLOIDY,
-                    STRUCTURALVARIANT.MODIFIED);
+            InsertValuesStep21 inserter =
+                    context.insertInto(STRUCTURALVARIANT, STRUCTURALVARIANT.SAMPLEID, STRUCTURALVARIANT.STARTCHROMOSOME,
+                            STRUCTURALVARIANT.ENDCHROMOSOME, STRUCTURALVARIANT.STARTPOSITION, STRUCTURALVARIANT.ENDPOSITION,
+                            STRUCTURALVARIANT.STARTORIENTATION, STRUCTURALVARIANT.ENDORIENTATION, STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE,
+                            STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE, STRUCTURALVARIANT.INSERTSEQUENCE, STRUCTURALVARIANT.TYPE,
+                            STRUCTURALVARIANT.STARTAF, STRUCTURALVARIANT.ADJUSTEDSTARTAF, STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER,
+                            STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE, STRUCTURALVARIANT.ENDAF, STRUCTURALVARIANT.ADJUSTEDENDAF,
+                            STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER, STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
+                            STRUCTURALVARIANT.PLOIDY, STRUCTURALVARIANT.MODIFIED);
             batch.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private void addRecord(Timestamp timestamp, InsertValuesStep21 inserter, String sample, EnrichedStructuralVariant region) {
-        inserter.values(sample,
-                region.start().chromosome(),
-                region.end().chromosome(),
-                region.start().position(),
-                region.end().position(),
-                region.start().orientation(),
-                region.end().orientation(),
-                region.start().homology(),
-                region.end().homology(),
-                region.insertSequence(),
-                region.type(),
-                region.start().alleleFrequency(),
-                region.start().adjustedAlleleFrequency(),
-                region.start().adjustedCopyNumber(),
-                region.start().adjustedCopyNumberChange(),
-                region.end().alleleFrequency(),
-                region.end().adjustedAlleleFrequency(),
-                region.end().adjustedCopyNumber(),
-                region.end().adjustedCopyNumberChange(),
-                region.ploidy(),
-                timestamp);
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
+            @NotNull EnrichedStructuralVariant region) {
+        //noinspection unchecked
+        inserter.values(sample, region.start().chromosome(), region.end().chromosome(), region.start().position(), region.end().position(),
+                region.start().orientation(), region.end().orientation(), region.start().homology(), region.end().homology(),
+                region.insertSequence(), region.type(), region.start().alleleFrequency(), region.start().adjustedAlleleFrequency(),
+                region.start().adjustedCopyNumber(), region.start().adjustedCopyNumberChange(), region.end().alleleFrequency(),
+                region.end().adjustedAlleleFrequency(), region.end().adjustedCopyNumber(), region.end().adjustedCopyNumberChange(),
+                region.ploidy(), timestamp);
     }
 }

@@ -121,5 +121,4 @@ public class TreatmentMatcherTest {
         assertTrue(treatments.size() == matchedTreatments.size());
         assertEquals(null, matchedTreatments.get(0).biopsyId());
     }
-
 }

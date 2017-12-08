@@ -60,12 +60,14 @@ class EcrfDAO {
             @NotNull final Supplier<InsertValuesStep4> inserter) {
         context.batch(StreamSupport.stream(datamodelFields.spliterator(), false).map(field -> {
             final String codeList = StringUtils.join(field.codeList().values().toArray(), ",");
+            //noinspection unchecked
             return inserter.get().values(field.name(), field.description(), codeList, field.isRelevant() ? "TRUE" : "FALSE");
         }).collect(Collectors.toList())).execute();
     }
 
     private void writePatient(@NotNull final EcrfPatient patient, final boolean sequenced,
             @NotNull final Supplier<InsertValuesStep14> inserter) {
+        //noinspection unchecked
         context.batch(patient.fields()
                 .stream()
                 .map(field -> inserter.get()
