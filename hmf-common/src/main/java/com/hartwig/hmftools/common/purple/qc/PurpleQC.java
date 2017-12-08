@@ -37,11 +37,13 @@ public abstract class PurpleQC {
         return (int) Math.round(unsupportedSegments() / ploidy());
     }
 
-    public abstract int unsupportedSegments();
+    abstract int unsupportedSegments();
 
     public abstract double ploidy();
 
+    @NotNull
     public abstract Gender cobaltGender();
 
+    @NotNull
     public abstract Gender amberGender();
 }

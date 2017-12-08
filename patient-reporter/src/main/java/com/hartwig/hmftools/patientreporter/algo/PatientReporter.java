@@ -74,7 +74,7 @@ public abstract class PatientReporter {
 
         final String tumorSample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
-        final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.copyNumberAnalysis();
+        final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.purpleAnalysis().copyNumberAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
         final StructuralVariantAnalysis svAnalysis = genomeAnalysis.structuralVariantAnalysis();
         final List<GeneFusionData> reportableFusions =
@@ -170,14 +170,12 @@ public abstract class PatientReporter {
                     + ") range exceeds 5%. Proceed with caution.");
         }
 
-        final CopyNumberAnalysis copyNumberAnalysis = purpleAnalysis.copyNumberAnalysis();
-
         final Path svVcfPath = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
         LOGGER.info(" Loading structural variants...");
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(svVcfPath.toString());
         LOGGER.info(" Analysing structural variants...");
         final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer().run(structuralVariants);
 
-        return new GenomeAnalysis(sample, variantAnalysis, copyNumberAnalysis, purpleAnalysis, svAnalysis);
+        return new GenomeAnalysis(sample, variantAnalysis, purpleAnalysis, svAnalysis);
     }
 }
