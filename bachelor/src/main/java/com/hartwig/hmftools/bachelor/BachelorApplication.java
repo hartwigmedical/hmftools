@@ -90,11 +90,12 @@ public class BachelorApplication {
         }
     }
 
-    private static Collection<EligibilityReport> processPurpleCNV(final File cnv, final BachelorEligibility eligibility) {
+    private static Collection<EligibilityReport> processPurpleCNV(final String patient, final File cnv,
+            final BachelorEligibility eligibility) {
         LOGGER.info("process cnv: {}", cnv.getPath());
         try {
             final List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(cnv);
-            return eligibility.processCopyNumbers(copyNumbers);
+            return eligibility.processCopyNumbers(patient, copyNumbers);
         } catch (final IOException e) {
             LOGGER.error("error with CNV file {}: {}", cnv.getPath(), e.getMessage());
             return Collections.emptyList();
@@ -123,7 +124,7 @@ public class BachelorApplication {
             result.addAll(processVCF(patient, false, run.somatic, eligibility));
         }
         if (run.copyNumber != null) {
-            result.addAll(processPurpleCNV(run.copyNumber, eligibility));
+            result.addAll(processPurpleCNV(patient, run.copyNumber, eligibility));
         }
         if (run.structuralVariants != null) {
             result.addAll(processSV(run.structuralVariants, eligibility));
