@@ -1,19 +1,20 @@
-ALTER TABLE copyNumber CHANGE structuralVariantSupport segmentStartSupport varchar(255) NOT NULL;
-ALTER TABLE copyNumber ADD COLUMN segmentEndSupport varchar(255) NOT NULL AFTER segmentStartSupport;
-ALTER TABLE copyNumberRegion CHANGE structuralVariantSupport segmentStartSupport varchar(255) NOT NULL;
-ALTER TABLE copyNumberRegion ADD COLUMN actualTumorBaf DOUBLE PRECISION not null AFTER modelTumorRatio;
-
-ALTER TABLE copyNumber DROP COLUMN ratioSupport;
-ALTER TABLE copyNumber ADD COLUMN inferred BOOLEAN NOT NULL AFTER end;
-
 DROP TABLE IF EXISTS structuralVariantCluster;
 DROP TABLE IF EXISTS copyNumberCluster;
-ALTER TABLE copyNumberRegion ADD COLUMN gcContent DOUBLE PRECISION not null AFTER observedTumorRatioCount;
-
 
 ALTER TABLE copyNumber
-    ADD COLUMN copyNumberMethod varchar(255) NOT NULL AFTER copyNumber,
-    DROP COLUMN inferred;
+    CHANGE structuralVariantSupport segmentStartSupport varchar(255) NOT NULL,
+    ADD COLUMN segmentEndSupport varchar(255) NOT NULL AFTER segmentStartSupport,
+    DROP COLUMN ratioSupport,
+    ADD COLUMN copyNumberMethod varchar(255) NOT NULL AFTER copyNumber;
+
+ALTER TABLE copyNumberRegion
+    CHANGE structuralVariantSupport segmentStartSupport varchar(255) NOT NULL,
+    ADD COLUMN actualTumorBaf DOUBLE PRECISION not null AFTER modelTumorRatio,
+    ADD COLUMN gcContent DOUBLE PRECISION not null AFTER observedTumorRatioCount,
+    DROP COLUMN highConfidenceBaf,
+    DROP COLUMN highConfidenceCopyNumber,
+    CHANGE status germlineStatus varchar(255) NOT NULL,
+    ADD COLUMN svCluster BOOLEAN NOT NULL AFTER germlineStatus;
 
 DROP TABLE IF EXISTS copyNumberGermline;
 CREATE TABLE copyNumberGermline
@@ -39,11 +40,6 @@ ALTER TABLE geneCopyNumber
     ADD COLUMN germlineHomRegions int not null AFTER somaticRegions,
     ADD COLUMN germlineHetRegions int not null AFTER germlineHomRegions;
 
-ALTER TABLE copyNumberRegion
-    DROP COLUMN highConfidenceBaf,
-    DROP COLUMN highConfidenceCopyNumber,
-    CHANGE status germlineStatus varchar(255) NOT NULL,
-    ADD COLUMN svCluster BOOLEAN NOT NULL AFTER germlineStatus;
 
 ALTER TABLE structuralVariant
     ADD COLUMN ploidy DOUBLE PRECISION AFTER endAF,
