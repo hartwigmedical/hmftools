@@ -25,12 +25,12 @@ public class ClusterFactory {
 
     public ClusterFactory(final int windowSize) {
         this.windowSize = windowSize;
-        window = new Window(windowSize);
+        this.window = new Window(windowSize);
     }
 
     @NotNull
     public ListMultimap<String, Cluster> cluster(@NotNull final List<StructuralVariant> variants,
-            @NotNull final Multimap<String, PCFPosition> pcfPositions, ListMultimap<String, CobaltRatio> ratios) {
+            @NotNull final Multimap<String, PCFPosition> pcfPositions, @NotNull ListMultimap<String, CobaltRatio> ratios) {
         final Multimap<String, ClusterVariantLeg> positions = asMap(ClusterVariantLegFactory.create(variants));
         return cluster(positions, pcfPositions, ratios);
     }
@@ -40,11 +40,11 @@ public class ClusterFactory {
             @NotNull final Multimap<String, PCFPosition> pcfPositions, @NotNull final ListMultimap<String, CobaltRatio> ratios) {
         ListMultimap<String, Cluster> clusters = ArrayListMultimap.create();
         for (String chromosome : pcfPositions.keySet()) {
-            final Collection<PCFPosition> chromosomeRatioPositions = pcfPositions.get(chromosome);
+            final Collection<PCFPosition> chromosomePcfPositions = pcfPositions.get(chromosome);
             final Collection<ClusterVariantLeg> chromosomeVariants =
                     variantPositions.containsKey(chromosome) ? variantPositions.get(chromosome) : Collections.EMPTY_LIST;
             final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.EMPTY_LIST;
-            clusters.putAll(chromosome, cluster(chromosomeVariants, chromosomeRatioPositions, chromosomeRatios));
+            clusters.putAll(chromosome, cluster(chromosomeVariants, chromosomePcfPositions, chromosomeRatios));
         }
 
         return clusters;

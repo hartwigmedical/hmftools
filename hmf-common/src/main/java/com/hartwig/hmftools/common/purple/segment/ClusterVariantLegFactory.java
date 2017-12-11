@@ -29,5 +29,4 @@ final class ClusterVariantLegFactory {
         Collections.sort(positions);
         return positions;
     }
-
 }
