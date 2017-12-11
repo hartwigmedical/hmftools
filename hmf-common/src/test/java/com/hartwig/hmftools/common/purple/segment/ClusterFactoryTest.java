@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -160,20 +161,6 @@ public class ClusterFactoryTest {
         assertVariantsInCluster(clusters.get(0), 12002, 15532, 18881);
     }
 
-    private List<CobaltRatio> createRatios() {
-        return cobalt(11001, true, true, false, false, true, false, false, true);
-    }
-
-    private static void assertCluster(final Cluster cluster, long start, Long firstVariant, Long finalVariant, Long firstRatio,
-            Long finalRatio) {
-        assertEquals(start, cluster.start());
-        assertEquals(Math.max(finalVariant == null ? 0 : finalVariant, finalRatio == null ? 0 : finalRatio), cluster.end());
-        assertEquals(firstVariant, cluster.firstVariant());
-        assertEquals(finalVariant, cluster.finalVariant());
-        assertEquals(firstRatio, cluster.firstRatio());
-        assertEquals(finalRatio, cluster.finalRatio());
-    }
-
     private static void assertRatioInCluster(final Cluster cluster, long start, long position) {
         assertCluster(cluster, start, null, null, position, position);
     }
@@ -190,14 +177,32 @@ public class ClusterFactoryTest {
         assertCluster(cluster, start, firstPosition, finalPosition, null, null);
     }
 
+    private static void assertCluster(@NotNull final Cluster cluster, long start, @Nullable Long firstVariant, @Nullable Long finalVariant,
+            @Nullable Long firstRatio, @Nullable Long finalRatio) {
+        assertEquals(start, cluster.start());
+        assertEquals(Math.max(finalVariant == null ? 0 : finalVariant, finalRatio == null ? 0 : finalRatio), cluster.end());
+        assertEquals(firstVariant, cluster.firstVariant());
+        assertEquals(finalVariant, cluster.finalVariant());
+        assertEquals(firstRatio, cluster.firstRatio());
+        assertEquals(finalRatio, cluster.finalRatio());
+    }
+
+    @NotNull
+    private static List<CobaltRatio> createRatios() {
+        return cobalt(11001, true, true, false, false, true, false, false, true);
+    }
+
+    @NotNull
     private static CobaltRatio cobalt(long position, boolean useable) {
         return ratio(position, useable ? 1 : -1);
     }
 
+    @NotNull
     private static CobaltRatio ratio(long position, double ratio) {
         return PurpleDatamodelTest.cobalt(CHROM, position, ratio).build();
     }
 
+    @NotNull
     private static ClusterVariantLeg createSVPosition(long position) {
         return ImmutableClusterVariantLeg.builder()
                 .chromosome(CHROM)
