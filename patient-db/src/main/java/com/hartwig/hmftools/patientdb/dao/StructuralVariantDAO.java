@@ -87,7 +87,7 @@ class StructuralVariantDAO {
         // delete annotations
         context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(breakendsToDelete)).execute();
         context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(breakendsToDelete)).execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID.in(breakendsToDelete)).execute();
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(breakendsToDelete)).execute();
 
         // delete structural variants
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
