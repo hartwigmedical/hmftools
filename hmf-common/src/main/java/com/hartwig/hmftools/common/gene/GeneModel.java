@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.gene;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
@@ -15,12 +17,14 @@ public class GeneModel {
 
     private final Map<String, HmfGenomeRegion> transcriptMap;
     private final Collection<HmfGenomeRegion> regions;
+    private final Set<String> panel;
     private final Slicer slicer;
 
     public GeneModel(@NotNull final SortedSetMultimap<String, HmfGenomeRegion> regions) {
         this.regions = regions.values();
         slicer = SlicerFactory.fromRegions(regions);
         transcriptMap = extractTranscriptMap(regions.values());
+        panel = regions.values().stream().map(GeneRegion::gene).collect(Collectors.toSet());
     }
 
     @NotNull
@@ -46,4 +50,9 @@ public class GeneModel {
         }
         return transcriptMap;
     }
+
+    public Set<String> panel() {
+        return panel;
+    }
+
 }

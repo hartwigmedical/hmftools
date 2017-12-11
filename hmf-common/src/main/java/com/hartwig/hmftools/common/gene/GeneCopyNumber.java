@@ -25,6 +25,10 @@ public interface GeneCopyNumber extends GeneRegion, CopyNumber {
 
     int germlineHomRegions();
 
+    default int totalRegions() {
+        return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();
+    }
+
     @Override
     default int value() {
         return (int) Math.max(0, Math.round(minCopyNumber()));
