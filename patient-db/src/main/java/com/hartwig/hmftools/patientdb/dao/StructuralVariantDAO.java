@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTU
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTDISRUPTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
 
-import static org.jooq.impl.DSL.select;
-
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
+import org.jooq.Record1;
 import org.jooq.Result;
+import org.jooq.types.UInteger;
 
 class StructuralVariantDAO {
     @NotNull
@@ -76,25 +76,20 @@ class StructuralVariantDAO {
 
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> regions) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(STRUCTURALVARIANTDISRUPTION)
-                .where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(select(STRUCTURALVARIANTBREAKEND.ID).from(STRUCTURALVARIANTBREAKEND)
-                        .innerJoin(STRUCTURALVARIANT)
-                        .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-                        .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))))
-                .execute();
 
-        context.delete(STRUCTURALVARIANTFUSION)
-                .where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(select(STRUCTURALVARIANTBREAKEND.ID).from(STRUCTURALVARIANTBREAKEND)
-                        .innerJoin(STRUCTURALVARIANT)
-                        .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
-                        .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))))
-                .execute();
+        final Result<Record1<UInteger>> breakendsToDelete = context.select(STRUCTURALVARIANTBREAKEND.ID)
+                .from(STRUCTURALVARIANTBREAKEND)
+                .innerJoin(STRUCTURALVARIANT)
+                .on(STRUCTURALVARIANT.ID.eq(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID))
+                .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))
+                .fetch();
 
-        context.delete(STRUCTURALVARIANTBREAKEND)
-                .where(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID.in(
-                        select(STRUCTURALVARIANT.ID).from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample))))
-                .execute();
+        // delete annotations
+        context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(breakendsToDelete)).execute();
+        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(breakendsToDelete)).execute();
+        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID.in(breakendsToDelete)).execute();
 
+        // delete structural variants
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedStructuralVariant> batch : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
