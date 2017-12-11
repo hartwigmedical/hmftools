@@ -43,7 +43,9 @@ public abstract class Alteration {
 
     public abstract List<AlterationMatch> getMatches();
 
+    @SuppressWarnings("unused")
     public String getAlteration() {
+        // KODU: This function is used via reflection inside FieldBuilder -> pls do not remove!
         return getGene() + "\n" + getPredictedEffect();
     }
 
