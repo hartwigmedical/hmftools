@@ -154,7 +154,11 @@ public abstract class PatientReporter {
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore purityScore = context.score();
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
-        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample);
+        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
+                .stream()
+                .filter(x -> reporterData().geneModel().panel().contains(x.gene()))
+                .collect(Collectors.toList());
+
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);
         LOGGER.info(" Analyzing purple somatic copy numbers...");
         final PurpleAnalysis purpleAnalysis = ImmutablePurpleAnalysis.builder()
