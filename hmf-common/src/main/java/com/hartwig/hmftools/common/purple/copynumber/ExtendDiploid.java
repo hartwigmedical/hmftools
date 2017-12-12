@@ -110,7 +110,8 @@ class ExtendDiploid {
 
         final boolean isNeighbourDubious = isDubious(neighbour);
         if (isNeighbourDubious) {
-            int minTumorCount = nextBigBreakIsCentromere(regions, direction, targetIndex) ? minTumorCountAtCentromere : this.minTumorCount;
+            int minTumorCount =
+                    nextBigBreakIsCentromereOrTelomere(regions, direction, targetIndex) ? minTumorCountAtCentromere : this.minTumorCount;
             if (inTolerance(target.region(), neighbour)) {
                 target.extendWithBAFWeightedAverage(neighbour);
                 return true;
@@ -135,16 +136,14 @@ class ExtendDiploid {
     }
 
     private boolean isValid(@NotNull final FittedRegion region) {
-        return region.status() == GermlineStatus.DIPLOID && (region.support() != SegmentSupport.NONE
-                || region.observedTumorRatioCount() >= minTumorCount);
+        return region.status() == GermlineStatus.DIPLOID && (region.support().isSV() || region.observedTumorRatioCount() >= minTumorCount);
     }
 
     private boolean isDubious(@NotNull final FittedRegion region) {
-        return region.status() == GermlineStatus.DIPLOID && region.support() == SegmentSupport.NONE
-                && region.observedTumorRatioCount() < minTumorCount;
+        return region.status() == GermlineStatus.DIPLOID && !region.support().isSV() && region.observedTumorRatioCount() < minTumorCount;
     }
 
-    private boolean nextBigBreakIsCentromere(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction,
+    private boolean nextBigBreakIsCentromereOrTelomere(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction,
             int targetIndex) {
         for (int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i)) {
             final FittedRegion neighbour = regions.get(i).region();
@@ -156,7 +155,7 @@ class ExtendDiploid {
             }
         }
 
-        return false;
+        return true;
     }
 
     private boolean pushThroughDubiousRegion(int minTumorCount, @NotNull final List<CombinedRegion> regions,
@@ -187,7 +186,7 @@ class ExtendDiploid {
             }
         }
 
-        return false;
+        return dubiousCount < minTumorCount;
     }
 
     private boolean inTolerance(@NotNull final FittedRegion left, @NotNull final FittedRegion right) {
@@ -197,9 +196,11 @@ class ExtendDiploid {
     private static int nextIndex(@NotNull final List<CombinedRegion> regions) {
         int indexOfLargestBaf = -1;
         int indexOfLargestLength = -1;
+        int indexOfTumorRatioCount = -1;
 
         int largestBAFCount = 0;
         long largestBases = 0;
+        long largestTumorRatioCount = 0;
 
         for (int i = 0; i < regions.size(); i++) {
             final CombinedRegion combined = regions.get(i);
@@ -211,6 +212,11 @@ class ExtendDiploid {
                     indexOfLargestBaf = i;
                 }
 
+                if (region.observedTumorRatioCount() > largestTumorRatioCount) {
+                    largestTumorRatioCount = region.observedTumorRatioCount();
+                    indexOfTumorRatioCount = i;
+                }
+
                 if (region.bases() > largestBases) {
                     largestBases = region.bases();
                     indexOfLargestLength = i;
@@ -218,7 +224,7 @@ class ExtendDiploid {
             }
         }
 
-        return indexOfLargestBaf > -1 ? indexOfLargestBaf : indexOfLargestLength;
+        return indexOfLargestBaf > -1 ? indexOfLargestBaf : (indexOfTumorRatioCount > -1 ? indexOfTumorRatioCount : indexOfLargestLength);
     }
 
     @NotNull
