@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
@@ -115,7 +116,7 @@ public class ConfigSupplier {
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
 
-    public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, HartwigException {
+    public ConfigSupplier(@NotNull CommandLine cmd, @NotNull Options opt) throws ParseException, HartwigException, IOException {
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
         if (runDirectory == null) {
             printHelp(opt);
@@ -140,6 +141,11 @@ public class ConfigSupplier {
         }
 
         final String outputDirectory = defaultValue(cmd, OUTPUT_DIRECTORY, runDirectory + File.separator + OUTPUT_DIRECTORY_DEFAULT);
+        final File outputDir = new File(outputDirectory);
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            throw new IOException("Unable to write directory " + outputDirectory);
+        }
+
         final String amberDirectory = cmd.hasOption(AMBER) ? cmd.getOptionValue(AMBER) : runDirectory + File.separator + "amber";
         final String cobaltDirectory = cmd.hasOption(COBALT) ? cmd.getOptionValue(COBALT) : runDirectory + File.separator + "cobalt";
 
