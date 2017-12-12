@@ -47,76 +47,42 @@ public class ClusterFactoryTest {
     public void testWindowStartWithRatios() {
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
 
-        assertEquals(37380002, victim.start(37381001, 6, cobalt));
-        assertEquals(37380002, victim.start(37381002, 6, cobalt));
-        assertEquals(37380002, victim.start(37381999, 6, cobalt));
-        assertEquals(37380002, victim.start(37382000, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381001, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381002, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381999, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382000, 6, cobalt));
 
-        assertEquals(37380002, victim.start(37382001, 6, cobalt));
-        assertEquals(37380002, victim.start(37382002, 6, cobalt));
-        assertEquals(37380002, victim.start(37382999, 6, cobalt));
-        assertEquals(37380002, victim.start(37383000, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382001, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382002, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382999, 6, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37383000, 6, cobalt));
 
-        assertEquals(37382002, victim.start(37383001, 6, cobalt));
-        assertEquals(37382002, victim.start(37383002, 6, cobalt));
-        assertEquals(37382002, victim.start(37383999, 6, cobalt));
-        assertEquals(37382002, victim.start(37384000, 6, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383001, 6, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383002, 6, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383999, 6, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37384000, 6, cobalt));
     }
 
     @Test
     public void testWindowStartWithoutRatios() {
         final List<CobaltRatio> cobalt = Lists.newArrayList();
 
-        assertEquals(37380002, victim.start(37381001, -1, cobalt));
-        assertEquals(37380002, victim.start(37381002, -1, cobalt));
-        assertEquals(37380002, victim.start(37381999, -1, cobalt));
-        assertEquals(37380002, victim.start(37382000, -1, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381001, -1, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381002, -1, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381999, -1, cobalt));
+        assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37382000, -1, cobalt));
 
-        assertEquals(37381002, victim.start(37382001, -1, cobalt));
-        assertEquals(37381002, victim.start(37382002, -1, cobalt));
-        assertEquals(37381002, victim.start(37382999, -1, cobalt));
-        assertEquals(37381002, victim.start(37383000, -1, cobalt));
+        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37382001, -1, cobalt));
+        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37382002, -1, cobalt));
+        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37382999, -1, cobalt));
+        assertEquals(37381002, victim.earliestDetectableCopyNumberChangePosition(37383000, -1, cobalt));
 
-        assertEquals(37382002, victim.start(37383001, -1, cobalt));
-        assertEquals(37382002, victim.start(37383002, -1, cobalt));
-        assertEquals(37382002, victim.start(37383999, -1, cobalt));
-        assertEquals(37382002, victim.start(37384000, -1, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383001, -1, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383002, -1, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383999, -1, cobalt));
+        assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37384000, -1, cobalt));
     }
 
-    @Test
-    public void testWindowEndWithRatios() {
-        final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
-
-        assertEquals(37381000, victim.end(37380001, 0, cobalt));
-
-        assertEquals(37383000, victim.end(37380002, 0, cobalt));
-        assertEquals(37383000, victim.end(37381001, 0, cobalt));
-        assertEquals(37383000, victim.end(37382000, 0, cobalt));
-        assertEquals(37383000, victim.end(37382001, 0, cobalt));
-
-        assertEquals(37384000, victim.end(37382002, 0, cobalt));
-        assertEquals(37384000, victim.end(37383000, 0, cobalt));
-        assertEquals(37384000, victim.end(37383001, 0, cobalt));
-
-        assertEquals(37385000, victim.end(37383002, 0, cobalt));
-    }
-
-    @Test
-    public void testWindowEndWithoutRatios() {
-        final List<CobaltRatio> cobalt = Lists.newArrayList();
-        assertEquals(37381000, victim.end(37380001, 0, cobalt));
-
-        assertEquals(37382000, victim.end(37380002, 0, cobalt));
-        assertEquals(37382000, victim.end(37381001, 0, cobalt));
-
-        assertEquals(37383000, victim.end(37382000, 0, cobalt));
-        assertEquals(37383000, victim.end(37382001, 0, cobalt));
-
-        assertEquals(37384000, victim.end(37382002, 0, cobalt));
-        assertEquals(37384000, victim.end(37383001, 0, cobalt));
-
-        assertEquals(37385000, victim.end(37383002, 0, cobalt));
-    }
 
     @Test
     public void testDefaultClusterBounds() {
