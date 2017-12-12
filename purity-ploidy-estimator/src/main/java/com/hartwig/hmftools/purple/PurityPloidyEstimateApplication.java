@@ -91,7 +91,6 @@ public class PurityPloidyEstimateApplication {
     private static final String THREADS = "threads";
     private static final String EXPERIMENTAL = "experimental";
     private static final String VERSION = "version";
-    private static final String GENE_PANEL = "gene_panel";
 
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
@@ -127,9 +126,7 @@ public class PurityPloidyEstimateApplication {
             final String tumorSample = config.tumorSample();
 
             // JOBA: Read Gene Panel
-            final List<HmfGenomeRegion> genePanel = cmd.hasOption(GENE_PANEL)
-                    ? HmfGenePanelSupplier.fromFile(cmd.getOptionValue(GENE_PANEL))
-                    : HmfGenePanelSupplier.allGeneList();
+            final List<HmfGenomeRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(configSupplier.bafConfig().bafFile().toString());
@@ -318,7 +315,6 @@ public class PurityPloidyEstimateApplication {
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
-        options.addOption(GENE_PANEL, true, "Use specified gene panel instead of default.");
 
         return options;
     }
