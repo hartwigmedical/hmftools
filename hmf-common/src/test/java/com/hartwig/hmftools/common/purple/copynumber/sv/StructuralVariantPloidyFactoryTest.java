@@ -71,7 +71,7 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @Test
-    public void testExludeNegativeAndZeroCopyNumbers() {
+    public void testExcludeNegativeAndZeroCopyNumbers() {
         final StructuralVariantLeg positiveLeg = createLeg(1001, 1, 0.25);
         final StructuralVariantLeg negativeLeg = createLeg(2001, -1, 0.25);
         final PurpleCopyNumber left = copyNumber(1, 1000, -0.01);
@@ -79,6 +79,14 @@ public class StructuralVariantPloidyFactoryTest {
 
         assertFalse(PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).isPresent());
         assertFalse(PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).isPresent());
+    }
+
+    @Test
+    public void testExcludeInfiniteVAF() {
+        final StructuralVariantLeg leg = createLeg(1001, -1, 1);
+        final PurpleCopyNumber left = copyNumber(1, 1000, 3);
+
+        assertFalse(PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(singleton(left))).isPresent());
     }
 
     @Test

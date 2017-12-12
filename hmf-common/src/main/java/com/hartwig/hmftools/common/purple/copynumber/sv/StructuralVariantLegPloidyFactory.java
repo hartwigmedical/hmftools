@@ -126,7 +126,12 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
             weight = 1;
         } else {
             double copyNumber = alternate.get();
-            ploidy = purityAdjustedPloidy(leg.chromosome(), vaf / (1 - vaf), copyNumber);
+            double reciprocalVAF = vaf / (1 - vaf);
+            if (!Double.isFinite(reciprocalVAF)) {
+                return Optional.empty();
+            }
+
+            ploidy = purityAdjustedPloidy(leg.chromosome(), reciprocalVAF, copyNumber);
             weight = 1 / (1 + Math.pow(Math.max(copyNumber, 2) / Math.min(Math.max(copyNumber, 0.01), 2), 2));
         }
 
