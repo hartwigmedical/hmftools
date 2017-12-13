@@ -21,9 +21,9 @@ final class Extend {
 
     static boolean breakForStructuralVariant(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.start() < neighbour.start()) {
-            return neighbour.support() != SegmentSupport.NONE;
+            return neighbour.support().isSV();
         }
 
-        return target.region().support() != SegmentSupport.NONE;
+        return target.region().support().isSV();
     }
 }

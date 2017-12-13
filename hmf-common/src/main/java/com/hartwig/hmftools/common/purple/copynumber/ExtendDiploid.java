@@ -165,24 +165,35 @@ class ExtendDiploid {
         for (int i = direction.moveIndex(targetIndex); i >= 0 && i < regions.size(); i = direction.moveIndex(i)) {
             final FittedRegion neighbour = regions.get(i).region();
 
-            if (Extend.breakForCentromereStart(target, neighbour)) {
-                return dubiousCount < minTumorCount;
-            }
-
-            if (Extend.breakForStructuralVariant(target, neighbour)) {
-                return false;
+            // JOBA: Coming from left to right, EXCLUDE neighbour from decision on break.
+            if (neighbour.start() > target.start()) {
+                if (neighbour.support() == SegmentSupport.CENTROMERE) {
+                    return dubiousCount < minTumorCount;
+                }
+                if (neighbour.support().isSV()) {
+                    return false;
+                }
             }
 
             if (isDubious(neighbour)) {
                 dubiousCount += neighbour.observedTumorRatioCount();
-            }
-
-            if (dubiousCount >= minTumorCount) {
-                return false;
+                if (dubiousCount >= minTumorCount) {
+                    return false;
+                }
             }
 
             if (isValid(neighbour)) {
                 return inTolerance(target.region(), neighbour);
+            }
+
+            // JOBA: Coming from right to left, INCLUDE neighbour from decision on break.
+            if (neighbour.start() < target.start()) {
+                if (neighbour.support() == SegmentSupport.CENTROMERE) {
+                    return dubiousCount < minTumorCount;
+                }
+                if (neighbour.support().isSV()) {
+                    return false;
+                }
             }
         }
 
