@@ -137,7 +137,9 @@ public class TreatmentCurator {
         }
         tokenStream.end();
         tokenStream.close();
-        return searchTokens.stream().sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset)).collect(Collectors.toList());
+        return searchTokens.stream()
+                .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
+                .collect(Collectors.toList());
     }
 
     @NotNull
