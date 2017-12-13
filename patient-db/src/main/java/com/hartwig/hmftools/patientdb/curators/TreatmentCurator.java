@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -111,7 +110,7 @@ public class TreatmentCurator {
 
     @NotNull
     List<CuratedTreatment> matchMultiple(@NotNull final String searchTerm) throws IOException {
-        final HashMap<SearchToken, CuratedTreatment> matchedTokens = Maps.newHashMap();
+        final Map<SearchToken, CuratedTreatment> matchedTokens = Maps.newHashMap();
         final List<SearchToken> searchTokens = generateSearchTokens(searchTerm);
         for (final SearchToken searchToken : searchTokens) {
             if (matchedTokens.keySet()
