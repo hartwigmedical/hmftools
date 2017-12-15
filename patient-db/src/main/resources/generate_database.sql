@@ -107,6 +107,7 @@ CREATE TABLE somaticVariant
     trinucleotideContext varchar(3) NOT NULL,
     clonality varchar(455) NOT NULL,
     loh BOOLEAN NOT NULL,
+    mappability DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),

@@ -29,14 +29,31 @@ class SomaticVariantDAO {
         context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedSomaticVariant> splitRegions : Iterables.partition(variants, BATCH_INSERT_SIZE)) {
-            InsertValuesStepN inserter =
-                    context.insertInto(SOMATICVARIANT, SOMATICVARIANT.SAMPLEID, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
-                            SOMATICVARIANT.FILTER, SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.GENE, SOMATICVARIANT.COSMICID,
-                            SOMATICVARIANT.DBSNPID, SOMATICVARIANT.EFFECT, SOMATICVARIANT.ALLELEREADCOUNT, SOMATICVARIANT.TOTALREADCOUNT,
-                            SOMATICVARIANT.ADJUSTEDCOPYNUMBER, SOMATICVARIANT.ADJUSTEDVAF, SOMATICVARIANT.HIGHCONFIDENCE,
-                            SOMATICVARIANT.TRINUCLEOTIDECONTEXT, SOMATICVARIANT.MICROHOMOLOGY, SOMATICVARIANT.REPEATSEQUENCE,
-                            SOMATICVARIANT.REPEATCOUNT, SOMATICVARIANT.REFGENOMECONTEXT, SOMATICVARIANT.CLONALITY, SOMATICVARIANT.LOH,
-                            SOMATICVARIANT.MODIFIED);
+            InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
+                    SOMATICVARIANT.SAMPLEID,
+                    SOMATICVARIANT.CHROMOSOME,
+                    SOMATICVARIANT.POSITION,
+                    SOMATICVARIANT.FILTER,
+                    SOMATICVARIANT.REF,
+                    SOMATICVARIANT.ALT,
+                    SOMATICVARIANT.GENE,
+                    SOMATICVARIANT.COSMICID,
+                    SOMATICVARIANT.DBSNPID,
+                    SOMATICVARIANT.EFFECT,
+                    SOMATICVARIANT.ALLELEREADCOUNT,
+                    SOMATICVARIANT.TOTALREADCOUNT,
+                    SOMATICVARIANT.ADJUSTEDCOPYNUMBER,
+                    SOMATICVARIANT.ADJUSTEDVAF,
+                    SOMATICVARIANT.HIGHCONFIDENCE,
+                    SOMATICVARIANT.TRINUCLEOTIDECONTEXT,
+                    SOMATICVARIANT.MICROHOMOLOGY,
+                    SOMATICVARIANT.REPEATSEQUENCE,
+                    SOMATICVARIANT.REPEATCOUNT,
+                    SOMATICVARIANT.REFGENOMECONTEXT,
+                    SOMATICVARIANT.CLONALITY,
+                    SOMATICVARIANT.LOH,
+                    SOMATICVARIANT.MAPPABILITY,
+                    SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -44,11 +61,30 @@ class SomaticVariantDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
             @NotNull EnrichedSomaticVariant region) {
-        inserter.values(sample, region.chromosome(), region.position(), filter(region.filter()), region.ref(), region.alt(), region.gene(),
-                region.cosmicId(), region.dbsnpId(), region.effect(), region.alleleReadCount(), region.totalReadCount(),
-                region.adjustedCopyNumber(), region.adjustedVAF(), region.highConfidenceRegion(), region.trinucleotideContext(),
-                region.microhomology(), region.repeatSequence(), region.repeatCount(), region.refGenomeContext(), region.clonality(),
-                region.lossOfHeterozygosity(), timestamp);
+        inserter.values(sample,
+                region.chromosome(),
+                region.position(),
+                filter(region.filter()),
+                region.ref(),
+                region.alt(),
+                region.gene(),
+                region.cosmicId(),
+                region.dbsnpId(),
+                region.effect(),
+                region.alleleReadCount(),
+                region.totalReadCount(),
+                region.adjustedCopyNumber(),
+                region.adjustedVAF(),
+                region.highConfidenceRegion(),
+                region.trinucleotideContext(),
+                region.microhomology(),
+                region.repeatSequence(),
+                region.repeatCount(),
+                region.refGenomeContext(),
+                region.clonality(),
+                region.lossOfHeterozygosity(),
+                region.mappability(),
+                timestamp);
     }
 
     @NotNull

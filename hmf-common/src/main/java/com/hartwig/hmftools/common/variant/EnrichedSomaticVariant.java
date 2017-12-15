@@ -35,6 +35,8 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     public abstract int repeatCount();
 
+    public abstract double mappability();
+
     @Override
     public abstract double adjustedCopyNumber();
 

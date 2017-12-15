@@ -1,0 +1,2 @@
+ALTER TABLE somaticVariant
+    ADD COLUMN mappability DOUBLE PRECISION NOT NULL AFTER loh;

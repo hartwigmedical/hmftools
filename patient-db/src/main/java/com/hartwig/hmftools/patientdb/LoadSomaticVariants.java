@@ -38,6 +38,7 @@ public class LoadSomaticVariants {
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
+    private static final String MAPPABILITY_BED = "mappability_bed";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -47,7 +48,8 @@ public class LoadSomaticVariants {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
-        final String bedFileLocation = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+        final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+        final String mappabilityBed = cmd.getOptionValue(MAPPABILITY_BED);
         final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
@@ -56,7 +58,7 @@ public class LoadSomaticVariants {
         final String sample = vcfFile.sample();
 
         LOGGER.info("Reading high confidence bed file");
-        final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(bedFileLocation);
+        final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
         LOGGER.info("Loading indexed fasta reference file");
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
@@ -77,7 +79,7 @@ public class LoadSomaticVariants {
 
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
-                new EnrichedSomaticVariantFactory(purityAdjuster, highConfidenceRegions, copyNumbers, indexedFastaSequenceFile);
+                new EnrichedSomaticVariantFactory(purityAdjuster, highConfidenceRegions, copyNumbers, indexedFastaSequenceFile, mappabilityBed);
         final List<EnrichedSomaticVariant> variants = enrichedSomaticVariantFactory.enrich(vcfFile.variants());
 
         LOGGER.info("Persisting variants to database");
@@ -92,6 +94,7 @@ public class LoadSomaticVariants {
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(VCF_FILE, true, "Path to the vcf file.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file.");
+        options.addOption(MAPPABILITY_BED, true, "Path to the mappability score bed file.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
