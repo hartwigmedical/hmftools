@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.VariantFactory.FILTER_COLUMN;
 import static com.hartwig.hmftools.common.variant.VariantFactory.ID_COLUMN;
 import static com.hartwig.hmftools.common.variant.VariantFactory.INFO_COLUMN;
 import static com.hartwig.hmftools.common.variant.VariantFactory.VCF_COLUMN_SEPARATOR;
@@ -47,22 +46,8 @@ public final class SomaticVariantFactory {
     }
 
     @NotNull
-    static String toVCFLine(@NotNull final SomaticVariant variant) {
-        final String[] values = variant.originalVCFLine().split(VCF_COLUMN_SEPARATOR);
-        // KODU: Currently assume only the filter value could change, but this is potentially wrong!
-        if (!values[FILTER_COLUMN].trim().equals(variant.filter())) {
-            values[FILTER_COLUMN] = variant.filter();
-        }
-        final StringBuilder reassembledLine = new StringBuilder(values[0]);
-        for (int i = 1; i < values.length; i++) {
-            reassembledLine.append(VCF_COLUMN_SEPARATOR).append(values[i]);
-        }
-        return reassembledLine.toString();
-    }
-
-    @NotNull
     public static SomaticVariant fromVCFLine(@NotNull final String line) {
-        final SomaticVariant.Builder builder = SomaticVariant.Builder.fromVCF(line);
+        final SomaticVariant.Builder builder = new SomaticVariant.Builder();
         final String[] values = line.split(VCF_COLUMN_SEPARATOR);
         VariantFactory.withLine(builder, values);
 

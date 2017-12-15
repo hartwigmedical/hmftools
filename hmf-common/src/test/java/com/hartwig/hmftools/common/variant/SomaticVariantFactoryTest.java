@@ -42,12 +42,7 @@ public class SomaticVariantFactoryTest {
         assertEquals(0.5, variant.alleleFrequency(), EPSILON);
         assertEquals(120, variant.totalReadCount(), EPSILON);
 
-        assertEquals(line, SomaticVariantFactory.toVCFLine(variant));
-
         final String filter = "KODU_FILTER";
-        final SomaticVariant filtered = SomaticVariant.Builder.fromVariant(variant).filter(filter).build();
-
-        assertEquals(part1 + filter + part3, SomaticVariantFactory.toVCFLine(filtered));
     }
 
     @Test
@@ -98,10 +93,4 @@ public class SomaticVariantFactoryTest {
         assertFalse(hasNone.isCOSMIC());
     }
 
-    @Test
-    public void canRecreateVCFLine() {
-        final String vcfLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
-        final SomaticVariant variant = SomaticVariantFactory.fromVCFLine(vcfLine);
-        assertEquals(vcfLine, SomaticVariantFactory.toVCFLine(variant));
-    }
 }
