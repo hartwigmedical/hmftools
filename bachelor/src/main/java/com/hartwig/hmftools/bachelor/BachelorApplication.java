@@ -47,6 +47,7 @@ public class BachelorApplication {
     private static final String VALIDATE = "validate";
     private static final String GERMLINE = "germline";
     private static final String SOMATIC = "somatic";
+    private static final String COPYNUMBER = "copyNumber";
 
     @NotNull
     private static Options createOptions() {
@@ -57,8 +58,9 @@ public class BachelorApplication {
         options.addOption(Option.builder(RUN_DIRECTORY).required(false).hasArg().desc("the run directory to look for inputs").build());
         options.addOption(Option.builder(BATCH_DIRECTORY).required(false).hasArg().desc("runs directory to batch process").build());
         options.addOption(Option.builder(VALIDATE).required(false).desc("only validate the configs").build());
-        options.addOption(Option.builder(GERMLINE).required(false).desc("process the germline file only").build());
-        options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file only").build());
+        options.addOption(Option.builder(GERMLINE).required(false).desc("process the germline file").build());
+        options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file").build());
+        options.addOption(Option.builder(COPYNUMBER).required(false).desc("process the copy number file").build());
         return options;
     }
 
@@ -108,11 +110,12 @@ public class BachelorApplication {
     }
 
     private static File process(final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
-            final boolean somatic) {
+            final boolean somatic, final boolean copyNumber) {
 
         final String patient = run.getPatientID();
         final boolean doGermline = run.germline != null && germline;
         final boolean doSomatic = run.somatic != null && somatic;
+        final boolean doCopyNumber = run.copyNumber != null && copyNumber;
 
         LOGGER.info("processing run: {}", patient);
 
@@ -123,7 +126,7 @@ public class BachelorApplication {
         if (doSomatic) {
             result.addAll(processVCF(patient, false, run.somatic, eligibility));
         }
-        if (run.copyNumber != null) {
+        if (doCopyNumber) {
             result.addAll(processPurpleCNV(patient, run.copyNumber, eligibility));
         }
         if (run.structuralVariants != null) {
@@ -198,11 +201,10 @@ public class BachelorApplication {
 
             LOGGER.info("beginning processing...");
 
-            final boolean germline = !cmd.hasOption(SOMATIC);
-            final boolean somatic = !cmd.hasOption(GERMLINE);
-            if (!(germline || somatic)) {
-                LOGGER.error("can't have -germline and -somatic set at the same time");
-            }
+            final boolean germline = cmd.hasOption(GERMLINE);
+            final boolean somatic = cmd.hasOption(SOMATIC);
+            final boolean copyNumber = cmd.hasOption(COPYNUMBER);
+            final boolean doAll = !(germline || somatic || copyNumber);
 
             final List<File> filesToMerge;
             if (cmd.hasOption(BATCH_DIRECTORY)) {
@@ -211,12 +213,13 @@ public class BachelorApplication {
                     filesToMerge = stream.filter(p -> p.toFile().isDirectory())
                             .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
-                            .map(run -> process(eligibility, run, germline, somatic))
+                            .map(run -> process(eligibility, run, germline || doAll, somatic || doAll, copyNumber || doAll))
                             .collect(Collectors.toList());
                 }
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
                 filesToMerge = Collections.singletonList(
-                        process(eligibility, new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))), germline, somatic));
+                        process(eligibility, new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))), germline || doAll,
+                                somatic || doAll, copyNumber || doAll));
             } else {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
