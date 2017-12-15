@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.common.variant;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
+
 import org.jetbrains.annotations.NotNull;
 
-public interface Variant extends GenomePosition {
+public interface Variant extends GenomePosition, AllelicDepth {
 
     @NotNull
     String ref();

@@ -15,10 +15,6 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     public abstract boolean highConfidenceRegion();
 
-    public abstract int totalReadCount();
-
-    public abstract int alleleReadCount();
-
     public abstract String microhomology();
 
     public abstract String refGenomeContext();

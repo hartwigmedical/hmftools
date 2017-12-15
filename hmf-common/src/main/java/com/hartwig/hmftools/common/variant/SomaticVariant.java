@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(overshadowImplementation = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SomaticVariant implements Variant, AllelicDepth {
+public abstract class SomaticVariant implements Variant {
 
     @Override
     @NotNull
@@ -81,12 +81,6 @@ public abstract class SomaticVariant implements Variant, AllelicDepth {
     @Value.Default
     public int alleleReadCount() {
         return 0;
-    }
-
-    @NotNull
-    @Value.Default
-    public String genoType() {
-        return Strings.EMPTY;
     }
 
     public boolean isDBSNP() {

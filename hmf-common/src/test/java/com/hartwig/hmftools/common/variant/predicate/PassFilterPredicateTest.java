@@ -73,5 +73,15 @@ public class PassFilterPredicateTest {
         public String filter() {
             return filter;
         }
+
+        @Override
+        public int totalReadCount() {
+            return 0;
+        }
+
+        @Override
+        public int alleleReadCount() {
+            return 0;
+        }
     }
 }
