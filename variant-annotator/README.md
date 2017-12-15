@@ -26,9 +26,9 @@ It will then provide further annotations of *Gene Disruptions* and *Gene Fusions
 
 ```
 java -jar variant-annotator-x.y-with-dependencies.jar
-    -ensembl_db mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_90_37&user=anonymous
+    -ensembl_db "mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37?user=anonymous"
     -fusion_csv /path/to/fusion.csv
-    -db_url mysql://localhost/hmfpatients
+    -db_url "mysql://localhost/hmfpatients"
     -db_user username
     -db_pass password
     -sample SAMPLE_ID
