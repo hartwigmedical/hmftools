@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant;
 import org.jetbrains.annotations.NotNull;
 
 public enum VariantType {
+    MNP,
     SNP,
     INDEL,
     UNDEFINED;

@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.io.reader.FileReader;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactoryOld;
 import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,8 +39,8 @@ public final class VCFFileLoader {
     private static VCFSomaticFile toVCFSomaticFile(@NotNull final List<String> lines) {
         final List<String> metaInformationLines = extractMetaInformation(lines);
         final String header = extractHeader(lines);
-        final String sample = SomaticVariantFactory.sampleFromHeaderLine(header);
-        final List<SomaticVariant> variants = variants(lines, SomaticVariantFactory::fromVCFLine);
+        final String sample = SomaticVariantFactoryOld.sampleFromHeaderLine(header);
+        final List<SomaticVariant> variants = variants(lines, SomaticVariantFactoryOld::fromVCFLine);
         return ImmutableVCFSomaticFile.builder()
                 .sample(sample)
                 .originalMetaInformationLines(metaInformationLines)

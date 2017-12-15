@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 final class VariantFactory {
     static final String VCF_COLUMN_SEPARATOR = "\t";
     private static final int CHROMOSOME_COLUMN = 0;

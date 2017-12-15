@@ -16,9 +16,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class SomaticVariantFactory {
+@Deprecated
+public final class SomaticVariantFactoryOld {
 
-    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactoryOld.class);
 
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
@@ -34,7 +35,7 @@ public final class SomaticVariantFactory {
     private static final int SAMPLE_DATA_COLUMN = 9;
     private static final int SAMPLE_DATA_ALLELE_FREQUENCY_COLUMN = 1;
 
-    private SomaticVariantFactory() {
+    private SomaticVariantFactoryOld() {
     }
 
     @NotNull
