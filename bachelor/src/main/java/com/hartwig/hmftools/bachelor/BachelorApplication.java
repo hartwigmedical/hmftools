@@ -217,9 +217,14 @@ public class BachelorApplication {
                             .collect(Collectors.toList());
                 }
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
+                final Path path = Paths.get(cmd.getOptionValue(RUN_DIRECTORY));
+                if (!Files.exists(path)) {
+                    LOGGER.error("-runDirectory path does not exist");
+                    System.exit(1);
+                    return;
+                }
                 filesToMerge = Collections.singletonList(
-                        process(eligibility, new RunDirectory(Paths.get(cmd.getOptionValue(RUN_DIRECTORY))), germline || doAll,
-                                somatic || doAll, copyNumber || doAll));
+                        process(eligibility, new RunDirectory(path), germline || doAll, somatic || doAll, copyNumber || doAll));
             } else {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
