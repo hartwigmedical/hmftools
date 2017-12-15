@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -23,8 +22,6 @@ import htsjdk.samtools.Chunk;
 import htsjdk.samtools.util.BlockCompressedFilePointerUtil;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.ConnectionPool;
-import okhttp3.Dispatcher;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -33,7 +30,6 @@ import okhttp3.ResponseBody;
 
 class ChunkHttpBuffer {
     private static final Logger LOGGER = LogManager.getLogger(ChunkHttpBuffer.class);
-    private static final int MAX_REQUESTS = 50;
     @NotNull
     private final LoadingCache<Long, ListenableFuture<byte[]>> chunkBuffer;
     private final int maxSize;
@@ -42,21 +38,10 @@ class ChunkHttpBuffer {
     @NotNull
     private final ConcurrentSkipListMap<Long, Chunk> chunksPerOffset = new ConcurrentSkipListMap<>();
     @NotNull
-    private final static OkHttpClient httpClient;
+    private final OkHttpClient httpClient;
 
-    static {
-        final Dispatcher requestDispatcher = new Dispatcher();
-        requestDispatcher.setMaxRequests(MAX_REQUESTS);
-        requestDispatcher.setMaxRequestsPerHost(MAX_REQUESTS);
-        httpClient = new OkHttpClient.Builder().connectionPool(new ConnectionPool(20, 1, TimeUnit.MINUTES))
-                .readTimeout(20, TimeUnit.SECONDS)
-                .connectTimeout(20, TimeUnit.SECONDS)
-                .writeTimeout(20, TimeUnit.SECONDS)
-                .dispatcher(requestDispatcher)
-                .build();
-    }
-
-    ChunkHttpBuffer(@NotNull final URL url, final int maxSize, @NotNull final List<Chunk> chunks) {
+    ChunkHttpBuffer(@NotNull final OkHttpClient httpClient, @NotNull final URL url, final int maxSize, @NotNull final List<Chunk> chunks) {
+        this.httpClient = httpClient;
         this.url = url;
         this.maxSize = maxSize;
         for (final Chunk chunk : chunks) {

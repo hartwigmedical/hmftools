@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.Chunk;
 import htsjdk.samtools.seekablestream.SeekableStream;
 import htsjdk.samtools.util.HttpUtils;
+import okhttp3.OkHttpClient;
 
 public class CachingSeekableHTTPStream extends SeekableStream {
     private static final Logger LOGGER = LogManager.getLogger(CachingSeekableHTTPStream.class);
@@ -21,7 +22,8 @@ public class CachingSeekableHTTPStream extends SeekableStream {
     private long contentLength = -1;
     private final ChunkHttpBuffer chunkBuffer;
 
-    CachingSeekableHTTPStream(final URL url, @NotNull final List<Chunk> chunks, final int maxBufferSize) throws IOException {
+    CachingSeekableHTTPStream(@NotNull final OkHttpClient httpClient, @NotNull final URL url, @NotNull final List<Chunk> chunks,
+            final int maxBufferSize) throws IOException {
         // Try to get the file length
         // Note: This also sets setDefaultUseCaches(false), which is important
         final String contentLengthString = HttpUtils.getHeaderField(url, "Content-Length");
@@ -34,7 +36,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
             }
         }
         LOGGER.info("Caching {} bam chunks from {}", maxBufferSize, url);
-        chunkBuffer = new ChunkHttpBuffer(url, maxBufferSize, chunks);
+        chunkBuffer = new ChunkHttpBuffer(httpClient, url, maxBufferSize, chunks);
         updatePosition(0);
     }
 
@@ -101,6 +103,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
     }
 
     @Override
+    @NotNull
     public String getSource() {
         return chunkBuffer.url().toString();
     }

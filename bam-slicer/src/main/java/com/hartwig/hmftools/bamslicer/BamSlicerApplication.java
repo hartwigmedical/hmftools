@@ -48,6 +48,7 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.StructuralVariantType;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import okhttp3.OkHttpClient;
 
 public class BamSlicerApplication {
     private static final Logger LOGGER = LogManager.getLogger(BamSlicerApplication.class);
@@ -62,6 +63,7 @@ public class BamSlicerApplication {
     private static final String VCF = "vcf";
     private static final String BED = "bed";
     private static final String MAX_CHUNKS_IN_MEMORY = "max_chunks";
+    private static final String MAX_CONCURRENT_REQUESTS = "max_concurrent_requests";
 
     public static void main(final String... args) throws ParseException, IOException, EmptyFileException {
         final CommandLine cmd = createCommandLine(args);
@@ -131,6 +133,7 @@ public class BamSlicerApplication {
     }
 
     private static void sliceFromS3(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
+        final OkHttpClient httpClient = SbpS3Client.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS)));
         final URL bamUrl = SbpS3UrlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT));
         final URL indexUrl = SbpS3UrlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX));
         final String outputPath = cmd.getOptionValue(OUTPUT);
@@ -144,7 +147,7 @@ public class BamSlicerApplication {
         final List<Chunk> expandedChunks = expandChunks(span.getChunks());
         LOGGER.info("Generated {} query intervals which map to {} bam chunks", intervals.length, expandedChunks.size());
         final SamInputResource bamResource =
-                SamInputResource.of(new CachingSeekableHTTPStream(bamUrl, expandedChunks, maxBufferSize)).index(indexFile);
+                SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, expandedChunks, maxBufferSize)).index(indexFile);
         final SamReader cachingReader = SamReaderFactory.makeDefault().open(bamResource);
 
         LOGGER.info("Slicing bam...");
@@ -269,6 +272,7 @@ public class BamSlicerApplication {
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("the output BAM (required)").build());
         options.addOption(Option.builder(BED).required().hasArg().desc("BED to slice BAM with (required)").build());
         options.addOption(Option.builder(MAX_CHUNKS_IN_MEMORY).required().hasArg().desc("Max number of chunks to keep in memory").build());
+        options.addOption(Option.builder(MAX_CONCURRENT_REQUESTS).required().hasArg().desc("Max concurrent http requests").build());
         return options;
     }
 

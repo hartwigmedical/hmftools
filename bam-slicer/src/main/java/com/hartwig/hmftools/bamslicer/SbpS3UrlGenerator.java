@@ -41,7 +41,7 @@ class SbpS3UrlGenerator {
         try {
             LOGGER.info("Generating pre-signed URL for bucket: {}\tobject: {}", bucketName, objectKey);
             final long millisNow = System.currentTimeMillis();
-            final long expirationMillis = millisNow + 1000 * 60 * 60;   //add 1 hour;
+            final long expirationMillis = millisNow + 1000 * 60 * 120;   //add 2 hours;
             final Date expiration = new java.util.Date(expirationMillis);
             final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, objectKey);
             generatePresignedUrlRequest.setMethod(HttpMethod.GET);
