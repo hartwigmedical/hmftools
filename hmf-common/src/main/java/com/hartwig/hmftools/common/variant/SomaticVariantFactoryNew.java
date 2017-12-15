@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,6 +20,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -36,9 +38,13 @@ public class SomaticVariantFactoryNew {
     private final CompoundFilter filter;
 
     public SomaticVariantFactoryNew() {
+        this(new VariantContextFilter[0]);
+    }
+
+    public SomaticVariantFactoryNew(VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.add(new ChromosomeFilter());
-
+        filter.addAll(Arrays.asList(filters));
         this.filter = filter;
     }
 

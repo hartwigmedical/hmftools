@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +26,7 @@ public class BestFitFactory {
     private final FittedPurityStatus status;
     private final int minVariants;
 
-    public BestFitFactory(int minVariants, int minPeak, final List<FittedPurity> fittedPurities, List<PurpleSomaticVariant> somatics) {
+    public BestFitFactory(int minVariants, int minPeak, final List<FittedPurity> fittedPurities, List<SomaticVariant> somatics) {
         assert (!fittedPurities.isEmpty());
         this.minVariants = minVariants;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.variant.filter;
 
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 

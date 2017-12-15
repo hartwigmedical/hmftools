@@ -52,10 +52,12 @@ import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
-import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
-import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactoryNew;
+import com.hartwig.hmftools.common.variant.filter.NTFilter;
+import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -81,6 +83,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+import htsjdk.variant.variantcontext.filter.SnpFilter;
 
 public class PurityPloidyEstimateApplication {
 
@@ -149,7 +154,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             // JOBA: Load structural and somatic variants
-            final List<PurpleSomaticVariant> somaticVariants = somaticVariants(configSupplier);
+            final List<SomaticVariant> somaticVariants = somaticVariants(configSupplier);
             final List<StructuralVariant> structuralVariants = structuralVariants(configSupplier);
 
             // JOBA: Ratio Segmentation
@@ -281,12 +286,16 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static List<PurpleSomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
+    private static List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
         final SomaticConfig config = configSupplier.somaticConfig();
         if (config.file().isPresent()) {
             String filename = config.file().get().toString();
             LOGGER.info("Loading somatic variants from {}", filename);
-            return new PurpleSomaticVariantFactory().fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
+
+            SomaticVariantFactoryNew factory =
+                    new SomaticVariantFactoryNew(new PassingVariantFilter(), new SnpFilter(), new NTFilter(), new SGTFilter());
+
+            return factory.fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
         } else {
             LOGGER.info("Somatic variants support disabled.");
             return Collections.emptyList();

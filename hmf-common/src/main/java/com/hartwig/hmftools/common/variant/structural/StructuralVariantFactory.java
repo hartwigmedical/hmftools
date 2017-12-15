@@ -7,7 +7,7 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
 import org.jetbrains.annotations.NotNull;
 

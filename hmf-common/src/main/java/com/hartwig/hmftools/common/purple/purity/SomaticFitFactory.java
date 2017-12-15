@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.purple.variant.PurpleSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +21,7 @@ class SomaticFitFactory {
     }
 
     @NotNull
-    Optional<FittedPurity> fromSomatics(@NotNull final List<FittedPurity> candidates, @NotNull final List<PurpleSomaticVariant> variants) {
+    Optional<FittedPurity> fromSomatics(@NotNull final List<FittedPurity> candidates, @NotNull final List<SomaticVariant> variants) {
         double minPurity = candidates.stream().mapToDouble(FittedPurity::purity).min().orElse(0);
         double maxPurity = candidates.stream().mapToDouble(FittedPurity::purity).max().orElse(1);
 
@@ -31,7 +31,8 @@ class SomaticFitFactory {
         for (int i = peaks.size() - 1; i >= 0; i--) {
             SomaticPeak peak = peaks.get(i);
             double impliedPurity = peak.alleleFrequency() * 2;
-            if (Doubles.greaterOrEqual(impliedPurity, minPurity) && Doubles.lessOrEqual(impliedPurity, maxPurity) && peak.count() > minPeak) {
+            if (Doubles.greaterOrEqual(impliedPurity, minPurity) && Doubles.lessOrEqual(impliedPurity, maxPurity)
+                    && peak.count() > minPeak) {
                 LOGGER.info("Somatic implied purity: {}", impliedPurity);
                 return Optional.of(closest(impliedPurity, candidates));
             }
