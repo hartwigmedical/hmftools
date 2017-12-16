@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
@@ -64,30 +66,37 @@ public class SomaticVariantFactoryNew {
             }
 
             for (final VariantContext context : reader.iterator()) {
-                if (filter.test(context)) {
-                    final Genotype genotype = context.getGenotype(sample);
-                    if (genotype.hasAD()) {
-                        final AlleleFrequencyData frequencyData = VariantFactoryFunctions.determineAlleleFrequencies(genotype);
-                        SomaticVariant.Builder builder = new SomaticVariant.Builder().chromosome(context.getContig())
-                                .annotations(Collections.emptyList())
-                                .position(context.getStart())
-                                .ref(context.getReference().getBaseString())
-                                .alt(alt(context))
-                                .alleleReadCount(frequencyData.alleleReadCount())
-                                .totalReadCount(frequencyData.totalReadCount());
-
-                        attachCallers(builder, context);
-                        attachAnnotations(builder, context);
-                        attachFilter(builder, context);
-                        attachID(builder, context);
-                        attachType(builder, context);
-                        variants.add(builder.build());
-                    }
-                }
+                createVariant(sample, context).ifPresent(variants::add);
             }
         }
 
         return variants;
+    }
+
+    @VisibleForTesting
+    @NotNull
+    Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+        if (filter.test(context)) {
+            final Genotype genotype = context.getGenotype(sample);
+            if (genotype.hasAD()) {
+                final AlleleFrequencyData frequencyData = VariantFactoryFunctions.determineAlleleFrequencies(genotype);
+                SomaticVariant.Builder builder = new SomaticVariant.Builder().chromosome(context.getContig())
+                        .annotations(Collections.emptyList())
+                        .position(context.getStart())
+                        .ref(context.getReference().getBaseString())
+                        .alt(alt(context))
+                        .alleleReadCount(frequencyData.alleleReadCount())
+                        .totalReadCount(frequencyData.totalReadCount());
+
+                attachCallers(builder, context);
+                attachAnnotations(builder, context);
+                attachFilter(builder, context);
+                attachID(builder, context);
+                attachType(builder, context);
+                return Optional.of(builder.build());
+            }
+        }
+        return Optional.empty();
     }
 
     private static SomaticVariant.Builder attachAnnotations(@NotNull final SomaticVariant.Builder builder,
