@@ -18,7 +18,7 @@ class GeneCopyNumberBuilder {
     private int het2HomCount;
     private double cumulativeCopyNumber;
 
-    private double previousCopyNumber;
+    private double previousCopyNumber = -Double.MAX_VALUE;
     private long totalBases;
     private HmfExonRegion exon;
     private PurpleCopyNumber copyNumber;

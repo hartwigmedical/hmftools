@@ -64,10 +64,19 @@ class CopyNumberDAO {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter =
-                    context.insertInto(COPYNUMBER, COPYNUMBER.SAMPLEID, COPYNUMBER.CHROMOSOME, COPYNUMBER.START, COPYNUMBER.END,
-                            COPYNUMBER.COPYNUMBERMETHOD, COPYNUMBER.SEGMENTSTARTSUPPORT, COPYNUMBER.SEGMENTENDSUPPORT, COPYNUMBER.BAFCOUNT,
-                            COPYNUMBER.OBSERVEDBAF, COPYNUMBER.ACTUALBAF, COPYNUMBER.COPYNUMBER_, COPYNUMBER.MODIFIED);
+            InsertValuesStep12 inserter = context.insertInto(COPYNUMBER,
+                    COPYNUMBER.SAMPLEID,
+                    COPYNUMBER.CHROMOSOME,
+                    COPYNUMBER.START,
+                    COPYNUMBER.END,
+                    COPYNUMBER.COPYNUMBERMETHOD,
+                    COPYNUMBER.SEGMENTSTARTSUPPORT,
+                    COPYNUMBER.SEGMENTENDSUPPORT,
+                    COPYNUMBER.BAFCOUNT,
+                    COPYNUMBER.OBSERVEDBAF,
+                    COPYNUMBER.ACTUALBAF,
+                    COPYNUMBER.COPYNUMBER_,
+                    COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -78,10 +87,18 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
 
         for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(COPYNUMBERGERMLINE, COPYNUMBERGERMLINE.SAMPLEID, COPYNUMBERGERMLINE.CHROMOSOME,
-                    COPYNUMBERGERMLINE.START, COPYNUMBERGERMLINE.END, COPYNUMBERGERMLINE.COPYNUMBERMETHOD,
-                    COPYNUMBERGERMLINE.SEGMENTSTARTSUPPORT, COPYNUMBERGERMLINE.SEGMENTENDSUPPORT, COPYNUMBERGERMLINE.BAFCOUNT,
-                    COPYNUMBERGERMLINE.OBSERVEDBAF, COPYNUMBERGERMLINE.ACTUALBAF, COPYNUMBERGERMLINE.COPYNUMBER,
+            InsertValuesStep12 inserter = context.insertInto(COPYNUMBERGERMLINE,
+                    COPYNUMBERGERMLINE.SAMPLEID,
+                    COPYNUMBERGERMLINE.CHROMOSOME,
+                    COPYNUMBERGERMLINE.START,
+                    COPYNUMBERGERMLINE.END,
+                    COPYNUMBERGERMLINE.COPYNUMBERMETHOD,
+                    COPYNUMBERGERMLINE.SEGMENTSTARTSUPPORT,
+                    COPYNUMBERGERMLINE.SEGMENTENDSUPPORT,
+                    COPYNUMBERGERMLINE.BAFCOUNT,
+                    COPYNUMBERGERMLINE.OBSERVEDBAF,
+                    COPYNUMBERGERMLINE.ACTUALBAF,
+                    COPYNUMBERGERMLINE.COPYNUMBER,
                     COPYNUMBERGERMLINE.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -91,9 +108,18 @@ class CopyNumberDAO {
     private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
             @NotNull PurpleCopyNumber region) {
         //noinspection unchecked
-        inserter.values(sample, region.chromosome(), region.start(), region.end(), region.method(), region.segmentStartSupport(),
-                region.segmentEndSupport(), region.bafCount(), region.averageObservedBAF(), region.averageActualBAF(),
-                region.averageTumorCopyNumber(), timestamp);
+        inserter.values(sample,
+                region.chromosome(),
+                region.start(),
+                region.end(),
+                region.method(),
+                region.segmentStartSupport(),
+                region.segmentEndSupport(),
+                region.bafCount(),
+                region.averageObservedBAF(),
+                region.averageActualBAF(),
+                region.averageTumorCopyNumber(),
+                timestamp);
     }
 
     void writeCopyNumberRegions(@NotNull final String sample, @NotNull List<FittedRegion> regions) {
@@ -101,16 +127,33 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();
 
         for (List<FittedRegion> splitRegions : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStepN inserter =
-                    context.insertInto(COPYNUMBERREGION, COPYNUMBERREGION.SAMPLEID, COPYNUMBERREGION.CHROMOSOME, COPYNUMBERREGION.START,
-                            COPYNUMBERREGION.END, COPYNUMBERREGION.GERMLINESTATUS, COPYNUMBERREGION.SVCLUSTER,
-                            COPYNUMBERREGION.RATIOSUPPORT, COPYNUMBERREGION.SEGMENTSTARTSUPPORT, COPYNUMBERREGION.BAFCOUNT,
-                            COPYNUMBERREGION.OBSERVEDBAF, COPYNUMBERREGION.OBSERVEDTUMORRATIO, COPYNUMBERREGION.OBSERVEDNORMALRATIO,
-                            COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT, COPYNUMBERREGION.GCCONTENT, COPYNUMBERREGION.MODELPLOIDY,
-                            COPYNUMBERREGION.MODELBAF, COPYNUMBERREGION.MODELTUMORRATIO, COPYNUMBERREGION.ACTUALTUMORBAF,
-                            COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER, COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER,
-                            COPYNUMBERREGION.CNVDEVIATION, COPYNUMBERREGION.BAFDEVIATION, COPYNUMBERREGION.TOTALDEVIATION,
-                            COPYNUMBERREGION.FITTEDBAF, COPYNUMBERREGION.FITTEDCOPYNUMBER, COPYNUMBERREGION.MODIFIED);
+            InsertValuesStepN inserter = context.insertInto(COPYNUMBERREGION,
+                    COPYNUMBERREGION.SAMPLEID,
+                    COPYNUMBERREGION.CHROMOSOME,
+                    COPYNUMBERREGION.START,
+                    COPYNUMBERREGION.END,
+                    COPYNUMBERREGION.GERMLINESTATUS,
+                    COPYNUMBERREGION.SVCLUSTER,
+                    COPYNUMBERREGION.RATIOSUPPORT,
+                    COPYNUMBERREGION.SEGMENTSTARTSUPPORT,
+                    COPYNUMBERREGION.BAFCOUNT,
+                    COPYNUMBERREGION.OBSERVEDBAF,
+                    COPYNUMBERREGION.OBSERVEDTUMORRATIO,
+                    COPYNUMBERREGION.OBSERVEDNORMALRATIO,
+                    COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT,
+                    COPYNUMBERREGION.GCCONTENT,
+                    COPYNUMBERREGION.MODELPLOIDY,
+                    COPYNUMBERREGION.MODELBAF,
+                    COPYNUMBERREGION.MODELTUMORRATIO,
+                    COPYNUMBERREGION.ACTUALTUMORBAF,
+                    COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER,
+                    COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER,
+                    COPYNUMBERREGION.CNVDEVIATION,
+                    COPYNUMBERREGION.BAFDEVIATION,
+                    COPYNUMBERREGION.TOTALDEVIATION,
+                    COPYNUMBERREGION.FITTEDBAF,
+                    COPYNUMBERREGION.FITTEDCOPYNUMBER,
+                    COPYNUMBERREGION.MODIFIED);
             splitRegions.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -118,11 +161,31 @@ class CopyNumberDAO {
 
     private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
             @NotNull FittedRegion region) {
-        inserter.values(sample, region.chromosome(), region.start(), region.end(), region.status(), region.svCluster(),
-                region.ratioSupport(), region.support(), region.bafCount(), region.observedBAF(), region.observedTumorRatio(),
-                region.observedNormalRatio(), region.observedTumorRatioCount(), region.gcContent(), region.modelPloidy(), region.modelBAF(),
-                region.modelTumorRatio(), region.tumorBAF(), region.tumorCopyNumber(), region.refNormalisedCopyNumber(),
-                region.cnvDeviation(), region.bafDeviation(), region.deviation(), region.segmentBAF(), region.segmentTumorCopyNumber(),
+        inserter.values(sample,
+                region.chromosome(),
+                region.start(),
+                region.end(),
+                region.status(),
+                region.svCluster(),
+                region.ratioSupport(),
+                region.support(),
+                region.bafCount(),
+                region.observedBAF(),
+                region.observedTumorRatio(),
+                region.observedNormalRatio(),
+                region.observedTumorRatioCount(),
+                region.gcContent(),
+                region.modelPloidy(),
+                region.modelBAF(),
+                region.modelTumorRatio(),
+                region.tumorBAF(),
+                region.tumorCopyNumber(),
+                region.refNormalisedCopyNumber(),
+                region.cnvDeviation(),
+                region.bafDeviation(),
+                region.deviation(),
+                region.segmentBAF(),
+                region.segmentTumorCopyNumber(),
                 timestamp);
     }
 }

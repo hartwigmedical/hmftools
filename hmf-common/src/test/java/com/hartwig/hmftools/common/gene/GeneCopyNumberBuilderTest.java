@@ -69,6 +69,13 @@ public class GeneCopyNumberBuilderTest {
         assertCopyNumber(1, -0.8, -0.8, -0.8);
     }
 
+    @Test
+    public void testSingleZeroRegion() {
+        addCopyNumber(1, 2500, 0);
+        addExon(1001, 2000);
+        assertCopyNumber(1, 0, 0, 0);
+    }
+
     private void assertCopyNumber(int count, double expectedMin, double expectedMean, double expectedMax) {
         final GeneCopyNumber geneCopyNumber = victim.build();
         assertEquals(count, geneCopyNumber.somaticRegions());
