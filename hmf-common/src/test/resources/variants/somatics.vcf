@@ -1,4 +1,5 @@
 ##fileformat=VCFv4.1
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample
 1	1	.	C	A	.	PASS	set=freebayes	GT:AD:DP	0/1:48,15:64
 1	2	.	G	T	.	PASS	set=mutect	GT:AD:DP	0/1:84,5:89

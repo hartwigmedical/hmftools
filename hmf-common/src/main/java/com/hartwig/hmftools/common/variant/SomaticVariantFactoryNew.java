@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +49,12 @@ public class SomaticVariantFactoryNew {
         filter.add(new ChromosomeFilter());
         filter.addAll(Arrays.asList(filters));
         this.filter = filter;
+    }
+
+    @NotNull
+    public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String basePath,
+            @NotNull final String fileExtension) throws IOException {
+        return fromVCFFile(sample, PathExtensionFinder.build().findPath(basePath, fileExtension).toString());
     }
 
     @NotNull

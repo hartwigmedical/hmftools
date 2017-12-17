@@ -24,7 +24,7 @@ import org.junit.Test;
 public class SomaticVariantsCheckerTest {
 
     private static final double EPSILON = 1.0e-4;
-    private static final int EXPECTED_NUM_CHECKS = 4;
+    private static final int EXPECTED_NUM_CHECKS = 6;
 
     private static final String BASE_DIRECTORY = Resources.getResource("somatics").getPath();
     private static final String RUN_DIRECTORY = BASE_DIRECTORY + File.separator + "run";
@@ -47,11 +47,14 @@ public class SomaticVariantsCheckerTest {
         Assert.assertEquals(CheckType.SOMATIC_VARIANTS, result.getCheckType());
         assertEquals(EXPECTED_NUM_CHECKS, checks.size());
 
-        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(), 991);
+        assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(), 990);
         assertCheck(checks, SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(), 820);
 
         assertCheck(checks, SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(), 67);
         assertCheck(checks, SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(), 42);
+
+        assertCheck(checks, SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(), 1);
+        assertCheck(checks, SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(), 0);
     }
 
     @Test

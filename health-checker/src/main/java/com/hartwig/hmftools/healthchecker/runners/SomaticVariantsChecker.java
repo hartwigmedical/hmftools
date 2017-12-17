@@ -7,11 +7,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactoryNew;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.predicate.VariantPredicates;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.healthchecker.result.BaseResult;
 import com.hartwig.hmftools.healthchecker.result.MultiValueResult;
 import com.hartwig.hmftools.healthchecker.result.NoResult;
@@ -35,16 +34,13 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.SOMATIC_VARIANTS);
         }
-        final VCFSomaticFile variantFile = VCFFileLoader.loadSomaticVCF(runContext.runDirectory(), SOMATICS_EXTENSION);
-
-        if (!variantFile.sample().equals(runContext.tumorSample())) {
-            LOGGER.warn("Sample name in VCF (" + variantFile.sample() + ") does not match with name (" + runContext.tumorSample()
-                    + ") from run context!");
-        }
-        final List<SomaticVariant> snps = VariantFilter.filter(variantFile.variants(), VariantPredicates.withType(VariantType.SNP));
-        final List<SomaticVariant> indels = VariantFilter.filter(variantFile.variants(), VariantPredicates.withType(VariantType.INDEL));
+        final List<SomaticVariant> variants = new SomaticVariantFactoryNew().fromVCFFile(runContext.tumorSample(), runContext.runDirectory(), SOMATICS_EXTENSION);
+        final List<SomaticVariant> snps = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.SNP));
+        final List<SomaticVariant> mnps = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.MNP));
+        final List<SomaticVariant> indels = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.INDEL));
 
         final List<SomaticVariant> snpsWithDBSNPAndNotCOSMIC = VariantFilter.filter(snps, VariantPredicates.inDBSNPAndNotInCOSMIC());
+        final List<SomaticVariant> mnpWithDBSNPAndNotCOSMIC = VariantFilter.filter(mnps, VariantPredicates.inDBSNPAndNotInCOSMIC());
         final List<SomaticVariant> indelsWithDBSNPAndNotCOSMIC = VariantFilter.filter(indels, VariantPredicates.inDBSNPAndNotInCOSMIC());
 
         final List<HealthCheck> checks = Lists.newArrayList();
@@ -56,6 +52,10 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
                 String.valueOf(snpsWithDBSNPAndNotCOSMIC.size())));
         checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(),
                 String.valueOf(indelsWithDBSNPAndNotCOSMIC.size())));
+        checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(),
+                String.valueOf(mnps.size())));
+        checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(),
+                String.valueOf(mnpWithDBSNPAndNotCOSMIC.size())));
 
         return toMultiValueResult(checks);
     }
@@ -73,6 +73,10 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
             checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
             checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(),
+                    HealthCheckConstants.ERROR_VALUE));
+            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(),
+                    HealthCheckConstants.ERROR_VALUE));
+            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
 
             return toMultiValueResult(checks);

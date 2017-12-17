@@ -18,9 +18,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
@@ -69,7 +69,7 @@ public abstract class PatientReporter {
     public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments)
             throws IOException, HartwigException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
-        final GenomeAnalysis genomeAnalysis = analyseGenomeData(runDirectory);
+        final GenomeAnalysis genomeAnalysis = analyseGenomeData(run.tumorSample(), runDirectory);
         assert run.isSomaticRun() && run.tumorSample().equals(genomeAnalysis.sample());
 
         final String tumorSample = genomeAnalysis.sample();
@@ -137,13 +137,13 @@ public abstract class PatientReporter {
     }
 
     @NotNull
-    private GenomeAnalysis analyseGenomeData(@NotNull final String runDirectory) throws IOException, HartwigException {
+    private GenomeAnalysis analyseGenomeData(@NotNull final String sample, @NotNull final String runDirectory)
+            throws IOException, HartwigException {
         LOGGER.info(" Loading somatic snv and indels...");
-        final VCFSomaticFile variantFile = PatientReporterHelper.loadSomaticSNVFile(runDirectory);
-        final String sample = variantFile.sample();
-        LOGGER.info("  " + variantFile.variants().size() + " somatic snv and indels loaded for sample " + sample);
+        final List<SomaticVariant> variants = PatientReporterHelper.loadSomaticSNVFile(sample, runDirectory);
+        LOGGER.info("  " + variants.size() + " somatic snv and indels loaded for sample " + sample);
         LOGGER.info(" Analyzing somatic snv and indels....");
-        final VariantAnalysis variantAnalysis = variantAnalyzer().run(variantFile.variants());
+        final VariantAnalysis variantAnalysis = variantAnalyzer().run(variants);
 
         LOGGER.info(" Loading purity numbers...");
         final PurityContext context = PatientReporterHelper.loadPurity(runDirectory, sample);

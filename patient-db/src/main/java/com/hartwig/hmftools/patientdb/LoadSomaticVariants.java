@@ -16,8 +16,8 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactoryNew;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -35,6 +35,7 @@ public class LoadSomaticVariants {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
+    private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
@@ -51,11 +52,12 @@ public class LoadSomaticVariants {
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String mappabilityBed = cmd.getOptionValue(MAPPABILITY_BED);
         final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
+        final String sample = cmd.getOptionValue(SAMPLE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading somatic VCF File");
-        final VCFSomaticFile vcfFile = VCFFileLoader.loadSomaticVCF(vcfFileLocation);
-        final String sample = vcfFile.sample();
+        final List<SomaticVariant> variants = new SomaticVariantFactoryNew().fromVCFFile(sample, vcfFileLocation);
+
 
         LOGGER.info("Reading high confidence bed file");
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
@@ -80,10 +82,10 @@ public class LoadSomaticVariants {
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
                 new EnrichedSomaticVariantFactory(purityAdjuster, highConfidenceRegions, copyNumbers, indexedFastaSequenceFile, mappabilityBed);
-        final List<EnrichedSomaticVariant> variants = enrichedSomaticVariantFactory.enrich(vcfFile.variants());
+        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
 
         LOGGER.info("Persisting variants to database");
-        dbAccess.writeSomaticVariants(sample, variants);
+        dbAccess.writeSomaticVariants(sample, enrichedVariants);
 
         LOGGER.info("Complete");
     }
@@ -98,6 +100,8 @@ public class LoadSomaticVariants {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+        options.addOption(SAMPLE, true, "Tumor sample.");
+
         return options;
     }
 

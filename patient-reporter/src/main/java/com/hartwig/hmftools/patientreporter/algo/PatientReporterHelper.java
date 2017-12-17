@@ -17,8 +17,8 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.vcf.VCFFileLoader;
-import com.hartwig.hmftools.common.variant.vcf.VCFSomaticFile;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactoryNew;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,8 +69,9 @@ final class PatientReporterHelper {
     }
 
     @NotNull
-    static VCFSomaticFile loadSomaticSNVFile(@NotNull final String path) throws IOException, HartwigException {
-        return VCFFileLoader.loadSomaticVCF(path, SOMATIC_SNV_EXTENSION);
+    static List<SomaticVariant> loadSomaticSNVFile(@NotNull final String sample, @NotNull final String path)
+            throws IOException, HartwigException {
+        return new SomaticVariantFactoryNew().fromVCFFile(sample, path, SOMATIC_SNV_EXTENSION);
     }
 
     @NotNull
