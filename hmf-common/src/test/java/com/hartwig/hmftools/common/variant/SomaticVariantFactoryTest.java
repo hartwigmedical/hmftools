@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Optional;
+
 import com.google.common.collect.Sets;
 
 import org.junit.Before;
@@ -62,15 +64,14 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void incorrectSampleFieldYieldsMissingReadCounts() {
-        final String missingAFLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 9";
-        final SomaticVariant missingAFVariant = SomaticVariantFactoryOld.fromVCFLine(missingAFLine);
-        assertEquals(Double.NaN, missingAFVariant.alleleFrequency(), EPSILON);
-        assertEquals(0, missingAFVariant.totalReadCount(), EPSILON);
+        final String missingAFLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=varscan-freebayes;\tGT:DP\t0/1:21";
 
-        final String missingRefCovLine = "0 \t 1 \t 2 \t 3 \t 4 \t 5 \t 6 \t 7 \t 8 \t 0/1:60:113";
-        final SomaticVariant missingRefCovVariant = SomaticVariantFactoryOld.fromVCFLine(missingRefCovLine);
-        assertEquals(Double.NaN, missingRefCovVariant.alleleFrequency(), EPSILON);
-        assertEquals(0, missingRefCovVariant.totalReadCount(), EPSILON);
+        final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(missingAFLine));
+        assertFalse(missingAFVariant.isPresent());
+
+        final String missingRefCovLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=varscan-freebayes;\tGT:AD:DP\t0/1:60:121";
+        final Optional<SomaticVariant> missingRefCovVariant = victim.createVariant(SAMPLE, codec.decode(missingRefCovLine));
+        assertFalse(missingRefCovVariant.isPresent());
     }
 
     @Test
@@ -91,7 +92,7 @@ public class SomaticVariantFactoryTest {
         assertEquals("COSM2", hasBoth.cosmicID());
 
         final String dbsnpOnly = "15\t12345678\trs1\tC\tA,G\t2\tPASS\tset=freebayes-filterInVarscan;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasDBSNPOnly = SomaticVariantFactoryOld.fromVCFLine(dbsnpOnly);
+        final SomaticVariant hasDBSNPOnly = victim.createVariant(SAMPLE, codec.decode(dbsnpOnly)).get();
         assertTrue(hasDBSNPOnly.isDBSNP());
         assertFalse(hasDBSNPOnly.isCOSMIC());
 

@@ -78,7 +78,7 @@ public class SomaticVariantFactoryNew {
     Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         if (filter.test(context)) {
             final Genotype genotype = context.getGenotype(sample);
-            if (genotype.hasAD()) {
+            if (genotype.hasAD() && genotype.getAD().length > 1) {
                 final AlleleFrequencyData frequencyData = VariantFactoryFunctions.determineAlleleFrequencies(genotype);
                 SomaticVariant.Builder builder = new SomaticVariant.Builder().chromosome(context.getContig())
                         .annotations(Collections.emptyList())
