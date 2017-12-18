@@ -89,6 +89,7 @@ CREATE TABLE somaticVariant
     chromosome varchar(255) NOT NULL,
     position int not null,
     filter varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
     ref varchar(255) NOT NULL,
     alt varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
@@ -111,6 +112,7 @@ CREATE TABLE somaticVariant
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),
+    INDEX(type),
     INDEX(gene)
 );
 
