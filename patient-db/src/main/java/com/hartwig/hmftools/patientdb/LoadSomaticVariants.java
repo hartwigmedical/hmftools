@@ -14,6 +14,9 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
+import com.hartwig.hmftools.common.region.bed.BEDFileLookupFileImpl;
+import com.hartwig.hmftools.common.region.bed.BedFileLookup;
+import com.hartwig.hmftools.common.region.bed.BedFileLookupNoImpl;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -41,10 +44,10 @@ public class LoadSomaticVariants {
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String MAPPABILITY_BED = "mappability_bed";
     private static final String PASS_FILTER = "pass_filter";
     private static final String SOMATIC_FILTER = "somatic_filter";
+    private static final String MAPPABILITY_BED = "mappability_bed";
+    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -55,7 +58,6 @@ public class LoadSomaticVariants {
         final CommandLine cmd = createCommandLine(args, options);
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-        final String mappabilityBed = cmd.getOptionValue(MAPPABILITY_BED);
         final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
         final String sample = cmd.getOptionValue(SAMPLE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
@@ -67,39 +69,43 @@ public class LoadSomaticVariants {
             filter.add(new SomaticFilter());
         }
 
-        LOGGER.info("Reading somatic VCF File");
-        final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);
+        try (final BedFileLookup mappabilityLookup = cmd.hasOption(MAPPABILITY_BED) ? new BEDFileLookupFileImpl(cmd.getOptionValue(
+                MAPPABILITY_BED)) : new BedFileLookupNoImpl()) {
 
-        LOGGER.info("Reading high confidence bed file");
-        final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
+            LOGGER.info("Reading somatic VCF File");
+            final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);
 
-        LOGGER.info("Loading indexed fasta reference file");
-        IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+            LOGGER.info("Reading high confidence bed file");
+            final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
-        LOGGER.info("Querying purple database");
-        final PurityContext purityContext = dbAccess.readPurityContext(sample);
+            LOGGER.info("Loading indexed fasta reference file");
+            IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
-        if (purityContext == null) {
-            LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
+            LOGGER.info("Querying purple database");
+            final PurityContext purityContext = dbAccess.readPurityContext(sample);
+
+            if (purityContext == null) {
+                LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
+            }
+
+            final PurityAdjuster purityAdjuster = purityContext == null
+                    ? new PurityAdjuster(Gender.FEMALE, 1, 1)
+                    : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
+
+            final Multimap<String, PurpleCopyNumber> copyNumbers =
+                    Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
+
+            LOGGER.info("Enriching variants");
+            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(purityAdjuster,
+                    highConfidenceRegions,
+                    copyNumbers,
+                    indexedFastaSequenceFile,
+                    mappabilityLookup);
+            final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
+
+            LOGGER.info("Persisting variants to database");
+            dbAccess.writeSomaticVariants(sample, enrichedVariants);
         }
-
-        final PurityAdjuster purityAdjuster = purityContext == null
-                ? new PurityAdjuster(Gender.FEMALE, 1, 1)
-                : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
-
-        final Multimap<String, PurpleCopyNumber> copyNumbers =
-                Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
-
-        LOGGER.info("Enriching variants");
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(purityAdjuster,
-                highConfidenceRegions,
-                copyNumbers,
-                indexedFastaSequenceFile,
-                mappabilityBed);
-        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
-
-        LOGGER.info("Persisting variants to database");
-        dbAccess.writeSomaticVariants(sample, enrichedVariants);
 
         LOGGER.info("Complete");
     }

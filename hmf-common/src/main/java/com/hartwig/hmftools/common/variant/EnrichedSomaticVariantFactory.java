@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.region.bed.BEDFileLookup;
+import com.hartwig.hmftools.common.region.bed.BedFileLookup;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,40 +37,41 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final IndexedFastaSequenceFile reference;
     @NotNull
-    private final String mappabilityBedFile;
+    private final BedFileLookup mappabilityLookup;
 
     private int unmatchedAnnotations;
 
-    public EnrichedSomaticVariantFactory(@NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference, @NotNull final String mappabilityBedFile) {
+    public EnrichedSomaticVariantFactory(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference,
+            @NotNull final BedFileLookup mappabilityLookup) {
         this.purityAdjuster = purityAdjuster;
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
         this.reference = reference;
 
-        this.mappabilityBedFile = mappabilityBedFile;
+        this.mappabilityLookup = mappabilityLookup;
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<SomaticVariant> variants) throws IOException {
 
         final List<EnrichedSomaticVariant> result = Lists.newArrayList();
-        try (final BEDFileLookup mappabilityLookup = new BEDFileLookup(mappabilityBedFile)) {
 
-            for (SomaticVariant variant : variants) {
-                double mappability = Math.round(mappabilityLookup.score(variant) * 1000) / 1000d;
-                result.add(enrich(variant, mappability));
-            }
-
-            if (unmatchedAnnotations > 0) {
-                LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
-            }
-
+        for (SomaticVariant variant : variants) {
+            result.add(enrich(variant));
         }
+
+        if (unmatchedAnnotations > 0) {
+            LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
+        }
+
         return result;
     }
 
     @NotNull
-    private EnrichedSomaticVariant enrich(@NotNull final SomaticVariant variant, double mappability) {
+    private EnrichedSomaticVariant enrich(@NotNull final SomaticVariant variant) throws IOException {
+        double mappability = Math.round(mappabilityLookup.score(variant) * 1000) / 1000d;
+
         final Builder builder = createBuilder(variant).mappability(mappability);
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
