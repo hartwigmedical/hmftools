@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.filter.NoFilter;
+import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -31,8 +31,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class LoadSomaticVariants {
 
@@ -43,7 +43,8 @@ public class LoadSomaticVariants {
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String MAPPABILITY_BED = "mappability_bed";
-    private static final String PASS = "pass";
+    private static final String PASS_FILTER = "pass_filter";
+    private static final String SOMATIC_FILTER = "somatic_filter";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -58,7 +59,13 @@ public class LoadSomaticVariants {
         final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
         final String sample = cmd.getOptionValue(SAMPLE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
-        final VariantContextFilter filter = cmd.hasOption(PASS) ? new PassingVariantFilter() : new NoFilter();
+        final CompoundFilter filter = new CompoundFilter(true);
+        if (cmd.hasOption(PASS_FILTER)) {
+            filter.add(new PassingVariantFilter());
+        }
+        if (cmd.hasOption(SOMATIC_FILTER)) {
+            filter.add(new SomaticFilter());
+        }
 
         LOGGER.info("Reading somatic VCF File");
         final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);
@@ -108,7 +115,8 @@ public class LoadSomaticVariants {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(SAMPLE, true, "Tumor sample.");
-        options.addOption(PASS, false, "Only load unfiltered variants");
+        options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
+        options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
 
         return options;
     }
