@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.filter.NoFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -30,6 +31,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class LoadSomaticVariants {
 
@@ -40,6 +43,7 @@ public class LoadSomaticVariants {
     private static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String MAPPABILITY_BED = "mappability_bed";
+    private static final String PASS = "pass";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -54,10 +58,10 @@ public class LoadSomaticVariants {
         final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
         final String sample = cmd.getOptionValue(SAMPLE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
+        final VariantContextFilter filter = cmd.hasOption(PASS) ? new PassingVariantFilter() : new NoFilter();
 
         LOGGER.info("Reading somatic VCF File");
-        final List<SomaticVariant> variants = new SomaticVariantFactory().fromVCFFile(sample, vcfFileLocation);
-
+        final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Reading high confidence bed file");
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
@@ -80,8 +84,11 @@ public class LoadSomaticVariants {
                 Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
 
         LOGGER.info("Enriching variants");
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
-                new EnrichedSomaticVariantFactory(purityAdjuster, highConfidenceRegions, copyNumbers, indexedFastaSequenceFile, mappabilityBed);
+        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(purityAdjuster,
+                highConfidenceRegions,
+                copyNumbers,
+                indexedFastaSequenceFile,
+                mappabilityBed);
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
 
         LOGGER.info("Persisting variants to database");
@@ -101,6 +108,7 @@ public class LoadSomaticVariants {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(SAMPLE, true, "Tumor sample.");
+        options.addOption(PASS, false, "Only load unfiltered variants");
 
         return options;
     }
