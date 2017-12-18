@@ -27,7 +27,7 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticVariantFactoryNew {
+public class SomaticVariantFactory {
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
@@ -40,11 +40,11 @@ public class SomaticVariantFactoryNew {
     @NotNull
     private final CompoundFilter filter;
 
-    public SomaticVariantFactoryNew() {
+    public SomaticVariantFactory() {
         this(new VariantContextFilter[0]);
     }
 
-    public SomaticVariantFactoryNew(VariantContextFilter... filters) {
+    public SomaticVariantFactory(VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.add(new ChromosomeFilter());
         filter.addAll(Arrays.asList(filters));

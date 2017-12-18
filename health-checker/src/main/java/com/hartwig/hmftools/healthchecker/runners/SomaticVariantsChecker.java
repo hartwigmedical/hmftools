@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactoryNew;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.predicate.VariantFilter;
 import com.hartwig.hmftools.common.variant.predicate.VariantPredicates;
@@ -34,7 +34,7 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
         if (!runContext.isSomaticRun()) {
             return new NoResult(CheckType.SOMATIC_VARIANTS);
         }
-        final List<SomaticVariant> variants = new SomaticVariantFactoryNew().fromVCFFile(runContext.tumorSample(), runContext.runDirectory(), SOMATICS_EXTENSION);
+        final List<SomaticVariant> variants = new SomaticVariantFactory().fromVCFFile(runContext.tumorSample(), runContext.runDirectory(), SOMATICS_EXTENSION);
         final List<SomaticVariant> snps = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.SNP));
         final List<SomaticVariant> mnps = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.MNP));
         final List<SomaticVariant> indels = VariantFilter.filter(variants, VariantPredicates.withType(VariantType.INDEL));

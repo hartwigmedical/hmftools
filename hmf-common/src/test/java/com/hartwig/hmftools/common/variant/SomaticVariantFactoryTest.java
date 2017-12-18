@@ -26,14 +26,14 @@ public class SomaticVariantFactoryTest {
     private static final String VARIANT_PATH = Resources.getResource("variants").getPath();
     private static final String SOMATIC_EXTENSION = "somatics.vcf";
 
-    private SomaticVariantFactoryNew victim;
+    private SomaticVariantFactory victim;
     private VCFCodec codec;
 
     private static final double EPSILON = 1.0e-10;
 
     @Before
     public void setup() {
-        victim = new SomaticVariantFactoryNew();
+        victim = new SomaticVariantFactory();
         codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
@@ -41,22 +41,17 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canLoadSomaticVCFFromBasePath() throws IOException, HartwigException {
-        final List<SomaticVariant> variants =  new SomaticVariantFactoryNew().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
+        final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
         assertEquals(3, variants.size());
     }
 
     @Test
     public void canLoadSomaticVCFFromFile() throws IOException, HartwigException {
         final String file = VARIANT_PATH + File.separator + SOMATIC_EXTENSION;
-        final List<SomaticVariant> variants =  new SomaticVariantFactoryNew().fromVCFFile("sample", file);
+        final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", file);
         assertEquals(3, variants.size());
     }
 
-    @Test
-    public void canReadSampleNameFromHeader() {
-        final String header = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tsample";
-        assertEquals("sample", SomaticVariantFactoryOld.sampleFromHeaderLine(header));
-    }
 
     @Test
     public void canReadAndWriteCorrectSomaticVariant() {

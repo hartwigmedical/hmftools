@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactoryNew;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -56,7 +56,7 @@ public class LoadSomaticVariants {
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading somatic VCF File");
-        final List<SomaticVariant> variants = new SomaticVariantFactoryNew().fromVCFFile(sample, vcfFileLocation);
+        final List<SomaticVariant> variants = new SomaticVariantFactory().fromVCFFile(sample, vcfFileLocation);
 
 
         LOGGER.info("Reading high confidence bed file");
