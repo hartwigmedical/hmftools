@@ -41,8 +41,8 @@
                 <xsd:element name="Gene" type="geneIdentifier" maxOccurs="unbounded"/>
                 <xsd:element name="AllGenes"/>
             </xsd:choice>
-            <xsd:element name="SnpEffect" type="snpEffect" maxOccurs="unbounded"/>
-            <xsd:element name="Effect" type="otherEffect" maxOccurs="unbounded"/>
+            <xsd:element name="SnpEffect" type="snpEffect" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="Effect" type="otherEffect" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
     </xsd:complexType>
 

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.bachelor;
 
-import java.util.List;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,12 +10,36 @@ abstract class EligibilityReport {
     @NotNull
     public abstract String patient();
 
+    enum ReportType {
+        GERMLINE_MUTATION,
+        SOMATIC_MUTATION,
+        GERMLINE_DELETION,
+        SOMATIC_DELETION;
+    }
+
     @NotNull
-    public abstract String tag();
+    public abstract ReportType source();
 
     @NotNull
     public abstract String program();
 
     @NotNull
-    public abstract List<VariantModel> variants();
+    public abstract String id();
+
+    @NotNull
+    public abstract String genes();
+
+    @NotNull
+    public abstract String chrom();
+
+    public abstract long pos();
+
+    @NotNull
+    public abstract String ref();
+
+    @NotNull
+    public abstract String alts();
+
+    @NotNull
+    public abstract String effects();
 }

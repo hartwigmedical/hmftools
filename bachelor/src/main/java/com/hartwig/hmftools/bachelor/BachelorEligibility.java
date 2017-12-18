@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
+import nl.hartwigmedicalfoundation.bachelor.OtherEffect;
 import nl.hartwigmedicalfoundation.bachelor.Program;
 import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
@@ -77,16 +78,31 @@ class BachelorEligibility {
         for (final Program program : input.values()) {
 
             final Multimap<String, String> geneToEnsemblMap = HashMultimap.create();
+            program.getPanel()
+                    .stream()
+                    .map(ProgramPanel::getGene)
+                    .flatMap(Collection::stream)
+                    .forEach(g -> geneToEnsemblMap.put(g.getName(), g.getEnsembl()));
 
-            // load panels, potentially multiple
+            // process copy number sections
+            final List<Predicate<GeneCopyNumber>> cnvPredicates = Lists.newArrayList();
+            for (final ProgramPanel panel : program.getPanel()) {
+                final boolean allGene = panel.getAllGenes() != null;
+                final List<GeneIdentifier> genes = panel.getGene();
 
+                if (panel.getEffect().contains(OtherEffect.HOMOZYGOUS_DELETION)) {
+                    final Predicate<GeneCopyNumber> geneCopyNumberPredicate =
+                            cnv -> allGene || genes.stream().anyMatch(g -> g.getEnsembl().equals(cnv.transcriptID()));
+                    cnvPredicates.add(geneCopyNumberPredicate);
+                }
+            }
+
+            // process variants from vcf
             final List<Predicate<VariantModel>> panelPredicates = Lists.newArrayList();
             for (final ProgramPanel panel : program.getPanel()) {
                 final boolean allGene = panel.getAllGenes() != null;
                 final List<GeneIdentifier> genes = panel.getGene();
                 final List<String> effects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
-
-                genes.forEach(g -> geneToEnsemblMap.put(g.getName(), g.getEnsembl()));
 
                 final Predicate<VariantModel> panelPredicate = v -> allGene
                         ? v.Annotations.stream().anyMatch(a -> a.Effects.stream().anyMatch(effects::contains))
@@ -161,7 +177,10 @@ class BachelorEligibility {
                     .anyMatch(a -> !a.HGVSp.isEmpty() && whitelist.get(a.Transcript).contains(a.HGVSp));
 
             final Predicate<VariantModel> predicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
-            result.programs.put(program.getName(), new BachelorProgram(predicate));
+            final Predicate<GeneCopyNumber> copyNumberPredicate =
+                    cnv -> cnvPredicates.stream().anyMatch(p -> p.test(cnv)) && cnv.minCopyNumber() < MAX_COPY_NUMBER_FOR_LOSS;
+
+            result.programs.put(program.getName(), new BachelorProgram(predicate, copyNumberPredicate));
         }
 
         if (iterateAllGenes) {
@@ -171,17 +190,18 @@ class BachelorEligibility {
         return result;
     }
 
-    private void processVariant(final Map<String, ImmutableEligibilityReport.Builder> results, final VariantContext variant,
-            final String patient, final String sample, final String tag) {
+    @NotNull
+    private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sample,
+            final EligibilityReport.ReportType type) {
 
         if (variant.isFiltered()) {
-            return;
+            return Collections.emptyList();
         }
 
         // we will skip when an ALT is not present in the sample
         final Genotype genotype = variant.getGenotype(sample);
         if (genotype == null || !(genotype.isHomVar() || genotype.isHet())) {
-            return;
+            return Collections.emptyList();
         }
 
         // TODO: do we need to verify specific ALTS have specific SnpEff effects
@@ -194,42 +214,80 @@ class BachelorEligibility {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
-        for (final String p : matchingPrograms) {
-            // TODO: only add matching annotations of variant
-            results.computeIfAbsent(p, k -> ImmutableEligibilityReport.builder().patient(patient).program(p).tag(tag)).addVariants(model);
-        }
+        // TODO: only add matching annotations of variant
+        final String alts = variant.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
+        final String effects = String.join("|", model.Annotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.toSet()));
+        final String genes = String.join("|", model.Annotations.stream().map(a -> a.GeneName).collect(Collectors.toSet()));
 
+        return matchingPrograms.stream()
+                .map(p -> ImmutableEligibilityReport.builder()
+                        .patient(patient)
+                        .source(type)
+                        .program(p)
+                        .id(variant.getID())
+                        .genes(genes)
+                        .chrom(variant.getContig())
+                        .pos(variant.getStart())
+                        .ref(variant.getReference().toString())
+                        .alts(alts)
+                        .effects(effects)
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @NotNull
-    Collection<EligibilityReport> processVCF(final String patient, final String sample, final String tag, final VCFFileReader reader) {
+    Collection<EligibilityReport> processVCF(final String patient, final String sample, final EligibilityReport.ReportType type,
+            final VCFFileReader reader) {
 
-        final Map<String, ImmutableEligibilityReport.Builder> results = Maps.newHashMap();
+        final List<EligibilityReport> results = Lists.newArrayList();
 
         for (final HmfGenomeRegion region : querySet.values()) {
             final CloseableIterator<VariantContext> query =
                     reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
             while (query.hasNext()) {
                 final VariantContext variant = query.next();
-                processVariant(results, variant, patient, sample, tag);
+                results.addAll(processVariant(variant, patient, sample, type));
             }
             query.close();
         }
 
-        return results.values().stream().map(ImmutableEligibilityReport.Builder::build).collect(Collectors.toList());
+        return results;
     }
 
     @NotNull
     public Collection<EligibilityReport> processCopyNumbers(final String patient, final List<GeneCopyNumber> copyNumbers) {
+
+        final List<EligibilityReport> results = Lists.newArrayList();
         for (final GeneCopyNumber copyNumber : copyNumbers) {
 
-            final boolean germline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
-            if (copyNumber.value() < MAX_COPY_NUMBER_FOR_LOSS) {
-                // TODO:
-            }
+            // TODO: verify the germline check
+            final boolean isGermline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
+            final List<String> matchingPrograms = programs.entrySet()
+                    .stream()
+                    .filter(program -> program.getValue().copyNumberProcessor.test(copyNumber))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
 
+            final List<EligibilityReport> interimResults = matchingPrograms.stream()
+                    .map(p -> ImmutableEligibilityReport.builder()
+                            .patient(patient)
+                            .source(isGermline
+                                    ? EligibilityReport.ReportType.GERMLINE_DELETION
+                                    : EligibilityReport.ReportType.SOMATIC_DELETION)
+                            .program(p)
+                            .id("")
+                            .genes(copyNumber.gene())
+                            .chrom(copyNumber.chromosome())
+                            .pos(copyNumber.start())
+                            .ref("")
+                            .alts("")
+                            .effects("")
+                            .build())
+                    .collect(Collectors.toList());
+
+            results.addAll(interimResults);
         }
 
-        return Collections.emptyList();
+        return results;
     }
 }

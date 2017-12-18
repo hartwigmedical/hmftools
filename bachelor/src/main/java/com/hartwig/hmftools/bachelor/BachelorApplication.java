@@ -33,7 +33,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.TribbleException;
-import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class BachelorApplication {
@@ -79,13 +78,14 @@ public class BachelorApplication {
     private static Collection<EligibilityReport> processVCF(final String patient, final boolean isGermline, final File vcf,
             final BachelorEligibility eligibility) {
 
-        final String tag = isGermline ? "germline" : "somatic";
-        LOGGER.info("process {} vcf: {}", tag, vcf.getPath());
+        final EligibilityReport.ReportType type =
+                isGermline ? EligibilityReport.ReportType.GERMLINE_MUTATION : EligibilityReport.ReportType.SOMATIC_MUTATION;
+        LOGGER.info("process {} vcf: {}", type, vcf.getPath());
 
         try (final VCFFileReader reader = new VCFFileReader(vcf, true)) {
             // TODO: always correct? germline has R,T somatic has just T
             final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
-            return eligibility.processVCF(patient, sample, tag, reader);
+            return eligibility.processVCF(patient, sample, type, reader);
         } catch (final TribbleException e) {
             LOGGER.error("error with VCF file {}: {}", vcf.getPath(), e.getMessage());
             return Collections.emptyList();
@@ -152,19 +152,13 @@ public class BachelorApplication {
 
     private static void outputToFile(final Collection<EligibilityReport> reports, final File outputFile) throws IOException {
         try (final BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath())) {
-            for (final EligibilityReport report : reports) {
-                for (final VariantModel model : report.variants()) {
-                    final VariantContext v = model.Context;
+            for (final EligibilityReport r : reports) {
 
-                    final String alts = v.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
-                    final String effects =
-                            String.join("|", model.Annotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.toSet()));
-                    final String genes = String.join("|", model.Annotations.stream().map(a -> a.GeneName).collect(Collectors.toSet()));
+                writer.write(
+                        String.format("%s,%s,%s,%s,%s,%s,%d,%s,%s,%s", r.patient(), r.source().toString(), r.program(), r.id(), r.genes(),
+                                r.chrom(), r.pos(), r.ref(), r.alts(), r.effects()));
+                writer.newLine();
 
-                    writer.write(String.format("%s,%s,%s,%s,%s,%s,%d,%s,%s,%s", report.patient(), report.tag(), report.program(), v.getID(),
-                            genes, v.getContig(), v.getStart(), v.getReference(), alts, effects));
-                    writer.newLine();
-                }
             }
             writer.close();
         }
