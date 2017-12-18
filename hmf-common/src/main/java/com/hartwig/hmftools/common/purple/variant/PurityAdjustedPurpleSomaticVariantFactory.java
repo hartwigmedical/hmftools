@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantBuilder;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +34,7 @@ public class PurityAdjustedPurpleSomaticVariantFactory {
     public List<PurityAdjustedSomaticVariant> create(@NotNull List<SomaticVariant> variants) {
         final List<PurityAdjustedSomaticVariant> result = Lists.newArrayList();
 
-        for (Variant variant : variants) {
+        for (SomaticVariant variant : variants) {
             final PurityAdjustedSomaticVariantBuilder builder =
                     builder().from(variant).adjustedCopyNumber(0).adjustedVAF(0).clonality(Clonality.UNKNOWN).lossOfHeterozygosity(false);
             copyNumberSelector.select(variant).ifPresent(x -> builder.purityAdjustment(purityAdjuster, x, variant));

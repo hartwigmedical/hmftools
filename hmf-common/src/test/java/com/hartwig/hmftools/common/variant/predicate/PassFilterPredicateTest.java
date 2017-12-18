@@ -3,17 +3,21 @@ package com.hartwig.hmftools.common.variant.predicate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.variant.Variant;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class PassFilterPredicateTest {
 
-    private final Predicate<Variant> predicate = new PassFilterPredicate<>();
+    private final Predicate<SomaticVariant> predicate = new PassFilterPredicate<>();
 
     @Test
     public void filtersOnFirstPassIdentifier() {
@@ -30,7 +34,7 @@ public class PassFilterPredicateTest {
         assertFalse(predicate.test(new TestVariant("NotPassing!")));
     }
 
-    private static class TestVariant implements Variant {
+    private static class TestVariant implements SomaticVariant {
 
         @NotNull
         private final String filter;
@@ -72,6 +76,30 @@ public class PassFilterPredicateTest {
         @Override
         public String filter() {
             return filter;
+        }
+
+        @Nullable
+        @Override
+        public String dbsnpID() {
+            return null;
+        }
+
+        @Nullable
+        @Override
+        public String cosmicID() {
+            return null;
+        }
+
+        @NotNull
+        @Override
+        public List<VariantAnnotation> annotations() {
+            return Lists.newArrayList();
+        }
+
+        @NotNull
+        @Override
+        public List<String> callers() {
+            return Lists.newArrayList();
         }
 
         @Override

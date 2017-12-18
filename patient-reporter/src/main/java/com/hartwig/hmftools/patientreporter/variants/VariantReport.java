@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.variants;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.formatPercent;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -18,7 +18,7 @@ public interface VariantReport {
     String gene();
 
     @NotNull
-    Variant variant();
+    SomaticVariant variant();
 
     @NotNull
     String transcript();

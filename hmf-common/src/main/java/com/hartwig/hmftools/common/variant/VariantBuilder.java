@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.variant;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface VariantBuilder<T extends Variant> {
+@Deprecated
+public interface VariantBuilder<T extends SomaticVariant> {
     VariantBuilder type(VariantType type);
 
     VariantBuilder chromosome(@NotNull final String chromosome);

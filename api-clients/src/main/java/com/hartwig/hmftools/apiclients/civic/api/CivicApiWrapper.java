@@ -10,7 +10,7 @@ import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicGene;
 import com.hartwig.hmftools.apiclients.civic.data.CivicIndexResult;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,12 +54,12 @@ public class CivicApiWrapper {
     }
 
     @NotNull
-    public Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final Variant variant) {
+    public Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final SomaticVariant variant) {
         return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().containsVariant(variant));
     }
 
     @NotNull
-    public Observable<CivicVariant> getVariantMatches(final int entrezId, @NotNull final Variant variant) {
+    public Observable<CivicVariant> getVariantMatches(final int entrezId, @NotNull final SomaticVariant variant) {
         return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().equals(variant));
     }
 

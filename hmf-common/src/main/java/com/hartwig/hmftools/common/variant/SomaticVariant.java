@@ -2,96 +2,46 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
-import org.apache.logging.log4j.util.Strings;
-import org.immutables.value.Value;
+import com.hartwig.hmftools.common.position.GenomePosition;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(overshadowImplementation = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SomaticVariant implements Variant {
+public interface SomaticVariant extends GenomePosition, AllelicDepth {
 
-    @Override
     @NotNull
-    @Value.Default
-    public VariantType type() {
-        return VariantType.UNDEFINED;
-    }
+    String ref();
 
-    @Override
     @NotNull
-    @Value.Default
-    public String chromosome() {
-        return Strings.EMPTY;
-    }
+    String alt();
 
-    @Override
-    @Value.Default
-    public long position() {
-        return 0L;
-    }
-
-    @Override
     @NotNull
-    @Value.Default
-    public String ref() {
-        return Strings.EMPTY;
-    }
+    VariantType type();
 
-    @Override
     @NotNull
-    @Value.Default
-    public String alt() {
-        return Strings.EMPTY;
-    }
-
-    @Override
-    @NotNull
-    @Value.Default
-    public String filter() {
-        return Strings.EMPTY;
-    }
+    String filter();
 
     @Nullable
-    @Value.Default
-    public String dbsnpID() {
-        return null;
-    }
+    String dbsnpID();
 
     @Nullable
-    @Value.Default
-    public String cosmicID() {
-        return null;
-    }
+    String cosmicID();
 
     @NotNull
-    public abstract List<VariantAnnotation> annotations();
+    List<VariantAnnotation> annotations();
 
     @NotNull
-    public abstract List<String> callers();
+    List<String> callers();
 
-    @Override
-    @Value.Default
-    public int totalReadCount() {
-        return 0;
-    }
-
-    @Override
-    @Value.Default
-    public int alleleReadCount() {
-        return 0;
-    }
-
-    public boolean isDBSNP() {
+    default boolean isDBSNP() {
         return dbsnpID() != null;
     }
 
-    public boolean isCOSMIC() {
+    default boolean isCOSMIC() {
         return cosmicID() != null;
     }
 
-    public boolean hasConsequence(@NotNull final VariantConsequence consequence) {
+    default boolean hasConsequence(@NotNull final VariantConsequence consequence) {
         for (final VariantAnnotation annotation : annotations()) {
             if (annotation.consequences().contains(consequence)) {
                 return true;
@@ -100,16 +50,7 @@ public abstract class SomaticVariant implements Variant {
         return false;
     }
 
-    long callerCount() {
+    default long callerCount() {
         return callers().size();
-    }
-
-    @Override
-    public String toString() {
-        return "SomaticVariant{" + "chromosome='" + chromosome() + '\'' + ", position=" + position() + '}';
-    }
-
-    public static class Builder extends ImmutableSomaticVariant.Builder implements VariantBuilder<SomaticVariant> {
-
     }
 }

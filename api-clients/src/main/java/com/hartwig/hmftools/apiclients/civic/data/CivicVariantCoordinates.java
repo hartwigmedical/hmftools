@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.apiclients.civic.data;
 
 import com.google.gson.annotations.SerializedName;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -54,7 +54,7 @@ public abstract class CivicVariantCoordinates {
     @SerializedName("reference_build")
     public abstract String referenceBuild();
 
-    public boolean equals(@NotNull final Variant variant) {
+    public boolean equals(@NotNull final SomaticVariant variant) {
         final String refBases = referenceBases();
         final String altBases = variantBases();
         if (refBases == null || altBases == null) {
@@ -63,13 +63,13 @@ public abstract class CivicVariantCoordinates {
         return containsVariant(variant) && refBases.equals(variant.ref()) && altBases.equals(variant.alt());
     }
 
-    private boolean checkCoordinates(@NotNull final Variant variant, final String chromosome, final Long start, final Long stop) {
+    private boolean checkCoordinates(@NotNull final SomaticVariant variant, final String chromosome, final Long start, final Long stop) {
         return chromosome != null && start != null && stop != null && chromosome.equals(variant.chromosome()) && start <= variant.position()
                 && stop >= variant.position();
 
     }
 
-    public boolean containsVariant(@NotNull final Variant variant) {
+    public boolean containsVariant(@NotNull final SomaticVariant variant) {
         final boolean firstCoordContainsVariant = checkCoordinates(variant, chromosome(), start(), stop());
         final boolean secondCoordContainsVariant = checkCoordinates(variant, chromosome2(), start2(), stop2());
         return firstCoordContainsVariant || secondCoordContainsVariant;

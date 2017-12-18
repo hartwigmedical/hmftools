@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-public interface PurityAdjustedSomaticVariant extends Variant {
+public interface PurityAdjustedSomaticVariant extends SomaticVariant {
 
     double adjustedCopyNumber();
 

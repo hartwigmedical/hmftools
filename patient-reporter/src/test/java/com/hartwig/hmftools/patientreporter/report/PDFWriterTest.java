@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.ImmutableNotSequencedPatientReport;
@@ -81,10 +81,16 @@ public class PDFWriterTest {
         final List<Alteration> alterations =
                 CivicAnalysis.run(variants, copyNumbers, reporterData.geneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
 
-        final SequencedPatientReport patientReport =
-                ImmutableSequencedPatientReport.of(sampleReport, variants, fusions, disruptions, copyNumbers, 361, "58%", alterations,
-                        Optional.of("this is a test report and does not relate to any real CPCT patient"),
-                        baseReporterData.signaturePath());
+        final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
+                variants,
+                fusions,
+                disruptions,
+                copyNumbers,
+                361,
+                "58%",
+                alterations,
+                Optional.of("this is a test report and does not relate to any real CPCT patient"),
+                baseReporterData.signaturePath());
 
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
@@ -119,7 +125,7 @@ public class PDFWriterTest {
                 .alleleReadCount(18)
                 .totalReadCount(99)
                 .baf("AAAB")
-                .impliedVAF(purityAdjuster.purityAdjustedVAF("7",4, 0.18 / 0.99))
+                .impliedVAF(purityAdjuster.purityAdjustedVAF("7", 4, 0.18 / 0.99))
                 .build();
 
         final VariantReport variant2 = ImmutableVariantReport.builder()
@@ -132,7 +138,7 @@ public class PDFWriterTest {
                 .cosmicID("")
                 .alleleReadCount(20)
                 .totalReadCount(88)
-                .impliedVAF(purityAdjuster.purityAdjustedVAF("8",2, 0.2 / 0.88))
+                .impliedVAF(purityAdjuster.purityAdjustedVAF("8", 2, 0.2 / 0.88))
                 .baf("AB")
                 .build();
 
@@ -145,15 +151,15 @@ public class PDFWriterTest {
                 .consequence("inframe deletion")
                 .alleleReadCount(20)
                 .totalReadCount(87)
-                .impliedVAF(purityAdjuster.purityAdjustedVAF("17",3, 0.20 / 0.87))
+                .impliedVAF(purityAdjuster.purityAdjustedVAF("17", 3, 0.20 / 0.87))
                 .baf("AAA")
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3);
     }
 
-    private static Variant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
+    private static SomaticVariant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
             @NotNull final String alt) {
-        return new SomaticVariant.Builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
+        return new SomaticVariantImpl.Builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
     }
 
     @NotNull
@@ -307,9 +313,11 @@ public class PDFWriterTest {
     @NotNull
     private static JasperReportBuilder generateNotSequenceableCPCTReport(final double pathologyTumorEstimate,
             @NotNull final NotSequenceableReason reason) throws IOException, EmptyFileException {
-        final NotSequencedPatientReport patientReport =
-                ImmutableNotSequencedPatientReport.of(testSampleReport(pathologyTumorEstimate), reason, NotSequenceableStudy.CPCT,
-                        Optional.empty(), PatientReporterTestUtil.SIGNATURE_PATH);
+        final NotSequencedPatientReport patientReport = ImmutableNotSequencedPatientReport.of(testSampleReport(pathologyTumorEstimate),
+                reason,
+                NotSequenceableStudy.CPCT,
+                Optional.empty(),
+                PatientReporterTestUtil.SIGNATURE_PATH);
 
         return PDFWriter.generateNotSequenceableReport(patientReport);
     }
@@ -317,8 +325,12 @@ public class PDFWriterTest {
     @NotNull
     private static SampleReport testSampleReport(final double pathologyTumorPercentage) throws IOException, EmptyFileException {
         final String sample = "CPCT02991111T";
-        return ImmutableSampleReport.of(sample, "Melanoma", pathologyTumorPercentage, LocalDate.parse("05-Jan-2016", FORMATTER),
-                LocalDate.parse("01-Jan-2016", FORMATTER), "PREP013V23-QC037V20-SEQ008V25",
+        return ImmutableSampleReport.of(sample,
+                "Melanoma",
+                pathologyTumorPercentage,
+                LocalDate.parse("05-Jan-2016", FORMATTER),
+                LocalDate.parse("01-Jan-2016", FORMATTER),
+                "PREP013V23-QC037V20-SEQ008V25",
                 testBaseReporterData().centerModel().getAddresseeStringForSample(sample));
     }
 }

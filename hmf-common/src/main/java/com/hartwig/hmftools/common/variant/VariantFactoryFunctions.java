@@ -20,6 +20,7 @@ public final class VariantFactoryFunctions {
         return sampleData.split(SAMPLE_FIELD_SEPARATOR);
     }
 
+    @Deprecated
     @Nullable
     static AlleleFrequencyData determineAlleleFrequencies(@NotNull final String alleleFrequencyField) {
         final String[] afFields = alleleFrequencyField.split(ALLELE_FREQUENCY_FIELD_SEPARATOR);

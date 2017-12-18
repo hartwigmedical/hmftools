@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.variant.ImmutableVariantAnnotation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
@@ -66,7 +67,7 @@ public class ConsequenceDeterminerTest {
         final VariantAnnotation rightAnnotation = annotationBuilder.consequences(Lists.newArrayList(rightConsequence)).build();
         final VariantAnnotation wrongAnnotation = annotationBuilder.consequences(Lists.newArrayList(wrongConsequence)).build();
 
-        final SomaticVariant.Builder variantBuilder = new SomaticVariant.Builder().
+        final SomaticVariantImpl.Builder variantBuilder = new SomaticVariantImpl.Builder().
                 chromosome(CHROMOSOME).ref(REF).alt(ALT).cosmicID(COSMIC_ID).
                 totalReadCount(TOTAL_READ_COUNT).alleleReadCount(ALLELE_READ_COUNT);
 

@@ -87,7 +87,7 @@ public class SomaticVariantFactory {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {
                 final AlleleFrequencyData frequencyData = VariantFactoryFunctions.determineAlleleFrequencies(genotype);
-                SomaticVariant.Builder builder = new SomaticVariant.Builder().chromosome(context.getContig())
+                SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
                         .annotations(Collections.emptyList())
                         .position(context.getStart())
                         .ref(context.getReference().getBaseString())
@@ -106,12 +106,12 @@ public class SomaticVariantFactory {
         return Optional.empty();
     }
 
-    private static SomaticVariant.Builder attachAnnotations(@NotNull final SomaticVariant.Builder builder,
+    private static SomaticVariantImpl.Builder attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder,
             @NotNull VariantContext context) {
         return builder.annotations(VariantAnnotationFactory.fromContext(context));
     }
 
-    private static SomaticVariant.Builder attachCallers(@NotNull final SomaticVariant.Builder builder, @NotNull VariantContext context) {
+    private static SomaticVariantImpl.Builder attachCallers(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         if (context.getCommonInfo().hasAttribute(CALLER_ALGO_IDENTIFIER)) {
             return builder.callers(extractCallers(context.getCommonInfo().getAttributeAsString(CALLER_ALGO_IDENTIFIER, "")));
         }
@@ -134,7 +134,7 @@ public class SomaticVariantFactory {
         return finalCallers;
     }
 
-    private static SomaticVariant.Builder attachFilter(@NotNull final SomaticVariant.Builder builder, @NotNull VariantContext context) {
+    private static SomaticVariantImpl.Builder attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         if (context.isFiltered()) {
             StringJoiner joiner = new StringJoiner(";");
             context.getFilters().forEach(joiner::add);
@@ -144,7 +144,7 @@ public class SomaticVariantFactory {
         return builder.filter("PASS");
     }
 
-    private static SomaticVariant.Builder attachType(@NotNull final SomaticVariant.Builder builder, @NotNull VariantContext context) {
+    private static SomaticVariantImpl.Builder attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         switch (context.getType()) {
             case MNP:
                 return builder.type(VariantType.MNP);
@@ -157,7 +157,7 @@ public class SomaticVariantFactory {
         return builder.type(VariantType.UNDEFINED);
     }
 
-    private static SomaticVariant.Builder attachID(@NotNull final SomaticVariant.Builder builder, @NotNull VariantContext context) {
+    private static SomaticVariantImpl.Builder attachID(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         final String ID = context.getID();
         if (!ID.isEmpty()) {
             final String[] ids = ID.split(ID_SEPARATOR);
