@@ -51,9 +51,9 @@ import com.hartwig.hmftools.common.purple.segment.Cluster;
 import com.hartwig.hmftools.common.purple.segment.ClusterFactory;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegmentFactory;
-import com.hartwig.hmftools.common.purple.variant.PurityAdjustedPurpleSomaticVariantFactory;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
@@ -250,7 +250,7 @@ public class PurityPloidyEstimateApplication {
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
 
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedPurpleSomaticVariantFactory(purityContext.bestFit(), copyNumbers).create(somaticVariants);
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers).create(somaticVariants);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());

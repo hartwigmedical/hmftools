@@ -19,6 +19,8 @@ import com.hartwig.hmftools.common.region.bed.BEDFileLookupFileImpl;
 import com.hartwig.hmftools.common.region.bed.BEDFileLookupNoImpl;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
@@ -96,12 +98,13 @@ public class LoadSomaticVariants {
                     Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
 
             LOGGER.info("Enriching variants");
-            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(purityAdjuster,
-                    highConfidenceRegions,
-                    copyNumbers,
-                    indexedFastaSequenceFile,
-                    mappabilityLookup);
-            final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
+            final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers);
+            final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
+
+            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
+                    new EnrichedSomaticVariantFactory(highConfidenceRegions, indexedFastaSequenceFile, mappabilityLookup);
+            final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 
             LOGGER.info("Persisting variants to database");
             dbAccess.writeSomaticVariants(sample, enrichedVariants);

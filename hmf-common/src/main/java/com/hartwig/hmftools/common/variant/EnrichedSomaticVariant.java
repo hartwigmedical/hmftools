@@ -8,9 +8,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVariant {
 
-    public abstract static class Builder implements PurityAdjustedSomaticVariantBuilder {
-    }
-
     public abstract String trinucleotideContext();
 
     public abstract boolean highConfidenceRegion();
@@ -23,19 +20,9 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     public abstract String gene();
 
-    public abstract String cosmicId();
-
-    public abstract String dbsnpId();
-
     public abstract String effect();
 
     public abstract int repeatCount();
 
     public abstract double mappability();
-
-    @Override
-    public abstract double adjustedCopyNumber();
-
-    @Override
-    public abstract double adjustedVAF();
 }

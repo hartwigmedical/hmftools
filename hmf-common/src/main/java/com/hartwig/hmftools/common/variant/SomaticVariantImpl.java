@@ -89,7 +89,7 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
         return "SomaticVariant{" + "chromosome='" + chromosome() + '\'' + ", position=" + position() + '}';
     }
 
-    public static class Builder extends ImmutableSomaticVariantImpl.Builder implements VariantBuilder<SomaticVariantImpl> {
+    public static class Builder extends ImmutableSomaticVariantImpl.Builder implements VariantBuilder {
 
     }
 }
