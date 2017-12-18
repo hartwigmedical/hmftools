@@ -4,13 +4,20 @@
             xmlns="http://www.hartwigmedicalfoundation.nl/bachelor.xsd"
             elementFormDefault="qualified">
 
-    <xsd:simpleType name="effect" final="restriction">
+    <xsd:simpleType name="snpEffect" final="restriction">
         <xsd:restriction base="xsd:string">
             <xsd:enumeration value="stop_gained"/>
             <xsd:enumeration value="frameshift_variant"/>
             <xsd:enumeration value="splice_acceptor_variant"/>
             <xsd:enumeration value="splice_donor_variant"/>
             <xsd:enumeration value="missense_variant"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="otherEffect" final="restriction">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="homozygous_deletion"/>
+            <xsd:enumeration value="gene_disruption"/>
         </xsd:restriction>
     </xsd:simpleType>
 
@@ -34,7 +41,8 @@
                 <xsd:element name="Gene" type="geneIdentifier" maxOccurs="unbounded"/>
                 <xsd:element name="AllGenes"/>
             </xsd:choice>
-            <xsd:element name="SnpEffect" type="effect" maxOccurs="unbounded"/>
+            <xsd:element name="SnpEffect" type="snpEffect" maxOccurs="unbounded"/>
+            <xsd:element name="Effect" type="otherEffect" maxOccurs="unbounded"/>
         </xsd:sequence>
     </xsd:complexType>
 

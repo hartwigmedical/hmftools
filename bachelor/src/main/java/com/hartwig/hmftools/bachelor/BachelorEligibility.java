@@ -18,12 +18,12 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 
-import nl.hartwigmedicalfoundation.bachelor.Effect;
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.Program;
 import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
 import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
+import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,14 +36,14 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 class BachelorEligibility {
 
-    private static final double MIN_COPY_NUMBER_FOR_LOSS = 0.5;
+    private static final double MAX_COPY_NUMBER_FOR_LOSS = 0.5;
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorEligibility.class);
     private static final SortedSetMultimap<String, HmfGenomeRegion> allGenesByChromosomeMap = HmfGenePanelSupplier.allGeneMap();
     private static final Map<String, HmfGenomeRegion> allGenesMap = makeGeneNameMap();
     private static final Map<String, HmfGenomeRegion> allTranscriptsMap = makeTranscriptMap();
 
-    private final Map<String, Predicate<VariantModel>> programs = Maps.newHashMap();
+    private final Map<String, BachelorProgram> programs = Maps.newHashMap();
     private final Map<String, HmfGenomeRegion> querySet = Maps.newHashMap();
 
     private static Map<String, HmfGenomeRegion> makeGeneNameMap() {
@@ -84,7 +84,7 @@ class BachelorEligibility {
             for (final ProgramPanel panel : program.getPanel()) {
                 final boolean allGene = panel.getAllGenes() != null;
                 final List<GeneIdentifier> genes = panel.getGene();
-                final List<String> effects = panel.getSnpEffect().stream().map(Effect::value).collect(Collectors.toList());
+                final List<String> effects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
 
                 genes.forEach(g -> geneToEnsemblMap.put(g.getName(), g.getEnsembl()));
 
@@ -161,7 +161,7 @@ class BachelorEligibility {
                     .anyMatch(a -> !a.HGVSp.isEmpty() && whitelist.get(a.Transcript).contains(a.HGVSp));
 
             final Predicate<VariantModel> predicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
-            result.programs.put(program.getName(), predicate);
+            result.programs.put(program.getName(), new BachelorProgram(predicate));
         }
 
         if (iterateAllGenes) {
@@ -190,7 +190,7 @@ class BachelorEligibility {
 
         final List<String> matchingPrograms = programs.entrySet()
                 .stream()
-                .filter(program -> program.getValue().test(model))
+                .filter(program -> program.getValue().vcfProcessor.test(model))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
@@ -222,10 +222,12 @@ class BachelorEligibility {
     @NotNull
     public Collection<EligibilityReport> processCopyNumbers(final String patient, final List<GeneCopyNumber> copyNumbers) {
         for (final GeneCopyNumber copyNumber : copyNumbers) {
-            final boolean germline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
-            if (copyNumber.value() < MIN_COPY_NUMBER_FOR_LOSS) {
 
+            final boolean germline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
+            if (copyNumber.value() < MAX_COPY_NUMBER_FOR_LOSS) {
+                // TODO:
             }
+
         }
 
         return Collections.emptyList();
