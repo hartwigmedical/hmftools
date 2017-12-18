@@ -14,9 +14,9 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
-import com.hartwig.hmftools.common.region.bed.BEDFileLookupFileImpl;
-import com.hartwig.hmftools.common.region.bed.BedFileLookup;
-import com.hartwig.hmftools.common.region.bed.BedFileLookupNoImpl;
+import com.hartwig.hmftools.common.region.bed.BEDFileLookup1;
+import com.hartwig.hmftools.common.region.bed.BEDFileLookupFileImpl1;
+import com.hartwig.hmftools.common.region.bed.BEDFileLookupNoImpl;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -69,8 +69,8 @@ public class LoadSomaticVariants {
             filter.add(new SomaticFilter());
         }
 
-        try (final BedFileLookup mappabilityLookup = cmd.hasOption(MAPPABILITY_BED) ? new BEDFileLookupFileImpl(cmd.getOptionValue(
-                MAPPABILITY_BED)) : new BedFileLookupNoImpl()) {
+        try (final BEDFileLookup1 mappabilityLookup = cmd.hasOption(MAPPABILITY_BED) ? new BEDFileLookupFileImpl1(cmd.getOptionValue(
+                MAPPABILITY_BED)) : new BEDFileLookupNoImpl()) {
 
             LOGGER.info("Reading somatic VCF File");
             final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);

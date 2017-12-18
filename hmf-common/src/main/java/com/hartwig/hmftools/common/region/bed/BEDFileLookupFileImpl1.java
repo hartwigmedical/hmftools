@@ -13,11 +13,11 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
 
-public class BEDFileLookupFileImpl implements BedFileLookup {
+public class BEDFileLookupFileImpl1 implements BEDFileLookup1 {
 
     private final AbstractFeatureReader<BEDFeature, LineIterator> reader;
 
-    public BEDFileLookupFileImpl(final String bedFile) {
+    public BEDFileLookupFileImpl1(final String bedFile) {
         reader = getFeatureReader(bedFile, new BEDCodec(), true);
     }
 

@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-public class BedFileLookupNoImpl implements BedFileLookup {
+public class BEDFileLookupNoImpl implements BEDFileLookup1 {
     @Override
     public double score(@NotNull final GenomePosition position) throws IOException {
         return 0;
