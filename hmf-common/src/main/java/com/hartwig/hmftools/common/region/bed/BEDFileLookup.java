@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface BEDFileLookup1 extends AutoCloseable {
+public interface BEDFileLookup extends AutoCloseable {
     double score(@NotNull final GenomePosition position) throws IOException;
 
     @Override

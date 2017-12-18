@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.region.bed.BEDFileLookup1;
+import com.hartwig.hmftools.common.region.bed.BEDFileLookup;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,14 +37,14 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final IndexedFastaSequenceFile reference;
     @NotNull
-    private final BEDFileLookup1 mappabilityLookup;
+    private final BEDFileLookup mappabilityLookup;
 
     private int unmatchedAnnotations;
 
     public EnrichedSomaticVariantFactory(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final IndexedFastaSequenceFile reference,
-            @NotNull final BEDFileLookup1 mappabilityLookup) {
+            @NotNull final BEDFileLookup mappabilityLookup) {
         this.purityAdjuster = purityAdjuster;
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
