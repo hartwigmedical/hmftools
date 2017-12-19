@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.EligibilityReport.ReportType.GERMLINE_DELETION;
+import static com.hartwig.hmftools.bachelor.EligibilityReport.ReportType.SOMATIC_DELETION;
+import static com.hartwig.hmftools.bachelor.EligibilityReport.ReportType.SOMATIC_DISRUPTION;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -15,7 +20,11 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
@@ -94,6 +103,20 @@ class BachelorEligibility {
                     final Predicate<GeneCopyNumber> geneCopyNumberPredicate =
                             cnv -> allGene || genes.stream().anyMatch(g -> g.getEnsembl().equals(cnv.transcriptID()));
                     cnvPredicates.add(geneCopyNumberPredicate);
+                }
+            }
+
+            // process structural variant disruptions
+            final List<Predicate<HmfGenomeRegion>> disruptionPredicates = Lists.newArrayList();
+            for (final ProgramPanel panel : program.getPanel()) {
+                final boolean allGene = panel.getAllGenes() != null;
+                final List<GeneIdentifier> genes = panel.getGene();
+
+                if (panel.getEffect().contains(OtherEffect.GENE_DISRUPTION)) {
+                    final Predicate<HmfGenomeRegion> disruptionPredicate =
+                            sv -> allGene || genes.stream().anyMatch(g -> g.getEnsembl().equals(sv.transcriptID()));
+                    // TODO: we are matching on transcript ID here but we only have canonical transcripts in our panel file
+                    disruptionPredicates.add(disruptionPredicate);
                 }
             }
 
@@ -179,8 +202,11 @@ class BachelorEligibility {
             final Predicate<VariantModel> predicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
             final Predicate<GeneCopyNumber> copyNumberPredicate =
                     cnv -> cnvPredicates.stream().anyMatch(p -> p.test(cnv)) && cnv.minCopyNumber() < MAX_COPY_NUMBER_FOR_LOSS;
+            final Predicate<HmfGenomeRegion> disruptionPredicate =
+                    disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
 
-            result.programs.put(program.getName(), new BachelorProgram(predicate, copyNumberPredicate));
+            result.programs.put(program.getName(),
+                    new BachelorProgram(program.getName(), predicate, copyNumberPredicate, disruptionPredicate));
         }
 
         if (iterateAllGenes) {
@@ -271,9 +297,7 @@ class BachelorEligibility {
             final List<EligibilityReport> interimResults = matchingPrograms.stream()
                     .map(p -> ImmutableEligibilityReport.builder()
                             .patient(patient)
-                            .source(isGermline
-                                    ? EligibilityReport.ReportType.GERMLINE_DELETION
-                                    : EligibilityReport.ReportType.SOMATIC_DELETION)
+                            .source(isGermline ? GERMLINE_DELETION : SOMATIC_DELETION)
                             .program(p)
                             .id("")
                             .genes(copyNumber.gene())
@@ -289,5 +313,93 @@ class BachelorEligibility {
         }
 
         return results;
+    }
+
+    private static int intron(final List<HmfExonRegion> exome, final GenomePosition position) {
+        for (int i = 0; i < exome.size() - 1; i++) {
+            if (position.position() > exome.get(i).end() && position.position() < exome.get(i + 1).start()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private Stream<EligibilityReport> processStructuralVariant(final String patient, final StructuralVariant structuralVariant) {
+        final GenomePosition start = GenomePositions.create(structuralVariant.chromosome(true), structuralVariant.position(true));
+        final GenomePosition end = GenomePositions.create(structuralVariant.chromosome(false), structuralVariant.position(false));
+
+        final List<EligibilityReport> results = Lists.newArrayList();
+
+        // first check this isn't in the same intron
+        for (final HmfGenomeRegion region : allGenesByChromosomeMap.get(start.chromosome())) {
+            final boolean overlapStart = region.contains(start);
+            final boolean overlapEnd = region.contains(end);
+
+            final int intronStart = intron(region.exome(), start);
+            final int intronEnd = intron(region.exome(), end);
+
+            // the variant is intronic in a gene -- we will filter it
+            if (overlapStart && overlapEnd && intronStart >= 0 && intronStart == intronEnd) {
+                continue;
+            }
+
+            if (overlapStart) {
+                programs.values()
+                        .stream()
+                        .filter(p -> p.disruptionProcessor.test(region))
+                        .map(p -> ImmutableEligibilityReport.builder()
+                                .patient(patient)
+                                .source(SOMATIC_DISRUPTION)
+                                .program(p.name)
+                                .id("")
+                                .genes(region.gene())
+                                .chrom(region.chromosome())
+                                .pos(start.position())
+                                .ref("")
+                                .alts("")
+                                .effects("")
+                                .build())
+                        .forEach(results::add);
+            }
+        }
+
+        for (final HmfGenomeRegion region : allGenesByChromosomeMap.get(end.chromosome())) {
+            final boolean overlapStart = region.contains(start);
+            final boolean overlapEnd = region.contains(end);
+
+            final int intronStart = intron(region.exome(), start);
+            final int intronEnd = intron(region.exome(), end);
+
+            // the variant is intronic in a gene -- we will filter it
+            if (overlapStart && overlapEnd && intronStart >= 0 && intronStart == intronEnd) {
+                continue;
+            }
+
+            if (overlapEnd) {
+                programs.values()
+                        .stream()
+                        .filter(p -> p.disruptionProcessor.test(region))
+                        .map(p -> ImmutableEligibilityReport.builder()
+                                .patient(patient)
+                                .source(SOMATIC_DISRUPTION)
+                                .program(p.name)
+                                .id("")
+                                .genes(region.gene())
+                                .chrom(region.chromosome())
+                                .pos(end.position())
+                                .ref("")
+                                .alts("")
+                                .effects("")
+                                .build())
+                        .forEach(results::add);
+            }
+        }
+
+        return results.stream();
+    }
+
+    @NotNull
+    public Collection<EligibilityReport> processStructuralVariants(final String patient, final List<StructuralVariant> structuralVariants) {
+        return structuralVariants.stream().flatMap(sv -> processStructuralVariant(patient, sv)).collect(Collectors.toList());
     }
 }

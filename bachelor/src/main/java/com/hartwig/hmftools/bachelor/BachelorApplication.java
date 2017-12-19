@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
 
@@ -32,7 +33,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.TribbleException;
+import htsjdk.tribble.readers.LineIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class BachelorApplication {
@@ -104,9 +109,21 @@ public class BachelorApplication {
         }
     }
 
-    private static Collection<EligibilityReport> processSV(final File vcf, final BachelorEligibility eligibility) {
+    private static Collection<EligibilityReport> processSV(final String patient, final File vcf, final BachelorEligibility eligibility) {
         LOGGER.info("process sv: {}", vcf.getPath());
-        return Collections.emptyList();
+
+        final StructuralVariantFactory factory = new StructuralVariantFactory();
+        try {
+            try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcf.getPath(),
+                    new VCFCodec(), false)) {
+                reader.iterator().forEach(factory::addVariantContext);
+            }
+        } catch (IOException e) {
+            LOGGER.error("error with SV file {}: {}", vcf.getPath(), e.getMessage());
+            return Collections.emptyList();
+        }
+
+        return eligibility.processStructuralVariants(patient, factory.results());
     }
 
     private static File process(final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
@@ -130,7 +147,7 @@ public class BachelorApplication {
             result.addAll(processPurpleCNV(patient, run.copyNumber, eligibility));
         }
         if (run.structuralVariants != null) {
-            result.addAll(processSV(run.structuralVariants, eligibility));
+            result.addAll(processSV(patient, run.structuralVariants, eligibility));
         }
 
         try {

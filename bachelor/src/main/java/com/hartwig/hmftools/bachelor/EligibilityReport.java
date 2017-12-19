@@ -14,7 +14,8 @@ abstract class EligibilityReport {
         GERMLINE_MUTATION,
         SOMATIC_MUTATION,
         GERMLINE_DELETION,
-        SOMATIC_DELETION;
+        SOMATIC_DELETION,
+        SOMATIC_DISRUPTION
     }
 
     @NotNull
