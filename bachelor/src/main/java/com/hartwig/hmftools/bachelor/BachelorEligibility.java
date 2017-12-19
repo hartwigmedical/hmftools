@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
 
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
@@ -324,77 +325,58 @@ class BachelorEligibility {
         return -1;
     }
 
+    private Collection<EligibilityReport> processStructuralVariant(final String patient, final GenomePosition position,
+            final GenomePosition other, final StructuralVariantType svType) {
+
+        final List<EligibilityReport> results = Lists.newArrayList();
+
+        // TODO: can we do better than this performance wise? new map?
+        for (final HmfGenomeRegion region : allGenesByChromosomeMap.get(position.chromosome())) {
+
+            if (!region.contains(position)) {
+                continue;
+            }
+
+            // skip non-inversion intronic variants
+            if (region.contains(other) && svType != StructuralVariantType.INV) {
+                final int intronStart = intron(region.exome(), position);
+                final int intronEnd = intron(region.exome(), other);
+
+                // the variant is intronic in a gene -- we will filter it
+                if (intronStart >= 0 && intronStart == intronEnd) {
+                    continue;
+                }
+            }
+
+            programs.values()
+                    .stream()
+                    .filter(p -> p.disruptionProcessor.test(region))
+                    .map(p -> ImmutableEligibilityReport.builder()
+                            .patient(patient)
+                            .source(SOMATIC_DISRUPTION)
+                            .program(p.name)
+                            .id("")
+                            .genes(region.gene())
+                            .chrom(region.chromosome())
+                            .pos(position.position())
+                            .ref("")
+                            .alts("")
+                            .effects("")
+                            .build())
+                    .forEach(results::add);
+
+        }
+
+        return results;
+    }
+
     private Stream<EligibilityReport> processStructuralVariant(final String patient, final StructuralVariant structuralVariant) {
         final GenomePosition start = GenomePositions.create(structuralVariant.chromosome(true), structuralVariant.position(true));
         final GenomePosition end = GenomePositions.create(structuralVariant.chromosome(false), structuralVariant.position(false));
 
         final List<EligibilityReport> results = Lists.newArrayList();
-
-        // first check this isn't in the same intron
-        for (final HmfGenomeRegion region : allGenesByChromosomeMap.get(start.chromosome())) {
-            final boolean overlapStart = region.contains(start);
-            final boolean overlapEnd = region.contains(end);
-
-            final int intronStart = intron(region.exome(), start);
-            final int intronEnd = intron(region.exome(), end);
-
-            // the variant is intronic in a gene -- we will filter it
-            if (overlapStart && overlapEnd && intronStart >= 0 && intronStart == intronEnd) {
-                continue;
-            }
-
-            if (overlapStart) {
-                programs.values()
-                        .stream()
-                        .filter(p -> p.disruptionProcessor.test(region))
-                        .map(p -> ImmutableEligibilityReport.builder()
-                                .patient(patient)
-                                .source(SOMATIC_DISRUPTION)
-                                .program(p.name)
-                                .id("")
-                                .genes(region.gene())
-                                .chrom(region.chromosome())
-                                .pos(start.position())
-                                .ref("")
-                                .alts("")
-                                .effects("")
-                                .build())
-                        .forEach(results::add);
-            }
-        }
-
-        for (final HmfGenomeRegion region : allGenesByChromosomeMap.get(end.chromosome())) {
-            final boolean overlapStart = region.contains(start);
-            final boolean overlapEnd = region.contains(end);
-
-            final int intronStart = intron(region.exome(), start);
-            final int intronEnd = intron(region.exome(), end);
-
-            // the variant is intronic in a gene -- we will filter it
-            if (overlapStart && overlapEnd && intronStart >= 0 && intronStart == intronEnd) {
-                continue;
-            }
-
-            if (overlapEnd) {
-                programs.values()
-                        .stream()
-                        .filter(p -> p.disruptionProcessor.test(region))
-                        .map(p -> ImmutableEligibilityReport.builder()
-                                .patient(patient)
-                                .source(SOMATIC_DISRUPTION)
-                                .program(p.name)
-                                .id("")
-                                .genes(region.gene())
-                                .chrom(region.chromosome())
-                                .pos(end.position())
-                                .ref("")
-                                .alts("")
-                                .effects("")
-                                .build())
-                        .forEach(results::add);
-            }
-        }
-
+        results.addAll(processStructuralVariant(patient, start, end, structuralVariant.type()));
+        results.addAll(processStructuralVariant(patient, end, start, structuralVariant.type()));
         return results.stream();
     }
 
