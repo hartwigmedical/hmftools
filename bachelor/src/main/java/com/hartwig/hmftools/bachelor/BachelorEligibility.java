@@ -103,6 +103,7 @@ class BachelorEligibility {
                 if (panel.getEffect().contains(OtherEffect.HOMOZYGOUS_DELETION)) {
                     final Predicate<GeneCopyNumber> geneCopyNumberPredicate =
                             cnv -> allGene || genes.stream().anyMatch(g -> g.getEnsembl().equals(cnv.transcriptID()));
+                    // TODO: we are matching on transcript ID here but we only have canonical transcripts in our panel file
                     cnvPredicates.add(geneCopyNumberPredicate);
                 }
             }
