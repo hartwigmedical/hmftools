@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionData;
 import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusionModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
@@ -85,7 +86,7 @@ public class StructuralVariantAnalyzer {
 
     private static int orientation(final GeneAnnotation g) {
         final StructuralVariant sv = g.getVariant();
-        return  sv.orientation(g.isStart());
+        return sv.orientation(g.isStart());
     }
 
     private static List<Transcript> intronic(final List<Transcript> list) {
@@ -201,7 +202,7 @@ public class StructuralVariantAnalyzer {
                             .stream()
                             .filter(o -> o.getCanonical() != null)
                             .anyMatch(o -> intronicDisruption(g.getCanonical(), o.getCanonical())));
-            if (intronicExists) {
+            if (intronicExists && sv.getVariant().type() != StructuralVariantType.INV) {
                 continue;
             }
 
