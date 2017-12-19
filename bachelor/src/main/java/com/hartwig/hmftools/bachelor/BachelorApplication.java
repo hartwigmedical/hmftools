@@ -52,6 +52,7 @@ public class BachelorApplication {
     private static final String GERMLINE = "germline";
     private static final String SOMATIC = "somatic";
     private static final String COPYNUMBER = "copyNumber";
+    private static final String SV = "structuralVariants";
 
     @NotNull
     private static Options createOptions() {
@@ -65,6 +66,7 @@ public class BachelorApplication {
         options.addOption(Option.builder(GERMLINE).required(false).desc("process the germline file").build());
         options.addOption(Option.builder(SOMATIC).required(false).desc("process the somatic file").build());
         options.addOption(Option.builder(COPYNUMBER).required(false).desc("process the copy number file").build());
+        options.addOption(Option.builder(SV).required(false).desc("process the sv file").build());
         return options;
     }
 
@@ -127,12 +129,13 @@ public class BachelorApplication {
     }
 
     private static File process(final BachelorEligibility eligibility, final RunDirectory run, final boolean germline,
-            final boolean somatic, final boolean copyNumber) {
+            final boolean somatic, final boolean copyNumber, final boolean structuralVariants) {
 
         final String patient = run.getPatientID();
         final boolean doGermline = run.germline != null && germline;
         final boolean doSomatic = run.somatic != null && somatic;
         final boolean doCopyNumber = run.copyNumber != null && copyNumber;
+        final boolean doStructuralVariants = run.structuralVariants != null && structuralVariants;
 
         LOGGER.info("processing run: {}", patient);
 
@@ -146,7 +149,7 @@ public class BachelorApplication {
         if (doCopyNumber) {
             result.addAll(processPurpleCNV(patient, run.copyNumber, eligibility));
         }
-        if (run.structuralVariants != null) {
+        if (doStructuralVariants) {
             result.addAll(processSV(patient, run.structuralVariants, eligibility));
         }
 
@@ -215,7 +218,8 @@ public class BachelorApplication {
             final boolean germline = cmd.hasOption(GERMLINE);
             final boolean somatic = cmd.hasOption(SOMATIC);
             final boolean copyNumber = cmd.hasOption(COPYNUMBER);
-            final boolean doAll = !(germline || somatic || copyNumber);
+            final boolean structuralVariants = cmd.hasOption(SV);
+            final boolean doAll = !(germline || somatic || copyNumber || structuralVariants);
 
             final List<File> filesToMerge;
             if (cmd.hasOption(BATCH_DIRECTORY)) {
@@ -224,7 +228,8 @@ public class BachelorApplication {
                     filesToMerge = stream.filter(p -> p.toFile().isDirectory())
                             .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
-                            .map(run -> process(eligibility, run, germline || doAll, somatic || doAll, copyNumber || doAll))
+                            .map(run -> process(eligibility, run, germline || doAll, somatic || doAll, copyNumber || doAll,
+                                    structuralVariants || doAll))
                             .collect(Collectors.toList());
                 }
             } else if (cmd.hasOption(RUN_DIRECTORY)) {
@@ -235,7 +240,8 @@ public class BachelorApplication {
                     return;
                 }
                 filesToMerge = Collections.singletonList(
-                        process(eligibility, new RunDirectory(path), germline || doAll, somatic || doAll, copyNumber || doAll));
+                        process(eligibility, new RunDirectory(path), germline || doAll, somatic || doAll, copyNumber || doAll,
+                                structuralVariants || doAll));
             } else {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
