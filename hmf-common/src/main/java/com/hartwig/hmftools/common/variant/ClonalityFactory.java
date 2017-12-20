@@ -47,7 +47,7 @@ public class ClonalityFactory {
 
         final BinomialDistribution monoploidDistribution = new BinomialDistribution(TRIALS, Math.min(1, monoploidSamples / TRIALS));
         if (variant.alleleReadCount() < monoploidDistribution.inverseCumulativeProbability(0.001)
-                && Doubles.lessThan(variant.ploidy(), ploidyCutoff)) {
+                || Doubles.lessThan(variant.ploidy(), ploidyCutoff)) {
             return Clonality.SUBCLONAL;
         }
 
