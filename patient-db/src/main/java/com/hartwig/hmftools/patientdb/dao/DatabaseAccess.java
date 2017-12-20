@@ -120,6 +120,11 @@ public class DatabaseAccess {
         copyNumberDAO.writeCopyNumberRegions(sample, regions);
     }
 
+    @NotNull
+    public List<FittedRegion> readCopyNumberRegions(@NotNull final String sample) {
+        return copyNumberDAO.readCopyNumberRegions(sample);
+    }
+
     public void writeGeneCopynumberRegions(@NotNull final String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }

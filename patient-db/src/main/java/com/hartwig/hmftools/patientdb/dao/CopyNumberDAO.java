@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
@@ -188,4 +190,44 @@ class CopyNumberDAO {
                 region.segmentTumorCopyNumber(),
                 timestamp);
     }
+
+    @NotNull
+    List<FittedRegion> readCopyNumberRegions(@NotNull final String sample) {
+        List<FittedRegion> fittedRegions = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result) {
+            fittedRegions.add(ImmutableFittedRegion.builder()
+                    .chromosome(record.getValue(COPYNUMBERREGION.CHROMOSOME))
+                    .start(record.getValue(COPYNUMBERREGION.START))
+                    .end(record.getValue(COPYNUMBERREGION.END))
+                    .status(GermlineStatus.valueOf(record.getValue(COPYNUMBERREGION.GERMLINESTATUS)))
+                    .svCluster(record.getValue(COPYNUMBERREGION.SVCLUSTER) != 0)
+                    .ratioSupport(record.getValue(COPYNUMBERREGION.RATIOSUPPORT) != 0)
+                    .support(SegmentSupport.valueOf(record.getValue(COPYNUMBERREGION.SEGMENTSTARTSUPPORT)))
+                    .bafCount(record.getValue(COPYNUMBERREGION.BAFCOUNT))
+                    .observedBAF(record.getValue(COPYNUMBERREGION.OBSERVEDBAF))
+                    .observedTumorRatio(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIO))
+                    .observedNormalRatio(record.getValue(COPYNUMBERREGION.OBSERVEDNORMALRATIO))
+                    .observedTumorRatioCount(record.getValue(COPYNUMBERREGION.OBSERVEDTUMORRATIOCOUNT))
+                    .gcContent(record.getValue(COPYNUMBERREGION.GCCONTENT))
+                    .modelPloidy(record.getValue(COPYNUMBERREGION.MODELPLOIDY))
+                    .modelBAF(record.getValue(COPYNUMBERREGION.MODELBAF))
+                    .modelTumorRatio(record.getValue(COPYNUMBERREGION.MODELTUMORRATIO))
+                    .tumorBAF(record.getValue(COPYNUMBERREGION.ACTUALTUMORBAF))
+                    .tumorCopyNumber(record.getValue(COPYNUMBERREGION.ACTUALTUMORCOPYNUMBER))
+                    .refNormalisedCopyNumber(record.getValue(COPYNUMBERREGION.REFNORMALISEDTUMORCOPYNUMBER))
+                    .cnvDeviation(record.getValue(COPYNUMBERREGION.CNVDEVIATION))
+                    .bafDeviation(record.getValue(COPYNUMBERREGION.BAFDEVIATION))
+                    .deviation(record.getValue(COPYNUMBERREGION.TOTALDEVIATION))
+                    .segmentBAF(record.getValue(COPYNUMBERREGION.FITTEDBAF))
+                    .segmentTumorCopyNumber(record.getValue(COPYNUMBERREGION.FITTEDCOPYNUMBER))
+                    .build());
+        }
+
+        Collections.sort(fittedRegions);
+        return fittedRegions;
+    }
+
 }
