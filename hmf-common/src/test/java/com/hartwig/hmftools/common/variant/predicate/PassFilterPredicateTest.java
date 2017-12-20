@@ -103,6 +103,11 @@ public class PassFilterPredicateTest {
         }
 
         @Override
+        public double mappability() {
+            return 0;
+        }
+
+        @Override
         public int totalReadCount() {
             return 0;
         }

@@ -33,6 +33,8 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     List<String> callers();
 
+    double mappability();
+
     default boolean isDBSNP() {
         return dbsnpID() != null;
     }
