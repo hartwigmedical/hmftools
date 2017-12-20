@@ -14,19 +14,20 @@ public class ClonalityFactory {
 
     public ClonalityFactory(final PurityAdjuster purityAdjuster, final double ploidyCutoff) {
         this.purityAdjuster = purityAdjuster;
-        this.ploidyCutoff = 0;
+        this.ploidyCutoff = ploidyCutoff;
     }
 
 
     @NotNull
-    public static Clonality fromPloidy(final double clonalCutoff, final double ploidy) {
-        if (Doubles.isZero(clonalCutoff)) {
+    public Clonality fromSample1(@NotNull final PurityAdjustedSomaticVariant variant) {
+        if (Doubles.isZero(ploidyCutoff)) {
             return Clonality.UNKNOWN;
-        } else if (Doubles.greaterOrEqual(ploidy, clonalCutoff)) {
+        } else if (Doubles.greaterOrEqual(variant.ploidy(), ploidyCutoff)) {
             return Clonality.CLONAL;
         }
         return Clonality.SUBCLONAL;
     }
+
 
     @NotNull
     Clonality fromSample(@NotNull final PurityAdjustedSomaticVariant variant) {
@@ -45,8 +46,8 @@ public class ClonalityFactory {
         }
 
         final BinomialDistribution monoploidDistribution = new BinomialDistribution(TRIALS, Math.min(1, monoploidSamples / TRIALS));
-        if (variant.alleleReadCount() < monoploidDistribution.inverseCumulativeProbability(0.01)
-                && Doubles.greaterOrEqual(variant.ploidy(), ploidyCutoff)) {
+        if (variant.alleleReadCount() < monoploidDistribution.inverseCumulativeProbability(0.001)
+                && Doubles.lessThan(variant.ploidy(), ploidyCutoff)) {
             return Clonality.SUBCLONAL;
         }
 
