@@ -95,6 +95,7 @@ public class SomaticVariantFactory {
                         .alt(alt(context))
                         .alleleReadCount(frequencyData.alleleReadCount())
                         .totalReadCount(frequencyData.totalReadCount())
+                        .totalReadCount(frequencyData.totalReadCount())
                         .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
                 attachCallers(builder, context);

@@ -7,6 +7,8 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
@@ -18,16 +20,22 @@ public class PurityAdjustedSomaticVariantFactory {
     private final PurityAdjuster purityAdjuster;
     @NotNull
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
+    @NotNull
+    private final GenomeRegionSelector<FittedRegion> fittedRegionSelector;
 
-    public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+    public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+            @NotNull final List<FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
     }
 
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers,
+            @NotNull final Multimap<String, FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
         copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
     }
 
     @NotNull
@@ -40,9 +48,11 @@ public class PurityAdjustedSomaticVariantFactory {
                     .adjustedCopyNumber(0)
                     .adjustedVAF(0)
                     .ploidy(0)
+                    .germlineStatus(GermlineStatus.UNKNOWN)
                     .lossOfHeterozygosity(false);
 
             copyNumberSelector.select(variant).ifPresent(x -> purityAdjustment(x, variant, builder));
+            fittedRegionSelector.select(variant).ifPresent(x -> builder.germlineStatus(x.status()));
             result.add(builder.build());
         }
 

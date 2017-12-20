@@ -83,6 +83,11 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
         return 0;
     }
 
+    @Override
+    @Value.Default
+    public double mappability() {
+        return 0;
+    }
 
     @Override
     public String toString() {

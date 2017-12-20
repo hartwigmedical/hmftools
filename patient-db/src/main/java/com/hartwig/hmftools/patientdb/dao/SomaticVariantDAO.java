@@ -54,6 +54,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.CLONALITY,
                     SOMATICVARIANT.LOH,
                     SOMATICVARIANT.MAPPABILITY,
+                    SOMATICVARIANT.GERMLINESTATUS,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -86,6 +87,7 @@ class SomaticVariantDAO {
                 region.clonality(),
                 region.lossOfHeterozygosity(),
                 region.mappability(),
+                region.germlineStatus(),
                 timestamp);
     }
 

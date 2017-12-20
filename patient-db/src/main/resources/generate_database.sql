@@ -109,6 +109,7 @@ CREATE TABLE somaticVariant
     clonality varchar(455) NOT NULL,
     loh BOOLEAN NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
+    germlineStatus varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),

@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.region.bed.BEDFileLookup;
@@ -99,9 +100,12 @@ public class LoadSomaticVariants {
             final Multimap<String, PurpleCopyNumber> copyNumbers =
                     Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
 
+            final Multimap<String, FittedRegion> copyNumberRegions =
+                    Multimaps.index(dbAccess.readCopyNumberRegions(sample), FittedRegion::chromosome);
+
             LOGGER.info("Incorporating purple purity");
             final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers);
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, copyNumberRegions);
             final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 
             final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
