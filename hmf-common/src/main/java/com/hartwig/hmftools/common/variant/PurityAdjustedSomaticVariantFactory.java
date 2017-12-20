@@ -40,7 +40,6 @@ public class PurityAdjustedSomaticVariantFactory {
                     .adjustedCopyNumber(0)
                     .adjustedVAF(0)
                     .ploidy(0)
-                    .clonality(Clonality.UNKNOWN)
                     .lossOfHeterozygosity(false);
 
             copyNumberSelector.select(variant).ifPresent(x -> purityAdjustment(x, variant, builder));
@@ -63,8 +62,5 @@ public class PurityAdjustedSomaticVariantFactory {
 
         boolean loh = Doubles.lessOrEqual(adjustedCopyNumber, 0) || Doubles.greaterOrEqual(variantPloidy, adjustedCopyNumber - 0.5);
         builder.lossOfHeterozygosity(loh);
-
-        final Clonality clonality = Clonality.fromSample(purityAdjuster, copyNumber, depth);
-        builder.clonality(clonality);
     }
 }

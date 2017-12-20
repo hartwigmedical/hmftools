@@ -31,18 +31,22 @@ public class EnrichedSomaticVariantFactory {
     private final IndexedFastaSequenceFile reference;
     @NotNull
     private final BEDFileLookup mappabilityLookup;
+    @NotNull
+    private final ClonalityFactory clonalityFactory;
 
     private int unmatchedAnnotations;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final BEDFileLookup mappabilityLookup) {
+            @NotNull final IndexedFastaSequenceFile reference, @NotNull final BEDFileLookup mappabilityLookup,
+            @NotNull final ClonalityFactory clonalityFactory) {
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
         this.mappabilityLookup = mappabilityLookup;
+        this.clonalityFactory = clonalityFactory;
     }
 
     public List<EnrichedSomaticVariant> enrich(final List<PurityAdjustedSomaticVariant> variants) throws IOException {
-
+        unmatchedAnnotations = 0;
         final List<EnrichedSomaticVariant> result = Lists.newArrayList();
 
         for (PurityAdjustedSomaticVariant variant : variants) {
@@ -66,6 +70,7 @@ public class EnrichedSomaticVariantFactory {
         addAnnotations(builder, variant);
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);
+        builder.clonality(clonalityFactory.fromSample(variant));
 
         return builder.build();
     }
@@ -99,10 +104,7 @@ public class EnrichedSomaticVariantFactory {
                 .repeatCount(0)
                 .repeatSequence("")
                 .highConfidenceRegion(false)
-                .adjustedCopyNumber(0)
-                .clonality(Clonality.UNKNOWN)
-                .lossOfHeterozygosity(false)
-                .adjustedVAF(0);
+                .clonality(Clonality.UNKNOWN);
     }
 
     private void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {

@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
 import com.hartwig.hmftools.common.region.bed.BEDFileLookup;
 import com.hartwig.hmftools.common.region.bed.BEDFileLookupFileImpl;
 import com.hartwig.hmftools.common.region.bed.BEDFileLookupNoImpl;
+import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
+import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
@@ -97,13 +99,18 @@ public class LoadSomaticVariants {
             final Multimap<String, PurpleCopyNumber> copyNumbers =
                     Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
 
-            LOGGER.info("Enriching variants");
+            LOGGER.info("Incorporating purple purity");
             final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
                     new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers);
             final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 
-            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory =
-                    new EnrichedSomaticVariantFactory(highConfidenceRegions, indexedFastaSequenceFile, mappabilityLookup);
+            final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
+
+            LOGGER.info("Enriching variants");
+            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
+                    indexedFastaSequenceFile,
+                    mappabilityLookup,
+                    new ClonalityFactory(purityAdjuster, clonalPloidy));
             final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 
             LOGGER.info("Persisting variants to database");

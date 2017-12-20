@@ -8,7 +8,5 @@ public interface PurityAdjustedSomaticVariant extends SomaticVariant {
 
     double ploidy();
 
-    Clonality clonality();
-
     boolean lossOfHeterozygosity();
 }

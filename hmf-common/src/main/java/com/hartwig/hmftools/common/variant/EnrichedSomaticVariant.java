@@ -25,4 +25,6 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
     public abstract int repeatCount();
 
     public abstract double mappability();
+
+    public abstract Clonality clonality();
 }

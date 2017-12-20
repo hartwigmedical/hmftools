@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
@@ -15,12 +16,24 @@ public enum Clonality {
     private static final int TRIALS = 100_000;
 
     @NotNull
+    public static Clonality fromPloidy(final double clonalCutoff, final double ploidy) {
+        if (Doubles.isZero(clonalCutoff)) {
+            return Clonality.UNKNOWN;
+        } else if (Doubles.greaterOrEqual(ploidy, clonalCutoff)) {
+            return Clonality.CLONAL;
+        }
+        return Clonality.SUBCLONAL;
+    }
+
+    @NotNull
+    @Deprecated
     public static Clonality fromSample(@NotNull final PurityAdjuster purityAdjuster, @NotNull final PurpleCopyNumber copyNumber,
             @NotNull final AllelicDepth depth) {
         return fromSample(purityAdjuster, copyNumber.chromosome(), copyNumber.averageTumorCopyNumber(), depth);
     }
 
     @NotNull
+    @Deprecated
     public static Clonality fromSample(@NotNull final PurityAdjuster purityAdjuster, @NotNull final String chromosome, double copyNumber,
             @NotNull final AllelicDepth depth) {
 
