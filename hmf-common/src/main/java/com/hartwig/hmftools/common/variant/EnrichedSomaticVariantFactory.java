@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.region.bed.BEDFileLookup;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,18 +29,14 @@ public class EnrichedSomaticVariantFactory {
     @NotNull
     private final IndexedFastaSequenceFile reference;
     @NotNull
-    private final BEDFileLookup mappabilityLookup;
-    @NotNull
     private final ClonalityFactory clonalityFactory;
 
     private int unmatchedAnnotations;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final BEDFileLookup mappabilityLookup,
-            @NotNull final ClonalityFactory clonalityFactory) {
+            @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory) {
         highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
-        this.mappabilityLookup = mappabilityLookup;
         this.clonalityFactory = clonalityFactory;
     }
 
@@ -62,9 +57,7 @@ public class EnrichedSomaticVariantFactory {
 
     @NotNull
     private EnrichedSomaticVariant enrich(@NotNull final PurityAdjustedSomaticVariant variant) throws IOException {
-        double mappability = Math.round(mappabilityLookup.score(variant) * 1000) / 1000d;
-
-        final Builder builder = createBuilder(variant).mappability(mappability);
+        final Builder builder = createBuilder(variant);
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
         addAnnotations(builder, variant);

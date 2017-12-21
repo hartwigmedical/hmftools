@@ -15,9 +15,6 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.bed.BEDFileLoader;
-import com.hartwig.hmftools.common.region.bed.BEDFileLookup;
-import com.hartwig.hmftools.common.region.bed.BEDFileLookupFileImpl;
-import com.hartwig.hmftools.common.region.bed.BEDFileLookupNoImpl;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -51,7 +48,6 @@ public class LoadSomaticVariants {
     private static final String REF_GENOME = "ref_genome";
     private static final String PASS_FILTER = "pass_filter";
     private static final String SOMATIC_FILTER = "somatic_filter";
-    private static final String MAPPABILITY_BED = "mappability_bed";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     private static final String DB_USER = "db_user";
@@ -74,52 +70,47 @@ public class LoadSomaticVariants {
             filter.add(new SomaticFilter());
         }
 
-        try (final BEDFileLookup mappabilityLookup = cmd.hasOption(MAPPABILITY_BED) ? new BEDFileLookupFileImpl(cmd.getOptionValue(
-                MAPPABILITY_BED)) : new BEDFileLookupNoImpl()) {
+        LOGGER.info("Reading somatic VCF File");
+        final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);
 
-            LOGGER.info("Reading somatic VCF File");
-            final List<SomaticVariant> variants = new SomaticVariantFactory(filter).fromVCFFile(sample, vcfFileLocation);
+        LOGGER.info("Reading high confidence bed file");
+        final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
-            LOGGER.info("Reading high confidence bed file");
-            final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
+        LOGGER.info("Loading indexed fasta reference file");
+        IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
 
-            LOGGER.info("Loading indexed fasta reference file");
-            IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+        LOGGER.info("Querying purple database");
+        final PurityContext purityContext = dbAccess.readPurityContext(sample);
 
-            LOGGER.info("Querying purple database");
-            final PurityContext purityContext = dbAccess.readPurityContext(sample);
-
-            if (purityContext == null) {
-                LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
-            }
-
-            final PurityAdjuster purityAdjuster = purityContext == null
-                    ? new PurityAdjuster(Gender.FEMALE, 1, 1)
-                    : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
-
-            final Multimap<String, PurpleCopyNumber> copyNumbers =
-                    Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
-
-            final Multimap<String, FittedRegion> copyNumberRegions =
-                    Multimaps.index(dbAccess.readCopyNumberRegions(sample), FittedRegion::chromosome);
-
-            LOGGER.info("Incorporating purple purity");
-            final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, copyNumberRegions);
-            final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
-
-            final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
-
-            LOGGER.info("Enriching variants");
-            final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
-                    indexedFastaSequenceFile,
-                    mappabilityLookup,
-                    new ClonalityFactory(purityAdjuster, clonalPloidy));
-            final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
-
-            LOGGER.info("Persisting variants to database");
-            dbAccess.writeSomaticVariants(sample, enrichedVariants);
+        if (purityContext == null) {
+            LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }
+
+        final PurityAdjuster purityAdjuster = purityContext == null
+                ? new PurityAdjuster(Gender.FEMALE, 1, 1)
+                : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
+
+        final Multimap<String, PurpleCopyNumber> copyNumbers =
+                Multimaps.index(dbAccess.readCopynumbers(sample), PurpleCopyNumber::chromosome);
+
+        final Multimap<String, FittedRegion> copyNumberRegions =
+                Multimaps.index(dbAccess.readCopyNumberRegions(sample), FittedRegion::chromosome);
+
+        LOGGER.info("Incorporating purple purity");
+        final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
+                new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, copyNumberRegions);
+        final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
+
+        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(purityAdjustedVariants);
+
+        LOGGER.info("Enriching variants");
+        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
+                indexedFastaSequenceFile,
+                new ClonalityFactory(purityAdjuster, clonalPloidy));
+        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
+
+        LOGGER.info("Persisting variants to database");
+        dbAccess.writeSomaticVariants(sample, enrichedVariants);
 
         LOGGER.info("Complete");
     }
@@ -130,7 +121,6 @@ public class LoadSomaticVariants {
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(VCF_FILE, true, "Path to the vcf file.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file.");
-        options.addOption(MAPPABILITY_BED, true, "Path to the mappability score bed file.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
