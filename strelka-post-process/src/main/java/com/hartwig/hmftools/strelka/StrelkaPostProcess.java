@@ -148,10 +148,12 @@ final class StrelkaPostProcess {
         return ArrayUtils.toPrimitive(alleleAds.toArray(ads));
     }
 
+    @NotNull
     private static String snpAlleleKey(@NotNull final Allele allele) {
         return allele.getBaseString() + "U";
     }
 
+    @NotNull
     private static String indelAlleleKey(@NotNull final Allele allele) {
         return allele.isReference() ? TAR_FIELD : TIR_FIELD;
     }
