@@ -99,7 +99,6 @@ CREATE TABLE somaticVariant
     microhomology varchar(255) NOT NULL,
     repeatSequence varchar(255) NOT NULL,
     repeatCount int NOT NULL,
-    refGenomeContext varchar(255) NOT NULL,
     alleleReadCount int NOT NULL,
     totalReadCount int NOT NULL,
     adjustedVaf DOUBLE PRECISION NOT NULL,

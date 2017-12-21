@@ -91,7 +91,6 @@ public class EnrichedSomaticVariantFactory {
         return builder().from(variant)
                 .trinucleotideContext("")
                 .microhomology("")
-                .refGenomeContext("")
                 .gene("")
                 .effect("")
                 .repeatCount(0)
@@ -107,7 +106,6 @@ public class EnrichedSomaticVariantFactory {
         long end = Math.min(positionBeforeEvent + 100, maxEnd);
         int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
-        builder.refGenomeContext(sequence);
 
         RepeatContextFactory.repeats(relativePosition, sequence, variant.ref(), variant.alt())
                 .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));

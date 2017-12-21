@@ -14,8 +14,6 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     public abstract String microhomology();
 
-    public abstract String refGenomeContext();
-
     public abstract String repeatSequence();
 
     public abstract String gene();
