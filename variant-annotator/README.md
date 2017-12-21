@@ -15,7 +15,8 @@ It will then provide further annotations of *Gene Disruptions* and *Gene Fusions
 
 ## Resources
 
-[Cosmic Gene Fusion CSV](https://www.dropbox.com/s/ettsvttgrg1lc6j/cosmic_gene_fusions.csv?dl=0)
+|<img src="http://cancer.sanger.ac.uk/images/banners/cosmic_banner_328x68.png" width=148 height=31/>|[Cosmic Gene Fusion CSV](https://www.dropbox.com/s/ettsvttgrg1lc6j/cosmic_gene_fusions.csv?dl=0)|[from: cancer.sanger.ac.uk](http://cancer.sanger.ac.uk/cosmic)|[Curr Protoc Hum Genet 10:.11 (2016)](https://www.ncbi.nlm.nih.gov/pubmed/27727438)|
+|---|---|---|---|
 
 ## Dependencies
 
