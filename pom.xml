@@ -25,6 +25,7 @@
         <module>ensembl-db</module>
         <module>bam-slicer</module>
         <module>bachelor</module>
+        <module>hmf-id-generator</module>
     </modules>
 
     <properties>
@@ -59,6 +60,8 @@
         <okhttp.version>3.9.0</okhttp.version>
         <apache.lucene.version>7.1.0</apache.lucene.version>
         <apache.commons.csv.version>1.5</apache.commons.csv.version>
+        <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
+        <kotlin.version>1.2.10</kotlin.version>
 
         <hmf-common.version>1</hmf-common.version>
         <hmf-gene-panel.version>1</hmf-gene-panel.version>
@@ -67,6 +70,7 @@
         <variant-annotation.version>1.0</variant-annotation.version>
         <strelka-post-process.version>1.1</strelka-post-process.version>
 
+        <kotlintest.version>2.0.7</kotlintest.version>
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
         <!-- jmockit is used by health-checker (unfortunately...) -->
@@ -105,6 +109,11 @@
                     <groupId>org.jvnet.jaxb2.maven2</groupId>
                     <artifactId>maven-jaxb2-plugin</artifactId>
                     <version>${jaxb2.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>kotlin-maven-plugin</artifactId>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <version>${kotlin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -307,6 +316,17 @@
                 <artifactId>commons-csv</artifactId>
                 <version>${apache.commons.csv.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>${bouncycastle.jdk15.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+
             <!-- KODU: Test dependencies -->
             <dependency>
                 <groupId>junit</groupId>
@@ -324,6 +344,12 @@
                 <groupId>org.jmockit</groupId>
                 <artifactId>jmockit</artifactId>
                 <version>${jmockit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.kotlintest</groupId>
+                <artifactId>kotlintest</artifactId>
+                <version>${kotlintest.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
