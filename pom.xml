@@ -26,6 +26,7 @@
         <module>bam-slicer</module>
         <module>bachelor</module>
         <module>hmf-id-generator</module>
+        <module>portal-data-converter</module>
     </modules>
 
     <properties>
@@ -62,6 +63,7 @@
         <apache.commons.csv.version>1.5</apache.commons.csv.version>
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
         <kotlin.version>1.2.10</kotlin.version>
+        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <hmf-common.version>1</hmf-common.version>
         <hmf-gene-panel.version>1</hmf-gene-panel.version>
