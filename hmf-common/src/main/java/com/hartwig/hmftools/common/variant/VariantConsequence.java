@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public enum VariantConsequence {
     // KODU: See also http://sequenceontology.org
     TRANSCRIPT(false, "transcript"),
-    NON_CODING_EXON_VARIANT(false, "non_coding_exon_variant"),
+    NON_CODING_EXON_VARIANT(false, "non_coding_exon_variant", "non_coding_transcript_exon_variant"),
     INTRON_VARIANT(false, "intron_variant"),
     INTRAGENIC_VARIANT(false, "intragenic_variant"),
     SEQUENCE_FEATURE(false, "sequence_feature"),
@@ -54,6 +54,7 @@ public enum VariantConsequence {
             "rare_amino_acid_variant",
             "pyrrolysine_loss",
             "selenocysteine_loss"),
+    STRUCTURAL_INTERACTION_VARIANT(false, "structural_interaction_variant"),
     OTHER(false, Strings.EMPTY);
 
     @NotNull
