@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.portal.converter.ssm
+package com.hartwig.hmftools.portal.converter.records.ssm
 
 import com.google.common.collect.Lists
-import com.hartwig.hmftools.portal.converter.Record
 import com.hartwig.hmftools.portal.converter.extensions.mutationType
 import com.hartwig.hmftools.portal.converter.extensions.split
 import com.hartwig.hmftools.portal.converter.extensions.toRecord
+import com.hartwig.hmftools.portal.converter.records.Record
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.portal.converter.sample
+package com.hartwig.hmftools.portal.converter.records.sample
 
 enum class SampleHeader {
     analyzed_sample_id,

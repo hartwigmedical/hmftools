@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.portal.converter.specimen
+package com.hartwig.hmftools.portal.converter.records.specimen
 
 enum class SpecimenHeader {
     donor_id,

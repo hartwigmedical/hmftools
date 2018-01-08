@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.portal.converter.ssm
+package com.hartwig.hmftools.portal.converter.records.ssm
 
-import com.hartwig.hmftools.portal.converter.Record
 import com.hartwig.hmftools.portal.converter.extensions.toRecord
+import com.hartwig.hmftools.portal.converter.records.Record
 import kotlin.reflect.KClass
 
 data class SimpleSomaticMutationMetadata(private val fields: Map<SimpleSomaticMutationMetadataHeader, String>) : Record {

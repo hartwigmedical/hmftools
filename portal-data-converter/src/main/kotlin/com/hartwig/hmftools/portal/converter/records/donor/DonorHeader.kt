@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.portal.converter.donor
+package com.hartwig.hmftools.portal.converter.records.donor
 
 enum class DonorHeader {
     donor_id,

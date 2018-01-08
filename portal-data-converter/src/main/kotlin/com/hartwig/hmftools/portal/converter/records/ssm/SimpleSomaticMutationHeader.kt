@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.portal.converter.ssm
+package com.hartwig.hmftools.portal.converter.records.ssm
 
 enum class SimpleSomaticMutationHeader {
     analysis_id,

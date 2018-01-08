@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.portal.converter.sample
+package com.hartwig.hmftools.portal.converter.records.sample
 
-import com.hartwig.hmftools.portal.converter.Record
 import com.hartwig.hmftools.portal.converter.extensions.toRecord
+import com.hartwig.hmftools.portal.converter.records.Record
 import kotlin.reflect.KClass
 
 data class Sample(private val fields: Map<SampleHeader, String>) : Record {
