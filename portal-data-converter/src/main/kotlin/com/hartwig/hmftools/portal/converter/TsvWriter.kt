@@ -1,44 +1,38 @@
 package com.hartwig.hmftools.portal.converter
 
-import com.hartwig.hmftools.portal.converter.donor.Donor
-import com.hartwig.hmftools.portal.converter.sample.Sample
-import com.hartwig.hmftools.portal.converter.specimen.Specimen
-import com.hartwig.hmftools.portal.converter.ssm.SimpleSomaticMutation
-import com.hartwig.hmftools.portal.converter.ssm.SimpleSomaticMutationMetadata
+import com.hartwig.hmftools.portal.converter.records.Record
+import com.hartwig.hmftools.portal.converter.records.SampleRecords
+import com.hartwig.hmftools.portal.converter.records.donor.Donor
+import com.hartwig.hmftools.portal.converter.records.sample.Sample
+import com.hartwig.hmftools.portal.converter.records.specimen.Specimen
+import com.hartwig.hmftools.portal.converter.records.ssm.SimpleSomaticMutation
+import com.hartwig.hmftools.portal.converter.records.ssm.SimpleSomaticMutationMetadata
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.FileWriter
 import java.io.IOException
 import kotlin.reflect.KClass
 
-object TsvWriterKt {
+object TsvWriter {
 
     @Throws(IOException::class)
-    fun writeDonors(donors: List<Donor>) {
-        printRecords(Donor.header, "donor", donors)
+    fun writeSampleRecords(folder: String, records: Collection<SampleRecords>) {
+        printRecords(Donor.header, "$folder/donor", records.map { it.donor }.toSet())
+        printRecords(Sample.header, "$folder/sample", records.map { it.sample })
+        printRecords(Specimen.header, "$folder/specimen", records.map { it.specimen })
     }
 
     @Throws(IOException::class)
-    fun writeSamples(samples: List<Sample>) {
-        printRecords(Sample.header, "sample", samples)
+    fun writeSimpleSomaticMutation(folder: String, sampleName: String, simpleSomaticMutations: List<SimpleSomaticMutation>) {
+        printRecords(SimpleSomaticMutation.header, "$folder/ssm_p.$sampleName", simpleSomaticMutations)
     }
 
     @Throws(IOException::class)
-    fun writeSpecimens(specimens: List<Specimen>) {
-        printRecords(Specimen.header, "specimen", specimens)
+    fun writeSomaticMutationMetadata(folder: String, sampleName: String, metadatas: Collection<SimpleSomaticMutationMetadata>) {
+        printRecords(SimpleSomaticMutationMetadata.header, "$folder/ssm_m.$sampleName", metadatas)
     }
 
-    @Throws(IOException::class)
-    fun writeSimpleSomaticMutation(simpleSomaticMutations: List<SimpleSomaticMutation>) {
-        printRecords(SimpleSomaticMutation.header, "ssm_p", simpleSomaticMutations)
-    }
-
-    @Throws(IOException::class)
-    fun writeSomaticMutationMetadata(metadatas: List<SimpleSomaticMutationMetadata>) {
-        printRecords(SimpleSomaticMutationMetadata.header, "ssm_m", metadatas)
-    }
-
-    private fun <T : Enum<T>> printRecords(headerClass: KClass<T>, fileName: String, records: List<Record>) {
+    private fun <T : Enum<T>> printRecords(headerClass: KClass<T>, fileName: String, records: Collection<Record>) {
         var count = 0
         records.chunked(100000, {
             val printer = createPrinter(headerClass, "$fileName.$count.txt")
