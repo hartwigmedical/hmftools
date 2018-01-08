@@ -10,6 +10,8 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -63,24 +65,36 @@ public class GeneCopyNumberFile {
                 .add("TranscriptId")
                 .add("TranscriptVersion")
                 .add("ChromosomeBand")
+                .add("MinRegions")
+                .add("MinRegionStart")
+                .add("MinRegionEnd")
+                .add("MinRegionStartSupport")
+                .add("MinRegionEndSupport")
+                .add("MinRegionMethod")
                 .toString();
     }
 
     @NotNull
-    private static String toString(@NotNull final GeneCopyNumber ratio) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
-                .add(String.valueOf(ratio.start()))
-                .add(String.valueOf(ratio.end()))
-                .add(String.valueOf(ratio.gene()))
-                .add(String.valueOf(ratio.minCopyNumber()))
-                .add(String.valueOf(ratio.maxCopyNumber()))
-                .add(String.valueOf(ratio.meanCopyNumber()))
-                .add(String.valueOf(ratio.somaticRegions()))
-                .add(String.valueOf(ratio.germlineHomRegions()))
-                .add(String.valueOf(ratio.germlineHet2HomRegions()))
-                .add(String.valueOf(ratio.transcriptID()))
-                .add(String.valueOf(ratio.transcriptVersion()))
-                .add(String.valueOf(ratio.chromosomeBand()))
+    private static String toString(@NotNull final GeneCopyNumber geneCopyNumber) {
+        return new StringJoiner(DELIMITER).add(String.valueOf(geneCopyNumber.chromosome()))
+                .add(String.valueOf(geneCopyNumber.start()))
+                .add(String.valueOf(geneCopyNumber.end()))
+                .add(String.valueOf(geneCopyNumber.gene()))
+                .add(String.valueOf(geneCopyNumber.minCopyNumber()))
+                .add(String.valueOf(geneCopyNumber.maxCopyNumber()))
+                .add(String.valueOf(geneCopyNumber.meanCopyNumber()))
+                .add(String.valueOf(geneCopyNumber.somaticRegions()))
+                .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
+                .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
+                .add(String.valueOf(geneCopyNumber.transcriptID()))
+                .add(String.valueOf(geneCopyNumber.transcriptVersion()))
+                .add(String.valueOf(geneCopyNumber.chromosomeBand()))
+                .add(String.valueOf(geneCopyNumber.minRegions()))
+                .add(String.valueOf(geneCopyNumber.minRegionStart()))
+                .add(String.valueOf(geneCopyNumber.minRegionEnd()))
+                .add(String.valueOf(geneCopyNumber.minRegionStartSupport()))
+                .add(String.valueOf(geneCopyNumber.minRegionEndSupport()))
+                .add(String.valueOf(geneCopyNumber.minRegionMethod()))
                 .toString();
     }
 
@@ -90,10 +104,12 @@ public class GeneCopyNumberFile {
         return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(GeneCopyNumberFile::fromString).collect(toList());
     }
 
+    @VisibleForTesting
     @NotNull
-    private static GeneCopyNumber fromString(@NotNull final String line) {
+    static GeneCopyNumber fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableGeneCopyNumber.builder()
+
+        final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
                 .chromosome(values[0])
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
@@ -106,7 +122,24 @@ public class GeneCopyNumberFile {
                 .germlineHet2HomRegions(Integer.valueOf(values[9]))
                 .transcriptID(values[10])
                 .transcriptVersion(Integer.valueOf(values[11]))
-                .chromosomeBand(values[12])
-                .build();
+                .chromosomeBand(values[12]);
+
+        if (values.length == 19) {
+            builder.minRegions(Integer.valueOf(values[13]))
+                    .minRegionStart(Long.valueOf(values[14]))
+                    .minRegionEnd(Long.valueOf(values[15]))
+                    .minRegionStartSupport(SegmentSupport.valueOf(values[16]))
+                    .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
+                    .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
+        } else {
+            builder.minRegions(0)
+                    .minRegionStart(Long.valueOf(values[1]))
+                    .minRegionEnd(Long.valueOf(values[2]))
+                    .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                    .minRegionStartSupport(SegmentSupport.NONE)
+                    .minRegionEndSupport(SegmentSupport.NONE);
+        }
+
+        return builder.build();
     }
 }

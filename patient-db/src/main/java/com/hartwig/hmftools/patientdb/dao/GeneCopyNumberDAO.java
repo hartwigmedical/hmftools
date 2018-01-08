@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep15;
+import org.jooq.InsertValuesStep21;
 
 class GeneCopyNumberDAO {
 
@@ -29,7 +29,7 @@ class GeneCopyNumberDAO {
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep15 inserter = context.insertInto(GENECOPYNUMBER,
+            InsertValuesStep21 inserter = context.insertInto(GENECOPYNUMBER,
                     GENECOPYNUMBER.SAMPLEID,
                     GENECOPYNUMBER.CHROMOSOME,
                     GENECOPYNUMBER.START,
@@ -44,6 +44,12 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.TRANSCRIPTID,
                     GENECOPYNUMBER.TRANSCRIPTVERSION,
                     GENECOPYNUMBER.CHROMOSOMEBAND,
+                    GENECOPYNUMBER.MINREGIONS,
+                    GENECOPYNUMBER.MINREGIONSTART,
+                    GENECOPYNUMBER.MINREGIONEND,
+                    GENECOPYNUMBER.MINREGIONSTARTSUPPORT,
+                    GENECOPYNUMBER.MINREGIONENDSUPPORT,
+                    GENECOPYNUMBER.MINREGIONMETHOD,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -51,7 +57,7 @@ class GeneCopyNumberDAO {
 
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep15 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
             @NotNull GeneCopyNumber gene) {
         //noinspection unchecked
         inserter.values(sample,
@@ -68,6 +74,12 @@ class GeneCopyNumberDAO {
                 gene.transcriptID(),
                 gene.transcriptVersion(),
                 gene.chromosomeBand(),
+                gene.minRegions(),
+                gene.minRegionStart(),
+                gene.minRegionEnd(),
+                gene.minRegionStartSupport(),
+                gene.minRegionEndSupport(),
+                gene.minRegionMethod(),
                 timestamp);
     }
 }

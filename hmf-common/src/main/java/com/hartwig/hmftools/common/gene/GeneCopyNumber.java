@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.gene;
 
 import com.hartwig.hmftools.common.copynumber.CopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,18 @@ public interface GeneCopyNumber extends GeneRegion, CopyNumber {
     int germlineHet2HomRegions();
 
     int germlineHomRegions();
+
+    int minRegions();
+
+    long minRegionStart();
+
+    long minRegionEnd();
+
+    SegmentSupport minRegionStartSupport();
+
+    SegmentSupport minRegionEndSupport();
+
+    CopyNumberMethod minRegionMethod();
 
     default int totalRegions() {
         return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();

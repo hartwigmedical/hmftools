@@ -275,6 +275,12 @@ CREATE TABLE geneCopyNumber
     somaticRegions int not null,
     germlineHomRegions int not null,
     germlineHetRegions int not null,
+    minRegions int not null,
+    minRegionStart int not null,
+    minRegionEnd int not null,
+    minRegionStartSupport varchar(255) NOT NULL,
+    minRegionEndSupport varchar(255) NOT NULL,
+    minRegionMethod varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(gene)

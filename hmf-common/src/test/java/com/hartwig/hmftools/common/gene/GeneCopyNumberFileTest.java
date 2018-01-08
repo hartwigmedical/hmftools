@@ -6,12 +6,23 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GeneCopyNumberFileTest {
 
+    @Test
+    public void testSupportOlderFileFormat() {
+        final String oldVersion =
+                "1\t11869\t14409\tDDX11L1\t2.60025049329193\t2.60025049329193\t2.60025049329193\t1\t0\t0\tENST00000456328\t2\tp36.33";
+
+        GeneCopyNumber copyNumber = GeneCopyNumberFile.fromString(oldVersion);
+        assertEquals(11869, copyNumber.start());
+        assertEquals("p36.33", copyNumber.chromosomeBand());
+    }
 
     @Test
     public void testInputAndOutput() {
@@ -29,13 +40,13 @@ public class GeneCopyNumberFileTest {
         Random random = new Random();
         final List<GeneCopyNumber> result = Lists.newArrayList();
         for (int i = 0; i < count; i++) {
-            result.add(createRandom(random));
+            result.add(createRandom(random).build());
         }
         return result;
     }
 
     @NotNull
-    private static GeneCopyNumber createRandom(@NotNull Random random) {
+    static ImmutableGeneCopyNumber.Builder createRandom(@NotNull Random random) {
         return ImmutableGeneCopyNumber.builder()
                 .chromosome(String.valueOf(random.nextInt(22)))
                 .start(random.nextLong())
@@ -50,6 +61,22 @@ public class GeneCopyNumberFileTest {
                 .transcriptID("transcriptId" + random.nextInt())
                 .transcriptVersion(random.nextInt())
                 .chromosomeBand("chromosomeband" + random.nextInt())
-                .build();
+                .minRegions(random.nextInt())
+                .minRegionStart(random.nextLong())
+                .minRegionEnd(random.nextLong())
+                .minRegionMethod(randomMethod(random))
+                .minRegionStartSupport(randomSupport(random))
+                .minRegionEndSupport(randomSupport(random));
     }
+
+    @NotNull
+    private static CopyNumberMethod randomMethod(@NotNull Random random) {
+        return CopyNumberMethod.values()[random.nextInt(CopyNumberMethod.values().length)];
+    }
+
+    @NotNull
+    private static SegmentSupport randomSupport(@NotNull Random random) {
+        return SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)];
+    }
+
 }

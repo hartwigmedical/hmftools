@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.common.gene;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class GeneCopyNumberBuilder {
 
@@ -18,13 +21,29 @@ class GeneCopyNumberBuilder {
     private int het2HomCount;
     private double cumulativeCopyNumber;
 
+    @Nullable
+    private PurpleCopyNumber previous;
+
     private double previousCopyNumber = -Double.MAX_VALUE;
     private long totalBases;
     private HmfExonRegion exon;
     private PurpleCopyNumber copyNumber;
 
+    private int minRegions = 0;
+    private long minRegionStart = 0;
+    private long minRegionEnd = 0;
+    private SegmentSupport minRegionStartSupport = SegmentSupport.NONE;
+    private SegmentSupport minRegionEndSupport = SegmentSupport.NONE;
+    private CopyNumberMethod minRegionMethod = CopyNumberMethod.UNKNOWN;
+
     GeneCopyNumberBuilder(@NotNull final HmfGenomeRegion gene) {
-        builder = ImmutableGeneCopyNumber.builder().from(gene);
+        builder = ImmutableGeneCopyNumber.builder()
+                .from(gene)
+                .minRegionStart(gene.start())
+                .minRegionEnd(gene.end())
+                .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                .minRegionStartSupport(SegmentSupport.NONE)
+                .minRegionEndSupport(SegmentSupport.NONE);
     }
 
     void addExon(@NotNull final HmfExonRegion exon) {
@@ -47,7 +66,6 @@ class GeneCopyNumberBuilder {
         if (overlap > 0) {
             double currentCopyNumber = copyNumber.averageTumorCopyNumber();
 
-            minCopyNumber = Math.min(minCopyNumber, currentCopyNumber);
             maxCopyNumber = Math.max(maxCopyNumber, currentCopyNumber);
             cumulativeCopyNumber += overlap * currentCopyNumber;
 
@@ -64,18 +82,51 @@ class GeneCopyNumberBuilder {
                 }
             }
 
+            if (isUnprocessedCopyNumberRegion(copyNumber)) {
+                if (Doubles.lessThan(currentCopyNumber, minCopyNumber)) {
+                    minRegions = 1;
+                    minCopyNumber = currentCopyNumber;
+                    minRegionStart = copyNumber.start();
+                    minRegionStartSupport = copyNumber.segmentStartSupport();
+                    minRegionEnd = copyNumber.end();
+                    minRegionEndSupport = copyNumber.segmentEndSupport();
+                    minRegionMethod = copyNumber.method();
+
+                } else if (Doubles.equal(currentCopyNumber, minCopyNumber)) {
+                    minRegionEnd = copyNumber.end();
+                    minRegionEndSupport = copyNumber.segmentEndSupport();
+                    minRegionMethod = copyNumber.method();
+
+                    if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
+                        minRegions++;
+                    }
+                }
+            }
+
             previousCopyNumber = currentCopyNumber;
+            previous = copyNumber;
         }
+    }
+
+    private boolean isUnprocessedCopyNumberRegion(@NotNull final PurpleCopyNumber copyNumber) {
+        return previous == null || !previous.equals(copyNumber);
     }
 
     @NotNull
     public GeneCopyNumber build() {
+
         return builder.maxCopyNumber(maxCopyNumber)
+                .minRegionStartSupport(minRegionStartSupport)
+                .minRegionEndSupport(minRegionEndSupport)
+                .minRegionMethod(minRegionMethod)
+                .minRegionStart(minRegionStart)
+                .minRegionEnd(minRegionEnd)
                 .minCopyNumber(minCopyNumber)
                 .meanCopyNumber(cumulativeCopyNumber / totalBases)
                 .somaticRegions(somaticCount)
                 .germlineHomRegions(homCount)
                 .germlineHet2HomRegions(het2HomCount)
+                .minRegions(minRegions)
                 .build();
     }
 }
