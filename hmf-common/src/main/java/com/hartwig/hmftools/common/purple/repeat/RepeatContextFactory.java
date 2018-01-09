@@ -15,21 +15,7 @@ public final class RepeatContextFactory {
     private static final int MAX_LENGTH = 10;
 
     @NotNull
-    public static Optional<RepeatContext> repeats(int position, @NotNull final String refGenome, @NotNull final String ref,
-            @NotNull final String alt) {
-        if (isIndel(ref, alt)) {
-            return repeats(position + 1, refGenome);
-        }
-        return Optional.empty();
-    }
-
-    private static boolean isIndel(@NotNull final String ref, @NotNull final String alt) {
-        return ref.length() != alt.length();
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
+    public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
         final Map<String, Integer> result = Maps.newHashMap();
 
         for (int start = Math.max(0, index - MAX_LENGTH); start <= index; start++) {

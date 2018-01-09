@@ -5,9 +5,11 @@ import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVarian
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
 import com.hartwig.hmftools.common.purple.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
@@ -20,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class EnrichedSomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
@@ -107,13 +110,41 @@ public class EnrichedSomaticVariantFactory {
         int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
 
-        RepeatContextFactory.repeats(relativePosition, sequence, variant.ref(), variant.alt())
-                .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
+        if (variant.type().equals(VariantType.INDEL)) {
+            RepeatContextFactory.repeats(relativePosition + 1, sequence)
+                    .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
 
-        if (variant.ref().length() != variant.alt().length()) {
             final String microhomology = Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt());
             builder.microhomology(microhomology);
+        } else if (variant.type().equals(VariantType.SNP)) {
+            Optional<RepeatContext> priorRepeat = RepeatContextFactory.repeats(relativePosition - 1, sequence);
+            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + 1, sequence);
+            max(priorRepeat, postRepeat).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
         }
+
+    }
+
+    @NotNull
+    private Optional<RepeatContext> max(@NotNull final Optional<RepeatContext> optionalPrior,
+            @NotNull final Optional<RepeatContext> optionalPost) {
+        if (!optionalPrior.isPresent()) {
+            return optionalPost;
+        }
+
+        if (!optionalPost.isPresent()) {
+            return optionalPrior;
+        }
+
+        final RepeatContext prior = optionalPrior.get();
+        final RepeatContext post = optionalPost.get();
+
+        if (post.sequence().length() > prior.sequence().length()) {
+            return optionalPost;
+        } else if (post.sequence().length() == prior.sequence().length() && post.count() > prior.count()) {
+            return optionalPost;
+        }
+
+        return optionalPrior;
     }
 
     private void addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
