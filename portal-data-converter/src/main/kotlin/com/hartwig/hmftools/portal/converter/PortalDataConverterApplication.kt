@@ -23,7 +23,7 @@ private val logger = LogManager.getLogger("PortalDataConverterApplication")
 
 fun main(args: Array<String>) {
     val options = createOptions()
-    val cmd = options.createCommandLine("hmf-id-create", args)
+    val cmd = options.createCommandLine("portal-data-converter", args)
     val patientData = File(cmd.getOptionValue(CLINICAL_DATA_CSV)).readCpctSamples()
     val runs = Files.lines(Paths.get(cmd.getOptionValue(RUNS_FILE))).map { it.trim() }.filter { it.isNotEmpty() }
             .collect(Collectors.toList()).map { ProductionRunContextFactory.fromRunDirectory(it) }
