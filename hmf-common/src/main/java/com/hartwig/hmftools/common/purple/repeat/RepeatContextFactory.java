@@ -11,8 +11,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class RepeatContextFactory {
 
-    private static final int MIN_COUNT = 4;
-    private static final int MAX_LENGTH = 6;
+    private static final int MIN_COUNT = 2;
+    private static final int MAX_LENGTH = 10;
 
     @NotNull
     public static Optional<RepeatContext> repeats(int position, @NotNull final String refGenome, @NotNull final String ref,
