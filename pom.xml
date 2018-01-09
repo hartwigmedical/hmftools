@@ -25,6 +25,7 @@
         <module>ensembl-db</module>
         <module>bam-slicer</module>
         <module>bachelor</module>
+        <module>hmf-common-extensions</module>
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
     </modules>
@@ -71,6 +72,7 @@
         <apiclients.version>1.0</apiclients.version>
         <variant-annotation.version>1.0</variant-annotation.version>
         <strelka-post-process.version>1.1</strelka-post-process.version>
+        <hmf-common-extensions.version>1</hmf-common-extensions.version>
 
         <kotlintest.version>2.0.7</kotlintest.version>
         <junit.version>4.12</junit.version>
@@ -327,6 +329,21 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib</artifactId>
                 <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-reflect</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>hmf-common-extensions-cli</artifactId>
+                <version>${hmf-common-extensions.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>hmf-common-extensions-samtools</artifactId>
+                <version>${hmf-common-extensions.version}</version>
             </dependency>
 
             <!-- KODU: Test dependencies -->
