@@ -36,6 +36,7 @@ public class PurpleCopyNumberFactory {
 
         final ExtendGermline extendGermline = new ExtendGermline(gender);
         final ExtendDiploid extendDiploid = new ExtendDiploid(purityAdjuster, minTumorRatioCount, minTumorRatioCountAtCentromere);
+        final PopulateUnknown populateUnknownFactory = new PopulateUnknown(gender);
 
         final ListMultimap<String, CombinedRegion> diploidExtension = ArrayListMultimap.create();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
@@ -52,7 +53,8 @@ public class PurpleCopyNumberFactory {
             if (allSVImplied.containsKey(chromosome.toString())) {
                 final List<CombinedRegion> svImplied = allSVImplied.get(chromosome.toString());
                 final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
-                final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(longArmExtended);
+                final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
+                final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(populateUnknown);
 
                 final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
                 final List<CombinedRegion> somaticsAndGermlineDeletions =
