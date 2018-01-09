@@ -26,9 +26,13 @@ fun main(args: Array<String>) {
 private fun updateOptions(): Options {
     val options = Options()
     options.addOption(Option.builder(PASSWORD).required().hasArg().desc("password").build())
-    options.addOption(Option.builder(OLD_PASSWORD).required().hasArg().desc("password used to generate hashes in HMF ids file").build())
-    options.addOption(Option.builder(PATIENT_FILE).required().hasArg().desc("file containing list of patients to generate ids for").build())
-    options.addOption(Option.builder(HMF_IDS_FILE).required().hasArg().desc("file containing current mapping of patients to HMF ids").build())
-    options.addOption(Option.builder(OUTPUT_FILE).required().hasArg().desc("output file location").build())
+    options.addOption(Option.builder(OLD_PASSWORD).required().hasArg()
+            .desc("password used to generate hashes in HMF ids file").build())
+    options.addOption(Option.builder(PATIENT_FILE).required().hasArg()
+            .desc("file containing list of patients to generate ids for").build())
+    options.addOption(Option.builder(HMF_IDS_FILE).required().hasArg()
+            .desc("file containing current mapping of patients to HMF ids").build())
+    options.addOption(Option.builder(OUTPUT_FILE).required().hasArg()
+            .desc("output file location").build())
     return options
 }
