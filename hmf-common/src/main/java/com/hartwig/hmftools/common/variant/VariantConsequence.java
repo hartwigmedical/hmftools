@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public enum VariantConsequence {
     // KODU: See also http://sequenceontology.org
     TRANSCRIPT(false, "transcript"),
-    NON_CODING_EXON_VARIANT(false, "non_coding_exon_variant", "non_coding_transcript_exon_variant"),
+    NON_CODING_TRANSCRIPT_VARIANT(false, "non_coding_transcript_variant", "non_coding_transcript_exon_variant"),
     INTRON_VARIANT(false, "intron_variant"),
     INTRAGENIC_VARIANT(false, "intragenic_variant"),
     SEQUENCE_FEATURE(false, "sequence_feature"),
@@ -29,6 +29,7 @@ public enum VariantConsequence {
     EXON_LOSS_VARIANT(false, "exon_loss_variant", "exon_loss"),
     NON_CANONICAL_START_CODON(false, "non_canonical_start_codon"),
     TRANSCRIPT_ABLATION(true, "transcript_ablation"),
+    TFBS_ABLATION(false, "TFBS_ablation"),
     TRANSCRIPT_AMPLIFICATION(true, "transcript_amplification"),
     SPLICE_ACCEPTOR_VARIANT(true, "splice_acceptor_variant"),
     SPLICE_DONOR_VARIANT(true, "splice_donor_variant"),
@@ -54,7 +55,9 @@ public enum VariantConsequence {
             "rare_amino_acid_variant",
             "pyrrolysine_loss",
             "selenocysteine_loss"),
-    STRUCTURAL_INTERACTION_VARIANT(false, "structural_interaction_variant"),
+    STRUCTURAL_INTERACTION_VARIANT(true, "structural_interaction_variant"),
+    FUSION(false, "bidirectional_gene_fusion", "gene_fusion"),
+    PROTEIN_PROTEIN_CONTACT(true, "protein_protein_contact"),
     OTHER(false, Strings.EMPTY);
 
     @NotNull
