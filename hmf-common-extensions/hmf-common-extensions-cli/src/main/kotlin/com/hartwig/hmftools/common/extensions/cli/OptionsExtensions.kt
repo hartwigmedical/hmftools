@@ -1,14 +1,11 @@
-package com.hartwig.hmftools.idgenerator.extensions
+package com.hartwig.hmftools.common.extensions.cli
 
 import org.apache.commons.cli.*
-import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
 
-private val logger = LogManager.getLogger("OptionsExtensions")
-
-fun Options.printHelpAndExit(cmd: String): Nothing {
+fun Options.printHelpAndExit(cmd: String, errorMessage: String): Nothing {
     val formatter = HelpFormatter()
-    formatter.printHelp(cmd, cmd, this, "", true)
+    formatter.printHelp(100, cmd, cmd, this, errorMessage, true)
     exitProcess(1)
 }
 
@@ -17,7 +14,6 @@ fun Options.createCommandLine(cmd: String, args: Array<String>): CommandLine {
     return try {
         parser.parse(this, args)
     } catch (parseException: ParseException) {
-        logger.error(parseException.message)
-        this.printHelpAndExit(cmd)
+        this.printHelpAndExit(cmd, "\n${parseException.message}")
     }
 }
