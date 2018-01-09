@@ -53,4 +53,3 @@ data class SampleClinicalData(val sampleId: String, val gender: String, val ageA
         }
     }
 }
-

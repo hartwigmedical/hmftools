@@ -1,35 +1,15 @@
 package com.hartwig.hmftools.portal.converter.extensions
 
-import com.google.common.collect.Lists
 import htsjdk.variant.variantcontext.Allele
-import htsjdk.variant.variantcontext.GenotypeBuilder
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 
-fun VariantContext.split(): List<VariantContext> {
-    val variants = Lists.newArrayList<VariantContext>()
-    val ad = this.getGenotype(0).ad
-    val dp = this.getGenotype(0).dp
-    for (index in 0 until this.alternateAlleles.size) {
-        val alt = this.getAlternateAllele(index)
-        val alleles = reformatAlleles(this.reference, alt)
-        val altADIndex = if (this.isWronglyPostProcessedIndel()) {
-            1
-        } else {
-            index + 1
-        }
-        val genotype = GenotypeBuilder(this.sampleNamesOrderedByName[0], alleles).DP(dp)
-                .AD(intArrayOf(ad[0], ad[altADIndex]))
-                .make()
-        variants.add(VariantContextBuilder(this)
-                .loc(this.contig, this.start.toLong(), (this.start + alleles[0].length() - 1).toLong()).alleles(alleles)
-                .genotypes(genotype).make())
-    }
-    return variants
-}
-
-private fun VariantContext.isWronglyPostProcessedIndel(): Boolean {
-    return this.isIndel && this.getGenotype(0).ad.size < this.alleles.size
+fun VariantContext.reformatAlleles(): VariantContext {
+    assert(this.isBiallelic)
+    val alleles = reformatAlleles(this.reference, this.alternateAlleles[0])
+    return VariantContextBuilder(this)
+            .loc(this.contig, this.start.toLong(), (this.start + alleles[0].length() - 1).toLong())
+            .alleles(alleles).make()
 }
 
 //MIVO: transforms variants like TAAAATAA -> TCGGAGGTCGCCGAAAATAA to regular format: T -> TCGGAGGTCGCCG

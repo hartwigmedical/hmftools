@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.portal.converter.records.ssm
 
 import com.google.common.collect.Lists
+import com.hartwig.hmftools.common.extensions.samtools.split
 import com.hartwig.hmftools.portal.converter.extensions.mutationType
-import com.hartwig.hmftools.portal.converter.extensions.split
+import com.hartwig.hmftools.portal.converter.extensions.reformatAlleles
 import com.hartwig.hmftools.portal.converter.extensions.toRecord
 import com.hartwig.hmftools.portal.converter.records.Record
 import htsjdk.variant.variantcontext.VariantContext
@@ -15,8 +16,8 @@ data class SimpleSomaticMutation(private val fields: Map<SimpleSomaticMutationHe
         val header: KClass<SimpleSomaticMutationHeader> = SimpleSomaticMutationHeader::class
         private val CHROMOSOME_STRAND = "1"                             //MIVO: 1 = forward
         private val VERIFICATION_STATUS = "2"                           //MIVO: 2 = not tested
-        operator fun invoke(analysisId: String, sampleId: String, mutationType: String, chromosome: String, start: Int, end: Int,
-                            ref: String, alt: String): SimpleSomaticMutation {
+        private operator fun invoke(analysisId: String, sampleId: String, mutationType: String, chromosome: String, start: Int, end: Int,
+                                    ref: String, alt: String): SimpleSomaticMutation {
             val controlGenotype = "$ref/$ref"
             val tumorGenotype = "$alt/$alt"
             return SimpleSomaticMutation(mapOf(
@@ -36,10 +37,10 @@ data class SimpleSomaticMutation(private val fields: Map<SimpleSomaticMutationHe
             ))
         }
 
-        operator fun invoke(variantContext: VariantContext): List<SimpleSomaticMutation> {
+        private operator fun invoke(variantContext: VariantContext): List<SimpleSomaticMutation> {
             val sampleId = variantContext.sampleNamesOrderedByName[0]
             val variants = if (variantContext.alternateAlleles.size > 1) {
-                variantContext.split()
+                variantContext.split().map { it.reformatAlleles() }
             } else {
                 Lists.newArrayList<VariantContext>(variantContext)
             }
