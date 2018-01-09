@@ -81,7 +81,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.portal.converter.PortalDataConverterApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.portal.converter.PortalDataConverterApplicationKt</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

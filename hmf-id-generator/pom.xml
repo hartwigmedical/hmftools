@@ -73,7 +73,7 @@
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <mainClass>com.hartwig.hmftools.idgenerator.CreateHmfIdApplication</mainClass>
+                                    <mainClass>com.hartwig.hmftools.idgenerator.CreateHmfIdApplicationKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
@@ -92,7 +92,7 @@
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <mainClass>com.hartwig.hmftools.idgenerator.UpdateHmfIdApplication</mainClass>
+                                    <mainClass>com.hartwig.hmftools.idgenerator.UpdateHmfIdApplicationKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
