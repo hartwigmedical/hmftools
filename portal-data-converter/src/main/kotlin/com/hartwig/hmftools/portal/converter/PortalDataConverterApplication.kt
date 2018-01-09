@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.context.RunContext
 import com.hartwig.hmftools.common.extensions.cli.createCommandLine
 import com.hartwig.hmftools.portal.converter.extensions.readCpctSamples
 import com.hartwig.hmftools.portal.converter.extensions.somaticVcfPath
+import com.hartwig.hmftools.portal.converter.ids.extractPatientId
 import com.hartwig.hmftools.portal.converter.records.SampleRecords
 import com.hartwig.hmftools.portal.converter.records.ssm.SimpleSomaticMutation
 import com.hartwig.hmftools.portal.converter.records.ssm.SimpleSomaticMutationMetadata
@@ -42,9 +43,9 @@ private fun convertSamples(runContexts: List<RunContext>, outputDirectory: Strin
     val clinicalRecords: Multimap<String, SampleRecords> = ArrayListMultimap.create()
 
     runContexts.forEach { it ->
-        val (clinicalData, somaticVcfPath) = getClinicalDataAndVcf(it, patientData) ?: return
+        val (patientId, clinicalData, somaticVcfPath) = getPatientDataAndVcf(it, patientData) ?: return
         val projectFolder = "$outputDirectory/HMF-${clinicalData.cancerType}"
-        clinicalRecords.put(projectFolder, SampleRecords(clinicalData))
+        clinicalRecords.put(projectFolder, SampleRecords(patientId, clinicalData))
         TsvWriter.writeSomaticMutationMetadata(projectFolder, clinicalData.sampleId,
                 listOf(SimpleSomaticMutationMetadata(clinicalData.sampleId)))
         TsvWriter.writeSimpleSomaticMutation(projectFolder, clinicalData.sampleId, SimpleSomaticMutation(somaticVcfPath))
@@ -52,10 +53,11 @@ private fun convertSamples(runContexts: List<RunContext>, outputDirectory: Strin
     clinicalRecords.keySet().forEach { TsvWriter.writeSampleRecords(it, clinicalRecords[it]) }
 }
 
-private fun getClinicalDataAndVcf(runContext: RunContext,
-                                  patientData: Map<String, SampleClinicalData>): Pair<SampleClinicalData, String>? {
+private fun getPatientDataAndVcf(runContext: RunContext,
+                                 patientData: Map<String, SampleClinicalData>): Triple<String, SampleClinicalData, String>? {
     val clinicalData = patientData[runContext.tumorSample()]
     val somaticVcfPath = runContext.somaticVcfPath()
+    val patientId = extractPatientId(runContext.tumorSample())
     return when {
         clinicalData == null -> {
             logger.warn("Missing clinical data for sample id: ${runContext.tumorSample()}")
@@ -65,6 +67,10 @@ private fun getClinicalDataAndVcf(runContext: RunContext,
             logger.warn("Could not locate somatic vcf file for set: ${runContext.setName()}")
             null
         }
-        else -> Pair(clinicalData, somaticVcfPath)
+        patientId == null -> {
+            logger.warn("Could not extract valid patient id from sample: ${runContext.tumorSample()}")
+            null
+        }
+        else -> Triple(patientId, clinicalData, somaticVcfPath)
     }
 }
