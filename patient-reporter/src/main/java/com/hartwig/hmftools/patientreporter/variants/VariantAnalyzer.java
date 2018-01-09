@@ -17,6 +17,7 @@ public class VariantAnalyzer {
     @NotNull
     private final ConsequenceDeterminer determiner;
 
+    @NotNull
     public static VariantAnalyzer fromSlicingRegions(@NotNull final GeneModel geneModel) {
         return new VariantAnalyzer(fromHmfSlicingRegion(geneModel));
     }
