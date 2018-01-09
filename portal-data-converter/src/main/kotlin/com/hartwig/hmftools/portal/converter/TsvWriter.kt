@@ -17,9 +17,9 @@ object TsvWriter {
 
     @Throws(IOException::class)
     fun writeSampleRecords(folder: String, records: Collection<SampleRecords>) {
-        printRecords(Donor.header, "$folder/donor", records.map { it.donor }.toSet())
-        printRecords(Sample.header, "$folder/sample", records.map { it.sample })
-        printRecords(Specimen.header, "$folder/specimen", records.map { it.specimen })
+        printRecords(Donor.header, "$folder/donor.", records.map { it.donor }.toSet())
+        printRecords(Sample.header, "$folder/sample.", records.map { it.sample })
+        printRecords(Specimen.header, "$folder/specimen.", records.map { it.specimen })
     }
 
     @Throws(IOException::class)
@@ -35,7 +35,7 @@ object TsvWriter {
     private fun <T : Enum<T>> printRecords(headerClass: KClass<T>, fileName: String, records: Collection<Record>) {
         var count = 0
         records.chunked(100000, {
-            val printer = createPrinter(headerClass, "$fileName.$count.txt")
+            val printer = createPrinter(headerClass, "$fileName$count.txt")
             printer.printRecords(it.map { it.record() })
             printer.close()
             count++
