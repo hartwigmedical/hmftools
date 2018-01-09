@@ -34,9 +34,9 @@ public class BiopsyDataValidationTest {
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2016 = LocalDate.parse("2016-03-01");
 
-    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, null, FormStatusState.UNKNOWN, false);
-    private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, "1", "", FormStatusState.UNKNOWN, false);
-    private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, "2", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_NULL = ImmutableBiopsyData.of(null, null, null, null, FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_FEB1 = ImmutableBiopsyData.of(FEB2015, null, "1", "", FormStatusState.UNKNOWN, false);
+    private final static BiopsyData BIOPSY_FEB2 = ImmutableBiopsyData.of(FEB2015, null, "2", "", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentData TREATMENT_JAN_FEB =
             ImmutableBiopsyTreatmentData.of("Yes", JAN2015, FEB2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
 

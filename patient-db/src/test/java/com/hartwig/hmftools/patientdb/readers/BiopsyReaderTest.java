@@ -32,6 +32,7 @@ public class BiopsyReaderTest {
         final String patient = "dummy";
 
         EcrfItemGroup biopsy1 = new EcrfItemGroup(patient);
+        biopsy1.addItem(BiopsyReader.FIELD_BIOPSY_TAKEN, "Yes");
         biopsy1.addItem(BiopsyReader.FIELD_BIOPSY_DATE, "2017-11-10");
         biopsy1.addItem(BiopsyReader.FIELD_LOCATION, "liver");
         biopsy1.addItem(BiopsyReader.FIELD_SITE, "other");

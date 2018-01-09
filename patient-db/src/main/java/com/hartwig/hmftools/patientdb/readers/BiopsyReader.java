@@ -25,6 +25,7 @@ public final class BiopsyReader {
     static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
 
     public static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
+    static final String FIELD_BIOPSY_TAKEN = "FLD.BIOPS.CPCT";
     public static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
     public static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
     public static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
@@ -41,13 +42,14 @@ public final class BiopsyReader {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, false)) {
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, false)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, false);
+                    final String biopsyTaken = itemGroup.readItemString(FIELD_BIOPSY_TAKEN, 0, false);
                     final String location = itemGroup.readItemString(FIELD_LOCATION, 0, false);
 
                     final String site = itemGroup.readItemString(FIELD_SITE, 0, false);
                     final String siteOther = itemGroup.readItemString(FIELD_SITE_OTHER, 0, false);
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
-                    BiopsyData biopsy = ImmutableBiopsyData.of(date, finalSite, location, form.status(), form.locked());
+                    BiopsyData biopsy = ImmutableBiopsyData.of(date, biopsyTaken, finalSite, location, form.status(), form.locked());
                     if (isEmpty(biopsy)) {
                         LOGGER.info("Filtered empty biopsy form for " + patient.patientId());
                     } else {

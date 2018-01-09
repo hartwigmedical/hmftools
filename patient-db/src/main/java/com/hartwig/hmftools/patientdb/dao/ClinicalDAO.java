@@ -85,9 +85,10 @@ class ClinicalDAO {
     }
 
     private void writeBiopsyData(final int patientId, @NotNull final BiopsyData biopsy) {
-        context.insertInto(BIOPSY, BIOPSY.ID, BIOPSY.SAMPLEID, BIOPSY.PATIENTID, BIOPSY.BIOPSYSITE, BIOPSY.BIOPSYLOCATION,
-                BIOPSY.BIOPSYDATE)
-                .values(biopsy.id(), biopsy.sampleId(), patientId, biopsy.site(), biopsy.location(), Utils.toSQLDate(biopsy.date()))
+        context.insertInto(BIOPSY, BIOPSY.ID, BIOPSY.SAMPLEID, BIOPSY.PATIENTID, BIOPSY.BIOPSYTAKEN, BIOPSY.BIOPSYSITE,
+                BIOPSY.BIOPSYLOCATION, BIOPSY.BIOPSYDATE)
+                .values(biopsy.id(), biopsy.sampleId(), patientId, biopsy.biopsyTaken(), biopsy.site(), biopsy.location(),
+                        Utils.toSQLDate(biopsy.date()))
                 .execute();
         writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus().stateString(), Boolean.toString(biopsy.formLocked()));
     }
