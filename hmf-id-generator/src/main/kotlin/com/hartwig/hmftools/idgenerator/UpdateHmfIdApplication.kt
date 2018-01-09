@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.idgenerator
 
-import com.hartwig.hmftools.idgenerator.extensions.createCommandLine
+import com.hartwig.hmftools.common.extensions.cli.createCommandLine
 import com.hartwig.hmftools.idgenerator.extensions.readOldIds
 import com.hartwig.hmftools.idgenerator.extensions.writeHmfIds
 import org.apache.commons.cli.Option
