@@ -26,12 +26,13 @@ data class SampleClinicalData(val sampleId: String, val gender: String, val ageA
         }
 
         private fun determineCancerType(ecrfCancerType: String?): String {
-            return if (ecrfCancerType == null || ecrfCancerType.isBlank()) "Missing" else ecrfCancerType
+            return if (ecrfCancerType == null || ecrfCancerType.isBlank() || ecrfCancerType == "NULL") "Missing" else ecrfCancerType
         }
 
         private fun determineSpecimenType(ecrfBiopsySite: String?): Pair<String, String> {
             return when (ecrfBiopsySite?.trim()?.toLowerCase()) {
                 null -> Pair(DEFAULT_VALUE, DEFAULT_VALUE)
+                "null" -> Pair(DEFAULT_VALUE, DEFAULT_VALUE)
                 "primary" -> Pair("Primary tumour - solid tissue", DEFAULT_VALUE)
                 "lymph node" -> Pair("Metastatic tumour - lymph node", DEFAULT_VALUE)
                 else -> Pair("Metastatic tumour - other", ecrfBiopsySite)
