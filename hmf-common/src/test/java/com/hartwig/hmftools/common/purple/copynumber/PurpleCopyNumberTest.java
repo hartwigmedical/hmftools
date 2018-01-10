@@ -41,12 +41,14 @@ public class PurpleCopyNumberTest {
         assertEquals("AAA", createBAFString(1, 3));
 
         assertEquals("AAAA", createBAFString(0, 4));
+        assertEquals("AAAA", createBAFString(0.49, 4));
         assertEquals("AABB", createBAFString(0.5, 4));
-        assertEquals("AABB", createBAFString(0.624, 4));
-        assertEquals("AAAB", createBAFString(0.625, 4));
-        assertEquals("AAAB", createBAFString(0.874, 4));
-        assertEquals("AAAA", createBAFString(0.875, 4));
+        assertEquals("AABB", createBAFString(0.625, 4));
+        assertEquals("AAAB", createBAFString(0.626, 4));
+        assertEquals("AAAB", createBAFString(0.875, 4));
+        assertEquals("AAAA", createBAFString(0.876, 4));
         assertEquals("AAAA", createBAFString(0.9, 4));
+        assertEquals("AAAA", createBAFString(1, 4));
 
         assertEquals("A[12x]", createBAFString(0, 12));
     }

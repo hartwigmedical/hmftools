@@ -188,10 +188,10 @@ class CopyNumberCharts {
         double[][] buckets = new double[MAX_COPY_NUMBER_SERIES + 1][totalBuckets + 1];
         for (final PurpleCopyNumber copyNumber : copyNumbers) {
 
-            double minorAllele = (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber();
+            double unboundMinorAllele = (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber();
 
             int series = limit(copyNumber.averageTumorCopyNumber(), 0, MAX_COPY_NUMBER_SERIES);
-            int column = limit(minorAllele / 0.1, -negativeBuckets, positiveBuckets) + negativeBuckets;
+            int column = limit(unboundMinorAllele / 0.1, -negativeBuckets, positiveBuckets) + negativeBuckets;
 
             buckets[series][column] += copyNumber.bafCount();
         }

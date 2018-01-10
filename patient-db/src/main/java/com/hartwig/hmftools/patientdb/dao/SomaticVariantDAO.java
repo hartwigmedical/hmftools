@@ -54,6 +54,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.LOH,
                     SOMATICVARIANT.MAPPABILITY,
                     SOMATICVARIANT.GERMLINESTATUS,
+                    SOMATICVARIANT.MINORALLELEPLOIDY,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -75,8 +76,8 @@ class SomaticVariantDAO {
                 region.effect(),
                 region.alleleReadCount(),
                 region.totalReadCount(),
-                region.adjustedCopyNumber(),
-                region.adjustedVAF(),
+                DatabaseUtil.decimal(region.adjustedCopyNumber()),
+                DatabaseUtil.decimal(region.adjustedVAF()),
                 region.highConfidenceRegion(),
                 region.trinucleotideContext(),
                 region.microhomology(),
@@ -84,8 +85,9 @@ class SomaticVariantDAO {
                 region.repeatCount(),
                 region.clonality(),
                 region.lossOfHeterozygosity(),
-                region.mappability(),
+                DatabaseUtil.decimal(region.mappability()),
                 region.germlineStatus(),
+                DatabaseUtil.decimal(region.minorAllelePloidy()),
                 timestamp);
     }
 

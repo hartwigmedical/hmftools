@@ -110,6 +110,7 @@ CREATE TABLE somaticVariant
     loh BOOLEAN NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
     germlineStatus varchar(255) NOT NULL,
+    minorAllelePloidy DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),

@@ -48,6 +48,7 @@ public class PurityAdjustedSomaticVariantFactory {
                     .adjustedCopyNumber(0)
                     .adjustedVAF(0)
                     .ploidy(0)
+                    .minorAllelePloidy(0)
                     .germlineStatus(GermlineStatus.UNKNOWN)
                     .lossOfHeterozygosity(false);
 
@@ -72,5 +73,7 @@ public class PurityAdjustedSomaticVariantFactory {
 
         boolean loh = Doubles.lessOrEqual(adjustedCopyNumber, 0) || Doubles.greaterOrEqual(variantPloidy, adjustedCopyNumber - 0.5);
         builder.lossOfHeterozygosity(loh);
+
+        builder.minorAllelePloidy(copyNumber.minorAllelePloidy());
     }
 }

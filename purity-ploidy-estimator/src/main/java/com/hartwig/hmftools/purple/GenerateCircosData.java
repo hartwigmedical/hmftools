@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.circos.CircosSNPWriter;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -146,7 +145,7 @@ class GenerateCircosData {
     }
 
     private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
-        CircosFileWriter.writeRegions(baseCircosTumorSample + ".map.circos", copyNumbers, x -> minorAllelePloidy(x) - 1);
+        CircosFileWriter.writeRegions(baseCircosTumorSample + ".map.circos", copyNumbers, x -> x.minorAllelePloidy() - 1);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".cnv.circos", copyNumbers, x -> x.averageTumorCopyNumber() - 2);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
     }
@@ -154,12 +153,6 @@ class GenerateCircosData {
     private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
         final List<PurityAdjustedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
         CircosSNPWriter.writePositions(baseCircosTumorSample + ".snp.circos", downsampledSomaticVariants);
-    }
-
-    private double minorAllelePloidy(@NotNull final PurpleCopyNumber copyNumber) {
-        return Doubles.lessThan(copyNumber.averageActualBAF(), 0.50)
-                ? 0
-                : Math.max(0, (1 - copyNumber.averageActualBAF()) * copyNumber.averageTumorCopyNumber());
     }
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {
