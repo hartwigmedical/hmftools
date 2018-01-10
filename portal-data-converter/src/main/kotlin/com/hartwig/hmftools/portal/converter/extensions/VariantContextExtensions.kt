@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger("VariantContextExtensions")
 
-
 fun VariantContext.reformatAlleles(): VariantContext {
     assert(this.isBiallelic)
     val alleles = reformatAlleles(this.reference, this.alternateAlleles[0])
@@ -18,13 +17,11 @@ fun VariantContext.reformatAlleles(): VariantContext {
 
 //MIVO: transforms variants like TAAAATAA -> TCGGAGGTCGCCGAAAATAA to regular format: T -> TCGGAGGTCGCCG
 private fun reformatAlleles(ref: Allele, alt: Allele): List<Allele> {
-    if (isInsertionWithTrailingBases(ref.baseString, alt.baseString)) {
-        val newRef = Allele.create(ref.baseString[0].toString(), true)
-        val lastIndexOfRefBasesInAlt = alt.baseString.lastIndexOf(ref.baseString.substring(1))
-        val newAlt = Allele.create(alt.baseString.substring(0, lastIndexOfRefBasesInAlt))
-        return listOf(newRef, newAlt)
+    return when {
+        isInsertionWithTrailingBases(ref.baseString, alt.baseString) -> reformatInsertionAlleles(ref, alt)
+        isDeletionWithTrailingBases(ref.baseString, alt.baseString) -> reformatDeletionAlleles(ref, alt)
+        else -> listOf(ref, alt)
     }
-    return listOf(ref, alt)
 }
 
 fun VariantContext.mutationType(): String {
@@ -48,3 +45,14 @@ private fun isInsertionWithTrailingBases(ref: String, alt: String): Boolean {
     val altSubstring = alt.substring(1)
     return alt.length > ref.length && ref[0] == alt[0] && altSubstring.lastIndexOf(refSubstring) == altSubstring.length - refSubstring.length
 }
+
+private fun reformatInsertionAlleles(first: Allele, second: Allele): List<Allele> {
+    val newFirst = Allele.create(first.baseString[0].toString(), first.isReference)
+    val lastIndexOfFirstBasesInSecond = second.baseString.lastIndexOf(first.baseString.substring(1))
+    val newSecond = Allele.create(second.baseString.substring(0, lastIndexOfFirstBasesInSecond), second.isReference)
+    return listOf(newFirst, newSecond)
+}
+
+fun isDeletionWithTrailingBases(ref: String, alt: String): Boolean = isInsertionWithTrailingBases(alt, ref)
+
+private fun reformatDeletionAlleles(ref: Allele, alt: Allele): List<Allele> = reformatInsertionAlleles(alt, ref).reversed()
