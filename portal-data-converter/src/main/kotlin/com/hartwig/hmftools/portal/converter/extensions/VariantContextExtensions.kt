@@ -34,7 +34,7 @@ fun VariantContext.mutationType(): String {
         this.isSimpleDeletion -> "3"
         this.isMNP -> "4"
         else -> {
-            logger.warn("Determined mutation type 0 for variant ${this.contig}:${this.start}: " +
+            logger.warn("Determined mutation type 0 for variant ${this.sampleNamesOrderedByName[0]} ${this.contig}:${this.start}: " +
                     "${this.reference.baseString} -> ${this.alternateAlleles[0].baseString}}")
             "0"
         }
