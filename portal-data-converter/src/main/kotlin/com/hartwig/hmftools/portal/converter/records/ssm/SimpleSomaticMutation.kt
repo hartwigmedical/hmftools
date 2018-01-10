@@ -44,8 +44,7 @@ data class SimpleSomaticMutation(private val fields: Map<SimpleSomaticMutationHe
             } else {
                 Lists.newArrayList<VariantContext>(variantContext)
             }
-            return variants.map { it ->
-
+            return variants.filter { it.mutationType() != "0" }.map { it ->
                 SimpleSomaticMutation(sampleId, sampleId, it.mutationType(), it.contig, it.start, it.end,
                         it.reference.baseString, it.alternateAlleles[0].baseString)
             }

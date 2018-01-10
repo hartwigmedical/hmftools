@@ -3,6 +3,10 @@ package com.hartwig.hmftools.portal.converter.extensions
 import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
+import org.apache.logging.log4j.LogManager
+
+private val logger = LogManager.getLogger("VariantContextExtensions")
+
 
 fun VariantContext.reformatAlleles(): VariantContext {
     assert(this.isBiallelic)
@@ -29,7 +33,11 @@ fun VariantContext.mutationType(): String {
         this.isSimpleInsertion -> "2"
         this.isSimpleDeletion -> "3"
         this.isMNP -> "4"
-        else -> "0"
+        else -> {
+            logger.warn("Determined mutation type 0 for variant ${this.contig}:${this.start}: " +
+                    "${this.reference.baseString} -> ${this.alternateAlleles[0].baseString}}")
+            "0"
+        }
     }
 }
 
