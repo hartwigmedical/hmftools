@@ -3,6 +3,7 @@ package com.hartwig.hmftools.portal.converter
 const val DEFAULT_VALUE = "-888"
 
 // CSV header fields
+const val CPCT_ID_FIELD = "cpctId"
 const val SAMPLE_ID_FIELD = "sampleId"
 const val GENDER_FIELD = "gender"
 const val BIRTH_YEAR_FIELD = "birthYear"

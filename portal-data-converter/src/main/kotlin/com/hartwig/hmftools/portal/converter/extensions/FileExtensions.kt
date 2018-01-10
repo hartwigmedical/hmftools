@@ -6,7 +6,7 @@ import org.apache.commons.csv.CSVParser
 import java.io.File
 import java.nio.charset.Charset
 
-fun File.readCpctSamples(): Map<String, SampleClinicalData> {
+fun File.readSamplesData(): List<SampleClinicalData> {
     val parser = CSVParser.parse(this, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())
-    return parser.map { SampleClinicalData(it) }.associateBy { it.sampleId }
+    return parser.map { SampleClinicalData(it) }
 }
