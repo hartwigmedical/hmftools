@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.strelka;
 
-import static com.hartwig.hmftools.strelka.StrelkaPostProcess.allelicFrequency;
-import static com.hartwig.hmftools.strelka.StrelkaPostProcess.qualityScore;
-import static com.hartwig.hmftools.strelka.StrelkaPostProcess.variantGenomePosition;
+import static com.hartwig.hmftools.strelka.StrelkaPostProcessFilter.allelicFrequency;
+import static com.hartwig.hmftools.strelka.StrelkaPostProcessFilter.qualityScore;
+import static com.hartwig.hmftools.strelka.StrelkaPostProcessFilter.variantGenomePosition;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -21,156 +21,167 @@ import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class StrelkaPostProcessTest {
+public class StrelkaPostProcessFilterTest {
     private static final File VCF_FILE = new File(Resources.getResource("variants.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
     private static final String HIGH_CONF_BED_PATH = Resources.getResource("high_conf.bed").getPath();
     private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
 
+    private Slicer hcBed;
+    private StrelkaPostProcessFilter victim;
+
+    @Before
+    public void setup() throws IOException {
+        hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
+        victim = new StrelkaPostProcessFilter(hcBed);
+    }
+
     @Test
     public void canSimplifySNP() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(0);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 39, 7 }, StrelkaPostProcess.getAD(snpVariant));
-        assertEquals(53, StrelkaPostProcess.getDP(snpVariant));
+        assertArrayEquals(new int[] { 39, 7 }, StrelkaPostProcessFilter.getAD(snpVariant));
+        assertEquals(53, StrelkaPostProcessFilter.getDP(snpVariant));
     }
 
     @Test
     public void canSimplifyIndel() throws IOException, HartwigException {
         final VariantContext indelVariant = VARIANTS.get(1);
         assertTrue(indelVariant.isIndel());
-        assertArrayEquals(new int[] { 57, 9 }, StrelkaPostProcess.getAD(indelVariant));
-        assertEquals(66, StrelkaPostProcess.getDP(indelVariant));
+        assertArrayEquals(new int[] { 57, 9 }, StrelkaPostProcessFilter.getAD(indelVariant));
+        assertEquals(66, StrelkaPostProcessFilter.getDP(indelVariant));
     }
 
     @Test
     public void canSimplifyMultipleAltVariant() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(2);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 0, 4, 1 }, StrelkaPostProcess.getAD(snpVariant));
-        assertEquals(5, StrelkaPostProcess.getDP(snpVariant));
+        assertArrayEquals(new int[] { 0, 4, 1 }, StrelkaPostProcessFilter.getAD(snpVariant));
+        assertEquals(5, StrelkaPostProcessFilter.getDP(snpVariant));
     }
 
     @Test
     public void canSimplifyMultipleAltIndelVariant() throws IOException, HartwigException {
-        final VariantContext indelVariant = VARIANTS.get(14);
+        final VariantContext indelVariant = VARIANTS.get(15);
         assertTrue(indelVariant.isIndel());
-        assertArrayEquals(new int[] { 87, 3, 3 }, StrelkaPostProcess.getAD(indelVariant));
-        assertEquals(100, StrelkaPostProcess.getDP(indelVariant));
+        assertArrayEquals(new int[] { 87, 3, 3 }, StrelkaPostProcessFilter.getAD(indelVariant));
+        assertEquals(100, StrelkaPostProcessFilter.getDP(indelVariant));
     }
 
     @Test
     public void canSimplifyVariantWithoutRead() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(3);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcess.getAD(snpVariant));
-        assertEquals(53, StrelkaPostProcess.getDP(snpVariant));
+        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcessFilter.getAD(snpVariant));
+        assertEquals(53, StrelkaPostProcessFilter.getDP(snpVariant));
     }
 
     @Test
     public void canSimplifyVariantWithDotRead() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(4);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcess.getAD(snpVariant));
-        assertEquals(53, StrelkaPostProcess.getDP(snpVariant));
+        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcessFilter.getAD(snpVariant));
+        assertEquals(53, StrelkaPostProcessFilter.getDP(snpVariant));
     }
 
     @Test
     public void doesNotFilterMultipleAltVariant() throws IOException, EmptyFileException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext snpVariant = VARIANTS.get(2);
-        assertTrue(StrelkaPostProcess.checkVariant(snpVariant, hcBed));
+        assertTrue(victim.test(snpVariant));
     }
 
     @Test
     public void filtersVariantWithNoCall() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext snpVariant = VARIANTS.get(5);
-        assertFalse(StrelkaPostProcess.checkVariant(snpVariant, hcBed));
+        assertFalse(victim.test(snpVariant));
     }
 
     @Test
     public void filtersHCRegionSNPBelowThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext snpVariant = VARIANTS.get(6);
         assertEquals(0.5, allelicFrequency(snpVariant), 0.001);
         assertEquals(2, qualityScore(snpVariant));
         assertTrue(hcBed.includes(variantGenomePosition(snpVariant)));
-        assertFalse(StrelkaPostProcess.checkVariant(snpVariant, hcBed));
+        assertFalse(victim.test(snpVariant));
     }
 
     @Test
     public void doesNotFilterHCRegionSNPAboveThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext snpVariant = VARIANTS.get(7);
         assertEquals(0.5, allelicFrequency(snpVariant), 0.001);
         assertEquals(3, qualityScore(snpVariant));
         assertTrue(hcBed.includes(variantGenomePosition(snpVariant)));
-        assertTrue(StrelkaPostProcess.checkVariant(snpVariant, hcBed));
+        assertTrue(victim.test(snpVariant));
     }
 
     @Test
     public void filtersLCRegionSNPBelowThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext snpVariant = VARIANTS.get(8);
         assertEquals(0.1, allelicFrequency(snpVariant), 0.001);
         assertEquals(20, qualityScore(snpVariant));
         assertTrue(!hcBed.includes(variantGenomePosition(snpVariant)));
-        assertFalse(StrelkaPostProcess.checkVariant(snpVariant, hcBed));
+        assertFalse(victim.test(snpVariant));
     }
 
     @Test
     public void doesNotFilterLCRegionSNPAboveThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext snpVariant = VARIANTS.get(9);
         assertEquals(0.11, allelicFrequency(snpVariant), 0.01);
         assertEquals(21, qualityScore(snpVariant));
         assertTrue(!hcBed.includes(variantGenomePosition(snpVariant)));
-        assertTrue(StrelkaPostProcess.checkVariant(snpVariant, hcBed));
+        assertTrue(victim.test(snpVariant));
     }
 
     @Test
     public void filtersHCRegionIndelBelowThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext indelVariant = VARIANTS.get(10);
         assertEquals(0.5, allelicFrequency(indelVariant), 0.001);
         assertEquals(2, qualityScore(indelVariant));
         assertTrue(hcBed.includes(variantGenomePosition(indelVariant)));
-        assertFalse(StrelkaPostProcess.checkVariant(indelVariant, hcBed));
+        assertFalse(victim.test(indelVariant));
     }
 
     @Test
     public void doesNotFilterHCRegionIndelBelowThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext indelVariant = VARIANTS.get(11);
         assertEquals(0.5, allelicFrequency(indelVariant), 0.001);
         assertEquals(3, qualityScore(indelVariant));
         assertTrue(hcBed.includes(variantGenomePosition(indelVariant)));
-        assertTrue(StrelkaPostProcess.checkVariant(indelVariant, hcBed));
+        assertTrue(victim.test(indelVariant));
     }
 
     @Test
     public void filtersLCRegionIndelBelowThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext indelVariant = VARIANTS.get(12);
         assertEquals(0.1, allelicFrequency(indelVariant), 0.001);
         assertEquals(20, qualityScore(indelVariant));
         assertTrue(!hcBed.includes(variantGenomePosition(indelVariant)));
-        assertFalse(StrelkaPostProcess.checkVariant(indelVariant, hcBed));
+        assertFalse(victim.test(indelVariant));
     }
 
     @Test
     public void doesNotFilterLCRegionIndelAboveThreshold() throws IOException, HartwigException {
-        final Slicer hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
         final VariantContext indelVariant = VARIANTS.get(13);
         assertEquals(0.11, allelicFrequency(indelVariant), 0.01);
         assertEquals(21, qualityScore(indelVariant));
         assertTrue(!hcBed.includes(variantGenomePosition(indelVariant)));
-        assertTrue(StrelkaPostProcess.checkVariant(indelVariant, hcBed));
+        assertTrue(victim.test(indelVariant));
     }
+
+    @Test
+    public void doesNotFilterHotspot() throws IOException, HartwigException {
+        final VariantContext indelVariant = VARIANTS.get(14);
+        assertEquals(0.1, allelicFrequency(indelVariant), 0.001);
+        assertEquals(20, qualityScore(indelVariant));
+        assertTrue(indelVariant.hasAttribute("HOTSPOT"));
+        assertTrue(!hcBed.includes(variantGenomePosition(indelVariant)));
+        assertTrue(victim.test(indelVariant));
+    }
+
 }

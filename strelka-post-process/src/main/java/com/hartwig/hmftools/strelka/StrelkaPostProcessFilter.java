@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -19,9 +20,10 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-final class StrelkaPostProcess {
-    private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcess.class);
+final class StrelkaPostProcessFilter implements VariantContextFilter {
+    private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcessFilter.class);
 
     private static final String SNP_QUAL_FIELD = "QSS_NT";
     private static final String INDEL_QUAL_FIELD = "QSI_NT";
@@ -36,11 +38,18 @@ final class StrelkaPostProcess {
     private static final int LC_QUALITY_SCORE_THRESHOLD = 20;
     private static final double LC_ALLELE_FREQUENCY_THRESHOLD = 0.1;
 
-    private StrelkaPostProcess() {
+    @NotNull
+    private final Slicer highConfidenceSlicer;
+    @NotNull
+    private final HotspotFilter hotspotFilter;
+
+    StrelkaPostProcessFilter(@NotNull final Slicer highConfidenceSlicer) {
+        this.highConfidenceSlicer = highConfidenceSlicer;
+        this.hotspotFilter = new HotspotFilter();
     }
 
-    @VisibleForTesting
-    static boolean checkVariant(@NotNull final VariantContext variant, @NotNull final Slicer highConfidenceSlicer) {
+    @Override
+    public boolean test(@NotNull final VariantContext variant) {
         if (variant.getAlleles().size() > 2) {
             LOGGER.warn("More than 1 alt for record {}: {}", variant.getContig(), variant.getStart());
             return true;
@@ -48,14 +57,30 @@ final class StrelkaPostProcess {
             LOGGER.warn("Alt is . for record {}: {}", variant.getContig(), variant.getStart());
             return false;
         }
+
+        if (hotspotFilter.test(variant)) {
+            return true;
+        }
+
         try {
-            return qualityScore(variant) > LC_QUALITY_SCORE_THRESHOLD && allelicFrequency(variant) > LC_ALLELE_FREQUENCY_THRESHOLD || (
-                    highConfidenceSlicer.includes(variantGenomePosition(variant))
-                            && allelicFrequency(variant) * qualityScore(variant) > THRESHOLD);
+            int qualityScore = qualityScore(variant);
+            double allelicFrequency = allelicFrequency(variant);
+            return testLowConfidenceQuality(qualityScore, allelicFrequency) || testHighConfidenceQuality(variant,
+                    qualityScore,
+                    allelicFrequency);
+
         } catch (final HartwigException e) {
             LOGGER.error("encountered error while processing variant {}: {}:\t{}", variant.getContig(), variant.getStart(), e.getMessage());
             return false;
         }
+    }
+
+    private static boolean testLowConfidenceQuality(int qualityScore, double allelicFrequency) {
+        return qualityScore > LC_QUALITY_SCORE_THRESHOLD && allelicFrequency > LC_ALLELE_FREQUENCY_THRESHOLD;
+    }
+
+    private boolean testHighConfidenceQuality(@NotNull final VariantContext variant, int qualityScore, double allelicFrequency) {
+        return highConfidenceSlicer.includes(variantGenomePosition(variant)) && allelicFrequency * qualityScore > THRESHOLD;
     }
 
     @VisibleForTesting
@@ -82,10 +107,10 @@ final class StrelkaPostProcess {
     static double allelicFrequency(@NotNull final VariantContext variant) throws HartwigException {
         if (variant.isSNP()) {
             final int tierIndex = getIntField(variant, SNP_TIER_INDEX_FIELD) - 1;
-            return readAf(variant, tierIndex, StrelkaPostProcess::snpAlleleKey);
+            return readAf(variant, tierIndex, StrelkaPostProcessFilter::snpAlleleKey);
         } else if (variant.isIndel()) {
             final int tierIndex = getIntField(variant, INDEL_TIER_INDEX_FIELD) - 1;
-            return readAf(variant, tierIndex, StrelkaPostProcess::indelAlleleKey);
+            return readAf(variant, tierIndex, StrelkaPostProcessFilter::indelAlleleKey);
         } else {
             throw new HartwigException("record is not indel or snp: " + variant);
         }
@@ -122,9 +147,9 @@ final class StrelkaPostProcess {
     @VisibleForTesting
     static int[] getAD(@NotNull final VariantContext variant) throws HartwigException {
         if (variant.isSNP()) {
-            return readAD(variant, StrelkaPostProcess::snpAlleleKey);
+            return readAD(variant, StrelkaPostProcessFilter::snpAlleleKey);
         } else if (variant.isIndel()) {
-            return readAD(variant, StrelkaPostProcess::indelAlleleKey);
+            return readAD(variant, StrelkaPostProcessFilter::indelAlleleKey);
         } else {
             throw new HartwigException("record is not indel or snp: " + variant);
         }

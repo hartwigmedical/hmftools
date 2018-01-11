@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFConstants;
@@ -94,9 +95,11 @@ public class StrelkaPostProcessApplication {
         writer.writeHeader(outputHeader);
         final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
+
+        final VariantContextFilter filter = new StrelkaPostProcessFilter(highConfidenceSlicer);
         for (final VariantContext variantContext : vcfReader) {
-            if (StrelkaPostProcess.checkVariant(variantContext, highConfidenceSlicer)) {
-                final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
+            if (filter.test(variantContext)) {
+                final VariantContext simplifiedVariant = StrelkaPostProcessFilter.simplifyVariant(variantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
                 outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
                 outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion).forEach(writer::add));
