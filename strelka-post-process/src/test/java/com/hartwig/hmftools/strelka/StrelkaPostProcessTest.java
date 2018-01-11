@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.strelka;
 
-import static com.hartwig.hmftools.strelka.StrelkaPostProcessFilter.allelicFrequency;
-import static com.hartwig.hmftools.strelka.StrelkaPostProcessFilter.qualityScore;
-import static com.hartwig.hmftools.strelka.StrelkaPostProcessFilter.variantGenomePosition;
+import static com.hartwig.hmftools.strelka.StrelkaPostProcess.allelicFrequency;
+import static com.hartwig.hmftools.strelka.StrelkaPostProcess.qualityScore;
+import static com.hartwig.hmftools.strelka.StrelkaPostProcess.variantGenomePosition;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -27,67 +27,67 @@ import org.junit.Test;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class StrelkaPostProcessFilterTest {
+public class StrelkaPostProcessTest {
     private static final File VCF_FILE = new File(Resources.getResource("variants.vcf").getPath());
     private static final VCFFileReader VCF_FILE_READER = new VCFFileReader(VCF_FILE, false);
     private static final String HIGH_CONF_BED_PATH = Resources.getResource("high_conf.bed").getPath();
     private static final List<VariantContext> VARIANTS = Streams.stream(VCF_FILE_READER).collect(Collectors.toList());
 
     private Slicer hcBed;
-    private StrelkaPostProcessFilter victim;
+    private StrelkaPostProcess victim;
 
     @Before
     public void setup() throws IOException {
         hcBed = SlicerFactory.fromBedFile(HIGH_CONF_BED_PATH);
-        victim = new StrelkaPostProcessFilter(hcBed);
+        victim = new StrelkaPostProcess(hcBed);
     }
 
     @Test
     public void canSimplifySNP() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(0);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 39, 7 }, StrelkaPostProcessFilter.getAD(snpVariant));
-        assertEquals(53, StrelkaPostProcessFilter.getDP(snpVariant));
+        assertArrayEquals(new int[] { 39, 7 }, StrelkaPostProcess.getAD(snpVariant));
+        assertEquals(53, StrelkaPostProcess.getDP(snpVariant));
     }
 
     @Test
     public void canSimplifyIndel() throws IOException, HartwigException {
         final VariantContext indelVariant = VARIANTS.get(1);
         assertTrue(indelVariant.isIndel());
-        assertArrayEquals(new int[] { 57, 9 }, StrelkaPostProcessFilter.getAD(indelVariant));
-        assertEquals(66, StrelkaPostProcessFilter.getDP(indelVariant));
+        assertArrayEquals(new int[] { 57, 9 }, StrelkaPostProcess.getAD(indelVariant));
+        assertEquals(66, StrelkaPostProcess.getDP(indelVariant));
     }
 
     @Test
     public void canSimplifyMultipleAltVariant() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(2);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 0, 4, 1 }, StrelkaPostProcessFilter.getAD(snpVariant));
-        assertEquals(5, StrelkaPostProcessFilter.getDP(snpVariant));
+        assertArrayEquals(new int[] { 0, 4, 1 }, StrelkaPostProcess.getAD(snpVariant));
+        assertEquals(5, StrelkaPostProcess.getDP(snpVariant));
     }
 
     @Test
     public void canSimplifyMultipleAltIndelVariant() throws IOException, HartwigException {
         final VariantContext indelVariant = VARIANTS.get(15);
         assertTrue(indelVariant.isIndel());
-        assertArrayEquals(new int[] { 87, 3, 3 }, StrelkaPostProcessFilter.getAD(indelVariant));
-        assertEquals(100, StrelkaPostProcessFilter.getDP(indelVariant));
+        assertArrayEquals(new int[] { 87, 3, 3 }, StrelkaPostProcess.getAD(indelVariant));
+        assertEquals(100, StrelkaPostProcess.getDP(indelVariant));
     }
 
     @Test
     public void canSimplifyVariantWithoutRead() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(3);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcessFilter.getAD(snpVariant));
-        assertEquals(53, StrelkaPostProcessFilter.getDP(snpVariant));
+        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcess.getAD(snpVariant));
+        assertEquals(53, StrelkaPostProcess.getDP(snpVariant));
     }
 
     @Test
     public void canSimplifyVariantWithDotRead() throws IOException, HartwigException {
         final VariantContext snpVariant = VARIANTS.get(4);
         assertTrue(snpVariant.isSNP());
-        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcessFilter.getAD(snpVariant));
-        assertEquals(53, StrelkaPostProcessFilter.getDP(snpVariant));
+        assertArrayEquals(new int[] { 39, 0 }, StrelkaPostProcess.getAD(snpVariant));
+        assertEquals(53, StrelkaPostProcess.getDP(snpVariant));
     }
 
     @Test

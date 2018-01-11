@@ -22,8 +22,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-final class StrelkaPostProcessFilter implements VariantContextFilter {
-    private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcessFilter.class);
+final class StrelkaPostProcess implements VariantContextFilter {
+    private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcess.class);
 
     private static final String SNP_QUAL_FIELD = "QSS_NT";
     private static final String INDEL_QUAL_FIELD = "QSI_NT";
@@ -32,7 +32,7 @@ final class StrelkaPostProcessFilter implements VariantContextFilter {
     private static final String TIR_FIELD = "TIR";
     private static final String TAR_FIELD = "TAR";
     private static final String SEPARATOR = ",";
-    private static final String TUMOR_GENOTYPE = "TUMOR";
+    static final String TUMOR_GENOTYPE = "TUMOR";
 
     private static final double THRESHOLD = 1.3;
     private static final int LC_QUALITY_SCORE_THRESHOLD = 20;
@@ -43,7 +43,7 @@ final class StrelkaPostProcessFilter implements VariantContextFilter {
     @NotNull
     private final HotspotFilter hotspotFilter;
 
-    StrelkaPostProcessFilter(@NotNull final Slicer highConfidenceSlicer) {
+    StrelkaPostProcess(@NotNull final Slicer highConfidenceSlicer) {
         this.highConfidenceSlicer = highConfidenceSlicer;
         this.hotspotFilter = new HotspotFilter();
     }
@@ -107,10 +107,10 @@ final class StrelkaPostProcessFilter implements VariantContextFilter {
     static double allelicFrequency(@NotNull final VariantContext variant) throws HartwigException {
         if (variant.isSNP()) {
             final int tierIndex = getIntField(variant, SNP_TIER_INDEX_FIELD) - 1;
-            return readAf(variant, tierIndex, StrelkaPostProcessFilter::snpAlleleKey);
+            return readAf(variant, tierIndex, StrelkaPostProcess::snpAlleleKey);
         } else if (variant.isIndel()) {
             final int tierIndex = getIntField(variant, INDEL_TIER_INDEX_FIELD) - 1;
-            return readAf(variant, tierIndex, StrelkaPostProcessFilter::indelAlleleKey);
+            return readAf(variant, tierIndex, StrelkaPostProcess::indelAlleleKey);
         } else {
             throw new HartwigException("record is not indel or snp: " + variant);
         }
@@ -147,9 +147,9 @@ final class StrelkaPostProcessFilter implements VariantContextFilter {
     @VisibleForTesting
     static int[] getAD(@NotNull final VariantContext variant) throws HartwigException {
         if (variant.isSNP()) {
-            return readAD(variant, StrelkaPostProcessFilter::snpAlleleKey);
+            return readAD(variant, StrelkaPostProcess::snpAlleleKey);
         } else if (variant.isIndel()) {
-            return readAD(variant, StrelkaPostProcessFilter::indelAlleleKey);
+            return readAD(variant, StrelkaPostProcess::indelAlleleKey);
         } else {
             throw new HartwigException("record is not indel or snp: " + variant);
         }

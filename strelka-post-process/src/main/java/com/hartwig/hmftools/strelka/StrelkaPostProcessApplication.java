@@ -96,10 +96,10 @@ public class StrelkaPostProcessApplication {
         final MNVValidator validator = ImmutableMNVValidator.of(tumorBam);
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
 
-        final VariantContextFilter filter = new StrelkaPostProcessFilter(highConfidenceSlicer);
+        final VariantContextFilter filter = new StrelkaPostProcess(highConfidenceSlicer);
         for (final VariantContext variantContext : vcfReader) {
             if (filter.test(variantContext)) {
-                final VariantContext simplifiedVariant = StrelkaPostProcessFilter.simplifyVariant(variantContext, sampleName);
+                final VariantContext simplifiedVariant = StrelkaPostProcess.simplifyVariant(variantContext, sampleName);
                 final PotentialMNVRegion potentialMNV = outputPair.getLeft();
                 outputPair = MNVDetector.fitsMNVRegion(potentialMNV, simplifiedVariant);
                 outputPair.getRight().ifPresent(mnvRegion -> validator.mergeVariants(mnvRegion).forEach(writer::add));
@@ -112,7 +112,7 @@ public class StrelkaPostProcessApplication {
     }
 
     @NotNull
-    private static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
+    static VCFHeader generateOutputHeader(@NotNull final VCFHeader header, @NotNull final String sampleName) {
         final VCFHeader outputVCFHeader = new VCFHeader(header.getMetaDataInInputOrder(), Sets.newHashSet(sampleName));
         outputVCFHeader.addMetaDataLine(
                 new VCFFormatHeaderLine(VCFConstants.GENOTYPE_ALLELE_DEPTHS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer,
