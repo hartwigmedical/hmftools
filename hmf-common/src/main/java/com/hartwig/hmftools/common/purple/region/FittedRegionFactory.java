@@ -68,7 +68,7 @@ public class FittedRegionFactory {
             double bafDeviation = modelBAFWithDeviation[1];
 
             double ploidyPenalty = PloidyPenalty.penalty(ploidy, (int) modelBAFWithDeviation[2]);
-            double deviation = ploidyPenalty * (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
+            double deviation = (bafDeviation + cnvDeviation) * Math.pow(observedBAF, observedBafExponent);
 
             if (ploidy == 1 || deviation < minDeviation) {
                 builder.modelPloidy(ploidy)
@@ -76,6 +76,7 @@ public class FittedRegionFactory {
                         .modelTumorRatio(modelRatio)
                         .bafDeviation(bafDeviation)
                         .cnvDeviation(cnvDeviation)
+                        .ploidyPenalty(ploidyPenalty)
                         .deviation(deviation);
                 minDeviation = deviation;
             }

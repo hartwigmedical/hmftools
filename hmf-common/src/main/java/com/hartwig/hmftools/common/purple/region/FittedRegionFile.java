@@ -54,6 +54,7 @@ public enum FittedRegionFile {
                 .add("tumorBAF")
                 .add("gcContent")
                 .add("svCluster")
+                .add("ploidyPenalty")
                 .toString();
     }
 
@@ -83,13 +84,14 @@ public enum FittedRegionFile {
                 .add(String.valueOf(copyNumber.tumorBAF()))
                 .add(String.valueOf(copyNumber.gcContent()))
                 .add(String.valueOf(copyNumber.svCluster()))
+                .add(String.valueOf(copyNumber.ploidyPenalty()))
                 .toString();
     }
 
     @NotNull
-    static FittedRegion fromString(@NotNull final String purity) {
-        String[] values = purity.split(DELIMITER);
-        return ImmutableFittedRegion.builder()
+    static FittedRegion fromString(@NotNull final String region) {
+        String[] values = region.split(DELIMITER);
+        ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .chromosome(values[0])
                 .start(Long.valueOf(values[1]))
                 .end(Long.valueOf(values[2]))
@@ -114,6 +116,12 @@ public enum FittedRegionFile {
                 .tumorBAF(Double.valueOf(values[21]))
                 .gcContent(Double.valueOf(values[22]))
                 .svCluster(Boolean.valueOf(values[23]))
-                .build();
+                .ploidyPenalty(0);
+
+        if (values.length == 25) {
+            builder.ploidyPenalty(Double.valueOf(values[24]));
+        }
+
+        return builder.build();
     }
 }

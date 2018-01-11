@@ -83,6 +83,7 @@ public class PurpleDatamodelTest {
                 .refNormalisedCopyNumber(2)
                 .ratioSupport(true)
                 .support(SegmentSupport.NONE)
+                .ploidyPenalty(0)
                 .bafDeviation(0);
     }
 

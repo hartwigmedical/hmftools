@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.purple.region;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
@@ -10,6 +11,23 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FittedRegionFileTest {
+
+    @Test
+    public void testSupportOlderFileFormat() {
+        final FittedRegion complete = createRandom(new Random());
+        final FittedRegion expectedTruncated = ImmutableFittedRegion.builder().from(complete).ploidyPenalty(0).build();
+
+        final String completeString = FittedRegionFile.toString(complete);
+        final String values[] = completeString.split("\t");
+
+        final StringJoiner truncatedStringJoiner = new StringJoiner("\t");
+        for (int i = 0; i < values.length - 1; i++) {
+            truncatedStringJoiner.add(values[i]);
+        }
+
+        final FittedRegion truncated = FittedRegionFile.fromString(truncatedStringJoiner.toString());
+        assertEquals(expectedTruncated, truncated);
+    }
 
     @Test
     public void testToFromString() {
@@ -45,6 +63,7 @@ public class FittedRegionFileTest {
                 .observedTumorRatioCount(random.nextInt())
                 .svCluster(random.nextBoolean())
                 .gcContent(random.nextDouble())
+                .ploidyPenalty(random.nextDouble())
                 .build();
     }
 }

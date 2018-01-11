@@ -225,6 +225,7 @@ CREATE TABLE copyNumberRegion
     cnvDeviation DOUBLE PRECISION not null,
     bafDeviation DOUBLE PRECISION not null,
     totalDeviation DOUBLE PRECISION not null,
+    ploidyPenalty DOUBLE PRECISION not null,
     fittedBaf DOUBLE PRECISION not null,
     fittedCopyNumber DOUBLE PRECISION not null,
     PRIMARY KEY (id),

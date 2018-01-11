@@ -118,6 +118,7 @@ public class FittedPurityFactory {
     private FittedPurity fitPurity(final double purity, final double normFactor, final double totalBafCount,
             @NotNull final Collection<ObservedRegion> observedRegions) {
         ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
+        double ploidyPenalty = 0;
         double modelDeviation = 0;
         double diploidProportion = 0;
         double averagePloidy = 0;
@@ -126,6 +127,7 @@ public class FittedPurityFactory {
 
         for (final ObservedRegion enrichedRegion : observedRegions) {
             final FittedRegion fittedRegion = fittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
+            ploidyPenalty += enrichedRegion.bafCount() / totalBafCount * fittedRegion.ploidyPenalty();
             modelDeviation += enrichedRegion.bafCount() / totalBafCount * fittedRegion.deviation();
             averagePloidy += fittedRegion.tumorCopyNumber() * fittedRegion.bafCount() / totalBafCount;
             if (fittedRegion.modelPloidy() == 2) {
@@ -133,6 +135,6 @@ public class FittedPurityFactory {
             }
         }
 
-        return builder.score(modelDeviation).diploidProportion(diploidProportion).ploidy(averagePloidy).build();
+        return builder.score(ploidyPenalty * modelDeviation).diploidProportion(diploidProportion).ploidy(averagePloidy).build();
     }
 }

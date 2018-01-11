@@ -15,6 +15,8 @@ public abstract class FittedRegion implements ObservedRegion {
 
     public abstract double modelBAF();
 
+    public abstract double ploidyPenalty();
+
     public abstract double bafDeviation();
 
     public abstract double modelTumorRatio();

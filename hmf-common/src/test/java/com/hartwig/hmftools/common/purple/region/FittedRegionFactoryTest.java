@@ -50,7 +50,8 @@ public class FittedRegionFactoryTest {
         assertEquals(3, result.modelPloidy());
         assertEquals(0.01, result.bafDeviation(), EPSILON);
         assertEquals(0.002, result.cnvDeviation(), EPSILON);
-        assertEquals(0.015668571428571587, result.deviation(), EPSILON);
+        assertEquals(0.007834285714285794, result.deviation(), EPSILON);
+        assertEquals(2.0, result.ploidyPenalty(), EPSILON);
     }
 
     @NotNull
