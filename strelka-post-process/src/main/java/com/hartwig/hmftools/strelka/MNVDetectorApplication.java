@@ -73,10 +73,11 @@ public class MNVDetectorApplication {
         return parser.parse(options, args);
     }
 
-    private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String outputBed, boolean strelka)
-            throws IOException, HartwigException {
+    private static void processVariants(@NotNull final String filePath, @NotNull final String outputVcf, @NotNull final String outputBed,
+            boolean strelka) throws IOException, HartwigException {
         final VCFFileReader vcfReader = new VCFFileReader(new File(filePath), false);
-        final VCFHeader outputHeader = strelka ? generateOutputHeader(vcfReader.getFileHeader(), StrelkaPostProcess.TUMOR_GENOTYPE) : vcfReader.getFileHeader();
+        final VCFHeader outputHeader =
+                strelka ? generateOutputHeader(vcfReader.getFileHeader(), StrelkaPostProcess.TUMOR_GENOTYPE) : vcfReader.getFileHeader();
         final BufferedWriter bedWriter = new BufferedWriter(new FileWriter(outputBed, false));
         final VariantContextWriter vcfWriter = new VariantContextWriterBuilder().setOutputFile(outputVcf)
                 .setReferenceDictionary(outputHeader.getSequenceDictionary())
@@ -85,13 +86,16 @@ public class MNVDetectorApplication {
 
         Pair<PotentialMNVRegion, Optional<PotentialMNVRegion>> outputPair = ImmutablePair.of(PotentialMNVRegion.empty(), Optional.empty());
         for (final VariantContext rawVariant : vcfReader) {
-            final VariantContext variant = strelka ? StrelkaPostProcess.simplifyVariant(rawVariant, StrelkaPostProcess.TUMOR_GENOTYPE) : rawVariant;
+            final VariantContext variant =
+                    strelka ? StrelkaPostProcess.simplifyVariant(rawVariant, StrelkaPostProcess.TUMOR_GENOTYPE) : rawVariant;
 
             final PotentialMNVRegion potentialMNVregion = outputPair.getLeft();
             outputPair = MNVDetector.fitsMNVRegion(potentialMNVregion, variant);
             outputPair.getRight()
-                    .ifPresent(mnvRegion -> filterMnvRegion(mnvRegion).ifPresent(
-                            filteredRegion -> writeMnvRegionToFiles(filteredRegion, vcfWriter, bedWriter, "\n")));
+                    .ifPresent(mnvRegion -> filterMnvRegion(mnvRegion).ifPresent(filteredRegion -> writeMnvRegionToFiles(filteredRegion,
+                            vcfWriter,
+                            bedWriter,
+                            "\n")));
         }
         filterMnvRegion(outputPair.getLeft()).ifPresent(mnvRegion -> writeMnvRegionToFiles(mnvRegion, vcfWriter, bedWriter, ""));
         vcfWriter.close();
