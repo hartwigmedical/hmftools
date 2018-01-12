@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.portal.converter
 
-import com.hartwig.hmftools.portal.converter.extensions.getNullable
+import com.hartwig.hmftools.portal.converter.extensions.getOrNull
 import org.apache.commons.csv.CSVRecord
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -11,11 +11,11 @@ data class SampleClinicalData(val cpctId: String?, val sampleId: String?, val ge
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         operator fun invoke(record: CSVRecord): SampleClinicalData {
-            val gender = determineGender(record.getNullable(GENDER_FIELD))
-            val ageAtEnrollment = determineAgeAtEnrollment(record.getNullable(BIRTH_YEAR_FIELD), record.getNullable(REGISTRATION_DATE_FIELD))
-            val cancerType = determineCancerType(record.getNullable(CANCER_TYPE_FIELD))
-            val (specimenType, specimenTypeOther) = determineSpecimenType(record.getNullable(BIOPSY_SITE_FIELD))
-            return SampleClinicalData(record.getNullable(CPCT_ID_FIELD), record.getNullable(SAMPLE_ID_FIELD), gender, ageAtEnrollment,
+            val gender = determineGender(record.getOrNull(GENDER_FIELD))
+            val ageAtEnrollment = determineAgeAtEnrollment(record.getOrNull(BIRTH_YEAR_FIELD), record.getOrNull(REGISTRATION_DATE_FIELD))
+            val cancerType = determineCancerType(record.getOrNull(CANCER_TYPE_FIELD))
+            val (specimenType, specimenTypeOther) = determineSpecimenType(record.getOrNull(BIOPSY_SITE_FIELD))
+            return SampleClinicalData(record.getOrNull(CPCT_ID_FIELD), record.getOrNull(SAMPLE_ID_FIELD), gender, ageAtEnrollment,
                     cancerType, specimenType, specimenTypeOther)
         }
 
