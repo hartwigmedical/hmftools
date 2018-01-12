@@ -30,7 +30,7 @@ final class PatientReporterHelper {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterHelper.class);
 
-    private static final String SOMATIC_SNV_EXTENSION = "_post_processed.vcf";
+    private static final String SOMATIC_SNV_EXTENSION = "_post_processed_v2.1.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
 

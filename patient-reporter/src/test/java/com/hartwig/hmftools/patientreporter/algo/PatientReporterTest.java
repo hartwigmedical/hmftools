@@ -35,28 +35,6 @@ public class PatientReporterTest {
     private static final String RUN_DIRECTORY = Resources.getResource("example").getPath();
     private static final String FUSIONS_CSV = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
 
-    private static class TestAnnotator implements VariantAnnotator {
-
-        @Override
-        public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
-            final List<StructuralVariantAnnotation> result = Lists.newArrayList();
-            for (final StructuralVariant sv : variants) {
-                final StructuralVariantAnnotation ann = new StructuralVariantAnnotation(sv);
-                final GeneAnnotation g1 = new GeneAnnotation(ann, true,"PNPLA7", Collections.singletonList("PNPLA7"), "ENSG00000130653", -1);
-                g1.addTranscript(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 37, true));
-                ann.getAnnotations().add(g1);
-
-                final GeneAnnotation g2 = new GeneAnnotation(ann, false, "TMPRSS2", Collections.singletonList("TMPRSS2"), "ENSG00000184012", -1);
-                g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 14, true));
-                ann.getAnnotations().add(g2);
-
-                result.add(ann);
-            }
-            return result;
-        }
-
-    }
-
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfGeneMap());
@@ -67,5 +45,28 @@ public class PatientReporterTest {
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
+    }
+
+    private static class TestAnnotator implements VariantAnnotator {
+
+        @Override
+        public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
+            final List<StructuralVariantAnnotation> result = Lists.newArrayList();
+            for (final StructuralVariant sv : variants) {
+                final StructuralVariantAnnotation ann = new StructuralVariantAnnotation(sv);
+                final GeneAnnotation g1 =
+                        new GeneAnnotation(ann, true, "PNPLA7", Collections.singletonList("PNPLA7"), "ENSG00000130653", -1);
+                g1.addTranscript(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 37, true));
+                ann.getAnnotations().add(g1);
+
+                final GeneAnnotation g2 =
+                        new GeneAnnotation(ann, false, "TMPRSS2", Collections.singletonList("TMPRSS2"), "ENSG00000184012", -1);
+                g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 14, true));
+                ann.getAnnotations().add(g2);
+
+                result.add(ann);
+            }
+            return result;
+        }
     }
 }
