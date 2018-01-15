@@ -36,7 +36,7 @@ public class CosmicData {
     @NotNull
     private final String otherSyndrome;
 
-    public CosmicData(@NotNull final String description, @NotNull final String entrezId,
+    CosmicData(@NotNull final String description, @NotNull final String entrezId,
             @NotNull final String genomeLocation, @NotNull final String chromosomeBand, @NotNull final String somatic,
             @NotNull final String germline, @NotNull final String somaticTumorTypes,
             @NotNull final String germlineTumorTypes, @NotNull final String cancerSyndrome,

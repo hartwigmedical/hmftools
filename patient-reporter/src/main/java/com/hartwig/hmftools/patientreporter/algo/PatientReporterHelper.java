@@ -107,6 +107,7 @@ final class PatientReporterHelper {
         }
     }
 
+    @Nullable
     private static List<String> readEcrfField(@NotNull final EcrfPatient patient, @NotNull final String field) {
         final List<String> fieldValues = patient.fieldValuesByName(field);
         if (fieldValues == null) {

@@ -18,8 +18,8 @@ import org.jetbrains.annotations.NotNull;
 public class GeneCopyNumberFile {
     ;
 
-    static final String DELIMITER = "\t";
-    static final String HEADER_PREFIX = "Chr";
+    private static final String DELIMITER = "\t";
+    private static final String HEADER_PREFIX = "Chr";
     private static final String EXTENSION = ".purple.gene.cnv";
 
     @NotNull
