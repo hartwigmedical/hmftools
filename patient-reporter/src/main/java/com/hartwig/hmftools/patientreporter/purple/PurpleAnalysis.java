@@ -60,8 +60,10 @@ public abstract class PurpleAnalysis {
             final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
             if (optionalCopyNumber.isPresent()) {
                 final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
-                double adjustedVAF =
-                        Math.min(1, purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(), copyNumber.averageTumorCopyNumber(), variantReport.alleleFrequency()));
+                double adjustedVAF = Math.min(1,
+                        purityAdjuster.purityAdjustedVAF(copyNumber.chromosome(),
+                                copyNumber.averageTumorCopyNumber(),
+                                variantReport.alleleFrequency()));
                 result.add(ImmutableVariantReport.builder()
                         .from(variantReport)
                         .baf(copyNumber.descriptiveBAF())
@@ -79,10 +81,9 @@ public abstract class PurpleAnalysis {
         return fittedScorePurity().maxPurity() - fittedScorePurity().minPurity();
     }
 
+    @NotNull
     public String purityString() {
-        return status() == FittedPurityStatus.NO_TUMOR
-                ? "[below detection threshold]"
-                : PatientReportFormat.formatPercent(fittedPurity().purity());
+        return status() == FittedPurityStatus.NO_TUMOR ? "[below detection threshold]" : PatientReportFormat.formatPercent(fittedPurity().purity());
     }
 
     @NotNull
