@@ -26,9 +26,6 @@ public abstract class VariantAnalysis {
     public abstract List<SomaticVariant> consequentialVariants();
 
     @NotNull
-    public abstract List<SomaticVariant> potentialConsequentialMNVs();
-
-    @NotNull
     public abstract List<VariantReport> findings();
 
     public int mutationalLoad() {

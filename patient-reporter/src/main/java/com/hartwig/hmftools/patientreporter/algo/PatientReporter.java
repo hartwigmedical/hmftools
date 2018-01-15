@@ -86,7 +86,6 @@ public abstract class PatientReporter {
         final int passedVariantCount = variantAnalysis.passedVariants().size();
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
-        final int potentialMNVCount = variantAnalysis.potentialConsequentialMNVs().size();
         final int svCount = svAnalysis.annotations().size();
         final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), tumorSample);
 
@@ -101,12 +100,7 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of variants after applying pass-only filter : " + Integer.toString(passedVariantCount));
         LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
-        LOGGER.info("  Number of potential consequential MNVs : " + Integer.toString(potentialMNVCount));
-        if (potentialMNVCount > 0) {
-            LOGGER.warn(" !! Non-zero number of potentials MNV ");
-            LOGGER.warn(variantAnalysis.potentialConsequentialMNVs());
-        }
-        LOGGER.info("  Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
+        LOGGER.info(" Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
         LOGGER.info("  Number of unreported structural variants : " + Integer.toString(svCount));
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
