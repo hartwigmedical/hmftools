@@ -27,14 +27,11 @@ public abstract class CircosPage {
     abstract String circosImagePath();
 
     @NotNull
-    private String pageTitle() {
-        return "CIRCOS plot";
-    }
+    private static final String TITLE = "CIRCOS plot";
 
     @NotNull
     private TextFieldBuilder<String> title() {
-        return cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - " + pageTitle())
-                .setStyle(sectionHeaderStyle());
+        return cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - " + TITLE).setStyle(sectionHeaderStyle());
     }
 
     @NotNull
