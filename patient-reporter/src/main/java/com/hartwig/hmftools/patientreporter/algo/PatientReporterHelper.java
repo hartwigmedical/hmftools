@@ -33,6 +33,8 @@ final class PatientReporterHelper {
     private static final String SOMATIC_SNV_EXTENSION = "_post_processed_v2.1.vcf.gz";
     private static final String PURPLE_DIRECTORY = "purple";
     private static final String SV_EXTENSION = "_somaticSV_bpi.vcf";
+    private static final String CIRCOS_PLOT_DIRECTORY = "plot";
+    private static final String CIRCOS_PLOT_EXTENSION = ".circos.png";
 
     private static final String TUMOR_TYPE_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC";
     private static final String TUMOR_TYPE_OTHER_ECRF_FIELD = "BASELINE.CARCINOMA.CARCINOMA.PTUMLOCS";
@@ -66,6 +68,12 @@ final class PatientReporterHelper {
         final Optional<Path> path = Files.walk(Paths.get(runDirectory)).filter(p -> p.toString().endsWith(SV_EXTENSION)).findFirst();
         assert path.isPresent();
         return path.get();
+    }
+
+    @NotNull
+    static String findCircosPlotPath(@NotNull final String runDirectory, @NotNull final String sample) throws IOException {
+        return runDirectory + File.separator + PURPLE_DIRECTORY + File.separator + CIRCOS_PLOT_DIRECTORY + File.separator + sample
+                + CIRCOS_PLOT_EXTENSION;
     }
 
     @NotNull

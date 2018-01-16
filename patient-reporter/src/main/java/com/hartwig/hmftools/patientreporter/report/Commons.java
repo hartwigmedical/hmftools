@@ -19,7 +19,7 @@ public final class Commons {
     private static final Color BORKIE_COLOR = new Color(221, 235, 247);
     public static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
     private static final int TABLE_PADDING = 1;
-    static final int SECTION_VERTICAL_GAP = 25;
+    public static final int SECTION_VERTICAL_GAP = 25;
     public static final int HEADER_TO_DETAIL_VERTICAL_GAP = 8;
 
     @NotNull
@@ -74,7 +74,7 @@ public final class Commons {
     }
 
     @NotNull
-    static StyleBuilder sectionHeaderStyle() {
+    public static StyleBuilder sectionHeaderStyle() {
         return fontStyle().bold().setFontSize(12).setHorizontalTextAlignment(HorizontalTextAlignment.CENTER);
     }
 

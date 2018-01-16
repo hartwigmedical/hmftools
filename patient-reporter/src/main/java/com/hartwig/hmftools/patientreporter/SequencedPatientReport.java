@@ -46,6 +46,9 @@ public abstract class SequencedPatientReport implements PatientReport {
     @NotNull
     public abstract List<Alteration> civicAlterations();
 
+    @NotNull
+    public abstract String circosPath();
+
     @Override
     @NotNull
     public abstract Optional<String> comments();

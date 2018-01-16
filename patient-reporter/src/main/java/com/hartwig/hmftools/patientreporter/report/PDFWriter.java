@@ -36,6 +36,7 @@ import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
+import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -173,6 +174,7 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> totalReport =
                 cmp.multiPageList().add(reportMainPage)
                         .newPage().add(genePanelPage)
+                        .newPage().add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
                         .newPage().add(additionalInfoPage)
                         .newPage().add(sampleDetailsPage);
         // @formatter:on

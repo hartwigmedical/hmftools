@@ -126,6 +126,7 @@ public abstract class PatientReporter {
                 mutationalLoad,
                 purpleAnalysis.purityString(),
                 alterations,
+                PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),
                 Optional.ofNullable(comments),
                 baseReporterData().signaturePath());
     }

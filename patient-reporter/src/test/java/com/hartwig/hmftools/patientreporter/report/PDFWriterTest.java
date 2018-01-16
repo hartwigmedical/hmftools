@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -89,6 +90,7 @@ public class PDFWriterTest {
                 361,
                 "58%",
                 alterations,
+                Resources.getResource("circos" + File.separator + "circos_example.jpeg").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
