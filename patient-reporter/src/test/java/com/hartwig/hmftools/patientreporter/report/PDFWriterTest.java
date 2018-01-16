@@ -97,9 +97,6 @@ public class PDFWriterTest {
         final JasperReportBuilder mainReport = PDFWriter.generatePatientReport(patientReport, reporterData);
         assertNotNull(mainReport);
 
-        final JasperReportBuilder supplement = PDFWriter.generateSupplementaryReport(patientReport);
-        assertNotNull(supplement);
-
         final JasperReportBuilder evidenceReport = EvidenceReport.generate(patientReport);
         assertNotNull(evidenceReport);
 
@@ -109,7 +106,6 @@ public class PDFWriterTest {
 
         if (WRITE_TO_PDF) {
             mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_report.pdf"));
-            supplement.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_supplement.pdf"));
             evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_evidence_report.pdf"));
         }
     }
