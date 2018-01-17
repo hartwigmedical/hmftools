@@ -21,7 +21,8 @@ It will then provide further annotations of *Gene Disruptions* and *Gene Fusions
 ## Dependencies
 
 * A MySQL (or possibly MariaDB) which has the HMF patient-db schema loaded (see patient-db project)
-* For Purity-Adjusted VAFS to be recorded, PURPLE must have been run and persisted to DB prior to this tool.
+* Access to the exact ensembl db version used by hmftools ensembl-db submodule
+* For Purity-Adjusted VAFs to be recorded, PURPLE must have been run and persisted to DB prior to this tool.
 
 ## Usage
 
