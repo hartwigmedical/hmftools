@@ -22,7 +22,7 @@ public enum PatientReportFormat {
 
     @NotNull
     public static String positionString(@NotNull final GeneAnnotation g) {
-        return positionString(g.getVariant(), g.isStart());
+        return positionString(g.variant(), g.isStart());
     }
 
     @NotNull
@@ -35,16 +35,16 @@ public enum PatientReportFormat {
         if (t.isPromoter()) {
             return "Promoter Region";
         } else if (t.isExonic()) {
-            return String.format("Exon %d", upstream ? t.getExonUpstream() : t.getExonDownstream());
+            return String.format("Exon %d", upstream ? t.exonUpstream() : t.exonDownstream());
         } else if (t.isIntronic()) {
-            return String.format("Intron %d", t.getExonUpstream());
+            return String.format("Intron %d", t.exonUpstream());
         } else {
-            return String.format("Error up(%d) down(%d)", t.getExonUpstream(), t.getExonDownstream());
+            return String.format("Error up(%d) down(%d)", t.exonUpstream(), t.exonDownstream());
         }
     }
 
     @Nullable
     public static Double alleleFrequency(@NotNull final GeneAnnotation g) {
-        return g.isStart() ? g.getVariant().start().alleleFrequency() : g.getVariant().end().alleleFrequency();
+        return g.isStart() ? g.variant().start().alleleFrequency() : g.variant().end().alleleFrequency();
     }
 }

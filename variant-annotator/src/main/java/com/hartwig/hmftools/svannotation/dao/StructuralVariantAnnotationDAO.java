@@ -25,6 +25,7 @@ import org.jooq.InsertValuesStep3;
 import org.jooq.types.UInteger;
 
 public class StructuralVariantAnnotationDAO {
+
     @NotNull
     private final DSLContext context;
 
@@ -32,15 +33,15 @@ public class StructuralVariantAnnotationDAO {
         this.context = context;
     }
 
+    @SuppressWarnings("unchecked")
     public void write(final StructuralVariantAnalysis analysis) {
-
         final Timestamp timestamp = new Timestamp(new Date().getTime());
 
         final Map<Transcript, Integer> id = Maps.newHashMap();
 
-        // load transcript annotations
+        // NERA: load transcript annotations
         for (final StructuralVariantAnnotation annotation : analysis.annotations()) {
-            for (final GeneAnnotation g : annotation.getAnnotations()) {
+            for (final GeneAnnotation geneAnnotation : annotation.annotations()) {
                 final InsertValuesStep13 inserter = context.insertInto(STRUCTURALVARIANTBREAKEND,
                         STRUCTURALVARIANTBREAKEND.MODIFIED,
                         STRUCTURALVARIANTBREAKEND.ISSTARTEND,
@@ -55,47 +56,44 @@ public class StructuralVariantAnnotationDAO {
                         STRUCTURALVARIANTBREAKEND.EXONRANKDOWNSTREAM,
                         STRUCTURALVARIANTBREAKEND.EXONPHASEDOWNSTREAM,
                         STRUCTURALVARIANTBREAKEND.EXONMAX);
-                for (final Transcript t : g.getTranscripts()) {
+                for (final Transcript transcript : geneAnnotation.transcripts()) {
                     inserter.values(timestamp,
-                            g.isStart(),
-                            t.getVariant().primaryKey(),
-                            g.getGeneName(),
-                            g.getStableId(),
-                            t.getTranscriptId(),
-                            t.isCanonical(),
-                            g.getStrand(),
-                            t.getExonUpstream(),
-                            t.getExonUpstreamPhase(),
-                            t.getExonDownstream(),
-                            t.getExonDownstreamPhase(),
-                            t.getExonMax());
+                            geneAnnotation.isStart(),
+                            transcript.variant().primaryKey(),
+                            geneAnnotation.geneName(),
+                            geneAnnotation.stableId(),
+                            transcript.transcriptId(),
+                            transcript.isCanonical(),
+                            geneAnnotation.strand(),
+                            transcript.exonUpstream(),
+                            transcript.exonUpstreamPhase(),
+                            transcript.exonDownstream(),
+                            transcript.exonDownstreamPhase(),
+                            transcript.exonMax());
                 }
 
                 final List<UInteger> ids = inserter.returning(STRUCTURALVARIANTBREAKEND.ID).fetch().getValues(0, UInteger.class);
-                if (ids.size() != g.getTranscripts().size()) {
+                if (ids.size() != geneAnnotation.transcripts().size()) {
                     throw new RuntimeException("not all transcripts were inserted successfully");
                 }
 
                 for (int i = 0; i < ids.size(); i++) {
-                    id.put(g.getTranscripts().get(i), ids.get(i).intValue());
+                    id.put(geneAnnotation.transcripts().get(i), ids.get(i).intValue());
                 }
             }
         }
 
-        // load fusions
-
+        // NERA: load fusions
         final InsertValuesStep3 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
                 STRUCTURALVARIANTFUSION.ISREPORTED,
                 STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
                 STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID);
         for (final GeneFusion fusion : analysis.fusions()) {
-            fusionInserter.values(fusion.reportable(),
-                    id.get(fusion.upstreamLinkedAnnotation()),
-                    id.get(fusion.downstreamLinkedAnnotation()));
+            fusionInserter.values(fusion.reportable(), id.get(fusion.upstreamLinkedAnnotation()), id.get(fusion.downstreamLinkedAnnotation()));
         }
         fusionInserter.execute();
 
-        // load disruptions
+        // NERA: load disruptions
         final InsertValuesStep2 disruptionInserter = context.insertInto(STRUCTURALVARIANTDISRUPTION,
                 STRUCTURALVARIANTDISRUPTION.ISREPORTED,
                 STRUCTURALVARIANTDISRUPTION.BREAKENDID);
@@ -103,8 +101,6 @@ public class StructuralVariantAnnotationDAO {
             disruptionInserter.values(disruption.reportable(), id.get(disruption.linkedAnnotation()));
         }
         disruptionInserter.execute();
-
     }
-
 }
 

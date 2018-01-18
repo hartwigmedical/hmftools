@@ -26,6 +26,7 @@ import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import net.sf.dynamicreports.report.exception.DRException;
@@ -50,6 +51,7 @@ public class PatientReporterTest {
     private static class TestAnnotator implements VariantAnnotator {
 
         @Override
+        @NotNull
         public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
             final List<StructuralVariantAnnotation> result = Lists.newArrayList();
             for (final StructuralVariant sv : variants) {
@@ -57,12 +59,12 @@ public class PatientReporterTest {
                 final GeneAnnotation g1 =
                         new GeneAnnotation(ann, true, "PNPLA7", Collections.singletonList("PNPLA7"), "ENSG00000130653", -1);
                 g1.addTranscript(new Transcript(g1, "ENST00000406427", 12, 0, 13, 0, 37, true));
-                ann.getAnnotations().add(g1);
+                ann.annotations().add(g1);
 
                 final GeneAnnotation g2 =
                         new GeneAnnotation(ann, false, "TMPRSS2", Collections.singletonList("TMPRSS2"), "ENSG00000184012", -1);
                 g2.addTranscript(new Transcript(g2, "ENST00000398585", 1, 0, 2, 0, 14, true));
-                ann.getAnnotations().add(g2);
+                ann.annotations().add(g2);
 
                 result.add(ann);
             }

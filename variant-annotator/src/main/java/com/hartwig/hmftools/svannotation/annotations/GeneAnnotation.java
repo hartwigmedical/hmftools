@@ -28,27 +28,27 @@ public class GeneAnnotation {
         this.strand = strand;
     }
 
-    public StructuralVariantAnnotation getAnnotation() {
+    public StructuralVariantAnnotation annotation() {
         return parent;
     }
 
-    public StructuralVariant getVariant() {
-        return parent.getVariant();
+    public StructuralVariant variant() {
+        return parent.variant();
     }
 
     public boolean isStart() {
         return isStart;
     }
 
-    public String getGeneName() {
+    public String geneName() {
         return geneName;
     }
 
-    public String getStableId() {
+    public String stableId() {
         return stableId;
     }
 
-    public int getStrand() {
+    public int strand() {
         return strand;
     }
 
@@ -56,16 +56,16 @@ public class GeneAnnotation {
         transcripts.add(a);
     }
 
-    public List<Transcript> getTranscripts() {
+    public List<Transcript> transcripts() {
         return ImmutableList.copyOf(transcripts);
     }
 
     @Nullable
-    public Transcript getCanonical() {
+    public Transcript canonical() {
         return transcripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
     }
 
-    public List<String> getSynonyms() {
+    public List<String> synonyms() {
         return ImmutableList.copyOf(synonyms);
     }
 }

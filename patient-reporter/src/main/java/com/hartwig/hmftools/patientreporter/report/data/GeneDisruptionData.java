@@ -37,16 +37,16 @@ public abstract class GeneDisruptionData {
     @NotNull
     public static GeneDisruptionData from(@NotNull final GeneDisruption disruption) {
         final Transcript transcript = disruption.linkedAnnotation();
-        final GeneAnnotation g = transcript.getGeneAnnotation();
-        final int variantOrientation = g.getVariant().orientation(g.isStart());
+        final GeneAnnotation g = transcript.geneAnnotation();
+        final int variantOrientation = g.variant().orientation(g.isStart());
 
         return ImmutableGeneDisruptionData.builder()
-                .geneName(disruption.linkedAnnotation().getGeneName())
+                .geneName(disruption.linkedAnnotation().geneName())
                 .location(positionString(g))
                 .geneContext(exonDescription(transcript, true)) // TODO: upstream ?
-                .transcript(transcript.getTranscriptId())
-                .partner(positionString(g.getVariant(), !g.isStart()))
-                .type(g.getVariant().type().toString())
+                .transcript(transcript.transcriptId())
+                .partner(positionString(g.variant(), !g.isStart()))
+                .type(g.variant().type().toString())
                 .orientation(variantOrientation > 0 ? "5'" : "3'")
                 .vaf(PatientReportFormat.formatNullablePercent(alleleFrequency(g)))
                 .build();

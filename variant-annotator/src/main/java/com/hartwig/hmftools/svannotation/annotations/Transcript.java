@@ -29,7 +29,7 @@ public class Transcript {
     }
 
     @NotNull
-    public String getTranscriptId() {
+    public String transcriptId() {
         return transcriptId;
     }
 
@@ -49,33 +49,35 @@ public class Transcript {
         return canonical;
     }
 
-    public GeneAnnotation getGeneAnnotation() {
+    public GeneAnnotation geneAnnotation() {
         return geneAnnotation;
     }
 
-    public StructuralVariant getVariant() { return geneAnnotation.getVariant(); }
-
-    public String getGeneName() {
-        return geneAnnotation.getGeneName();
+    public StructuralVariant variant() {
+        return geneAnnotation.variant();
     }
 
-    public int getExonUpstream() {
+    public String geneName() {
+        return geneAnnotation.geneName();
+    }
+
+    public int exonUpstream() {
         return exonUpstream;
     }
 
-    public int getExonUpstreamPhase() {
+    public int exonUpstreamPhase() {
         return exonUpstreamPhase;
     }
 
-    public int getExonDownstream() {
+    public int exonDownstream() {
         return exonDownstream;
     }
 
-    public int getExonDownstreamPhase() {
+    public int exonDownstreamPhase() {
         return exonDownstreamPhase;
     }
 
-    public int getExonMax() {
+    public int exonMax() {
         return exonMax;
     }
 }

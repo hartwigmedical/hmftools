@@ -24,6 +24,7 @@ import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
+import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -36,6 +37,7 @@ public class MySQLAnnotator implements VariantAnnotator {
     private final DSLContext context;
     private final UInteger coord_system_id;
 
+    @NotNull
     public static VariantAnnotator make(final String url) throws SQLException {
         return new MySQLAnnotator(url);
     }
@@ -47,6 +49,7 @@ public class MySQLAnnotator implements VariantAnnotator {
         coord_system_id = findCoordSystemId();
     }
 
+    @NotNull
     private UInteger findCoordSystemId() {
         return context.select(COORD_SYSTEM.COORD_SYSTEM_ID)
                 .from(COORD_SYSTEM)
@@ -58,26 +61,28 @@ public class MySQLAnnotator implements VariantAnnotator {
     }
 
     @Override
+    @NotNull
     public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
+    @NotNull
     private StructuralVariantAnnotation annotateVariant(final StructuralVariant variant) {
         final StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(variant);
-        annotation.getAnnotations().addAll(annotateBreakend(annotation, true, variant.start().chromosome(), variant.start().position()));
-        annotation.getAnnotations().addAll(annotateBreakend(annotation, false, variant.end().chromosome(), variant.end().position()));
+        annotation.annotations().addAll(annotateBreakend(annotation, true, variant.start().chromosome(), variant.start().position()));
+        annotation.annotations().addAll(annotateBreakend(annotation, false, variant.end().chromosome(), variant.end().position()));
         return annotation;
     }
 
+    @NotNull
     private List<GeneAnnotation> annotateBreakend(final StructuralVariantAnnotation parent, final boolean isStart, final String chromosome,
             final long position) {
-
         final List<GeneAnnotation> result = Lists.newArrayList();
 
         final int PROMOTER_DISTANCE = 10000;
         final byte zero = 0;
 
-        // start with the overlapping genes
+        // NERA: start with the overlapping genes
         final Result<?> genes =
                 context.select(GENE.GENE_ID, XREF.DISPLAY_LABEL, GENE.STABLE_ID, GENE.CANONICAL_TRANSCRIPT_ID, GENE.SEQ_REGION_STRAND)
                         .from(GENE)
@@ -98,12 +103,12 @@ public class MySQLAnnotator implements VariantAnnotator {
                                 .ge(UInteger.valueOf(position)))
                         .fetch();
 
-        for (final Record g : genes) {
-            final UInteger gene_id = g.get(GENE.GENE_ID);
-            final String gene_name = g.get(XREF.DISPLAY_LABEL);
-            final String gene_stable_id = g.get(GENE.STABLE_ID);
-            final UInteger canonical_transcript_id = g.get(GENE.CANONICAL_TRANSCRIPT_ID);
-            final int gene_strand = g.get(GENE.SEQ_REGION_STRAND);
+        for (final Record gene : genes) {
+            final UInteger gene_id = gene.get(GENE.GENE_ID);
+            final String gene_name = gene.get(XREF.DISPLAY_LABEL);
+            final String gene_stable_id = gene.get(GENE.STABLE_ID);
+            final UInteger canonical_transcript_id = gene.get(GENE.CANONICAL_TRANSCRIPT_ID);
+            final int gene_strand = gene.get(GENE.SEQ_REGION_STRAND);
 
             final List<String> synonyms = context.select(XREF.DBPRIMARY_ACC)
                     .from(XREF)
@@ -123,10 +128,10 @@ public class MySQLAnnotator implements VariantAnnotator {
                     .where(TRANSCRIPT.GENE_ID.eq(gene_id))
                     .fetch();
 
-            for (final Record t : transcripts) {
-                final UInteger transcript_id = t.get(TRANSCRIPT.TRANSCRIPT_ID);
+            for (final Record transcript : transcripts) {
+                final UInteger transcript_id = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
                 final boolean canonical = transcript_id.equals(canonical_transcript_id);
-                final String transcript_stable_id = t.get(TRANSCRIPT.STABLE_ID);
+                final String transcript_stable_id = transcript.get(TRANSCRIPT.STABLE_ID);
 
                 final Record exonLeft = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE)
                         .from(EXON_TRANSCRIPT)
@@ -162,13 +167,13 @@ public class MySQLAnnotator implements VariantAnnotator {
                 final int exon_downstream_phase;
 
                 if (gene_strand > 0) {
-                    // forward strand
+                    // NERA: forward strand
                     exon_upstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
                     exon_upstream_phase = exonLeft == null ? -1 : exonLeft.get(EXON.END_PHASE);
                     exon_downstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
                     exon_downstream_phase = exonRight == null ? -1 : exonRight.get(EXON.PHASE);
                 } else {
-                    // reverse strand
+                    // NERA: reverse strand
                     exon_downstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
                     exon_downstream_phase = exonLeft == null ? -1 : exonLeft.get(EXON.PHASE);
                     exon_upstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
@@ -176,17 +181,21 @@ public class MySQLAnnotator implements VariantAnnotator {
                 }
 
                 if (exon_upstream > 0 && exon_downstream == 0) {
-                    // past the last exon
+                    // NERA: past the last exon
                     continue;
                 }
 
-                final Transcript transcript =
-                        new Transcript(geneAnnotation, transcript_stable_id, exon_upstream, exon_upstream_phase, exon_downstream,
-                                exon_downstream_phase, exon_max, canonical);
-                geneAnnotation.addTranscript(transcript);
+                geneAnnotation.addTranscript(new Transcript(geneAnnotation,
+                        transcript_stable_id,
+                        exon_upstream,
+                        exon_upstream_phase,
+                        exon_downstream,
+                        exon_downstream_phase,
+                        exon_max,
+                        canonical));
             }
 
-            if (!geneAnnotation.getTranscripts().isEmpty()) {
+            if (!geneAnnotation.transcripts().isEmpty()) {
                 result.add(geneAnnotation);
             }
         }

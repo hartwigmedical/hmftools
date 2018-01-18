@@ -45,17 +45,17 @@ public abstract class GeneFusionData {
         final Transcript downstream = fusion.downstreamLinkedAnnotation();
 
         return ImmutableGeneFusionData.builder()
-                .type(upstream.getVariant().type().toString())
-                .start(positionString(upstream.getGeneAnnotation()))
-                .geneStart(upstream.getGeneName())
+                .type(upstream.variant().type().toString())
+                .start(positionString(upstream.geneAnnotation()))
+                .geneStart(upstream.geneName())
                 .geneContextStart(exonDescription(upstream, true))
-                .transcriptStart(upstream.getTranscriptId())
-                .end(positionString(downstream.getGeneAnnotation()))
-                .geneEnd(downstream.getGeneName())
+                .transcriptStart(upstream.transcriptId())
+                .end(positionString(downstream.geneAnnotation()))
+                .geneEnd(downstream.geneName())
                 .geneContextEnd(exonDescription(downstream, false))
-                .transcriptEnd(downstream.getTranscriptId())
-                .vaf(formatNullablePercent(alleleFrequency(upstream.getGeneAnnotation())) + " " + formatNullablePercent(
-                        alleleFrequency(downstream.getGeneAnnotation())))
+                .transcriptEnd(downstream.transcriptId())
+                .vaf(formatNullablePercent(alleleFrequency(upstream.geneAnnotation())) + " " + formatNullablePercent(alleleFrequency(
+                        downstream.geneAnnotation())))
                 .cosmicURL(fusion.cosmicURL())
                 .build();
 
