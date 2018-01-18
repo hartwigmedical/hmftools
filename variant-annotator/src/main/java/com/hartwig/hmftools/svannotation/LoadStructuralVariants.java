@@ -53,19 +53,44 @@ public class LoadStructuralVariants {
     public static void main(@NotNull final String[] args) throws ParseException, IOException, HartwigException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
-        final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
-        final StructuralVariantFactory factory = new StructuralVariantFactory();
-        final String tumorSample = cmd.getOptionValue(SAMPLE);
 
         LOGGER.info("Reading VCF File");
+        final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
+
+        LOGGER.info("Analyzing structural variants for impact via disruptions and fusions...");
+        final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
+        final COSMICGeneFusionModel cosmicGeneFusions = COSMICGeneFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
+
+        final StructuralVariantAnalyzer analyzer =
+                new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfGeneList(), cosmicGeneFusions);
+        final StructuralVariantAnalysis analysis = analyzer.run(variants);
+
+        LOGGER.info("Enriching and persisting structural variants to database");
+        final String tumorSample = cmd.getOptionValue(SAMPLE);
+        dbAccess.writeStructuralVariants(tumorSample, enrichStructuralVariants(variants, dbAccess, tumorSample));
+
+        LOGGER.info("Persisting annotations to database...");
+        final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
+        annotationDAO.write(analysis);
+
+        LOGGER.info("Complete");
+    }
+
+    @NotNull
+    private static List<StructuralVariant> readFromVcf(@NotNull String vcfFileLocation) throws IOException {
+        final StructuralVariantFactory factory = new StructuralVariantFactory();
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcfFileLocation,
                 new VCFCodec(),
                 false)) {
             reader.iterator().forEach(factory::addVariantContext);
         }
+        return factory.results();
+    }
 
-        LOGGER.info("Querying purple database");
+    @NotNull
+    private static List<EnrichedStructuralVariant> enrichStructuralVariants(@NotNull List<StructuralVariant> variants,
+            @NotNull DatabaseAccess dbAccess, @NotNull String tumorSample) {
         final PurityContext purityContext = dbAccess.readPurityContext(tumorSample);
 
         if (purityContext == null) {
@@ -78,28 +103,7 @@ public class LoadStructuralVariants {
 
         final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(tumorSample);
         final Multimap<String, PurpleCopyNumber> copyNumbers = Multimaps.index(copyNumberList, PurpleCopyNumber::chromosome);
-        List<EnrichedStructuralVariant> enriched = EnrichedStructuralVariantFactory.enrich(factory.results(), purityAdjuster, copyNumbers);
-
-        LOGGER.info("Persisting variants to database");
-        dbAccess.writeStructuralVariants(tumorSample, enriched);
-
-        LOGGER.info("Reading back...");
-        final List<StructuralVariant> structuralVariantList = dbAccess.readStructuralVariants(tumorSample);
-
-        final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
-        final COSMICGeneFusionModel cosmicGeneFusions = COSMICGeneFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
-
-        LOGGER.info("Annotating...");
-        final StructuralVariantAnalyzer analyzer =
-                new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfGeneList(), cosmicGeneFusions);
-        final StructuralVariantAnalysis analysis = analyzer.run(structuralVariantList);
-
-        final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
-
-        LOGGER.info("Persisting annotations to database...");
-        annotationDAO.write(analysis);
-
-        LOGGER.info("Complete");
+        return EnrichedStructuralVariantFactory.enrich(variants, purityAdjuster, copyNumbers);
     }
 
     @NotNull
