@@ -12,12 +12,14 @@ import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloi
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class EnrichedStructuralVariantFactory {
+public final class EnrichedStructuralVariantFactory {
+
+    private EnrichedStructuralVariantFactory() {
+    }
 
     @NotNull
     public static List<EnrichedStructuralVariant> enrich(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final List<StructuralVariant> variants) {
-
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
@@ -32,7 +34,7 @@ public class EnrichedStructuralVariantFactory {
 
             final List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
             if (!ploidies.isEmpty()) {
-                double roundedPloidy = round(ploidies.get(0).averageImpliedPloidy());
+                Double roundedPloidy = round(ploidies.get(0).averageImpliedPloidy());
                 builder.ploidy(roundedPloidy);
             }
 
@@ -50,7 +52,6 @@ public class EnrichedStructuralVariantFactory {
             }
 
             result.add(builder.start(startBuilder.build()).end(endBuilder.build()).build());
-
         }
 
         return result;
@@ -69,7 +70,6 @@ public class EnrichedStructuralVariantFactory {
 
     @Nullable
     private static Double adjustedCopyNumber(@NotNull final StructuralVariantLegPloidy ploidy) {
-
         if (ploidy.orientation() == 1) {
             return ploidy.leftCopyNumber().orElse(null);
         } else {
@@ -79,7 +79,6 @@ public class EnrichedStructuralVariantFactory {
 
     @Nullable
     private static Double adjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
-
         if (ploidy.leftCopyNumber().isPresent() && ploidy.rightCopyNumber().isPresent()) {
             return ploidy.orientation() == 1
                     ? ploidy.leftCopyNumber().get() - ploidy.rightCopyNumber().get()
@@ -88,5 +87,4 @@ public class EnrichedStructuralVariantFactory {
 
         return null;
     }
-
 }
