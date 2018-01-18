@@ -18,8 +18,8 @@ public final class EnrichedStructuralVariantFactory {
     }
 
     @NotNull
-    public static List<EnrichedStructuralVariant> enrich(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final List<StructuralVariant> variants) {
+    public static List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants,
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers) {
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 

@@ -78,7 +78,7 @@ public class LoadStructuralVariants {
 
         final List<PurpleCopyNumber> copyNumberList = dbAccess.readCopynumbers(tumorSample);
         final Multimap<String, PurpleCopyNumber> copyNumbers = Multimaps.index(copyNumberList, PurpleCopyNumber::chromosome);
-        List<EnrichedStructuralVariant> enriched = EnrichedStructuralVariantFactory.enrich(purityAdjuster, copyNumbers, factory.results());
+        List<EnrichedStructuralVariant> enriched = EnrichedStructuralVariantFactory.enrich(factory.results(), purityAdjuster, copyNumbers);
 
         LOGGER.info("Persisting variants to database");
         dbAccess.writeStructuralVariants(tumorSample, enriched);
