@@ -42,7 +42,6 @@ class StructuralVariantDAO {
         final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
-
             final StructuralVariantLeg start = ImmutableStructuralVariantLegImpl.builder()
                     .chromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .position(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
@@ -84,37 +83,65 @@ class StructuralVariantDAO {
                 .where(STRUCTURALVARIANT.SAMPLEID.eq(sample))
                 .fetch();
 
-        // delete annotations
+        // NERA: delete annotations
         context.delete(STRUCTURALVARIANTDISRUPTION).where(STRUCTURALVARIANTDISRUPTION.BREAKENDID.in(breakendsToDelete)).execute();
         context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID.in(breakendsToDelete)).execute();
         context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.ID.in(breakendsToDelete)).execute();
 
-        // delete structural variants
+        // NERA: delete structural variants
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
 
         for (List<EnrichedStructuralVariant> batch : Iterables.partition(regions, BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter =
-                    context.insertInto(STRUCTURALVARIANT, STRUCTURALVARIANT.SAMPLEID, STRUCTURALVARIANT.STARTCHROMOSOME,
-                            STRUCTURALVARIANT.ENDCHROMOSOME, STRUCTURALVARIANT.STARTPOSITION, STRUCTURALVARIANT.ENDPOSITION,
-                            STRUCTURALVARIANT.STARTORIENTATION, STRUCTURALVARIANT.ENDORIENTATION, STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE,
-                            STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE, STRUCTURALVARIANT.INSERTSEQUENCE, STRUCTURALVARIANT.TYPE,
-                            STRUCTURALVARIANT.STARTAF, STRUCTURALVARIANT.ADJUSTEDSTARTAF, STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER,
-                            STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE, STRUCTURALVARIANT.ENDAF, STRUCTURALVARIANT.ADJUSTEDENDAF,
-                            STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER, STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
-                            STRUCTURALVARIANT.PLOIDY, STRUCTURALVARIANT.MODIFIED);
-            batch.forEach(x -> addRecord(timestamp, inserter, sample, x));
+            InsertValuesStep21 inserter = context.insertInto(STRUCTURALVARIANT,
+                    STRUCTURALVARIANT.SAMPLEID,
+                    STRUCTURALVARIANT.STARTCHROMOSOME,
+                    STRUCTURALVARIANT.ENDCHROMOSOME,
+                    STRUCTURALVARIANT.STARTPOSITION,
+                    STRUCTURALVARIANT.ENDPOSITION,
+                    STRUCTURALVARIANT.STARTORIENTATION,
+                    STRUCTURALVARIANT.ENDORIENTATION,
+                    STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE,
+                    STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE,
+                    STRUCTURALVARIANT.INSERTSEQUENCE,
+                    STRUCTURALVARIANT.TYPE,
+                    STRUCTURALVARIANT.STARTAF,
+                    STRUCTURALVARIANT.ADJUSTEDSTARTAF,
+                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER,
+                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE,
+                    STRUCTURALVARIANT.ENDAF,
+                    STRUCTURALVARIANT.ADJUSTEDENDAF,
+                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER,
+                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
+                    STRUCTURALVARIANT.PLOIDY,
+                    STRUCTURALVARIANT.MODIFIED);
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
         }
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
-            @NotNull EnrichedStructuralVariant region) {
+            @NotNull EnrichedStructuralVariant variant) {
         //noinspection unchecked
-        inserter.values(sample, region.start().chromosome(), region.end().chromosome(), region.start().position(), region.end().position(),
-                region.start().orientation(), region.end().orientation(), region.start().homology(), region.end().homology(),
-                region.insertSequence(), region.type(), region.start().alleleFrequency(), region.start().adjustedAlleleFrequency(),
-                region.start().adjustedCopyNumber(), region.start().adjustedCopyNumberChange(), region.end().alleleFrequency(),
-                region.end().adjustedAlleleFrequency(), region.end().adjustedCopyNumber(), region.end().adjustedCopyNumberChange(),
-                region.ploidy(), timestamp);
+        inserter.values(sample,
+                variant.start().chromosome(),
+                variant.end().chromosome(),
+                variant.start().position(),
+                variant.end().position(),
+                variant.start().orientation(),
+                variant.end().orientation(),
+                variant.start().homology(),
+                variant.end().homology(),
+                variant.insertSequence(),
+                variant.type(),
+                variant.start().alleleFrequency(),
+                variant.start().adjustedAlleleFrequency(),
+                variant.start().adjustedCopyNumber(),
+                variant.start().adjustedCopyNumberChange(),
+                variant.end().alleleFrequency(),
+                variant.end().adjustedAlleleFrequency(),
+                variant.end().adjustedCopyNumber(),
+                variant.end().adjustedCopyNumberChange(),
+                variant.ploidy(),
+                timestamp);
     }
 }

@@ -55,10 +55,22 @@ class ClinicalDAO {
         if (patientRecord != null) {
             return patientRecord.getValue(PATIENT.ID);
         } else {
-            final int patientId = context.insertInto(PATIENT, PATIENT.CPCTID, PATIENT.REGISTRATIONDATE, PATIENT.GENDER, PATIENT.HOSPITAL,
-                    PATIENT.BIRTHYEAR, PATIENT.CANCERTYPE, PATIENT.CANCERSUBTYPE, PATIENT.DEATHDATE)
-                    .values(patient.cpctId(), Utils.toSQLDate(patient.registrationDate()), patient.gender(), patient.hospital(),
-                            patient.birthYear(), patient.primaryTumorLocation().category(), patient.primaryTumorLocation().subcategory(),
+            final int patientId = context.insertInto(PATIENT,
+                    PATIENT.CPCTID,
+                    PATIENT.REGISTRATIONDATE,
+                    PATIENT.GENDER,
+                    PATIENT.HOSPITAL,
+                    PATIENT.BIRTHYEAR,
+                    PATIENT.CANCERTYPE,
+                    PATIENT.CANCERSUBTYPE,
+                    PATIENT.DEATHDATE)
+                    .values(patient.cpctId(),
+                            Utils.toSQLDate(patient.registrationDate()),
+                            patient.gender(),
+                            patient.hospital(),
+                            patient.birthYear(),
+                            patient.primaryTumorLocation().category(),
+                            patient.primaryTumorLocation().subcategory(),
                             Utils.toSQLDate(patient.deathDate()))
                     .returning(PATIENT.ID)
                     .fetchOne()
@@ -85,24 +97,41 @@ class ClinicalDAO {
     }
 
     private void writeBiopsyData(final int patientId, @NotNull final BiopsyData biopsy) {
-        context.insertInto(BIOPSY, BIOPSY.ID, BIOPSY.SAMPLEID, BIOPSY.PATIENTID, BIOPSY.BIOPSYTAKEN, BIOPSY.BIOPSYSITE,
-                BIOPSY.BIOPSYLOCATION, BIOPSY.BIOPSYDATE)
-                .values(biopsy.id(), biopsy.sampleId(), patientId, biopsy.biopsyTaken(), biopsy.site(), biopsy.location(),
+        context.insertInto(BIOPSY,
+                BIOPSY.ID,
+                BIOPSY.SAMPLEID,
+                BIOPSY.PATIENTID,
+                BIOPSY.BIOPSYTAKEN,
+                BIOPSY.BIOPSYSITE,
+                BIOPSY.BIOPSYLOCATION,
+                BIOPSY.BIOPSYDATE).values(biopsy.id(), biopsy.sampleId(), patientId, biopsy.biopsyTaken(), biopsy.site(), biopsy.location(),
                         Utils.toSQLDate(biopsy.date()))
                 .execute();
         writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus().stateString(), Boolean.toString(biopsy.formLocked()));
     }
 
     private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatment) {
-        context.insertInto(TREATMENT, TREATMENT.ID, TREATMENT.BIOPSYID, TREATMENT.PATIENTID, TREATMENT.TREATMENTGIVEN, TREATMENT.STARTDATE,
-                TREATMENT.ENDDATE, TREATMENT.NAME, TREATMENT.TYPE)
-                .values(treatment.id(), treatment.biopsyId(), patientId, treatment.treatmentGiven(), Utils.toSQLDate(treatment.startDate()),
-                        Utils.toSQLDate(treatment.endDate()), treatment.treatmentName(), treatment.type())
+        context.insertInto(TREATMENT,
+                TREATMENT.ID,
+                TREATMENT.BIOPSYID,
+                TREATMENT.PATIENTID,
+                TREATMENT.TREATMENTGIVEN,
+                TREATMENT.STARTDATE,
+                TREATMENT.ENDDATE,
+                TREATMENT.NAME,
+                TREATMENT.TYPE)
+                .values(treatment.id(),
+                        treatment.biopsyId(),
+                        patientId,
+                        treatment.treatmentGiven(),
+                        Utils.toSQLDate(treatment.startDate()),
+                        Utils.toSQLDate(treatment.endDate()),
+                        treatment.treatmentName(),
+                        treatment.type())
                 .execute();
         writeFormStatus(treatment.id(), TREATMENT.getName(), "treatment", treatment.formStatus().stateString(),
                 Boolean.toString(treatment.formLocked()));
-        treatment.drugs()
-                .forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus().stateString(),
+        treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus().stateString(),
                         Boolean.toString(treatment.formLocked())));
     }
 
@@ -110,8 +139,12 @@ class ClinicalDAO {
             @NotNull final String formStatus, @NotNull final String formLocked) {
         drug.filteredCuratedTreatments().forEach(curatedTreatment -> {
             final int id = context.insertInto(DRUG, DRUG.TREATMENTID, DRUG.PATIENTID, DRUG.STARTDATE, DRUG.ENDDATE, DRUG.NAME, DRUG.TYPE)
-                    .values(treatmentId, patientId, Utils.toSQLDate(drug.startDate()), Utils.toSQLDate(drug.endDate()),
-                            curatedTreatment.name(), curatedTreatment.type())
+                    .values(treatmentId,
+                            patientId,
+                            Utils.toSQLDate(drug.startDate()),
+                            Utils.toSQLDate(drug.endDate()),
+                            curatedTreatment.name(),
+                            curatedTreatment.type())
                     .returning(DRUG.ID)
                     .fetchOne()
                     .getValue(DRUG.ID);
@@ -120,8 +153,12 @@ class ClinicalDAO {
     }
 
     private void writeTreatmentResponseData(final int patientId, @NotNull final BiopsyTreatmentResponseData treatmentResponse) {
-        final int id = context.insertInto(TREATMENTRESPONSE, TREATMENTRESPONSE.TREATMENTID, TREATMENTRESPONSE.PATIENTID,
-                TREATMENTRESPONSE.RESPONSEDATE, TREATMENTRESPONSE.RESPONSE, TREATMENTRESPONSE.MEASUREMENTDONE)
+        final int id = context.insertInto(TREATMENTRESPONSE,
+                TREATMENTRESPONSE.TREATMENTID,
+                TREATMENTRESPONSE.PATIENTID,
+                TREATMENTRESPONSE.RESPONSEDATE,
+                TREATMENTRESPONSE.RESPONSE,
+                TREATMENTRESPONSE.MEASUREMENTDONE)
                 .values(treatmentResponse.treatmentId(), patientId, Utils.toSQLDate(treatmentResponse.date()), treatmentResponse.response(),
                         treatmentResponse.measurementDone())
                 .returning(TREATMENTRESPONSE.ID)

@@ -78,8 +78,10 @@ public class DatabaseAccess {
 
     @Nullable
     private Settings settings(final String catalog) {
-        return !catalog.equals(DEV_CATALOG) ? new Settings().withRenderMapping(
-                new RenderMapping().withSchemata(new MappedSchema().withInput("hmfpatients").withOutput(catalog))) : null;
+        return !catalog.equals(DEV_CATALOG)
+                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput("hmfpatients")
+                .withOutput(catalog)))
+                : null;
     }
 
     public void writePurity(@NotNull final String sampleId, @NotNull final PurityContext context, @NotNull final PurpleQC checks) {
