@@ -89,8 +89,7 @@ public class PDFWriterTest {
                 copyNumbers,
                 361,
                 "58%",
-                alterations,
-                Resources.getResource("circos" + File.separator + "circos_example.jpeg").getPath(),
+                alterations, Resources.getResource("circos" + File.separator + "circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
