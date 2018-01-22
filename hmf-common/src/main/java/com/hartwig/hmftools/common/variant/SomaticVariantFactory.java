@@ -88,22 +88,24 @@ public class SomaticVariantFactory {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {
                 final AlleleFrequencyData frequencyData = VariantFactoryFunctions.determineAlleleFrequencies(genotype);
-                SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
-                        .annotations(Collections.emptyList())
-                        .position(context.getStart())
-                        .ref(context.getReference().getBaseString())
-                        .alt(alt(context))
-                        .alleleReadCount(frequencyData.alleleReadCount())
-                        .totalReadCount(frequencyData.totalReadCount())
-                        .totalReadCount(frequencyData.totalReadCount())
-                        .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
+                if (frequencyData.totalReadCount() > 0) {
+                    SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
+                            .annotations(Collections.emptyList())
+                            .position(context.getStart())
+                            .ref(context.getReference().getBaseString())
+                            .alt(alt(context))
+                            .alleleReadCount(frequencyData.alleleReadCount())
+                            .totalReadCount(frequencyData.totalReadCount())
+                            .totalReadCount(frequencyData.totalReadCount())
+                            .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
-                attachCallers(builder, context);
-                attachAnnotations(builder, context);
-                attachFilter(builder, context);
-                attachID(builder, context);
-                attachType(builder, context);
-                return Optional.of(builder.build());
+                    attachCallers(builder, context);
+                    attachAnnotations(builder, context);
+                    attachFilter(builder, context);
+                    attachID(builder, context);
+                    attachType(builder, context);
+                    return Optional.of(builder.build());
+                }
             }
         }
         return Optional.empty();

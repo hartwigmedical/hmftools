@@ -52,6 +52,11 @@ public class SomaticVariantFactoryTest {
         assertEquals(3, variants.size());
     }
 
+    @Test
+    public void ignoreZeroReadCount() {
+        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=varscan-freebayes;\tGT:AD:DP\t0/1:0,0:121";
+        assertFalse(victim.createVariant(SAMPLE, codec.decode(line)).isPresent());
+    }
 
     @Test
     public void canReadAndWriteCorrectSomaticVariant() {
