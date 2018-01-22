@@ -43,11 +43,11 @@ public final class PatientReporterTestUtil {
         final String cosmicPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_slice.csv";
         final String fusionPath = Resources.getResource("csv").getPath() + File.separator + "cosmic_gene_fusions.csv";
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfGeneMap());
+        final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
+        final CosmicFusionModel cosmicFusionModel = CosmicFusions.readFromCSV(fusionPath);
         final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
-        final CosmicGeneModel cosmicGeneModel = CosmicGenes.buildModelFromCsv(cosmicPath);
-        final CosmicFusionModel fusionModel = CosmicFusions.readFromCSV(fusionPath);
         final MSIAnalyzer msiAnalyzer = testMSIAnalyzer();
-        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, drupFilter, fusionModel, msiAnalyzer);
+        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, cosmicFusionModel, drupFilter, msiAnalyzer);
     }
 
     @NotNull

@@ -59,12 +59,10 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
 
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
-    private static final String COSMIC_CSV = "cosmic_csv";
+    private static final String COSMIC_GENE_CSV = "cosmic_gene_csv";
+    private static final String COSMIC_FUSION_CSV = "fusion_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
-    private static final String FUSION_CSV = "fusion_csv";
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
-    private static final String COMMENTS = "comments";
-
     private static final String CENTER_CSV = "center_csv";
 
     private static final String SIGNATURE = "signature";
@@ -122,8 +120,10 @@ public class PatientReporterApplication {
 
     @NotNull
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV),
-                cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(FASTA_FILE_LOCATION));
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV),
+                cmd.getOptionValue(COSMIC_GENE_CSV),
+                cmd.getOptionValue(COSMIC_FUSION_CSV),
+                cmd.getOptionValue(FASTA_FILE_LOCATION));
     }
 
     @NotNull
@@ -140,24 +140,18 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
         final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(annotator, reporterData.geneModel().hmfRegions(), reporterData.fusionModel());
+                new StructuralVariantAnalyzer(annotator, reporterData.geneModel().hmfRegions(), reporterData.cosmicFusionModel());
 
         return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer);
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
-        final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
-        final String cosmicCsv = cmd.getOptionValue(COSMIC_CSV);
         final String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String fusionCsv = cmd.getOptionValue(FUSION_CSV);
+        final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
+        final String cosmicGeneCsv = cmd.getOptionValue(COSMIC_GENE_CSV);
+        final String cosmicFusionCsv = cmd.getOptionValue(COSMIC_FUSION_CSV);
 
-        if (drupGenesCsv == null || !exists(drupGenesCsv)) {
-            LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
-        } else if (cosmicCsv == null || !exists(cosmicCsv)) {
-            LOGGER.warn(COSMIC_CSV + " has to be an existing file: " + cosmicCsv);
-        } else if (fusionCsv == null || !exists(fusionCsv)) {
-            LOGGER.warn(FUSION_CSV + " has to be an existing file: " + fusionCsv);
-        } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
+        if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
         } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
@@ -238,11 +232,11 @@ public class PatientReporterApplication {
         options.addOption(NOT_SEQUENCEABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
         options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(COSMIC_CSV, true, "Path towards a CSV containing COSMIC census data.");
+        options.addOption(COSMIC_GENE_CSV, true, "Path towards a CSV containing COSMIC census data.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
-        options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
+        options.addOption(COSMIC_FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
