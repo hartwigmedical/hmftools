@@ -174,7 +174,9 @@ public abstract class PatientReporter {
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(svVcfPath.toString());
         LOGGER.info(" Analysing structural variants...");
         final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer().run(structuralVariants);
+        LOGGER.info(" Analysing microsatellite status...");
         final double indelsPerMb = reporterData().microsatelliteAnalyzer().analyzeVariants(variants);
+        LOGGER.info(" Microsatellite analysis results: " + indelsPerMb + " indels per MB");
         return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, svAnalysis, indelsPerMb);
     }
 }
