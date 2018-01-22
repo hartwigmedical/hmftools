@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.exception.HartwigException;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,15 +55,15 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void ignoreZeroReadCount() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=varscan-freebayes;\tGT:AD:DP\t0/1:0,0:121";
+        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:121";
         assertFalse(victim.createVariant(SAMPLE, codec.decode(line)).isPresent());
     }
 
     @Test
-    public void canReadAndWriteCorrectSomaticVariant() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=varscan-freebayes;\tGT:AD:DP\t0/1:60,60:121";
+    public void canReadCorrectSomaticVariant() {
+        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
 
-        final SomaticVariant variant = victim.createVariant(SAMPLE, codec.decode(line)).get();
+        final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("15", variant.chromosome());
         assertEquals(12345678, variant.position());
         assertEquals(VariantType.SNP, variant.type());
@@ -72,60 +73,50 @@ public class SomaticVariantFactoryTest {
         assertEquals("C", variant.ref());
         assertEquals("A,G", variant.alt());
 
-        assertEquals(2, variant.callerCount());
-        assertTrue(variant.callers().contains(SomaticVariantConstants.FREEBAYES));
-        assertTrue(variant.callers().contains(SomaticVariantConstants.VARSCAN));
-        assertFalse(variant.callers().contains(SomaticVariantConstants.STRELKA));
-        assertFalse(variant.callers().contains(SomaticVariantConstants.MUTECT));
-
         assertEquals(0.5, variant.alleleFrequency(), EPSILON);
         assertEquals(120, variant.totalReadCount(), EPSILON);
     }
 
     @Test
     public void incorrectSampleFieldYieldsMissingReadCounts() {
-        final String missingAFLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=varscan-freebayes;\tGT:DP\t0/1:21";
+        final String missingAFLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:DP\t0/1:21";
 
         final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(missingAFLine));
         assertFalse(missingAFVariant.isPresent());
 
-        final String missingRefCovLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=varscan-freebayes;\tGT:AD:DP\t0/1:60:121";
+        final String missingRefCovLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60:121";
         final Optional<SomaticVariant> missingRefCovVariant = victim.createVariant(SAMPLE, codec.decode(missingRefCovLine));
         assertFalse(missingRefCovVariant.isPresent());
     }
 
     @Test
-    public void recognizeFilterInVarscan() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tset=freebayes-filterInVarscan;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant variant = victim.createVariant(SAMPLE, codec.decode(line)).get();
-
-        assertEquals(1, variant.callerCount());
-        assertFalse(variant.callers().contains(SomaticVariantConstants.VARSCAN));
-    }
-
-    @Test
     public void correctDBSNPAndCOSMIC() {
-        final String both = "15\t12345678\trs1;COSM2\tC\tA,G\t2\tPASS\tset=freebayes-filterInVarscan;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasBoth = victim.createVariant(SAMPLE, codec.decode(both)).get();
+        final String both = "15\t12345678\trs1;COSM2\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
+        final SomaticVariant hasBoth = assertedGet(victim.createVariant(SAMPLE, codec.decode(both)));
         assertTrue(hasBoth.isDBSNP());
         assertTrue(hasBoth.isCOSMIC());
         assertEquals("COSM2", hasBoth.cosmicID());
 
-        final String dbsnpOnly = "15\t12345678\trs1\tC\tA,G\t2\tPASS\tset=freebayes-filterInVarscan;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasDBSNPOnly = victim.createVariant(SAMPLE, codec.decode(dbsnpOnly)).get();
+        final String dbsnpOnly = "15\t12345678\trs1\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
+        final SomaticVariant hasDBSNPOnly = assertedGet(victim.createVariant(SAMPLE, codec.decode(dbsnpOnly)));
         assertTrue(hasDBSNPOnly.isDBSNP());
         assertFalse(hasDBSNPOnly.isCOSMIC());
 
-        final String cosmicOnly = "15\t12345678\tCOSM2\tC\tA,G\t2\tPASS\tset=freebayes-filterInVarscan;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasCOSMICOnly = victim.createVariant(SAMPLE, codec.decode(cosmicOnly)).get();
+        final String cosmicOnly = "15\t12345678\tCOSM2\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
+        final SomaticVariant hasCOSMICOnly = assertedGet(victim.createVariant(SAMPLE, codec.decode(cosmicOnly)));
         assertFalse(hasCOSMICOnly.isDBSNP());
         assertTrue(hasCOSMICOnly.isCOSMIC());
         assertEquals("COSM2", hasCOSMICOnly.cosmicID());
 
-        final String none = "15\t12345678\tID\tC\tA,G\t2\tPASS\tset=freebayes-filterInVarscan;\tGT:AD:DP\t0/1:60,60:121";
-        final SomaticVariant hasNone = victim.createVariant(SAMPLE, codec.decode(none)).get();
+        final String none = "15\t12345678\tID\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
+        final SomaticVariant hasNone = assertedGet(victim.createVariant(SAMPLE, codec.decode(none)));
         assertFalse(hasNone.isDBSNP());
         assertFalse(hasNone.isCOSMIC());
     }
 
+    @NotNull
+    private static SomaticVariant assertedGet(@NotNull Optional<SomaticVariant> variant) {
+        assert variant.isPresent();
+        return variant.get();
+    }
 }

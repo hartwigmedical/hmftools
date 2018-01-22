@@ -20,38 +20,12 @@ final class VariantAnnotationFactory {
     private static final Logger LOGGER = LogManager.getLogger(VariantAnnotationFactory.class);
 
     private static final String ANNOTATIONS_IDENTIFIER = "ANN";
-    private static final String START_IDENTIFIER = "ANN=";
-    private static final String END_IDENTIFIER = ";";
-    private static final String ANNOTATION_SEPARATOR = ",";
     private static final String FIELD_SEPARATOR = "\\|";
     private static final String CONSEQUENCE_SEPARATOR = "&";
 
     private static final int EXPECTED_FIELD_SIZE_PER_ANNOTATION = 16;
 
     private VariantAnnotationFactory() {
-    }
-
-    @NotNull
-    @Deprecated
-    static List<VariantAnnotation> fromVCFInfoField(@NotNull final String info) {
-        final List<VariantAnnotation> annotations = Lists.newArrayList();
-        final int startIndex = info.indexOf(START_IDENTIFIER);
-        if (startIndex >= 0) {
-            String fullAnnotationString = info.substring(startIndex + START_IDENTIFIER.length());
-            final int endIndex = fullAnnotationString.indexOf(END_IDENTIFIER);
-            if (endIndex >= 0) {
-                fullAnnotationString = fullAnnotationString.substring(0, endIndex);
-            }
-            for (final String annotationString : fullAnnotationString.split(ANNOTATION_SEPARATOR)) {
-                final String[] parts = enforceMinLength(annotationString.split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION);
-                if (parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION) {
-                    annotations.add(fromParts(parts));
-                } else {
-                    LOGGER.warn("Annotation found with invalid field count: " + annotationString);
-                }
-            }
-        }
-        return annotations;
     }
 
     @NotNull

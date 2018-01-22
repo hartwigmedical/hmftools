@@ -96,12 +96,6 @@ public class PassFilterPredicateTest {
             return Lists.newArrayList();
         }
 
-        @NotNull
-        @Override
-        public List<String> callers() {
-            return Lists.newArrayList();
-        }
-
         @Override
         public double mappability() {
             return 0;

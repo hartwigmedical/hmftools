@@ -30,9 +30,6 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     List<VariantAnnotation> annotations();
 
-    @NotNull
-    List<String> callers();
-
     double mappability();
 
     default boolean isDBSNP() {
@@ -50,9 +47,5 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
             }
         }
         return false;
-    }
-
-    default long callerCount() {
-        return callers().size();
     }
 }
