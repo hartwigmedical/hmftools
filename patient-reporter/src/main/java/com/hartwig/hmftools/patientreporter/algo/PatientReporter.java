@@ -179,7 +179,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Analysing structural variants...");
         final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer().run(structuralVariants);
 
-        return new GenomeAnalysis(sample, variantAnalysis, purpleAnalysis, svAnalysis);
+        return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, svAnalysis);
     }
 
     private double MSIAnalysis(@NotNull final List<SomaticVariant> variants, @NotNull final IndexedFastaSequenceFile reference) {
