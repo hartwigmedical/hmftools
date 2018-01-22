@@ -76,7 +76,7 @@ public class CoverageChecker extends ErrorHandlingChecker implements HealthCheck
     }
 
     @NotNull
-    private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
+    private static BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
         HealthCheck.log(LOGGER, checks);
 
         return new MultiValueResult(CheckType.COVERAGE, checks);
