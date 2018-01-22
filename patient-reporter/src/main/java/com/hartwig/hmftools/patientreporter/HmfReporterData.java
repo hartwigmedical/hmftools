@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.patientreporter.algo.MSIAnalyzer;
+import com.hartwig.hmftools.patientreporter.algo.MicrosatelliteAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.immutables.value.Value;
@@ -28,5 +28,5 @@ public abstract class HmfReporterData {
     public abstract DrupFilter drupFilter();
 
     @NotNull
-    public abstract MSIAnalyzer msiAnalyzer();
+    public abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
 }

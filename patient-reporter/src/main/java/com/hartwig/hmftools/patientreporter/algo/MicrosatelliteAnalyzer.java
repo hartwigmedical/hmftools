@@ -17,14 +17,14 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class },
              allParameters = true)
-public abstract class MSIAnalyzer {
+public abstract class MicrosatelliteAnalyzer {
 
     @NotNull
     public abstract IndexedFastaSequenceFile reference();
 
     @NotNull
-    public static MSIAnalyzer of(@NotNull final String fastaFileLocation) throws FileNotFoundException {
-        return ImmutableMSIAnalyzer.of(new IndexedFastaSequenceFile(new File(fastaFileLocation)));
+    public static MicrosatelliteAnalyzer of(@NotNull final String fastaFileLocation) throws FileNotFoundException {
+        return ImmutableMicrosatelliteAnalyzer.of(new IndexedFastaSequenceFile(new File(fastaFileLocation)));
     }
 
     public double analyzeVariants(@NotNull final List<SomaticVariant> variants) throws FileNotFoundException {

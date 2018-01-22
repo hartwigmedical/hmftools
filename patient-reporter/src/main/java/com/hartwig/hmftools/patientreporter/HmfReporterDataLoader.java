@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
-import com.hartwig.hmftools.patientreporter.algo.ImmutableMSIAnalyzer;
-import com.hartwig.hmftools.patientreporter.algo.MSIAnalyzer;
+import com.hartwig.hmftools.patientreporter.algo.ImmutableMicrosatelliteAnalyzer;
+import com.hartwig.hmftools.patientreporter.algo.MicrosatelliteAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ final class HmfReporterDataLoader {
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicGeneFile);
         final CosmicFusionModel cosmicFusionModel = CosmicFusions.readFromCSV(cosmicFusionFile);
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
-        final MSIAnalyzer msiAnalyzer = ImmutableMSIAnalyzer.of(fastaFileLocation);
-        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, cosmicFusionModel, drupFilter, msiAnalyzer);
+        final MicrosatelliteAnalyzer microsatelliteAnalyzer = ImmutableMicrosatelliteAnalyzer.of(fastaFileLocation);
+        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, cosmicFusionModel, drupFilter, microsatelliteAnalyzer);
     }
 }

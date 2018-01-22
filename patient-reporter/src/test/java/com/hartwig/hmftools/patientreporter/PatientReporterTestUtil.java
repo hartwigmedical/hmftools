@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
-import com.hartwig.hmftools.patientreporter.algo.MSIAnalyzer;
+import com.hartwig.hmftools.patientreporter.algo.MicrosatelliteAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.jetbrains.annotations.NotNull;
@@ -46,13 +46,13 @@ public final class PatientReporterTestUtil {
         final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicPath);
         final CosmicFusionModel cosmicFusionModel = CosmicFusions.readFromCSV(fusionPath);
         final DrupFilter drupFilter = new DrupFilter(drupFilterPath);
-        final MSIAnalyzer msiAnalyzer = testMSIAnalyzer();
-        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, cosmicFusionModel, drupFilter, msiAnalyzer);
+        final MicrosatelliteAnalyzer microsatelliteAnalyzer = testMicrosatelliteAnalyzer();
+        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, cosmicFusionModel, drupFilter, microsatelliteAnalyzer);
     }
 
     @NotNull
-    private static MSIAnalyzer testMSIAnalyzer() throws FileNotFoundException {
-        return new MSIAnalyzer() {
+    private static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() throws FileNotFoundException {
+        return new MicrosatelliteAnalyzer() {
             @Override
             @Nullable
             public IndexedFastaSequenceFile reference() {
