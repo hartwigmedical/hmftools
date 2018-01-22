@@ -57,6 +57,7 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE = "not_sequenceable";
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
+
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
@@ -65,7 +66,9 @@ public class PatientReporterApplication {
     private static final String COMMENTS = "comments";
 
     private static final String CENTER_CSV = "center_csv";
+
     private static final String SIGNATURE = "signature";
+    private static final String COMMENTS = "comments";
 
     public static void main(final String... args)
             throws ParseException, IOException, HartwigException, DRException, XMLStreamException, SQLException {
@@ -156,6 +159,12 @@ public class PatientReporterApplication {
             LOGGER.warn(FUSION_CSV + " has to be an existing file: " + fusionCsv);
         } else if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
+        } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
+            LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
+        } else if (cosmicGeneCsv == null || !exists(cosmicGeneCsv)) {
+            LOGGER.warn(COSMIC_GENE_CSV + " has to be an existing file: " + cosmicGeneCsv);
+        } else if (cosmicFusionCsv == null || !exists(cosmicFusionCsv)) {
+            LOGGER.warn(COSMIC_FUSION_CSV + " has to be an existing file: " + cosmicFusionCsv);
         } else {
             return true;
         }

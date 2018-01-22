@@ -40,18 +40,17 @@ public final class CosmicGenes {
     }
 
     @NotNull
-    public static CosmicGeneModel buildModelFromCsv(@NotNull final String pathToCsv)
-            throws IOException, EmptyFileException {
-        final Map<String, CosmicGeneData> cosmicDataPerGene = Maps.newHashMap();
+    public static CosmicGeneModel readFromCSV(@NotNull final String pathToCsv) throws IOException, EmptyFileException {
+        final Map<String, CosmicGeneData> dataPerGene = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines) {
             // KODU: Some fields are quoted as they hold the field separator char.
+            // Inside these quotes, we replace the field separator by a separate char.
             while (line.contains(QUOTE)) {
                 final int startIndex = line.indexOf(QUOTE);
                 final int endIndex = line.indexOf(QUOTE, startIndex + 1);
                 assert endIndex > startIndex;
-                final String field = line.substring(startIndex + 1, endIndex).replace(FIELD_SEPARATOR,
-                        FIELD_CONCATENATOR);
+                final String field = line.substring(startIndex + 1, endIndex).replace(FIELD_SEPARATOR, FIELD_CONCATENATOR);
                 line = line.substring(0, startIndex) + field + line.substring(endIndex + 1);
             }
 
@@ -59,22 +58,29 @@ public final class CosmicGenes {
             if (parts.length > 0) {
                 final String gene = parts[NAME_COLUMN].trim();
                 final CosmicGeneData data = ImmutableCosmicGeneData.of(parts[DESCRIPTION_COLUMN].trim(),
-                        parts[ENTREZ_ID_COLUMN].trim(), parts[GENOME_LOCATION_COLUMN].trim(),
-                        parts[CHROMOSOME_BAND_COLUMN].trim(), parts[SOMATIC_COLUMN].trim(),
-                        parts[GERMLINE_COLUMN].trim(), parts[SOMATIC_TUMOR_TYPES_COLUMN].trim(),
-                        parts[GERMLINE_TUMOR_TYPES_COLUMN].trim(), parts[CANCER_SYNDROME_COLUMN].trim(),
-                        parts[TISSUE_TYPE_COLUMN].trim(), parts[MOLECULAR_GENETICS_COLUMN].trim(),
-                        parts[ROLE_COLUMN].trim(), parts[MUTATION_TYPES_COLUMN].trim(),
-                        parts[TRANSLOCATION_PARTNER_COLUMN].trim(), parts[OTHER_GERMLINE_MUTATIONS_COLUMN].trim(),
+                        parts[ENTREZ_ID_COLUMN].trim(),
+                        parts[GENOME_LOCATION_COLUMN].trim(),
+                        parts[CHROMOSOME_BAND_COLUMN].trim(),
+                        parts[SOMATIC_COLUMN].trim(),
+                        parts[GERMLINE_COLUMN].trim(),
+                        parts[SOMATIC_TUMOR_TYPES_COLUMN].trim(),
+                        parts[GERMLINE_TUMOR_TYPES_COLUMN].trim(),
+                        parts[CANCER_SYNDROME_COLUMN].trim(),
+                        parts[TISSUE_TYPE_COLUMN].trim(),
+                        parts[MOLECULAR_GENETICS_COLUMN].trim(),
+                        parts[ROLE_COLUMN].trim(),
+                        parts[MUTATION_TYPES_COLUMN].trim(),
+                        parts[TRANSLOCATION_PARTNER_COLUMN].trim(),
+                        parts[OTHER_GERMLINE_MUTATIONS_COLUMN].trim(),
                         parts[OTHER_SYNDROME_COLUMN].trim());
 
-                cosmicDataPerGene.put(gene, data);
+                dataPerGene.put(gene, data);
 
                 for (final String synonym : parts[SYNONYMS_COLUMN].trim().split(FIELD_CONCATENATOR)) {
-                    cosmicDataPerGene.put(synonym, data);
+                    dataPerGene.put(synonym, data);
                 }
             }
         }
-        return ImmutableCosmicGeneModel.of(cosmicDataPerGene);
+        return ImmutableCosmicGeneModel.of(dataPerGene);
     }
 }

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.patientreporter.algo.MSIAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
 import org.immutables.value.Value;

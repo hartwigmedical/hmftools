@@ -33,7 +33,7 @@ public class GenePanelDataSource {
         regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
 
         for (final HmfGenomeRegion region : regions) {
-            final String role = reporterData.cosmicModel().getRoleForGene(region.gene());
+            final String role = reporterData.cosmicGeneModel().getRoleForGene(region.gene());
             genePanelDataSource.add(region.gene(), region.transcript(), role);
         }
         return genePanelDataSource;

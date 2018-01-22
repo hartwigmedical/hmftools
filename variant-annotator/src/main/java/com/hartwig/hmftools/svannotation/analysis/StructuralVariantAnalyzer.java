@@ -34,13 +34,13 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private final Collection<HmfGenomeRegion> regions;
     @NotNull
-    private final CosmicFusionModel fusionModel;
+    private final CosmicFusionModel cosmicFusionModel;
 
     public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator, @NotNull final Collection<HmfGenomeRegion> regions,
-            @NotNull final CosmicFusionModel fusionModel) {
+            @NotNull final CosmicFusionModel cosmicFusionModel) {
         this.annotator = annotator;
         this.regions = regions;
-        this.fusionModel = fusionModel;
+        this.cosmicFusionModel = cosmicFusionModel;
     }
 
     @NotNull
@@ -158,9 +158,12 @@ public class StructuralVariantAnalyzer {
         for (final StructuralVariantAnnotation annotation : annotations) {
             @SuppressWarnings("ConstantConditions")
             final boolean intronicExists = annotation.start()
-                    .stream().filter(gene -> gene.canonical() != null).anyMatch(gene -> annotation.end()
+                    .stream()
+                    .filter(gene -> gene.canonical() != null)
+                    .anyMatch(gene -> annotation.end()
                             .stream()
-                            .filter(o -> o.canonical() != null).anyMatch(o -> intronicDisruption(gene.canonical(), o.canonical())));
+                            .filter(o -> o.canonical() != null)
+                            .anyMatch(o -> intronicDisruption(gene.canonical(), o.canonical())));
             if (intronicExists && annotation.variant().type() != StructuralVariantType.INV) {
                 continue;
             }
@@ -207,16 +210,16 @@ public class StructuralVariantAnalyzer {
 
     @Nullable
     private CosmicFusionData transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
-        return fusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
+        return cosmicFusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
     }
 
     private boolean oneEndPromiscuous(final Transcript five, final Transcript three) {
         @SuppressWarnings("ConstantConditions")
-        final boolean promiscuousFive = fusionModel.promiscuousFivePrime()
+        final boolean promiscuousFive = cosmicFusionModel.promiscuousFivePrime()
                 .stream()
                 .anyMatch(p -> p.transcript() != null ? p.transcript().equals(five.transcriptId()) : p.geneName().equals(five.geneName()));
         @SuppressWarnings("ConstantConditions")
-        final boolean promiscuousThree = fusionModel.promiscuousThreePrime()
+        final boolean promiscuousThree = cosmicFusionModel.promiscuousThreePrime()
                 .stream()
                 .anyMatch(p -> p.transcript() != null
                         ? p.transcript().equals(three.transcriptId())

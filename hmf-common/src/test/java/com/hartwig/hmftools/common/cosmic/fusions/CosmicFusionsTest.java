@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.cosmic.fusions;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,10 @@ public class CosmicFusionsTest {
 
     @Test
     public void canReadFromCSV() throws IOException, EmptyFileException {
-        CosmicFusionModel model = CosmicFusions.readFromCSV(FUSION_EXAMPLE_FILE);
-        assertNotNull(model);
+        CosmicFusionModel fusionModel = CosmicFusions.readFromCSV(FUSION_EXAMPLE_FILE);
+        assertEquals(5, fusionModel.fusions().size());
+
+        assertEquals(1, fusionModel.promiscuousFivePrime().size());
+        assertEquals(0, fusionModel.promiscuousThreePrime().size());
     }
 }
