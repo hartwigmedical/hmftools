@@ -32,24 +32,11 @@ public class COSMICGeneFusions {
     private COSMICGeneFusions() {
     }
 
-    private static String gene(final String input) {
-        return input.contains("_") ? input.split("_")[0] : input;
-    }
-
-    @Nullable
-    private static String transcript(final String input) {
-        if (input.contains("_")) {
-            final String transcript = input.split("_", 2)[1];
-            return transcript.startsWith("ENST") ? transcript : null; // only want ENSEMBL transcript ID
-        }
-        return null;
-    }
-
     @NotNull
     public static COSMICGeneFusionModel readFromCSV(@NotNull final String pathToCSV) throws IOException, EmptyFileException {
         final List<COSMICGeneFusionData> items = Lists.newArrayList();
         final List<String> lines = FileReader.build().readLines(new File(pathToCSV).toPath());
-        lines.remove(0); // delete header
+        lines.remove(0); // NERA: delete header
 
         final Map<String, Integer> countThree = Maps.newHashMap();
         final Map<String, Integer> countFive = Maps.newHashMap();
@@ -57,8 +44,11 @@ public class COSMICGeneFusions {
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
-                items.add(ImmutableCOSMICGeneFusionData.of(gene(parts[FIVE_COLUMN]), transcript(parts[FIVE_COLUMN]),
-                        gene(parts[THREE_COLUMN]), transcript(parts[THREE_COLUMN]), parts[URL_COLUMN]));
+                items.add(ImmutableCOSMICGeneFusionData.of(gene(parts[FIVE_COLUMN]),
+                        transcript(parts[FIVE_COLUMN]),
+                        gene(parts[THREE_COLUMN]),
+                        transcript(parts[THREE_COLUMN]),
+                        parts[URL_COLUMN]));
                 countFive.compute(gene(parts[FIVE_COLUMN]), (k, v) -> v == null ? 1 : v + 1);
                 countThree.compute(gene(parts[THREE_COLUMN]), (k, v) -> v == null ? 1 : v + 1);
             } else if (parts.length > 0) {
@@ -66,15 +56,31 @@ public class COSMICGeneFusions {
             }
         }
 
-        return ImmutableCOSMICGeneFusionModel.of(items, countFive.entrySet()
-                .stream()
-                .filter(e -> e.getValue() > MIN_PROMISCUOUS_PARTNER)
-                .map(e -> ImmutableCOSMICPromiscuousGene.of(gene(e.getKey()), transcript(e.getKey())))
-                .collect(Collectors.toList()), countThree.entrySet()
-                .stream()
-                .filter(e -> e.getValue() > MIN_PROMISCUOUS_PARTNER)
-                .map(e -> ImmutableCOSMICPromiscuousGene.of(gene(e.getKey()), transcript(e.getKey())))
-                .collect(Collectors.toList()));
+        return ImmutableCOSMICGeneFusionModel.of(items,
+                countFive.entrySet()
+                        .stream()
+                        .filter(e -> e.getValue() > MIN_PROMISCUOUS_PARTNER)
+                        .map(e -> ImmutableCOSMICPromiscuousGene.of(gene(e.getKey()), transcript(e.getKey())))
+                        .collect(Collectors.toList()),
+                countThree.entrySet()
+                        .stream()
+                        .filter(e -> e.getValue() > MIN_PROMISCUOUS_PARTNER)
+                        .map(e -> ImmutableCOSMICPromiscuousGene.of(gene(e.getKey()), transcript(e.getKey())))
+                        .collect(Collectors.toList()));
     }
 
+    @NotNull
+    private static String gene(@NotNull String input) {
+        return input.contains("_") ? input.split("_")[0] : input;
+    }
+
+    @Nullable
+    private static String transcript(@NotNull String input) {
+        if (input.contains("_")) {
+            final String transcript = input.split("_", 2)[1];
+            // NERA: only want ENSEMBL transcript ID
+            return transcript.startsWith("ENST") ? transcript : null;
+        }
+        return null;
+    }
 }
