@@ -9,21 +9,23 @@ public class MicrohomologyTest {
 
     @Test
     public void testRepeats() {
-        assertHomology("GTAACCAGGAGTGTATT", 0, "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG",
-                "CGTAACCAGGAGTGTATT", "C");
+        assertHomology("GTAACCAGGAGTGTATT",
+                0,
+                "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG",
+                "CGTAACCAGGAGTGTATT");
     }
 
     @Test
     public void testSangerExample() {
-        assertHomology("TATC", 5, "GCACTGTATCCACTTGATATCATTAT", "GTATCCACTTGA", "G");
-        assertHomology("TATC", 6, "GCACTGTATCCACTTGATATCATTAT", "TATCCACTTGAT", "T");
-        assertHomology("TATC", 7, "GCACTGTATCCACTTGATATCATTAT", "ATCCACTTGATA", "A");
-        assertHomology("TATC", 8, "GCACTGTATCCACTTGATATCATTAT", "TCCACTTGATAT", "T");
-        assertHomology("TATC", 9, "GCACTGTATCCACTTGATATCATTAT", "CCACTTGATATC", "C");
+        assertHomology("TATC", 5, "GCACTGTATCCACTTGATATCATTAT", "GTATCCACTTGA");
+        assertHomology("TATC", 6, "GCACTGTATCCACTTGATATCATTAT", "TATCCACTTGAT");
+        assertHomology("TATC", 7, "GCACTGTATCCACTTGATATCATTAT", "ATCCACTTGATA");
+        assertHomology("TATC", 8, "GCACTGTATCCACTTGATATCATTAT", "TCCACTTGATAT");
+        assertHomology("TATC", 9, "GCACTGTATCCACTTGATATCATTAT", "CCACTTGATATC");
     }
 
     private static void assertHomology(@NotNull final String expected, int position, @NotNull final String sequence,
-            @NotNull final String ref, @NotNull final String alt) {
-        assertEquals(expected, Microhomology.microhomology(position, sequence, ref, alt));
+            @NotNull final String ref) {
+        assertEquals(expected, Microhomology.microhomology(position, sequence, ref));
     }
 }

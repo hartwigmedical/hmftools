@@ -88,7 +88,7 @@ public class SomaticVariantFactory {
         if (filter.test(context)) {
             final Genotype genotype = context.getGenotype(sample);
             if (genotype.hasAD() && genotype.getAD().length > 1) {
-                final AlleleFrequencyData frequencyData = determineAlleleFrequencies(genotype);
+                final AllelicDepth frequencyData = determineAlleleFrequencies(genotype);
                 if (frequencyData.totalReadCount() > 0) {
                     SomaticVariantImpl.Builder builder = new SomaticVariantImpl.Builder().chromosome(context.getContig())
                             .annotations(Collections.emptyList())
@@ -100,7 +100,6 @@ public class SomaticVariantFactory {
                             .totalReadCount(frequencyData.totalReadCount())
                             .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
-                    attachCallers(builder, context);
                     attachAnnotations(builder, context);
                     attachFilter(builder, context);
                     attachID(builder, context);
@@ -115,29 +114,6 @@ public class SomaticVariantFactory {
     private static void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder,
             @NotNull VariantContext context) {
         builder.annotations(VariantAnnotationFactory.fromContext(context));
-    }
-
-    private static void attachCallers(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
-        if (context.getCommonInfo().hasAttribute(CALLER_ALGO_IDENTIFIER)) {
-            builder.callers(extractCallers(context.getCommonInfo().getAttributeAsString(CALLER_ALGO_IDENTIFIER, "")));
-        } else {
-            builder.callers(Collections.emptyList());
-        }
-    }
-
-    @NotNull
-    private static List<String> extractCallers(@NotNull final String callers) {
-        final String[] allCallers = callers.split(CALLER_ALGO_SEPARATOR);
-        final List<String> finalCallers = Lists.newArrayList();
-        if (allCallers.length > 0 && allCallers[0].equals(CALLER_INTERSECTION_IDENTIFIER)) {
-            finalCallers.addAll(SomaticVariantConstants.ALL_CALLERS);
-        } else {
-            finalCallers.addAll(Arrays.stream(allCallers)
-                    .filter(caller -> !caller.startsWith(CALLER_FILTERED_IDENTIFIER))
-                    .collect(Collectors.toList()));
-        }
-        return finalCallers;
     }
 
     private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder,
@@ -192,7 +168,7 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    private static AlleleFrequencyData determineAlleleFrequencies(@NotNull final Genotype genotype) {
+    private static AllelicDepth determineAlleleFrequencies(@NotNull final Genotype genotype) {
         Preconditions.checkArgument(genotype.hasAD());
 
         int[] adFields = genotype.getAD();
@@ -202,6 +178,6 @@ public class SomaticVariantFactory {
             totalReadCount += afField;
         }
 
-        return new AlleleFrequencyData(alleleReadCount, totalReadCount);
+        return new AllelicDepthImpl(alleleReadCount, totalReadCount);
     }
 }

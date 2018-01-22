@@ -6,12 +6,11 @@ import org.jetbrains.annotations.NotNull;
 final class Microhomology {
 
     @NotNull
-    static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref, @NotNull final String alt) {
+    static String microhomology(int position, @NotNull final String sequence, @NotNull final String ref) {
         String result =
                 commonPrefix(sequence.substring(position + 1), sequence.substring(position + 1 + ref.length() - 1), ref.length() - 1);
 
         for (int i = position; i >= 0; i--) {
-
             final String earlierPrefix = commonPrefix(sequence.substring(i), sequence.substring(i + ref.length() - 1), ref.length() - 1);
             if (earlierPrefix.length() > result.length()) {
                 result = earlierPrefix;

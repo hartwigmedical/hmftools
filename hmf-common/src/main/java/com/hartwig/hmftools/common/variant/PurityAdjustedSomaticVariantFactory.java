@@ -26,16 +26,15 @@ public class PurityAdjustedSomaticVariantFactory {
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
-        copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
+        this.copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        this.fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
     }
 
     public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers,
-            @NotNull final Multimap<String, FittedRegion> fittedRegions) {
+            @NotNull final Multimap<String, PurpleCopyNumber> copyNumbers, @NotNull final Multimap<String, FittedRegion> fittedRegions) {
         this.purityAdjuster = purityAdjuster;
-        copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
-        fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
+        this.copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers);
+        this.fittedRegionSelector = GenomeRegionSelectorFactory.create(fittedRegions);
     }
 
     @NotNull

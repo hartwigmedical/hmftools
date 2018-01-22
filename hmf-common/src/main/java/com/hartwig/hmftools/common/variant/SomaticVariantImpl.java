@@ -68,9 +68,6 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
     @NotNull
     public abstract List<VariantAnnotation> annotations();
 
-    @NotNull
-    public abstract List<String> callers();
-
     @Override
     @Value.Default
     public int totalReadCount() {

@@ -1,20 +1,22 @@
 package com.hartwig.hmftools.common.variant;
 
-public class AlleleFrequencyData {
+class AllelicDepthImpl implements AllelicDepth {
 
     private final int alleleReadCount;
     private final int totalReadCount;
 
-    AlleleFrequencyData(final int alleleReadCount, final int totalReadCount) {
+    AllelicDepthImpl(final int alleleReadCount, final int totalReadCount) {
         this.alleleReadCount = alleleReadCount;
         this.totalReadCount = totalReadCount;
     }
 
-    public int alleleReadCount() {
-        return alleleReadCount;
-    }
-
+    @Override
     public int totalReadCount() {
         return totalReadCount;
+    }
+
+    @Override
+    public int alleleReadCount() {
+        return alleleReadCount;
     }
 }

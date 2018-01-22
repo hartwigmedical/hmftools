@@ -109,7 +109,7 @@ public class EnrichedSomaticVariantFactory {
         int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
         if (variant.type().equals(VariantType.INDEL)) {
-            builder.microhomology(Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt()));
+            builder.microhomology(Microhomology.microhomology(relativePosition, sequence, variant.ref()));
         }
         getRepeatContext(variant, relativePosition, sequence).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
     }
