@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.cosmic.fusions;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,19 +9,14 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class COSMICGeneFusionData {
+public abstract class CosmicFusionModel {
     @NotNull
-    public abstract String fiveGene();
-
-    @Nullable
-    public abstract String fiveTranscript();
+    public abstract List<CosmicFusionData> fusions();
 
     @NotNull
-    public abstract String threeGene();
-
-    @Nullable
-    public abstract String threeTranscript();
+    public abstract List<CosmicPromiscuousFusionGene> promiscuousFivePrime();
 
     @NotNull
-    public abstract String cosmicURL();
+    public abstract List<CosmicPromiscuousFusionGene> promiscuousThreePrime();
 }
+

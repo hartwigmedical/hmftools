@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
-import com.hartwig.hmftools.common.cosmic.census.CosmicModel;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusionModel;
+import com.hartwig.hmftools.common.cosmic.census.CosmicGeneModel;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 
@@ -18,11 +18,11 @@ public abstract class HmfReporterData {
     public abstract GeneModel geneModel();
 
     @NotNull
-    public abstract CosmicModel cosmicModel();
+    public abstract CosmicGeneModel cosmicModel();
 
     @NotNull
     public abstract DrupFilter drupFilter();
 
     @NotNull
-    public abstract COSMICGeneFusionModel fusionModel();
+    public abstract CosmicFusionModel fusionModel();
 }

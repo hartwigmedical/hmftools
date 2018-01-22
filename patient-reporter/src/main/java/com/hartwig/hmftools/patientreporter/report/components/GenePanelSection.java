@@ -45,7 +45,7 @@ public class GenePanelSection {
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(GenePanelDataSource.transcriptUrl()))
                                 .setStyle(linkStyle().setFontSize(fontSize)),
-                        col.column("Cosmic Type", GenePanelDataSource.TYPE_FIELD),
+                        col.column("CosmicGenes Type", GenePanelDataSource.TYPE_FIELD),
                         col.emptyColumn().setFixedWidth(20)))
                     .setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
         // @formatter:on

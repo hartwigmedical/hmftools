@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusionData;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusionModel;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionData;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -34,10 +34,10 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private final Collection<HmfGenomeRegion> regions;
     @NotNull
-    private final COSMICGeneFusionModel fusionModel;
+    private final CosmicFusionModel fusionModel;
 
     public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator, @NotNull final Collection<HmfGenomeRegion> regions,
-            @NotNull final COSMICGeneFusionModel fusionModel) {
+            @NotNull final CosmicFusionModel fusionModel) {
         this.annotator = annotator;
         this.regions = regions;
         this.fusionModel = fusionModel;
@@ -134,7 +134,7 @@ public class StructuralVariantAnalyzer {
             for (final Pair<Transcript, Transcript> fusion : fusions) {
                 final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
 
-                final COSMICGeneFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
+                final CosmicFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
                 final boolean promiscuousEnd = oneEndPromiscuous(upstream, downstream);
                 final boolean reportable =
                         reportableFusion.isPresent() && reportableFusion.get() == fusion && (cosmic != null || promiscuousEnd);
@@ -192,7 +192,7 @@ public class StructuralVariantAnalyzer {
         return regions.stream().anyMatch(region -> gene.synonyms().contains(region.geneID()));
     }
 
-    private boolean transcriptsMatchKnownFusion(final COSMICGeneFusionData fusion, final Transcript five, final Transcript three) {
+    private boolean transcriptsMatchKnownFusion(final CosmicFusionData fusion, final Transcript five, final Transcript three) {
         String fiveTranscript = fusion.fiveTranscript();
         String threeTranscript = fusion.threeTranscript();
 
@@ -206,7 +206,7 @@ public class StructuralVariantAnalyzer {
     }
 
     @Nullable
-    private COSMICGeneFusionData transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
+    private CosmicFusionData transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
         return fusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
     }
 

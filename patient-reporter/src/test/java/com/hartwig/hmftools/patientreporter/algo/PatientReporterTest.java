@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusions;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -43,7 +43,7 @@ public class PatientReporterTest {
         final HmfReporterData reporterData = testHmfReporterData();
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
         final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), COSMICGeneFusions.readFromCSV(FUSIONS_CSV));
+                new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), CosmicFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }

@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.io.reader.FileReader;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class Cosmic {
+public final class CosmicGenes {
 
     private static final int NAME_COLUMN = 0;
     private static final int DESCRIPTION_COLUMN = 1;
@@ -36,13 +36,13 @@ public final class Cosmic {
     private static final String FIELD_CONCATENATOR = ";";
     private static final String QUOTE = "\"";
 
-    private Cosmic() {
+    private CosmicGenes() {
     }
 
     @NotNull
-    public static CosmicModel buildModelFromCsv(@NotNull final String pathToCsv)
+    public static CosmicGeneModel buildModelFromCsv(@NotNull final String pathToCsv)
             throws IOException, EmptyFileException {
-        final Map<String, CosmicData> cosmicDataPerGene = Maps.newHashMap();
+        final Map<String, CosmicGeneData> cosmicDataPerGene = Maps.newHashMap();
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines) {
             // KODU: Some fields are quoted as they hold the field separator char.
@@ -58,7 +58,7 @@ public final class Cosmic {
             final String[] parts = line.split(FIELD_SEPARATOR, 18);
             if (parts.length > 0) {
                 final String gene = parts[NAME_COLUMN].trim();
-                final CosmicData data = new CosmicData(parts[DESCRIPTION_COLUMN].trim(),
+                final CosmicGeneData data = new CosmicGeneData(parts[DESCRIPTION_COLUMN].trim(),
                         parts[ENTREZ_ID_COLUMN].trim(), parts[GENOME_LOCATION_COLUMN].trim(),
                         parts[CHROMOSOME_BAND_COLUMN].trim(), parts[SOMATIC_COLUMN].trim(),
                         parts[GERMLINE_COLUMN].trim(), parts[SOMATIC_TUMOR_TYPES_COLUMN].trim(),
@@ -75,6 +75,6 @@ public final class Cosmic {
                 }
             }
         }
-        return new CosmicModel(cosmicDataPerGene);
+        return new CosmicGeneModel(cosmicDataPerGene);
     }
 }

@@ -2,10 +2,10 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.cosmic.census.Cosmic;
-import com.hartwig.hmftools.common.cosmic.census.CosmicModel;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusionModel;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusions;
+import com.hartwig.hmftools.common.cosmic.census.CosmicGeneModel;
+import com.hartwig.hmftools.common.cosmic.census.CosmicGenes;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
@@ -22,8 +22,8 @@ public final class HmfReporterDataLoader {
             @NotNull final String fusionFile) throws IOException, HartwigException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfGeneMap());
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
-        final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(cosmicFile);
-        final COSMICGeneFusionModel fusionModel = COSMICGeneFusions.readFromCSV(fusionFile);
-        return ImmutableHmfReporterData.of(geneModel, cosmicModel, drupFilter, fusionModel);
+        final CosmicGeneModel cosmicGeneModel = CosmicGenes.buildModelFromCsv(cosmicFile);
+        final CosmicFusionModel fusionModel = CosmicFusions.readFromCSV(fusionFile);
+        return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, drupFilter, fusionModel);
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.cosmic.census;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CosmicData {
+public class CosmicGeneData {
     @NotNull
     private final String description;
     @NotNull
@@ -36,7 +36,7 @@ public class CosmicData {
     @NotNull
     private final String otherSyndrome;
 
-    CosmicData(@NotNull final String description, @NotNull final String entrezId,
+    CosmicGeneData(@NotNull final String description, @NotNull final String entrezId,
             @NotNull final String genomeLocation, @NotNull final String chromosomeBand, @NotNull final String somatic,
             @NotNull final String germline, @NotNull final String somaticTumorTypes,
             @NotNull final String germlineTumorTypes, @NotNull final String cancerSyndrome,

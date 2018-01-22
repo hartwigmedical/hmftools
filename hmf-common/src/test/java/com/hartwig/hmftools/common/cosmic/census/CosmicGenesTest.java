@@ -11,18 +11,18 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
-public class CosmicTest {
+public class CosmicGenesTest {
 
     private static final String COSMIC_EXAMPLE_FILE = Resources.getResource("cosmic").getPath() + File.separator + "CosmicExample.csv";
 
     @Test
     public void canLoadFromCsv() throws IOException, EmptyFileException {
-        final CosmicModel cosmicModel = Cosmic.buildModelFromCsv(COSMIC_EXAMPLE_FILE);
-        final Map<String, CosmicData> dataPerSample = cosmicModel.data();
+        final CosmicGeneModel cosmicGeneModel = CosmicGenes.buildModelFromCsv(COSMIC_EXAMPLE_FILE);
+        final Map<String, CosmicGeneData> dataPerSample = cosmicGeneModel.data();
         assertEquals(7, dataPerSample.size());
 
-        final CosmicData gene1Data = cosmicModel.data().get("ABI1");
-        assertEquals(gene1Data, cosmicModel.data().get("ABI-1"));
+        final CosmicGeneData gene1Data = cosmicGeneModel.data().get("ABI1");
+        assertEquals(gene1Data, cosmicGeneModel.data().get("ABI-1"));
         assertEquals("abl-interactor 1; and 2", gene1Data.description());
         assertEquals("10006", gene1Data.entrezId());
         assertEquals("10:27037499-27149792", gene1Data.genomeLocation());
@@ -39,7 +39,7 @@ public class CosmicTest {
         assertEquals("", gene1Data.otherGermlineMut());
         assertEquals("", gene1Data.otherSyndrome());
 
-        final CosmicData gene2Data = cosmicModel.data().get("ACKR3");
+        final CosmicGeneData gene2Data = cosmicGeneModel.data().get("ACKR3");
         assertEquals("atypical chemokine receptor 3", gene2Data.description());
         assertEquals("57007", gene2Data.entrezId());
         assertEquals("2:-", gene2Data.genomeLocation());

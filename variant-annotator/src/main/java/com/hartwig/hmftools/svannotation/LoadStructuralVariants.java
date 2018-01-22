@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusionModel;
-import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusions;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
+import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -60,7 +60,7 @@ public class LoadStructuralVariants {
 
         LOGGER.info("Analyzing structural variants for impact via disruptions and fusions...");
         final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
-        final COSMICGeneFusionModel cosmicGeneFusions = COSMICGeneFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
+        final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
 
         final StructuralVariantAnalyzer analyzer =
                 new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfGeneList(), cosmicGeneFusions);

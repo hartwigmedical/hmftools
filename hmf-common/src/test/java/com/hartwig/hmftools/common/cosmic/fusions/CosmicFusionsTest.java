@@ -10,13 +10,13 @@ import com.hartwig.hmftools.common.exception.EmptyFileException;
 
 import org.junit.Test;
 
-public class COSMICGeneFusionsTest {
+public class CosmicFusionsTest {
 
     private static final String FUSION_EXAMPLE_FILE = Resources.getResource("cosmic").getPath() + File.separator + "FusionsExample.csv";
 
     @Test
     public void canReadFromCSV() throws IOException, EmptyFileException {
-        COSMICGeneFusionModel model = COSMICGeneFusions.readFromCSV(FUSION_EXAMPLE_FILE);
+        CosmicFusionModel model = CosmicFusions.readFromCSV(FUSION_EXAMPLE_FILE);
         assertNotNull(model);
     }
 }

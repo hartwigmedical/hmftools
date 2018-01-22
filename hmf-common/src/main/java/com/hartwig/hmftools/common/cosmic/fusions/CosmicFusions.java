@@ -16,9 +16,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class COSMICGeneFusions {
+public final class CosmicFusions {
 
-    private static final Logger LOGGER = LogManager.getLogger(COSMICGeneFusions.class);
+    private static final Logger LOGGER = LogManager.getLogger(CosmicFusions.class);
 
     private static final int FIVE_COLUMN = 0;
     private static final int THREE_COLUMN = 1;
@@ -29,12 +29,12 @@ public final class COSMICGeneFusions {
 
     private static final int MIN_PROMISCUOUS_PARTNER = 3;
 
-    private COSMICGeneFusions() {
+    private CosmicFusions() {
     }
 
     @NotNull
-    public static COSMICGeneFusionModel readFromCSV(@NotNull final String pathToCSV) throws IOException, EmptyFileException {
-        final List<COSMICGeneFusionData> items = Lists.newArrayList();
+    public static CosmicFusionModel readFromCSV(@NotNull final String pathToCSV) throws IOException, EmptyFileException {
+        final List<CosmicFusionData> items = Lists.newArrayList();
         final List<String> lines = FileReader.build().readLines(new File(pathToCSV).toPath());
         lines.remove(0); // NERA: delete header
 
@@ -44,7 +44,7 @@ public final class COSMICGeneFusions {
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
-                items.add(ImmutableCOSMICGeneFusionData.of(gene(parts[FIVE_COLUMN]),
+                items.add(ImmutableCosmicFusionData.of(gene(parts[FIVE_COLUMN]),
                         transcript(parts[FIVE_COLUMN]),
                         gene(parts[THREE_COLUMN]),
                         transcript(parts[THREE_COLUMN]),
@@ -56,16 +56,16 @@ public final class COSMICGeneFusions {
             }
         }
 
-        return ImmutableCOSMICGeneFusionModel.of(items,
+        return ImmutableCosmicFusionModel.of(items,
                 countFive.entrySet()
                         .stream()
                         .filter(e -> e.getValue() > MIN_PROMISCUOUS_PARTNER)
-                        .map(e -> ImmutableCOSMICPromiscuousGene.of(gene(e.getKey()), transcript(e.getKey())))
+                        .map(e -> ImmutableCosmicPromiscuousFusionGene.of(gene(e.getKey()), transcript(e.getKey())))
                         .collect(Collectors.toList()),
                 countThree.entrySet()
                         .stream()
                         .filter(e -> e.getValue() > MIN_PROMISCUOUS_PARTNER)
-                        .map(e -> ImmutableCOSMICPromiscuousGene.of(gene(e.getKey()), transcript(e.getKey())))
+                        .map(e -> ImmutableCosmicPromiscuousFusionGene.of(gene(e.getKey()), transcript(e.getKey())))
                         .collect(Collectors.toList()));
     }
 

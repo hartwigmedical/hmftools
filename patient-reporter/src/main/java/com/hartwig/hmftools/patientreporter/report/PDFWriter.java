@@ -289,7 +289,7 @@ public class PDFWriter implements ReportWriter {
                             col.column("Variant", VariantDataSource.VARIANT_FIELD),
                             col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
                             col.componentColumn("Predicted Effect", predictedEffectColumn()),
-                            col.column("Cosmic", VariantDataSource.COSMIC_FIELD)
+                            col.column("CosmicGenes", VariantDataSource.COSMIC_FIELD)
                                     .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
                             col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.variants(), reporterData)) :
@@ -351,7 +351,7 @@ public class PDFWriter implements ReportWriter {
                                 + "the predicted impact on the final protein on the second line of this field.",
                         "The 'cosmic' fields display a link to the COSMIC database which contains "
                                 + "additional information on the variant. If the variant could not be found in the "
-                                + "COSMIC database, this field will be left blank. The Cosmic v76 database is used "
+                                + "COSMIC database, this field will be left blank. The CosmicGenes v76 database is used "
                                 + "to look-up these IDs.",
                         "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
                                 + "whole genome data.",
