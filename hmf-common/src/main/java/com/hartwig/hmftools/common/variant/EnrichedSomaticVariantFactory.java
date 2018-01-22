@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class EnrichedSomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
@@ -38,12 +37,13 @@ public class EnrichedSomaticVariantFactory {
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory) {
-        highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
+        this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.reference = reference;
         this.clonalityFactory = clonalityFactory;
     }
 
-    public List<EnrichedSomaticVariant> enrich(final List<PurityAdjustedSomaticVariant> variants) throws IOException {
+    @NotNull
+    public List<EnrichedSomaticVariant> enrich(@NotNull List<PurityAdjustedSomaticVariant> variants) throws IOException {
         unmatchedAnnotations = 0;
         final List<EnrichedSomaticVariant> result = Lists.newArrayList();
 
@@ -59,7 +59,7 @@ public class EnrichedSomaticVariantFactory {
     }
 
     @NotNull
-    private EnrichedSomaticVariant enrich(@NotNull final PurityAdjustedSomaticVariant variant) throws IOException {
+    private EnrichedSomaticVariant enrich(@NotNull PurityAdjustedSomaticVariant variant) throws IOException {
         final Builder builder = createBuilder(variant);
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
@@ -90,7 +90,6 @@ public class EnrichedSomaticVariantFactory {
 
     @NotNull
     private static Builder createBuilder(@NotNull final SomaticVariant variant) {
-
         return builder().from(variant)
                 .trinucleotideContext("")
                 .microhomology("")
@@ -158,7 +157,8 @@ public class EnrichedSomaticVariantFactory {
         builder.trinucleotideContext(sequence.getBaseString());
     }
 
-    private Builder inHighConfidenceRegion(@NotNull final Builder builder) {
+    @NotNull
+    private static Builder inHighConfidenceRegion(@NotNull final Builder builder) {
         return builder.highConfidenceRegion(true);
     }
 }
