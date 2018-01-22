@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.cosmicfusions.COSMICGeneFusions;
+import com.hartwig.hmftools.common.cosmic.fusions.COSMICGeneFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;

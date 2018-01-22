@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cosmic;
+package com.hartwig.hmftools.common.cosmic.census;
 
 import java.util.Map;
 

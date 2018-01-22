@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cosmic;
+package com.hartwig.hmftools.common.cosmic.census;
 
 import static org.junit.Assert.assertEquals;
 

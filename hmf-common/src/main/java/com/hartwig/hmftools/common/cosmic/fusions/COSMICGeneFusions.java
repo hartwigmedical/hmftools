@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.cosmicfusions;
+package com.hartwig.hmftools.common.cosmic.fusions;
 
 import java.io.File;
 import java.io.IOException;
