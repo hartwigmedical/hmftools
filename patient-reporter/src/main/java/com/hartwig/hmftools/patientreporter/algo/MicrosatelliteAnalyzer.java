@@ -30,7 +30,7 @@ public abstract class MicrosatelliteAnalyzer {
     public double analyzeVariants(@NotNull final List<SomaticVariant> variants) throws FileNotFoundException {
         double indelCount = 0;
         for (final SomaticVariant variant : variants) {
-            if (variantIsIndel(variant)) {
+            if (isPassIndel(variant)) {
                 long positionBeforeEvent = variant.position();
                 long start = Math.max(positionBeforeEvent - 100, 1);
                 long maxEnd = reference().getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
@@ -47,8 +47,9 @@ public abstract class MicrosatelliteAnalyzer {
         return indelCount / 3095;
     }
 
-    private boolean variantIsIndel(@NotNull final SomaticVariant variant) {
-        return variant.ref().length() != variant.alt().length() && variant.ref().length() < 50 && variant.alt().length() < 50;
+    private boolean isPassIndel(@NotNull final SomaticVariant variant) {
+        return variant.filter().equals("PASS") && variant.ref().length() != variant.alt().length() && variant.ref().length() < 50
+                && variant.alt().length() < 50;
     }
 
     private boolean repeatContextIsRelevant(@NotNull final RepeatContext repeatContext) {
