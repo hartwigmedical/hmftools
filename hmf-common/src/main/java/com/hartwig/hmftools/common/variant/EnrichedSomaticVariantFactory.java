@@ -109,23 +109,28 @@ public class EnrichedSomaticVariantFactory {
         long end = Math.min(positionBeforeEvent + 100, maxEnd);
         int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
-
         if (variant.type().equals(VariantType.INDEL)) {
-            RepeatContextFactory.repeats(relativePosition + 1, sequence)
-                    .ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
-
-            final String microhomology = Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt());
-            builder.microhomology(microhomology);
-        } else if (variant.type().equals(VariantType.SNP)) {
-            Optional<RepeatContext> priorRepeat = RepeatContextFactory.repeats(relativePosition - 1, sequence);
-            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + 1, sequence);
-            max(priorRepeat, postRepeat).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
+            builder.microhomology(Microhomology.microhomology(relativePosition, sequence, variant.ref(), variant.alt()));
         }
-
+        getRepeatContext(variant, relativePosition, sequence).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
     }
 
     @NotNull
-    private Optional<RepeatContext> max(@NotNull final Optional<RepeatContext> optionalPrior,
+    public static Optional<RepeatContext> getRepeatContext(@NotNull final SomaticVariant variant, int relativePosition,
+            @NotNull String sequence) {
+        if (variant.type().equals(VariantType.INDEL)) {
+            return RepeatContextFactory.repeats(relativePosition + 1, sequence);
+        } else if (variant.type().equals(VariantType.SNP)) {
+            Optional<RepeatContext> priorRepeat = RepeatContextFactory.repeats(relativePosition - 1, sequence);
+            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + 1, sequence);
+            return max(priorRepeat, postRepeat);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @NotNull
+    private static Optional<RepeatContext> max(@NotNull final Optional<RepeatContext> optionalPrior,
             @NotNull final Optional<RepeatContext> optionalPost) {
         if (!optionalPrior.isPresent()) {
             return optionalPost;
