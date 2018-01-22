@@ -90,7 +90,7 @@ public class PatientReporterApplication {
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Generating sequenceable report...");
             final HmfReporterData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(reporterData, cmd);
+            final PatientReporter reporter = buildReporter(cmd, reporterData);
 
             final SequencedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
             reportWriter.writeSequenceReport(report, reporterData);
@@ -121,12 +121,13 @@ public class PatientReporterApplication {
     @NotNull
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
-                cmd.getOptionValue(COSMIC_FUSION_CSV), cmd.getOptionValue(DRUP_GENES_CSV),
+                cmd.getOptionValue(COSMIC_FUSION_CSV),
+                cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION));
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final HmfReporterData reporterData, @NotNull final CommandLine cmd)
+    private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final HmfReporterData reporterData)
             throws IOException, HartwigException, XMLStreamException, SQLException {
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(reporterData.geneModel());
 
