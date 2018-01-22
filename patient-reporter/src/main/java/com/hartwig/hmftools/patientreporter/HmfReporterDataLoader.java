@@ -2,10 +2,10 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.cosmic.census.CosmicGeneModel;
-import com.hartwig.hmftools.common.cosmic.census.CosmicGenes;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
+import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
+import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
