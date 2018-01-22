@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class COSMICGeneFusions {
+public final class COSMICGeneFusions {
 
     private static final Logger LOGGER = LogManager.getLogger(COSMICGeneFusions.class);
 
