@@ -3,17 +3,17 @@ package com.hartwig.hmftools.common.variant;
 import org.jetbrains.annotations.NotNull;
 
 public interface VariantBuilder {
-    VariantBuilder type(VariantType type);
+    VariantBuilder type(@NotNull VariantType type);
 
-    VariantBuilder chromosome(@NotNull final String chromosome);
+    VariantBuilder chromosome(@NotNull String chromosome);
 
-    VariantBuilder position(final long position);
+    VariantBuilder position(long position);
 
-    VariantBuilder ref(@NotNull final String ref);
+    VariantBuilder ref(@NotNull String ref);
 
-    VariantBuilder alt(@NotNull final String alt);
+    VariantBuilder alt(@NotNull String alt);
 
-    VariantBuilder filter(@NotNull final String filter);
+    VariantBuilder filter(@NotNull String filter);
 
     SomaticVariant build();
 }
