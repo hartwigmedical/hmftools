@@ -20,12 +20,12 @@ final class HmfReporterDataLoader {
     }
 
     @NotNull
-    static HmfReporterData buildFromFiles(@NotNull final String drupFilterFile, @NotNull final String cosmicFile,
-            @NotNull final String fusionFile, @NotNull final String fastaFileLocation) throws IOException, HartwigException {
+    static HmfReporterData buildFromFiles(@NotNull final String cosmicGeneFile, @NotNull final String cosmicFusionFile,
+            @NotNull final String drupFilterFile, @NotNull final String fastaFileLocation) throws IOException, HartwigException {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfGeneMap());
+        final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicGeneFile);
+        final CosmicFusionModel cosmicFusionModel = CosmicFusions.readFromCSV(cosmicFusionFile);
         final DrupFilter drupFilter = new DrupFilter(drupFilterFile);
-        final CosmicGeneModel cosmicGeneModel = CosmicGenes.readFromCSV(cosmicFile);
-        final CosmicFusionModel cosmicFusionModel = CosmicFusions.readFromCSV(fusionFile);
         final MSIAnalyzer msiAnalyzer = ImmutableMSIAnalyzer.of(fastaFileLocation);
         return ImmutableHmfReporterData.of(geneModel, cosmicGeneModel, cosmicFusionModel, drupFilter, msiAnalyzer);
     }

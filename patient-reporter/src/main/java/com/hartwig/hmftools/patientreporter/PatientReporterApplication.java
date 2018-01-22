@@ -58,9 +58,9 @@ public class PatientReporterApplication {
     private static final String NOT_SEQUENCEABLE_REASON = "not_sequenceable_reason";
     private static final String NOT_SEQUENCEABLE_SAMPLE = "not_sequenceable_sample";
 
-    private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String COSMIC_GENE_CSV = "cosmic_gene_csv";
-    private static final String COSMIC_FUSION_CSV = "fusion_csv";
+    private static final String COSMIC_FUSION_CSV = "cosmic_fusion_csv";
+    private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
     private static final String CENTER_CSV = "center_csv";
@@ -120,9 +120,8 @@ public class PatientReporterApplication {
 
     @NotNull
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(COSMIC_GENE_CSV),
-                cmd.getOptionValue(COSMIC_FUSION_CSV),
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
+                cmd.getOptionValue(COSMIC_FUSION_CSV), cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION));
     }
 
@@ -231,12 +230,12 @@ public class PatientReporterApplication {
         options.addOption(NOT_SEQUENCEABLE, false, "If set, generates a non-sequenceable report.");
         options.addOption(NOT_SEQUENCEABLE_REASON, true, "Either 'low_tumor_percentage' or 'low_dna_yield'");
         options.addOption(NOT_SEQUENCEABLE_SAMPLE, true, "In case of non-sequenceable reports, the name of the sample used.");
+        options.addOption(COSMIC_GENE_CSV, true, "Path towards a CSV containing COSMIC gene data.");
+        options.addOption(COSMIC_FUSION_CSV, true, "Path towards a CSV containing COSMIC fusion data.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(COSMIC_GENE_CSV, true, "Path towards a CSV containing COSMIC census data.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
-        options.addOption(COSMIC_FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
