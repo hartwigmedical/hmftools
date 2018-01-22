@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import static com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory.getRepeatContext;
+import static com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory.relativePositionAndRef;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
+import org.apache.commons.math3.util.Pair;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,15 +34,9 @@ public abstract class MicrosatelliteAnalyzer {
         double indelCount = 0;
         for (final SomaticVariant variant : variants) {
             if (isPassIndel(variant)) {
-                long positionBeforeEvent = variant.position();
-                long start = Math.max(positionBeforeEvent - 100, 1);
-                long maxEnd = reference().getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
-                long end = Math.min(positionBeforeEvent + 100, maxEnd);
-                int relativePosition = (int) (positionBeforeEvent - start);
-                final String sequence = reference().getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
-                if (EnrichedSomaticVariantFactory.getRepeatContext(variant, relativePosition, sequence)
-                        .filter(this::repeatContextIsRelevant)
-                        .isPresent()) {
+                final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(variant, reference());
+                if (getRepeatContext(variant, relativePositionAndRef.getFirst(), relativePositionAndRef.getSecond()).filter(
+                        this::repeatContextIsRelevant).isPresent()) {
                     indelCount++;
                 }
             }

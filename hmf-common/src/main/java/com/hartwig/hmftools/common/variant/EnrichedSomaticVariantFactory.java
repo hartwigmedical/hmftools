@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
+import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -102,16 +103,24 @@ public class EnrichedSomaticVariantFactory {
     }
 
     private void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
+        final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(variant, reference);
+        final Integer relativePosition = relativePositionAndRef.getFirst();
+        final String sequence = relativePositionAndRef.getSecond();
+        if (variant.type().equals(VariantType.INDEL)) {
+            builder.microhomology(Microhomology.microhomology(relativePosition, sequence, variant.ref()));
+        }
+        getRepeatContext(variant, relativePosition, sequence).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
+    }
+
+    public static Pair<Integer, String> relativePositionAndRef(@NotNull final SomaticVariant variant,
+            @NotNull final IndexedFastaSequenceFile reference) {
         long positionBeforeEvent = variant.position();
         long start = Math.max(positionBeforeEvent - 100, 1);
         long maxEnd = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength() - 1;
         long end = Math.min(positionBeforeEvent + 100, maxEnd);
         int relativePosition = (int) (positionBeforeEvent - start);
         final String sequence = reference.getSubsequenceAt(variant.chromosome(), start, end).getBaseString();
-        if (variant.type().equals(VariantType.INDEL)) {
-            builder.microhomology(Microhomology.microhomology(relativePosition, sequence, variant.ref()));
-        }
-        getRepeatContext(variant, relativePosition, sequence).ifPresent(x -> builder.repeatSequence(x.sequence()).repeatCount(x.count()));
+        return new Pair<>(relativePosition, sequence);
     }
 
     @NotNull
