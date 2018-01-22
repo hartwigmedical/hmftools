@@ -37,7 +37,6 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 import com.hartwig.hmftools.patientreporter.report.data.CopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
-import com.hartwig.hmftools.patientreporter.report.pages.ImmutableSVReportPage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -114,7 +113,8 @@ public class PDFWriter implements ReportWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()), cmp.pageXslashY(),
+                .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
+                        cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .addDetail(finalReport)
                 .setDataSource(singleItemDataSource);
@@ -145,11 +145,13 @@ public class PDFWriter implements ReportWriter {
                         GenePanelSection.build(reporterData)
                 );
 
-        final ComponentBuilder<?, ?> additionalInfoPage =
+        final ComponentBuilder<?, ?> explanationPage =
                 cmp.verticalList(
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text(additionalPagesTitleStart + " - Field Explanations")
+                        cmp.text(additionalPagesTitleStart + " - Report Explanation")
                                 .setStyle(sectionHeaderStyle()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        generalExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         variantFieldExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -169,10 +171,10 @@ public class PDFWriter implements ReportWriter {
 
         final ComponentBuilder<?, ?> totalReport =
                 cmp.multiPageList().add(reportMainPage)
-                        .newPage().add(ImmutableSVReportPage.of(report).reportComponent())
+//                        .newPage().add(ImmutableSVReportPage.of(report).reportComponent())
                         .newPage().add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
                         .newPage().add(genePanelPage)
-                        .newPage().add(additionalInfoPage)
+                        .newPage().add(explanationPage)
                         .newPage().add(sampleDetailsPage);
         // @formatter:on
 
@@ -189,7 +191,8 @@ public class PDFWriter implements ReportWriter {
         singleItemDataSource.add(new Object());
 
         return report().pageFooter(cmp.pageXslashY())
-                .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()), cmp.pageXslashY(),
+                .lastPageFooter(cmp.verticalList(signatureFooter(report.signaturePath()),
+                        cmp.pageXslashY(),
                         cmp.text("End of report.").setStyle(stl.style().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .addDetail(totalReport)
                 .setDataSource(singleItemDataSource);
@@ -198,8 +201,7 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> mainPageAboutSection() {
         return toList("About this report",
-                Lists.newArrayList("This test is performed for research purpose and is not meant to be used for clinical decision making.",
-                        "Detailed information on the various fields can be found on the additional pages of this report.",
+                Lists.newArrayList("This report is based on tests that are performed under ISO/ICE-17025:2005 accreditation.",
                         "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl.",
                         "For other questions, please contact us via info@hartwigmedicalfoundation.nl."));
     }
@@ -339,9 +341,19 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
+    private static ComponentBuilder<?, ?> generalExplanationSection() {
+        return toList("Details on the report in general",
+                Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
+                        "Findings in the tumor that also exist in the germline are not included in this report.",
+                        "Analysis for samples with an implied tumor purity below 20% suffer from lower sensitivity. "
+                                + "This means we have a lower likelihood of finding real variants and "
+                                + "we likely underestimate the true mutational load."));
+    }
+
+    @NotNull
     private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
         return toList("Details on reported genomic variant fields",
-                Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
+                Lists.newArrayList(
                         "The 'position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
                         "The 'variant' displays what was expected as reference base and what " + "was found instead ('ref' > 'alt').",
                         "The 'depth (VAF)' displays the number of observations of the specific variant versus "
@@ -366,22 +378,21 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
-        return toList("Details on reported copy numbers", Lists.newArrayList(
-                "The lowest copy number value along the exonic regions of the canonical transcript is determined as "
-                        + "a measure for the gene's copy number.",
-                "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
-                "Any gene with no copies is reported as loss.", "Any gene with at least 8 copies is reported as a gain.",
-                "Any gene with more copies than 2.2 times the average tumor ploidy is reported as a gain."));
+        return toList("Details on reported copy numbers",
+                Lists.newArrayList("The lowest copy number value along the exonic regions of the canonical transcript is determined as "
+                                + "a measure for the gene's copy number.",
+                        "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
+                        "Any gene with no copies is reported as loss.",
+                        "Any gene with at least 8 copies is reported as a gain.",
+                        "Any gene with more copies than 2.2 times the average tumor ploidy is reported as a gain."));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> disclaimerSection() {
         //@formatter:off
-        final List<String> lines = Lists.newArrayList("This test is not certified for diagnostic purposes.",
-                "The data on which this report is based has passed all internal quality controls.",
-                "When no mutations are reported, the absence of mutations is not guaranteed.",
-                "The findings in this report are not meant to be used for clinical decision making without validation of "
-                        + "findings using certified assays.",
+        final List<String> lines = Lists.newArrayList(
+                "The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation.",
+                "This analysis done for this report has passed all internal quality controls.",
                 "For feedback or complaints please contact qualitysystem@hartwigmedicalfoundation.nl.");
         //@formatter:on
         return toList("Disclaimer", lines);
@@ -392,23 +403,19 @@ public class PDFWriter implements ReportWriter {
         if (report.sampleReport().recipient() == null) {
             throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleId());
         }
-        final List<String> lines = Lists.newArrayList();
-
-        if (report instanceof SequencedPatientReport) {
-            lines.addAll(
-                    Lists.newArrayList("The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
-                            "The samples have been analyzed by Next Generation Sequencing"));
-        }
 
         //@formatter:off
-        lines.addAll(Lists.newArrayList(
+        final List<String> lines = Lists.newArrayList(
+                "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
+                "The samples have been analyzed by Next Generation Sequencing",
                 "This experiment is performed on the tumor sample which arrived on " +
                         toFormattedDate(report.sampleReport().tumorArrivalDate()),
+                "The pathology tumor percentage for this sample is " + report.sampleReport().tumorPercentageString(),
                 "This experiment is performed on the blood sample which arrived on " +
                         toFormattedDate(report.sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + report.sampleReport().labProcedures(),
                 "This report is generated and verified by: " + report.user(),
-                "This report is addressed at: " + report.sampleReport().recipient()));
+                "This report is addressed at: " + report.sampleReport().recipient());
         //@formatter:on
         report.comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
@@ -444,8 +451,10 @@ public class PDFWriter implements ReportWriter {
             if (!isFirst) {
                 list.add(cmp.verticalGap(DETAIL_TO_DETAIL_VERTICAL_GAP));
             }
-            list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT), cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
-                    cmp.text(line).setStyle(fontStyle()), cmp.horizontalGap(TEXT_END_OF_LINE_GAP)));
+            list.add(cmp.horizontalList(cmp.horizontalGap(TEXT_DETAIL_INDENT),
+                    cmp.text("- ").setStyle(fontStyle()).setWidth(LIST_INDENT),
+                    cmp.text(line).setStyle(fontStyle()),
+                    cmp.horizontalGap(TEXT_END_OF_LINE_GAP)));
 
             isFirst = false;
         }

@@ -30,34 +30,36 @@ public abstract class CircosPage {
     private static final String TITLE = "CIRCOS plot";
 
     @NotNull
-    private TextFieldBuilder<String> title() {
-        return cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - " + TITLE).setStyle(sectionHeaderStyle());
-    }
-
-    @NotNull
-    private ImageBuilder circosImage() {
-        return cmp.image(circosImagePath()).setHeight(430).setWidth(430).setHorizontalImageAlignment(HorizontalImageAlignment.CENTER);
-    }
-
     public ComponentBuilder<?, ?> reportComponent() {
         // @formatter:off
         return cmp.verticalList(
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     title(),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    circosImage(),
+                    circosImage(circosImagePath()),
                     cmp.verticalGap(SECTION_VERTICAL_GAP),
                     description()
                 );
         // @formatter:on
     }
 
-    private VerticalListBuilder description() {
+    @NotNull
+    private static ImageBuilder circosImage(@NotNull String circosImagePath) {
+        return cmp.image(circosImagePath).setHeight(430).setWidth(430).setHorizontalImageAlignment(HorizontalImageAlignment.CENTER);
+    }
+
+    @NotNull
+    private static TextFieldBuilder<String> title() {
+        return cmp.text("HMF Sequencing Report v" + PatientReporterApplication.VERSION + " - " + TITLE).setStyle(sectionHeaderStyle());
+    }
+
+    @NotNull
+    private static VerticalListBuilder description() {
         return toList("Details on CIRCOS plot", Lists.newArrayList(
-                "The outer first circle shows the chromosomes.  The darker shaded areas represent large "
+                "The outer first circle shows the chromosomes. The darker shaded areas represent large "
                         + "gaps in the human reference genome:  i.e. regions of centromeres, heterochromatin & missing short arms.",
-                "The second circle shows the allele frequency of all observed somatic variants (incl. exon, intron and intergenic regions). "
-                        + "The scale is from 0 to 100%. Each purple dot represents a single somatic variant. "
+                "The second circle shows the allele frequency of observed somatic variants (incl. exon, intron and intergenic regions). "
+                        + "The scale is from 0 to 100%. Each dot represents a single somatic variant. "
                         + "Variant allele frequencies have been corrected for tumor purity. "
                         + "Indicated variants are colored according to the type of base change (e.g. C>T/G>A in red) and are in concordance "
                         + "with the coloring used in Alexandrov at al. 2013 Nature paper that describes the use of mutational signatures.",
