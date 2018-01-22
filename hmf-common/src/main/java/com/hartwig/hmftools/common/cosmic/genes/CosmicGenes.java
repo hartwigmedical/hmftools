@@ -58,7 +58,7 @@ public final class CosmicGenes {
             final String[] parts = line.split(FIELD_SEPARATOR, 18);
             if (parts.length > 0) {
                 final String gene = parts[NAME_COLUMN].trim();
-                final CosmicGeneData data = new CosmicGeneData(parts[DESCRIPTION_COLUMN].trim(),
+                final CosmicGeneData data = ImmutableCosmicGeneData.of(parts[DESCRIPTION_COLUMN].trim(),
                         parts[ENTREZ_ID_COLUMN].trim(), parts[GENOME_LOCATION_COLUMN].trim(),
                         parts[CHROMOSOME_BAND_COLUMN].trim(), parts[SOMATIC_COLUMN].trim(),
                         parts[GERMLINE_COLUMN].trim(), parts[SOMATIC_TUMOR_TYPES_COLUMN].trim(),
@@ -75,6 +75,6 @@ public final class CosmicGenes {
                 }
             }
         }
-        return new CosmicGeneModel(cosmicDataPerGene);
+        return ImmutableCosmicGeneModel.of(cosmicDataPerGene);
     }
 }

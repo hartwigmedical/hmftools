@@ -1,143 +1,59 @@
 package com.hartwig.hmftools.common.cosmic.genes;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class CosmicGeneData {
-    @NotNull
-    private final String description;
-    @NotNull
-    private final String entrezId;
-    @NotNull
-    private final String genomeLocation;
-    @NotNull
-    private final String chromosomeBand;
-    @NotNull
-    private final String somatic;
-    @NotNull
-    private final String germline;
-    @NotNull
-    private final String somaticTumorTypes;
-    @NotNull
-    private final String germlineTumorTypes;
-    @NotNull
-    private final String cancerSyndrome;
-    @NotNull
-    private final String tissueType;
-    @NotNull
-    private final String molecularGenetics;
-    @NotNull
-    private final String role;
-    @NotNull
-    private final String mutationTypes;
-    @NotNull
-    private final String translocationPartner;
-    @NotNull
-    private final String otherGermlineMut;
-    @NotNull
-    private final String otherSyndrome;
-
-    CosmicGeneData(@NotNull final String description, @NotNull final String entrezId,
-            @NotNull final String genomeLocation, @NotNull final String chromosomeBand, @NotNull final String somatic,
-            @NotNull final String germline, @NotNull final String somaticTumorTypes,
-            @NotNull final String germlineTumorTypes, @NotNull final String cancerSyndrome,
-            @NotNull final String tissueType, @NotNull final String molecularGenetics, @NotNull final String role,
-            @NotNull final String mutationTypes, @NotNull final String translocationPartner,
-            @NotNull final String otherGermlineMut, @NotNull final String otherSyndrome) {
-        this.description = description;
-        this.entrezId = entrezId;
-        this.genomeLocation = genomeLocation;
-        this.chromosomeBand = chromosomeBand;
-        this.somatic = somatic;
-        this.germline = germline;
-        this.somaticTumorTypes = somaticTumorTypes;
-        this.germlineTumorTypes = germlineTumorTypes;
-        this.cancerSyndrome = cancerSyndrome;
-        this.tissueType = tissueType;
-        this.molecularGenetics = molecularGenetics;
-        this.role = role;
-        this.mutationTypes = mutationTypes;
-        this.translocationPartner = translocationPartner;
-        this.otherGermlineMut = otherGermlineMut;
-        this.otherSyndrome = otherSyndrome;
-    }
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class CosmicGeneData {
 
     @NotNull
-    public String description() {
-        return description;
-    }
+    public abstract String description();
 
     @NotNull
-    public String entrezId() {
-        return entrezId;
-    }
+    public abstract String entrezId();
 
     @NotNull
-    public String genomeLocation() {
-        return genomeLocation;
-    }
+    public abstract String genomeLocation();
 
     @NotNull
-    public String chromosomeBand() {
-        return chromosomeBand;
-    }
+    public abstract String chromosomeBand();
 
     @NotNull
-    public String somatic() {
-        return somatic;
-    }
+    public abstract String somatic();
 
     @NotNull
-    public String germline() {
-        return germline;
-    }
+    public abstract String germline();
 
     @NotNull
-    public String somaticTumorTypes() {
-        return somaticTumorTypes;
-    }
+    public abstract String somaticTumorTypes();
 
     @NotNull
-    public String germlineTumorTypes() {
-        return germlineTumorTypes;
-    }
+    public abstract String germlineTumorTypes();
 
     @NotNull
-    public String cancerSyndrome() {
-        return cancerSyndrome;
-    }
+    public abstract String cancerSyndrome();
 
     @NotNull
-    public String tissueType() {
-        return tissueType;
-    }
+    public abstract String tissueType();
 
     @NotNull
-    public String molecularGenetics() {
-        return molecularGenetics;
-    }
+    public abstract String molecularGenetics();
 
     @NotNull
-    public String role() {
-        return role;
-    }
+    public abstract String role();
 
     @NotNull
-    public String mutationTypes() {
-        return mutationTypes;
-    }
+    public abstract String mutationTypes();
 
     @NotNull
-    public String translocationPartner() {
-        return translocationPartner;
-    }
+    public abstract String translocationPartner();
 
     @NotNull
-    public String otherGermlineMut() {
-        return otherGermlineMut;
-    }
+    public abstract String otherGermlineMut();
 
     @NotNull
-    public String otherSyndrome() {
-        return otherSyndrome;
-    }
+    public abstract String otherSyndrome();
 }
