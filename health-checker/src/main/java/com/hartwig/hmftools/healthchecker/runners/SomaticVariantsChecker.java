@@ -48,15 +48,20 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
         checks.add(new HealthCheck(runContext.tumorSample(),
                 SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(),
                 String.valueOf(snps.size())));
-        checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(),
+        checks.add(new HealthCheck(runContext.tumorSample(),
+                SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(),
                 String.valueOf(indels.size())));
-        checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(),
+        checks.add(new HealthCheck(runContext.tumorSample(),
+                SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(),
                 String.valueOf(snpsWithDBSNPAndNotCOSMIC.size())));
-        checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(),
+        checks.add(new HealthCheck(runContext.tumorSample(),
+                SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(),
                 String.valueOf(indelsWithDBSNPAndNotCOSMIC.size())));
-        checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(),
+        checks.add(new HealthCheck(runContext.tumorSample(),
+                SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(),
                 String.valueOf(mnps.size())));
-        checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(),
+        checks.add(new HealthCheck(runContext.tumorSample(),
+                SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(),
                 String.valueOf(mnpWithDBSNPAndNotCOSMIC.size())));
 
         return toMultiValueResult(checks);
@@ -68,17 +73,23 @@ public class SomaticVariantsChecker extends ErrorHandlingChecker implements Heal
         if (runContext.isSomaticRun()) {
             final List<HealthCheck> checks = Lists.newArrayList();
 
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(),
+            checks.add(new HealthCheck(runContext.tumorSample(),
+                    SomaticVariantCheck.SOMATIC_SNP_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(),
+            checks.add(new HealthCheck(runContext.tumorSample(),
+                    SomaticVariantCheck.SOMATIC_INDEL_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(),
+            checks.add(new HealthCheck(runContext.tumorSample(),
+                    SomaticVariantCheck.SOMATIC_SNP_DBSNP_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(),
+            checks.add(new HealthCheck(runContext.tumorSample(),
+                    SomaticVariantCheck.SOMATIC_INDEL_DBSNP_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(),
+            checks.add(new HealthCheck(runContext.tumorSample(),
+                    SomaticVariantCheck.SOMATIC_MNP_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
-            checks.add(new HealthCheck(runContext.tumorSample(), SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(),
+            checks.add(new HealthCheck(runContext.tumorSample(),
+                    SomaticVariantCheck.SOMATIC_MNP_DBSNP_COUNT.toString(),
                     HealthCheckConstants.ERROR_VALUE));
 
             return toMultiValueResult(checks);
