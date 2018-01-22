@@ -61,6 +61,7 @@ public class PatientReporterApplication {
     private static final String COSMIC_CSV = "cosmic_csv";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String FUSION_CSV = "fusion_csv";
+    private static final String FASTA_FILE_LOCATION = "fasta_file_location";
     private static final String COMMENTS = "comments";
 
     private static final String CENTER_CSV = "center_csv";
@@ -119,7 +120,7 @@ public class PatientReporterApplication {
     @NotNull
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
         return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(COSMIC_CSV),
-                cmd.getOptionValue(FUSION_CSV));
+                cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(FASTA_FILE_LOCATION));
     }
 
     @NotNull
@@ -233,6 +234,7 @@ public class PatientReporterApplication {
         options.addOption(CENTER_CSV, true, "Path towards a CSV containing center data.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
         options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
+        options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(COMMENTS, true, "Additional comments to be added to the report, if any.");
         return options;
     }
