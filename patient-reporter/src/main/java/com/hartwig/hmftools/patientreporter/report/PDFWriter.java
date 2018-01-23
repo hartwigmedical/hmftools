@@ -37,6 +37,7 @@ import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection
 import com.hartwig.hmftools.patientreporter.report.data.CopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
+import com.hartwig.hmftools.patientreporter.report.pages.ImmutableSVReportPage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -153,9 +154,13 @@ public class PDFWriter implements ReportWriter {
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         generalExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantFieldExplanationSection(),
+                        snvIndelExplanationSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberExplanationSection()
+                        copyNumberExplanationSection(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        disruptionExplanationSection(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        fusionExplanation()
                 );
 
         final ComponentBuilder<?, ?> sampleDetailsPage =
@@ -171,7 +176,7 @@ public class PDFWriter implements ReportWriter {
 
         final ComponentBuilder<?, ?> totalReport =
                 cmp.multiPageList().add(reportMainPage)
-//                        .newPage().add(ImmutableSVReportPage.of(report).reportComponent())
+                        .newPage().add(ImmutableSVReportPage.of(report).reportComponent())
                         .newPage().add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
                         .newPage().add(genePanelPage)
                         .newPage().add(explanationPage)
@@ -351,7 +356,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantFieldExplanationSection() {
+    private static ComponentBuilder<?, ?> snvIndelExplanationSection() {
         return toList("Details on reported genomic variant fields",
                 Lists.newArrayList(
                         "The 'position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
@@ -378,13 +383,29 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> copyNumberExplanationSection() {
-        return toList("Details on reported copy numbers",
+        return toList("Details on reported gene copy numbers",
                 Lists.newArrayList("The lowest copy number value along the exonic regions of the canonical transcript is determined as "
                                 + "a measure for the gene's copy number.",
                         "Copy numbers are corrected for the implied tumor purity and represent the number of copies in the tumor DNA.",
                         "Any gene with no copies is reported as loss.",
                         "Any gene with at least 8 copies is reported as a gain.",
                         "Any gene with more copies than 2.2 times the average tumor ploidy is reported as a gain."));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> disruptionExplanationSection() {
+        return toList("Details on reported gene disruptions",
+                Lists.newArrayList("Genes are only reported as disrupted if their canonical transcript has been disrupted"));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> fusionExplanation() {
+        return toList("Details on reported gene fusions",
+                Lists.newArrayList("Only intronic in-frame fusions or whole exon deletions are reported.",
+                        "The canonical, or otherwise longest transcript validly fused is reported.",
+                        "Fusions are restricted to those in the Fusion Gene list curated by COSMIC.",
+                        "We additionally select fusions where one partner occurs in the 5' or 3' position in COSMIC >3 times.",
+                        "See http://cancer.sanger.ac.uk/cosmic/fusion for more information."));
     }
 
     @NotNull
