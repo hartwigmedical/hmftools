@@ -20,7 +20,7 @@ public class MSISection {
         final int markerValue = computeGraphValue(THRESHOLD);
         final GradientBar gradient = ImmutableGradientBar.of(Color.YELLOW, Color.RED, "MSS", "MSI-H", graphValue, markerValue);
         final SliderSection sliderSection =
-                ImmutableSliderSection.of("Microsatellite Instability", interpretMSI(msiValue), description(), gradient);
+                ImmutableSliderSection.of("Microsatellite Status", interpretMSI(msiValue), description(), gradient);
         return sliderSection.build();
     }
 
