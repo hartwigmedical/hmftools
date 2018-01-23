@@ -30,7 +30,7 @@ public final class GeneCopyNumberDataSource {
 
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosomalPosition(), copyNumber.gene(), copyNumber.alteration().description(),
-                    Integer.toString((int) Math.round(copyNumber.minCopyNumber())));
+                    Integer.toString(copyNumber.value()));
         }
         return copyNumberDatasource;
     }
