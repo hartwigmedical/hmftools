@@ -5,10 +5,13 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
 import java.awt.Color;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
@@ -117,5 +120,11 @@ public final class Commons {
     @NotNull
     public static StyleBuilder linkStyle() {
         return dataStyle().setForegroundColor(Color.BLUE);
+    }
+
+    @NotNull
+    public static String formattedDate(@Nullable final LocalDate date) {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+        return date != null ? formatter.format(date) : "?";
     }
 }
