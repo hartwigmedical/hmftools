@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.commons.math3.util.Pair;
 import org.immutables.value.Value;
@@ -45,7 +46,7 @@ public abstract class MicrosatelliteAnalyzer {
     }
 
     private boolean isPassIndel(@NotNull final SomaticVariant variant) {
-        return variant.filter().equals("PASS") && variant.ref().length() != variant.alt().length() && variant.ref().length() < 50
+        return variant.filter().equals("PASS") && variant.type() == VariantType.INDEL && variant.ref().length() < 50
                 && variant.alt().length() < 50;
     }
 
