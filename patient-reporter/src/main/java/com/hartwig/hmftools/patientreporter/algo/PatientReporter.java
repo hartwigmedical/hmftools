@@ -89,7 +89,7 @@ public abstract class PatientReporter {
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations = CivicAnalysis.run(variantAnalysis.findings(),
-                purpleAnalysis.findings(),
+                purpleAnalysis.reportableGeneCopyNumbers(),
                 reporterData().geneModel(),
                 doidMapping.doidsForTumorType(tumorType));
 
@@ -99,7 +99,7 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
         LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
-                + Integer.toString(purpleAnalysis.findings().size()) + " findings.");
+                + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
         LOGGER.info("  Number of unreported structural variants : " + Integer.toString(svCount));
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
@@ -119,7 +119,7 @@ public abstract class PatientReporter {
         return ImmutableSequencedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
                 mutationalLoad,
-                purpleAnalysis.findings(),
+                purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableDisruptions,
                 reportableFusions,
                 purpleAnalysis.purityString(),
@@ -147,7 +147,7 @@ public abstract class PatientReporter {
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore purityScore = context.score();
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
-        final List<GeneCopyNumber> geneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
+        final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
                 .filter(x -> reporterData().geneModel().panel().contains(x.gene()))
                 .collect(Collectors.toList());
@@ -160,7 +160,7 @@ public abstract class PatientReporter {
                 .fittedPurity(purity)
                 .fittedScorePurity(purityScore)
                 .copyNumbers(purpleCopyNumbers)
-                .geneCopyNumbers(geneCopyNumbers)
+                .panelGeneCopyNumbers(panelGeneCopyNumbers)
                 .build();
         if (Doubles.greaterThan(purpleAnalysis.purityUncertainty(), 0.05)) {
             LOGGER.warn("Purity uncertainty (" + PatientReportFormat.formatPercent(purpleAnalysis.purityUncertainty())

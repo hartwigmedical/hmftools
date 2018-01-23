@@ -33,7 +33,7 @@ import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
-import com.hartwig.hmftools.patientreporter.report.data.CopyNumberDataSource;
+import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
@@ -288,12 +288,12 @@ public class PDFWriter implements ReportWriter {
     private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 report.geneCopyNumbers().size() > 0
-                        ? cmp.subreport(monospaceBaseTable().fields(CopyNumberDataSource.copyNumberFields())
-                        .columns(col.column("Position", CopyNumberDataSource.POSITION_FIELD),
-                                col.column("Gene", CopyNumberDataSource.GENE_FIELD),
-                                col.column("Type", CopyNumberDataSource.DESCRIPTION_FIELD),
-                                col.column("Copies", CopyNumberDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(CopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
+                        ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())
+                        .columns(col.column("Position", GeneCopyNumberDataSource.POSITION_FIELD),
+                                col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
+                                col.column("Type", GeneCopyNumberDataSource.DESCRIPTION_FIELD),
+                                col.column("Copies", GeneCopyNumberDataSource.COPY_NUMBER_FIELD))
+                        .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);

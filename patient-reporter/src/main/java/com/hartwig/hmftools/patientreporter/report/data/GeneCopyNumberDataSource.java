@@ -12,14 +12,14 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public final class CopyNumberDataSource {
+public final class GeneCopyNumberDataSource {
 
     public static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> DESCRIPTION_FIELD = field("description", String.class);
     public static final FieldBuilder<?> COPY_NUMBER_FIELD = field("copynumber", String.class);
 
-    private CopyNumberDataSource() {
+    private GeneCopyNumberDataSource() {
     }
 
     @NotNull
@@ -30,7 +30,7 @@ public final class CopyNumberDataSource {
 
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             copyNumberDatasource.add(copyNumber.chromosomalPosition(), copyNumber.gene(), copyNumber.alteration().name(),
-                    Integer.toString(copyNumber.value()));
+                    Integer.toString((int) Math.round(copyNumber.minCopyNumber())));
         }
         return copyNumberDatasource;
     }

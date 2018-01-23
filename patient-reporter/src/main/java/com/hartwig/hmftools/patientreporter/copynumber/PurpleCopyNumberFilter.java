@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-final class PurpleCopyNumberReportFactory {
+final class PurpleCopyNumberFilter {
 
     @VisibleForTesting
     static final double ABS_GAIN = 8;
@@ -19,11 +19,11 @@ final class PurpleCopyNumberReportFactory {
     @VisibleForTesting
     static final double ABS_LOSS = 0.5;
 
-    private PurpleCopyNumberReportFactory() {
+    private PurpleCopyNumberFilter() {
     }
 
     @NotNull
-    static List<GeneCopyNumber> createReport(final double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+    static List<GeneCopyNumber> filterCopyNumbersForReport(final double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
         final List<GeneCopyNumber> result = Lists.newArrayList();
         for (final GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
             if (includeInReport(samplePloidy, geneCopyNumber.minCopyNumber())) {

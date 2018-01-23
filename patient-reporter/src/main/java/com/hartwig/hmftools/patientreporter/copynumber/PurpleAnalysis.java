@@ -41,15 +41,15 @@ public abstract class PurpleAnalysis {
     public abstract List<PurpleCopyNumber> copyNumbers();
 
     @NotNull
-    public abstract List<GeneCopyNumber> geneCopyNumbers();
+    public abstract List<GeneCopyNumber> panelGeneCopyNumbers();
 
     public int genePanelSize() {
-        return geneCopyNumbers().size();
+        return panelGeneCopyNumbers().size();
     }
 
     @NotNull
-    public List<GeneCopyNumber> findings() {
-        return PurpleCopyNumberReportFactory.createReport(fittedPurity().ploidy(), geneCopyNumbers());
+    public List<GeneCopyNumber> reportableGeneCopyNumbers() {
+        return PurpleCopyNumberFilter.filterCopyNumbersForReport(fittedPurity().ploidy(), panelGeneCopyNumbers());
     }
 
     public double purityUncertainty() {
