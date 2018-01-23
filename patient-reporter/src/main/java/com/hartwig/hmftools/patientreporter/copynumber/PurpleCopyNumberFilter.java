@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,13 +23,7 @@ final class PurpleCopyNumberFilter {
 
     @NotNull
     static List<GeneCopyNumber> filterCopyNumbersForReport(final double samplePloidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        final List<GeneCopyNumber> result = Lists.newArrayList();
-        for (final GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-            if (includeInReport(samplePloidy, geneCopyNumber.minCopyNumber())) {
-                result.add(ImmutableGeneCopyNumber.copyOf(geneCopyNumber));
-            }
-        }
-        return result;
+        return geneCopyNumbers.stream().filter(x -> includeInReport(samplePloidy, x.minCopyNumber())).collect(Collectors.toList());
     }
 
     @VisibleForTesting
