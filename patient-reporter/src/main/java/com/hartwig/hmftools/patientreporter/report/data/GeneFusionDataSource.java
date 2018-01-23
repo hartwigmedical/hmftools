@@ -10,7 +10,7 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public class GeneFusionDataSource {
+public final class GeneFusionDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
@@ -28,7 +28,6 @@ public class GeneFusionDataSource {
 
     @NotNull
     public static JRDataSource fromGeneFusions(@NotNull List<GeneFusionData> fusions) {
-
         final DRDataSource dataSource =
                 new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), POSITION_FIELD.getName(), SV_GENE_CONTEXT.getName(),
                         SV_PARTNER_GENE_FIELD.getName(), SV_PARTNER_TRANSCRIPT_FIELD.getName(), SV_PARTNER_POSITION_FIELD.getName(),
@@ -46,5 +45,4 @@ public class GeneFusionDataSource {
         return new FieldBuilder<?>[] { GENE_FIELD, TRANSCRIPT_FIELD, POSITION_FIELD, SV_GENE_CONTEXT, SV_PARTNER_GENE_FIELD,
                 SV_PARTNER_TRANSCRIPT_FIELD, SV_PARTNER_POSITION_FIELD, SV_PARTNER_CONTEXT_FIELD, SV_TYPE_FIELD, SV_VAF };
     }
-
 }

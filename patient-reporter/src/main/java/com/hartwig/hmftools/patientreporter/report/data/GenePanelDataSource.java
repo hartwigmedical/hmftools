@@ -17,7 +17,7 @@ import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public class GenePanelDataSource {
+public final class GenePanelDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);

@@ -12,7 +12,7 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public class CopyNumberDataSource {
+public final class CopyNumberDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> CHROMOSOME_FIELD = field("chromosome", String.class);

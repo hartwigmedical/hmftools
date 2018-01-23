@@ -34,10 +34,11 @@ import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.CopyNumberDataSource;
+import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
-import com.hartwig.hmftools.patientreporter.report.pages.ImmutableSVReportPage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -118,45 +119,41 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final SequencedPatientReport report,
             @NotNull final HmfReporterData reporterData) throws IOException {
-        // @formatter:off
         final ComponentBuilder<?, ?> reportMainPage =
-                cmp.verticalList(
-                        MainPageTopSection.build("HMF Sequencing Report", report.sampleReport()),
+                cmp.verticalList(MainPageTopSection.build("HMF Sequencing Report", report.sampleReport()),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
                         mainPageAboutSection(),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        variantReport(report, reporterData),
+                        snvIndelReport(report, reporterData),
                         cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(report));
+                        copyNumberReport(report),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneDisruptionReport(report),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        geneFusionReport(report));
 
-        final ComponentBuilder<?, ?> genePanelPage =
-                cmp.verticalList(
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text(Commons.TITLE + " - Gene Panel Information")
-                                .setStyle(sectionHeaderStyle()),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        GenePanelSection.build(reporterData)
-                );
+        final ComponentBuilder<?, ?> genePanelPage = cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text(Commons.TITLE + " - Gene Panel Information").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                GenePanelSection.build(reporterData));
 
-        final ComponentBuilder<?, ?> sampleDetailsPage =
-                cmp.verticalList(
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        cmp.text(Commons.TITLE + " - Sample Details & Disclaimer")
-                                .setStyle(sectionHeaderStyle()),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        sampleDetailsSection(report),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        disclaimerSection()
-                );
+        final ComponentBuilder<?, ?> sampleDetailsPage = cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text(Commons.TITLE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                sampleDetailsSection(report),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                disclaimerSection());
 
-        final ComponentBuilder<?, ?> totalReport =
-                cmp.multiPageList().add(reportMainPage)
-                        .newPage().add(ImmutableSVReportPage.of(report).reportComponent())
-                        .newPage().add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
-                        .newPage().add(genePanelPage)
-                        .newPage().add(ImmutableExplanationPage.builder().build().reportComponent())
-                        .newPage().add(sampleDetailsPage);
-        // @formatter:on
+        final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
+                .add(reportMainPage)
+                .newPage()
+                .add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
+                .newPage()
+                .add(genePanelPage)
+                .newPage()
+                .add(ImmutableExplanationPage.builder().build().reportComponent())
+                .newPage()
+                .add(sampleDetailsPage);
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
         //  - footerBand, detailBand, etc are shown when data source is not empty
@@ -223,37 +220,30 @@ public class PDFWriter implements ReportWriter {
             }
         }
 
-        // @formatter:off
-        return cmp.verticalList(
-                cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12))
-                        .setHeight(20),
-                cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12))
-                        .setHeight(20),
+        return cmp.verticalList(cmp.text(title).setStyle(tableHeaderStyle().setFontSize(12)).setHeight(20),
+                cmp.text(subTitle).setStyle(dataTableStyle().setFontSize(12)).setHeight(20),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(message).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing " +
-                                "result. Therefore whole genome sequencing cannot be performed, " +
-                                "unless additional fresh tumor material can be provided for a new assessment.")
-                        .setStyle(fontStyle()),
+                cmp.text("The received biopsies for the tumor sample for this patient were inadequate to obtain a reliable sequencing "
+                        + "result. Therefore whole genome sequencing cannot be performed, "
+                        + "unless additional fresh tumor material can be provided for a new assessment.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("When possible, please resubmit using the same " + report.study().studyName() + "-number. " +
-                        "In case additional tumor material cannot be provided, please be notified that the patient will not be " +
-                        "evaluable for the " + report.study().studyCode() + " study.").setStyle(fontStyle()),
+                cmp.text("When possible, please resubmit using the same " + report.study().studyName() + "-number. "
+                        + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
+                        + "evaluable for the " + report.study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The biopsies evaluated for this sample have arrived on " +
-                        toFormattedDate(report.sampleReport().tumorArrivalDate())).setStyle(fontStyle()),
+                cmp.text("The biopsies evaluated for this sample have arrived on " + toFormattedDate(report.sampleReport()
+                        .tumorArrivalDate())).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("This report is generated and verified by: " + report.user() + " and is addressed at " +
-                        report.sampleReport().recipient()).setStyle(fontStyle()),
+                cmp.text("This report is generated and verified by: " + report.user() + " and is addressed at " + report.sampleReport()
+                        .recipient()).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl")
-                        .setStyle(fontStyle()));
-        // @formatter:on
+                cmp.text("For questions, please contact us via info@hartwigmedicalfoundation.nl").setStyle(fontStyle()));
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> variantReport(@NotNull final SequencedPatientReport report,
+    private static ComponentBuilder<?, ?> snvIndelReport(@NotNull final SequencedPatientReport report,
             @NotNull final HmfReporterData reporterData) {
         final String mutationalLoadAddition =
                 "Patients with a mutational load over 140 could be " + "eligible for immunotherapy within DRUP.";
@@ -262,23 +252,22 @@ public class PDFWriter implements ReportWriter {
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific variant reported for "
                 + "this sample, but only on a gene-level.";
 
-        // @formatter:off
-        final ComponentBuilder<?, ?> table = report.variants().size() > 0 ?
-                cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
-                        .columns(
-                            col.column("Gene", VariantDataSource.GENE_FIELD).setFixedWidth(50),
-                            col.column("Position", VariantDataSource.POSITION_FIELD),
-                            col.column("Variant", VariantDataSource.VARIANT_FIELD),
-                            col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
-                            col.componentColumn("Predicted Effect", predictedEffectColumn()),
-                            col.column("CosmicGenes", VariantDataSource.COSMIC_FIELD)
-                                    .setHyperLink(hyperLink(new COSMICLinkExpression())).setStyle(linkStyle()),
-                            col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
-                        .setDataSource(VariantDataSource.fromVariants(report.variants(), reporterData)) :
-                cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        final ComponentBuilder<?, ?> table =
+                report.variants().size() > 0
+                        ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
+                        .columns(col.column("Gene", VariantDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("Position", VariantDataSource.POSITION_FIELD),
+                                col.column("Variant", VariantDataSource.VARIANT_FIELD),
+                                col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
+                                col.componentColumn("Predicted Effect", predictedEffectColumn()),
+                                col.column("Cosmic", VariantDataSource.COSMIC_FIELD)
+                                        .setHyperLink(hyperLink(new COSMICLinkExpression()))
+                                        .setStyle(linkStyle()),
+                                col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
+                        .setDataSource(VariantDataSource.fromVariants(report.variants(), reporterData))
+                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(
-                cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(6),
                 table,
                 cmp.verticalGap(15),
@@ -286,38 +275,65 @@ public class PDFWriter implements ReportWriter {
                         cmp.text("*").setStyle(fontStyle()).setWidth(2),
                         cmp.text(geneMutationAddition).setStyle(fontStyle())),
                 cmp.verticalGap(15),
-                cmp.text("Implied Tumor Purity: " + report.impliedPurityString())
-                        .setStyle(tableHeaderStyle()),
+                cmp.text("Implied Tumor Purity: " + report.impliedPurityString()).setStyle(tableHeaderStyle()),
                 cmp.verticalGap(15),
-                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " **")
-                        .setStyle(tableHeaderStyle()),
+                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " **").setStyle(tableHeaderStyle()),
                 cmp.verticalGap(15),
                 cmp.horizontalList(cmp.horizontalGap(10),
                         cmp.text("**").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(mutationalLoadAddition).setStyle(fontStyle()))
-        );
-        // @formatter:on
+                        cmp.text(mutationalLoadAddition).setStyle(fontStyle())));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final SequencedPatientReport report) {
-        // @formatter:off
-        final ComponentBuilder<?, ?> table = report.copyNumbers().size() > 0 ?
-                cmp.subreport(monospaceBaseTable().fields(CopyNumberDataSource.copyNumberFields())
-                        .columns(
-                            col.column("Chromosome", CopyNumberDataSource.CHROMOSOME_FIELD),
-                            col.column("Band", CopyNumberDataSource.BAND_FIELD),
-                            col.column("Gene", CopyNumberDataSource.GENE_FIELD),
-                            col.column("Type", CopyNumberDataSource.COPY_NUMBER_TYPE_FIELD),
-                            col.column("Copies", CopyNumberDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(CopyNumberDataSource.fromCopyNumbers(report.copyNumbers()))) :
-                cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+        final ComponentBuilder<?, ?> table =
+                report.copyNumbers().size() > 0
+                        ? cmp.subreport(monospaceBaseTable().fields(CopyNumberDataSource.copyNumberFields())
+                        .columns(col.column("Chromosome", CopyNumberDataSource.CHROMOSOME_FIELD),
+                                col.column("Band", CopyNumberDataSource.BAND_FIELD),
+                                col.column("Gene", CopyNumberDataSource.GENE_FIELD),
+                                col.column("Type", CopyNumberDataSource.COPY_NUMBER_TYPE_FIELD),
+                                col.column("Copies", CopyNumberDataSource.COPY_NUMBER_FIELD))
+                        .setDataSource(CopyNumberDataSource.fromCopyNumbers(report.copyNumbers())))
+                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(
-                cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(6),
-                table);
-        // @formatter:on
+        return cmp.verticalList(cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
+        final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
+                ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
+                .columns(col.column("Gene", GeneDisruptionDataSource.GENE_FIELD).setFixedWidth(50),
+                        col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
+                        col.column("Gene Context", GeneDisruptionDataSource.SV_GENE_CONTEXT),
+                        col.column("Orientation", GeneDisruptionDataSource.SV_ORIENTATION_FIELD),
+                        col.column("Partner", GeneDisruptionDataSource.SV_PARTNER_POSITION_FIELD),
+                        col.column("Type", GeneDisruptionDataSource.SV_TYPE_FIELD).setFixedWidth(30),
+                        col.column("VAF", GeneDisruptionDataSource.SV_VAF).setFixedWidth(30))
+                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
+                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
+        return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final SequencedPatientReport report) {
+        final ComponentBuilder<?, ?> table =
+                report.geneFusions().size() > 0
+                        ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
+                        .columns(col.column("5' Gene", GeneFusionDataSource.GENE_FIELD).setFixedWidth(50),
+                                col.column("5' Position", GeneFusionDataSource.POSITION_FIELD),
+                                col.column("5' Gene Context", GeneFusionDataSource.SV_GENE_CONTEXT),
+                                col.column("3' Gene", GeneFusionDataSource.SV_PARTNER_GENE_FIELD).setFixedWidth(50),
+                                col.column("3' Position", GeneFusionDataSource.SV_PARTNER_POSITION_FIELD),
+                                col.column("3' Gene Context", GeneFusionDataSource.SV_PARTNER_CONTEXT_FIELD),
+                                col.column("SV Type", GeneFusionDataSource.SV_TYPE_FIELD).setFixedWidth(30),
+                                col.column("VAF", GeneFusionDataSource.SV_VAF).setFixedWidth(30))
+                        .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
+                        : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
+        return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
     }
 
     @NotNull

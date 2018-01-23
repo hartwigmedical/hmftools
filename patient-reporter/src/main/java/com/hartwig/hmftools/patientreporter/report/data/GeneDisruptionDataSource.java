@@ -10,7 +10,7 @@ import net.sf.dynamicreports.report.builder.FieldBuilder;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.jasperreports.engine.JRDataSource;
 
-public class GeneDisruptionDataSource {
+public final class GeneDisruptionDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> TRANSCRIPT_FIELD = field("transcript", String.class);
