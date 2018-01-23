@@ -39,10 +39,10 @@ public abstract class ExplanationPage {
     private static ComponentBuilder<?, ?> generalExplanationSection() {
         return toList("Details on the report in general",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
-                        "Findings in the tumor that also exist in the germline are not included in this report.",
-                        "Analysis for samples with an implied tumor purity below 20% suffer from lower sensitivity. "
-                                + "This means we have a lower likelihood of finding real variants and "
-                                + "we likely underestimate the true mutational load."));
+                        "Somatic (tumor derived) variants are reported. "
+                                + "Potential variants in the tumor that also exist in germline findings are not included in this report.",
+                        "Variant detection in samples with lower tumor content is less sensitive. "
+                                + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases."));
     }
 
     @NotNull
