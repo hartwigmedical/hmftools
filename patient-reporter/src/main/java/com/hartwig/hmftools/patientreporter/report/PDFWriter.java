@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.patientreporter.report;
 
-import static com.hartwig.hmftools.patientreporter.report.Commons.DATE_TIME_FORMAT;
 import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
 import static com.hartwig.hmftools.patientreporter.report.Commons.dataTableStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.formattedDate;
 import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.monospaceBaseTable;
 import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
@@ -21,15 +21,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
@@ -39,11 +35,11 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
+import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
@@ -137,13 +133,6 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 GenePanelSection.build(reporterData));
 
-        final ComponentBuilder<?, ?> sampleDetailsPage = cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                sampleDetailsSection(report),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                disclaimerSection());
-
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(reportMainPage)
                 .newPage()
@@ -153,7 +142,7 @@ public class PDFWriter implements ReportWriter {
                 .newPage()
                 .add(ImmutableExplanationPage.builder().build().reportComponent())
                 .newPage()
-                .add(sampleDetailsPage);
+                .add(SampleDetailsPage.of(report).reportComponent());
 
         // MIVO: hack to get page footers working; the footer band and noData bands are exclusive:
         //  - footerBand, detailBand, etc are shown when data source is not empty
@@ -333,47 +322,6 @@ public class PDFWriter implements ReportWriter {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> disclaimerSection() {
-        //@formatter:off
-        final List<String> lines = Lists.newArrayList(
-                "The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation.",
-                "This analysis done for this report has passed all internal quality controls.",
-                "For feedback or complaints please contact qualitysystem@hartwigmedicalfoundation.nl.");
-        //@formatter:on
-        return toList("Disclaimer", lines);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> sampleDetailsSection(@NotNull final PatientReport report) {
-        if (report.sampleReport().recipient() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + report.sampleReport().sampleId());
-        }
-
-        //@formatter:off
-        final List<String> lines = Lists.newArrayList(
-                "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
-                "The samples have been analyzed by Next Generation Sequencing",
-                "This experiment is performed on the tumor sample which arrived on " +
-                        toFormattedDate(report.sampleReport().tumorArrivalDate()),
-                "The pathology tumor percentage for this sample is " + report.sampleReport().tumorPercentageString(),
-                "This experiment is performed on the blood sample which arrived on " +
-                        toFormattedDate(report.sampleReport().bloodArrivalDate()),
-                "This experiment is performed according to lab procedures: " + report.sampleReport().labProcedures(),
-                "This report is generated and verified by: " + report.user(),
-                "This report is addressed at: " + report.sampleReport().recipient());
-        //@formatter:on
-        report.comments().ifPresent(comments -> lines.add("Comments: " + comments));
-
-        return toList("Sample details", lines);
-    }
-
-    @NotNull
-    private static String toFormattedDate(@Nullable final LocalDate date) {
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-        return date != null ? formatter.format(date) : "?";
     }
 
     @NotNull
