@@ -19,10 +19,14 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
@@ -37,9 +41,6 @@ import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReportType;
-import com.hartwig.hmftools.patientreporter.copynumber.ImmutableCopyNumberReport;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -73,7 +74,7 @@ public class PDFWriterTest {
                 ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
-        final List<CopyNumberReport> copyNumbers = createTestCopyNumbers();
+        final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
 
         final List<GeneFusionData> fusions = createTestFusions();
         final List<GeneDisruptionData> disruptions = createTestDisruptions();
@@ -84,10 +85,10 @@ public class PDFWriterTest {
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
-                fusions,
-                disruptions,
-                copyNumbers,
                 361,
+                copyNumbers,
+                disruptions,
+                fusions,
                 "58%",
                 alterations, Resources.getResource("circos" + File.separator + "circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
@@ -154,28 +155,47 @@ public class PDFWriterTest {
         return Lists.newArrayList(variant1, variant2, variant3);
     }
 
+    @NotNull
     private static SomaticVariant createTestVariant(@NotNull final String chromosome, final long position, @NotNull final String ref,
             @NotNull final String alt) {
         return new SomaticVariantImpl.Builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
     }
 
     @NotNull
-    private static List<CopyNumberReport> createTestCopyNumbers() {
-        final CopyNumberReport copyNumber1 = ImmutableCopyNumberReport.builder()
+    private static List<GeneCopyNumber> createTestCopyNumbers() {
+        final GeneCopyNumber copyNumber1 = createCopyNumberBuilder()
                 .chromosome("9")
                 .chromosomeBand("p21.3")
                 .gene("CDKN2A")
-                .copyNumber(0)
-                .type(CopyNumberReportType.LOSS)
+                .minCopyNumber(0)
                 .build();
-        final CopyNumberReport copyNumber2 = ImmutableCopyNumberReport.builder()
+        final GeneCopyNumber copyNumber2 = createCopyNumberBuilder()
                 .chromosome("17")
                 .chromosomeBand("q12")
                 .gene("ERBB2")
-                .copyNumber(9)
-                .type(CopyNumberReportType.GAIN)
+                .minCopyNumber(9)
                 .build();
         return Lists.newArrayList(copyNumber1, copyNumber2);
+    }
+
+    @NotNull
+    private static ImmutableGeneCopyNumber.Builder createCopyNumberBuilder() {
+        return ImmutableGeneCopyNumber.builder()
+                .start(1)
+                .end(2)
+                .minRegionStart(0)
+                .minRegionStartSupport(SegmentSupport.NONE)
+                .minRegionEnd(0)
+                .minRegionEndSupport(SegmentSupport.NONE)
+                .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                .minRegions(1)
+                .germlineHet2HomRegions(0)
+                .germlineHomRegions(0)
+                .somaticRegions(1)
+                .maxCopyNumber(0)
+                .meanCopyNumber(0)
+                .transcriptID("trans")
+                .transcriptVersion(0);
     }
 
     @NotNull

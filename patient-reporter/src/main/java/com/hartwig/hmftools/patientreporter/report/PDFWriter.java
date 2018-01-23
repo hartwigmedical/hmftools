@@ -287,14 +287,13 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table =
-                report.copyNumbers().size() > 0
+                report.geneCopyNumbers().size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(CopyNumberDataSource.copyNumberFields())
-                        .columns(col.column("Chromosome", CopyNumberDataSource.CHROMOSOME_FIELD),
-                                col.column("Band", CopyNumberDataSource.BAND_FIELD),
+                        .columns(col.column("Position", CopyNumberDataSource.POSITION_FIELD),
                                 col.column("Gene", CopyNumberDataSource.GENE_FIELD),
-                                col.column("Type", CopyNumberDataSource.COPY_NUMBER_TYPE_FIELD),
+                                col.column("Type", CopyNumberDataSource.DESCRIPTION_FIELD),
                                 col.column("Copies", CopyNumberDataSource.COPY_NUMBER_FIELD))
-                        .setDataSource(CopyNumberDataSource.fromCopyNumbers(report.copyNumbers())))
+                        .setDataSource(CopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);

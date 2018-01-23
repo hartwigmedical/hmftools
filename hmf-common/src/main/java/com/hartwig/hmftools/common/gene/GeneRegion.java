@@ -21,4 +21,7 @@ public interface GeneRegion extends GenomeRegion {
 
     @NotNull
     String chromosomeBand();
+
+    @NotNull
+    default String chromosomalPosition() { return chromosome() + chromosomeBand(); }
 }

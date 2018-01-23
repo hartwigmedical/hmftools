@@ -8,9 +8,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.apiclients.diseaseontology.api.DiseaseOntologyApiWrapper;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -23,7 +23,7 @@ public class CivicAnalysis {
 
     @NotNull
     public static List<Alteration> run(@NotNull final List<VariantReport> reportedVariants,
-            @NotNull final List<CopyNumberReport> copyNumbers, @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) {
+            @NotNull final List<GeneCopyNumber> copyNumbers, @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) {
         LOGGER.info(" Analysing civic associations...");
         final Set<String> tumorSubtypesDoids = getTumorSubtypesDoids(tumorDoids);
         if (tumorSubtypesDoids.isEmpty()) {
@@ -81,12 +81,12 @@ public class CivicAnalysis {
     }
 
     @NotNull
-    private static List<Alteration> civicCopyNumberAlterations(@NotNull final List<CopyNumberReport> copyNumbers,
+    private static List<Alteration> civicCopyNumberAlterations(@NotNull final List<GeneCopyNumber> copyNumbers,
             @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorSubtypesDoids) {
         LOGGER.info("  Fetching civic copy number alterations...");
         final List<Alteration> alterations = Lists.newArrayList();
         final CivicApiWrapper civicApi = new CivicApiWrapper();
-        for (final CopyNumberReport copyNumberReport : copyNumbers) {
+        for (final GeneCopyNumber copyNumberReport : copyNumbers) {
             for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
                 if (region.gene().equals(copyNumberReport.gene())) {
                     for (final int entrezId : region.entrezId()) {

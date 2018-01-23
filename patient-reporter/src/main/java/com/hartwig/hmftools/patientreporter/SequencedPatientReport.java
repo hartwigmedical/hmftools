@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -24,16 +24,16 @@ public abstract class SequencedPatientReport implements PatientReport {
     @NotNull
     public abstract List<VariantReport> variants();
 
+    public abstract int mutationalLoad();
+
     @NotNull
-    public abstract List<GeneFusionData> geneFusions();
+    public abstract List<GeneCopyNumber> geneCopyNumbers();
 
     @NotNull
     public abstract List<GeneDisruptionData> geneDisruptions();
 
     @NotNull
-    public abstract List<CopyNumberReport> copyNumbers();
-
-    public abstract int mutationalLoad();
+    public abstract List<GeneFusionData> geneFusions();
 
     @NotNull
     abstract String purplePurity();

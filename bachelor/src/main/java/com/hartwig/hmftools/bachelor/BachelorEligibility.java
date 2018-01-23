@@ -284,10 +284,8 @@ class BachelorEligibility {
 
     @NotNull
     public Collection<EligibilityReport> processCopyNumbers(final String patient, final List<GeneCopyNumber> copyNumbers) {
-
         final List<EligibilityReport> results = Lists.newArrayList();
         for (final GeneCopyNumber copyNumber : copyNumbers) {
-
             // TODO: verify the germline check
             final boolean isGermline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
             final List<String> matchingPrograms = programs.entrySet()

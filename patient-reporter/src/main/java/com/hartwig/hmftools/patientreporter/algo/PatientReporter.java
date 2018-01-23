@@ -28,9 +28,8 @@ import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
+import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -74,7 +73,6 @@ public abstract class PatientReporter {
 
         final String tumorSample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
-        final CopyNumberAnalysis copyNumberAnalysis = genomeAnalysis.purpleAnalysis().copyNumberAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
         final StructuralVariantAnalysis svAnalysis = genomeAnalysis.structuralVariantAnalysis();
         final List<GeneFusionData> reportableFusions =
@@ -91,7 +89,7 @@ public abstract class PatientReporter {
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations = CivicAnalysis.run(variantAnalysis.findings(),
-                copyNumberAnalysis.findings(),
+                purpleAnalysis.findings(),
                 reporterData().geneModel(),
                 doidMapping.doidsForTumorType(tumorType));
 
@@ -100,8 +98,8 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of variants after applying pass-only filter : " + Integer.toString(passedVariantCount));
         LOGGER.info("  Number of missense variants (mutational load) : " + Integer.toString(mutationalLoad));
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
-        LOGGER.info(" Determined copy number stats for " + Integer.toString(copyNumberAnalysis.genePanelSize()) + " genes which led to "
-                + Integer.toString(copyNumberAnalysis.findings().size()) + " findings.");
+        LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
+                + Integer.toString(purpleAnalysis.findings().size()) + " findings.");
         LOGGER.info("  Number of unreported structural variants : " + Integer.toString(svCount));
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
@@ -120,10 +118,10 @@ public abstract class PatientReporter {
                 sampleRecipient);
         return ImmutableSequencedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
-                reportableFusions,
-                reportableDisruptions,
-                copyNumberAnalysis.findings(),
                 mutationalLoad,
+                purpleAnalysis.findings(),
+                reportableDisruptions,
+                reportableFusions,
                 purpleAnalysis.purityString(),
                 alterations,
                 PatientReporterHelper.findCircosPlotPath(runDirectory, tumorSample),

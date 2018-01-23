@@ -31,8 +31,8 @@ public abstract class PurpleCopyNumber implements CopyNumber {
         return Doubles.lessThan(averageActualBAF(), 0.50) ? 0 : Math.max(0, (1 - averageActualBAF()) * averageTumorCopyNumber());
     }
 
+    @NotNull
     public String descriptiveBAF() {
-
         int copyNumber = value();
 
         int minorAlleleCount = (int) Math.round(minorAllelePloidy());

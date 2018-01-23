@@ -18,8 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.civic.AdditionalCivicMatches;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -70,7 +70,7 @@ public abstract class Alteration {
     }
 
     @NotNull
-    public static Alteration from(@NotNull final CopyNumberReport copyNumberReport, @NotNull final List<CivicVariant> civicVariants,
+    public static Alteration from(@NotNull final GeneCopyNumber copyNumberReport, @NotNull final List<CivicVariant> civicVariants,
             @NotNull final Set<String> tumorSubtypesDoids) {
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
@@ -80,7 +80,7 @@ public abstract class Alteration {
                 matchingVariants.add(AlterationMatch.of("manual", civicVariant));
             }
         });
-        return ImmutableAlteration.of(copyNumberReport.gene(), copyNumberReport.description(), exactMatchEvidence, matchingVariants);
+        return ImmutableAlteration.of(copyNumberReport.gene(), copyNumberReport.alteration().name(), exactMatchEvidence, matchingVariants);
     }
 
     @NotNull

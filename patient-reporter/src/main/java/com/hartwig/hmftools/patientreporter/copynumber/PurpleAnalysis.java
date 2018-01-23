@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.purple;
+package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,8 +13,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
-import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberReport;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -45,9 +43,24 @@ public abstract class PurpleAnalysis {
     @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();
 
+    public int genePanelSize() {
+        return geneCopyNumbers().size();
+    }
+
     @NotNull
-    public CopyNumberAnalysis copyNumberAnalysis() {
-        return new CopyNumberAnalysis(geneCopyNumbers().size(), copyNumberReport());
+    public List<GeneCopyNumber> findings() {
+        return PurpleCopyNumberReportFactory.createReport(fittedPurity().ploidy(), geneCopyNumbers());
+    }
+
+    public double purityUncertainty() {
+        return fittedScorePurity().maxPurity() - fittedScorePurity().minPurity();
+    }
+
+    @NotNull
+    public String purityString() {
+        return status() == FittedPurityStatus.NO_TUMOR
+                ? "[below detection threshold]"
+                : PatientReportFormat.formatPercent(fittedPurity().purity());
     }
 
     @NotNull
@@ -75,19 +88,5 @@ public abstract class PurpleAnalysis {
         }
 
         return result;
-    }
-
-    public double purityUncertainty() {
-        return fittedScorePurity().maxPurity() - fittedScorePurity().minPurity();
-    }
-
-    @NotNull
-    public String purityString() {
-        return status() == FittedPurityStatus.NO_TUMOR ? "[below detection threshold]" : PatientReportFormat.formatPercent(fittedPurity().purity());
-    }
-
-    @NotNull
-    private List<CopyNumberReport> copyNumberReport() {
-        return PurpleCopyNumberReportFactory.createReport(fittedPurity().ploidy(), geneCopyNumbers());
     }
 }
