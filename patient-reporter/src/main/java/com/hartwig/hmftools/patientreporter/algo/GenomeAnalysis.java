@@ -23,6 +23,4 @@ abstract class GenomeAnalysis {
 
     @NotNull
     abstract StructuralVariantAnalysis structuralVariantAnalysis();
-
-    abstract double indelsPerMb();
 }

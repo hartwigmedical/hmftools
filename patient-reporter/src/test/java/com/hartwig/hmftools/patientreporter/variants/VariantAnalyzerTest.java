@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import static com.hartwig.hmftools.common.variant.VariantAnnotationTest.createVariantAnnotationBuilder;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testMicrosatelliteAnalyzer;
 
 import static org.junit.Assert.assertEquals;
 
@@ -43,7 +44,7 @@ public class VariantAnalyzerTest {
     public void realCaseWorks() {
         final GeneModel geneModel = new GeneModel(hmfRegions());
 
-        final VariantAnalyzer analyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
+        final VariantAnalyzer analyzer = VariantAnalyzer.of(geneModel, testMicrosatelliteAnalyzer());
 
         final VariantAnnotation rightAnnotation =
                 createVariantAnnotationBuilder(VariantConsequence.MISSENSE_VARIANT).featureType(RIGHT_FEATURE_TYPE).
@@ -83,20 +84,19 @@ public class VariantAnalyzerTest {
     @NotNull
     private static SortedSetMultimap<String, HmfGenomeRegion> hmfRegions() {
         final SortedSetMultimap<String, HmfGenomeRegion> hmfRegions = TreeMultimap.create();
-        hmfRegions.put(CHROMOSOME,
-                ImmutableHmfGenomeRegion.builder()
-                        .chromosome(CHROMOSOME)
-                        .start(350)
-                        .end(450)
-                        .gene(GENE)
-                        .transcriptID(RIGHT_TRANSCRIPT)
-                        .transcriptVersion(TRANSCRIPT_VERSION)
-                        .chromosomeBand(CHROMOSOME_BAND)
-                        .entrezId(ENTREZ_ID)
-                        .geneID(GENE_ID)
-                        .geneStart(GENE_START)
-                        .geneEnd(GENE_END)
-                        .build());
+        hmfRegions.put(CHROMOSOME, ImmutableHmfGenomeRegion.builder()
+                .chromosome(CHROMOSOME)
+                .start(350)
+                .end(450)
+                .gene(GENE)
+                .transcriptID(RIGHT_TRANSCRIPT)
+                .transcriptVersion(TRANSCRIPT_VERSION)
+                .chromosomeBand(CHROMOSOME_BAND)
+                .entrezId(ENTREZ_ID)
+                .geneID(GENE_ID)
+                .geneStart(GENE_START)
+                .geneEnd(GENE_END)
+                .build());
         return hmfRegions;
     }
 }

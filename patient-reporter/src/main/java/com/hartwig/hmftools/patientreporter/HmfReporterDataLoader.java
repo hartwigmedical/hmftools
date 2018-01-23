@@ -9,9 +9,9 @@ import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
-import com.hartwig.hmftools.patientreporter.algo.ImmutableMicrosatelliteAnalyzer;
-import com.hartwig.hmftools.patientreporter.algo.MicrosatelliteAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableMicrosatelliteAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.MicrosatelliteAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 

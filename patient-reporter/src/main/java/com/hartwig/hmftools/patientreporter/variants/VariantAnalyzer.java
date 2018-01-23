@@ -10,37 +10,35 @@ import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class VariantAnalyzer {
-
-    @NotNull
-    private final ConsequenceDeterminer determiner;
-
-    @NotNull
-    public static VariantAnalyzer fromSlicingRegions(@NotNull final GeneModel geneModel) {
-        return new VariantAnalyzer(fromHmfSlicingRegion(geneModel));
-    }
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class },
+             allParameters = true)
+public abstract class VariantAnalyzer {
 
     @NotNull
-    private static ConsequenceDeterminer fromHmfSlicingRegion(@NotNull final GeneModel geneModel) {
-        return new ConsequenceDeterminer(geneModel);
-    }
+    protected abstract ConsequenceDeterminer determiner();
 
-    private VariantAnalyzer(@NotNull final ConsequenceDeterminer determiner) {
-        this.determiner = determiner;
+    @NotNull
+    protected abstract MicrosatelliteAnalyzer microsatelliteAnalyzer();
+
+    public static VariantAnalyzer of(@NotNull final GeneModel geneModel, @NotNull final MicrosatelliteAnalyzer microsatelliteAnalyzer) {
+        return ImmutableVariantAnalyzer.of(new ConsequenceDeterminer(geneModel), microsatelliteAnalyzer);
     }
 
     @NotNull
     public VariantAnalysis run(@NotNull final List<SomaticVariant> variants) {
         final List<SomaticVariant> passedVariants = passOnly(variants);
         final List<SomaticVariant> missenseVariants = filter(passedVariants, isMissense());
+        final double indelsPerMb = microsatelliteAnalyzer().analyzeVariants(variants);
 
-        final ConsequenceOutput consequenceOutput = determiner.run(passedVariants);
+        final ConsequenceOutput consequenceOutput = determiner().run(passedVariants);
 
-        return ImmutableVariantAnalysis.of(variants, passedVariants, missenseVariants,
-                consequenceOutput.consequentialVariants(),
-                consequenceOutput.findings());
+        return ImmutableVariantAnalysis.of(variants, passedVariants, missenseVariants, consequenceOutput.consequentialVariants(),
+                consequenceOutput.findings(), indelsPerMb);
     }
 
     @NotNull

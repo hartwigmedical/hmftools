@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.algo;
+package com.hartwig.hmftools.patientreporter.variants;
 
 import static com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory.getRepeatContext;
 import static com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory.relativePositionAndRef;
@@ -30,7 +30,7 @@ public abstract class MicrosatelliteAnalyzer {
         return ImmutableMicrosatelliteAnalyzer.of(new IndexedFastaSequenceFile(new File(fastaFileLocation)));
     }
 
-    public double analyzeVariants(@NotNull final List<SomaticVariant> variants) throws FileNotFoundException {
+    public double analyzeVariants(@NotNull final List<SomaticVariant> variants) {
         double indelCount = 0;
         for (final SomaticVariant variant : variants) {
             if (isPassIndel(variant)) {

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -22,8 +21,8 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
-import com.hartwig.hmftools.patientreporter.algo.MicrosatelliteAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.variants.MicrosatelliteAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +50,7 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    private static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() throws FileNotFoundException {
+    public static MicrosatelliteAnalyzer testMicrosatelliteAnalyzer() {
         return new MicrosatelliteAnalyzer() {
             @Override
             @Nullable
@@ -60,7 +59,7 @@ public final class PatientReporterTestUtil {
             }
 
             @Override
-            public double analyzeVariants(@NotNull final List<SomaticVariant> variants) throws FileNotFoundException {
+            public double analyzeVariants(@NotNull final List<SomaticVariant> variants) {
                 return 0.91;
             }
         };

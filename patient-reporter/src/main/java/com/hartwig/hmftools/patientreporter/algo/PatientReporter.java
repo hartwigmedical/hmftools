@@ -104,6 +104,7 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
+        LOGGER.info("  Microsatellite analysis results: " + variantAnalysis.indelsPerMb() + " indels per MB");
 
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
@@ -172,9 +173,6 @@ public abstract class PatientReporter {
         final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(svVcfPath.toString());
         LOGGER.info(" Analysing structural variants...");
         final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer().run(structuralVariants);
-        LOGGER.info(" Analysing microsatellite status...");
-        final double indelsPerMb = reporterData().microsatelliteAnalyzer().analyzeVariants(variants);
-        LOGGER.info(" Microsatellite analysis results: " + indelsPerMb + " indels per MB");
-        return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, svAnalysis, indelsPerMb);
+        return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, svAnalysis);
     }
 }

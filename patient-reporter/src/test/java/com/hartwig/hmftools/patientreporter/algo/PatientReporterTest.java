@@ -41,7 +41,7 @@ public class PatientReporterTest {
         final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfGeneMap());
         final BaseReporterData baseReporterData = testBaseReporterData();
         final HmfReporterData reporterData = testHmfReporterData();
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(geneModel);
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(geneModel, reporterData.microsatelliteAnalyzer());
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), CosmicFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);

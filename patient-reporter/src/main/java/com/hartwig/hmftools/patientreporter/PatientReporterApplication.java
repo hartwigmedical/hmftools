@@ -120,16 +120,14 @@ public class PatientReporterApplication {
 
     @NotNull
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
-                cmd.getOptionValue(COSMIC_FUSION_CSV),
-                cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(FASTA_FILE_LOCATION));
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV), cmd.getOptionValue(COSMIC_FUSION_CSV),
+                cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(FASTA_FILE_LOCATION));
     }
 
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final HmfReporterData reporterData)
             throws IOException, HartwigException, XMLStreamException, SQLException {
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.fromSlicingRegions(reporterData.geneModel());
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(reporterData.geneModel(), reporterData.microsatelliteAnalyzer());
 
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {

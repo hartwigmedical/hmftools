@@ -31,4 +31,6 @@ public abstract class VariantAnalysis {
     public int mutationalLoad() {
         return missenseVariants().size();
     }
+
+    public abstract double indelsPerMb();
 }
