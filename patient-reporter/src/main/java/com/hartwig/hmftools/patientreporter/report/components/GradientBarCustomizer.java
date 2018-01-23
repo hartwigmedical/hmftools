@@ -99,19 +99,20 @@ abstract class GradientBarCustomizer implements DRIChartCustomizer {
 
     private void addStartEndLabels(@NotNull final CategoryPlot categoryPlot, @NotNull final String startText,
             @NotNull final String endText) {
-        final int startPosition = (int) Math.ceil(startText.length() / 2.0) + 2;
-        final int endPosition = 100 - (int) Math.ceil(endText.length() / 2.0) - 2;
-        addLabel(categoryPlot, startText, startPosition, determineContrastingColor(gradientPaint().getColor1()));
-        addLabel(categoryPlot, endText, endPosition, determineContrastingColor(gradientPaint().getColor2()));
+        final int startPosition = 2;
+        final int endPosition = 98;
+        addLabel(categoryPlot, startText, startPosition, determineContrastingColor(gradientPaint().getColor1()), TextAnchor.CENTER_LEFT);
+        addLabel(categoryPlot, endText, endPosition, determineContrastingColor(gradientPaint().getColor2()), TextAnchor.CENTER_RIGHT);
     }
 
     private static void addLabel(@NotNull final CategoryPlot categoryPlot, @NotNull final String labelText, final int position,
-            @NotNull final Color color) {
+            @NotNull final Color color, @NotNull final TextAnchor anchor) {
         final Object category = categoryPlot.getCategories().get(0);
         if (category instanceof Comparable) {
             final Comparable categoryKey = (Comparable) category;
             final CategoryTextAnnotation label = new CategoryTextAnnotation(labelText, categoryKey, position);
             label.setPaint(color);
+            label.setTextAnchor(anchor);
             categoryPlot.addAnnotation(label);
         }
     }
