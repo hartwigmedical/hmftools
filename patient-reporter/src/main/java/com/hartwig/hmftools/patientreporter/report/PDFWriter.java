@@ -222,7 +222,7 @@ public class PDFWriter implements ReportWriter {
                         + "In case additional tumor material cannot be provided, please be notified that the patient will not be "
                         + "evaluable for the " + report.study().studyCode() + " study.").setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("The biopsies evaluated for this sample have arrived on " + toFormattedDate(report.sampleReport()
+                cmp.text("The biopsies evaluated for this sample have arrived on " + formattedDate(report.sampleReport()
                         .tumorArrivalDate())).setStyle(fontStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("This report is generated and verified by: " + report.user() + " and is addressed at " + report.sampleReport()
