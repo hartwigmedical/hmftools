@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.window;
+package com.hartwig.hmftools.common.window;
 
 public class Window {
 

@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.window.Window;
+import com.hartwig.hmftools.common.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -9,7 +9,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.window.Window;
+import com.hartwig.hmftools.common.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 

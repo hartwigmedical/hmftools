@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.window;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.window.Window;
-
 import org.junit.Test;
 
 public class WindowTest {
