@@ -9,11 +9,15 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.report.Commons;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
-public class ExplanationPage {
+@Value.Immutable
+@Value.Style(passAnnotations = NotNull.class,
+             allParameters = true)
+public abstract class ExplanationPage {
 
     @NotNull
     public ComponentBuilder<?, ?> reportComponent() {

@@ -35,8 +35,8 @@ import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.CopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
-import com.hartwig.hmftools.patientreporter.report.pages.ExplanationPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
+import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableSVReportPage;
 
 import org.apache.logging.log4j.LogManager;
@@ -154,7 +154,7 @@ public class PDFWriter implements ReportWriter {
                         .newPage().add(ImmutableSVReportPage.of(report).reportComponent())
                         .newPage().add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
                         .newPage().add(genePanelPage)
-                        .newPage().add(new ExplanationPage().reportComponent())
+                        .newPage().add(ImmutableExplanationPage.builder().build().reportComponent())
                         .newPage().add(sampleDetailsPage);
         // @formatter:on
 
