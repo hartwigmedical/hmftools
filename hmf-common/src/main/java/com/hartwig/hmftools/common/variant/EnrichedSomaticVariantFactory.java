@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 
 import org.apache.commons.math3.util.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -25,16 +23,12 @@ import htsjdk.samtools.reference.ReferenceSequence;
 
 public class EnrichedSomaticVariantFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(EnrichedSomaticVariantFactory.class);
-
     @NotNull
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
     @NotNull
     private final IndexedFastaSequenceFile reference;
     @NotNull
     private final ClonalityFactory clonalityFactory;
-
-    private int unmatchedAnnotations;
 
     public EnrichedSomaticVariantFactory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final ClonalityFactory clonalityFactory) {
@@ -45,15 +39,10 @@ public class EnrichedSomaticVariantFactory {
 
     @NotNull
     public List<EnrichedSomaticVariant> enrich(@NotNull List<PurityAdjustedSomaticVariant> variants) throws IOException {
-        unmatchedAnnotations = 0;
         final List<EnrichedSomaticVariant> result = Lists.newArrayList();
 
         for (PurityAdjustedSomaticVariant variant : variants) {
             result.add(enrich(variant));
-        }
-
-        if (unmatchedAnnotations > 0) {
-            LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
         }
 
         return result;
@@ -64,7 +53,6 @@ public class EnrichedSomaticVariantFactory {
         final Builder builder = createBuilder(variant);
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
-        addAnnotations(builder, variant);
         addTrinucleotideContext(builder, variant);
         addGenomeContext(builder, variant);
         builder.clonality(clonalityFactory.fromSample(variant));
@@ -72,30 +60,11 @@ public class EnrichedSomaticVariantFactory {
         return builder.build();
     }
 
-    private void addAnnotations(@NotNull final Builder builder, @NotNull final SomaticVariant variant) {
-        final List<VariantAnnotation> annotations = variant.annotations();
-        if (!annotations.isEmpty()) {
-            // MIVO: get the first annotation for now, eventually we will want all
-            final VariantAnnotation variantAnnotation = variant.annotations().get(0);
-            variant.annotations().forEach(annotation -> {
-                if (!annotation.gene().equals(variantAnnotation.gene())) {
-                    unmatchedAnnotations++;
-                    LOGGER.debug("Annotated gene (" + annotation.gene() + ") does not match gene expected from first annotation ( "
-                            + variantAnnotation.gene() + ") for variant: " + variant);
-                }
-            });
-            builder.gene(variantAnnotation.gene());
-            builder.effect(variantAnnotation.consequenceString());
-        }
-    }
-
     @NotNull
     private static Builder createBuilder(@NotNull final SomaticVariant variant) {
         return builder().from(variant)
                 .trinucleotideContext("")
                 .microhomology("")
-                .gene("")
-                .effect("")
                 .repeatCount(0)
                 .repeatSequence("")
                 .highConfidenceRegion(false)

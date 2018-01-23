@@ -86,6 +86,21 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
         return 0;
     }
 
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String gene() {
+        return Strings.EMPTY;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String effect() {
+        return Strings.EMPTY;
+    }
+
     @Override
     public String toString() {
         return "SomaticVariant{" + "chromosome='" + chromosome() + '\'' + ", position=" + position() + '}';

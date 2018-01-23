@@ -16,6 +16,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -29,18 +31,16 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory {
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactory.class);
+
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
 
-    private static final String CALLER_ALGO_IDENTIFIER = "set";
-    private static final String CALLER_ALGO_SEPARATOR = "-";
-    private static final String CALLER_FILTERED_IDENTIFIER = "filterIn";
-    private static final String CALLER_INTERSECTION_IDENTIFIER = "Intersection";
-
     @NotNull
     private final CompoundFilter filter;
+    private int unmatchedAnnotations;
 
     public SomaticVariantFactory() {
         this(new VariantContextFilter[0]);
@@ -63,6 +63,7 @@ public class SomaticVariantFactory {
     public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
+        unmatchedAnnotations = 0;
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
 
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -77,6 +78,10 @@ public class SomaticVariantFactory {
             for (final VariantContext context : reader.iterator()) {
                 createVariant(sample, context).ifPresent(variants::add);
             }
+        }
+
+        if (unmatchedAnnotations > 0) {
+            LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
         }
 
         return variants;
@@ -111,13 +116,28 @@ public class SomaticVariantFactory {
         return Optional.empty();
     }
 
-    private static void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+    private void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromContext(context);
         builder.annotations(VariantAnnotationFactory.fromContext(context));
+        if (!annotations.isEmpty()) {
+            // MIVO: get the first annotation for now, eventually we will want all
+            final VariantAnnotation variantAnnotation = annotations.get(0);
+            for (VariantAnnotation annotation : annotations) {
+                if (!annotation.gene().equals(variantAnnotation.gene())) {
+                    unmatchedAnnotations++;
+                    LOGGER.debug("Annotated gene (" + annotation.gene() + ") does not match gene expected from first annotation ( "
+                            + variantAnnotation.gene() + ") for variant: " + context);
+                }
+            }
+            builder.gene(variantAnnotation.gene());
+            builder.effect(variantAnnotation.consequenceString());
+        } else {
+            builder.gene("").effect("");
+        }
+
     }
 
-    private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+    private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         if (context.isFiltered()) {
             StringJoiner joiner = new StringJoiner(";");
             context.getFilters().forEach(joiner::add);
@@ -127,8 +147,7 @@ public class SomaticVariantFactory {
         builder.filter("PASS");
     }
 
-    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
         switch (context.getType()) {
             case MNP:
                 builder.type(VariantType.MNP);
@@ -180,4 +199,5 @@ public class SomaticVariantFactory {
 
         return new AllelicDepthImpl(alleleReadCount, totalReadCount);
     }
+
 }

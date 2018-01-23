@@ -96,6 +96,18 @@ public class PassFilterPredicateTest {
             return Lists.newArrayList();
         }
 
+        @NotNull
+        @Override
+        public String gene() {
+            return "";
+        }
+
+        @NotNull
+        @Override
+        public String effect() {
+            return "";
+        }
+
         @Override
         public double mappability() {
             return 0;

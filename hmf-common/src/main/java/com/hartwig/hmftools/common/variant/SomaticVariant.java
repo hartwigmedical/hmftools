@@ -30,6 +30,12 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     List<VariantAnnotation> annotations();
 
+    @NotNull
+    String gene();
+
+    @NotNull
+    String effect();
+
     double mappability();
 
     default boolean isDBSNP() {

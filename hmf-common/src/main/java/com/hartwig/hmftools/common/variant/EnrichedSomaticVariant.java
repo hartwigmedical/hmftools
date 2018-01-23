@@ -16,10 +16,6 @@ public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVar
 
     public abstract String repeatSequence();
 
-    public abstract String gene();
-
-    public abstract String effect();
-
     public abstract int repeatCount();
 
     public abstract Clonality clonality();
