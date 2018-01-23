@@ -16,7 +16,7 @@ public final class GeneCopyNumberDataSource {
 
     public static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
-    public static final FieldBuilder<?> DESCRIPTION_FIELD = field("description", String.class);
+    public static final FieldBuilder<?> GAIN_OR_LOSS_FIELD = field("gain_or_loss", String.class);
     public static final FieldBuilder<?> COPY_NUMBER_FIELD = field("copynumber", String.class);
 
     private GeneCopyNumberDataSource() {
@@ -25,11 +25,11 @@ public final class GeneCopyNumberDataSource {
     @NotNull
     public static JRDataSource fromCopyNumbers(@NotNull final List<GeneCopyNumber> copyNumbers) {
         final DRDataSource copyNumberDatasource =
-                new DRDataSource(POSITION_FIELD.getName(), GENE_FIELD.getName(), DESCRIPTION_FIELD.getName(),
+                new DRDataSource(POSITION_FIELD.getName(), GENE_FIELD.getName(), GAIN_OR_LOSS_FIELD.getName(),
                         COPY_NUMBER_FIELD.getName());
 
         for (final GeneCopyNumber copyNumber : copyNumbers) {
-            copyNumberDatasource.add(copyNumber.chromosomalPosition(), copyNumber.gene(), copyNumber.alteration().name(),
+            copyNumberDatasource.add(copyNumber.chromosomalPosition(), copyNumber.gene(), copyNumber.alteration().description(),
                     Integer.toString((int) Math.round(copyNumber.minCopyNumber())));
         }
         return copyNumberDatasource;
@@ -37,6 +37,6 @@ public final class GeneCopyNumberDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] copyNumberFields() {
-        return new FieldBuilder<?>[] { POSITION_FIELD, GENE_FIELD, DESCRIPTION_FIELD, COPY_NUMBER_FIELD };
+        return new FieldBuilder<?>[] { POSITION_FIELD, GENE_FIELD, GAIN_OR_LOSS_FIELD, COPY_NUMBER_FIELD };
     }
 }

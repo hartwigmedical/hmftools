@@ -291,7 +291,7 @@ public class PDFWriter implements ReportWriter {
                         ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())
                         .columns(col.column("Position", GeneCopyNumberDataSource.POSITION_FIELD),
                                 col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
-                                col.column("Type", GeneCopyNumberDataSource.DESCRIPTION_FIELD),
+                                col.column("Type", GeneCopyNumberDataSource.GAIN_OR_LOSS_FIELD),
                                 col.column("Copies", GeneCopyNumberDataSource.COPY_NUMBER_FIELD))
                         .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
