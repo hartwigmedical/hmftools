@@ -93,6 +93,11 @@ public final class Commons {
     }
 
     @NotNull
+    public static StyleBuilder monospaceFontStyle() {
+        return stl.style().setFontName(MONOSPACE_FONT);
+    }
+
+    @NotNull
     public static JasperReportBuilder baseTable() {
         return report().setColumnStyle(dataStyle()).setColumnTitleStyle(tableHeaderStyle()).highlightDetailEvenRows();
     }
