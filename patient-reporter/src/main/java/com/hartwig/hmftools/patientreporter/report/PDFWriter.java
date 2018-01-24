@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.monospaceBaseTable;
 import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
-import static com.hartwig.hmftools.patientreporter.report.Commons.toList;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
@@ -20,13 +19,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.report.components.MSISection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
+import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
@@ -112,11 +110,11 @@ public class PDFWriter implements ReportWriter {
                 report.sampleReport(),
                 report.impliedPurityString()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mainPageAboutSection(),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mutationalLoadAndMSIReport(report),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
                 pointMutationReport(report, reporterData.drupFilter()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                mutationalLoadReport(report),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                microsatelliteReport(report),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneCopyNumberReport(report),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -156,19 +154,6 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mainPageAboutSection() {
-        return toList("About this report",
-                Lists.newArrayList("This report is based on tests that are performed under ISO/ICE-17025:2005 accreditation.",
-                        "For DRUP-specific questions, please contact the DRUP study team at DRUP@nki.nl.",
-                        "For other questions, please contact us via info@hartwigmedicalfoundation.nl."));
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> mutationalLoadAndMSIReport(@NotNull SequencedPatientReport report) {
-        return cmp.horizontalList(MutationalLoadSection.build(report.mutationalLoad()), MSISection.build(report.microsatelliteIndicator()));
-    }
-
-    @NotNull
     private static ComponentBuilder<?, ?> pointMutationReport(@NotNull final SequencedPatientReport report,
             @NotNull final DrupFilter drupFilter) {
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
@@ -196,7 +181,17 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(15),
                 cmp.horizontalList(cmp.horizontalGap(10),
                         cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(geneMutationAddition).setStyle(fontStyle())));
+                        cmp.text(geneMutationAddition).setStyle(fontStyle().setFontSize(8))));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull SequencedPatientReport report) {
+        return MutationalLoadSection.build(report.mutationalLoad());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull SequencedPatientReport report) {
+        return MicrosatelliteSection.build(report.microsatelliteIndicator());
     }
 
     @NotNull

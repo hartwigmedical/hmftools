@@ -36,14 +36,17 @@ public final class MutationalLoadSection {
     }
 
     private static int computeGraphValue(final double value) {
-        final double logStart = Math.log10(START);
-        final double logEnd = Math.log10(END);
-        final double logValue = Math.log10(value);
-        final double logScaleValue = Math.min(logEnd, Math.max(logStart, logValue));
-        final double logIntervalLength = logEnd - logStart;
+        final double scaledStart = scale(START);
+        final double scaledEnd = scale(END);
+        final double scaledIntervalLength = scaledEnd - scaledStart;
+        final double scaleValue = Math.min(scaledEnd, Math.max(scaledStart, scale(value)));
 
         final double graphIntervalLength = 100 - 2 * BUFFER;
-        return (int) Math.round((logScaleValue - logStart) * graphIntervalLength / logIntervalLength + BUFFER);
+        return (int) Math.round((scaleValue - scaledStart) * graphIntervalLength / scaledIntervalLength + BUFFER);
+    }
+
+    private static double scale(double value) {
+        return Math.log10(value);
     }
 
     @NotNull
