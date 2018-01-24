@@ -60,7 +60,7 @@ public abstract class ExplanationPage {
                                 + "the predicted impact on the final protein on the second line of this field.",
                         "The 'Cosmic' fields display a link to the COSMIC database which contains "
                                 + "additional information on the variant. If the variant could not be found in the "
-                                + "COSMIC database, this field will be left blank. The CosmicGenes v76 database is used "
+                                + "COSMIC database, this field will be left blank. The COSMIC v76 database is used "
                                 + "to look-up these IDs.",
                         "The 'Ploidy (TAF)' field displays the tumor ploidy for the observed variant. The ploidy "
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
@@ -83,7 +83,7 @@ public abstract class ExplanationPage {
     @NotNull
     private static ComponentBuilder<?, ?> disruptionExplanationSection() {
         return toList("Details on reported gene disruptions",
-                Lists.newArrayList("Genes are only reported as disrupted if their canonical transcript has been disrupted"));
+                Lists.newArrayList("Genes are reported as being disrupted if their canonical transcript has been disrupted"));
     }
 
     @NotNull
