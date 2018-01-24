@@ -12,41 +12,37 @@ import net.sf.jasperreports.engine.JRDataSource;
 
 public final class GeneDisruptionDataSource {
 
-    public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
     public static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
-    public static final FieldBuilder<?> SV_TYPE_FIELD = field("type", String.class);
-    public static final FieldBuilder<?> SV_PARTNER_POSITION_FIELD = field("partner", String.class);
-    public static final FieldBuilder<?> SV_ORIENTATION_FIELD = field("orientation", String.class);
-    public static final FieldBuilder<?> SV_GENE_CONTEXT = field("gene context", String.class);
-    public static final FieldBuilder<?> SV_VAF = field("vaf", String.class);
+    public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
+    public static final FieldBuilder<?> GENE_CONTEXT = field("gene context", String.class);
+    public static final FieldBuilder<?> ORIENTATION_FIELD = field("orientation", String.class);
+    public static final FieldBuilder<?> VARIANT_PLOIDY = field("variant_ploidy", String.class);
+    public static final FieldBuilder<?> GENE_COPY_NUMBER = field("gene_copy_number", String.class);
 
     private GeneDisruptionDataSource() {
     }
 
     @NotNull
     public static JRDataSource fromGeneDisruptions(@NotNull List<GeneDisruptionData> disruptions) {
-        final DRDataSource dataSource = new DRDataSource(GENE_FIELD.getName(),
-                POSITION_FIELD.getName(),
-                SV_TYPE_FIELD.getName(),
-                SV_PARTNER_POSITION_FIELD.getName(),
-                SV_ORIENTATION_FIELD.getName(),
-                SV_GENE_CONTEXT.getName(),
-                SV_VAF.getName());
+        final DRDataSource dataSource = new DRDataSource(POSITION_FIELD.getName(),
+                GENE_FIELD.getName(),
+                GENE_CONTEXT.getName(),
+                ORIENTATION_FIELD.getName(),
+                VARIANT_PLOIDY.getName(),
+                GENE_COPY_NUMBER.getName());
 
-        disruptions.forEach(g -> dataSource.add(g.geneName(),
-                g.location(),
-                g.type(),
-                g.partner(),
-                g.orientation(),
-                g.geneContext(),
-                g.vaf()));
+        disruptions.forEach(disruption -> dataSource.add(disruption.position(),
+                disruption.gene(),
+                disruption.geneContext(),
+                disruption.orientation(),
+                disruption.ploidy(),
+                disruption.geneCopyNumber()));
 
         return dataSource;
     }
 
     @NotNull
     public static FieldBuilder<?>[] geneDisruptionFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, SV_TYPE_FIELD, SV_PARTNER_POSITION_FIELD, SV_ORIENTATION_FIELD,
-                SV_GENE_CONTEXT, SV_VAF };
+        return new FieldBuilder<?>[] { POSITION_FIELD, GENE_FIELD, GENE_CONTEXT, ORIENTATION_FIELD, VARIANT_PLOIDY, GENE_COPY_NUMBER };
     }
 }

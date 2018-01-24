@@ -206,20 +206,19 @@ public class PDFWriter implements ReportWriter {
                         .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Copy Numbers").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+        return cmp.verticalList(cmp.text("Somatic Gene Gains & Losses").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
-                .columns(col.column("Gene", GeneDisruptionDataSource.GENE_FIELD).setFixedWidth(50),
-                        col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
-                        col.column("Gene Context", GeneDisruptionDataSource.SV_GENE_CONTEXT),
-                        col.column("Orientation", GeneDisruptionDataSource.SV_ORIENTATION_FIELD),
-                        col.column("Partner", GeneDisruptionDataSource.SV_PARTNER_POSITION_FIELD),
-                        col.column("Type", GeneDisruptionDataSource.SV_TYPE_FIELD).setFixedWidth(30),
-                        col.column("VAF", GeneDisruptionDataSource.SV_VAF).setFixedWidth(30))
+                .columns(col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
+                        col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
+                        col.column("Gene Context", GeneDisruptionDataSource.GENE_CONTEXT),
+                        col.column("Orientation", GeneDisruptionDataSource.ORIENTATION_FIELD),
+                        col.column("Ploidy", GeneDisruptionDataSource.VARIANT_PLOIDY),
+                        col.column("Gene Copy Number", GeneDisruptionDataSource.GENE_COPY_NUMBER))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -231,14 +230,11 @@ public class PDFWriter implements ReportWriter {
         final ComponentBuilder<?, ?> table =
                 report.geneFusions().size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
-                        .columns(col.column("5' Gene", GeneFusionDataSource.GENE_FIELD).setFixedWidth(50),
-                                col.column("5' Position", GeneFusionDataSource.POSITION_FIELD),
-                                col.column("5' Gene Context", GeneFusionDataSource.SV_GENE_CONTEXT),
-                                col.column("3' Gene", GeneFusionDataSource.SV_PARTNER_GENE_FIELD).setFixedWidth(50),
-                                col.column("3' Position", GeneFusionDataSource.SV_PARTNER_POSITION_FIELD),
-                                col.column("3' Gene Context", GeneFusionDataSource.SV_PARTNER_CONTEXT_FIELD),
-                                col.column("SV Type", GeneFusionDataSource.SV_TYPE_FIELD).setFixedWidth(30),
-                                col.column("VAF", GeneFusionDataSource.SV_VAF).setFixedWidth(30))
+                        .columns(col.column("5' Gene", GeneFusionDataSource.GENE_FIELD),
+                                col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
+                                col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
+                                col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
+                                col.column("Ploidy", GeneFusionDataSource.PLOIDY))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -247,15 +243,12 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> signatureFooter(@NotNull final String signaturePath) {
-        // @formatter:off
-        return cmp.horizontalList(
-                cmp.horizontalGap(370),
+        return cmp.horizontalList(cmp.horizontalGap(370),
                 cmp.xyList()
-                    .add(40, 5, cmp.image(signaturePath))
-                    .add(0, 0,cmp.text("Edwin Cuppen,"))
-                    .add(0, 15, cmp.text("Director Hartwig Medical Foundation").setWidth(190)),
+                        .add(40, 5, cmp.image(signaturePath))
+                        .add(0, 0, cmp.text("Edwin Cuppen,"))
+                        .add(0, 15, cmp.text("Director Hartwig Medical Foundation").setWidth(190)),
                 cmp.horizontalGap(10));
-        // @formatter:on
     }
 
     @NotNull

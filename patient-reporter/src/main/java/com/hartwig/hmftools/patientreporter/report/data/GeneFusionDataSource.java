@@ -13,13 +13,10 @@ import net.sf.jasperreports.engine.JRDataSource;
 public final class GeneFusionDataSource {
 
     public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
-    public static final FieldBuilder<?> POSITION_FIELD = field("position", String.class);
-    public static final FieldBuilder<?> SV_TYPE_FIELD = field("type", String.class);
-    public static final FieldBuilder<?> SV_PARTNER_GENE_FIELD = field("partner_gene", String.class);
-    public static final FieldBuilder<?> SV_PARTNER_POSITION_FIELD = field("partner", String.class);
-    public static final FieldBuilder<?> SV_PARTNER_CONTEXT_FIELD = field("partner_context", String.class);
-    public static final FieldBuilder<?> SV_GENE_CONTEXT = field("gene context", String.class);
-    public static final FieldBuilder<?> SV_VAF = field("vaf", String.class);
+    public static final FieldBuilder<?> GENE_CONTEXT = field("gene context", String.class);
+    public static final FieldBuilder<?> PARTNER_GENE_FIELD = field("partner_gene", String.class);
+    public static final FieldBuilder<?> PARTNER_CONTEXT_FIELD = field("partner_context", String.class);
+    public static final FieldBuilder<?> PLOIDY = field("ploidy", String.class);
 
     private GeneFusionDataSource() {
     }
@@ -27,29 +24,22 @@ public final class GeneFusionDataSource {
     @NotNull
     public static JRDataSource fromGeneFusions(@NotNull List<GeneFusionData> fusions) {
         final DRDataSource dataSource = new DRDataSource(GENE_FIELD.getName(),
-                POSITION_FIELD.getName(),
-                SV_GENE_CONTEXT.getName(),
-                SV_PARTNER_GENE_FIELD.getName(),
-                SV_PARTNER_POSITION_FIELD.getName(),
-                SV_PARTNER_CONTEXT_FIELD.getName(),
-                SV_TYPE_FIELD.getName(),
-                SV_VAF.getName());
+                GENE_CONTEXT.getName(),
+                PARTNER_GENE_FIELD.getName(),
+                PARTNER_CONTEXT_FIELD.getName(),
+                PLOIDY.getName());
 
-        fusions.forEach(g -> dataSource.add(g.geneStart(),
-                g.start(),
-                g.geneContextStart(),
-                g.geneEnd(),
-                g.end(),
-                g.geneContextEnd(),
-                g.type(),
-                g.vaf()));
+        fusions.forEach(fusion -> dataSource.add(fusion.geneStart(),
+                fusion.geneContextStart(),
+                fusion.geneEnd(),
+                fusion.geneContextEnd(),
+                fusion.ploidy()));
 
         return dataSource;
     }
 
     @NotNull
     public static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, POSITION_FIELD, SV_GENE_CONTEXT, SV_PARTNER_GENE_FIELD, SV_PARTNER_POSITION_FIELD,
-                SV_PARTNER_CONTEXT_FIELD, SV_TYPE_FIELD, SV_VAF };
+        return new FieldBuilder<?>[] { GENE_FIELD, GENE_CONTEXT, PARTNER_GENE_FIELD, PARTNER_CONTEXT_FIELD, PLOIDY };
     }
 }

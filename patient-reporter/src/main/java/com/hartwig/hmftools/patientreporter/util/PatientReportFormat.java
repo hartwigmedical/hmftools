@@ -21,8 +21,8 @@ public enum PatientReportFormat {
     }
 
     @NotNull
-    public static String positionString(@NotNull final GeneAnnotation g) {
-        return positionString(g.variant(), g.isStart());
+    public static String positionString(@NotNull final GeneAnnotation geneAnnotation) {
+        return positionString(geneAnnotation.variant(), geneAnnotation.isStart());
     }
 
     @NotNull
@@ -31,15 +31,15 @@ public enum PatientReportFormat {
     }
 
     @NotNull
-    public static String exonDescription(@NotNull final Transcript t, final boolean upstream) {
-        if (t.isPromoter()) {
+    public static String exonDescription(@NotNull final Transcript transcript, final boolean upstream) {
+        if (transcript.isPromoter()) {
             return "Promoter Region";
-        } else if (t.isExonic()) {
-            return String.format("Exon %d", upstream ? t.exonUpstream() : t.exonDownstream());
-        } else if (t.isIntronic()) {
-            return String.format("Intron %d", t.exonUpstream());
+        } else if (transcript.isExonic()) {
+            return String.format("Exon %d", upstream ? transcript.exonUpstream() : transcript.exonDownstream());
+        } else if (transcript.isIntronic()) {
+            return String.format("Intron %d", transcript.exonUpstream());
         } else {
-            return String.format("Error up(%d) down(%d)", t.exonUpstream(), t.exonDownstream());
+            return String.format("Error up(%d) down(%d)", transcript.exonUpstream(), transcript.exonDownstream());
         }
     }
 

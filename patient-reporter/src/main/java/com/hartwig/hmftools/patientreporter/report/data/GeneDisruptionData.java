@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.alleleFrequency;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.positionString;
 
-import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
@@ -18,37 +16,30 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneDisruptionData {
 
-    public abstract String geneName();
+    public abstract String position();
 
-    public abstract String location();
+    public abstract String gene();
 
     public abstract String geneContext();
 
-    public abstract String transcript();
-
-    public abstract String partner();
-
-    public abstract String type();
-
     public abstract String orientation();
 
-    public abstract String vaf();
+    public abstract String ploidy();
+
+    public abstract String geneCopyNumber();
 
     @NotNull
     public static GeneDisruptionData from(@NotNull final GeneDisruption disruption) {
         final Transcript transcript = disruption.linkedAnnotation();
-        final GeneAnnotation g = transcript.geneAnnotation();
-        final int variantOrientation = g.variant().orientation(g.isStart());
+        final GeneAnnotation gene = transcript.geneAnnotation();
+        final int variantOrientation = gene.variant().orientation(gene.isStart());
 
         return ImmutableGeneDisruptionData.builder()
-                .geneName(disruption.linkedAnnotation().geneName())
-                .location(positionString(g))
-                .geneContext(exonDescription(transcript, true)) // TODO: upstream ?
-                .transcript(transcript.transcriptId())
-                .partner(positionString(g.variant(), !g.isStart()))
-                .type(g.variant().type().toString())
+                .position(positionString(gene))
+                .gene(disruption.linkedAnnotation().geneName())
+                .geneContext(exonDescription(transcript, true))
                 .orientation(variantOrientation > 0 ? "5'" : "3'")
-                .vaf(PatientReportFormat.formatNullablePercent(alleleFrequency(g)))
+                .ploidy("1")
                 .build();
     }
 }
