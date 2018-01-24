@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface GeneRegion extends GenomeRegion {
+public interface TranscriptRegion extends GenomeRegion {
 
     @NotNull
     String transcriptID();
@@ -15,12 +15,12 @@ public interface GeneRegion extends GenomeRegion {
     String gene();
 
     @NotNull
+    String chromosomeBand();
+
+    @NotNull
     default String transcript() {
         return transcriptID() + "." + transcriptVersion();
     }
-
-    @NotNull
-    String chromosomeBand();
 
     @NotNull
     default String chromosomalPosition() { return chromosome() + chromosomeBand(); }

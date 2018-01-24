@@ -10,10 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GeneCopyNumber extends GeneRegion, CopyNumber {
-
-    @NotNull
-    String gene();
+public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
 
     double maxCopyNumber();
 

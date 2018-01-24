@@ -17,7 +17,7 @@ public class GeneCopyNumberFactory implements RegionZipperHandler<PurpleCopyNumb
     private final GeneCopyNumberBuilder builder;
 
     @NotNull
-    public static List<GeneCopyNumber> geneCopyNumbers(List<HmfGenomeRegion> genes, List<PurpleCopyNumber> copyNumbers) {
+    public static List<GeneCopyNumber> geneCopyNumbers(@NotNull List<HmfGenomeRegion> genes, @NotNull List<PurpleCopyNumber> copyNumbers) {
         return genes.stream()
                 .map(x -> new GeneCopyNumberFactory(x, copyNumbers).geneCopyNumber())
                 .filter(x -> x.totalRegions() > 0)
@@ -29,6 +29,7 @@ public class GeneCopyNumberFactory implements RegionZipperHandler<PurpleCopyNumb
         RegionZipper.zip(copyNumbers, gene.exome(), this);
     }
 
+    @NotNull
     private GeneCopyNumber geneCopyNumber() {
         return builder.build();
     }

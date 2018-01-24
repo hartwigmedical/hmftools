@@ -49,11 +49,6 @@ public enum HmfGenePanelSupplier {
     }
 
     @NotNull
-    public static List<HmfGenomeRegion> fromFile(@NotNull final String filename) throws IOException {
-        return toList(HmfGenomeFileLoader.fromFile(filename));
-    }
-
-    @NotNull
     private static List<HmfGenomeRegion> toList(@NotNull final SortedSetMultimap<String, HmfGenomeRegion> map) {
         final List<HmfGenomeRegion> result = Lists.newArrayList(map.values());
         Collections.sort(result);

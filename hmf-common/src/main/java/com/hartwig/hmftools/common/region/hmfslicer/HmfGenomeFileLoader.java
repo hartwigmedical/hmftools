@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.common.region.hmfslicer;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +31,8 @@ public final class HmfGenomeFileLoader {
     private static final int CHROMOSOME_BAND_COLUMN = 6;
     private static final int TRANSCRIPT_ID_COLUMN = 7;
     private static final int TRANSCRIPT_VERSION_COLUMN = 8;
-    private static final int START_COLUMN = 9;
-    private static final int END_COLUMN = 10;
+    private static final int TRANSCRIPT_START_COLUMN = 9;
+    private static final int TRANSCRIPT_END_COLUMN = 10;
     private static final int EXON_ID_COLUMN = 11;
     private static final int EXON_START_COLUMN = 12;
     private static final int EXON_END_COLUMN = 13;
@@ -44,18 +41,12 @@ public final class HmfGenomeFileLoader {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream inputStream) {
-        return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
-    }
-
-    @NotNull
-    public static SortedSetMultimap<String, HmfGenomeRegion> fromFile(@NotNull final String filename) throws IOException {
-        return fromLines(Files.readAllLines(new File(filename).toPath()));
+    public static SortedSetMultimap<String, HmfGenomeRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
+        return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
     private static SortedSetMultimap<String, HmfGenomeRegion> fromLines(@NotNull final List<String> lines) {
-
         final Map<String, ModifiableHmfGenomeRegion> geneMap = Maps.newLinkedHashMap();
         for (final String line : lines) {
             final String[] values = line.split(FIELD_SEPARATOR);
@@ -66,14 +57,15 @@ public final class HmfGenomeFileLoader {
             }
 
             final String gene = values[GENE_COLUMN];
-            final long start = Long.valueOf(values[START_COLUMN].trim());
-            final long end = Long.valueOf(values[END_COLUMN].trim());
+            final long transcriptStart = Long.valueOf(values[TRANSCRIPT_START_COLUMN].trim());
+            final long transcriptEnd = Long.valueOf(values[TRANSCRIPT_END_COLUMN].trim());
 
-            if (end < start) {
-                LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
+            if (transcriptEnd < transcriptStart) {
+                LOGGER.warn("Invalid transcript region found on chromosome " + chromosome + ": start=" + transcriptStart + ", end="
+                        + transcriptEnd);
             } else {
-                final ModifiableHmfGenomeRegion geneRegion =
-                        geneMap.computeIfAbsent(gene, x -> createRegion(chromosome, start, end, x, values));
+                final ModifiableHmfGenomeRegion geneRegion = geneMap.computeIfAbsent(gene,
+                        geneName -> createRegion(chromosome, transcriptStart, transcriptEnd, geneName, values));
 
                 final HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
@@ -94,16 +86,16 @@ public final class HmfGenomeFileLoader {
         return regionMap;
     }
 
-    private static ModifiableHmfGenomeRegion createRegion(final String chromosome, final long start, final long end,
+    @NotNull
+    private static ModifiableHmfGenomeRegion createRegion(final String chromosome, final long transcriptStart, final long transcriptEnd,
             @NotNull final String gene, @NotNull final String[] values) {
-
         final List<Integer> entrezIds =
                 Arrays.stream(values[ENTREZ_ID_COLUMN].split(",")).map(Integer::parseInt).collect(Collectors.toList());
 
         return ModifiableHmfGenomeRegion.create()
                 .setChromosome(chromosome)
-                .setStart(start)
-                .setEnd(end)
+                .setStart(transcriptStart)
+                .setEnd(transcriptEnd)
                 .setTranscriptID(values[TRANSCRIPT_ID_COLUMN])
                 .setTranscriptVersion(Integer.valueOf(values[TRANSCRIPT_VERSION_COLUMN]))
                 .setChromosomeBand(values[CHROMOSOME_BAND_COLUMN])
@@ -113,5 +105,4 @@ public final class HmfGenomeFileLoader {
                 .setGeneStart(Long.valueOf(values[GENE_START_COLUMN]))
                 .setGeneEnd(Long.valueOf(values[GENE_END_COLUMN]));
     }
-
 }

@@ -114,7 +114,6 @@ class GeneCopyNumberBuilder {
 
     @NotNull
     public GeneCopyNumber build() {
-
         return builder.maxCopyNumber(maxCopyNumber)
                 .minRegionStartSupport(minRegionStartSupport)
                 .minRegionEndSupport(minRegionEndSupport)

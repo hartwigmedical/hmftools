@@ -15,16 +15,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class GeneModel {
 
+    @NotNull
     private final Map<String, HmfGenomeRegion> transcriptMap;
+    @NotNull
     private final Collection<HmfGenomeRegion> regions;
+    @NotNull
     private final Set<String> panel;
+    @NotNull
     private final Slicer slicer;
 
-    public GeneModel(@NotNull final SortedSetMultimap<String, HmfGenomeRegion> regions) {
+    public GeneModel(@NotNull SortedSetMultimap<String, HmfGenomeRegion> regions) {
         this.regions = regions.values();
-        slicer = SlicerFactory.fromRegions(regions);
-        transcriptMap = extractTranscriptMap(regions.values());
-        panel = regions.values().stream().map(GeneRegion::gene).collect(Collectors.toSet());
+        this.slicer = SlicerFactory.fromRegions(regions);
+        this.transcriptMap = extractTranscriptMap(regions.values());
+        this.panel = regions.values().stream().map(TranscriptRegion::gene).collect(Collectors.toSet());
     }
 
     @NotNull
