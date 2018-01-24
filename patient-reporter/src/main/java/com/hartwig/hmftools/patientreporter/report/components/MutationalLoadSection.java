@@ -51,6 +51,8 @@ public final class MutationalLoadSection {
 
     @NotNull
     private static String description() {
-        return "Patients with a mutational load over " + DRUP_THRESHOLD + " could be eligible for immunotherapy within the DRUP study. ";
+        return "The tumor mutational load represents the total number of somatic missense variants across"
+                + " the whole genome of the tumor. Patients with a mutational load over " + DRUP_THRESHOLD
+                + " could be eligible for immunotherapy within the DRUP study. ";
     }
 }

@@ -30,11 +30,11 @@ public final class MicrosatelliteSection {
 
     @NotNull
     private static String interpretMicrosatelliteStatus(final double microsatelliteIndicator) {
-        final String formattedMsi = new DecimalFormat("#.####").format(microsatelliteIndicator);
+        final String formattedMicrosatelliteIndicator = new DecimalFormat("#.####").format(microsatelliteIndicator);
         if (microsatelliteIndicator > MSI_THRESHOLD) {
-            return "Unstable (" + formattedMsi + ")";
+            return "Unstable (" + formattedMicrosatelliteIndicator + ")";
         } else {
-            return "Stable (" + formattedMsi + ")";
+            return "Stable (" + formattedMicrosatelliteIndicator + ")";
         }
     }
 
@@ -54,9 +54,8 @@ public final class MicrosatelliteSection {
 
     @NotNull
     private static String description() {
-        return "Microsatellite instability scores are calculated using WGS data and based on the MSIseq classifier as described in "
-                + "Huang MN et al, Sci Rep. 5: 13321 (2015). The arrow on the bar scale indicates the relative position of the "
-                + "analyzed sample compared to all samples in the  database. Samples with a score greater than " + MSI_THRESHOLD
+        return "The microsatellite stability score represents the number of somatic inserts and deletes in repeat sections "
+                + "across the whole genome of the tumor per Mb. Tumors with a score greater than " + MSI_THRESHOLD
                 + " are considered microsatellite unstable (MSI-H).";
     }
 }

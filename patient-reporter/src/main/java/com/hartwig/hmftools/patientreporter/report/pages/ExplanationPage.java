@@ -39,36 +39,34 @@ public abstract class ExplanationPage {
     private static ComponentBuilder<?, ?> generalExplanationSection() {
         return toList("Details on the report in general",
                 Lists.newArrayList("The analysis is based on reference genome version GRCh37.",
-                        "Somatic (tumor derived) variants are reported. "
+                        "Somatic (tumor derived) variation is reported. "
                                 + "Potential variants in the tumor that also exist in germline findings are not included in this report.",
                         "Variant detection in samples with lower tumor content is less sensitive. "
-                                + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases."));
+                                + "In case of a low tumor purity (below 20%) likelihood of failing to detect potential variants increases.",
+                        "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
+                                + "whole genome data."));
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> snvIndelExplanationSection() {
-        return toList("Details on reported genomic variant fields",
+        return toList("Details on reported point mutations",
                 Lists.newArrayList(
-                        "The 'position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
-                        "The 'variant' displays what was expected as reference base and what " + "was found instead ('ref' > 'alt').",
-                        "The 'depth (VAF)' displays the number of observations of the specific variant versus "
+                        "The 'Position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
+                        "The 'Variant' displays what was expected as reference base and what " + "was found instead ('ref' > 'alt').",
+                        "The 'Depth (VAF)' displays the number of observations of the specific variant versus "
                                 + "the total number of reads in this location in the format 'alt / total (%)'.",
-                        "The 'predicted effect' provides additional information on the variant, including "
+                        "The 'Predicted Effect' provides additional information on the variant, including "
                                 + "the change in coding sequence ('c.'), the change in protein ('p.') and "
                                 + "the predicted impact on the final protein on the second line of this field.",
-                        "The 'cosmic' fields display a link to the COSMIC database which contains "
+                        "The 'Cosmic' fields display a link to the COSMIC database which contains "
                                 + "additional information on the variant. If the variant could not be found in the "
                                 + "COSMIC database, this field will be left blank. The CosmicGenes v76 database is used "
                                 + "to look-up these IDs.",
-                        "The implied tumor purity is the percentage of tumor DNA in the biopsy based on analysis of "
-                                + "whole genome data.",
                         "The 'Ploidy (TAF)' field displays the tumor ploidy for the observed variant. The ploidy "
                                 + "has been adjusted for the implied tumor purity (see above) and is shown as a "
                                 + "proportion of A’s and B’s (e.g. AAABB for 3 copies A, and 2 copies B). "
                                 + "The copy number is the sum of A’s and B’s. The TAF (Tumor adjusted Alternative "
-                                + "Frequency) value refers to the alternative allele frequency after correction " + "for tumor purity.",
-                        "The tumor mutational load is the total number of somatic missense variants found across"
-                                + " the whole genome of the tumor biopsy."));
+                                + "Frequency) value refers to the alternative allele frequency after correction " + "for tumor purity."));
     }
 
     @NotNull
