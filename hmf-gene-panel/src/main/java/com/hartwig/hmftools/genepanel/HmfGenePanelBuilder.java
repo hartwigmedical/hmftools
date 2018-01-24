@@ -36,7 +36,7 @@ public class HmfGenePanelBuilder {
 
     private static final String OUT_PATH = "out";
 
-    private static final String DATABASE = "homo_sapiens_core_90_37";
+    private static final String DATABASE = "homo_sapiens_core_89_37";
     private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
     private static final String DB_USER = "anonymous";
 
@@ -44,14 +44,17 @@ public class HmfGenePanelBuilder {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String outputFilePath = cmd.getOptionValue(OUT_PATH);
+
         if (outputFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("HmfGenePanelBuilder", options);
-        } else {
-            final Result<Record> queryResults = queryEnsembldb();
-            writeFile(cmd, queryResults);
-            LOGGER.info("Written output to " + new File(outputFilePath).getAbsolutePath());
+            System.exit(1);
         }
+
+        LOGGER.info("Querying " + ENSEMBLDB_URL);
+        final Result<Record> queryResults = queryEnsembldb();
+        writeFile(cmd, queryResults);
+        LOGGER.info("Written output to " + new File(outputFilePath).getAbsolutePath());
     }
 
     @NotNull
