@@ -24,7 +24,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
+import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
+import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
@@ -111,9 +113,11 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 mainPageAboutSection(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                snvIndelReport(report, reporterData),
+                mutationalLoadAndMSIReport(report),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                copyNumberReport(report),
+                pointMutationReport(report, reporterData.drupFilter()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                geneCopyNumberReport(report),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneDisruptionReport(report),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -159,10 +163,15 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> snvIndelReport(@NotNull final SequencedPatientReport report,
-            @NotNull final HmfReporterData reporterData) {
+    private static ComponentBuilder<?, ?> mutationalLoadAndMSIReport(@NotNull SequencedPatientReport report) {
+        return MutationalLoadSection.build(report.mutationalLoad());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> pointMutationReport(@NotNull final SequencedPatientReport report,
+            @NotNull final DrupFilter drupFilter) {
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
-                + "eligibility in DRUP. Please note that the marking is NOT based on the specific variant reported for "
+                + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
                 + "this sample, but only on a gene-level.";
 
         final ComponentBuilder<?, ?> table =
@@ -177,10 +186,10 @@ public class PDFWriter implements ReportWriter {
                                         .setHyperLink(hyperLink(new COSMICLinkExpression()))
                                         .setStyle(linkStyle()),
                                 col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
-                        .setDataSource(VariantDataSource.fromVariants(report.variants(), reporterData))
+                        .setDataSource(VariantDataSource.fromVariants(report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Somatic Point Mutations").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(6),
                 table,
                 cmp.verticalGap(15),
@@ -190,7 +199,7 @@ public class PDFWriter implements ReportWriter {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> copyNumberReport(@NotNull final SequencedPatientReport report) {
+    private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 report.geneCopyNumbers().size() > 0
                         ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())

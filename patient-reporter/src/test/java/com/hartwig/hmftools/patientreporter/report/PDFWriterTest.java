@@ -69,6 +69,7 @@ public class PDFWriterTest {
     public void canGenerateSequenceReport() throws DRException, IOException, HartwigException {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
+        final int mutationalLoad = 361;
 
         final HmfReporterData reporterData = testHmfReporterData();
         final BaseReporterData baseReporterData = testBaseReporterData();
@@ -89,7 +90,7 @@ public class PDFWriterTest {
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
-                361,
+                mutationalLoad,
                 copyNumbers,
                 disruptions,
                 fusions, PatientReportFormat.formatPercent(impliedTumorPurity),

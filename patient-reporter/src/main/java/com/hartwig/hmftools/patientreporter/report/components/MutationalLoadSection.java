@@ -7,46 +7,47 @@ import org.jetbrains.annotations.NotNull;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
 public final class MutationalLoadSection {
-    private static final double THRESHOLD = 140;
+    private static final int DRUP_THRESHOLD = 140;
+
     //MIVO: buffer at edges of slider bar for min/max values. e.g. value of 1 would put min=1 and max=99
     private static final int BUFFER = 3;
-    private static final int START = 0;
-    private static final int END = 3;
+    private static final int START = 1;
+    private static final int END = 1000;
 
     @NotNull
     public static ComponentBuilder<?, ?> build(final int mutationalLoad) {
         final int graphValue = computeGraphValue(mutationalLoad);
-        final int markerValue = computeGraphValue(THRESHOLD);
+        final int markerValue = computeGraphValue(DRUP_THRESHOLD);
+
         final GradientBar gradient =
-                ImmutableGradientBar.of(new Color(253, 235, 171), new Color(70, 81, 137), "Normal", "High", graphValue, markerValue);
+                ImmutableGradientBar.of(new Color(253, 235, 171), new Color(70, 81, 137), "Low", "High", graphValue, markerValue);
         final SliderSection sliderSection =
-                ImmutableSliderSection.of("Mutational Load", interpret(mutationalLoad), description(), gradient);
+                ImmutableSliderSection.of("Tumor Mutational Load", interpret(mutationalLoad), description(), gradient);
         return sliderSection.build();
     }
 
     @NotNull
     private static String interpret(final int mutationalLoad) {
-        if (mutationalLoad > THRESHOLD) {
+        if (mutationalLoad > DRUP_THRESHOLD) {
             return "High (" + mutationalLoad + ")";
         } else {
-            return "Normal (" + mutationalLoad + ")";
+            return "Low (" + mutationalLoad + ")";
         }
     }
 
     private static int computeGraphValue(final double value) {
+        final double logStart = Math.log10(START);
+        final double logEnd = Math.log10(END);
         final double logValue = Math.log10(value);
-        final double logScaleValue = Math.min(END, Math.max(START, logValue));
-        final int logIntervalLength = END - START;
-        final int graphIntervalLength = 100 - 2 * BUFFER;
-        return (int) Math.round((logScaleValue - START) * graphIntervalLength / logIntervalLength + BUFFER);
+        final double logScaleValue = Math.min(logEnd, Math.max(logStart, logValue));
+        final double logIntervalLength = logEnd - logStart;
+
+        final double graphIntervalLength = 100 - 2 * BUFFER;
+        return (int) Math.round((logScaleValue - logStart) * graphIntervalLength / logIntervalLength + BUFFER);
     }
 
     @NotNull
     private static String description() {
-        return "Mutational load represents the total number of observed somatic variants across the entire protein coding region of the genome. "
-                + "Somatic variants only include single nucleotide variants (excluding insertion/deletions) and represent potential neoantigens. "
-                + "Patients with a mutational load over " + THRESHOLD + " could be eligible for immunotherapy within the DRUP study. ";
-        //                + "The arrow on the bar scale indicates the relative position of the analyzed sample compared to all samples (upper bar) "
-        //                + "and compared to all ‘on-tumor-type’ samples (lower bar) in the database.";
+        return "Patients with a mutational load over " + DRUP_THRESHOLD + " could be eligible for immunotherapy within the DRUP study. ";
     }
 }

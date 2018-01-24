@@ -4,7 +4,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
-import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,14 +33,14 @@ public class VariantDataSource {
 
     @NotNull
     public static JRDataSource fromVariants(@NotNull final List<VariantReport> variantReports,
-            @NotNull final HmfReporterData reporterData) {
+            @NotNull DrupFilter drupFilter) {
         final DRDataSource variantDataSource =
                 new DRDataSource(GENE_FIELD.getName(), POSITION_FIELD.getName(), VARIANT_FIELD.getName(), DEPTH_VAF_FIELD.getName(),
                         COSMIC_FIELD.getName(), COSMIC_NR_FIELD.getName(), HGVS_CODING_FIELD.getName(), HGVS_PROTEIN_FIELD.getName(),
                         CONSEQUENCE_FIELD.getName(), PLOIDY_TAF_FIELD.getName());
 
         for (final VariantReport variantReport : variantReports) {
-            final String displayGene = reporterData.drupFilter().test(variantReport) ? variantReport.gene() + " *" : variantReport.gene();
+            final String displayGene = drupFilter.test(variantReport) ? variantReport.gene() + " *" : variantReport.gene();
             variantDataSource.add(displayGene, variantReport.variant().chromosomePosition(), variantReport.variantField(),
                     variantReport.depthVafField(), variantReport.cosmicID(), stripCosmicIdentifier(variantReport.cosmicID()),
                     variantReport.hgvsCoding(), variantReport.hgvsProtein(), variantReport.consequence(), variantReport.ploidyTafField());
