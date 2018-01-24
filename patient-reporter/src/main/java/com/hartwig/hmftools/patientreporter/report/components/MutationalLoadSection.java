@@ -18,9 +18,8 @@ public final class MutationalLoadSection {
     public static ComponentBuilder<?, ?> build(final int mutationalLoad) {
         final int graphValue = computeGraphValue(mutationalLoad);
         final int markerValue = computeGraphValue(DRUP_THRESHOLD);
-
         final GradientBar gradient =
-                ImmutableGradientBar.of(new Color(253, 235, 171), new Color(70, 81, 137), "Low", "High", graphValue, markerValue);
+                ImmutableGradientBar.of(new Color(239, 229, 203), new Color(159, 163, 193), "Low", "High", graphValue, markerValue);
         final SliderSection sliderSection =
                 ImmutableSliderSection.of("Tumor Mutational Load", interpret(mutationalLoad), description(), gradient);
         return sliderSection.build();

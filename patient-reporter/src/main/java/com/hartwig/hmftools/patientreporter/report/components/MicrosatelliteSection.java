@@ -20,16 +20,15 @@ public final class MicrosatelliteSection {
         final int graphValue = computeGraphValue(microsatelliteIndicator);
         final int markerValue = computeGraphValue(MSI_THRESHOLD);
 
-        final GradientBar gradient = ImmutableGradientBar.of(Color.YELLOW, Color.RED, "MSS", "MSI", graphValue, markerValue);
-        final SliderSection sliderSection = ImmutableSliderSection.of("Microsatellite Status",
-                interpretMicrosatelliteStatus(microsatelliteIndicator),
-                description(),
-                gradient);
+        final GradientBar gradient =
+                ImmutableGradientBar.of(new Color(239, 239, 239), new Color(171, 191, 171), "MSS", "MSI", graphValue, markerValue);
+        final SliderSection sliderSection =
+                ImmutableSliderSection.of("Microsatellite Status", interpret(microsatelliteIndicator), description(), gradient);
         return sliderSection.build();
     }
 
     @NotNull
-    private static String interpretMicrosatelliteStatus(final double microsatelliteIndicator) {
+    private static String interpret(final double microsatelliteIndicator) {
         final String formattedMicrosatelliteIndicator = new DecimalFormat("#.####").format(microsatelliteIndicator);
         if (microsatelliteIndicator > MSI_THRESHOLD) {
             return "Unstable (" + formattedMicrosatelliteIndicator + ")";
