@@ -106,18 +106,19 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     static JasperReportBuilder generatePatientReport(@NotNull final SequencedPatientReport report,
             @NotNull final HmfReporterData reporterData) throws IOException {
-        final ComponentBuilder<?, ?> reportMainPage =
-                cmp.verticalList(MainPageTopSection.build("HMF Sequencing Report", report.sampleReport()),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        mainPageAboutSection(),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        snvIndelReport(report, reporterData),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        copyNumberReport(report),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        geneDisruptionReport(report),
-                        cmp.verticalGap(SECTION_VERTICAL_GAP),
-                        geneFusionReport(report));
+        final ComponentBuilder<?, ?> reportMainPage = cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Sequencing Report",
+                report.sampleReport(),
+                report.impliedPurityString()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                mainPageAboutSection(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                snvIndelReport(report, reporterData),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                copyNumberReport(report),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                geneDisruptionReport(report),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                geneFusionReport(report));
 
         final ComponentBuilder<?, ?> genePanelPage = cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(Commons.TITLE + " - Gene Panel Information").setStyle(sectionHeaderStyle()),
@@ -195,8 +196,6 @@ public class PDFWriter implements ReportWriter {
                 cmp.horizontalList(cmp.horizontalGap(10),
                         cmp.text("*").setStyle(fontStyle()).setWidth(2),
                         cmp.text(geneMutationAddition).setStyle(fontStyle())),
-                cmp.verticalGap(15),
-                cmp.text("Implied Tumor Purity: " + report.impliedPurityString()).setStyle(tableHeaderStyle()),
                 cmp.verticalGap(15),
                 cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " **").setStyle(tableHeaderStyle()),
                 cmp.verticalGap(15),

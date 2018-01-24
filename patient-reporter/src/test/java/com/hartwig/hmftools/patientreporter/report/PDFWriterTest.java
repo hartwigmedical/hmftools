@@ -80,8 +80,10 @@ public class PDFWriterTest {
         final List<GeneDisruptionData> disruptions = createTestDisruptions();
 
         final SampleReport sampleReport = testSampleReport(0.6);
-        final List<Alteration> alterations =
-                CivicAnalysis.run(variants, copyNumbers, reporterData.panelGeneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
+        final List<Alteration> alterations = CivicAnalysis.run(variants,
+                copyNumbers,
+                reporterData.panelGeneModel(),
+                doidMapping.doidsForTumorType(sampleReport.tumorType()));
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
@@ -90,7 +92,8 @@ public class PDFWriterTest {
                 disruptions,
                 fusions,
                 "58%",
-                alterations, Resources.getResource("circos" + File.separator + "circos_example.png").getPath(),
+                alterations,
+                Resources.getResource("circos" + File.separator + "circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
                 baseReporterData.signaturePath());
 
@@ -163,18 +166,10 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneCopyNumber> createTestCopyNumbers() {
-        final GeneCopyNumber copyNumber1 = createCopyNumberBuilder()
-                .chromosome("9")
-                .chromosomeBand("p21.3")
-                .gene("CDKN2A")
-                .minCopyNumber(0)
-                .build();
-        final GeneCopyNumber copyNumber2 = createCopyNumberBuilder()
-                .chromosome("17")
-                .chromosomeBand("q12")
-                .gene("ERBB2")
-                .minCopyNumber(9)
-                .build();
+        final GeneCopyNumber copyNumber1 =
+                createCopyNumberBuilder().chromosome("9").chromosomeBand("p21.3").gene("CDKN2A").minCopyNumber(0).build();
+        final GeneCopyNumber copyNumber2 =
+                createCopyNumberBuilder().chromosome("17").chromosomeBand("q12").gene("ERBB2").minCopyNumber(9).build();
         return Lists.newArrayList(copyNumber1, copyNumber2);
     }
 

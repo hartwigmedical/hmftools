@@ -22,22 +22,29 @@ public final class MainPageTopSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final SampleReport report) {
-        return build(title, report.sampleId(), report.tumorType(), report.tumorPercentageString());
+        return build(title, report.sampleId(), report.tumorType(), "Pathology Tumor Percentage", report.tumorPercentageString());
     }
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(@NotNull final String title, @NotNull final String sample, @NotNull final String tumorType,
-            @NotNull final String tumorPercentage) {
-        final ComponentBuilder<?, ?> mainDiagnosisInfo = cmp.horizontalList(
-                cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle()),
+    public static ComponentBuilder<?, ?> buildWithImpliedPurity(@NotNull final String title, @NotNull final SampleReport report,
+            @NotNull String purityString) {
+        return build(title, report.sampleId(), report.tumorType(), "Implied Tumor Purity", purityString);
+    }
+
+    @NotNull
+    public static ComponentBuilder<?, ?> build(@NotNull String title, @NotNull String sample, @NotNull String tumorType,
+            @NotNull String tumorPercentageTitle, @NotNull String tumorPercentage) {
+        final ComponentBuilder<?, ?> mainDiagnosisInfo =
+                cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle()),
                         cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
-                cmp.verticalList(cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
-                        cmp.text(tumorType).setStyle(dataTableStyle())),
-                cmp.verticalList(cmp.text("Pathology Tumor Percentage").setStyle(tableHeaderStyle()),
-                        cmp.text(tumorPercentage).setStyle(dataTableStyle())));
-        return cmp.horizontalList(cmp.image(REPORT_LOGO_PATH), cmp.verticalList(cmp.text(title + " - " + sample)
-                .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
-                .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
-                .setHeight(50), mainDiagnosisInfo));
+                        cmp.verticalList(cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
+                                cmp.text(tumorType).setStyle(dataTableStyle())),
+                        cmp.verticalList(cmp.text(tumorPercentageTitle).setStyle(tableHeaderStyle()),
+                                cmp.text(tumorPercentage).setStyle(dataTableStyle())));
+        return cmp.horizontalList(cmp.image(REPORT_LOGO_PATH),
+                cmp.verticalList(cmp.text(title + " - " + sample)
+                        .setStyle(fontStyle().bold().setFontSize(14).setVerticalTextAlignment(VerticalTextAlignment.MIDDLE))
+                        .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+                        .setHeight(50), mainDiagnosisInfo));
     }
 }

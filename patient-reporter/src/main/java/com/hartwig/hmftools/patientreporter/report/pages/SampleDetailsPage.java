@@ -43,17 +43,18 @@ public abstract class SampleDetailsPage {
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(Commons.TITLE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP), sampleDetailsSection(), cmp.verticalGap(SECTION_VERTICAL_GAP), disclaimerSection());
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                sampleDetailsSection(),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                disclaimerSection());
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> disclaimerSection() {
-        //@formatter:off
         final List<String> lines = Lists.newArrayList(
                 "The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation.",
                 "This analysis done for this report has passed all internal quality controls.",
                 "For feedback or complaints please contact qualitysystem@hartwigmedicalfoundation.nl.");
-        //@formatter:on
         return toList("Disclaimer", lines);
     }
 
@@ -63,19 +64,16 @@ public abstract class SampleDetailsPage {
             throw new IllegalStateException("No recipient address present for sample " + sampleReport().sampleId());
         }
 
-        //@formatter:off
         final List<String> lines = Lists.newArrayList(
                 "The samples have been sequenced at Hartwig Medical Foundation, Science Park 408, 1098XH Amsterdam",
                 "The samples have been analyzed by Next Generation Sequencing",
-                "This experiment is performed on the tumor sample which arrived on " +
-                        formattedDate(sampleReport().tumorArrivalDate()),
+                "This experiment is performed on the tumor sample which arrived on " + formattedDate(sampleReport().tumorArrivalDate()),
                 "The pathology tumor percentage for this sample is " + sampleReport().tumorPercentageString(),
-                "This experiment is performed on the blood sample which arrived on " +
-                        formattedDate(sampleReport().bloodArrivalDate()),
+                "This experiment is performed on the blood sample which arrived on " + formattedDate(sampleReport().bloodArrivalDate()),
                 "This experiment is performed according to lab procedures: " + sampleReport().labProcedures(),
                 "This report is generated and verified by: " + user(),
                 "This report is addressed at: " + sampleReport().recipient());
-        //@formatter:on
+
         comments().ifPresent(comments -> lines.add("Comments: " + comments));
 
         return toList("Sample details", lines);
