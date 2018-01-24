@@ -25,6 +25,7 @@ import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.report.components.MSISection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MutationalLoadSection;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
@@ -164,7 +165,7 @@ public class PDFWriter implements ReportWriter {
 
     @NotNull
     private static ComponentBuilder<?, ?> mutationalLoadAndMSIReport(@NotNull SequencedPatientReport report) {
-        return MutationalLoadSection.build(report.mutationalLoad());
+        return cmp.horizontalList(MutationalLoadSection.build(report.mutationalLoad()), MSISection.build(report.microsatelliteIndicator()));
     }
 
     @NotNull

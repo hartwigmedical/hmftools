@@ -26,6 +26,8 @@ public abstract class SequencedPatientReport implements PatientReport {
 
     public abstract int mutationalLoad();
 
+    public abstract double microsatelliteIndicator();
+
     @NotNull
     public abstract List<GeneCopyNumber> geneCopyNumbers();
 

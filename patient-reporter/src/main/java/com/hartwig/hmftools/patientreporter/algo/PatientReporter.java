@@ -120,6 +120,7 @@ public abstract class PatientReporter {
         return ImmutableSequencedPatientReport.of(sampleReport,
                 purpleEnrichedVariants,
                 mutationalLoad,
+                variantAnalysis.indelsPerMb(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
                 reportableDisruptions,
                 reportableFusions,

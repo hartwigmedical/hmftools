@@ -70,6 +70,7 @@ public class PDFWriterTest {
         final double pathologyTumorPercentage = 0.6;
         final double impliedTumorPurity = 0.58;
         final int mutationalLoad = 361;
+        final double microsatelliteIndicator = 2;
 
         final HmfReporterData reporterData = testHmfReporterData();
         final BaseReporterData baseReporterData = testBaseReporterData();
@@ -91,6 +92,7 @@ public class PDFWriterTest {
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
                 mutationalLoad,
+                microsatelliteIndicator,
                 copyNumbers,
                 disruptions,
                 fusions, PatientReportFormat.formatPercent(impliedTumorPurity),
