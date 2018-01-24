@@ -46,6 +46,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableGeneFusionData;
+import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
@@ -66,19 +67,21 @@ public class PDFWriterTest {
 
     @Test
     public void canGenerateSequenceReport() throws DRException, IOException, HartwigException {
+        final double pathologyTumorPercentage = 0.6;
+        final double impliedTumorPurity = 0.58;
+
         final HmfReporterData reporterData = testHmfReporterData();
         final BaseReporterData baseReporterData = testBaseReporterData();
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
 
-        final FittedPurity fittedPurity =
-                ImmutableFittedPurity.builder().purity(0.58).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
+        final FittedPurity fittedPurity = withPurity(impliedTumorPurity);
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
         final List<GeneDisruptionData> disruptions = createTestDisruptions();
         final List<GeneFusionData> fusions = createTestFusions();
 
-        final SampleReport sampleReport = testSampleReport(0.6);
+        final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
         final List<Alteration> alterations = CivicAnalysis.run(variants,
                 copyNumbers,
                 reporterData.panelGeneModel(),
@@ -89,8 +92,7 @@ public class PDFWriterTest {
                 361,
                 copyNumbers,
                 disruptions,
-                fusions,
-                "58%",
+                fusions, PatientReportFormat.formatPercent(impliedTumorPurity),
                 alterations,
                 Resources.getResource("circos" + File.separator + "circos_example.png").getPath(),
                 Optional.of("this is a test report and does not relate to any real CPCT patient"),
@@ -110,6 +112,11 @@ public class PDFWriterTest {
             mainReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_report.pdf"));
             evidenceReport.toPdf(new FileOutputStream(REPORT_BASE_DIR + File.separator + "test_evidence_report.pdf"));
         }
+    }
+
+    @NotNull
+    private static FittedPurity withPurity(double impliedPurity) {
+        return ImmutableFittedPurity.builder().purity(impliedPurity).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
     }
 
     @NotNull
