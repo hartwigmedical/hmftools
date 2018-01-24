@@ -23,9 +23,9 @@ public final class GenePanelSection {
 
     @NotNull
     public static ComponentBuilder<?, ?> build(@NotNull final HmfReporterData reporterData) {
-        final long coverage = Math.round(reporterData.panelGeneModel().slicer().numberOfBases() / 1E6);
+        final long coverage = Math.round(reporterData.panelGeneModel().numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
-                Lists.newArrayList("Findings are reported for the " + Integer.toString(reporterData.panelGeneModel().slicer().numberOfRegions())
+                Lists.newArrayList("Findings are reported for the " + Integer.toString(reporterData.panelGeneModel().numberOfRegions())
                         + " genes (canonical transcripts) indicated below, covering " + coverage + " MBases."));
 
         return section.add(cmp.verticalGap(HEADER_TO_DETAIL_VERTICAL_GAP), genePanelTable(reporterData));

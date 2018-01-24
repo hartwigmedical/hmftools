@@ -51,31 +51,31 @@ public class SlicerTest {
         unsortedVariants(forwardSlicer);
     }
 
-    private void excludedChromosomes(Slicer aSlicer) {
-        assertSlicers(false, buildVariant("1", 0), aSlicer);
-        assertSlicers(false, buildVariant("NotExists", 100), aSlicer);
+    private static void excludedChromosomes(@NotNull Slicer slicer) {
+        assertSlicerInclude(false, buildVariant("1", 0), slicer);
+        assertSlicerInclude(false, buildVariant("NotExists", 100), slicer);
     }
 
-    private void sortedVariants(Slicer aSlicer) {
-        assertSlicers(false, buildVariant("X", 1), aSlicer);
-        assertSlicers(true, buildVariant("X", 150), aSlicer);
-        assertSlicers(false, buildVariant("X", 250), aSlicer);
-        assertSlicers(true, buildVariant("X", 300), aSlicer);
-        assertSlicers(true, buildVariant("X", 400), aSlicer);
-        assertSlicers(true, buildVariant("Y", 570), aSlicer);
-        assertSlicers(false, buildVariant("Y", 1000), aSlicer);
-        assertSlicers(false, buildVariant("NotExists", 100), aSlicer);
+    private static void sortedVariants(@NotNull Slicer slicer) {
+        assertSlicerInclude(false, buildVariant("X", 1), slicer);
+        assertSlicerInclude(true, buildVariant("X", 150), slicer);
+        assertSlicerInclude(false, buildVariant("X", 250), slicer);
+        assertSlicerInclude(true, buildVariant("X", 300), slicer);
+        assertSlicerInclude(true, buildVariant("X", 400), slicer);
+        assertSlicerInclude(true, buildVariant("Y", 570), slicer);
+        assertSlicerInclude(false, buildVariant("Y", 1000), slicer);
+        assertSlicerInclude(false, buildVariant("NotExists", 100), slicer);
     }
 
-    private void unsortedVariants(Slicer aSlicer) {
-        assertSlicers(true, buildVariant("X", 150), aSlicer);
-        assertSlicers(true, buildVariant("X", 300), aSlicer);
-        assertSlicers(true, buildVariant("X", 400), aSlicer);
-        assertSlicers(true, buildVariant("Y", 570), aSlicer);
-        assertSlicers(false, buildVariant("X", 1), aSlicer);
-        assertSlicers(false, buildVariant("X", 250), aSlicer);
-        assertSlicers(false, buildVariant("Y", 1000), aSlicer);
-        assertSlicers(false, buildVariant("NotExists", 100), aSlicer);
+    private static void unsortedVariants(@NotNull Slicer slicer) {
+        assertSlicerInclude(true, buildVariant("X", 150), slicer);
+        assertSlicerInclude(true, buildVariant("X", 300), slicer);
+        assertSlicerInclude(true, buildVariant("X", 400), slicer);
+        assertSlicerInclude(true, buildVariant("Y", 570), slicer);
+        assertSlicerInclude(false, buildVariant("X", 1), slicer);
+        assertSlicerInclude(false, buildVariant("X", 250), slicer);
+        assertSlicerInclude(false, buildVariant("Y", 1000), slicer);
+        assertSlicerInclude(false, buildVariant("NotExists", 100), slicer);
     }
 
     @NotNull
@@ -83,7 +83,7 @@ public class SlicerTest {
         return new SomaticVariantImpl.Builder().chromosome(chromosome).position(position).build();
     }
 
-    private void assertSlicers(boolean expectedResult, SomaticVariant variant, Slicer aSlicer) {
-        assertSame(expectedResult, aSlicer.includes(variant));
+    private static void assertSlicerInclude(boolean expectedResult, @NotNull SomaticVariant variant, @NotNull Slicer slicer) {
+        assertSame(expectedResult, slicer.includes(variant));
     }
 }

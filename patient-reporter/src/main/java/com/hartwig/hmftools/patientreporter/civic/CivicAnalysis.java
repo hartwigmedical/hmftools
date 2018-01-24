@@ -59,7 +59,7 @@ public class CivicAnalysis {
         final List<Alteration> alterations = Lists.newArrayList();
         final CivicApiWrapper civicApi = new CivicApiWrapper();
         for (final VariantReport variantReport : reportedVariants) {
-            for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
+            for (final HmfGenomeRegion region : geneModel.regions()) {
                 if (region.gene().equals(variantReport.gene())) {
                     for (final int entrezId : region.entrezId()) {
                         try {
@@ -87,7 +87,7 @@ public class CivicAnalysis {
         final List<Alteration> alterations = Lists.newArrayList();
         final CivicApiWrapper civicApi = new CivicApiWrapper();
         for (final GeneCopyNumber copyNumberReport : copyNumbers) {
-            for (final HmfGenomeRegion region : geneModel.hmfRegions()) {
+            for (final HmfGenomeRegion region : geneModel.regions()) {
                 if (region.gene().equals(copyNumberReport.gene())) {
                     for (final int entrezId : region.entrezId()) {
                         try {

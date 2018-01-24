@@ -43,7 +43,7 @@ public class PatientReporterTest {
         final HmfReporterData reporterData = testHmfReporterData();
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(geneModel, reporterData.microsatelliteAnalyzer());
         final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.hmfRegions(), CosmicFusions.readFromCSV(FUSIONS_CSV));
+                new StructuralVariantAnalyzer(new TestAnnotator(), geneModel.regions(), CosmicFusions.readFromCSV(FUSIONS_CSV));
         final PatientReporter algo = ImmutablePatientReporter.of(baseReporterData, reporterData, variantAnalyzer, svAnalyzer);
         assertNotNull(algo.run(RUN_DIRECTORY, null));
     }

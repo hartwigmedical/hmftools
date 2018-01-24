@@ -29,7 +29,7 @@ public final class GenePanelDataSource {
     @NotNull
     public static JRDataSource fromHmfReporterData(@NotNull final HmfReporterData reporterData) {
         final DRDataSource genePanelDataSource = new DRDataSource(GENE_FIELD.getName(), TRANSCRIPT_FIELD.getName(), TYPE_FIELD.getName());
-        final List<HmfGenomeRegion> regions = Lists.newArrayList(reporterData.panelGeneModel().hmfRegions());
+        final List<HmfGenomeRegion> regions = Lists.newArrayList(reporterData.panelGeneModel().regions());
         regions.sort(Comparator.comparing(HmfGenomeRegion::gene));
 
         for (final HmfGenomeRegion region : regions) {

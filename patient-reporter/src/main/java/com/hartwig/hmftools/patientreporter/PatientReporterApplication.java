@@ -138,7 +138,7 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
         final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().hmfRegions(), reporterData.cosmicFusionModel());
+                new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.cosmicFusionModel());
 
         return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer);
     }
