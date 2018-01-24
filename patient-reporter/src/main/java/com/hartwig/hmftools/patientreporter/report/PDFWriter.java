@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.monospaceBaseTable;
 import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
-import static com.hartwig.hmftools.patientreporter.report.Commons.tableHeaderStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.toList;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
@@ -162,9 +161,6 @@ public class PDFWriter implements ReportWriter {
     @NotNull
     private static ComponentBuilder<?, ?> snvIndelReport(@NotNull final SequencedPatientReport report,
             @NotNull final HmfReporterData reporterData) {
-        final String mutationalLoadAddition =
-                "Patients with a mutational load over 140 could be " + "eligible for immunotherapy within DRUP.";
-
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific variant reported for "
                 + "this sample, but only on a gene-level.";
@@ -190,13 +186,7 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(15),
                 cmp.horizontalList(cmp.horizontalGap(10),
                         cmp.text("*").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(geneMutationAddition).setStyle(fontStyle())),
-                cmp.verticalGap(15),
-                cmp.text("Tumor Mutational Load: " + Integer.toString(report.mutationalLoad()) + " **").setStyle(tableHeaderStyle()),
-                cmp.verticalGap(15),
-                cmp.horizontalList(cmp.horizontalGap(10),
-                        cmp.text("**").setStyle(fontStyle()).setWidth(2),
-                        cmp.text(mutationalLoadAddition).setStyle(fontStyle())));
+                        cmp.text(geneMutationAddition).setStyle(fontStyle())));
     }
 
     @NotNull

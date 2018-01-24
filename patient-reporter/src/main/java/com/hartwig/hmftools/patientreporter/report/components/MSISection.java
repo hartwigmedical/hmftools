@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
-public class MSISection {
+public final class MSISection {
     private static final double THRESHOLD = 0.909;
     //MIVO: buffer at edges of slider bar for min/max values. e.g. value of 1 would put min=1 and max=99
     private static final int BUFFER = 3;
@@ -42,11 +42,11 @@ public class MSISection {
         return (int) Math.round((logScaleValue - START) * graphIntervalLength / logIntervalLength + BUFFER);
     }
 
+    @NotNull
     private static String description() {
         return "Microsatellite instability scores are calculated using WGS data and based on the MSIseq classifier as described in "
                 + "Huang MN et al, Sci Rep. 5: 13321 (2015). The arrow on the bar scale indicates the relative position of the "
                 + "analyzed sample compared to all samples in the  database. Samples with a score greater than " + THRESHOLD
-                + " are considered microsatellite instable (MSI-H).";
+                + " are considered microsatellite unstable (MSI-H).";
     }
-
 }

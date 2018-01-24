@@ -120,8 +120,8 @@ abstract class GradientBarCustomizer implements DRIChartCustomizer {
     @NotNull
     private Color determineContrastingColor(@NotNull final Color color) {
         final double colorLuminance =
-                0.2126 * relativeLuminance(color.getRed()) + 0.7152 * relativeLuminance(color.getGreen()) + 0.0722 * relativeLuminance(
-                        color.getBlue());
+                0.2126 * relativeLuminance(color.getRed()) + 0.7152 * relativeLuminance(color.getGreen()) + 0.0722 * relativeLuminance(color
+                        .getBlue());
         //MIVO: w3c recommended threshold for relative luminance = 0.179
         if (colorLuminance > 0.220) {
             return Color.BLACK;

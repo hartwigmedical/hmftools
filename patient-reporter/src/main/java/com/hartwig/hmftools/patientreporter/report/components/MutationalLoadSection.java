@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 
-public class MutationalLoadSection {
+public final class MutationalLoadSection {
     private static final double THRESHOLD = 140;
     //MIVO: buffer at edges of slider bar for min/max values. e.g. value of 1 would put min=1 and max=99
     private static final int BUFFER = 3;
@@ -41,6 +41,7 @@ public class MutationalLoadSection {
         return (int) Math.round((logScaleValue - START) * graphIntervalLength / logIntervalLength + BUFFER);
     }
 
+    @NotNull
     private static String description() {
         return "Mutational load represents the total number of observed somatic variants across the entire protein coding region of the genome. "
                 + "Somatic variants only include single nucleotide variants (excluding insertion/deletions) and represent potential neoantigens. "
@@ -48,5 +49,4 @@ public class MutationalLoadSection {
         //                + "The arrow on the bar scale indicates the relative position of the analyzed sample compared to all samples (upper bar) "
         //                + "and compared to all ‘on-tumor-type’ samples (lower bar) in the database.";
     }
-
 }

@@ -39,34 +39,41 @@ public abstract class SliderSection {
 
     @NotNull
     private ComponentBuilder<?, ?> dataSection() {
-        //@formatter:off
-        return cmp.horizontalList(
-                titleAndDetailsSection(),
-                bar().build().setStyle(stl.style().setTopPadding(5).setRightPadding(5)
-                            .setTopBorder(BORDER).setRightBorder(BORDER)));
-        // @formatter:on
+        return cmp.horizontalList(titleAndDetailsSection(),
+                bar().build().setStyle(stl.style().setTopPadding(5).setRightPadding(5).setTopBorder(BORDER).setRightBorder(BORDER)));
     }
 
     @NotNull
     private ComponentBuilder<?, ?> titleAndDetailsSection() {
-        //@formatter:off
         return cmp.verticalList(cmp.text(title())
-                .setStyle(Commons.fontStyle().setFontSize(10).setBold(true)
-                        .setLeftPadding(EDGE_PADDING).setTopPadding(EDGE_PADDING).setBottomPadding(INNER_PADDING)
-                        .setTopBorder(BORDER).setLeftBorder(BORDER)),
-                cmp.text(details()).setStyle(Commons.monospaceFontStyle().setFontSize(10)
-                        .setLeftPadding(EDGE_PADDING).setTopPadding(INNER_PADDING).setBottomPadding(INNER_PADDING)
-                        .setLeftBorder(BORDER)));
-        // @formatter:on
+                        .setStyle(Commons.fontStyle()
+                                .setFontSize(10)
+                                .setBold(true)
+                                .setLeftPadding(EDGE_PADDING)
+                                .setTopPadding(EDGE_PADDING)
+                                .setBottomPadding(INNER_PADDING)
+                                .setTopBorder(BORDER)
+                                .setLeftBorder(BORDER)),
+                cmp.text(details())
+                        .setStyle(Commons.monospaceFontStyle()
+                                .setFontSize(10)
+                                .setLeftPadding(EDGE_PADDING)
+                                .setTopPadding(INNER_PADDING)
+                                .setBottomPadding(INNER_PADDING)
+                                .setLeftBorder(BORDER)));
     }
 
     @NotNull
     private ComponentBuilder<?, ?> descriptionSection() {
-        //@formatter:off
         return cmp.text(description())
-                .setStyle(Commons.fontStyle().setFontSize(8)
-                        .setTopPadding(INNER_PADDING).setLeftPadding(EDGE_PADDING).setRightPadding(EDGE_PADDING).setBottomPadding(EDGE_PADDING)
-                        .setBottomBorder(BORDER).setLeftBorder(BORDER).setRightBorder(BORDER));
-        // @formatter:on
+                .setStyle(Commons.fontStyle()
+                        .setFontSize(8)
+                        .setTopPadding(INNER_PADDING)
+                        .setLeftPadding(EDGE_PADDING)
+                        .setRightPadding(EDGE_PADDING)
+                        .setBottomPadding(EDGE_PADDING)
+                        .setBottomBorder(BORDER)
+                        .setLeftBorder(BORDER)
+                        .setRightBorder(BORDER));
     }
 }

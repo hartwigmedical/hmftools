@@ -75,9 +75,8 @@ public class PDFWriterTest {
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
-
-        final List<GeneFusionData> fusions = createTestFusions();
         final List<GeneDisruptionData> disruptions = createTestDisruptions();
+        final List<GeneFusionData> fusions = createTestFusions();
 
         final SampleReport sampleReport = testSampleReport(0.6);
         final List<Alteration> alterations = CivicAnalysis.run(variants,
