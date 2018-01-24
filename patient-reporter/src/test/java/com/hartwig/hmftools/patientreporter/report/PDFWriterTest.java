@@ -75,7 +75,7 @@ public class PDFWriterTest {
         final BaseReporterData baseReporterData = testBaseReporterData();
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
 
-        final FittedPurity fittedPurity = withPurity(impliedTumorPurity);
+        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
         final List<GeneCopyNumber> copyNumbers = createTestCopyNumbers();
@@ -116,7 +116,7 @@ public class PDFWriterTest {
     }
 
     @NotNull
-    private static FittedPurity withPurity(double impliedPurity) {
+    private static FittedPurity createFittedPurity(double impliedPurity) {
         return ImmutableFittedPurity.builder().purity(impliedPurity).diploidProportion(0).normFactor(0).score(0).ploidy(2).build();
     }
 
