@@ -31,28 +31,26 @@ import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
 import net.sf.dynamicreports.report.exception.DRException;
 
-class EvidenceReport {
+final class EvidenceReport {
     private static final int PADDING = 3;
 
     @VisibleForTesting
     @NotNull
     static JasperReportBuilder generate(@NotNull final SequencedPatientReport report) throws IOException, DRException {
-
         final EvidenceReportData evidenceReportData = ImmutableEvidenceReportData.of(report.civicAlterations());
 
-        // @formatter:off
-        final VerticalListBuilder totalReport = cmp.verticalList(
-                    MainPageTopSection.build("HMF Civic Evidence Supplement", report.sampleReport()),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle().setFontSize(15)),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    conciseEvidenceSection(),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    cmp.text("Civic matching variants").setStyle(sectionHeaderStyle()),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP),
-                    civicMatchingVariantsTable(),
-                    cmp.verticalGap(SECTION_VERTICAL_GAP));
-        // @formatter:on
+        final VerticalListBuilder totalReport =
+                cmp.verticalList(MainPageTopSection.build("HMF Civic Evidence Supplement", report.sampleReport()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text("Knowledgebase drug association of reported genomic alterations")
+                                .setStyle(sectionHeaderStyle().setFontSize(15)),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        conciseEvidenceSection(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        cmp.text("Civic matching variants").setStyle(sectionHeaderStyle()),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP),
+                        civicMatchingVariantsTable(),
+                        cmp.verticalGap(SECTION_VERTICAL_GAP));
 
         return report().addDetail(totalReport).setDataSource(evidenceReportData.toDataSource());
     }
@@ -68,43 +66,39 @@ class EvidenceReport {
         final int SIGNIFICANCE_WIDTH = 100;
         final int SOURCE_WIDTH = 70;
 
-        //@formatter:off
-        final SubreportBuilder subtable = cmp.subreport(
-                baseTable().setColumnStyle(dataStyle()).fields(AlterationEvidence.SOURCE_URL)
-                    .columns(
-                        col.column(AlterationEvidence.SIGNIFICANCE).setFixedWidth(SIGNIFICANCE_WIDTH).setMinHeight(25),
+        final SubreportBuilder subTable = cmp.subreport(baseTable().setColumnStyle(dataStyle())
+                .fields(AlterationEvidence.SOURCE_URL)
+                .columns(col.column(AlterationEvidence.SIGNIFICANCE).setFixedWidth(SIGNIFICANCE_WIDTH).setMinHeight(25),
                         col.column(AlterationEvidence.DRUGS),
-                        col.column(AlterationEvidence.SOURCE).setHyperLink(hyperLink(AlterationEvidence.sourceHyperlink()))
-                                .setStyle(dataLinkStyle()).setFixedWidth(SOURCE_WIDTH)))
-                .setDataSource(exp.subDatasourceBeanCollection("evidence"));
+                        col.column(AlterationEvidence.SOURCE)
+                                .setHyperLink(hyperLink(AlterationEvidence.sourceHyperlink()))
+                                .setStyle(dataLinkStyle())
+                                .setFixedWidth(SOURCE_WIDTH))).setDataSource(exp.subDatasourceBeanCollection("evidence"));
 
-        final ComponentBuilder<?, ?> tableHeader = cmp.horizontalList(
-                cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
-                cmp.text("Significance").setStyle(tableHeaderStyle()).setFixedWidth(SIGNIFICANCE_WIDTH),
-                cmp.text("Association(Lv)").setStyle(tableHeaderStyle()),
-                cmp.text("Source").setStyle(tableHeaderStyle()).setFixedWidth(SOURCE_WIDTH));
+        final ComponentBuilder<?, ?> tableHeader =
+                cmp.horizontalList(cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
+                        cmp.text("Significance").setStyle(tableHeaderStyle()).setFixedWidth(SIGNIFICANCE_WIDTH),
+                        cmp.text("Association(Lv)").setStyle(tableHeaderStyle()),
+                        cmp.text("Source").setStyle(tableHeaderStyle()).setFixedWidth(SOURCE_WIDTH));
 
-        return cmp.subreport(
-                baseTable().setColumnStyle(dataStyle()).title(tableHeader)
-                    .columns(
-                        col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
-                        col.componentColumn(subtable))
+        return cmp.subreport(baseTable().setColumnStyle(dataStyle())
+                .title(tableHeader)
+                .columns(col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH), col.componentColumn(subTable))
                 .noData(cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .setDataSource(exp.subDatasourceBeanCollection("alterationsWithEvidence"));
-        // @formatter:on
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> civicMatchingVariantsTable() {
         final int ALTERATION_WIDTH = 75;
 
-        //@formatter:off
-        final SubreportBuilder subtable = cmp.subreport(
-                baseTable().setColumnStyle(dataStyle()).fields(AlterationMatch.SUMMARY_URL)
-                    .columns(
-                        col.column(AlterationMatch.MATCH_TYPE).setFixedWidth(40).setMinHeight(25),
-                        col.column(AlterationMatch.NAME).setHyperLink(hyperLink(AlterationMatch.civicSummaryHyperlink()))
-                                .setStyle(dataLinkStyle()).setFixedWidth(80),
+        final SubreportBuilder subTable = cmp.subreport(baseTable().setColumnStyle(dataStyle())
+                .fields(AlterationMatch.SUMMARY_URL)
+                .columns(col.column(AlterationMatch.MATCH_TYPE).setFixedWidth(40).setMinHeight(25),
+                        col.column(AlterationMatch.NAME)
+                                .setHyperLink(hyperLink(AlterationMatch.civicSummaryHyperlink()))
+                                .setStyle(dataLinkStyle())
+                                .setFixedWidth(80),
                         col.column(AlterationMatch.VARIANT_TYPE).setFixedWidth(80),
                         col.column(AlterationMatch.CHROMOSOME).setFixedWidth(30),
                         col.column(AlterationMatch.START).setFixedWidth(45),
@@ -112,30 +106,26 @@ class EvidenceReport {
                         col.column(AlterationMatch.CHROMOSOME2).setFixedWidth(30),
                         col.column(AlterationMatch.START2).setFixedWidth(30),
                         col.column(AlterationMatch.STOP2).setFixedWidth(30),
-                        col.column(AlterationMatch.HGVS_EXPRESSIONS)))
-                .setDataSource(exp.subDatasourceBeanCollection("matches"));
+                        col.column(AlterationMatch.HGVS_EXPRESSIONS))).setDataSource(exp.subDatasourceBeanCollection("matches"));
 
-        final ComponentBuilder<?, ?> tableHeader = cmp.horizontalList(
-                cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
-                cmp.text("Match").setStyle(tableHeaderStyle()).setFixedWidth(40),
-                cmp.text("Name").setStyle(tableHeaderStyle()).setFixedWidth(80),
-                cmp.text("Type").setStyle(tableHeaderStyle()).setFixedWidth(80),
-                cmp.text("Chr").setStyle(tableHeaderStyle()).setFixedWidth(30),
-                cmp.text("Start").setStyle(tableHeaderStyle()).setFixedWidth(45),
-                cmp.text("Stop").setStyle(tableHeaderStyle()).setFixedWidth(45),
-                cmp.text("Chr2").setStyle(tableHeaderStyle()).setFixedWidth(30),
-                cmp.text("Start2").setStyle(tableHeaderStyle()).setFixedWidth(30),
-                cmp.text("Stop2").setStyle(tableHeaderStyle()).setFixedWidth(30),
-                cmp.text("Hgvs Expressions").setStyle(tableHeaderStyle()));
+        final ComponentBuilder<?, ?> tableHeader =
+                cmp.horizontalList(cmp.text("Alteration").setStyle(tableHeaderStyle()).setFixedWidth(ALTERATION_WIDTH),
+                        cmp.text("Match").setStyle(tableHeaderStyle()).setFixedWidth(40),
+                        cmp.text("Name").setStyle(tableHeaderStyle()).setFixedWidth(80),
+                        cmp.text("Type").setStyle(tableHeaderStyle()).setFixedWidth(80),
+                        cmp.text("Chr").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                        cmp.text("Start").setStyle(tableHeaderStyle()).setFixedWidth(45),
+                        cmp.text("Stop").setStyle(tableHeaderStyle()).setFixedWidth(45),
+                        cmp.text("Chr2").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                        cmp.text("Start2").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                        cmp.text("Stop2").setStyle(tableHeaderStyle()).setFixedWidth(30),
+                        cmp.text("Hgvs Expressions").setStyle(tableHeaderStyle()));
 
-        return cmp.subreport(
-                baseTable().setColumnStyle(dataStyle()).title(tableHeader)
-                    .columns(
-                        col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH),
-                        col.componentColumn(subtable))
+        return cmp.subreport(baseTable().setColumnStyle(dataStyle())
+                .title(tableHeader)
+                .columns(col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH), col.componentColumn(subTable))
                 .noData(cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .setDataSource(exp.subDatasourceBeanCollection("alterations"));
-        // @formatter:on
     }
 
     @NotNull
