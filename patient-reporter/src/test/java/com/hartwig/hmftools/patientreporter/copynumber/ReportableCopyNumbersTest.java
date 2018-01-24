@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-import static com.hartwig.hmftools.patientreporter.copynumber.PurpleCopyNumberFilter.ABS_GAIN;
-import static com.hartwig.hmftools.patientreporter.copynumber.PurpleCopyNumberFilter.ABS_LOSS;
-import static com.hartwig.hmftools.patientreporter.copynumber.PurpleCopyNumberFilter.REL_GAIN;
-import static com.hartwig.hmftools.patientreporter.copynumber.PurpleCopyNumberFilter.includeInReport;
+import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.ABS_GAIN;
+import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.ABS_LOSS;
+import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.REL_GAIN;
+import static com.hartwig.hmftools.patientreporter.copynumber.ReportableCopyNumbers.includeInReport;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class PurpleCopyNumberFilterTest {
+public class ReportableCopyNumbersTest {
 
     @Test
     public void testLoss() {

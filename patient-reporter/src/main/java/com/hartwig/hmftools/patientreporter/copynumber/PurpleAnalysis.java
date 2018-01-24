@@ -49,7 +49,7 @@ public abstract class PurpleAnalysis {
 
     @NotNull
     public List<GeneCopyNumber> reportableGeneCopyNumbers() {
-        return PurpleCopyNumberFilter.filterCopyNumbersForReport(fittedPurity().ploidy(), panelGeneCopyNumbers());
+        return ReportableCopyNumbers.filterCopyNumbersForReport(fittedPurity().ploidy(), panelGeneCopyNumbers());
     }
 
     public double purityUncertainty() {

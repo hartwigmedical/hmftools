@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-final class PurpleCopyNumberFilter {
+final class ReportableCopyNumbers {
 
     @VisibleForTesting
     static final double ABS_GAIN = 8;
@@ -18,7 +18,7 @@ final class PurpleCopyNumberFilter {
     @VisibleForTesting
     static final double ABS_LOSS = 0.5;
 
-    private PurpleCopyNumberFilter() {
+    private ReportableCopyNumbers() {
     }
 
     @NotNull
