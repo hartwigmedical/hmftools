@@ -25,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.NotSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.report.components.GenePanelSection;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.data.GeneCopyNumberDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionDataSource;
@@ -33,6 +32,7 @@ import com.hartwig.hmftools.patientreporter.report.data.GeneFusionDataSource;
 import com.hartwig.hmftools.patientreporter.report.data.VariantDataSource;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableCircosPage;
 import com.hartwig.hmftools.patientreporter.report.pages.ImmutableExplanationPage;
+import com.hartwig.hmftools.patientreporter.report.pages.ImmutableGenePanelPage;
 import com.hartwig.hmftools.patientreporter.report.pages.NonSequenceablePage;
 import com.hartwig.hmftools.patientreporter.report.pages.SampleDetailsPage;
 
@@ -120,17 +120,12 @@ public class PDFWriter implements ReportWriter {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneFusionReport(report));
 
-        final ComponentBuilder<?, ?> genePanelPage = cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Gene Panel Information").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                GenePanelSection.build(reporterData));
-
         final ComponentBuilder<?, ?> totalReport = cmp.multiPageList()
                 .add(reportMainPage)
                 .newPage()
                 .add(ImmutableCircosPage.of(report.circosPath()).reportComponent())
                 .newPage()
-                .add(genePanelPage)
+                .add(ImmutableGenePanelPage.of(reporterData).reportComponent())
                 .newPage()
                 .add(ImmutableExplanationPage.builder().build().reportComponent())
                 .newPage()

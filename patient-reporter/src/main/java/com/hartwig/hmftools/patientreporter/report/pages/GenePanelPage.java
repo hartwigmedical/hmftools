@@ -1,9 +1,11 @@
-package com.hartwig.hmftools.patientreporter.report.components;
+package com.hartwig.hmftools.patientreporter.report.pages;
 
 import static com.hartwig.hmftools.patientreporter.report.Commons.HEADER_TO_DETAIL_VERTICAL_GAP;
+import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
 import static com.hartwig.hmftools.patientreporter.report.Commons.baseTable;
 import static com.hartwig.hmftools.patientreporter.report.Commons.dataStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.linkStyle;
+import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.toList;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
@@ -12,17 +14,32 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
+import com.hartwig.hmftools.patientreporter.report.Commons;
 import com.hartwig.hmftools.patientreporter.report.data.GenePanelDataSource;
 
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
 import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
 
-public final class GenePanelSection {
+@Value.Immutable
+@Value.Style(passAnnotations = NotNull.class,
+             allParameters = true)
+public abstract class GenePanelPage {
 
     @NotNull
-    public static ComponentBuilder<?, ?> build(@NotNull final HmfReporterData reporterData) {
+    abstract HmfReporterData reporterData();
+
+    public ComponentBuilder<?, ?> reportComponent() {
+        return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
+                cmp.text(Commons.TITLE + " - Gene Panel Information").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                build(reporterData()));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> build(@NotNull final HmfReporterData reporterData) {
         final long coverage = Math.round(reporterData.panelGeneModel().numberOfBases() / 1E6);
         final VerticalListBuilder section = toList("Details on the reported gene panel",
                 Lists.newArrayList("Findings are reported for the " + Integer.toString(reporterData.panelGeneModel().numberOfRegions())
