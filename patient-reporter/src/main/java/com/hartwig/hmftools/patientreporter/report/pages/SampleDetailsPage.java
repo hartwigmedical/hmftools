@@ -34,10 +34,12 @@ public abstract class SampleDetailsPage {
     @NotNull
     abstract Optional<String> comments();
 
+    @NotNull
     public static SampleDetailsPage of(@NotNull final PatientReport report) {
         return ImmutableSampleDetailsPage.of(report.sampleReport(), report.user(), report.comments());
     }
 
+    @NotNull
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text(Commons.TITLE + " - Sample Details & Disclaimer").setStyle(sectionHeaderStyle()),
