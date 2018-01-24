@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.hmfslicer.HmfGenePanelSupplier;
+import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
@@ -38,7 +38,7 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException, HartwigException, DRException {
-        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfGeneMap());
+        final GeneModel geneModel = new GeneModel(HmfGenePanelSupplier.hmfPanelGeneMap());
         final BaseReporterData baseReporterData = testBaseReporterData();
         final HmfReporterData reporterData = testHmfReporterData();
         final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(geneModel, reporterData.microsatelliteAnalyzer());

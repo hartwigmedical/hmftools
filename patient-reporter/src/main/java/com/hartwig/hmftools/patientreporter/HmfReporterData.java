@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HmfReporterData {
 
     @NotNull
-    public abstract GeneModel geneModel();
+    public abstract GeneModel panelGeneModel();
 
     @NotNull
     public abstract CosmicGeneModel cosmicGeneModel();

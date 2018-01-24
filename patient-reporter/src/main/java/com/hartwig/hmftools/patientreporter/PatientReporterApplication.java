@@ -127,7 +127,7 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final HmfReporterData reporterData)
             throws IOException, HartwigException, XMLStreamException, SQLException {
-        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(reporterData.geneModel(), reporterData.microsatelliteAnalyzer());
+        final VariantAnalyzer variantAnalyzer = VariantAnalyzer.of(reporterData.panelGeneModel(), reporterData.microsatelliteAnalyzer());
 
         final VariantAnnotator annotator;
         if (cmd.hasOption(ENSEMBL_DB)) {
@@ -138,7 +138,7 @@ public class PatientReporterApplication {
             annotator = NullAnnotator.make();
         }
         final StructuralVariantAnalyzer svAnalyzer =
-                new StructuralVariantAnalyzer(annotator, reporterData.geneModel().hmfRegions(), reporterData.cosmicFusionModel());
+                new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().hmfRegions(), reporterData.cosmicFusionModel());
 
         return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer);
     }

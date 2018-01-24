@@ -81,7 +81,7 @@ public class PDFWriterTest {
 
         final SampleReport sampleReport = testSampleReport(0.6);
         final List<Alteration> alterations =
-                CivicAnalysis.run(variants, copyNumbers, reporterData.geneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
+                CivicAnalysis.run(variants, copyNumbers, reporterData.panelGeneModel(), doidMapping.doidsForTumorType(sampleReport.tumorType()));
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,

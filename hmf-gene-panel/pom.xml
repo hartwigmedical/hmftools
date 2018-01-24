@@ -62,7 +62,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.hmfslicer.HmfGenePanelBuilder</mainClass>
+                            <mainClass>com.hartwig.hmftools.genepanel.HmfGenePanelBuilder</mainClass>
                         </manifest>
                     </archive>
 

@@ -90,7 +90,7 @@ public abstract class PatientReporter {
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations = CivicAnalysis.run(variantAnalysis.findings(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
-                reporterData().geneModel(),
+                reporterData().panelGeneModel(),
                 doidMapping.doidsForTumorType(tumorType));
 
         LOGGER.info(" Printing analysis results:");
@@ -150,7 +150,7 @@ public abstract class PatientReporter {
         final List<PurpleCopyNumber> purpleCopyNumbers = PatientReporterHelper.loadPurpleCopyNumbers(runDirectory, sample);
         final List<GeneCopyNumber> panelGeneCopyNumbers = PatientReporterHelper.loadPurpleGeneCopyNumbers(runDirectory, sample)
                 .stream()
-                .filter(x -> reporterData().geneModel().panel().contains(x.gene()))
+                .filter(x -> reporterData().panelGeneModel().panel().contains(x.gene()))
                 .collect(Collectors.toList());
 
         LOGGER.info("  " + purpleCopyNumbers.size() + " purple copy number regions loaded for sample " + sample);

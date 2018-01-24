@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.hmfslicer;
+package com.hartwig.hmftools.genepanel;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,6 +35,7 @@ public class HmfGenePanelBuilder {
     private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
 
     private static final String OUT_PATH = "out";
+
     private static final String DATABASE = "homo_sapiens_core_90_37";
     private static final String ENSEMBLDB_URL = "jdbc:mysql://ensembldb.ensembl.org:3337/" + DATABASE;
     private static final String DB_USER = "anonymous";

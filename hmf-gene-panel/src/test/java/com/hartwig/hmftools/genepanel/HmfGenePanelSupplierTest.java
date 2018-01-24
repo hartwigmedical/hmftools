@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.hmfslicer;
+package com.hartwig.hmftools.genepanel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -17,8 +17,8 @@ public class HmfGenePanelSupplierTest {
 
     @Test
     public void canLoadGeneRegionsFromFile() throws IOException, EmptyFileException {
-        final Set<String> panel = HmfGenePanelSupplier.geneSet();
-        final List<HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.hmfGeneList();
+        final Set<String> panel = HmfGenePanelSupplier.hmfPanelGeneSet();
+        final List<HmfGenomeRegion> geneRegions = HmfGenePanelSupplier.hmfPanelGeneList();
         assertEquals(panel.size(), geneRegions.size());
     }
 
