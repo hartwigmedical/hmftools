@@ -210,7 +210,7 @@ public class PDFWriterTest {
                 .geneContextStart("Exon 1")
                 .geneEnd("PNPLA7")
                 .geneContextEnd("Exon 13")
-                .fusionPloidy("1.0")
+                .copies("1.0")
                 .build());
     }
 
