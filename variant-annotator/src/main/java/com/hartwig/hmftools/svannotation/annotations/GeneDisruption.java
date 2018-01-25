@@ -11,5 +11,6 @@ public abstract class GeneDisruption {
 
     public abstract boolean reportable();
 
+    @NotNull
     public abstract Transcript linkedAnnotation();
 }
