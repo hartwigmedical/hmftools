@@ -50,15 +50,15 @@ public abstract class FindingsPage {
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 pointMutationReport(report(), reporterData().drupFilter()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                mutationalLoadReport(report()),
+                geneCopyNumberReport(report()),
+                cmp.verticalGap(SECTION_VERTICAL_GAP),
+                geneFusionReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 microsatelliteReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                geneCopyNumberReport(report()),
+                mutationalLoadReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                geneDisruptionReport(report()),
-                cmp.verticalGap(SECTION_VERTICAL_GAP),
-                geneFusionReport(report()));
+                geneDisruptionReport(report()));
     }
 
     @NotNull
@@ -83,7 +83,7 @@ public abstract class FindingsPage {
                         .setDataSource(VariantDataSource.fromVariants(report.variants(), drupFilter))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Point Mutations").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Somatic Variants").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table,
                 cmp.verticalGap(15),
@@ -121,7 +121,7 @@ public abstract class FindingsPage {
                         .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Gene Gains & Losses").setStyle(sectionHeaderStyle()),
+        return cmp.verticalList(cmp.text("Somatic Gains & Losses").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }
@@ -132,7 +132,7 @@ public abstract class FindingsPage {
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Gene Context", GeneDisruptionDataSource.GENE_CONTEXT),
+                        col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT),
                         col.column("Orientation", GeneDisruptionDataSource.ORIENTATION_FIELD),
                         col.column("Variant Ploidy", GeneDisruptionDataSource.VARIANT_PLOIDY),
                         col.column("Gene Ploidy", GeneDisruptionDataSource.GENE_PLOIDY))
