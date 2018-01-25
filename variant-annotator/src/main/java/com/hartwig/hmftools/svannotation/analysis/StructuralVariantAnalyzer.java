@@ -111,45 +111,53 @@ public class StructuralVariantAnalyzer {
     private List<GeneFusion> toReportableGeneFusions(@NotNull List<List<Pair<Transcript, Transcript>>> fusionsPerVariant) {
         final List<GeneFusion> result = Lists.newArrayList();
         for (final List<Pair<Transcript, Transcript>> fusions : fusionsPerVariant) {
-            // NERA: Select either the canonical -> canonical transcript fusion
-            //  then the longest where one end is canonical
-            //  then the longest combined transcript
-
-            Optional<Pair<Transcript, Transcript>> reportableFusion =
-                    fusions.stream().filter(pair -> pair.getLeft().isCanonical() && pair.getRight().isCanonical()).findFirst();
-
-            if (!reportableFusion.isPresent()) {
-                reportableFusion = fusions.stream()
-                        .filter(pair -> pair.getLeft().isCanonical() || pair.getRight().isCanonical())
-                        .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
-                        .reduce((a, b) -> b); // NERA: get longest
-            }
-
-            if (!reportableFusion.isPresent()) {
-                reportableFusion = fusions.stream()
-                        .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
-                        .reduce((a, b) -> b); // NERA: get longest
-            }
+            Optional<Pair<Transcript, Transcript>> reportableFusion = determineReportableFusion(fusions);
 
             for (final Pair<Transcript, Transcript> fusion : fusions) {
-                final Transcript upstream = fusion.getLeft(), downstream = fusion.getRight();
+                final Transcript upstream = fusion.getLeft();
+                final Transcript downstream = fusion.getRight();
 
                 final CosmicFusionData cosmic = transcriptsMatchKnownFusion(upstream, downstream);
                 final boolean promiscuousEnd = oneEndPromiscuous(upstream, downstream);
                 final boolean reportable =
                         reportableFusion.isPresent() && reportableFusion.get() == fusion && (cosmic != null || promiscuousEnd);
 
-                final GeneFusion details = ImmutableGeneFusion.builder()
+                final GeneFusion geneFusion = ImmutableGeneFusion.builder()
                         .reportable(reportable)
                         .upstreamLinkedAnnotation(upstream)
                         .downstreamLinkedAnnotation(downstream)
                         .cosmicURL(cosmic != null ? cosmic.cosmicURL() : "")
                         .build();
 
-                result.add(details);
+                result.add(geneFusion);
             }
         }
         return result;
+    }
+
+    @NotNull
+    private static Optional<Pair<Transcript, Transcript>> determineReportableFusion(@NotNull List<Pair<Transcript, Transcript>> fusions) {
+        // NERA: Select either the canonical -> canonical transcript fusion
+        //  then the one with the most exons where one end is canonical
+        //  then the one with the most exons combined transcript
+
+        Optional<Pair<Transcript, Transcript>> reportableFusion =
+                fusions.stream().filter(pair -> pair.getLeft().isCanonical() && pair.getRight().isCanonical()).findFirst();
+
+        if (!reportableFusion.isPresent()) {
+            reportableFusion = fusions.stream()
+                    .filter(pair -> pair.getLeft().isCanonical() || pair.getRight().isCanonical())
+                    .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
+                    .reduce((a, b) -> b);
+        }
+
+        if (!reportableFusion.isPresent()) {
+            reportableFusion = fusions.stream()
+                    .sorted(Comparator.comparingInt(a -> a.getLeft().exonMax() + a.getRight().exonMax()))
+                    .reduce((a, b) -> b);
+        }
+
+        return reportableFusion;
     }
 
     @NotNull
@@ -191,11 +199,11 @@ public class StructuralVariantAnalyzer {
         return disruptions;
     }
 
-    private boolean inHmfPanel(final GeneAnnotation gene) {
+    private boolean inHmfPanel(@NotNull GeneAnnotation gene) {
         return hmfGenePanelRegions.stream().anyMatch(region -> gene.synonyms().contains(region.geneID()));
     }
 
-    private boolean transcriptsMatchKnownFusion(final CosmicFusionData fusion, final Transcript five, final Transcript three) {
+    private boolean transcriptsMatchKnownFusion(@NotNull CosmicFusionData fusion, @NotNull Transcript five, @NotNull Transcript three) {
         String fiveTranscript = fusion.fiveTranscript();
         String threeTranscript = fusion.threeTranscript();
 
@@ -209,11 +217,11 @@ public class StructuralVariantAnalyzer {
     }
 
     @Nullable
-    private CosmicFusionData transcriptsMatchKnownFusion(final Transcript five, final Transcript three) {
+    private CosmicFusionData transcriptsMatchKnownFusion(@NotNull Transcript five, @NotNull Transcript three) {
         return cosmicFusionModel.fusions().stream().filter(f -> transcriptsMatchKnownFusion(f, five, three)).findFirst().orElse(null);
     }
 
-    private boolean oneEndPromiscuous(final Transcript five, final Transcript three) {
+    private boolean oneEndPromiscuous(@NotNull Transcript five, @NotNull Transcript three) {
         @SuppressWarnings("ConstantConditions")
         final boolean promiscuousFive = cosmicFusionModel.promiscuousFivePrime()
                 .stream()
@@ -240,7 +248,7 @@ public class StructuralVariantAnalyzer {
     }
 
     @NotNull
-    private static List<Transcript> intronic(final List<Transcript> list) {
-        return list.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
+    private static List<Transcript> intronic(@NotNull List<Transcript> transcripts) {
+        return transcripts.stream().filter(Transcript::isIntronic).collect(Collectors.toList());
     }
 }
