@@ -210,7 +210,7 @@ public class PDFWriterTest {
                 .geneContextStart("Exon 1")
                 .geneEnd("PNPLA7")
                 .geneContextEnd("Exon 13")
-                .fusionPloidy("1")
+                .fusionPloidy("1.0")
                 .build());
     }
 
@@ -221,7 +221,7 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 4")
                 .orientation("5'")
-                .variantPloidy("1")
+                .variantPloidy("1.0")
                 .genePloidy("3")
                 .build();
 
@@ -230,7 +230,7 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 20")
                 .orientation("3'")
-                .variantPloidy("1")
+                .variantPloidy("1.0")
                 .genePloidy("3")
                 .build();
 
@@ -239,7 +239,7 @@ public class PDFWriterTest {
                 .gene("PIK3CB")
                 .geneContext("Intron 1")
                 .orientation("3'")
-                .variantPloidy("3")
+                .variantPloidy("3.0")
                 .genePloidy("3")
                 .build();
 
@@ -266,7 +266,7 @@ public class PDFWriterTest {
                 .gene("CDK12")
                 .geneContext("Intron 12")
                 .orientation("3'")
-                .variantPloidy("1")
+                .variantPloidy("1.0")
                 .genePloidy("4")
                 .build();
 
