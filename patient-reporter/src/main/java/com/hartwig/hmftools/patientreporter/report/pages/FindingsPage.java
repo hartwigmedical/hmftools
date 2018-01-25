@@ -96,7 +96,7 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> predictedEffectColumn() {
         return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(VariantDataSource.HGVS_CODING_FIELD)),
                 cmp.text(DataExpression.fromField(VariantDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD)));
+                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
     }
 
     @NotNull
