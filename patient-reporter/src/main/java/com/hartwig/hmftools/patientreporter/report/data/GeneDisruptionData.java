@@ -24,9 +24,9 @@ public abstract class GeneDisruptionData {
 
     public abstract String orientation();
 
-    public abstract String ploidy();
+    public abstract String variantPloidy();
 
-    public abstract String geneCopyNumber();
+    public abstract String genePloidy();
 
     @NotNull
     public static GeneDisruptionData from(@NotNull final GeneDisruption disruption) {
@@ -39,7 +39,8 @@ public abstract class GeneDisruptionData {
                 .gene(disruption.linkedAnnotation().geneName())
                 .geneContext(exonDescription(transcript, true))
                 .orientation(variantOrientation > 0 ? "5'" : "3'")
-                .ploidy("1")
+                .variantPloidy("1")
+                .genePloidy("2")
                 .build();
     }
 }

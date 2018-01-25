@@ -34,6 +34,8 @@ import net.sf.dynamicreports.report.constant.HorizontalTextAlignment;
              allParameters = true)
 public abstract class FindingsPage {
 
+    private static final int HEADER_TO_TABLE_DISTANCE = 6;
+
     @NotNull
     abstract SequencedPatientReport report();
 
@@ -67,9 +69,9 @@ public abstract class FindingsPage {
                 + "this sample, but only on a gene-level.";
 
         final ComponentBuilder<?, ?> table =
-                report.variants().size() > 0
+                !report.variants().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(VariantDataSource.variantFields())
-                        .columns(col.column("Gene", VariantDataSource.GENE_FIELD).setFixedWidth(50),
+                        .columns(col.column("Gene", VariantDataSource.GENE_FIELD),
                                 col.column("Position", VariantDataSource.POSITION_FIELD),
                                 col.column("Variant", VariantDataSource.VARIANT_FIELD),
                                 col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
@@ -82,7 +84,7 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Point Mutations").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(6),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table,
                 cmp.verticalGap(15),
                 cmp.horizontalList(cmp.horizontalGap(10),
@@ -94,7 +96,7 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> predictedEffectColumn() {
         return cmp.verticalList(cmp.horizontalList(cmp.text(DataExpression.fromField(VariantDataSource.HGVS_CODING_FIELD)),
                 cmp.text(DataExpression.fromField(VariantDataSource.HGVS_PROTEIN_FIELD))),
-                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD))).setFixedWidth(170);
+                cmp.text(DataExpression.fromField(VariantDataSource.CONSEQUENCE_FIELD)));
     }
 
     @NotNull
@@ -110,7 +112,7 @@ public abstract class FindingsPage {
     @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table =
-                report.geneCopyNumbers().size() > 0
+                !report.geneCopyNumbers().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())
                         .columns(col.column("Position", GeneCopyNumberDataSource.POSITION_FIELD),
                                 col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
@@ -119,7 +121,9 @@ public abstract class FindingsPage {
                         .setDataSource(GeneCopyNumberDataSource.fromCopyNumbers(report.geneCopyNumbers())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Gene Gains & Losses").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+        return cmp.verticalList(cmp.text("Somatic Gene Gains & Losses").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                table);
     }
 
     @NotNull
@@ -130,27 +134,31 @@ public abstract class FindingsPage {
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
                         col.column("Gene Context", GeneDisruptionDataSource.GENE_CONTEXT),
                         col.column("Orientation", GeneDisruptionDataSource.ORIENTATION_FIELD),
-                        col.column("Ploidy", GeneDisruptionDataSource.VARIANT_PLOIDY),
-                        col.column("Gene Copy Number", GeneDisruptionDataSource.GENE_COPY_NUMBER))
+                        col.column("Variant Ploidy", GeneDisruptionDataSource.VARIANT_PLOIDY),
+                        col.column("Gene Ploidy", GeneDisruptionDataSource.GENE_PLOIDY))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+        return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                table);
     }
 
     @NotNull
     private static ComponentBuilder<?, ?> geneFusionReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table =
-                report.geneFusions().size() > 0
+                !report.geneFusions().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
                         .columns(col.column("5' Gene", GeneFusionDataSource.GENE_FIELD),
                                 col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
                                 col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
                                 col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
-                                col.column("Ploidy", GeneFusionDataSource.PLOIDY))
+                                col.column("Fusion Ploidy", GeneFusionDataSource.FUSION_PLOIDY))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
-        return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()), cmp.verticalGap(6), table);
+        return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                table);
     }
 }

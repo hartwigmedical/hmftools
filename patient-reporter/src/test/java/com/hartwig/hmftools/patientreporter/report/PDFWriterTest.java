@@ -210,7 +210,7 @@ public class PDFWriterTest {
                 .geneContextStart("Exon 1")
                 .geneEnd("PNPLA7")
                 .geneContextEnd("Exon 13")
-                .ploidy("1")
+                .fusionPloidy("1")
                 .build());
     }
 
@@ -221,8 +221,8 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 4")
                 .orientation("5'")
-                .ploidy("1")
-                .geneCopyNumber("3")
+                .variantPloidy("1")
+                .genePloidy("3")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
@@ -230,8 +230,8 @@ public class PDFWriterTest {
                 .gene("ERBB4")
                 .geneContext("Intron 20")
                 .orientation("3'")
-                .ploidy("1")
-                .geneCopyNumber("3")
+                .variantPloidy("1")
+                .genePloidy("3")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
@@ -239,8 +239,8 @@ public class PDFWriterTest {
                 .gene("PIK3CB")
                 .geneContext("Intron 1")
                 .orientation("3'")
-                .ploidy("3")
-                .geneCopyNumber("3")
+                .variantPloidy("3")
+                .genePloidy("3")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
@@ -248,8 +248,8 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .orientation("5'")
-                .ploidy("0.3")
-                .geneCopyNumber("2")
+                .variantPloidy("0.3")
+                .genePloidy("2")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
@@ -257,8 +257,8 @@ public class PDFWriterTest {
                 .gene("NRG1")
                 .geneContext("Intron 1")
                 .orientation("3'")
-                .ploidy("0.2")
-                .geneCopyNumber("2")
+                .variantPloidy("0.2")
+                .genePloidy("2")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
@@ -266,8 +266,8 @@ public class PDFWriterTest {
                 .gene("CDK12")
                 .geneContext("Intron 12")
                 .orientation("3'")
-                .ploidy("1")
-                .geneCopyNumber("4")
+                .variantPloidy("1")
+                .genePloidy("4")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);

@@ -17,7 +17,7 @@ public final class GeneDisruptionDataSource {
     public static final FieldBuilder<?> GENE_CONTEXT = field("gene context", String.class);
     public static final FieldBuilder<?> ORIENTATION_FIELD = field("orientation", String.class);
     public static final FieldBuilder<?> VARIANT_PLOIDY = field("variant_ploidy", String.class);
-    public static final FieldBuilder<?> GENE_COPY_NUMBER = field("gene_copy_number", String.class);
+    public static final FieldBuilder<?> GENE_PLOIDY = field("gene_ploidy", String.class);
 
     private GeneDisruptionDataSource() {
     }
@@ -29,20 +29,20 @@ public final class GeneDisruptionDataSource {
                 GENE_CONTEXT.getName(),
                 ORIENTATION_FIELD.getName(),
                 VARIANT_PLOIDY.getName(),
-                GENE_COPY_NUMBER.getName());
+                GENE_PLOIDY.getName());
 
         disruptions.forEach(disruption -> dataSource.add(disruption.position(),
                 disruption.gene(),
                 disruption.geneContext(),
                 disruption.orientation(),
-                disruption.ploidy(),
-                disruption.geneCopyNumber()));
+                disruption.variantPloidy(),
+                disruption.genePloidy()));
 
         return dataSource;
     }
 
     @NotNull
     public static FieldBuilder<?>[] geneDisruptionFields() {
-        return new FieldBuilder<?>[] { POSITION_FIELD, GENE_FIELD, GENE_CONTEXT, ORIENTATION_FIELD, VARIANT_PLOIDY, GENE_COPY_NUMBER };
+        return new FieldBuilder<?>[] { POSITION_FIELD, GENE_FIELD, GENE_CONTEXT, ORIENTATION_FIELD, VARIANT_PLOIDY, GENE_PLOIDY };
     }
 }

@@ -22,7 +22,7 @@ public abstract class GeneFusionData {
 
     public abstract String geneContextEnd();
 
-    public abstract String ploidy();
+    public abstract String fusionPloidy();
 
     @NotNull
     public static GeneFusionData from(@NotNull final GeneFusion fusion) {
@@ -34,7 +34,7 @@ public abstract class GeneFusionData {
                 .geneContextStart(exonDescription(upstream, true))
                 .geneEnd(downstream.geneName())
                 .geneContextEnd(exonDescription(downstream, false))
-                .ploidy("1")
+                .fusionPloidy("1")
                 .build();
     }
 }

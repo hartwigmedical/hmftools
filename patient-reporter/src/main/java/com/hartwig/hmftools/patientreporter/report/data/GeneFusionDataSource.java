@@ -16,7 +16,7 @@ public final class GeneFusionDataSource {
     public static final FieldBuilder<?> GENE_CONTEXT = field("gene context", String.class);
     public static final FieldBuilder<?> PARTNER_GENE_FIELD = field("partner_gene", String.class);
     public static final FieldBuilder<?> PARTNER_CONTEXT_FIELD = field("partner_context", String.class);
-    public static final FieldBuilder<?> PLOIDY = field("ploidy", String.class);
+    public static final FieldBuilder<?> FUSION_PLOIDY = field("fusion_ploidy", String.class);
 
     private GeneFusionDataSource() {
     }
@@ -27,19 +27,19 @@ public final class GeneFusionDataSource {
                 GENE_CONTEXT.getName(),
                 PARTNER_GENE_FIELD.getName(),
                 PARTNER_CONTEXT_FIELD.getName(),
-                PLOIDY.getName());
+                FUSION_PLOIDY.getName());
 
         fusions.forEach(fusion -> dataSource.add(fusion.geneStart(),
                 fusion.geneContextStart(),
                 fusion.geneEnd(),
                 fusion.geneContextEnd(),
-                fusion.ploidy()));
+                fusion.fusionPloidy()));
 
         return dataSource;
     }
 
     @NotNull
     public static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, GENE_CONTEXT, PARTNER_GENE_FIELD, PARTNER_CONTEXT_FIELD, PLOIDY };
+        return new FieldBuilder<?>[] { GENE_FIELD, GENE_CONTEXT, PARTNER_GENE_FIELD, PARTNER_CONTEXT_FIELD, FUSION_PLOIDY };
     }
 }
