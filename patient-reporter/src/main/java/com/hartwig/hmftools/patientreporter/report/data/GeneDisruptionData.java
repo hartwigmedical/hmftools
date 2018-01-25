@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
-import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.positionString;
 
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
@@ -30,15 +29,14 @@ public abstract class GeneDisruptionData {
     public static GeneDisruptionData from(@NotNull final GeneDisruption disruption) {
         final Transcript transcript = disruption.linkedAnnotation();
         final GeneAnnotation gene = transcript.parent();
-        final int variantOrientation = gene.variant().orientation(gene.isStart());
+        final boolean upstream = gene.variant().orientation(gene.isStart()) > 0;
 
         return ImmutableGeneDisruptionData.builder()
-                .position(positionString(gene))
-                .gene(disruption.linkedAnnotation().geneName())
-                .type("todo")
-                .geneContext(exonDescription(transcript, true) + (variantOrientation > 0 ? " Upstream" : " Downstream"))
+                .position("todo")
+                .gene(gene.geneName())
+                .type(gene.variant().type().name())
+                .geneContext(exonDescription(transcript, upstream) + (upstream ? " Upstream" : " Downstream"))
                 .copies("1")
                 .build();
     }
-
 }

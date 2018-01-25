@@ -33,7 +33,7 @@ public final class GeneFusionDataSource {
                 fusion.geneContextStart(),
                 fusion.geneEnd(),
                 fusion.geneContextEnd(),
-                fusion.fusionPloidy()));
+                fusion.copies()));
 
         return dataSource;
     }

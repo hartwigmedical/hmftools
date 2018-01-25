@@ -48,7 +48,7 @@ public abstract class FindingsPage {
                 report().sampleReport(),
                 report().impliedPurityString()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                pointMutationReport(report(), reporterData().drupFilter()),
+                somaticVariantReport(report(), reporterData().drupFilter()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 geneCopyNumberReport(report()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
@@ -62,7 +62,7 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> pointMutationReport(@NotNull final SequencedPatientReport report,
+    private static ComponentBuilder<?, ?> somaticVariantReport(@NotNull final SequencedPatientReport report,
             @NotNull final DrupFilter drupFilter) {
         final String geneMutationAddition = "Marked genes (*) are included in the DRUP study and indicate potential "
                 + "eligibility in DRUP. Please note that the marking is NOT based on the specific mutation reported for "
@@ -100,16 +100,6 @@ public abstract class FindingsPage {
     }
 
     @NotNull
-    private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull SequencedPatientReport report) {
-        return MutationalLoadSection.build(report.mutationalLoad());
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull SequencedPatientReport report) {
-        return MicrosatelliteSection.build(report.microsatelliteIndicator());
-    }
-
-    @NotNull
     private static ComponentBuilder<?, ?> geneCopyNumberReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table =
                 !report.geneCopyNumbers().isEmpty()
@@ -122,23 +112,6 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gains & Losses").setStyle(sectionHeaderStyle()),
-                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
-                table);
-    }
-
-    @NotNull
-    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
-        final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
-                ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
-                .columns(col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
-                        col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
-                        col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
-                        col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT),
-                        col.column("Copies", GeneDisruptionDataSource.COPIES))
-                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
-                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
-
-        return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }
@@ -157,6 +130,33 @@ public abstract class FindingsPage {
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
         return cmp.verticalList(cmp.text("Somatic Gene Fusions").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
+                table);
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> mutationalLoadReport(@NotNull SequencedPatientReport report) {
+        return MutationalLoadSection.build(report.mutationalLoad());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> microsatelliteReport(@NotNull SequencedPatientReport report) {
+        return MicrosatelliteSection.build(report.microsatelliteIndicator());
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
+        final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
+                ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
+                .columns(col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
+                        col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
+                        col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
+                        col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT),
+                        col.column("Copies", GeneDisruptionDataSource.COPIES))
+                .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
+                : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
+
+        return cmp.verticalList(cmp.text("Somatic Gene Disruptions").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(HEADER_TO_TABLE_DISTANCE),
                 table);
     }

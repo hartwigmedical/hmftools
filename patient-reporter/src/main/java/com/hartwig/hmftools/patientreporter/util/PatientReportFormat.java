@@ -42,9 +42,4 @@ public enum PatientReportFormat {
             return String.format("Error up(%d) down(%d)", transcript.exonUpstream(), transcript.exonDownstream());
         }
     }
-
-    @Nullable
-    public static Double alleleFrequency(@NotNull final GeneAnnotation g) {
-        return g.isStart() ? g.variant().start().alleleFrequency() : g.variant().end().alleleFrequency();
-    }
 }
