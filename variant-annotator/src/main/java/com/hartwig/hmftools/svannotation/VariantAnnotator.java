@@ -8,6 +8,7 @@ import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation
 import org.jetbrains.annotations.NotNull;
 
 public interface VariantAnnotator {
+
     @NotNull
-    List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants);
+    List<StructuralVariantAnnotation> annotateVariants(@NotNull List<StructuralVariant> variants);
 }

@@ -32,14 +32,14 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private final VariantAnnotator annotator;
     @NotNull
-    private final Collection<HmfGenomeRegion> regions;
+    private final Collection<HmfGenomeRegion> hmfGenePanelRegions;
     @NotNull
     private final CosmicFusionModel cosmicFusionModel;
 
-    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator, @NotNull final Collection<HmfGenomeRegion> regions,
-            @NotNull final CosmicFusionModel cosmicFusionModel) {
+    public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator,
+            @NotNull final Collection<HmfGenomeRegion> hmfGenePanelRegions, @NotNull final CosmicFusionModel cosmicFusionModel) {
         this.annotator = annotator;
-        this.regions = regions;
+        this.hmfGenePanelRegions = hmfGenePanelRegions;
         this.cosmicFusionModel = cosmicFusionModel;
     }
 
@@ -192,7 +192,7 @@ public class StructuralVariantAnalyzer {
     }
 
     private boolean inHmfPanel(final GeneAnnotation gene) {
-        return regions.stream().anyMatch(region -> gene.synonyms().contains(region.geneID()));
+        return hmfGenePanelRegions.stream().anyMatch(region -> gene.synonyms().contains(region.geneID()));
     }
 
     private boolean transcriptsMatchKnownFusion(final CosmicFusionData fusion, final Transcript five, final Transcript three) {

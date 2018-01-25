@@ -17,7 +17,7 @@ public class NullAnnotator implements VariantAnnotator {
 
     @Override
     @NotNull
-    public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
+    public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<StructuralVariant> variants) {
         return variants.stream().map(StructuralVariantAnnotation::new).collect(Collectors.toList());
     }
 }

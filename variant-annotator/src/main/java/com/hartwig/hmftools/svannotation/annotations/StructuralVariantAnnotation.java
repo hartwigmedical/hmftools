@@ -20,13 +20,13 @@ public class StructuralVariantAnnotation {
     }
 
     @NotNull
-    public List<GeneAnnotation> annotations() {
-        return annotations;
+    public StructuralVariant variant() {
+        return variant;
     }
 
     @NotNull
-    public StructuralVariant variant() {
-        return variant;
+    public List<GeneAnnotation> annotations() {
+        return annotations;
     }
 
     @NotNull

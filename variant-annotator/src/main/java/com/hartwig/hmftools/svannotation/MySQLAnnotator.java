@@ -34,19 +34,21 @@ import org.jooq.types.UInteger;
 
 public class MySQLAnnotator implements VariantAnnotator {
 
+    @NotNull
     private final DSLContext context;
-    private final UInteger coord_system_id;
+    @NotNull
+    private final UInteger coordSystemId;
 
     @NotNull
-    public static VariantAnnotator make(final String url) throws SQLException {
+    public static VariantAnnotator make(@NotNull String url) throws SQLException {
         return new MySQLAnnotator(url);
     }
 
-    private MySQLAnnotator(final String url) throws SQLException {
+    private MySQLAnnotator(@NotNull String url) throws SQLException {
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(url);
         context = DSL.using(conn, SQLDialect.MYSQL);
-        coord_system_id = findCoordSystemId();
+        coordSystemId = findCoordSystemId();
     }
 
     @NotNull
@@ -62,7 +64,7 @@ public class MySQLAnnotator implements VariantAnnotator {
 
     @Override
     @NotNull
-    public List<StructuralVariantAnnotation> annotateVariants(final List<StructuralVariant> variants) {
+    public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<StructuralVariant> variants) {
         return variants.stream().map(this::annotateVariant).collect(Collectors.toList());
     }
 
@@ -89,7 +91,7 @@ public class MySQLAnnotator implements VariantAnnotator {
                         .innerJoin(SEQ_REGION)
                         .on(GENE.SEQ_REGION_ID.eq(SEQ_REGION.SEQ_REGION_ID))
                         .and(SEQ_REGION.NAME.eq(chromosome))
-                        .and(SEQ_REGION.COORD_SYSTEM_ID.eq(coord_system_id))
+                        .and(SEQ_REGION.COORD_SYSTEM_ID.eq(coordSystemId))
                         .innerJoin(XREF)
                         .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
                         .where(GENE.STATUS.eq(GeneStatus.KNOWN))
@@ -104,40 +106,41 @@ public class MySQLAnnotator implements VariantAnnotator {
                         .fetch();
 
         for (final Record gene : genes) {
-            final UInteger gene_id = gene.get(GENE.GENE_ID);
-            final String gene_name = gene.get(XREF.DISPLAY_LABEL);
-            final String gene_stable_id = gene.get(GENE.STABLE_ID);
-            final UInteger canonical_transcript_id = gene.get(GENE.CANONICAL_TRANSCRIPT_ID);
-            final int gene_strand = gene.get(GENE.SEQ_REGION_STRAND);
+            final UInteger geneId = gene.get(GENE.GENE_ID);
+            final String geneName = gene.get(XREF.DISPLAY_LABEL);
+            final String geneStableId = gene.get(GENE.STABLE_ID);
+            final UInteger canonicalTranscriptId = gene.get(GENE.CANONICAL_TRANSCRIPT_ID);
+            final int geneStrand = gene.get(GENE.SEQ_REGION_STRAND);
 
             final List<String> synonyms = context.select(XREF.DBPRIMARY_ACC)
                     .from(XREF)
                     .innerJoin(OBJECT_XREF)
                     .on(OBJECT_XREF.XREF_ID.eq(XREF.XREF_ID))
-                    .and(OBJECT_XREF.ENSEMBL_ID.eq(gene_id))
+                    .and(OBJECT_XREF.ENSEMBL_ID.eq(geneId))
                     .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
                     .fetch()
                     .stream()
                     .map(r -> r.get(XREF.DBPRIMARY_ACC))
                     .collect(Collectors.toList());
 
-            final GeneAnnotation geneAnnotation = new GeneAnnotation(parent, isStart, gene_name, synonyms, gene_stable_id, gene_strand);
+            final GeneAnnotation geneAnnotation =
+                    new GeneAnnotation(parent.variant(), isStart, geneName, geneStableId, geneStrand, synonyms);
 
             final Result<?> transcripts = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID)
                     .from(TRANSCRIPT)
-                    .where(TRANSCRIPT.GENE_ID.eq(gene_id))
+                    .where(TRANSCRIPT.GENE_ID.eq(geneId))
                     .fetch();
 
             for (final Record transcript : transcripts) {
-                final UInteger transcript_id = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
-                final boolean canonical = transcript_id.equals(canonical_transcript_id);
-                final String transcript_stable_id = transcript.get(TRANSCRIPT.STABLE_ID);
+                final UInteger transcriptId = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
+                final boolean canonical = transcriptId.equals(canonicalTranscriptId);
+                final String transcriptStableId = transcript.get(TRANSCRIPT.STABLE_ID);
 
                 final Record exonLeft = context.select(EXON_TRANSCRIPT.RANK, EXON.PHASE, EXON.END_PHASE)
                         .from(EXON_TRANSCRIPT)
                         .innerJoin(EXON)
                         .on(EXON.EXON_ID.eq(EXON_TRANSCRIPT.EXON_ID))
-                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcript_id))
+                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcriptId))
                         .and(EXON.SEQ_REGION_START.le(UInteger.valueOf(position)))
                         .orderBy(EXON.SEQ_REGION_START.desc())
                         .limit(1)
@@ -147,51 +150,51 @@ public class MySQLAnnotator implements VariantAnnotator {
                         .from(EXON_TRANSCRIPT)
                         .innerJoin(EXON)
                         .on(EXON.EXON_ID.eq(EXON_TRANSCRIPT.EXON_ID))
-                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcript_id))
+                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcriptId))
                         .and(EXON.SEQ_REGION_END.ge(UInteger.valueOf(position)))
                         .orderBy(EXON.SEQ_REGION_END.asc())
                         .limit(1)
                         .fetchOne();
 
-                final int exon_max = context.select(EXON_TRANSCRIPT.RANK)
+                final int exonMax = context.select(EXON_TRANSCRIPT.RANK)
                         .from(EXON_TRANSCRIPT)
-                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcript_id))
+                        .where(EXON_TRANSCRIPT.TRANSCRIPT_ID.eq(transcriptId))
                         .orderBy(EXON_TRANSCRIPT.RANK.desc())
                         .limit(1)
                         .fetchOne()
                         .value1();
 
-                final int exon_upstream;
-                final int exon_upstream_phase;
-                final int exon_downstream;
-                final int exon_downstream_phase;
+                final int exonUpstream;
+                final int exonUpstreamPhase;
+                final int exonDownstream;
+                final int exonDownstreamPhase;
 
-                if (gene_strand > 0) {
+                if (geneStrand > 0) {
                     // NERA: forward strand
-                    exon_upstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
-                    exon_upstream_phase = exonLeft == null ? -1 : exonLeft.get(EXON.END_PHASE);
-                    exon_downstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
-                    exon_downstream_phase = exonRight == null ? -1 : exonRight.get(EXON.PHASE);
+                    exonUpstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
+                    exonUpstreamPhase = exonLeft == null ? -1 : exonLeft.get(EXON.END_PHASE);
+                    exonDownstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
+                    exonDownstreamPhase = exonRight == null ? -1 : exonRight.get(EXON.PHASE);
                 } else {
                     // NERA: reverse strand
-                    exon_downstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
-                    exon_downstream_phase = exonLeft == null ? -1 : exonLeft.get(EXON.PHASE);
-                    exon_upstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
-                    exon_upstream_phase = exonRight == null ? -1 : exonRight.get(EXON.END_PHASE);
+                    exonDownstream = exonLeft == null ? 0 : exonLeft.get(EXON_TRANSCRIPT.RANK);
+                    exonDownstreamPhase = exonLeft == null ? -1 : exonLeft.get(EXON.PHASE);
+                    exonUpstream = exonRight == null ? 0 : exonRight.get(EXON_TRANSCRIPT.RANK);
+                    exonUpstreamPhase = exonRight == null ? -1 : exonRight.get(EXON.END_PHASE);
                 }
 
-                if (exon_upstream > 0 && exon_downstream == 0) {
+                if (exonUpstream > 0 && exonDownstream == 0) {
                     // NERA: past the last exon
                     continue;
                 }
 
                 geneAnnotation.addTranscript(new Transcript(geneAnnotation,
-                        transcript_stable_id,
-                        exon_upstream,
-                        exon_upstream_phase,
-                        exon_downstream,
-                        exon_downstream_phase,
-                        exon_max,
+                        transcriptStableId,
+                        exonUpstream,
+                        exonUpstreamPhase,
+                        exonDownstream,
+                        exonDownstreamPhase,
+                        exonMax,
                         canonical));
             }
 
