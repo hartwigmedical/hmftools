@@ -216,58 +216,38 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneDisruptionData> createTestDisruptions() {
-        final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
-                .position("2q34")
-                .gene("ERBB4")
-                .geneContext("Intron 4")
-                .orientation("5'")
-                .variantPloidy("1.0")
-                .genePloidy("3")
-                .build();
+        final GeneDisruptionData disruption1 =
+                ImmutableGeneDisruptionData.builder().position("2q34").gene("ERBB4").geneContext("Intron 4 Upstream").copies("1.0").build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
                 .position("2q34")
                 .gene("ERBB4")
-                .geneContext("Intron 20")
-                .orientation("3'")
-                .variantPloidy("1.0")
-                .genePloidy("3")
+                .geneContext("Intron 20 Downstream")
+                .copies("1.0")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
                 .position("3q22.3")
                 .gene("PIK3CB")
-                .geneContext("Intron 1")
-                .orientation("3'")
-                .variantPloidy("3.0")
-                .genePloidy("3")
+                .geneContext("Intron 1 Downstream")
+                .copies("3.0")
                 .build();
 
-        final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
-                .position("8p12")
-                .gene("NRG1")
-                .geneContext("Intron 1")
-                .orientation("5'")
-                .variantPloidy("0.3")
-                .genePloidy("2")
-                .build();
+        final GeneDisruptionData disruption4 =
+                ImmutableGeneDisruptionData.builder().position("8p12").gene("NRG1").geneContext("Intron 1 Upstream").copies("0.3").build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
                 .position("8p12")
                 .gene("NRG1")
-                .geneContext("Intron 1")
-                .orientation("3'")
-                .variantPloidy("0.2")
-                .genePloidy("2")
+                .geneContext("Intron 1 Downstream")
+                .copies("0.2")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
                 .position("17q12")
                 .gene("CDK12")
-                .geneContext("Intron 12")
-                .orientation("3'")
-                .variantPloidy("1.0")
-                .genePloidy("4")
+                .geneContext("Intron 12 Downstream")
+                .copies("1.0")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);

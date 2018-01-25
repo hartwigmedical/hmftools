@@ -133,9 +133,7 @@ public abstract class FindingsPage {
                 .columns(col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
                         col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT),
-                        col.column("Orientation", GeneDisruptionDataSource.ORIENTATION_FIELD),
-                        col.column("Variant Ploidy", GeneDisruptionDataSource.VARIANT_PLOIDY),
-                        col.column("Gene Ploidy", GeneDisruptionDataSource.GENE_PLOIDY))
+                        col.column("Copies", GeneDisruptionDataSource.COPIES))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
