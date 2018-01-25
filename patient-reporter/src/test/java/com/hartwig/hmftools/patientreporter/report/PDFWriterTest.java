@@ -219,8 +219,8 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
                 .position("2q34")
                 .gene("ERBB4")
-                .geneContext("Intron 20")
-                .orientation("3'")
+                .geneContext("Intron 4")
+                .orientation("5'")
                 .ploidy("1")
                 .geneCopyNumber("3")
                 .build();
@@ -228,19 +228,19 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
                 .position("2q34")
                 .gene("ERBB4")
-                .geneContext("Intron 4")
-                .orientation("5'")
+                .geneContext("Intron 20")
+                .orientation("3'")
                 .ploidy("1")
                 .geneCopyNumber("3")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
-                .position("8p12")
-                .gene("NRG1")
+                .position("3q22.3")
+                .gene("PIK3CB")
                 .geneContext("Intron 1")
                 .orientation("3'")
-                .ploidy("0.2")
-                .geneCopyNumber("2")
+                .ploidy("3")
+                .geneCopyNumber("3")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
@@ -253,12 +253,12 @@ public class PDFWriterTest {
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
-                .position("3q22.3")
-                .gene("PIK3CB")
+                .position("8p12")
+                .gene("NRG1")
                 .geneContext("Intron 1")
                 .orientation("3'")
-                .ploidy("3")
-                .geneCopyNumber("3")
+                .ploidy("0.2")
+                .geneCopyNumber("2")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
