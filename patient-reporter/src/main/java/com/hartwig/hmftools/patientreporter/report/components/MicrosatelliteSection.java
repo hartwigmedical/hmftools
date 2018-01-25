@@ -53,8 +53,9 @@ public final class MicrosatelliteSection {
 
     @NotNull
     private static String description() {
-        return "The microsatellite stability score represents the number of somatic inserts and deletes in repeat sections "
-                + "across the whole genome of the tumor per Mb. Tumors with a score greater than " + MSI_THRESHOLD
-                + " are considered microsatellite unstable (MSI-H).";
+        return "The microsatellite stability score represents the number of somatic inserts and deletes in (short) repeat sections "
+                + "across the whole genome of the tumor per Mb. This metric can be considered as a good marker for instability " +
+                "in microsatellite repeat regions. Tumors with a score greater than " + MSI_THRESHOLD + " are considered microsatellite " +
+                "unstable (MSI).";
     }
 }
