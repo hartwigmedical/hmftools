@@ -216,12 +216,18 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneDisruptionData> createTestDisruptions() {
-        final GeneDisruptionData disruption1 =
-                ImmutableGeneDisruptionData.builder().position("2q34").gene("ERBB4").geneContext("Intron 4 Upstream").copies("1.0").build();
+        final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
+                .position("2q34")
+                .gene("ERBB4")
+                .type("INV")
+                .geneContext("Intron 4 Upstream")
+                .copies("1.0")
+                .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
                 .position("2q34")
                 .gene("ERBB4")
+                .type("INV")
                 .geneContext("Intron 20 Downstream")
                 .copies("1.0")
                 .build();
@@ -229,16 +235,23 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
                 .position("3q22.3")
                 .gene("PIK3CB")
+                .type("INS")
                 .geneContext("Intron 1 Downstream")
                 .copies("3.0")
                 .build();
 
-        final GeneDisruptionData disruption4 =
-                ImmutableGeneDisruptionData.builder().position("8p12").gene("NRG1").geneContext("Intron 1 Upstream").copies("0.3").build();
+        final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
+                .position("8p12")
+                .gene("NRG1")
+                .type("DUP")
+                .geneContext("Intron 1 Upstream")
+                .copies("0.3")
+                .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
                 .position("8p12")
                 .gene("NRG1")
+                .type("DEL")
                 .geneContext("Intron 1 Downstream")
                 .copies("0.2")
                 .build();
@@ -246,6 +259,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
                 .position("17q12")
                 .gene("CDK12")
+                .type("BND")
                 .geneContext("Intron 12 Downstream")
                 .copies("1.0")
                 .build();

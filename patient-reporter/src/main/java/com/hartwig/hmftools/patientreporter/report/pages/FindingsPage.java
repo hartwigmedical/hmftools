@@ -132,6 +132,7 @@ public abstract class FindingsPage {
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
+                        col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
                         col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT),
                         col.column("Copies", GeneDisruptionDataSource.COPIES))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
@@ -151,7 +152,7 @@ public abstract class FindingsPage {
                                 col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
                                 col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
                                 col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
-                                col.column("Fusion Ploidy", GeneFusionDataSource.FUSION_PLOIDY))
+                                col.column("Copies", GeneFusionDataSource.COPIES))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 

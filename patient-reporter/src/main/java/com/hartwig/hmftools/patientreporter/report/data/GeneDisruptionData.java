@@ -20,6 +20,8 @@ public abstract class GeneDisruptionData {
 
     public abstract String gene();
 
+    public abstract String type();
+
     public abstract String geneContext();
 
     public abstract String copies();
@@ -33,6 +35,7 @@ public abstract class GeneDisruptionData {
         return ImmutableGeneDisruptionData.builder()
                 .position(positionString(gene))
                 .gene(disruption.linkedAnnotation().geneName())
+                .type("todo")
                 .geneContext(exonDescription(transcript, true) + (variantOrientation > 0 ? " Upstream" : " Downstream"))
                 .copies("1")
                 .build();
