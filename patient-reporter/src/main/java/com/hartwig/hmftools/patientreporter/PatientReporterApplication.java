@@ -22,7 +22,6 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
-import com.hartwig.hmftools.patientreporter.report.ReportWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
 import com.hartwig.hmftools.svannotation.NullAnnotator;
@@ -77,7 +76,7 @@ public class PatientReporterApplication {
             printUsageAndExit(options);
         }
         LOGGER.info("Running patient reporter v" + VERSION);
-        final ReportWriter reportWriter = buildReportWriter(cmd);
+        final PDFWriter pdfWriter = new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
 
         if (cmd.hasOption(NOT_SEQUENCEABLE) && validInputForNonSequenceableReport(cmd)) {
             final String sample = cmd.getOptionValue(NOT_SEQUENCEABLE_SAMPLE);
@@ -86,22 +85,17 @@ public class PatientReporterApplication {
             final NotSequenceableReporter reporter = ImmutableNotSequenceableReporter.of(buildBaseReporterData(cmd));
 
             final NotSequencedPatientReport report = reporter.run(sample, reason, cmd.getOptionValue(COMMENTS));
-            reportWriter.writeNonSequenceableReport(report);
+            pdfWriter.writeNonSequenceableReport(report);
         } else if (validInputForPatientReporter(cmd)) {
             LOGGER.info("Generating sequenceable report...");
             final HmfReporterData reporterData = buildReporterData(cmd);
             final PatientReporter reporter = buildReporter(cmd, reporterData);
 
             final SequencedPatientReport report = reporter.run(cmd.getOptionValue(RUN_DIRECTORY), cmd.getOptionValue(COMMENTS));
-            reportWriter.writeSequenceReport(report, reporterData);
+            pdfWriter.writeSequenceReport(report, reporterData);
         } else {
             printUsageAndExit(options);
         }
-    }
-
-    @NotNull
-    private static ReportWriter buildReportWriter(@NotNull final CommandLine cmd) {
-        return new PDFWriter(cmd.getOptionValue(REPORT_DIRECTORY));
     }
 
     @NotNull

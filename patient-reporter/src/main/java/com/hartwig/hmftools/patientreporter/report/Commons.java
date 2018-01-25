@@ -106,7 +106,7 @@ public final class Commons {
     }
 
     @NotNull
-    static JasperReportBuilder monospaceBaseTable() {
+    public static JasperReportBuilder monospaceBaseTable() {
         return report().setColumnStyle(dataStyle().setFontName(MONOSPACE_FONT))
                 .setColumnTitleStyle(tableHeaderStyle())
                 .highlightDetailEvenRows();

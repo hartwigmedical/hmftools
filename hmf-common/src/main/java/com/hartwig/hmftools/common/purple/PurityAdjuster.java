@@ -70,7 +70,6 @@ public class PurityAdjuster {
     }
 
     public double purityAdjustedBAF(@NotNull final String chromosomeName, final double copyNumber, final double observedFrequency) {
-
         int normalCopyNumber = typicalCopyNumber(chromosomeName);
         if (normalCopyNumber == 1 || (Doubles.positive(observedFrequency) && Doubles.lessOrEqual(copyNumber, 1))) {
             return 1;
