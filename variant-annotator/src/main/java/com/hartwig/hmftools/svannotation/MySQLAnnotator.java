@@ -78,7 +78,7 @@ public class MySQLAnnotator implements VariantAnnotator {
     }
 
     @NotNull
-    private List<GeneAnnotation> annotateBreakend(@NotNull StructuralVariant parent, final boolean isStart, @NotNull String chromosome,
+    private List<GeneAnnotation> annotateBreakend(@NotNull StructuralVariant variant, final boolean isStart, @NotNull String chromosome,
             final long position) {
         final List<GeneAnnotation> result = Lists.newArrayList();
 
@@ -102,7 +102,7 @@ public class MySQLAnnotator implements VariantAnnotator {
                     .map(r -> r.get(XREF.DBPRIMARY_ACC))
                     .collect(Collectors.toList());
 
-            final GeneAnnotation geneAnnotation = new GeneAnnotation(parent, isStart, geneName, geneStableId, geneStrand, synonyms);
+            final GeneAnnotation geneAnnotation = new GeneAnnotation(variant, isStart, geneName, geneStableId, geneStrand, synonyms);
 
             final Result<?> transcripts = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID)
                     .from(TRANSCRIPT)
@@ -110,7 +110,7 @@ public class MySQLAnnotator implements VariantAnnotator {
                     .fetch();
 
             for (final Record transcriptRecord : transcripts) {
-                Transcript transcript = buildTranscript(transcriptRecord, geneAnnotation, position, canonicalTranscriptId, geneStrand > 0);
+                Transcript transcript = buildTranscript(geneAnnotation, transcriptRecord, position, canonicalTranscriptId, geneStrand > 0);
 
                 if (transcript != null) {
                     geneAnnotation.addTranscript(transcript);
@@ -151,7 +151,7 @@ public class MySQLAnnotator implements VariantAnnotator {
     }
 
     @Nullable
-    private Transcript buildTranscript(@NotNull Record transcript, @NotNull GeneAnnotation gene, long position,
+    private Transcript buildTranscript(@NotNull GeneAnnotation parent, @NotNull Record transcript, long position,
             @NotNull UInteger canonicalTranscriptId, boolean isForwardStrand) {
         final UInteger transcriptId = transcript.get(TRANSCRIPT.TRANSCRIPT_ID);
         final boolean canonical = transcriptId.equals(canonicalTranscriptId);
@@ -205,15 +205,15 @@ public class MySQLAnnotator implements VariantAnnotator {
         if (exonUpstream > 0 && exonDownstream == 0) {
             // NERA: past the last exon
             return null;
+        } else {
+            return new Transcript(parent,
+                    transcriptStableId,
+                    exonUpstream,
+                    exonUpstreamPhase,
+                    exonDownstream,
+                    exonDownstreamPhase,
+                    exonMax,
+                    canonical);
         }
-
-        return new Transcript(gene,
-                transcriptStableId,
-                exonUpstream,
-                exonUpstreamPhase,
-                exonDownstream,
-                exonDownstreamPhase,
-                exonMax,
-                canonical);
     }
 }
