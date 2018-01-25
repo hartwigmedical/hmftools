@@ -200,10 +200,10 @@ public class StructuralVariantAnalyzer {
         String threeTranscript = fusion.threeTranscript();
 
         final boolean fiveValid = fiveTranscript == null
-                ? five.geneAnnotation().synonyms().stream().anyMatch(s -> s.equals(fusion.fiveGene()))
+                ? five.parent().synonyms().stream().anyMatch(s -> s.equals(fusion.fiveGene()))
                 : fiveTranscript.equals(five.transcriptId());
         final boolean threeValid = threeTranscript == null
-                ? three.geneAnnotation().synonyms().stream().anyMatch(s -> s.equals(fusion.threeGene()))
+                ? three.parent().synonyms().stream().anyMatch(s -> s.equals(fusion.threeGene()))
                 : threeTranscript.equals(three.transcriptId());
         return fiveValid && threeValid;
     }

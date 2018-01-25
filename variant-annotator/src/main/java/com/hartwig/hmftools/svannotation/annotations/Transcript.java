@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Transcript {
 
-    private final GeneAnnotation geneAnnotation;
+    private final GeneAnnotation parent;
     private final String transcriptId;
     private final int exonUpstream;
     private final int exonUpstreamPhase;
@@ -15,10 +15,10 @@ public class Transcript {
     private final int exonMax;
     private final boolean canonical;
 
-    public Transcript(final GeneAnnotation geneAnnotation, @NotNull final String transcriptId, final int exonUpstream,
+    public Transcript(final GeneAnnotation parent, @NotNull final String transcriptId, final int exonUpstream,
             final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase, final int exonMax,
             final boolean canonical) {
-        this.geneAnnotation = geneAnnotation;
+        this.parent = parent;
         this.transcriptId = transcriptId;
         this.exonUpstream = exonUpstream;
         this.exonUpstreamPhase = exonUpstreamPhase;
@@ -49,16 +49,16 @@ public class Transcript {
         return canonical;
     }
 
-    public GeneAnnotation geneAnnotation() {
-        return geneAnnotation;
-    }
-
-    public StructuralVariant variant() {
-        return geneAnnotation.variant();
+    public GeneAnnotation parent() {
+        return parent;
     }
 
     public String geneName() {
-        return geneAnnotation.geneName();
+        return parent.geneName();
+    }
+
+    public StructuralVariant variant() {
+        return parent.variant();
     }
 
     public int exonUpstream() {

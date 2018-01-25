@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public class GeneAnnotation {
 
     @NotNull
-    private final StructuralVariant parent;
+    private final StructuralVariant variant;
     private final boolean isStart;
     @NotNull
     private final String geneName;
@@ -24,9 +24,9 @@ public class GeneAnnotation {
     @NotNull
     private final List<String> synonyms;
 
-    public GeneAnnotation(@NotNull final StructuralVariant parent, final boolean isStart, @NotNull final String geneName,
+    public GeneAnnotation(@NotNull final StructuralVariant variant, final boolean isStart, @NotNull final String geneName,
             @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms) {
-        this.parent = parent;
+        this.variant = variant;
         this.isStart = isStart;
         this.geneName = geneName;
         this.stableId = stableId;
@@ -36,7 +36,7 @@ public class GeneAnnotation {
 
     @NotNull
     public StructuralVariant variant() {
-        return parent;
+        return variant;
     }
 
     public boolean isStart() {
