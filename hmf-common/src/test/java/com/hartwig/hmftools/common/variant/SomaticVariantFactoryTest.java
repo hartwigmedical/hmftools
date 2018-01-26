@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.predicate.VariantFilter.passOnly;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -41,16 +43,23 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void canLoadSomaticVCFFromBasePath() throws IOException, HartwigException {
+    public void canLoadSomaticVCFFromBasePathAndFilter() throws IOException, HartwigException {
         final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
-        assertEquals(3, variants.size());
+        assertTestVariants(variants);
     }
 
     @Test
     public void canLoadSomaticVCFFromFile() throws IOException, HartwigException {
         final String file = VARIANT_PATH + File.separator + SOMATIC_EXTENSION;
         final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", file);
+        assertTestVariants(variants);
+    }
+
+    private static void assertTestVariants(@NotNull List<SomaticVariant> variants) {
         assertEquals(3, variants.size());
+
+        final List<SomaticVariant> passOnly = passOnly(variants);
+        assertEquals(2, passOnly.size());
     }
 
     @Test

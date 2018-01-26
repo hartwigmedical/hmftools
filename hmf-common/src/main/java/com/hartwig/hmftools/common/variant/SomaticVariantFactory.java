@@ -142,9 +142,9 @@ public class SomaticVariantFactory {
             StringJoiner joiner = new StringJoiner(";");
             context.getFilters().forEach(joiner::add);
             builder.filter(joiner.toString());
+        } else {
+            builder.filter("PASS");
         }
-
-        builder.filter("PASS");
     }
 
     private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
