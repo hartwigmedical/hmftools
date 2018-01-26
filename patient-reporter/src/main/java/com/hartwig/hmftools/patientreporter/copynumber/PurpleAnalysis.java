@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -13,6 +15,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientreporter.util.PatientReportFormat;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableVariantReport;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -64,12 +69,12 @@ public abstract class PurpleAnalysis {
     }
 
     @NotNull
-    public List<VariantReport> enrich(@NotNull final List<VariantReport> variantReports) {
+    public List<VariantReport> enrichSomaticVariants(@NotNull final List<VariantReport> variants) {
         final List<VariantReport> result = Lists.newArrayList();
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
         final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector = GenomeRegionSelectorFactory.create(copyNumbers());
 
-        for (final VariantReport variantReport : variantReports) {
+        for (final VariantReport variantReport : variants) {
             final Optional<PurpleCopyNumber> optionalCopyNumber = copyNumberSelector.select(variantReport.variant());
             if (optionalCopyNumber.isPresent()) {
                 final PurpleCopyNumber copyNumber = optionalCopyNumber.get();
@@ -88,5 +93,13 @@ public abstract class PurpleAnalysis {
         }
 
         return result;
+    }
+
+    @NotNull
+    public List<EnrichedStructuralVariant> enrichStructuralVariants(@NotNull final List<StructuralVariant> structuralVariants) {
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(gender(), fittedPurity());
+        final Multimap<String, PurpleCopyNumber> copyNumberMap = Multimaps.index(copyNumbers(), PurpleCopyNumber::chromosome);
+
+        return EnrichedStructuralVariantFactory.enrich(structuralVariants, purityAdjuster, copyNumberMap);
     }
 }

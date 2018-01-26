@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
@@ -74,17 +75,17 @@ public abstract class PatientReporter {
         final String tumorSample = genomeAnalysis.sample();
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
-        final StructuralVariantAnalysis svAnalysis = genomeAnalysis.structuralVariantAnalysis();
+        final StructuralVariantAnalysis structuralVariantAnalysis = genomeAnalysis.structuralVariantAnalysis();
         final List<GeneFusionData> reportableFusions =
-                svAnalysis.reportableFusions().stream().map(GeneFusionData::from).collect(Collectors.toList());
+                structuralVariantAnalysis.reportableFusions().stream().map(GeneFusionData::from).collect(Collectors.toList());
         final List<GeneDisruptionData> reportableDisruptions =
-                svAnalysis.reportableDisruptions().stream().map(GeneDisruptionData::from).collect(Collectors.toList());
+                structuralVariantAnalysis.reportableDisruptions().stream().map(GeneDisruptionData::from).collect(Collectors.toList());
 
         final int totalVariantCount = variantAnalysis.allVariants().size();
         final int passedVariantCount = variantAnalysis.passedVariants().size();
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
-        final int svCount = svAnalysis.annotations().size();
+        final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
         final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), tumorSample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
@@ -100,7 +101,7 @@ public abstract class PatientReporter {
         LOGGER.info("  Number of consequential variants to report : " + Integer.toString(consequentialVariantCount));
         LOGGER.info(" Determined copy number stats for " + Integer.toString(purpleAnalysis.genePanelSize()) + " genes which led to "
                 + Integer.toString(purpleAnalysis.reportableGeneCopyNumbers().size()) + " copy numbers.");
-        LOGGER.info("  Number of unreported structural variants : " + Integer.toString(svCount));
+        LOGGER.info("  Number of unreported structural variants : " + Integer.toString(structuralVariantCount));
         LOGGER.info("  Number of gene fusions to report : " + Integer.toString(reportableFusions.size()));
         LOGGER.info("  Number of gene disruptions to report : " + Integer.toString(reportableDisruptions.size()));
         LOGGER.info("  Number of CIViC alterations to report : " + alterations.size());
@@ -108,7 +109,7 @@ public abstract class PatientReporter {
 
         final Lims lims = baseReporterData().limsModel();
         final Double tumorPercentage = lims.tumorPercentageForSample(tumorSample);
-        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrich(variantAnalysis.findings());
+        final List<VariantReport> purpleEnrichedVariants = purpleAnalysis.enrichSomaticVariants(variantAnalysis.findings());
         final String sampleRecipient = baseReporterData().centerModel().getAddresseeStringForSample(tumorSample);
         final SampleReport sampleReport = ImmutableSampleReport.of(tumorSample,
                 tumorType,
@@ -169,11 +170,13 @@ public abstract class PatientReporter {
                     + ") range exceeds 5%. Proceed with caution.");
         }
 
-        final Path svVcfPath = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
+        final Path structuralVariantVCF = PatientReporterHelper.findStructuralVariantVCF(runDirectory);
         LOGGER.info(" Loading structural variants...");
-        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(svVcfPath.toString());
+        final List<StructuralVariant> structuralVariants = StructuralVariantFileLoader.fromFile(structuralVariantVCF.toString());
+        LOGGER.info(" Enriching structural variants with purple data.");
+        final List<EnrichedStructuralVariant> enrichedStructuralVariants = purpleAnalysis.enrichStructuralVariants(structuralVariants);
         LOGGER.info(" Analysing structural variants...");
-        final StructuralVariantAnalysis svAnalysis = structuralVariantAnalyzer().run(structuralVariants);
-        return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, svAnalysis);
+        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants);
+        return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, structuralVariantAnalysis);
     }
 }

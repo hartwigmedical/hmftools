@@ -15,7 +15,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneModel;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.BaseReporterData;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
@@ -52,9 +52,9 @@ public class PatientReporterTest {
 
         @Override
         @NotNull
-        public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<StructuralVariant> variants) {
+        public List<StructuralVariantAnnotation> annotateVariants(@NotNull List<EnrichedStructuralVariant> variants) {
             final List<StructuralVariantAnnotation> result = Lists.newArrayList();
-            for (final StructuralVariant sv : variants) {
+            for (final EnrichedStructuralVariant sv : variants) {
                 final StructuralVariantAnnotation ann = new StructuralVariantAnnotation(sv);
                 final GeneAnnotation g1 =
                         new GeneAnnotation(sv, true, "PNPLA7", "ENSG00000130653", -1, Collections.singletonList("PNPLA7"));

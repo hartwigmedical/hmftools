@@ -12,7 +12,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionData;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svannotation.VariantAnnotator;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
@@ -44,7 +44,7 @@ public class StructuralVariantAnalyzer {
     }
 
     @NotNull
-    public StructuralVariantAnalysis run(@NotNull final List<StructuralVariant> variants) {
+    public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants) {
         final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
 
         final List<StructuralVariantAnnotation> copy = Lists.newArrayList(annotations);

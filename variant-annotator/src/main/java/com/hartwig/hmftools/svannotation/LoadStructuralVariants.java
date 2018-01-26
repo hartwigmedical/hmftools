@@ -58,19 +58,21 @@ public class LoadStructuralVariants {
         LOGGER.info("Reading VCF File");
         final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
 
+        LOGGER.info("Enriching structural variants based on purple data.");
+        final String tumorSample = cmd.getOptionValue(SAMPLE);
+        final List<EnrichedStructuralVariant> enrichedVariants = enrichStructuralVariants(variants, dbAccess, tumorSample);
+
         LOGGER.info("Analyzing structural variants for impact via disruptions and fusions...");
         final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
         final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
 
         final StructuralVariantAnalyzer analyzer =
                 new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
-        final StructuralVariantAnalysis analysis = analyzer.run(variants);
+        final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
 
-        LOGGER.info("Enriching and persisting structural variants to database");
-        final String tumorSample = cmd.getOptionValue(SAMPLE);
-        dbAccess.writeStructuralVariants(tumorSample, enrichStructuralVariants(variants, dbAccess, tumorSample));
+        LOGGER.info("Persisting variants and annotations to database...");
+        dbAccess.writeStructuralVariants(tumorSample, enrichedVariants);
 
-        LOGGER.info("Persisting annotations to database...");
         final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
         annotationDAO.write(analysis);
 
