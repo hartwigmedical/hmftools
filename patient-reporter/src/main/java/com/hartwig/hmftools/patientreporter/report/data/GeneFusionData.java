@@ -15,8 +15,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneFusionData {
 
-    private static final double MAX_PLOIDY_DIFF = 0.5;
-
     public abstract String geneStart();
 
     public abstract String geneContextStart();
@@ -50,10 +48,8 @@ public abstract class GeneFusionData {
             return null;
         }
 
-        if (Math.abs(upstreamPloidy - downstreamPloidy) > MAX_PLOIDY_DIFF) {
-            return null;
-        }
+        assert upstreamPloidy.equals(downstreamPloidy);
 
-        return (upstreamPloidy + downstreamPloidy) / 2D;
+        return upstreamPloidy;
     }
 }
