@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
@@ -79,8 +78,8 @@ public class MySQLAnnotator implements VariantAnnotator {
     }
 
     @NotNull
-    private List<GeneAnnotation> annotateBreakend(@NotNull StructuralVariant variant, final boolean isStart, @NotNull String chromosome,
-            final long position) {
+    private List<GeneAnnotation> annotateBreakend(@NotNull EnrichedStructuralVariant variant, final boolean isStart,
+            @NotNull String chromosome, final long position) {
         final List<GeneAnnotation> result = Lists.newArrayList();
 
         final Result<?> genes = queryGenesOnChromosomeAndPosition(chromosome, position);

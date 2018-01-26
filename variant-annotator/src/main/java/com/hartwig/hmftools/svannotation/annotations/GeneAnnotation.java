@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public class GeneAnnotation {
 
     @NotNull
-    private final StructuralVariant variant;
+    private final EnrichedStructuralVariant variant;
     private final boolean isStart;
     @NotNull
     private final String geneName;
@@ -24,7 +24,7 @@ public class GeneAnnotation {
     @NotNull
     private final List<String> synonyms;
 
-    public GeneAnnotation(@NotNull final StructuralVariant variant, final boolean isStart, @NotNull final String geneName,
+    public GeneAnnotation(@NotNull final EnrichedStructuralVariant variant, final boolean isStart, @NotNull final String geneName,
             @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms) {
         this.variant = variant;
         this.isStart = isStart;
@@ -35,7 +35,7 @@ public class GeneAnnotation {
     }
 
     @NotNull
-    public StructuralVariant variant() {
+    public EnrichedStructuralVariant variant() {
         return variant;
     }
 

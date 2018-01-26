@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.util;
 
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,13 +19,8 @@ public enum PatientReportFormat {
     }
 
     @NotNull
-    public static String positionString(@NotNull final GeneAnnotation geneAnnotation) {
-        return positionString(geneAnnotation.variant(), geneAnnotation.isStart());
-    }
-
-    @NotNull
-    public static String positionString(@NotNull final StructuralVariant sv, final boolean start) {
-        return String.format("chr%s:%d", sv.chromosome(start), sv.position(start));
+    public static String ploidyToCopiesString(@Nullable Double ploidy) {
+        return ploidy != null ? String.format("%.1f", ploidy) : "-";
     }
 
     @NotNull

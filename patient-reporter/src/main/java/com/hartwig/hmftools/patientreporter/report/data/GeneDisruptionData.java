@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
+import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.ploidyToCopiesString;
 
 import com.hartwig.hmftools.svannotation.annotations.GeneAnnotation;
 import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
@@ -15,13 +16,13 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneDisruptionData {
 
-    public abstract String position();
+    public abstract String chromosome();
 
     public abstract String gene();
 
-    public abstract String type();
-
     public abstract String geneContext();
+
+    public abstract String type();
 
     public abstract String copies();
 
@@ -32,11 +33,11 @@ public abstract class GeneDisruptionData {
         final boolean upstream = gene.variant().orientation(gene.isStart()) > 0;
 
         return ImmutableGeneDisruptionData.builder()
-                .position("todo")
+                .chromosome(gene.variant().chromosome(gene.isStart()))
                 .gene(gene.geneName())
-                .type(gene.variant().type().name())
                 .geneContext(exonDescription(transcript, upstream) + (upstream ? " Upstream" : " Downstream"))
-                .copies("1")
+                .type(gene.variant().type().name())
+                .copies(ploidyToCopiesString(gene.variant().ploidy()))
                 .build();
     }
 }

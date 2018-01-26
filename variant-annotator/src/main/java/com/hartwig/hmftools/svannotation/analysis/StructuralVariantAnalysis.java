@@ -35,7 +35,9 @@ public abstract class StructuralVariantAnalysis {
         return disruptions().stream()
                 .filter(GeneDisruption::reportable)
                 .filter(disruption -> fusions().stream()
-                        .noneMatch(fusion -> fusion.upstreamLinkedAnnotation().variant() == disruption.linkedAnnotation().variant()))
+                        .noneMatch(fusion -> fusion.upstreamLinkedAnnotation().parent().variant() == disruption.linkedAnnotation()
+                                .parent()
+                                .variant()))
                 .collect(Collectors.toList());
     }
 }

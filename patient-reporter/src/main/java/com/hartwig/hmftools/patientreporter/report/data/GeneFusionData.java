@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.data;
 
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
+import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.ploidyToCopiesString;
 
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
@@ -13,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneFusionData {
+
+    private static final double MAX_PLOIDY_DIFF = 0.5;
 
     public abstract String geneStart();
 
@@ -34,7 +37,23 @@ public abstract class GeneFusionData {
                 .geneContextStart(exonDescription(upstream, true))
                 .geneEnd(downstream.geneName())
                 .geneContextEnd(exonDescription(downstream, false))
-                .copies("1")
+                .copies(ploidyToCopiesString(fusionPloidy(fusion)))
                 .build();
+    }
+
+    @Nullable
+    private static Double fusionPloidy(@NotNull GeneFusion fusion) {
+        Double upstreamPloidy = fusion.upstreamLinkedAnnotation().parent().variant().ploidy();
+        Double downstreamPloidy = fusion.downstreamLinkedAnnotation().parent().variant().ploidy();
+
+        if (upstreamPloidy == null || downstreamPloidy == null) {
+            return null;
+        }
+
+        if (Math.abs(upstreamPloidy - downstreamPloidy) > MAX_PLOIDY_DIFF) {
+            return null;
+        }
+
+        return (upstreamPloidy + downstreamPloidy) / 2D;
     }
 }

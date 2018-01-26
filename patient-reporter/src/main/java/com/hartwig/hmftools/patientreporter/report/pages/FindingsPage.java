@@ -125,7 +125,7 @@ public abstract class FindingsPage {
                                 col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
                                 col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
                                 col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
-                                col.column("Copies", GeneFusionDataSource.COPIES))
+                                col.column("Copies", GeneFusionDataSource.COPIES_FIELD))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -148,11 +148,11 @@ public abstract class FindingsPage {
     private static ComponentBuilder<?, ?> geneDisruptionReport(@NotNull final SequencedPatientReport report) {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
-                .columns(col.column("Position", GeneDisruptionDataSource.POSITION_FIELD),
+                .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
+                        col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
-                        col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT),
-                        col.column("Copies", GeneDisruptionDataSource.COPIES))
+                        col.column("Copies", GeneDisruptionDataSource.COPIES_FIELD))
                 .setDataSource(GeneDisruptionDataSource.fromGeneDisruptions(report.geneDisruptions())))
                 : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 

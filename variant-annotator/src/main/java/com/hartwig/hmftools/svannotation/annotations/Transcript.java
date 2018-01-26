@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svannotation.annotations;
 
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-
 import org.jetbrains.annotations.NotNull;
 
 public class Transcript {
@@ -55,10 +53,6 @@ public class Transcript {
 
     public String geneName() {
         return parent.geneName();
-    }
-
-    public StructuralVariant variant() {
-        return parent.variant();
     }
 
     public int exonUpstream() {

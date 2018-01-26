@@ -59,7 +59,7 @@ public class StructuralVariantAnnotationDAO {
                 for (final Transcript transcript : geneAnnotation.transcripts()) {
                     inserter.values(timestamp,
                             geneAnnotation.isStart(),
-                            transcript.variant().primaryKey(),
+                            transcript.parent().variant().primaryKey(),
                             geneAnnotation.geneName(),
                             geneAnnotation.stableId(),
                             transcript.transcriptId(),

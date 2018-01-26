@@ -217,50 +217,50 @@ public class PDFWriterTest {
     @NotNull
     private static List<GeneDisruptionData> createTestDisruptions() {
         final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
-                .position("2q34")
+                .chromosome("2")
                 .gene("ERBB4")
-                .type("INV")
                 .geneContext("Intron 4 Upstream")
+                .type("INV")
                 .copies("1.0")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
-                .position("2q34")
+                .chromosome("2")
                 .gene("ERBB4")
-                .type("INV")
                 .geneContext("Intron 20 Downstream")
+                .type("INV")
                 .copies("1.0")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
-                .position("3q22.3")
+                .chromosome("3")
                 .gene("PIK3CB")
-                .type("INS")
                 .geneContext("Intron 1 Downstream")
+                .type("INS")
                 .copies("3.0")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
-                .position("8p12")
+                .chromosome("8")
                 .gene("NRG1")
-                .type("DUP")
                 .geneContext("Intron 1 Upstream")
+                .type("DUP")
                 .copies("0.3")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
-                .position("8p12")
+                .chromosome("8")
                 .gene("NRG1")
-                .type("DEL")
                 .geneContext("Intron 1 Downstream")
+                .type("DEL")
                 .copies("0.2")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
-                .position("17q12")
+                .chromosome("17")
                 .gene("CDK12")
-                .type("BND")
                 .geneContext("Intron 12 Downstream")
+                .type("BND")
                 .copies("1.0")
                 .build();
 
