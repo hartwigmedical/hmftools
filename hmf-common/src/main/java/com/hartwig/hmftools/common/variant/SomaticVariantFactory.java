@@ -40,7 +40,7 @@ public class SomaticVariantFactory {
 
     @NotNull
     private final CompoundFilter filter;
-    private int unmatchedAnnotations;
+    private int mismatchedAnnotations;
 
     public SomaticVariantFactory() {
         this(new VariantContextFilter[0]);
@@ -63,7 +63,7 @@ public class SomaticVariantFactory {
     public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
-        unmatchedAnnotations = 0;
+        mismatchedAnnotations = 0;
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
 
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -80,8 +80,8 @@ public class SomaticVariantFactory {
             }
         }
 
-        if (unmatchedAnnotations > 0) {
-            LOGGER.warn("There were {} unmatched annotated genes.", unmatchedAnnotations);
+        if (mismatchedAnnotations > 0) {
+            LOGGER.warn("There were {} mismatches in gene annotation.", mismatchedAnnotations);
         }
 
         return variants;
@@ -124,7 +124,7 @@ public class SomaticVariantFactory {
             final VariantAnnotation variantAnnotation = annotations.get(0);
             for (VariantAnnotation annotation : annotations) {
                 if (!annotation.gene().equals(variantAnnotation.gene())) {
-                    unmatchedAnnotations++;
+                    mismatchedAnnotations++;
                     LOGGER.debug("Annotated gene (" + annotation.gene() + ") does not match gene expected from first annotation ( "
                             + variantAnnotation.gene() + ") for variant: " + context);
                 }
@@ -134,7 +134,6 @@ public class SomaticVariantFactory {
         } else {
             builder.gene("").effect("");
         }
-
     }
 
     private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
@@ -199,5 +198,4 @@ public class SomaticVariantFactory {
 
         return new AllelicDepthImpl(alleleReadCount, totalReadCount);
     }
-
 }

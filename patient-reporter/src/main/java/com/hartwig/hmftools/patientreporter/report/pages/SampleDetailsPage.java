@@ -53,8 +53,9 @@ public abstract class SampleDetailsPage {
     private static ComponentBuilder<?, ?> disclaimerSection() {
         final List<String> lines = Lists.newArrayList(
                 "The data on which this report is based is generated from tests that are performed under ISO/ICE-17025:2005 accreditation.",
-                "This analysis done for this report has passed all internal quality controls.",
-                "For feedback or complaints please contact qualitysystem@hartwigmedicalfoundation.nl.");
+                "The analysis done for this report has passed all internal quality controls.",
+                "For feedback or complaints please contact qualitysystem@hartwigmedicalfoundation.nl.",
+                "For general questions, please contact us at info@hartwigmedicalfoundation.nl");
         return toList("Disclaimer", lines);
     }
 
