@@ -100,7 +100,7 @@ public class StructuralVariantAnalyzer {
                 return false;
             }
             // NERA: skip fusions within the same intron
-            if (intronicDisruption(t1, t2)) {
+            if (intronicDisruptionOnSameTranscript(t1, t2)) {
                 return false;
             }
         }
@@ -165,14 +165,14 @@ public class StructuralVariantAnalyzer {
         final List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
         for (final StructuralVariantAnnotation annotation : annotations) {
             @SuppressWarnings("ConstantConditions")
-            final boolean intronicExists = annotation.start()
+            final boolean pureIntronicDisruptionCanonical = annotation.start()
                     .stream()
                     .filter(gene -> gene.canonical() != null)
                     .anyMatch(gene -> annotation.end()
                             .stream()
-                            .filter(o -> o.canonical() != null)
-                            .anyMatch(o -> intronicDisruption(gene.canonical(), o.canonical())));
-            if (intronicExists && annotation.variant().type() != StructuralVariantType.INV) {
+                            .filter(other -> other.canonical() != null)
+                            .anyMatch(other -> intronicDisruptionOnSameTranscript(gene.canonical(), other.canonical())));
+            if (pureIntronicDisruptionCanonical && annotation.variant().type() != StructuralVariantType.INV) {
                 continue;
             }
 
@@ -184,10 +184,10 @@ public class StructuralVariantAnalyzer {
 
         final List<GeneDisruption> disruptions = Lists.newArrayList();
         for (final String geneName : geneMap.keySet()) {
-            for (final GeneAnnotation g : geneMap.get(geneName)) {
-                for (final Transcript transcript : g.transcripts()) {
+            for (final GeneAnnotation gene : geneMap.get(geneName)) {
+                for (final Transcript transcript : gene.transcripts()) {
                     final GeneDisruption disruption = ImmutableGeneDisruption.builder()
-                            .reportable(inHmfPanel(g) && transcript.isCanonical())
+                            .reportable(inHmfPanel(gene) && transcript.isCanonical())
                             .linkedAnnotation(transcript)
                             .build();
 
@@ -235,7 +235,7 @@ public class StructuralVariantAnalyzer {
         return promiscuousFive || promiscuousThree;
     }
 
-    private static boolean intronicDisruption(@NotNull Transcript t1, @NotNull Transcript t2) {
+    private static boolean intronicDisruptionOnSameTranscript(@NotNull Transcript t1, @NotNull Transcript t2) {
         final boolean sameTranscript = t1.transcriptId().equals(t2.transcriptId());
         final boolean bothIntronic = t1.isIntronic() && t2.isIntronic();
         final boolean sameExonUpstream = t1.exonUpstream() == t2.exonUpstream();
