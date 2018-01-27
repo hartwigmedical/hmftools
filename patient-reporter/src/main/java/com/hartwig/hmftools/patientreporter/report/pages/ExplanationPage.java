@@ -83,7 +83,9 @@ public abstract class ExplanationPage {
     @NotNull
     private static ComponentBuilder<?, ?> disruptionExplanationSection() {
         return toList("Details on reported gene disruptions",
-                Lists.newArrayList("Genes are reported as being disrupted if their canonical transcript has been disrupted"));
+                Lists.newArrayList("Genes are reported as being disrupted if their canonical transcript has been disrupted",
+                        "The context of the disruption is indicated by the intron/exon/promoter region of the break point occurred.",
+                        "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), INS (insertion) or BND (translocation)."));
     }
 
     @NotNull
