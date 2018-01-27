@@ -114,8 +114,10 @@ public class PatientReporterApplication {
 
     @NotNull
     private static HmfReporterData buildReporterData(@NotNull final CommandLine cmd) throws IOException, HartwigException {
-        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV), cmd.getOptionValue(COSMIC_FUSION_CSV),
-                cmd.getOptionValue(DRUP_GENES_CSV), cmd.getOptionValue(FASTA_FILE_LOCATION));
+        return HmfReporterDataLoader.buildFromFiles(cmd.getOptionValue(COSMIC_GENE_CSV),
+                cmd.getOptionValue(COSMIC_FUSION_CSV),
+                cmd.getOptionValue(DRUP_GENES_CSV),
+                cmd.getOptionValue(FASTA_FILE_LOCATION));
     }
 
     @NotNull
@@ -142,6 +144,7 @@ public class PatientReporterApplication {
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
         final String cosmicGeneCsv = cmd.getOptionValue(COSMIC_GENE_CSV);
         final String cosmicFusionCsv = cmd.getOptionValue(COSMIC_FUSION_CSV);
+        final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
 
         if (runDirectory == null || !exists(runDirectory) && !isDirectory(runDirectory)) {
             LOGGER.warn(RUN_DIRECTORY + " has to be an existing directory: " + runDirectory);
@@ -151,6 +154,8 @@ public class PatientReporterApplication {
             LOGGER.warn(COSMIC_GENE_CSV + " has to be an existing file: " + cosmicGeneCsv);
         } else if (cosmicFusionCsv == null || !exists(cosmicFusionCsv)) {
             LOGGER.warn(COSMIC_FUSION_CSV + " has to be an existing file: " + cosmicFusionCsv);
+        } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
+            LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
         } else {
             return true;
         }
