@@ -30,12 +30,14 @@ public abstract class GeneDisruptionData {
     public static GeneDisruptionData from(@NotNull final GeneDisruption disruption) {
         final Transcript transcript = disruption.linkedAnnotation();
         final GeneAnnotation gene = transcript.parent();
-        final boolean upstream = gene.variant().orientation(gene.isStart()) > 0;
+        // TODO (KODU): Add upstream/downstream annotation
+//        final boolean upstream = gene.variant().orientation(gene.isStart()) > 0;
+        final String geneContext = exonDescription(transcript); //+ (upstream ? " Upstream" : " Downstream");
 
         return ImmutableGeneDisruptionData.builder()
                 .chromosome(gene.variant().chromosome(gene.isStart()))
                 .gene(gene.geneName())
-                .geneContext(exonDescription(transcript) + (upstream ? " Upstream" : " Downstream"))
+                .geneContext(geneContext)
                 .type(gene.variant().type().name())
                 .copies(ploidyToCopiesString(gene.variant().ploidy()))
                 .build();
