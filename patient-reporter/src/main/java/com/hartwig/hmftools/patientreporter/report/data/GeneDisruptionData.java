@@ -35,7 +35,7 @@ public abstract class GeneDisruptionData {
         return ImmutableGeneDisruptionData.builder()
                 .chromosome(gene.variant().chromosome(gene.isStart()))
                 .gene(gene.geneName())
-                .geneContext(exonDescription(transcript, upstream) + (upstream ? " Upstream" : " Downstream"))
+                .geneContext(exonDescription(transcript) + (upstream ? " Upstream" : " Downstream"))
                 .type(gene.variant().type().name())
                 .copies(ploidyToCopiesString(gene.variant().ploidy()))
                 .build();

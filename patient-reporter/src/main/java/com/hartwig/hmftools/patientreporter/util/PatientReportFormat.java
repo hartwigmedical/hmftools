@@ -24,11 +24,12 @@ public enum PatientReportFormat {
     }
 
     @NotNull
-    public static String exonDescription(@NotNull final Transcript transcript, final boolean upstream) {
+    public static String exonDescription(@NotNull final Transcript transcript) {
         if (transcript.isPromoter()) {
             return "Promoter Region";
         } else if (transcript.isExonic()) {
-            return String.format("Exon %d", upstream ? transcript.exonUpstream() : transcript.exonDownstream());
+            assert transcript.exonUpstream() == transcript.exonDownstream();
+            return String.format("Exon %d", transcript.exonUpstream());
         } else if (transcript.isIntronic()) {
             return String.format("Intron %d", transcript.exonUpstream());
         } else {

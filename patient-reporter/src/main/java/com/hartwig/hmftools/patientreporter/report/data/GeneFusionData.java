@@ -32,9 +32,9 @@ public abstract class GeneFusionData {
 
         return ImmutableGeneFusionData.builder()
                 .geneStart(upstream.geneName())
-                .geneContextStart(exonDescription(upstream, true))
+                .geneContextStart(exonDescription(upstream))
                 .geneEnd(downstream.geneName())
-                .geneContextEnd(exonDescription(downstream, false))
+                .geneContextEnd(exonDescription(downstream))
                 .copies(ploidyToCopiesString(fusionPloidy(fusion)))
                 .build();
     }
