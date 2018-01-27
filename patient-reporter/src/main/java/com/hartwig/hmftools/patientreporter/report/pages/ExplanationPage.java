@@ -49,7 +49,7 @@ public abstract class ExplanationPage {
 
     @NotNull
     private static ComponentBuilder<?, ?> snvIndelExplanationSection() {
-        return toList("Details on reported point mutations",
+        return toList("Details on reported somatic variants",
                 Lists.newArrayList(
                         "The 'Position' refers to the chromosome and start base of the variant with " + "respect to this reference genome.",
                         "The 'Variant' displays what was expected as reference base and what " + "was found instead ('ref' > 'alt').",
