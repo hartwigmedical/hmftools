@@ -86,6 +86,11 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
         return 0;
     }
 
+    @Override
+    @Value.Default
+    public boolean hotspot() {
+        return false;
+    }
 
     @Override
     @NotNull
@@ -98,6 +103,13 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
     @NotNull
     @Value.Default
     public String effect() {
+        return Strings.EMPTY;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String simplifiedEffect() {
         return Strings.EMPTY;
     }
 

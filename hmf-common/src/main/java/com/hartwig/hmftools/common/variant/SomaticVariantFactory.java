@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +34,7 @@ import htsjdk.variant.vcf.VCFHeader;
 public class SomaticVariantFactory {
     private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactory.class);
 
+    private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
@@ -103,6 +105,7 @@ public class SomaticVariantFactory {
                             .alleleReadCount(frequencyData.alleleReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
+                            .hotspot(HOTSPOT_FILTER.test(context))
                             .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
                     attachAnnotations(builder, context);
@@ -131,8 +134,11 @@ public class SomaticVariantFactory {
             }
             builder.gene(variantAnnotation.gene());
             builder.effect(variantAnnotation.consequenceString());
+            builder.simplifiedEffect(SimplifiedEffect.effect(type(context), variantAnnotation.consequences()).toString());
+
         } else {
             builder.gene("").effect("");
+            builder.gene("").simplifiedEffect(SimplifiedEffect.NONE.toString());
         }
     }
 
@@ -146,20 +152,21 @@ public class SomaticVariantFactory {
         }
     }
 
-    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    @NotNull
+    private static VariantType type(@NotNull VariantContext context) {
         switch (context.getType()) {
             case MNP:
-                builder.type(VariantType.MNP);
-                break;
+                return VariantType.MNP;
             case SNP:
-                builder.type(VariantType.SNP);
-                break;
+                return VariantType.SNP;
             case INDEL:
-                builder.type(VariantType.INDEL);
-                break;
-            default:
-                builder.type(VariantType.UNDEFINED);
+                return VariantType.INDEL;
         }
+        return VariantType.UNDEFINED;
+    }
+
+    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+        builder.type(type(context));
     }
 
     private static void attachID(@NotNull SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {

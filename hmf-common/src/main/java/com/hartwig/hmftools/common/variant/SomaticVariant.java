@@ -36,6 +36,11 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     String effect();
 
+    @NotNull
+    String simplifiedEffect();
+
+    boolean hotspot();
+
     double mappability();
 
     default boolean isDBSNP() {

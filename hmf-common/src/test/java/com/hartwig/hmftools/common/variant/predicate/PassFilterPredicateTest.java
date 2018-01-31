@@ -108,6 +108,17 @@ public class PassFilterPredicateTest {
             return "";
         }
 
+        @NotNull
+        @Override
+        public String simplifiedEffect() {
+            return "";
+        }
+
+        @Override
+        public boolean hotspot() {
+            return false;
+        }
+
         @Override
         public double mappability() {
             return 0;
