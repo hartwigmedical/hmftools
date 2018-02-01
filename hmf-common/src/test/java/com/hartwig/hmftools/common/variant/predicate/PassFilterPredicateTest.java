@@ -110,7 +110,7 @@ public class PassFilterPredicateTest {
 
         @NotNull
         @Override
-        public String simplifiedEffect() {
+        public String codingEffect() {
             return "";
         }
 

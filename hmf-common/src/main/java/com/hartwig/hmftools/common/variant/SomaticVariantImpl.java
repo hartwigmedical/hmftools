@@ -109,7 +109,7 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
     @Override
     @NotNull
     @Value.Default
-    public String simplifiedEffect() {
+    public String codingEffect() {
         return Strings.EMPTY;
     }
 

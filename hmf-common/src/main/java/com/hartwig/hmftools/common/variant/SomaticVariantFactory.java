@@ -134,11 +134,11 @@ public class SomaticVariantFactory {
             }
             builder.gene(variantAnnotation.gene());
             builder.effect(variantAnnotation.consequenceString());
-            builder.simplifiedEffect(SimplifiedEffect.effect(type(context), variantAnnotation.consequences()).toString());
+            builder.codingEffect(CodingEffect.effect(variantAnnotation.consequences()).toString());
 
         } else {
             builder.gene("").effect("");
-            builder.gene("").simplifiedEffect(SimplifiedEffect.NONE.toString());
+            builder.gene("").codingEffect(CodingEffect.NONE.toString());
         }
     }
 

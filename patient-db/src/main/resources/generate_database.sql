@@ -195,7 +195,7 @@ CREATE TABLE somaticVariant
     cosmicId varchar(255) NOT NULL,
     dbsnpId varchar(255) NOT NULL,
     effect varchar(255) NOT NULL,
-    simplifiedEffect varchar(255) NOT NULL,
+    codingEffect varchar(255) NOT NULL,
     microhomology varchar(255) NOT NULL,
     repeatSequence varchar(255) NOT NULL,
     repeatCount int NOT NULL,
