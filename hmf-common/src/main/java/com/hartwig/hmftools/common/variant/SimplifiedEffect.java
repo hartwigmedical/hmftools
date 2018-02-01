@@ -30,7 +30,7 @@ public enum SimplifiedEffect {
     public static SimplifiedEffect indelEffect(@NotNull final List<VariantConsequence> consequences) {
 
         final List<SimplifiedEffect> simplifiedEffects =
-                consequences.stream().map(SimplifiedEffect::snpEffect).collect(Collectors.toList());
+                consequences.stream().map(SimplifiedEffect::indelEffect).collect(Collectors.toList());
         if (simplifiedEffects.stream().anyMatch(x -> x.equals(INDEL_FRAMESHIFT))) {
             return INDEL_FRAMESHIFT;
         }
