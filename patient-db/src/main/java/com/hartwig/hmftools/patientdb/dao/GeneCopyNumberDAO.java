@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep21;
+import org.jooq.InsertValuesStepN;
 
 class GeneCopyNumberDAO {
 
@@ -29,7 +29,7 @@ class GeneCopyNumberDAO {
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
 
         for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter = context.insertInto(GENECOPYNUMBER,
+            InsertValuesStepN inserter = context.insertInto(GENECOPYNUMBER,
                     GENECOPYNUMBER.SAMPLEID,
                     GENECOPYNUMBER.CHROMOSOME,
                     GENECOPYNUMBER.START,
@@ -50,6 +50,15 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.MINREGIONSTARTSUPPORT,
                     GENECOPYNUMBER.MINREGIONENDSUPPORT,
                     GENECOPYNUMBER.MINREGIONMETHOD,
+                    GENECOPYNUMBER.NONSENSEBIALLELICVARIANTS,
+                    GENECOPYNUMBER.NONSENSENONBIALLELICVARIANTS,
+                    GENECOPYNUMBER.NONSENSENONBIALLELICPLOIDY,
+                    GENECOPYNUMBER.SPLICEBIALLELICVARIANTS,
+                    GENECOPYNUMBER.SPLICENONBIALLELICVARIANTS,
+                    GENECOPYNUMBER.SPLICENONBIALLELICPLOIDY,
+                    GENECOPYNUMBER.MISSENSEBIALLELICVARIANTS,
+                    GENECOPYNUMBER.MISSENSENONBIALLELICVARIANTS,
+                    GENECOPYNUMBER.MISSENSENONBIALLELICPLOIDY,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -57,7 +66,7 @@ class GeneCopyNumberDAO {
 
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
             @NotNull GeneCopyNumber gene) {
         //noinspection unchecked
         inserter.values(sample,
@@ -80,6 +89,15 @@ class GeneCopyNumberDAO {
                 gene.minRegionStartSupport(),
                 gene.minRegionEndSupport(),
                 gene.minRegionMethod(),
+                gene.nonsenseBiallelicCount(),
+                gene.nonsenseNonBiallelicCount(),
+                gene.nonsenseNonBiallelicPloidy(),
+                gene.spliceBiallelicCount(),
+                gene.spliceNonBiallelicCount(),
+                gene.spliceNonBiallelicPloidy(),
+                gene.missenseBiallelicCount(),
+                gene.missenseNonBiallelicCount(),
+                gene.missenseNonBiallelicPloidy(),
                 timestamp);
     }
 }

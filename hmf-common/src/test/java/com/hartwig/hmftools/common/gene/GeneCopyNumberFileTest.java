@@ -66,7 +66,16 @@ public class GeneCopyNumberFileTest {
                 .minRegionEnd(random.nextLong())
                 .minRegionMethod(randomMethod(random))
                 .minRegionStartSupport(randomSupport(random))
-                .minRegionEndSupport(randomSupport(random));
+                .minRegionEndSupport(randomSupport(random))
+                .nonsenseBiallelicCount(random.nextInt())
+                .nonsenseNonBiallelicCount(random.nextInt())
+                .nonsenseNonBiallelicPloidy(random.nextInt())
+                .spliceBiallelicCount(random.nextInt())
+                .spliceNonBiallelicCount(random.nextInt())
+                .spliceNonBiallelicPloidy(random.nextInt())
+                .missenseBiallelicCount(random.nextInt())
+                .missenseNonBiallelicCount(random.nextInt())
+                .missenseNonBiallelicPloidy(random.nextInt());
     }
 
     @NotNull

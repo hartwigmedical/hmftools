@@ -6,6 +6,8 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +38,19 @@ class GeneCopyNumberBuilder {
     private SegmentSupport minRegionEndSupport = SegmentSupport.NONE;
     private CopyNumberMethod minRegionMethod = CopyNumberMethod.UNKNOWN;
 
+    private final String gene;
+    private int nonsenseBiallelicCount;
+    private int nonsenseNonBiallelicCount;
+    private double nonsenseNonBiallelicPloidy;
+    private int spliceBiallelicCount;
+    private int spliceNonBiallelicCount;
+    private double spliceNonBiallelicPloidy;
+    private int missenseBiallelicCount;
+    private int missenseNonBiallelicCount;
+    private double missenseNonBiallelicPloidy;
+
     GeneCopyNumberBuilder(@NotNull final HmfGenomeRegion gene) {
+        this.gene = gene.gene();
         builder = ImmutableGeneCopyNumber.builder()
                 .from(gene)
                 .minRegionStart(gene.start())
@@ -58,6 +72,34 @@ class GeneCopyNumberBuilder {
         this.copyNumber = copyNumber;
         if (exon != null) {
             addOverlap(exon, this.copyNumber);
+        }
+    }
+
+    void addSomatic(@NotNull final PurityAdjustedSomaticVariant variant) {
+        if (variant.gene().equals(gene)) {
+            if (variant.codingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT.toString())) {
+                if (variant.biallelic()) {
+                    nonsenseBiallelicCount++;
+                } else {
+                    nonsenseNonBiallelicCount++;
+                    nonsenseNonBiallelicPloidy += variant.ploidy();
+                }
+            } else if (variant.codingEffect().equals(CodingEffect.SPLICE.toString())) {
+                if (variant.biallelic()) {
+                    spliceBiallelicCount++;
+                } else {
+                    spliceNonBiallelicCount++;
+                    spliceNonBiallelicPloidy += variant.ploidy();
+                }
+            } else if (variant.codingEffect().equals(CodingEffect.MISSENSE.toString())) {
+                if (variant.biallelic()) {
+                    missenseBiallelicCount++;
+                } else {
+                    missenseNonBiallelicCount++;
+                    missenseNonBiallelicPloidy += variant.ploidy();
+                }
+            }
+
         }
     }
 
@@ -126,6 +168,15 @@ class GeneCopyNumberBuilder {
                 .germlineHomRegions(homCount)
                 .germlineHet2HomRegions(het2HomCount)
                 .minRegions(minRegions)
+                .nonsenseBiallelicCount(nonsenseBiallelicCount)
+                .nonsenseNonBiallelicCount(nonsenseNonBiallelicCount)
+                .nonsenseNonBiallelicPloidy(nonsenseNonBiallelicPloidy)
+                .spliceBiallelicCount(spliceBiallelicCount)
+                .spliceNonBiallelicCount(spliceNonBiallelicCount)
+                .spliceNonBiallelicPloidy(spliceNonBiallelicPloidy)
+                .missenseBiallelicCount(missenseBiallelicCount)
+                .missenseNonBiallelicCount(missenseNonBiallelicCount)
+                .missenseNonBiallelicPloidy(missenseNonBiallelicPloidy)
                 .build();
     }
 }
