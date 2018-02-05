@@ -1,16 +1,15 @@
 package com.hartwig.hmftools.apiclients.civic.api;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import com.google.gson.Gson;
 import com.hartwig.hmftools.apiclients.civic.data.CivicApiDataGson;
 import com.hartwig.hmftools.apiclients.civic.data.CivicApiMetadata;
-import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicGene;
 import com.hartwig.hmftools.apiclients.civic.data.CivicIndexResult;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,28 +53,23 @@ public class CivicApiWrapper {
     }
 
     @NotNull
-    public Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final SomaticVariant variant) {
-        return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().containsVariant(variant));
+    private Observable<CivicVariant> getWildTypeVariantsForGeneId(final int entrezId) {
+        return getVariantsForGene(entrezId).filter(civicVariant -> {
+            final String type = civicVariant.type();
+            final String name = civicVariant.name();
+            return (type != null && type.toLowerCase().equals("wild_type")) || (name != null && (name.toLowerCase().equals("wild type")
+                    || name.toLowerCase().equals("wildtype")));
+        });
     }
 
     @NotNull
-    public Observable<CivicVariant> getVariantMatches(final int entrezId, @NotNull final SomaticVariant variant) {
-        return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().equals(variant));
+    public Observable<CivicVariant> getWildTypeVariantsForGeneIds(@NotNull final List<Integer> entrezIds) {
+        return Observable.fromIterable(entrezIds).flatMap(this::getWildTypeVariantsForGeneId);
     }
 
     @NotNull
     public Observable<CivicVariant> getAllVariants() {
         return getAllFromPaginatedEndpoint(api::getVariants).flatMap(variant -> api.getVariant(variant.id()));
-    }
-
-    @NotNull
-    public Observable<CivicEvidenceItem> getAllEvidenceItems() {
-        return getAllFromPaginatedEndpoint(api::getEvidenceItems);
-    }
-
-    @NotNull
-    public Observable<CivicGene> getAllGenes() {
-        return getAllFromPaginatedEndpoint(api::getGenes);
     }
 
     @NotNull
