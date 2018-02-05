@@ -59,6 +59,9 @@ public abstract class Alteration {
                     .equals(variantReport.variant())) {
                 exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("exact", civicVariant));
+            } else if (civicVariant.coordinates().isExtendedVariant(variantReport.variant())) {
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
+                matchingVariants.add(AlterationMatch.of("extended", civicVariant));
             } else if (AdditionalCivicMatches.lossOfFunctionVariants(variantReport).contains(civicVariant.id())) {
                 exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("manual", civicVariant));
