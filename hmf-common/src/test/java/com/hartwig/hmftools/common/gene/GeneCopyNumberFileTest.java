@@ -75,7 +75,9 @@ public class GeneCopyNumberFileTest {
                 .spliceNonBiallelicPloidy(random.nextInt())
                 .missenseBiallelicCount(random.nextInt())
                 .missenseNonBiallelicCount(random.nextInt())
-                .missenseNonBiallelicPloidy(random.nextInt());
+                .missenseNonBiallelicPloidy(random.nextInt())
+                .minMinorAllelePloidy(random.nextInt())
+                .exonicBases(random.nextInt());
     }
 
     @NotNull

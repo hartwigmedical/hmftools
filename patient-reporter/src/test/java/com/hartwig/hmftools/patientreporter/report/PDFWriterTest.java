@@ -209,7 +209,9 @@ public class PDFWriterTest {
                 .spliceNonBiallelicPloidy(0)
                 .missenseBiallelicCount(0)
                 .missenseNonBiallelicCount(0)
-                .missenseNonBiallelicPloidy(0);
+                .missenseNonBiallelicPloidy(0)
+                .minMinorAllelePloidy(0)
+                .exonicBases(0);
     }
 
     @NotNull

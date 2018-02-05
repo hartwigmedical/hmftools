@@ -59,6 +59,8 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.MISSENSEBIALLELICVARIANTS,
                     GENECOPYNUMBER.MISSENSENONBIALLELICVARIANTS,
                     GENECOPYNUMBER.MISSENSENONBIALLELICPLOIDY,
+                    GENECOPYNUMBER.MINMINORALLELEPLOIDY,
+                    GENECOPYNUMBER.EXONICBASES,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -98,6 +100,8 @@ class GeneCopyNumberDAO {
                 gene.missenseBiallelicCount(),
                 gene.missenseNonBiallelicCount(),
                 gene.missenseNonBiallelicPloidy(),
+                gene.minMinorAllelePloidy(),
+                gene.exonicBases(),
                 timestamp);
     }
 }

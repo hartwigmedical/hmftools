@@ -80,6 +80,8 @@ public class GeneCopyNumberFile {
                 .add("MissenseBiallelicCount")
                 .add("MissenseNonBiallelicCount")
                 .add("MissenseNonBiallelicPloidy")
+                .add("MinMinorAllelePloidy")
+                .add("ExonicBases")
                 .toString();
     }
 
@@ -113,6 +115,8 @@ public class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.missenseBiallelicCount()))
                 .add(String.valueOf(geneCopyNumber.missenseNonBiallelicCount()))
                 .add(String.valueOf(geneCopyNumber.missenseNonBiallelicPloidy()))
+                .add(String.valueOf(geneCopyNumber.minMinorAllelePloidy()))
+                .add(String.valueOf(geneCopyNumber.exonicBases()))
                 .toString();
     }
 
@@ -156,7 +160,9 @@ public class GeneCopyNumberFile {
                 .spliceNonBiallelicPloidy(0)
                 .missenseBiallelicCount(0)
                 .missenseNonBiallelicCount(0)
-                .missenseNonBiallelicPloidy(0);
+                .missenseNonBiallelicPloidy(0)
+                .minMinorAllelePloidy(0)
+                .exonicBases(0);
 
         if (values.length >= 19) {
             builder.minRegions(Integer.valueOf(values[13]))
@@ -166,7 +172,7 @@ public class GeneCopyNumberFile {
                     .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
         }
-        if (values.length == 28) {
+        if (values.length ==30) {
             builder.nonsenseBiallelicCount(Integer.valueOf(values[19]))
                     .nonsenseNonBiallelicCount(Integer.valueOf(values[20]))
                     .nonsenseNonBiallelicPloidy(Double.valueOf(values[21]))
@@ -175,7 +181,9 @@ public class GeneCopyNumberFile {
                     .spliceNonBiallelicPloidy(Double.valueOf(values[24]))
                     .missenseBiallelicCount(Integer.valueOf(values[25]))
                     .missenseNonBiallelicCount(Integer.valueOf(values[26]))
-                    .missenseNonBiallelicPloidy(Double.valueOf(values[27]));
+                    .missenseNonBiallelicPloidy(Double.valueOf(values[27]))
+                    .minMinorAllelePloidy(Double.valueOf(values[28]))
+                    .exonicBases(Integer.valueOf(values[29]));
         }
 
         return builder.build();

@@ -54,6 +54,10 @@ public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
 
     double missenseNonBiallelicPloidy();
 
+    double minMinorAllelePloidy();
+
+    int exonicBases();
+
     default int totalRegions() {
         return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();
     }

@@ -362,6 +362,8 @@ CREATE TABLE geneCopyNumber
     missenseBiallelicVariants int not null,
     missenseNonBiallelicVariants int not null,
     missenseNonBiallelicPloidy DOUBLE PRECISION not null,
+    minMinorAllelePloidy DOUBLE PRECISION not null,
+    exonicBases int not null,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(gene)

@@ -17,6 +17,7 @@ class GeneCopyNumberBuilder {
     private final ImmutableGeneCopyNumber.Builder builder;
 
     private double minCopyNumber = Double.MAX_VALUE;
+    private double minMinorAllelePloidy = Double.MAX_VALUE;
     private double maxCopyNumber = -Double.MAX_VALUE;
     private int somaticCount;
     private int homCount;
@@ -27,7 +28,7 @@ class GeneCopyNumberBuilder {
     private PurpleCopyNumber previous;
 
     private double previousCopyNumber = -Double.MAX_VALUE;
-    private long totalBases;
+    private long totalExonicBases;
     private HmfExonRegion exon;
     private PurpleCopyNumber copyNumber;
 
@@ -61,7 +62,7 @@ class GeneCopyNumberBuilder {
     }
 
     void addExon(@NotNull final HmfExonRegion exon) {
-        totalBases += exon.bases();
+        totalExonicBases += exon.bases();
         this.exon = exon;
         if (copyNumber != null) {
             addOverlap(this.exon, copyNumber);
@@ -109,6 +110,7 @@ class GeneCopyNumberBuilder {
             double currentCopyNumber = copyNumber.averageTumorCopyNumber();
 
             maxCopyNumber = Math.max(maxCopyNumber, currentCopyNumber);
+            minMinorAllelePloidy = Math.min(minMinorAllelePloidy, copyNumber.minorAllelePloidy());
             cumulativeCopyNumber += overlap * currentCopyNumber;
 
             if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
@@ -163,7 +165,7 @@ class GeneCopyNumberBuilder {
                 .minRegionStart(minRegionStart)
                 .minRegionEnd(minRegionEnd)
                 .minCopyNumber(minCopyNumber)
-                .meanCopyNumber(cumulativeCopyNumber / totalBases)
+                .meanCopyNumber(cumulativeCopyNumber / totalExonicBases)
                 .somaticRegions(somaticCount)
                 .germlineHomRegions(homCount)
                 .germlineHet2HomRegions(het2HomCount)
@@ -177,6 +179,8 @@ class GeneCopyNumberBuilder {
                 .missenseBiallelicCount(missenseBiallelicCount)
                 .missenseNonBiallelicCount(missenseNonBiallelicCount)
                 .missenseNonBiallelicPloidy(missenseNonBiallelicPloidy)
+                .minMinorAllelePloidy(minMinorAllelePloidy)
+                .exonicBases((int) totalExonicBases)
                 .build();
     }
 }
