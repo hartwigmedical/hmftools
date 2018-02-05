@@ -87,6 +87,18 @@ public abstract class Alteration {
     }
 
     @NotNull
+    public static Alteration fromWildType(@NotNull final String gene, @NotNull final List<CivicVariant> civicVariants,
+            @NotNull final Set<String> relevantDoids) {
+        final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
+        final List<AlterationMatch> matchingVariants = Lists.newArrayList();
+        civicVariants.forEach(civicVariant -> {
+            exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
+            matchingVariants.add(AlterationMatch.of("wild type", civicVariant));
+        });
+        return ImmutableAlteration.of(gene, "wild type", exactMatchEvidence, matchingVariants);
+    }
+
+    @NotNull
     private static List<AlterationEvidence> alterationEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
             @NotNull final String civicUrl, @NotNull final Set<String> relevantDoids) {
         final Map<String, String> associationsPerSignificance = drugAssociationsPerSignificance(evidenceItems, relevantDoids);
