@@ -178,6 +178,10 @@ public abstract class Alteration {
 
     @NotNull
     private static String flattenDrugLevelsMap(@NotNull final Map<String, String> drugToLevels) {
-        return drugToLevels.entrySet().stream().map(entry -> entry.getKey() + " " + entry.getValue()).collect(joining("\n"));
+        return drugToLevels.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue())
+                .map(entry -> entry.getKey() + " " + entry.getValue())
+                .collect(joining("\n"));
     }
 }
