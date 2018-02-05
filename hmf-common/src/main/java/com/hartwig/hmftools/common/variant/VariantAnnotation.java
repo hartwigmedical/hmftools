@@ -15,6 +15,9 @@ public abstract class VariantAnnotation {
     public abstract String allele();
 
     @NotNull
+    public abstract List<String> effects();
+
+    @NotNull
     public abstract List<VariantConsequence> consequences();
 
     @NotNull
