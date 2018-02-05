@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.variant.snpeff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

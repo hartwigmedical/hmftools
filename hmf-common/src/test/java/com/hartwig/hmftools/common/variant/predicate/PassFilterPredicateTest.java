@@ -8,8 +8,8 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

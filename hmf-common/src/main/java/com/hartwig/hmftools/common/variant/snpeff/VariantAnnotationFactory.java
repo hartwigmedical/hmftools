@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.variant.snpeff;
 
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-final class VariantAnnotationFactory {
+public final class VariantAnnotationFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(VariantAnnotationFactory.class);
 
@@ -29,7 +30,7 @@ final class VariantAnnotationFactory {
     }
 
     @NotNull
-    static List<VariantAnnotation> fromContext(@NotNull final VariantContext context) {
+    public static List<VariantAnnotation> fromContext(@NotNull final VariantContext context) {
         if (context.hasAttribute(ANNOTATIONS_IDENTIFIER)) {
             return context.getAttributeAsStringList(ANNOTATIONS_IDENTIFIER, "")
                     .stream()

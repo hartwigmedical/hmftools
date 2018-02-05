@@ -16,6 +16,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

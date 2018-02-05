@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

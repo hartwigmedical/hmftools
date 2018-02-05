@@ -1,7 +1,9 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.variant.snpeff;
 
 import java.util.List;
 import java.util.StringJoiner;
+
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +18,10 @@ public abstract class VariantAnnotation {
 
     @NotNull
     public abstract List<String> effects();
+
+    public boolean containsEffect(@NotNull final String effect) {
+        return effects().stream().anyMatch(x -> x.equals(effect));
+    }
 
     @NotNull
     public abstract List<VariantConsequence> consequences();
