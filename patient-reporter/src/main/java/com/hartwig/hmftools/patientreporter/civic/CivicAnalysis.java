@@ -22,39 +22,42 @@ public class CivicAnalysis {
     private static final Logger LOGGER = LogManager.getLogger(CivicAnalysis.class);
 
     @NotNull
-    public static List<Alteration> run(@NotNull final List<VariantReport> reportedVariants,
-            @NotNull final List<GeneCopyNumber> copyNumbers, @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) {
+    public static List<Alteration> run(@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
+            @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) {
         LOGGER.info(" Analysing civic associations...");
-        final Set<String> tumorSubtypesDoids = getTumorSubtypesDoids(tumorDoids);
-        if (tumorSubtypesDoids.isEmpty()) {
+        final Set<String> relevantDoids = getRelevantDoids(tumorDoids);
+        if (relevantDoids.isEmpty()) {
             LOGGER.warn("  Disease-ontology id set for this tumor is empty!");
         }
-        final List<Alteration> alterations = civicVariantAlterations(reportedVariants, geneModel, tumorSubtypesDoids);
-        alterations.addAll(civicCopyNumberAlterations(copyNumbers, geneModel, tumorSubtypesDoids));
+        final List<Alteration> alterations = civicVariantAlterations(reportedVariants, geneModel, relevantDoids);
+        alterations.addAll(civicCopyNumberAlterations(copyNumbers, geneModel, relevantDoids));
         return alterations;
     }
 
     @NotNull
-    private static Set<String> getTumorSubtypesDoids(@NotNull final Set<String> tumorDoids) {
-        LOGGER.info("  Fetching tumor subtypes...");
-        final Set<String> tumorSubtypesDoids = Sets.newHashSet();
-        tumorSubtypesDoids.addAll(tumorDoids);
+    private static Set<String> getRelevantDoids(@NotNull final Set<String> tumorDoids) {
+        LOGGER.info("  Fetching relevant tumor types...");
+        final Set<String> relevantDoids = Sets.newHashSet();
+        relevantDoids.addAll(tumorDoids);
         final DiseaseOntologyApiWrapper diseaseOntologyApi = new DiseaseOntologyApiWrapper();
         for (final String tumorDoid : tumorDoids) {
             try {
-                final List<String> childrenDoid = diseaseOntologyApi.getAllChildrenDoids(tumorDoid).toList().blockingGet();
-                tumorSubtypesDoids.addAll(childrenDoid);
+                final List<String> childrenAndParentDoids = diseaseOntologyApi.getAllChildrenDoids(tumorDoid)
+                        .mergeWith(diseaseOntologyApi.getAllParentDoids(tumorDoid))
+                        .toList()
+                        .blockingGet();
+                relevantDoids.addAll(childrenAndParentDoids);
             } catch (final Throwable throwable) {
                 LOGGER.error("  Failed to get children doids for tumor doid: " + tumorDoid + ". error message: " + throwable.getMessage());
             }
         }
         diseaseOntologyApi.releaseResources();
-        return tumorSubtypesDoids;
+        return relevantDoids;
     }
 
     @NotNull
     private static List<Alteration> civicVariantAlterations(@NotNull final List<VariantReport> reportedVariants,
-            @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorSubtypesDoids) {
+            @NotNull final GeneModel geneModel, @NotNull final Set<String> relevantDoids) {
         LOGGER.info("  Fetching civic variant alterations...");
         final List<Alteration> alterations = Lists.newArrayList();
         final CivicApiWrapper civicApi = new CivicApiWrapper();
@@ -64,7 +67,7 @@ public class CivicAnalysis {
                     for (final int entrezId : region.entrezId()) {
                         try {
                             final List<CivicVariant> civicVariants = civicApi.getVariantsForGene(entrezId).toList().blockingGet();
-                            final Alteration alteration = Alteration.from(variantReport, civicVariants, tumorSubtypesDoids);
+                            final Alteration alteration = Alteration.from(variantReport, civicVariants, relevantDoids);
                             if (alteration.getMatches().size() > 0) {
                                 alterations.add(alteration);
                             }
@@ -82,7 +85,7 @@ public class CivicAnalysis {
 
     @NotNull
     private static List<Alteration> civicCopyNumberAlterations(@NotNull final List<GeneCopyNumber> copyNumbers,
-            @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorSubtypesDoids) {
+            @NotNull final GeneModel geneModel, @NotNull final Set<String> relevantDoids) {
         LOGGER.info("  Fetching civic copy number alterations...");
         final List<Alteration> alterations = Lists.newArrayList();
         final CivicApiWrapper civicApi = new CivicApiWrapper();
@@ -92,12 +95,13 @@ public class CivicAnalysis {
                     for (final int entrezId : region.entrezId()) {
                         try {
                             final List<CivicVariant> civicVariants = civicApi.getVariantsForGene(entrezId).toList().blockingGet();
-                            final Alteration alteration = Alteration.from(copyNumberReport, civicVariants, tumorSubtypesDoids);
+                            final Alteration alteration = Alteration.from(copyNumberReport, civicVariants, relevantDoids);
                             if (alteration.getMatches().size() > 0) {
                                 alterations.add(alteration);
                             }
                         } catch (final Throwable throwable) {
-                            LOGGER.error("  Failed to get civic variants for copy number: {}. error message: {}", copyNumberReport.gene(),
+                            LOGGER.error("  Failed to get civic variants for copy number: {}. error message: {}",
+                                    copyNumberReport.gene(),
                                     throwable.getMessage());
                         }
                     }

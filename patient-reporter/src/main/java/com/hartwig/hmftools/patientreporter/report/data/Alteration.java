@@ -51,16 +51,16 @@ public abstract class Alteration {
 
     @NotNull
     public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants,
-            @NotNull final Set<String> tumorSubtypesDoids) {
+            @NotNull final Set<String> relevantDoids) {
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
         civicVariants.forEach(civicVariant -> {
             if (civicVariant.containsHgvsExpression(variantReport.hgvsProtein()) || civicVariant.coordinates()
                     .equals(variantReport.variant())) {
-                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("exact", civicVariant));
             } else if (AdditionalCivicMatches.lossOfFunctionVariants(variantReport).contains(civicVariant.id())) {
-                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("manual", civicVariant));
             } else if (civicVariant.coordinates().containsVariant(variantReport.variant())) {
                 matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
@@ -71,12 +71,12 @@ public abstract class Alteration {
 
     @NotNull
     public static Alteration from(@NotNull final GeneCopyNumber copyNumberReport, @NotNull final List<CivicVariant> civicVariants,
-            @NotNull final Set<String> tumorSubtypesDoids) {
+            @NotNull final Set<String> relevantDoids) {
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         civicVariants.forEach(civicVariant -> {
             if (AdditionalCivicMatches.copyNumberVariants(copyNumberReport).contains(civicVariant.id())) {
-                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), tumorSubtypesDoids));
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("manual", civicVariant));
             }
         });
@@ -85,8 +85,8 @@ public abstract class Alteration {
 
     @NotNull
     private static List<AlterationEvidence> alterationEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull final String civicUrl, @NotNull final Set<String> tumorSubtypesDoids) {
-        final Map<String, String> associationsPerSignificance = drugAssociationsPerSignificance(evidenceItems, tumorSubtypesDoids);
+            @NotNull final String civicUrl, @NotNull final Set<String> relevantDoids) {
+        final Map<String, String> associationsPerSignificance = drugAssociationsPerSignificance(evidenceItems, relevantDoids);
         return associationsPerSignificance.keySet().stream().map(significance -> {
             final String associations = associationsPerSignificance.get(significance);
             return ImmutableAlterationEvidence.of(significance, associations, "CIViC", civicUrl);
@@ -95,18 +95,18 @@ public abstract class Alteration {
 
     @NotNull
     private static List<CivicEvidenceItem> onLabelEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull Set<String> tumorSubtypesDoids) {
+            @NotNull Set<String> relevantDoids) {
         return evidenceItems.stream()
-                .filter(item -> item.level() < 'D' && isUsable(item) && tumorSubtypesDoids.contains(item.disease().doidString()))
+                .filter(item -> item.level() < 'D' && isUsable(item) && relevantDoids.contains(item.disease().doidString()))
                 .sorted(Comparator.comparing(CivicEvidenceItem::level))
                 .collect(toList());
     }
 
     @NotNull
     private static List<CivicEvidenceItem> offLabelEvidence(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull Set<String> tumorSubtypesDoids) {
+            @NotNull Set<String> relevantDoids) {
         return evidenceItems.stream()
-                .filter(item -> item.level() < 'C' && isUsable(item) && !tumorSubtypesDoids.contains(item.disease().doidString()))
+                .filter(item -> item.level() < 'C' && isUsable(item) && !relevantDoids.contains(item.disease().doidString()))
                 .sorted(Comparator.comparing(CivicEvidenceItem::level))
                 .collect(toList());
     }
@@ -150,10 +150,10 @@ public abstract class Alteration {
 
     @NotNull
     private static Map<String, String> drugAssociationsPerSignificance(@NotNull final List<CivicEvidenceItem> evidenceItems,
-            @NotNull Set<String> tumorSubtypesDoids) {
+            @NotNull Set<String> relevantDoids) {
         final Map<String, String> results = Maps.newHashMap();
-        final List<CivicEvidenceItem> onLabelEvidence = onLabelEvidence(evidenceItems, tumorSubtypesDoids);
-        final List<CivicEvidenceItem> offLabelEvidence = offLabelEvidence(evidenceItems, tumorSubtypesDoids);
+        final List<CivicEvidenceItem> onLabelEvidence = onLabelEvidence(evidenceItems, relevantDoids);
+        final List<CivicEvidenceItem> offLabelEvidence = offLabelEvidence(evidenceItems, relevantDoids);
         final Map<String, Map<String, String>> onLabelEvidenceLevels = groupOnLabelEvidenceLevels(onLabelEvidence);
         final Map<String, Map<String, String>> offLabelEvidenceLevels = groupOffLabelEvidenceLevels(onLabelEvidence, offLabelEvidence);
         onLabelEvidenceLevels.forEach((significance, drugLevelsMap) -> results.put(significance, flattenDrugLevelsMap(drugLevelsMap)));
