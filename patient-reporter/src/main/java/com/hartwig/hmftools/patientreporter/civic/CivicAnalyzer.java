@@ -24,11 +24,12 @@ import org.jetbrains.annotations.NotNull;
 
 import io.reactivex.Observable;
 
-public class CivicAnalysis {
-    private static final Logger LOGGER = LogManager.getLogger(CivicAnalysis.class);
+public class CivicAnalyzer implements AlterationAnalyzer {
+    private static final Logger LOGGER = LogManager.getLogger(CivicAnalyzer.class);
 
+    @Override
     @NotNull
-    public static List<Alteration> run(@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
+    public List<Alteration> run(@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
             @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) {
         LOGGER.info(" Analysing civic associations...");
         final Set<String> relevantDoids = getRelevantDoids(tumorDoids);
