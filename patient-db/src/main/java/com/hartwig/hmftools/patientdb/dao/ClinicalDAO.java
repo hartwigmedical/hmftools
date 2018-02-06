@@ -158,9 +158,10 @@ class ClinicalDAO {
                 TREATMENTRESPONSE.PATIENTID,
                 TREATMENTRESPONSE.RESPONSEDATE,
                 TREATMENTRESPONSE.RESPONSE,
-                TREATMENTRESPONSE.MEASUREMENTDONE)
+                TREATMENTRESPONSE.MEASUREMENTDONE,
+                TREATMENTRESPONSE.BONEONLYDISEASE)
                 .values(treatmentResponse.treatmentId(), patientId, Utils.toSQLDate(treatmentResponse.date()), treatmentResponse.response(),
-                        treatmentResponse.measurementDone())
+                        treatmentResponse.measurementDone(), treatmentResponse.boneOnlyDisease())
                 .returning(TREATMENTRESPONSE.ID)
                 .fetchOne()
                 .getValue(TREATMENTRESPONSE.ID);

@@ -74,6 +74,7 @@ CREATE TABLE treatmentResponse
     treatmentId int,
     patientId int NOT NULL,
     measurementDone varchar(5),
+    boneOnlyDisease varchar(5),
     responseDate DATE,
     response varchar(25),
     PRIMARY KEY (id),
