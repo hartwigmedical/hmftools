@@ -14,5 +14,5 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CivicGene {
     @SerializedName("variants")
-    public abstract List<CivicVariantMetadata> variantMetadatas();
+    public abstract List<CivicGeneVariantMetadata> variantMetadatas();
 }
