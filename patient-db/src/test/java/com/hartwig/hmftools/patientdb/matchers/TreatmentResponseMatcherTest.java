@@ -30,17 +30,17 @@ public class TreatmentResponseMatcherTest {
             ImmutableBiopsyTreatmentData.of("Yes", FEB2015, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
 
     private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 =
-            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_MAR2015 =
-            ImmutableBiopsyTreatmentResponseData.of(MAR2015, MAR2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(MAR2015, MAR2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_JUL2015 =
-            ImmutableBiopsyTreatmentResponseData.of(JUL2015, JUL2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(JUL2015, JUL2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_AUG2015 =
-            ImmutableBiopsyTreatmentResponseData.of(AUG2015, AUG2015, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(AUG2015, AUG2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     private final static BiopsyTreatmentResponseData RESPONSE_NULL =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", "Yes", FormStatusState.UNKNOWN, false);
+            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
 
     // MIVO:    ---response(jan)-start(feb)-----end(jul)--
     @Test
