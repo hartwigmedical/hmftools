@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.apiclients.civic.api.CivicApiWrapper;
-import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantWithEvidence;
 import com.hartwig.hmftools.apiclients.diseaseontology.api.DiseaseOntologyApiWrapper;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
@@ -84,15 +84,7 @@ public class CivicAnalyzer implements AlterationAnalyzer {
                 wildTypeGenes.add(region);
             }
         }
-        final List<Alteration> wildTypeAlterations = Observable.fromIterable(wildTypeGenes)
-                .flatMap(hmfGenomeRegion -> civicApi.getWildTypeVariantsForGeneIds(hmfGenomeRegion.entrezId())
-                        .toList()
-                        .map(variantList -> Alteration.fromWildType(hmfGenomeRegion.gene(), variantList, relevantDoids))
-                        .filter(alteration -> !alteration.getMatches().isEmpty())
-                        .toObservable())
-                .toList()
-                .blockingGet();
-        alterations.addAll(wildTypeAlterations);
+        alterations.addAll(civicWildTypeAlterations(wildTypeGenes, relevantDoids));
         civicApi.releaseResources();
         return alterations;
     }
@@ -115,8 +107,29 @@ public class CivicAnalyzer implements AlterationAnalyzer {
     }
 
     @NotNull
+    private static List<Alteration> civicWildTypeAlterations(@NotNull final List<HmfGenomeRegion> wildTypeGenes,
+            @NotNull final Set<String> relevantDoids) {
+        LOGGER.info("  Fetching civic wild type alterations...");
+        final CivicApiWrapper civicApi = new CivicApiWrapper();
+        final Set<String> wildTypeEntrezIds = wildTypeGenes.stream()
+                .flatMap(hmfGenomeRegion -> hmfGenomeRegion.entrezId().stream().map(Object::toString))
+                .collect(Collectors.toSet());
+        final List<Alteration> wildTypeAlterations = civicApi.getAllWildTypeVariants()
+                .filter(civicVariant -> wildTypeEntrezIds.contains(civicVariant.entrezId()))
+                .groupBy(CivicVariantWithEvidence::gene)
+                .flatMap(pair -> pair.toList()
+                        .map(variantList -> Alteration.fromWildType(pair.getKey(), variantList, relevantDoids))
+                        .filter(alteration -> !alteration.getMatches().isEmpty())
+                        .toObservable())
+                .toList()
+                .blockingGet();
+        civicApi.releaseResources();
+        return wildTypeAlterations;
+    }
+
+    @NotNull
     private static List<Alteration> queryCivicAlteration(@NotNull final HmfGenomeRegion region,
-            io.reactivex.functions.Function<List<CivicVariant>, Alteration> alterationBuilder, @NotNull final String error) {
+            io.reactivex.functions.Function<List<CivicVariantWithEvidence>, Alteration> alterationBuilder, @NotNull final String error) {
         final CivicApiWrapper civicApi = new CivicApiWrapper();
         final List<Alteration> result = Lists.newArrayList();
         try {

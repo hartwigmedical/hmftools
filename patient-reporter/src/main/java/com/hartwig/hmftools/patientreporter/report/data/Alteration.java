@@ -17,7 +17,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
-import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantWithEvidence;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.civic.AdditionalCivicMatches;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
@@ -50,7 +50,7 @@ public abstract class Alteration {
     }
 
     @NotNull
-    public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariant> civicVariants,
+    public static Alteration from(@NotNull final VariantReport variantReport, @NotNull final List<CivicVariantWithEvidence> civicVariants,
             @NotNull final Set<String> relevantDoids) {
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
@@ -73,8 +73,8 @@ public abstract class Alteration {
     }
 
     @NotNull
-    public static Alteration from(@NotNull final GeneCopyNumber copyNumberReport, @NotNull final List<CivicVariant> civicVariants,
-            @NotNull final Set<String> relevantDoids) {
+    public static Alteration from(@NotNull final GeneCopyNumber copyNumberReport,
+            @NotNull final List<CivicVariantWithEvidence> civicVariants, @NotNull final Set<String> relevantDoids) {
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         civicVariants.forEach(civicVariant -> {
@@ -87,7 +87,7 @@ public abstract class Alteration {
     }
 
     @NotNull
-    public static Alteration fromWildType(@NotNull final String gene, @NotNull final List<CivicVariant> civicVariants,
+    public static Alteration fromWildType(@NotNull final String gene, @NotNull final List<CivicVariantWithEvidence> civicVariants,
             @NotNull final Set<String> relevantDoids) {
         final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
         final List<AlterationMatch> matchingVariants = Lists.newArrayList();
@@ -144,8 +144,10 @@ public abstract class Alteration {
     private static Map<String, Map<String, String>> groupOnLabelEvidenceLevels(@NotNull final List<CivicEvidenceItem> evidenceItems) {
         return evidenceItems.stream()
                 .flatMap(evidenceItem -> evidenceItem.drugNames().stream().map(drug -> ImmutablePair.of(drug, evidenceItem)))
-                .collect(groupingBy(pair -> pair.getRight().significance(), groupingBy(Pair::getLeft,
-                        mapping(pair -> pair.getRight().level(), collectingAndThen(toList(), Alteration::flattenOnLabelEvidenceLevels)))));
+                .collect(groupingBy(pair -> pair.getRight().significance(),
+                        groupingBy(Pair::getLeft,
+                                mapping(pair -> pair.getRight().level(),
+                                        collectingAndThen(toList(), Alteration::flattenOnLabelEvidenceLevels)))));
     }
 
     //MIVO: highest evidence level by significance (sensitivity/resistance) and by drug.
@@ -159,8 +161,10 @@ public abstract class Alteration {
                         .stream()
                         .filter(drug -> !onLabelDrugs.contains(drug))
                         .map(drug -> ImmutablePair.of(drug, evidenceItem)))
-                .collect(groupingBy(pair -> pair.getRight().significance(), groupingBy(Pair::getLeft,
-                        mapping(pair -> pair.getRight().level(), collectingAndThen(toList(), Alteration::flattenOffLabelEvidenceLevels)))));
+                .collect(groupingBy(pair -> pair.getRight().significance(),
+                        groupingBy(Pair::getLeft,
+                                mapping(pair -> pair.getRight().level(),
+                                        collectingAndThen(toList(), Alteration::flattenOffLabelEvidenceLevels)))));
     }
 
     @NotNull
@@ -172,7 +176,8 @@ public abstract class Alteration {
         final Map<String, Map<String, String>> onLabelEvidenceLevels = groupOnLabelEvidenceLevels(onLabelEvidence);
         final Map<String, Map<String, String>> offLabelEvidenceLevels = groupOffLabelEvidenceLevels(onLabelEvidence, offLabelEvidence);
         onLabelEvidenceLevels.forEach((significance, drugLevelsMap) -> results.put(significance, flattenDrugLevelsMap(drugLevelsMap)));
-        offLabelEvidenceLevels.forEach((significance, drugLevelsMap) -> results.merge(significance, flattenDrugLevelsMap(drugLevelsMap),
+        offLabelEvidenceLevels.forEach((significance, drugLevelsMap) -> results.merge(significance,
+                flattenDrugLevelsMap(drugLevelsMap),
                 (existingAssociation, newAssociation) -> existingAssociation + "\n" + newAssociation));
         return results;
     }

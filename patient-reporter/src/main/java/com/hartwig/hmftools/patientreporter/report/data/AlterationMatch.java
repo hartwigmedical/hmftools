@@ -5,8 +5,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
 import com.hartwig.hmftools.apiclients.civic.data.CivicVariantType;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantWithEvidence;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -62,13 +62,18 @@ public abstract class AlterationMatch {
 
     public abstract String getSummaryUrl();
 
-    public static AlterationMatch of(@NotNull final String matchType, @NotNull final CivicVariant variant) {
-        return ImmutableAlterationMatch.of(matchType, variant.name(), variant.coordinates().chromosome(),
-                Objects.toString(variant.coordinates().start(), ""), Objects.toString(variant.coordinates().stop(), ""),
-                variant.coordinates().chromosome2(), Objects.toString(variant.coordinates().start2(), ""),
+    public static AlterationMatch of(@NotNull final String matchType, @NotNull final CivicVariantWithEvidence variant) {
+        return ImmutableAlterationMatch.of(matchType,
+                variant.name(),
+                variant.coordinates().chromosome(),
+                Objects.toString(variant.coordinates().start(), ""),
+                Objects.toString(variant.coordinates().stop(), ""),
+                variant.coordinates().chromosome2(),
+                Objects.toString(variant.coordinates().start2(), ""),
                 Objects.toString(variant.coordinates().stop2(), ""),
                 Strings.join(variant.variantTypes().stream().map(CivicVariantType::name).collect(Collectors.toList()), ','),
-                Strings.join(variant.hgvsExpressions(), ','), variant.summaryUrl());
+                Strings.join(variant.hgvsExpressions(), ','),
+                variant.summaryUrl());
     }
 
     @NotNull
