@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReporter;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
 import com.hartwig.hmftools.patientreporter.algo.PatientReporter;
+import com.hartwig.hmftools.patientreporter.civic.CivicAnalyzer;
 import com.hartwig.hmftools.patientreporter.report.PDFWriter;
 import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.svannotation.MySQLAnnotator;
@@ -136,7 +137,7 @@ public class PatientReporterApplication {
         final StructuralVariantAnalyzer svAnalyzer =
                 new StructuralVariantAnalyzer(annotator, reporterData.panelGeneModel().regions(), reporterData.cosmicFusionModel());
 
-        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer);
+        return ImmutablePatientReporter.of(buildBaseReporterData(cmd), reporterData, variantAnalyzer, svAnalyzer, new CivicAnalyzer());
     }
 
     private static boolean validInputForPatientReporter(@NotNull final CommandLine cmd) {
