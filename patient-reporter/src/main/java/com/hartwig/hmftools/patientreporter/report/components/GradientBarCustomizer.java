@@ -42,10 +42,7 @@ abstract class GradientBarCustomizer implements DRIChartCustomizer {
     abstract int value();
 
     @NotNull
-    @Value.Default
-    Optional<Pair<Integer, String>> marker() {
-        return Optional.empty();
-    }
+    abstract Optional<Pair<Integer, String>> marker();
 
     @Override
     public void customize(JFreeChart chart, ReportParameters reportParameters) {
