@@ -3,7 +3,8 @@ package com.hartwig.hmftools.apiclients.civic.api;
 import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicGene;
 import com.hartwig.hmftools.apiclients.civic.data.CivicIndexResult;
-import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantData;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantWithEvidence;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,37 +22,38 @@ public interface CivicApi {
 
     @NotNull
     @GET("variants/{id}")
-    Observable<CivicVariant> getVariantService(@Path("id") final int variantId);
+    Observable<CivicVariantWithEvidence> getVariantService(@Path("id") final int variantId);
 
     @NotNull
     @GET("variants")
-    Observable<CivicIndexResult<CivicVariant>> getVariantsService(@Query("page") final long page);
+    Observable<CivicIndexResult<CivicVariantData>> getVariantsService(@Query("page") final long page, @Query("count") final long count);
 
     @NotNull
     @GET("evidence_items")
-    Observable<CivicIndexResult<CivicEvidenceItem>> getEvidenceItemsService(@Query("page") final long page);
+    Observable<CivicIndexResult<CivicEvidenceItem>> getEvidenceItemsService(@Query("page") final long page,
+            @Query("count") final long count);
 
     @NotNull
     @GET("genes")
-    Observable<CivicIndexResult<CivicGene>> getGenesService(@Query("page") final long page);
+    Observable<CivicIndexResult<CivicGene>> getGenesService(@Query("page") final long page, @Query("count") final long count);
 
     default Observable<CivicGene> getGene(final int entrezId) {
         return getGeneService(entrezId).retry(RETRY_COUNT);
     }
 
-    default Observable<CivicVariant> getVariant(final int variantId) {
+    default Observable<CivicVariantWithEvidence> getVariant(final int variantId) {
         return getVariantService(variantId).retry(RETRY_COUNT);
     }
 
-    default Observable<CivicIndexResult<CivicVariant>> getVariants(final long page) {
-        return getVariantsService(page).retry(RETRY_COUNT);
+    default Observable<CivicIndexResult<CivicVariantData>> getVariants(final long page, final long count) {
+        return getVariantsService(page, count).retry(RETRY_COUNT);
     }
 
-    default Observable<CivicIndexResult<CivicEvidenceItem>> getEvidenceItems(final long page) {
-        return getEvidenceItemsService(page).retry(RETRY_COUNT);
+    default Observable<CivicIndexResult<CivicEvidenceItem>> getEvidenceItems(final long page, final long count) {
+        return getEvidenceItemsService(page, count).retry(RETRY_COUNT);
     }
 
-    default Observable<CivicIndexResult<CivicGene>> getGenes(final long page) {
-        return getGenesService(page).retry(RETRY_COUNT);
+    default Observable<CivicIndexResult<CivicGene>> getGenes(final long page, final long count) {
+        return getGenesService(page, count).retry(RETRY_COUNT);
     }
 }
