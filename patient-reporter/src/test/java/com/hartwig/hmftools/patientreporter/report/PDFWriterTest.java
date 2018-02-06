@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.mockedAlterations;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
 
@@ -16,7 +17,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -40,7 +40,6 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
-import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -74,8 +73,6 @@ public class PDFWriterTest {
 
         final HmfReporterData reporterData = testHmfReporterData();
         final BaseReporterData baseReporterData = testBaseReporterData();
-        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
@@ -84,10 +81,7 @@ public class PDFWriterTest {
         final List<GeneFusionData> fusions = createTestFusions();
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
-        final List<Alteration> alterations = CivicAnalysis.run(variants,
-                copyNumbers,
-                reporterData.panelGeneModel(),
-                doidMapping.doidsForTumorType(sampleReport.tumorType()));
+        final List<Alteration> alterations = mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
