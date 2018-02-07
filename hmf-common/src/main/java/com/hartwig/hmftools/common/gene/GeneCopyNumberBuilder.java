@@ -8,11 +8,12 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class GeneCopyNumberBuilder {
+class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion> {
 
     private final ImmutableGeneCopyNumber.Builder builder;
 
@@ -59,21 +60,28 @@ class GeneCopyNumberBuilder {
                 .minRegionEndSupport(SegmentSupport.NONE);
     }
 
-    void addExon(@NotNull final HmfExonRegion exon) {
-        this.exon = exon;
-        if (copyNumber != null) {
-            addOverlap(this.exon, copyNumber);
-        }
+    @Override
+    public void enterChromosome(@NotNull final String chromosome) {
+        // IGNORE
     }
 
-    void addCopyNumber(@NotNull final PurpleCopyNumber copyNumber) {
+    @Override
+    public void primary(@NotNull final PurpleCopyNumber copyNumber) {
         this.copyNumber = copyNumber;
         if (exon != null) {
             addOverlap(exon, this.copyNumber);
         }
     }
 
-    void addSomatic(@NotNull final PurityAdjustedSomaticVariant variant) {
+    @Override
+    public void secondary(@NotNull final HmfExonRegion exon) {
+        this.exon = exon;
+        if (copyNumber != null) {
+            addOverlap(this.exon, copyNumber);
+        }
+    }
+
+    public void somatic(@NotNull final PurityAdjustedSomaticVariant variant) {
         if (variant.gene().equals(gene)) {
             if (variant.codingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT.toString())) {
                 if (variant.biallelic()) {

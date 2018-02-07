@@ -94,11 +94,11 @@ public class GeneCopyNumberBuilderTest {
     }
 
     private void addExon(long start, long end) {
-        victim.addExon(exon(start, end));
+        victim.secondary(exon(start, end));
     }
 
     private void addCopyNumber(long start, long end, double copyNumber) {
-        victim.addCopyNumber(createCopyNumber(start, end, copyNumber));
+        victim.primary(createCopyNumber(start, end, copyNumber));
     }
 
     @NotNull

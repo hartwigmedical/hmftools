@@ -23,15 +23,12 @@ public class PurpleCopyNumberFactory {
     @NotNull
     private final List<PurpleCopyNumber> somatics;
     @NotNull
-    private final List<PurpleCopyNumber> somaticsWithGermlineDeletions;
-    @NotNull
     private final List<PurpleCopyNumber> germlineDeletions;
 
     public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, @NotNull final Gender gender,
             @NotNull final PurityAdjuster purityAdjuster, final List<FittedRegion> fittedRegions,
             final List<StructuralVariant> structuralVariants) {
         somatics = Lists.newArrayList();
-        somaticsWithGermlineDeletions = Lists.newArrayList();
         germlineDeletions = Lists.newArrayList();
 
         final ExtendGermline extendGermline = new ExtendGermline(gender);
@@ -57,12 +54,9 @@ public class PurpleCopyNumberFactory {
                 final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(populateUnknown);
 
                 final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
-                final List<CombinedRegion> somaticsAndGermlineDeletions =
-                        extendGermline.extendGermlineAmplificationsAndDeletions(bafExtended);
                 final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
 
                 this.somatics.addAll(toCopyNumber(somatics));
-                this.somaticsWithGermlineDeletions.addAll(toCopyNumber(somaticsAndGermlineDeletions));
                 this.germlineDeletions.addAll(germlineDeletions.stream()
                         .map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN))
                         .collect(toList()));
@@ -80,10 +74,6 @@ public class PurpleCopyNumberFactory {
         return germlineDeletions;
     }
 
-    @NotNull
-    public List<PurpleCopyNumber> copyNumbersWithDeletions() {
-        return somaticsWithGermlineDeletions;
-    }
 
     @NotNull
     private List<PurpleCopyNumber> toCopyNumber(@NotNull final List<CombinedRegion> regions) {
