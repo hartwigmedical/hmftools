@@ -127,6 +127,7 @@ class ClinicalDAO {
                 BIOPSY.SAMPLEID,
                 BIOPSY.PATIENTID,
                 BIOPSY.BIOPSYTAKEN,
+                BIOPSY.BIOPSYEVALUABLE,
                 BIOPSY.BIOPSYSITE,
                 BIOPSY.BIOPSYLOCATION,
                 BIOPSY.BIOPSYDATE)
@@ -134,6 +135,7 @@ class ClinicalDAO {
                         biopsy.sampleId(),
                         patientId,
                         biopsy.biopsyTaken(),
+                        biopsy.biopsyEvaluable(),
                         biopsy.site(),
                         biopsy.location(),
                         Utils.toSQLDate(biopsy.date()))
