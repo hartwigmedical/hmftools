@@ -226,6 +226,7 @@ class ClinicalDAO {
                 FORMSMETADATA.LOCKED).values(id, tableName, formName, formStatus, formLocked).execute();
     }
 
+    @NotNull
     List<PatientCancerTypes> readCancerTypes() {
         final Result<Record3<String, String, String>> results =
                 context.select(PATIENT.CPCTID, PATIENT.CANCERTYPE, PATIENT.CANCERSUBTYPE).from(PATIENT).fetch();
@@ -233,5 +234,4 @@ class ClinicalDAO {
                 Strings.nullToEmpty(record.value2()),
                 Strings.nullToEmpty(record.value3())));
     }
-
 }
