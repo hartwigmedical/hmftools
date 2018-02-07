@@ -40,6 +40,7 @@ public abstract class AlterationEvidencePage {
         return cmp.verticalList(MainPageTopSection.build("HMF Civic Evidence Supplement", sampleReport),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle().setFontSize(15)),
+                description(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 conciseEvidenceSection());
     }
@@ -70,6 +71,22 @@ public abstract class AlterationEvidencePage {
                 .columns(col.column(Alteration.ALTERATION).setFixedWidth(ALTERATION_WIDTH), col.componentColumn(subTable))
                 .noData(cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER))))
                 .setDataSource(exp.subDatasourceBeanCollection("alterationsWithEvidence"));
+    }
+
+    @NotNull
+    private static ComponentBuilder<?, ?> description() {
+        return cmp.horizontalList(cmp.horizontalGap(20),
+                cmp.text("Reported genomic alterations (somatic variants and copy number changes) have been automatically queried "
+                        + "for their potential clinical relevance using the CIViC knowledgebase (https://civic.genome.wustl.edu/). "
+                        + "Associations are reported for the specific tumor type for CIViC level A-B-C evidence items. "
+                        + "In addition, off-label indication are reported for level A-B evidence items. "
+                        + "If the tumor type of the reported sample is not known or not present in the eCRF, no knowledgebase "
+                        + "associations are reported. More information on the CIViC evidence items can be found on "
+                        + "https://civic.genome.wustl.edu/faq.\n"
+                        + "All matching variants within the knowledgebase are reported on the following page(s). Please note that both "
+                        + "the CIViC knowledgebase as well as matching the genomic alterations to this database are still work-in-progress. "
+                        + "Potential gene-drug associations that are not (yet) in the used knowledgebase can therefore also not be reported here."),
+                cmp.horizontalGap(20));
     }
 
     @NotNull
