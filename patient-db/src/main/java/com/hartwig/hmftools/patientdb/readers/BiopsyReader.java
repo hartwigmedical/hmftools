@@ -67,6 +67,6 @@ public final class BiopsyReader {
     }
 
     private static boolean isEmpty(@NotNull BiopsyData biopsy) {
-        return (biopsy.date() == null && biopsy.location() == null && biopsy.site() == null && biopsy.formLocked());
+        return (biopsy.date() == null && biopsy.location() == null && biopsy.site() == null);
     }
 }
