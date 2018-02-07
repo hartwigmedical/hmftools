@@ -170,6 +170,7 @@ public class DatabaseAccess {
         validationFindingsDAO.write(findings);
     }
 
+    @NotNull
     public List<PatientCancerTypes> readCancerTypes() {
         return clinicalDAO.readCancerTypes();
     }
