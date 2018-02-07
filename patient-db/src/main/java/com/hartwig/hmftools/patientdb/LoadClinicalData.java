@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +18,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -51,6 +54,7 @@ public final class LoadClinicalData {
     private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates_csv";
     private static final String FORM_STATUS_CSV = "form_status_csv";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
+    private static final String CSV_OUT_DIR = "csv_out_dir";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
@@ -100,8 +104,15 @@ public final class LoadClinicalData {
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
         final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
+        final String csvOutputDir = cmd.getOptionValue(CSV_OUT_DIR);
 
-        if (Utils.anyNull(ecrfFilePath, treatmentMappingCsv, tumorLocationMappingCsv, limsJson, preLIMSArrivalDatesCsv, formStatusCsv)) {
+        if (Utils.anyNull(ecrfFilePath,
+                treatmentMappingCsv,
+                tumorLocationMappingCsv,
+                limsJson,
+                preLIMSArrivalDatesCsv,
+                formStatusCsv,
+                csvOutputDir)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", clinicalOptions);
         } else {
@@ -110,9 +121,10 @@ public final class LoadClinicalData {
             final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
-            final PatientReader patientReader =
-                    new PatientReader(model, new TreatmentCurator(treatmentMappingCsv), new TumorLocationCurator(tumorLocationMappingCsv),
-                            lims);
+            final PatientReader patientReader = new PatientReader(model,
+                    new TreatmentCurator(treatmentMappingCsv),
+                    new TumorLocationCurator(tumorLocationMappingCsv),
+                    lims);
 
             final Set<String> cpctPatientIds = Utils.sequencedPatientIds(runContexts)
                     .stream()
@@ -132,8 +144,19 @@ public final class LoadClinicalData {
                     dbWriter.writeValidationFindings(cpctPatient.matchFindings());
                 }
             }
+            writeCancerDataToCSV(csvOutputDir, dbWriter);
             LOGGER.info("Done!");
         }
+    }
+
+    private static void writeCancerDataToCSV(@NotNull final String csvOutputDir, @NotNull final DatabaseAccess dbAccess)
+            throws IOException {
+        final String fileName = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + "_cancerTypes.csv";
+        final String outputFile = csvOutputDir + File.separator + fileName;
+        LOGGER.info("Writing cancer data to CSV... ");
+        final List<PatientCancerTypes> cancerTypes = dbAccess.readCancerTypes();
+        PatientCancerTypes.writeRecords(outputFile, cancerTypes);
+        LOGGER.info("Written {} records to {}", cancerTypes.size(), outputFile);
     }
 
     private static void writeRawEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
@@ -201,8 +224,10 @@ public final class LoadClinicalData {
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(FORM_STATUS_CSV, true, "Path towards the form status csv file.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards the csv file that maps treatment to treatment names and types.");
-        options.addOption(TUMOR_LOCATION_MAPPING_CSV, true,
+        options.addOption(TUMOR_LOCATION_MAPPING_CSV,
+                true,
                 "Path towards the csv file that maps detailed tumor locations to general ones.");
+        options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
         return options;
     }
 
