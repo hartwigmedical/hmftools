@@ -55,9 +55,7 @@ public final class BiopsyReader {
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
                     BiopsyData biopsy = ImmutableBiopsyData.of(date, biopsyTaken, finalSite, location, form.status(), form.locked());
-                    if (isEmpty(biopsy)) {
-                        LOGGER.info("Filtered empty biopsy form for " + patient.patientId());
-                    } else {
+                    if (!isEmpty(biopsy)) {
                         biopsies.add(biopsy);
                     }
                 }
@@ -67,6 +65,6 @@ public final class BiopsyReader {
     }
 
     private static boolean isEmpty(@NotNull BiopsyData biopsy) {
-        return (biopsy.date() == null && biopsy.location() == null && biopsy.site() == null && biopsy.formLocked());
+        return (biopsy.date() == null && biopsy.location() == null && biopsy.site() == null);
     }
 }
