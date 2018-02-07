@@ -34,6 +34,7 @@ public class BiopsyReaderTest {
 
         EcrfItemGroup biopsy = new EcrfItemGroup(patient);
         biopsy.addItem(BiopsyReader.FIELD_BIOPSY_TAKEN, "Yes");
+        biopsy.addItem(BiopsyReader.FIELD_BIOPSY_EVALUABLE, "Yes");
 
         // KODU: Create initial biopsy.
         EcrfItemGroup biopsies1 = new EcrfItemGroup(patient);

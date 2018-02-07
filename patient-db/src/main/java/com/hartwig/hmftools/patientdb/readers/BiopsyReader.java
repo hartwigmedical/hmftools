@@ -12,22 +12,19 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class BiopsyReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(BiopsyReader.class);
-
     static final String STUDY_BIOPSY = "SE.BIOPSY";
     public static final String FORM_BIOPS = "FRM.BIOPS";
     static final String ITEMGROUP_BIOPSY = "GRP.BIOPS.BIOPS";
-    static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
-
-    public static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
     static final String FIELD_BIOPSY_TAKEN = "FLD.BIOPS.CPCT";
+    static final String FIELD_BIOPSY_EVALUABLE = "FLD.BIOPS.BIOPEFS";
+
+    static final String ITEMGROUP_BIOPSIES = "GRP.BIOPS.BIOPSIES";
+    public static final String FIELD_BIOPSY_DATE = "FLD.BIOPS.BIOPTDT";
     public static final String FIELD_SITE = "FLD.BIOPS.BILESSITE";
     public static final String FIELD_SITE_OTHER = "FLD.BIOPS.BIOTHLESSITE";
     public static final String FIELD_LOCATION = "FLD.BIOPS.BILESLOC";
@@ -43,8 +40,11 @@ public final class BiopsyReader {
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS, false)) {
                 String biopsyTaken = null;
+                String biopsyEvaluable = null;
+                // KODU: This works as there is generally a 1:N relation between BIOPSY and BIOPSIES item groups.
                 for (final EcrfItemGroup biopsyGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSY, false)) {
                     biopsyTaken = biopsyGroup.readItemString(FIELD_BIOPSY_TAKEN, 0, false);
+                    biopsyEvaluable = biopsyGroup.readItemString(FIELD_BIOPSY_EVALUABLE, 0, false);
                 }
                 for (final EcrfItemGroup biopsiesGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES, false)) {
                     final LocalDate date = biopsiesGroup.readItemDate(FIELD_BIOPSY_DATE, 0, DATE_FORMATTER, false);
@@ -55,7 +55,8 @@ public final class BiopsyReader {
                     final String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER, 0, false);
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
-                    BiopsyData biopsy = ImmutableBiopsyData.of(date, biopsyTaken, finalSite, location, form.status(), form.locked());
+                    BiopsyData biopsy =
+                            ImmutableBiopsyData.of(date, biopsyTaken, biopsyEvaluable, finalSite, location, form.status(), form.locked());
                     if (!isDuplicate(biopsies, biopsy) && !isEmpty(biopsy)) {
                         biopsies.add(biopsy);
                     }

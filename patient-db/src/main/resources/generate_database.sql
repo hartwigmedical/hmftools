@@ -31,6 +31,7 @@ CREATE TABLE biopsy
     sampleId varchar(255),
     patientId int NOT NULL,
     biopsyTaken varchar(255),
+    biopsyEvaluable varchar(255),
     biopsySite varchar(255),
     biopsyLocation varchar(255),
     biopsyDate DATE,
