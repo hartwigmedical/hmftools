@@ -15,6 +15,7 @@ import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class BiopsyReader {
 
@@ -55,7 +56,7 @@ public final class BiopsyReader {
                     final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
                     BiopsyData biopsy = ImmutableBiopsyData.of(date, biopsyTaken, finalSite, location, form.status(), form.locked());
-                    if (!isEmpty(biopsy)) {
+                    if (!isDuplicate(biopsies, biopsy) && !isEmpty(biopsy)) {
                         biopsies.add(biopsy);
                     }
                 }
@@ -66,5 +67,19 @@ public final class BiopsyReader {
 
     private static boolean isEmpty(@NotNull BiopsyData biopsy) {
         return (biopsy.date() == null && biopsy.location() == null && biopsy.site() == null);
+    }
+
+    private static boolean isDuplicate(@NotNull List<BiopsyData> biopsies, @NotNull BiopsyData biopsyToCheck) {
+        for (BiopsyData biopsy : biopsies) {
+            if (equals(biopsy.date(), biopsyToCheck.date()) && equals(biopsy.location(), biopsyToCheck.location()) && equals(biopsy.site(),
+                    biopsyToCheck.site())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean equals(@Nullable Object field1, @Nullable Object field2) {
+        return ((field1 == null && field2 == null) || (field1 != null && field1.equals(field2)));
     }
 }
