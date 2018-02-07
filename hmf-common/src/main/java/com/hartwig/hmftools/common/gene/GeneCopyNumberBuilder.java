@@ -22,13 +22,11 @@ class GeneCopyNumberBuilder {
     private int somaticCount;
     private int homCount;
     private int het2HomCount;
-    private double cumulativeCopyNumber;
 
     @Nullable
     private PurpleCopyNumber previous;
 
     private double previousCopyNumber = -Double.MAX_VALUE;
-    private long totalExonicBases;
     private HmfExonRegion exon;
     private PurpleCopyNumber copyNumber;
 
@@ -62,7 +60,6 @@ class GeneCopyNumberBuilder {
     }
 
     void addExon(@NotNull final HmfExonRegion exon) {
-        totalExonicBases += exon.bases();
         this.exon = exon;
         if (copyNumber != null) {
             addOverlap(this.exon, copyNumber);
@@ -111,7 +108,6 @@ class GeneCopyNumberBuilder {
 
             maxCopyNumber = Math.max(maxCopyNumber, currentCopyNumber);
             minMinorAllelePloidy = Math.min(minMinorAllelePloidy, copyNumber.minorAllelePloidy());
-            cumulativeCopyNumber += overlap * currentCopyNumber;
 
             if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
                 switch (copyNumber.method()) {
@@ -165,7 +161,6 @@ class GeneCopyNumberBuilder {
                 .minRegionStart(minRegionStart)
                 .minRegionEnd(minRegionEnd)
                 .minCopyNumber(minCopyNumber)
-                .meanCopyNumber(cumulativeCopyNumber / totalExonicBases)
                 .somaticRegions(somaticCount)
                 .germlineHomRegions(homCount)
                 .germlineHet2HomRegions(het2HomCount)
@@ -180,7 +175,6 @@ class GeneCopyNumberBuilder {
                 .missenseNonBiallelicCount(missenseNonBiallelicCount)
                 .missenseNonBiallelicPloidy(missenseNonBiallelicPloidy)
                 .minMinorAllelePloidy(minMinorAllelePloidy)
-                .exonicBases((int) totalExonicBases)
                 .build();
     }
 }

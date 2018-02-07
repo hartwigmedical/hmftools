@@ -37,7 +37,6 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.GENE,
                     GENECOPYNUMBER.MINCOPYNUMBER,
                     GENECOPYNUMBER.MAXCOPYNUMBER,
-                    GENECOPYNUMBER.MEANCOPYNUMBER,
                     GENECOPYNUMBER.SOMATICREGIONS,
                     GENECOPYNUMBER.GERMLINEHOMREGIONS,
                     GENECOPYNUMBER.GERMLINEHETREGIONS,
@@ -60,7 +59,6 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.MISSENSENONBIALLELICVARIANTS,
                     GENECOPYNUMBER.MISSENSENONBIALLELICPLOIDY,
                     GENECOPYNUMBER.MINMINORALLELEPLOIDY,
-                    GENECOPYNUMBER.EXONICBASES,
                     COPYNUMBER.MODIFIED);
             splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -78,7 +76,6 @@ class GeneCopyNumberDAO {
                 gene.gene(),
                 gene.minCopyNumber(),
                 gene.maxCopyNumber(),
-                gene.meanCopyNumber(),
                 gene.somaticRegions(),
                 gene.germlineHomRegions(),
                 gene.germlineHet2HomRegions(),
@@ -101,7 +98,6 @@ class GeneCopyNumberDAO {
                 gene.missenseNonBiallelicCount(),
                 gene.missenseNonBiallelicPloidy(),
                 gene.minMinorAllelePloidy(),
-                gene.exonicBases(),
                 timestamp);
     }
 }

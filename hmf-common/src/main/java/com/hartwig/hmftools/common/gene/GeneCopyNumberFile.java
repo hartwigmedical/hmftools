@@ -58,7 +58,7 @@ public class GeneCopyNumberFile {
                 .add("Gene")
                 .add("MinCopyNumber")
                 .add("MaxCopyNumber")
-                .add("MeanCopyNumber")
+                .add("MeanCopyNumber") // Unused
                 .add("SomaticRegions")
                 .add("GermlineHomRegions")
                 .add("GermlineHet2HomRegions")
@@ -93,7 +93,7 @@ public class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.gene()))
                 .add(String.valueOf(geneCopyNumber.minCopyNumber()))
                 .add(String.valueOf(geneCopyNumber.maxCopyNumber()))
-                .add(String.valueOf(geneCopyNumber.meanCopyNumber()))
+                .add(String.valueOf(0))
                 .add(String.valueOf(geneCopyNumber.somaticRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
@@ -116,7 +116,6 @@ public class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.missenseNonBiallelicCount()))
                 .add(String.valueOf(geneCopyNumber.missenseNonBiallelicPloidy()))
                 .add(String.valueOf(geneCopyNumber.minMinorAllelePloidy()))
-                .add(String.valueOf(geneCopyNumber.exonicBases()))
                 .toString();
     }
 
@@ -138,7 +137,6 @@ public class GeneCopyNumberFile {
                 .gene(values[3])
                 .minCopyNumber(Double.valueOf(values[4]))
                 .maxCopyNumber(Double.valueOf(values[5]))
-                .meanCopyNumber(Double.valueOf(values[6]))
                 .somaticRegions(Integer.valueOf(values[7]))
                 .germlineHomRegions(Integer.valueOf(values[8]))
                 .germlineHet2HomRegions(Integer.valueOf(values[9]))
@@ -161,8 +159,7 @@ public class GeneCopyNumberFile {
                 .missenseBiallelicCount(0)
                 .missenseNonBiallelicCount(0)
                 .missenseNonBiallelicPloidy(0)
-                .minMinorAllelePloidy(0)
-                .exonicBases(0);
+                .minMinorAllelePloidy(0);
 
         if (values.length >= 19) {
             builder.minRegions(Integer.valueOf(values[13]))
@@ -172,7 +169,7 @@ public class GeneCopyNumberFile {
                     .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
         }
-        if (values.length ==30) {
+        if (values.length ==29) {
             builder.nonsenseBiallelicCount(Integer.valueOf(values[19]))
                     .nonsenseNonBiallelicCount(Integer.valueOf(values[20]))
                     .nonsenseNonBiallelicPloidy(Double.valueOf(values[21]))
@@ -182,8 +179,7 @@ public class GeneCopyNumberFile {
                     .missenseBiallelicCount(Integer.valueOf(values[25]))
                     .missenseNonBiallelicCount(Integer.valueOf(values[26]))
                     .missenseNonBiallelicPloidy(Double.valueOf(values[27]))
-                    .minMinorAllelePloidy(Double.valueOf(values[28]))
-                    .exonicBases(Integer.valueOf(values[29]));
+                    .minMinorAllelePloidy(Double.valueOf(values[28]));
         }
 
         return builder.build();

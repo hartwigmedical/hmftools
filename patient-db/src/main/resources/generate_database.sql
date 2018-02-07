@@ -344,7 +344,6 @@ CREATE TABLE geneCopyNumber
     transcriptVersion int not null,
     minCopyNumber DOUBLE PRECISION not null,
     maxCopyNumber DOUBLE PRECISION not null,
-    meanCopyNumber DOUBLE PRECISION not null,
     somaticRegions int not null,
     germlineHomRegions int not null,
     germlineHetRegions int not null,
@@ -364,7 +363,6 @@ CREATE TABLE geneCopyNumber
     missenseNonBiallelicVariants int not null,
     missenseNonBiallelicPloidy DOUBLE PRECISION not null,
     minMinorAllelePloidy DOUBLE PRECISION not null,
-    exonicBases int not null,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(gene)

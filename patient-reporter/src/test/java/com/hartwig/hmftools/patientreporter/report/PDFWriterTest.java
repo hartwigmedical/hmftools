@@ -192,7 +192,6 @@ public class PDFWriterTest {
                 .germlineHomRegions(0)
                 .somaticRegions(1)
                 .maxCopyNumber(0)
-                .meanCopyNumber(0)
                 .transcriptID("trans")
                 .transcriptVersion(0)
                 .nonsenseBiallelicCount(0)
@@ -204,8 +203,7 @@ public class PDFWriterTest {
                 .missenseBiallelicCount(0)
                 .missenseNonBiallelicCount(0)
                 .missenseNonBiallelicPloidy(0)
-                .minMinorAllelePloidy(0)
-                .exonicBases(0);
+                .minMinorAllelePloidy(0);
     }
 
     @NotNull

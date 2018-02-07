@@ -14,5 +14,8 @@ ALTER TABLE geneCopyNumber
     ADD COLUMN missenseBiallelicVariants int not null,
     ADD COLUMN missenseNonBiallelicVariants int not null,
     ADD COLUMN missenseNonBiallelicPloidy DOUBLE PRECISION not null,
-    ADD COLUMN minMinorAllelePloidy DOUBLE PRECISION not null,
-    ADD COLUMN exonicBases int not null;
+    ADD COLUMN minMinorAllelePloidy DOUBLE PRECISION not null;
+
+ALTER TABLE geneCopyNumber
+        DROP COLUMN exonicBases,
+        DROP COLUMN meanCopyNumber;
