@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-final class VariantAnnotationFactory {
+public final class VariantAnnotationFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(VariantAnnotationFactory.class);
 
@@ -29,7 +29,7 @@ final class VariantAnnotationFactory {
     }
 
     @NotNull
-    static List<VariantAnnotation> fromContext(@NotNull final VariantContext context) {
+    public static List<VariantAnnotation> fromContext(@NotNull final VariantContext context) {
         if (context.hasAttribute(ANNOTATIONS_IDENTIFIER)) {
             return context.getAttributeAsStringList(ANNOTATIONS_IDENTIFIER, "")
                     .stream()

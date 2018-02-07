@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <Program name="TestStudy" xmlns="http://www.hartwigmedicalfoundation.nl/bachelor.xsd">
     <Panel>
-        <Gene name="BRCA2" ensembl="ENST00000544455" refseq="NM_000059"/>
+        <Gene name="BRCA2" ensembl="ENST00000544455"/> <!-- prev element, now deprecated  refseq="NM_000059" -->
         <SnpEffect>stop_gained</SnpEffect>
     </Panel>
     <Blacklist>

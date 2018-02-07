@@ -29,8 +29,6 @@
         <xsd:complexContent>
             <xsd:extension base="geneName">
                 <xsd:attribute name="ensembl" type="xsd:string" use="required"/>
-                <xsd:attribute name="entrez" type="xsd:positiveInteger"/>
-                <xsd:attribute name="refseq" type="xsd:string"/>
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
@@ -39,7 +37,6 @@
         <xsd:sequence>
             <xsd:choice>
                 <xsd:element name="Gene" type="geneIdentifier" maxOccurs="unbounded"/>
-                <xsd:element name="AllGenes"/>
             </xsd:choice>
             <xsd:element name="SnpEffect" type="snpEffect" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="Effect" type="otherEffect" minOccurs="0" maxOccurs="unbounded"/>

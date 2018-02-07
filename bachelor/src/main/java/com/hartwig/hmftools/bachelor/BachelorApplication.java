@@ -78,7 +78,7 @@ public class BachelorApplication {
 
     private static void printHelpAndExit(final Options options) {
         final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Bachelor", "Determines your eligibility!", options, "", true);
+        formatter.printHelp("Bachelor", "Determines your eligibility", options, "", true);
         System.exit(1);
     }
 
@@ -87,10 +87,11 @@ public class BachelorApplication {
 
         final EligibilityReport.ReportType type =
                 isGermline ? EligibilityReport.ReportType.GERMLINE_MUTATION : EligibilityReport.ReportType.SOMATIC_MUTATION;
-        LOGGER.info("process {} vcf: {}", type, vcf.getPath());
+
+        LOGGER.info("processing {} vcf: {}", type, vcf.getPath());
 
         try (final VCFFileReader reader = new VCFFileReader(vcf, true)) {
-            // TODO: always correct? germline has R,T somatic has just T
+            // assume that the first sample is the germline
             final String sample = reader.getFileHeader().getGenotypeSamples().get(0);
             return eligibility.processVCF(patient, sample, type, reader);
         } catch (final TribbleException e) {
@@ -101,7 +102,7 @@ public class BachelorApplication {
 
     private static Collection<EligibilityReport> processPurpleCNV(final String patient, final File cnv,
             final BachelorEligibility eligibility) {
-        LOGGER.info("process cnv: {}", cnv.getPath());
+        LOGGER.info("processing cnv: {}", cnv.getPath());
         try {
             final List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(cnv);
             return eligibility.processCopyNumbers(patient, copyNumbers);
@@ -112,7 +113,7 @@ public class BachelorApplication {
     }
 
     private static Collection<EligibilityReport> processSV(final String patient, final File vcf, final BachelorEligibility eligibility) {
-        LOGGER.info("process sv: {}", vcf.getPath());
+        LOGGER.info("processing sv: {}", vcf.getPath());
 
         final StructuralVariantFactory factory = new StructuralVariantFactory();
         try {
@@ -137,7 +138,7 @@ public class BachelorApplication {
         final boolean doCopyNumber = run.copyNumber != null && copyNumber;
         final boolean doStructuralVariants = run.structuralVariants != null && structuralVariants;
 
-        LOGGER.info("processing run: {}", patient);
+        LOGGER.info("processing run for patient({}) from file({})", patient, run.prefix);
 
         final List<EligibilityReport> result = Lists.newArrayList();
         if (doGermline) {
@@ -167,7 +168,7 @@ public class BachelorApplication {
     }
 
     private static String fileHeader() {
-        return String.join(",", Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
+        return String.join(",", Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
     }
 
     private static void outputToFile(final Collection<EligibilityReport> reports, final File outputFile) throws IOException {
@@ -175,7 +176,8 @@ public class BachelorApplication {
             for (final EligibilityReport r : reports) {
 
                 writer.write(
-                        String.format("%s,%s,%s,%s,%s,%s,%d,%s,%s,%s", r.patient(), r.source().toString(), r.program(), r.id(), r.genes(),
+                        String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
+                                r.patient(), r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId(),
                                 r.chrom(), r.pos(), r.ref(), r.alts(), r.effects()));
                 writer.newLine();
 
@@ -206,14 +208,14 @@ public class BachelorApplication {
                 return;
             }
             if (map.isEmpty()) {
-                LOGGER.error("no programs loaded!");
+                LOGGER.error("no programs loaded, exiting");
                 System.exit(1);
                 return;
             }
 
             final BachelorEligibility eligibility = BachelorEligibility.fromMap(map);
 
-            LOGGER.info("beginning processing...");
+            LOGGER.info("beginning processing");
 
             final boolean germline = cmd.hasOption(GERMLINE);
             final boolean somatic = cmd.hasOption(SOMATIC);
@@ -222,9 +224,11 @@ public class BachelorApplication {
             final boolean doAll = !(germline || somatic || copyNumber || structuralVariants);
 
             final List<File> filesToMerge;
-            if (cmd.hasOption(BATCH_DIRECTORY)) {
+            if (cmd.hasOption(BATCH_DIRECTORY))
+            {
                 final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
-                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel()) {
+                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
+                {
                     filesToMerge = stream.filter(p -> p.toFile().isDirectory())
                             .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
@@ -248,8 +252,8 @@ public class BachelorApplication {
                 return;
             }
 
-            LOGGER.info("... processing complete!");
-            LOGGER.info("merging to CSV {} ...", cmd.getOptionValue(OUTPUT));
+            LOGGER.info("processing complete");
+            LOGGER.info("merging to CSV {}", cmd.getOptionValue(OUTPUT));
 
             // TODO: better way to join files? using FileChannels?
 
@@ -269,9 +273,9 @@ public class BachelorApplication {
 
             }
 
-            LOGGER.info("... output complete!");
+            LOGGER.info("output written");
 
-            LOGGER.info("bachelor done!");
+            LOGGER.info("bachelor done");
 
         } catch (final ParseException e) {
             printHelpAndExit(options);
