@@ -39,7 +39,8 @@ public abstract class AlterationEvidencePage {
     public static ComponentBuilder<?, ?> reportComponent(@NotNull final SampleReport sampleReport) {
         return cmp.verticalList(MainPageTopSection.build("HMF Civic Evidence Supplement", sampleReport),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle().setFontSize(15)),
+                cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle()),
+                cmp.verticalGap(10),
                 description(),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 conciseEvidenceSection());
@@ -85,7 +86,8 @@ public abstract class AlterationEvidencePage {
                         + "https://civic.genome.wustl.edu/faq.\n"
                         + "All matching variants within the knowledgebase are reported on the following page(s). Please note that both "
                         + "the CIViC knowledgebase as well as matching the genomic alterations to this database are still work-in-progress. "
-                        + "Potential gene-drug associations that are not (yet) in the used knowledgebase can therefore also not be reported here."),
+                        + "Potential gene-drug associations that are not (yet) in the used knowledgebase can therefore also not be reported here.")
+                        .setStyle(fontStyle().setFontSize(9)),
                 cmp.horizontalGap(20));
     }
 
