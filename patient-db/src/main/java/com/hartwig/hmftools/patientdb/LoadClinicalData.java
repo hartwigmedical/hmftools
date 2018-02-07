@@ -2,10 +2,14 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -55,6 +59,7 @@ public final class LoadClinicalData {
     private static final String FORM_STATUS_CSV = "form_status_csv";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
     private static final String CSV_OUT_DIR = "csv_out_dir";
+    private static final String CANCER_TYPES_LINK = "cancer_types_symlink";
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
@@ -105,6 +110,7 @@ public final class LoadClinicalData {
         final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
         final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
         final String csvOutputDir = cmd.getOptionValue(CSV_OUT_DIR);
+        final Optional<String> cancerTypesLink = Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK));
 
         if (Utils.anyNull(ecrfFilePath,
                 treatmentMappingCsv,
@@ -144,19 +150,31 @@ public final class LoadClinicalData {
                     dbWriter.writeValidationFindings(cpctPatient.matchFindings());
                 }
             }
-            writeCancerDataToCSV(csvOutputDir, dbWriter);
+            writeCancerTypesToCSV(csvOutputDir, cancerTypesLink, dbWriter);
             LOGGER.info("Done!");
         }
     }
 
-    private static void writeCancerDataToCSV(@NotNull final String csvOutputDir, @NotNull final DatabaseAccess dbAccess)
-            throws IOException {
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private static void writeCancerTypesToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
+            @NotNull final DatabaseAccess dbAccess) throws IOException {
         final String fileName = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + "_cancerTypes.csv";
         final String outputFile = csvOutputDir + File.separator + fileName;
-        LOGGER.info("Writing cancer data to CSV... ");
+        LOGGER.info("Writing cancer types to CSV... ");
         final List<PatientCancerTypes> cancerTypes = dbAccess.readCancerTypes();
         PatientCancerTypes.writeRecords(outputFile, cancerTypes);
+        linkName.ifPresent(link -> updateCancerTypesCSVLink(csvOutputDir + File.separator + link, outputFile));
         LOGGER.info("Written {} records to {}", cancerTypes.size(), outputFile);
+    }
+
+    private static void updateCancerTypesCSVLink(@NotNull final String linkName, @NotNull final String fileName) {
+        final Path linkPath = Paths.get(linkName);
+        try {
+            Files.deleteIfExists(linkPath);
+            Files.createSymbolicLink(linkPath, Paths.get(fileName));
+        } catch (IOException e) {
+            LOGGER.warn("Failed to update symlink {}. Cause: {}", linkName, e.getMessage());
+        }
     }
 
     private static void writeRawEcrf(@NotNull final Options ecrfOptions, @NotNull final CommandLine cmd,
@@ -228,6 +246,7 @@ public final class LoadClinicalData {
                 true,
                 "Path towards the csv file that maps detailed tumor locations to general ones.");
         options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
+        options.addOption(CANCER_TYPES_LINK, true, "Name of cancer type csv symlink.");
         return options;
     }
 
