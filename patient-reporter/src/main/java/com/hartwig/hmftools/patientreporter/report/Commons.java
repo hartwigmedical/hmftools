@@ -86,11 +86,6 @@ public final class Commons {
     }
 
     @NotNull
-    static StyleBuilder smallDataTableStyle() {
-        return dataStyle().setFontSize(7).setBorder(stl.penThin().setLineColor(Color.black));
-    }
-
-    @NotNull
     public static StyleBuilder fontStyle() {
         return stl.style().setFontName(FONT);
     }

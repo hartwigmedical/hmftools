@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.report.pages;
 
 import static com.hartwig.hmftools.patientreporter.report.Commons.SECTION_VERTICAL_GAP;
+import static com.hartwig.hmftools.patientreporter.report.Commons.dataStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.fontStyle;
 import static com.hartwig.hmftools.patientreporter.report.Commons.sectionHeaderStyle;
 
@@ -9,6 +10,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.exp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
 import java.awt.Color;
 
@@ -87,7 +89,7 @@ public abstract class AlterationEvidencePage {
 
     @NotNull
     static StyleBuilder alterationDataStyle() {
-        return Commons.smallDataTableStyle().setPadding(PADDING);
+        return dataStyle().setFontSize(7).setBorder(stl.penThin().setLineColor(Color.black)).setPadding(PADDING);
     }
 
     @NotNull
