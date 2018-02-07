@@ -26,6 +26,8 @@ import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
+import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlteration;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationEvidence;
 import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationMatch;
@@ -127,7 +129,11 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static AlterationAnalyzer mockedCivicAnalyzer() {
-        return (@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers, @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) -> mockedAlterations();
+        //@formatter:off
+        return (@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
+                @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, @NotNull final GeneModel geneModel,
+                @NotNull final Set<String> tumorDoids) -> mockedAlterations();
+        //@formatter:on
     }
 
 }

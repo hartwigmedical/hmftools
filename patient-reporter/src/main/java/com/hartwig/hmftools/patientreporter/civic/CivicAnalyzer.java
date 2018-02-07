@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
+import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +32,7 @@ public class CivicAnalyzer implements AlterationAnalyzer {
     @Override
     @NotNull
     public List<Alteration> run(@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
+            @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions,
             @NotNull final GeneModel geneModel, @NotNull final Set<String> tumorDoids) {
         LOGGER.info(" Analysing civic associations...");
         final Set<String> relevantDoids = getRelevantDoids(tumorDoids);
@@ -38,7 +41,9 @@ public class CivicAnalyzer implements AlterationAnalyzer {
         }
         final Collection<HmfGenomeRegion> geneRegions = geneModel.regions().stream().filter(distinctByGene()).collect(Collectors.toList());
         final List<Alteration> alterations = civicVariantAlterations(reportedVariants, geneRegions, relevantDoids);
+        final List<HmfGenomeRegion> nonWildTypeGenes = nonWildTypeGenes(reportedVariants, copyNumbers, disruptions, fusions, geneRegions);
         alterations.addAll(civicCopyNumberAlterations(copyNumbers, geneRegions, relevantDoids));
+        alterations.addAll(civicWildTypeAlterations(nonWildTypeGenes, relevantDoids));
         return alterations;
     }
 
@@ -69,7 +74,6 @@ public class CivicAnalyzer implements AlterationAnalyzer {
         LOGGER.info("  Fetching civic variant alterations...");
         final List<Alteration> alterations = Lists.newArrayList();
         final CivicApiWrapper civicApi = new CivicApiWrapper();
-        final List<HmfGenomeRegion> wildTypeGenes = Lists.newArrayList();
         for (final HmfGenomeRegion region : geneRegions) {
             final List<VariantReport> reportedVariantsInGene = reportedVariants.stream()
                     .filter(variantReport -> region.gene().equals(variantReport.gene()))
@@ -80,11 +84,8 @@ public class CivicAnalyzer implements AlterationAnalyzer {
                             variantList -> Alteration.from(variantReport, variantList, relevantDoids),
                             "  Failed to get civic variants for variant: " + variantReport.variant().chromosomePosition()));
                 }
-            } else {
-                wildTypeGenes.add(region);
             }
         }
-        alterations.addAll(civicWildTypeAlterations(wildTypeGenes, relevantDoids));
         civicApi.releaseResources();
         return alterations;
     }
@@ -107,15 +108,15 @@ public class CivicAnalyzer implements AlterationAnalyzer {
     }
 
     @NotNull
-    private static List<Alteration> civicWildTypeAlterations(@NotNull final List<HmfGenomeRegion> wildTypeGenes,
+    private static List<Alteration> civicWildTypeAlterations(@NotNull final List<HmfGenomeRegion> nonWildTypeGenes,
             @NotNull final Set<String> relevantDoids) {
         LOGGER.info("  Fetching civic wild type alterations...");
         final CivicApiWrapper civicApi = new CivicApiWrapper();
-        final Set<String> wildTypeEntrezIds = wildTypeGenes.stream()
+        final Set<String> nonWildTypeEntrezIds = nonWildTypeGenes.stream()
                 .flatMap(hmfGenomeRegion -> hmfGenomeRegion.entrezId().stream().map(Object::toString))
                 .collect(Collectors.toSet());
         final List<Alteration> wildTypeAlterations = civicApi.getAllWildTypeVariants()
-                .filter(civicVariant -> wildTypeEntrezIds.contains(civicVariant.entrezId()))
+                .filter(civicVariant -> !nonWildTypeEntrezIds.contains(civicVariant.entrezId()))
                 .groupBy(CivicVariantWithEvidence::gene)
                 .flatMap(pair -> pair.toList()
                         .map(variantList -> Alteration.fromWildType(pair.getKey(), variantList, relevantDoids))
@@ -125,6 +126,28 @@ public class CivicAnalyzer implements AlterationAnalyzer {
                 .blockingGet();
         civicApi.releaseResources();
         return wildTypeAlterations;
+    }
+
+    @NotNull
+    private static List<HmfGenomeRegion> nonWildTypeGenes(@NotNull final List<VariantReport> reportedVariants,
+            @NotNull final List<GeneCopyNumber> copyNumbers, @NotNull final List<GeneDisruptionData> disruptions,
+            @NotNull final List<GeneFusionData> fusions, @NotNull final Collection<HmfGenomeRegion> geneRegions) {
+        final List<HmfGenomeRegion> nonWildTypeGenes = Lists.newArrayList();
+        for (final HmfGenomeRegion region : geneRegions) {
+            final boolean hasVariant =
+                    reportedVariants.stream().filter(variantReport -> region.gene().equals(variantReport.gene())).count() > 0;
+            final boolean geneLost = copyNumbers.stream()
+                    .filter(geneCopyNumber -> region.gene().equals(geneCopyNumber.gene()) && geneCopyNumber.value() < 1)
+                    .count() > 0;
+            final boolean geneDisrupted = disruptions.stream().filter(disruption -> region.gene().equals(disruption.gene())).count() > 0;
+            final boolean geneFused = fusions.stream()
+                    .filter(fusion -> region.gene().equals(fusion.geneStart()) || region.gene().equals(fusion.geneEnd()))
+                    .count() > 0;
+            if (hasVariant || geneLost || geneDisrupted || geneFused) {
+                nonWildTypeGenes.add(region);
+            }
+        }
+        return nonWildTypeGenes;
     }
 
     @NotNull

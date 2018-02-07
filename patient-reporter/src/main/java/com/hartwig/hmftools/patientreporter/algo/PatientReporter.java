@@ -94,6 +94,8 @@ public abstract class PatientReporter {
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
+                reportableDisruptions,
+                reportableFusions,
                 reporterData().panelGeneModel(),
                 doidMapping.doidsForTumorType(tumorType));
 
