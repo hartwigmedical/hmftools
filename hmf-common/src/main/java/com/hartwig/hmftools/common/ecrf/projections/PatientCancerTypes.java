@@ -28,13 +28,13 @@ public abstract class PatientCancerTypes {
     }
 
     @NotNull
-    abstract String cpctId();
+    public abstract String cpctId();
 
     @NotNull
-    abstract String cancerType();
+    public abstract String cancerType();
 
     @NotNull
-    abstract String cancerSubtype();
+    public abstract String cancerSubtype();
 
     @NotNull
     private List<String> csvRecord() {
