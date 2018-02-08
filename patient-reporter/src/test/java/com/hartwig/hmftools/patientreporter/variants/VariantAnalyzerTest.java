@@ -96,6 +96,8 @@ public class VariantAnalyzerTest {
                 .geneID(GENE_ID)
                 .geneStart(GENE_START)
                 .geneEnd(GENE_END)
+                .codingStart(0)
+                .codingEnd(0)
                 .build());
         return hmfRegions;
     }
