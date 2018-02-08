@@ -89,7 +89,7 @@ public abstract class PatientReporter {
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
-        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), tumorSample);
+        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().patientsCancerTypes(), tumorSample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
         final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),

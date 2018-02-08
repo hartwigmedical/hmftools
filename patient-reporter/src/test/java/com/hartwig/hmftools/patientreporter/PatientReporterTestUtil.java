@@ -13,8 +13,7 @@ import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -78,15 +77,10 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static BaseReporterData testBaseReporterData() throws IOException, EmptyFileException {
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final CpctEcrfModel ecrfModel = new CpctEcrfModel(ImmutableXMLEcrfDatamodel.of(Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList()), Lists.newArrayList());
+        final List<PatientCancerTypes> patientsCancerTypes = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(centerPath);
-
-        return ImmutableBaseReporterData.of(ecrfModel, lims, centerModel, SIGNATURE_PATH);
+        return ImmutableBaseReporterData.of(patientsCancerTypes, lims, centerModel, SIGNATURE_PATH);
     }
 
     @NotNull
