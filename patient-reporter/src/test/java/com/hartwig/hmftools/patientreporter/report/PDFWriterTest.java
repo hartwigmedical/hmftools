@@ -210,9 +210,9 @@ public class PDFWriterTest {
     private static List<GeneFusionData> createTestFusions() {
         return Collections.singletonList(ImmutableGeneFusionData.builder()
                 .geneStart("TMPRSS2")
-                .geneContextStart("Exon 1")
+                .geneContextStart("Intron 1")
                 .geneEnd("PNPLA7")
-                .geneContextEnd("Exon 13")
+                .geneContextEnd("Intron 13")
                 .copies("1.0")
                 .build());
     }
@@ -222,7 +222,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
                 .chromosome("2")
                 .gene("ERBB4")
-                .geneContext("Intron 4 Upstream")
+                .geneContext("Intron 4")
                 .type("INV")
                 .copies("1.0")
                 .build();
@@ -230,7 +230,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
                 .chromosome("2")
                 .gene("ERBB4")
-                .geneContext("Intron 20 Downstream")
+                .geneContext("Intron 20")
                 .type("INV")
                 .copies("1.0")
                 .build();
@@ -238,7 +238,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
                 .chromosome("3")
                 .gene("PIK3CB")
-                .geneContext("Intron 1 Downstream")
+                .geneContext("Intron 1")
                 .type("INS")
                 .copies("3.0")
                 .build();
@@ -246,7 +246,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
                 .chromosome("8")
                 .gene("NRG1")
-                .geneContext("Intron 1 Upstream")
+                .geneContext("Intron 1")
                 .type("DUP")
                 .copies("0.3")
                 .build();
@@ -254,7 +254,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
                 .chromosome("8")
                 .gene("NRG1")
-                .geneContext("Intron 1 Downstream")
+                .geneContext("Intron 1")
                 .type("DEL")
                 .copies("0.2")
                 .build();
@@ -262,7 +262,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
                 .chromosome("17")
                 .gene("CDK12")
-                .geneContext("Intron 12 Downstream")
+                .geneContext("Intron 12")
                 .type("BND")
                 .copies("1.0")
                 .build();
