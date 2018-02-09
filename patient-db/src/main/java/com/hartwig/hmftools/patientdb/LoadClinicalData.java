@@ -46,6 +46,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LoadClinicalData {
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
+    private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
 
     private static final String RUNS_DIR = "runs_dir";
     private static final String ECRF_FILE = "ecrf";
@@ -64,6 +65,7 @@ public final class LoadClinicalData {
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
             HartwigException {
+        LOGGER.info("Running patient-db v{}", VERSION);
         final Options basicOptions = createBasicOptions();
         final Options clinicalOptions = createLimsOptions();
         final Options ecrfOptions = createEcrfOptions();
@@ -78,7 +80,7 @@ public final class LoadClinicalData {
 
         if (Utils.anyNull(runsFolderPath, userName, password, databaseUrl)) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db", basicOptions);
+            formatter.printHelp("patient-db", options);
         } else {
             final File runDirectory = new File(runsFolderPath);
             if (runDirectory.isDirectory()) {
