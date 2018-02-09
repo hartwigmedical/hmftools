@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class CanonicalTranscriptFactory {
 
     @NotNull
-    public List<CanonicalTranscript> create(@NotNull final List<HmfGenomeRegion> regions) {
+    public static List<CanonicalTranscript> create(@NotNull final List<HmfGenomeRegion> regions) {
 
         final List<CanonicalTranscript> transcripts = Lists.newArrayList();
         for (final HmfGenomeRegion region : regions) {
