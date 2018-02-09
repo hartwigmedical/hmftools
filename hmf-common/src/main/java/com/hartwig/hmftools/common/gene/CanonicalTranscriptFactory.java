@@ -33,7 +33,7 @@ public class CanonicalTranscriptFactory {
         long exonStart = 0;
         long exonEnd = 0;
         long exonBases = 0;
-        long codingBases = 0;
+        int codingBases = 0;
         int codingExons = 0;
 
         for (final HmfExonRegion exon : region.exome()) {
@@ -60,10 +60,10 @@ public class CanonicalTranscriptFactory {
                 .codingExons(codingExons)
                 .exonStart(exonStart)
                 .exonEnd(exonEnd)
-                .transcriptLength(exonBases)
+                .exonBases(exonBases)
                 .codingStart(codingStart)
                 .codingEnd(codingEnd)
-                .codons(Math.max(0, (int) codingBases / 3 - 1))
+                .codingBases(Math.max(0, codingBases - 3))
                 .build();
     }
 

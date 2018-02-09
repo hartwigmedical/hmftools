@@ -440,4 +440,30 @@ CREATE TABLE structuralVariantFusion
     INDEX(threePrimeBreakendId)
 );
 
+DROP TABLE IF EXISTS canonicalTranscript;
+CREATE TABLE canonicalTranscript
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    gene varchar(255) NOT NULL,
+    geneId varchar(255) NOT NULL,
+    chromosomeBand varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    geneStart int not null,
+    geneEnd int not null,
+    transcriptId varchar(255) NOT NULL,
+    transcriptVersion int not null,
+    transcriptStart int not null,
+    transcriptEnd int not null,
+    exons int not null,
+    exonStart int not null,
+    exonEnd int not null,
+    exonBases int not null,
+    codingStart int not null,
+    codingEnd int not null,
+    codingBases int not null,
+    PRIMARY KEY (id),
+    INDEX(gene),
+    INDEX(transcriptId)
+);
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -23,11 +23,11 @@ public interface CanonicalTranscript extends TranscriptRegion {
 
     long exonEnd();
 
-    long transcriptLength();
+    long exonBases();
 
     long codingStart();
 
     long codingEnd();
 
-    int codons();
+    int codingBases();
 }
