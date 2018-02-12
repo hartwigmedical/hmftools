@@ -210,8 +210,10 @@ public class PDFWriterTest {
     private static List<GeneFusionData> createTestFusions() {
         return Collections.singletonList(ImmutableGeneFusionData.builder()
                 .geneStart("TMPRSS2")
+                .geneStartEntrezIds(Lists.newArrayList(7113))
                 .geneContextStart("Intron 1")
                 .geneEnd("PNPLA7")
+                .geneEndEntrezIds(Lists.newArrayList(375775))
                 .geneContextEnd("Intron 13")
                 .copies("1.0")
                 .build());
