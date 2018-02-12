@@ -18,6 +18,8 @@ public abstract class GeneDisruptionData {
 
     public abstract String chromosome();
 
+    public abstract String karyotypeBand();
+
     public abstract String gene();
 
     public abstract String geneContext();
@@ -31,7 +33,7 @@ public abstract class GeneDisruptionData {
         final Transcript transcript = disruption.linkedAnnotation();
         final GeneAnnotation gene = transcript.parent();
         // TODO (KODU): Add upstream/downstream annotation
-//        final boolean upstream = gene.variant().orientation(gene.isStart()) > 0;
+        //        final boolean upstream = gene.variant().orientation(gene.isStart()) > 0;
         final String geneContext = exonDescription(transcript); //+ (upstream ? " Upstream" : " Downstream");
 
         return ImmutableGeneDisruptionData.builder()
@@ -40,6 +42,7 @@ public abstract class GeneDisruptionData {
                 .geneContext(geneContext)
                 .type(gene.variant().type().name())
                 .copies(ploidyToCopiesString(gene.variant().ploidy()))
+                .karyotypeBand(gene.karyotypeBand())
                 .build();
     }
 }
