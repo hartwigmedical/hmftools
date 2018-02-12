@@ -56,6 +56,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 
 public class PDFWriterTest {
 
+    private static final boolean RUN_CIVIC_ANALYSIS = false;
     private static final boolean SHOW_AND_PRINT = false;
     private static final boolean WRITE_TO_PDF = false;
 
@@ -80,7 +81,12 @@ public class PDFWriterTest {
         final List<GeneFusionData> fusions = createTestFusions();
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
-        final List<Alteration> alterations = mockedAlterations();
+        final List<Alteration> alterations = RUN_CIVIC_ANALYSIS ? PatientReporterTestUtil.runCivicAnalysis(variants,
+                copyNumbers,
+                disruptions,
+                fusions,
+                reporterData.panelGeneModel(),
+                sampleReport.tumorType()) : mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
@@ -235,7 +241,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 4")
                 .type("INV")
                 .copies("1.0")
-                .karyotypeBand("q13")
+                .chromosomeBand("q13")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
@@ -244,7 +250,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 20")
                 .type("INV")
                 .copies("1.0")
-                .karyotypeBand("q14")
+                .chromosomeBand("q14")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
@@ -253,7 +259,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 1")
                 .type("INS")
                 .copies("3.0")
-                .karyotypeBand("q15")
+                .chromosomeBand("q15")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
@@ -262,7 +268,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 1")
                 .type("DUP")
                 .copies("0.3")
-                .karyotypeBand("q16")
+                .chromosomeBand("q16")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
@@ -271,7 +277,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 1")
                 .type("DEL")
                 .copies("0.2")
-                .karyotypeBand("q17.3")
+                .chromosomeBand("q17.3")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
@@ -280,7 +286,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 12")
                 .type("BND")
                 .copies("1.0")
-                .karyotypeBand("q32")
+                .chromosomeBand("q32")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);

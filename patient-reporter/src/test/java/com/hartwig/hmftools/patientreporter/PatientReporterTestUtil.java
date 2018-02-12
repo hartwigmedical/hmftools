@@ -132,7 +132,6 @@ public final class PatientReporterTestUtil {
         //@formatter:on
     }
 
-    @SuppressWarnings("unused")
     @NotNull
     public static List<Alteration> runCivicAnalysis(List<VariantReport> variants, List<GeneCopyNumber> copyNumbers,
             @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, GeneModel geneModel,
