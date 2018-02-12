@@ -126,8 +126,8 @@ public abstract class FindingsPage {
                                 col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
                                 col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
                                 col.column("Copies", GeneFusionDataSource.COPIES_FIELD),
-                                col.column("Cosmic", GeneFusionDataSource.COSMIC_URL)
-                                        .setHyperLink(hyperLink(new COSMICLinkExpression(GeneFusionDataSource.COSMIC_URL)))
+                                col.column("Cosmic", GeneFusionDataSource.URL_TEXT)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.cosmicHyperlink()))
                                         .setStyle(linkStyle()))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));

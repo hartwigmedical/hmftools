@@ -231,7 +231,7 @@ public class PDFWriterTest {
                         .geneEndEntrezIds(Lists.newArrayList(7586))
                         .geneContextEnd("Exon 13")
                         .copies("1.0")
-                        .cosmicURL("COSM001")
+                        .cosmicURL("http://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=2&gid=54500")
                         .build());
     }
 
