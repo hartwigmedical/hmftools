@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
+import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
+import com.hartwig.hmftools.patientreporter.civic.CivicAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
@@ -128,6 +130,15 @@ public final class PatientReporterTestUtil {
                 @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, @NotNull final GeneModel geneModel,
                 @NotNull final Set<String> tumorDoids) -> mockedAlterations();
         //@formatter:on
+    }
+
+    @SuppressWarnings("unused")
+    @NotNull
+    public static List<Alteration> runCivicAnalysis(List<VariantReport> variants, List<GeneCopyNumber> copyNumbers,
+            @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, GeneModel geneModel,
+            String tumorType) {
+        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
+        return new CivicAnalyzer().run(variants, copyNumbers, disruptions, fusions, geneModel, doidMapping.doidsForTumorType(tumorType));
     }
 
 }

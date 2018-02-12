@@ -11,7 +11,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -208,15 +207,24 @@ public class PDFWriterTest {
 
     @NotNull
     private static List<GeneFusionData> createTestFusions() {
-        return Collections.singletonList(ImmutableGeneFusionData.builder()
-                .geneStart("TMPRSS2")
-                .geneStartEntrezIds(Lists.newArrayList(7113))
-                .geneContextStart("Intron 1")
-                .geneEnd("PNPLA7")
-                .geneEndEntrezIds(Lists.newArrayList(375775))
-                .geneContextEnd("Intron 13")
-                .copies("1.0")
-                .build());
+        return Lists.newArrayList(ImmutableGeneFusionData.builder()
+                        .geneStart("TMPRSS2")
+                        .geneStartEntrezIds(Lists.newArrayList(7113))
+                        .geneContextStart("Exon 1")
+                        .geneEnd("PNPLA7")
+                        .geneEndEntrezIds(Lists.newArrayList(375775))
+                        .geneContextEnd("Exon 13")
+                        .copies("1.0")
+                        .build(),
+                ImmutableGeneFusionData.builder()
+                        .geneStart("BRAF")
+                        .geneStartEntrezIds(Lists.newArrayList(673))
+                        .geneContextStart("Exon 1")
+                        .geneEnd("ZKSCAN1")
+                        .geneEndEntrezIds(Lists.newArrayList(7586))
+                        .geneContextEnd("Exon 13")
+                        .copies("1.0")
+                        .build());
     }
 
     @NotNull
