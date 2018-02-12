@@ -17,6 +17,7 @@ public final class GeneFusionDataSource {
     public static final FieldBuilder<?> PARTNER_GENE_FIELD = field("partner_gene", String.class);
     public static final FieldBuilder<?> PARTNER_CONTEXT_FIELD = field("partner_context", String.class);
     public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
+    public static final FieldBuilder<?> COSMIC_URL = field("cosmic url", String.class);
 
     private GeneFusionDataSource() {
     }
@@ -27,19 +28,21 @@ public final class GeneFusionDataSource {
                 GENE_CONTEXT.getName(),
                 PARTNER_GENE_FIELD.getName(),
                 PARTNER_CONTEXT_FIELD.getName(),
-                COPIES_FIELD.getName());
+                COPIES_FIELD.getName(),
+                COSMIC_URL.getName());
 
         fusions.forEach(fusion -> dataSource.add(fusion.geneStart(),
                 fusion.geneContextStart(),
                 fusion.geneEnd(),
                 fusion.geneContextEnd(),
-                fusion.copies()));
+                fusion.copies(),
+                fusion.cosmicURL()));
 
         return dataSource;
     }
 
     @NotNull
     public static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, GENE_CONTEXT, PARTNER_GENE_FIELD, PARTNER_CONTEXT_FIELD, COPIES_FIELD };
+        return new FieldBuilder<?>[] { GENE_FIELD, GENE_CONTEXT, PARTNER_GENE_FIELD, PARTNER_CONTEXT_FIELD, COPIES_FIELD, COSMIC_URL };
     }
 }

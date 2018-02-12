@@ -221,6 +221,7 @@ public class PDFWriterTest {
                         .geneEndEntrezIds(Lists.newArrayList(375775))
                         .geneContextEnd("Exon 13")
                         .copies("1.0")
+                        .cosmicURL("")
                         .build(),
                 ImmutableGeneFusionData.builder()
                         .geneStart("BRAF")
@@ -230,6 +231,7 @@ public class PDFWriterTest {
                         .geneEndEntrezIds(Lists.newArrayList(7586))
                         .geneContextEnd("Exon 13")
                         .copies("1.0")
+                        .cosmicURL("COSM001")
                         .build());
     }
 

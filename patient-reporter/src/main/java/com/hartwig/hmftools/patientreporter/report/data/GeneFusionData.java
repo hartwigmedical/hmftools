@@ -39,6 +39,9 @@ public abstract class GeneFusionData {
     public abstract String copies();
 
     @NotNull
+    public abstract String cosmicURL();
+
+    @NotNull
     public static GeneFusionData from(@NotNull final GeneFusion fusion) {
         final Transcript upstream = fusion.upstreamLinkedAnnotation();
         final Transcript downstream = fusion.downstreamLinkedAnnotation();
@@ -51,6 +54,7 @@ public abstract class GeneFusionData {
                 .geneEndEntrezIds(downstream.parent().entrezIds())
                 .geneContextEnd(exonDescription(downstream))
                 .copies(ploidyToCopiesString(fusionPloidy(fusion)))
+                .cosmicURL(fusion.cosmicURL())
                 .build();
     }
 

@@ -77,7 +77,7 @@ public abstract class FindingsPage {
                                 col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
                                 col.componentColumn("Predicted Effect", predictedEffectColumn()),
                                 col.column("Cosmic", VariantDataSource.COSMIC_FIELD)
-                                        .setHyperLink(hyperLink(new COSMICLinkExpression()))
+                                        .setHyperLink(hyperLink(new COSMICLinkExpression(VariantDataSource.COSMIC_FIELD)))
                                         .setStyle(linkStyle()),
                                 col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.variants(), drupFilter))
@@ -126,7 +126,10 @@ public abstract class FindingsPage {
                                 col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
                                 col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
                                 col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
-                                col.column("Copies", GeneFusionDataSource.COPIES_FIELD))
+                                col.column("Copies", GeneFusionDataSource.COPIES_FIELD),
+                                col.column("Cosmic", GeneFusionDataSource.COSMIC_URL)
+                                        .setHyperLink(hyperLink(new COSMICLinkExpression(GeneFusionDataSource.COSMIC_URL)))
+                                        .setStyle(linkStyle()))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
