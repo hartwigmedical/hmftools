@@ -225,6 +225,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 4")
                 .type("INV")
                 .copies("1.0")
+                .karyotypeBand("q13")
                 .build();
 
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
@@ -233,6 +234,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 20")
                 .type("INV")
                 .copies("1.0")
+                .karyotypeBand("q14")
                 .build();
 
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
@@ -241,6 +243,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 1")
                 .type("INS")
                 .copies("3.0")
+                .karyotypeBand("q15")
                 .build();
 
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
@@ -249,6 +252,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 1")
                 .type("DUP")
                 .copies("0.3")
+                .karyotypeBand("q16")
                 .build();
 
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
@@ -257,6 +261,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 1")
                 .type("DEL")
                 .copies("0.2")
+                .karyotypeBand("q17.3")
                 .build();
 
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
@@ -265,6 +270,7 @@ public class PDFWriterTest {
                 .geneContext("Intron 12")
                 .type("BND")
                 .copies("1.0")
+                .karyotypeBand("q32")
                 .build();
 
         return Lists.newArrayList(disruption1, disruption2, disruption3, disruption4, disruption5, disruption6);
