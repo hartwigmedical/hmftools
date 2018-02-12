@@ -103,12 +103,12 @@ class BachelorEligibility {
             // process copy number sections
             final List<Predicate<GeneCopyNumber>> cnvPredicates = Lists.newArrayList();
             for (final ProgramPanel panel : program.getPanel()) {
-                final boolean allGene = panel.getAllGenes() != null;
+
                 final List<GeneIdentifier> genes = panel.getGene();
 
                 if (panel.getEffect().contains(OtherEffect.HOMOZYGOUS_DELETION)) {
                     final Predicate<GeneCopyNumber> geneCopyNumberPredicate =
-                            cnv -> allGene || genes.stream().anyMatch(g -> g.getEnsembl().equals(cnv.transcriptID()));
+                            cnv -> genes.stream().anyMatch(g -> g.getEnsembl().equals(cnv.transcriptID()));
                     // TODO: we are matching on transcript ID here but we only have canonical transcripts in our panel file
                     cnvPredicates.add(geneCopyNumberPredicate);
                 }
@@ -117,12 +117,12 @@ class BachelorEligibility {
             // process structural variant disruptions
             final List<Predicate<HmfGenomeRegion>> disruptionPredicates = Lists.newArrayList();
             for (final ProgramPanel panel : program.getPanel()) {
-                final boolean allGene = panel.getAllGenes() != null;
+
                 final List<GeneIdentifier> genes = panel.getGene();
 
                 if (panel.getEffect().contains(OtherEffect.GENE_DISRUPTION)) {
                     final Predicate<HmfGenomeRegion> disruptionPredicate =
-                            sv -> allGene || genes.stream().anyMatch(g -> g.getEnsembl().equals(sv.transcriptID()));
+                            sv -> genes.stream().anyMatch(g -> g.getEnsembl().equals(sv.transcriptID()));
                     // TODO: we are matching on transcript ID here but we only have canonical transcripts in our panel file
                     disruptionPredicates.add(disruptionPredicate);
                 }
@@ -135,7 +135,7 @@ class BachelorEligibility {
             List<String> panelTranscripts = Lists.newArrayList();
 
             for (final ProgramPanel panel : program.getPanel()) {
-                final boolean allGene = panel.getAllGenes() != null;
+
                 final List<GeneIdentifier> genes = panel.getGene();
 
                 // take up a collection of the effects to search for
@@ -144,9 +144,7 @@ class BachelorEligibility {
 
                 final List<String> effects = requiredEffects;
 
-                final Predicate<VariantModel> panelPredicate = v -> allGene
-                        ? v.SampleAnnotations.stream().anyMatch(a -> a.Effects.stream().anyMatch(effects::contains))
-                        : genes.stream()
+                final Predicate<VariantModel> panelPredicate = v -> genes.stream()
                                 .anyMatch(p -> v.SampleAnnotations.stream()
                                         .anyMatch(a -> a.Transcript.equals(p.getEnsembl()) && a.Effects.stream()
                                                 .anyMatch(effects::contains)));
