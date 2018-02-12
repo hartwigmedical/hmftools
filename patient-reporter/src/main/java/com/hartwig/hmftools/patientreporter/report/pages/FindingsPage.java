@@ -13,7 +13,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.report.components.COSMICLinkExpression;
 import com.hartwig.hmftools.patientreporter.report.components.DataExpression;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -77,7 +76,7 @@ public abstract class FindingsPage {
                                 col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
                                 col.componentColumn("Predicted Effect", predictedEffectColumn()),
                                 col.column("Cosmic", VariantDataSource.COSMIC_FIELD)
-                                        .setHyperLink(hyperLink(new COSMICLinkExpression(VariantDataSource.COSMIC_FIELD)))
+                                        .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
                                         .setStyle(linkStyle()),
                                 col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.variants(), drupFilter))
