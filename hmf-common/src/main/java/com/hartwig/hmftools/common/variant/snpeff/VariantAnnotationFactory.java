@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.variant.snpeff;
 
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,9 +57,11 @@ public final class VariantAnnotationFactory {
 
     @NotNull
     private static VariantAnnotation fromParts(@NotNull final String[] parts) {
+        final List<String> effects = toEffects(parts[1]);
         return ImmutableVariantAnnotation.builder()
                 .allele(parts[0])
-                .consequences(toConsequences(parts[1]))
+                .effects(effects)
+                .consequences(toConsequences(effects))
                 .severity(parts[2])
                 .gene(parts[3])
                 .geneID(parts[4])
@@ -92,10 +95,14 @@ public final class VariantAnnotationFactory {
     }
 
     @NotNull
-    private static List<VariantConsequence> toConsequences(@NotNull final String consequenceString) {
+    private static List<String> toEffects(@NotNull final String effectString) {
+        return Lists.newArrayList(effectString.split(CONSEQUENCE_SEPARATOR));
+    }
+
+    @NotNull
+    private static List<VariantConsequence> toConsequences(@NotNull final List<String> effects) {
         final List<VariantConsequence> consequences = Lists.newArrayList();
-        final String[] parts = consequenceString.split(CONSEQUENCE_SEPARATOR);
-        for (final String part : parts) {
+        for (final String part : effects) {
             boolean found = false;
             for (final VariantConsequence consequence : VariantConsequence.values()) {
                 if (consequence.isParentTypeOf(part)) {

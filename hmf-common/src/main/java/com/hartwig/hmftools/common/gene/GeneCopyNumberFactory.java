@@ -1,51 +1,44 @@
 package com.hartwig.hmftools.common.gene;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.zipper.RegionZipper;
-import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GeneCopyNumberFactory implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion> {
+public class GeneCopyNumberFactory {
 
     @NotNull
-    private final GeneCopyNumberBuilder builder;
+    public static List<GeneCopyNumber> geneCopyNumbers(@NotNull final List<HmfGenomeRegion> genes,
+            @NotNull final List<PurpleCopyNumber> somaticCopyNumbers, @NotNull final List<PurpleCopyNumber> germlineDeletions,
+            @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
 
-    @NotNull
-    public static List<GeneCopyNumber> geneCopyNumbers(@NotNull List<HmfGenomeRegion> genes, @NotNull List<PurpleCopyNumber> copyNumbers) {
-        return genes.stream()
-                .map(x -> new GeneCopyNumberFactory(x, copyNumbers).geneCopyNumber())
-                .filter(x -> x.totalRegions() > 0)
-                .collect(Collectors.toList());
-    }
+        final ListMultimap<String, PurityAdjustedSomaticVariant> variantMap = Multimaps.index(enrichedSomatics, SomaticVariant::gene);
 
-    private GeneCopyNumberFactory(@NotNull final HmfGenomeRegion gene, @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        builder = new GeneCopyNumberBuilder(gene);
-        RegionZipper.zip(copyNumbers, gene.exome(), this);
-    }
+        final List<GeneCopyNumber> result = Lists.newArrayList();
+        for (HmfGenomeRegion gene : genes) {
+            final List<PurityAdjustedSomaticVariant> variants =
+                    variantMap.containsKey(gene.gene()) ? variantMap.get(gene.gene()) : Collections.EMPTY_LIST;
 
-    @NotNull
-    private GeneCopyNumber geneCopyNumber() {
-        return builder.build();
-    }
+            final GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(gene);
+            RegionZipper.zip(somaticCopyNumbers, gene.exome(), builder);
+            RegionZipper.zip(germlineDeletions, gene.exome(), builder);
+            variants.forEach(builder::somatic);
 
-    @Override
-    public void enterChromosome(@NotNull final String chromosome) {
-        // IGNORE
-    }
+            GeneCopyNumber geneCopyNumber = builder.build();
+            if (geneCopyNumber.totalRegions() > 0) {
+                result.add(geneCopyNumber);
+            }
 
-    @Override
-    public void primary(@NotNull final PurpleCopyNumber copyNumber) {
-        builder.addCopyNumber(copyNumber);
-    }
-
-    @Override
-    public void secondary(@NotNull final HmfExonRegion exon) {
-        builder.addExon(exon);
+        }
+        return result;
     }
 }

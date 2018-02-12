@@ -28,7 +28,7 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
-import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
+import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutablePurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
@@ -66,6 +66,9 @@ public abstract class PatientReporter {
     public abstract StructuralVariantAnalyzer structuralVariantAnalyzer();
 
     @NotNull
+    public abstract AlterationAnalyzer civicAnalyzer();
+
+    @NotNull
     public SequencedPatientReport run(@NotNull final String runDirectory, @Nullable final String comments)
             throws IOException, HartwigException {
         final RunContext run = ProductionRunContextFactory.fromRunDirectory(runDirectory);
@@ -86,11 +89,13 @@ public abstract class PatientReporter {
         final int mutationalLoad = variantAnalysis.mutationalLoad();
         final int consequentialVariantCount = variantAnalysis.consequentialVariants().size();
         final int structuralVariantCount = structuralVariantAnalysis.annotations().size();
-        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().cpctEcrfModel(), tumorSample);
+        final String tumorType = PatientReporterHelper.extractTumorType(baseReporterData().patientsCancerTypes(), tumorSample);
 
         final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-        final List<Alteration> alterations = CivicAnalysis.run(variantAnalysis.findings(),
+        final List<Alteration> alterations = civicAnalyzer().run(variantAnalysis.findings(),
                 purpleAnalysis.reportableGeneCopyNumbers(),
+                reportableDisruptions,
+                reportableFusions,
                 reporterData().panelGeneModel(),
                 doidMapping.doidsForTumorType(tumorType));
 

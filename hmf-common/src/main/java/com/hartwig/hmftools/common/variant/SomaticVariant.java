@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.variant;
 import java.util.List;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +36,11 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
 
     @NotNull
     String effect();
+
+    @NotNull
+    String codingEffect();
+
+    boolean hotspot();
 
     double mappability();
 

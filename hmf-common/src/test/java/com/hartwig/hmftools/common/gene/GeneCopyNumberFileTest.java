@@ -54,7 +54,6 @@ public class GeneCopyNumberFileTest {
                 .gene("gene" + random.nextInt())
                 .minCopyNumber(random.nextDouble())
                 .maxCopyNumber(random.nextDouble())
-                .meanCopyNumber(random.nextDouble())
                 .somaticRegions(random.nextInt())
                 .germlineHomRegions(random.nextInt())
                 .germlineHet2HomRegions(random.nextInt())
@@ -66,7 +65,17 @@ public class GeneCopyNumberFileTest {
                 .minRegionEnd(random.nextLong())
                 .minRegionMethod(randomMethod(random))
                 .minRegionStartSupport(randomSupport(random))
-                .minRegionEndSupport(randomSupport(random));
+                .minRegionEndSupport(randomSupport(random))
+                .nonsenseBiallelicCount(random.nextInt())
+                .nonsenseNonBiallelicCount(random.nextInt())
+                .nonsenseNonBiallelicPloidy(random.nextInt())
+                .spliceBiallelicCount(random.nextInt())
+                .spliceNonBiallelicCount(random.nextInt())
+                .spliceNonBiallelicPloidy(random.nextInt())
+                .missenseBiallelicCount(random.nextInt())
+                .missenseNonBiallelicCount(random.nextInt())
+                .missenseNonBiallelicPloidy(random.nextInt())
+                .minMinorAllelePloidy(random.nextInt());
     }
 
     @NotNull

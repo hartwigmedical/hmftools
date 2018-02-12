@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.report;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.mockedAlterations;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReporterData;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testHmfReporterData;
 
@@ -16,7 +17,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.doid.TumorLocationDoidMapping;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
@@ -40,7 +40,6 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableReason;
 import com.hartwig.hmftools.patientreporter.algo.NotSequenceableStudy;
-import com.hartwig.hmftools.patientreporter.civic.CivicAnalysis;
 import com.hartwig.hmftools.patientreporter.report.data.Alteration;
 import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
 import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
@@ -74,8 +73,6 @@ public class PDFWriterTest {
 
         final HmfReporterData reporterData = testHmfReporterData();
         final BaseReporterData baseReporterData = testBaseReporterData();
-        final TumorLocationDoidMapping doidMapping = TumorLocationDoidMapping.fromResource("/tumor_location_doid_mapping.csv");
-
         final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity);
 
         final List<VariantReport> variants = createTestVariants(new PurityAdjuster(Gender.MALE, fittedPurity));
@@ -84,10 +81,7 @@ public class PDFWriterTest {
         final List<GeneFusionData> fusions = createTestFusions();
 
         final SampleReport sampleReport = testSampleReport(pathologyTumorPercentage);
-        final List<Alteration> alterations = CivicAnalysis.run(variants,
-                copyNumbers,
-                reporterData.panelGeneModel(),
-                doidMapping.doidsForTumorType(sampleReport.tumorType()));
+        final List<Alteration> alterations = mockedAlterations();
 
         final SequencedPatientReport patientReport = ImmutableSequencedPatientReport.of(sampleReport,
                 variants,
@@ -198,18 +192,27 @@ public class PDFWriterTest {
                 .germlineHomRegions(0)
                 .somaticRegions(1)
                 .maxCopyNumber(0)
-                .meanCopyNumber(0)
                 .transcriptID("trans")
-                .transcriptVersion(0);
+                .transcriptVersion(0)
+                .nonsenseBiallelicCount(0)
+                .nonsenseNonBiallelicCount(0)
+                .nonsenseNonBiallelicPloidy(0)
+                .spliceBiallelicCount(0)
+                .spliceNonBiallelicCount(0)
+                .spliceNonBiallelicPloidy(0)
+                .missenseBiallelicCount(0)
+                .missenseNonBiallelicCount(0)
+                .missenseNonBiallelicPloidy(0)
+                .minMinorAllelePloidy(0);
     }
 
     @NotNull
     private static List<GeneFusionData> createTestFusions() {
         return Collections.singletonList(ImmutableGeneFusionData.builder()
                 .geneStart("TMPRSS2")
-                .geneContextStart("Exon 1")
+                .geneContextStart("Intron 1")
                 .geneEnd("PNPLA7")
-                .geneContextEnd("Exon 13")
+                .geneContextEnd("Intron 13")
                 .copies("1.0")
                 .build());
     }
@@ -219,7 +222,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption1 = ImmutableGeneDisruptionData.builder()
                 .chromosome("2")
                 .gene("ERBB4")
-                .geneContext("Intron 4 Upstream")
+                .geneContext("Intron 4")
                 .type("INV")
                 .copies("1.0")
                 .build();
@@ -227,7 +230,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption2 = ImmutableGeneDisruptionData.builder()
                 .chromosome("2")
                 .gene("ERBB4")
-                .geneContext("Intron 20 Downstream")
+                .geneContext("Intron 20")
                 .type("INV")
                 .copies("1.0")
                 .build();
@@ -235,7 +238,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption3 = ImmutableGeneDisruptionData.builder()
                 .chromosome("3")
                 .gene("PIK3CB")
-                .geneContext("Intron 1 Downstream")
+                .geneContext("Intron 1")
                 .type("INS")
                 .copies("3.0")
                 .build();
@@ -243,7 +246,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption4 = ImmutableGeneDisruptionData.builder()
                 .chromosome("8")
                 .gene("NRG1")
-                .geneContext("Intron 1 Upstream")
+                .geneContext("Intron 1")
                 .type("DUP")
                 .copies("0.3")
                 .build();
@@ -251,7 +254,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption5 = ImmutableGeneDisruptionData.builder()
                 .chromosome("8")
                 .gene("NRG1")
-                .geneContext("Intron 1 Downstream")
+                .geneContext("Intron 1")
                 .type("DEL")
                 .copies("0.2")
                 .build();
@@ -259,7 +262,7 @@ public class PDFWriterTest {
         final GeneDisruptionData disruption6 = ImmutableGeneDisruptionData.builder()
                 .chromosome("17")
                 .gene("CDK12")
-                .geneContext("Intron 12 Downstream")
+                .geneContext("Intron 12")
                 .type("BND")
                 .copies("1.0")
                 .build();

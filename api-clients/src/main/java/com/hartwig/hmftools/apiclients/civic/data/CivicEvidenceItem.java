@@ -72,9 +72,9 @@ public abstract class CivicEvidenceItem {
     public List<String> drugNames() {
         final String drugInteractionType = drugInteractionType();
         if (drugInteractionType != null && drugInteractionType.toLowerCase().equals("combination")) {
-            return Lists.newArrayList(drugs().stream().map(CivicDrug::name).collect(joining(", ")) + " (Combination)");
+            return Lists.newArrayList(drugs().stream().map(CivicDrug::name).sorted().collect(joining(", ")) + " (Combination)");
         } else {
-            return drugs().stream().map(CivicDrug::name).collect(Collectors.toList());
+            return drugs().stream().map(CivicDrug::name).sorted().collect(Collectors.toList());
         }
     }
 }

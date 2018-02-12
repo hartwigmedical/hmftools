@@ -16,8 +16,6 @@ public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
 
     double minCopyNumber();
 
-    double meanCopyNumber();
-
     int somaticRegions();
 
     int germlineHet2HomRegions();
@@ -35,6 +33,26 @@ public interface GeneCopyNumber extends TranscriptRegion, CopyNumber {
     SegmentSupport minRegionEndSupport();
 
     CopyNumberMethod minRegionMethod();
+
+    int nonsenseBiallelicCount();
+
+    int nonsenseNonBiallelicCount();
+
+    double nonsenseNonBiallelicPloidy();
+
+    int spliceBiallelicCount();
+
+    int spliceNonBiallelicCount();
+
+    double spliceNonBiallelicPloidy();
+
+    int missenseBiallelicCount();
+
+    int missenseNonBiallelicCount();
+
+    double missenseNonBiallelicPloidy();
+
+    double minMinorAllelePloidy();
 
     default int totalRegions() {
         return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();

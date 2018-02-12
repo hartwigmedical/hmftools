@@ -37,7 +37,7 @@ public final class MainPageTopSection {
         final ComponentBuilder<?, ?> mainDiagnosisInfo =
                 cmp.horizontalList(cmp.verticalList(cmp.text("Report Date").setStyle(tableHeaderStyle()),
                         cmp.currentDate().setPattern(DATE_TIME_FORMAT).setStyle(dataTableStyle())),
-                        cmp.verticalList(cmp.text("Primary Tumor Location").setStyle(tableHeaderStyle()),
+                        cmp.verticalList(cmp.text("Cancer Type").setStyle(tableHeaderStyle()),
                                 cmp.text(tumorType).setStyle(dataTableStyle())),
                         cmp.verticalList(cmp.text(tumorPercentageTitle).setStyle(tableHeaderStyle()),
                                 cmp.text(tumorPercentage).setStyle(dataTableStyle())));

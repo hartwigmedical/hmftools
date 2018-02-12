@@ -260,9 +260,9 @@ public class StructuralVariantAnalyzer {
         return sameTranscript && bothIntronic && sameExonUpstream;
     }
 
-    private static boolean isUpstream(@NotNull GeneAnnotation annotation) {
-        int orientation = annotation.variant().orientation(annotation.isStart());
-        return annotation.strand() * orientation > 0;
+    private static boolean isUpstream(@NotNull GeneAnnotation gene) {
+        int orientation = gene.variant().orientation(gene.isStart());
+        return gene.strand() * orientation > 0;
     }
 
     @NotNull

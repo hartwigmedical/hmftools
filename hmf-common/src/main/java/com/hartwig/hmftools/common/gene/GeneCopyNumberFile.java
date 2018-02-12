@@ -58,7 +58,7 @@ public class GeneCopyNumberFile {
                 .add("Gene")
                 .add("MinCopyNumber")
                 .add("MaxCopyNumber")
-                .add("MeanCopyNumber")
+                .add("MeanCopyNumber") // Unused
                 .add("SomaticRegions")
                 .add("GermlineHomRegions")
                 .add("GermlineHet2HomRegions")
@@ -71,6 +71,17 @@ public class GeneCopyNumberFile {
                 .add("MinRegionStartSupport")
                 .add("MinRegionEndSupport")
                 .add("MinRegionMethod")
+                .add("NonsenseBiallelicCount")
+                .add("NonsenseNonBiallelicCount")
+                .add("NonsenseNonBiallelicPloidy")
+                .add("SpliceBiallelicCount")
+                .add("SpliceNonBiallelicCount")
+                .add("SpliceNonBiallelicPloidy")
+                .add("MissenseBiallelicCount")
+                .add("MissenseNonBiallelicCount")
+                .add("MissenseNonBiallelicPloidy")
+                .add("MinMinorAllelePloidy")
+                .add("ExonicBases")
                 .toString();
     }
 
@@ -82,7 +93,7 @@ public class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.gene()))
                 .add(String.valueOf(geneCopyNumber.minCopyNumber()))
                 .add(String.valueOf(geneCopyNumber.maxCopyNumber()))
-                .add(String.valueOf(geneCopyNumber.meanCopyNumber()))
+                .add(String.valueOf(0))
                 .add(String.valueOf(geneCopyNumber.somaticRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
@@ -95,6 +106,16 @@ public class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.minRegionStartSupport()))
                 .add(String.valueOf(geneCopyNumber.minRegionEndSupport()))
                 .add(String.valueOf(geneCopyNumber.minRegionMethod()))
+                .add(String.valueOf(geneCopyNumber.nonsenseBiallelicCount()))
+                .add(String.valueOf(geneCopyNumber.nonsenseNonBiallelicCount()))
+                .add(String.valueOf(geneCopyNumber.nonsenseNonBiallelicPloidy()))
+                .add(String.valueOf(geneCopyNumber.spliceBiallelicCount()))
+                .add(String.valueOf(geneCopyNumber.spliceNonBiallelicCount()))
+                .add(String.valueOf(geneCopyNumber.spliceNonBiallelicPloidy()))
+                .add(String.valueOf(geneCopyNumber.missenseBiallelicCount()))
+                .add(String.valueOf(geneCopyNumber.missenseNonBiallelicCount()))
+                .add(String.valueOf(geneCopyNumber.missenseNonBiallelicPloidy()))
+                .add(String.valueOf(geneCopyNumber.minMinorAllelePloidy()))
                 .toString();
     }
 
@@ -116,7 +137,6 @@ public class GeneCopyNumberFile {
                 .gene(values[3])
                 .minCopyNumber(Double.valueOf(values[4]))
                 .maxCopyNumber(Double.valueOf(values[5]))
-                .meanCopyNumber(Double.valueOf(values[6]))
                 .somaticRegions(Integer.valueOf(values[7]))
                 .germlineHomRegions(Integer.valueOf(values[8]))
                 .germlineHet2HomRegions(Integer.valueOf(values[9]))
@@ -124,20 +144,42 @@ public class GeneCopyNumberFile {
                 .transcriptVersion(Integer.valueOf(values[11]))
                 .chromosomeBand(values[12]);
 
-        if (values.length == 19) {
+                builder.minRegions(0)
+                .minRegionStart(Long.valueOf(values[1]))
+                .minRegionEnd(Long.valueOf(values[2]))
+                .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                .minRegionStartSupport(SegmentSupport.NONE)
+                .minRegionEndSupport(SegmentSupport.NONE)
+                .nonsenseBiallelicCount(0)
+                .nonsenseNonBiallelicCount(0)
+                .nonsenseNonBiallelicPloidy(0)
+                .spliceBiallelicCount(0)
+                .spliceNonBiallelicCount(0)
+                .spliceNonBiallelicPloidy(0)
+                .missenseBiallelicCount(0)
+                .missenseNonBiallelicCount(0)
+                .missenseNonBiallelicPloidy(0)
+                .minMinorAllelePloidy(0);
+
+        if (values.length >= 19) {
             builder.minRegions(Integer.valueOf(values[13]))
                     .minRegionStart(Long.valueOf(values[14]))
                     .minRegionEnd(Long.valueOf(values[15]))
                     .minRegionStartSupport(SegmentSupport.valueOf(values[16]))
                     .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
-        } else {
-            builder.minRegions(0)
-                    .minRegionStart(Long.valueOf(values[1]))
-                    .minRegionEnd(Long.valueOf(values[2]))
-                    .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                    .minRegionStartSupport(SegmentSupport.NONE)
-                    .minRegionEndSupport(SegmentSupport.NONE);
+        }
+        if (values.length ==29) {
+            builder.nonsenseBiallelicCount(Integer.valueOf(values[19]))
+                    .nonsenseNonBiallelicCount(Integer.valueOf(values[20]))
+                    .nonsenseNonBiallelicPloidy(Double.valueOf(values[21]))
+                    .spliceBiallelicCount(Integer.valueOf(values[22]))
+                    .spliceNonBiallelicCount(Integer.valueOf(values[23]))
+                    .spliceNonBiallelicPloidy(Double.valueOf(values[24]))
+                    .missenseBiallelicCount(Integer.valueOf(values[25]))
+                    .missenseNonBiallelicCount(Integer.valueOf(values[26]))
+                    .missenseNonBiallelicPloidy(Double.valueOf(values[27]))
+                    .minMinorAllelePloidy(Double.valueOf(values[28]));
         }
 
         return builder.build();

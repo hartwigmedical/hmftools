@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
@@ -12,17 +13,25 @@ import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusions;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGeneModel;
 import com.hartwig.hmftools.common.cosmic.genes.CosmicGenes;
-import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
-import com.hartwig.hmftools.common.ecrf.reader.ImmutableXMLEcrfDatamodel;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.patientreporter.civic.AlterationAnalyzer;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
+import com.hartwig.hmftools.patientreporter.report.data.Alteration;
+import com.hartwig.hmftools.patientreporter.report.data.GeneDisruptionData;
+import com.hartwig.hmftools.patientreporter.report.data.GeneFusionData;
+import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlteration;
+import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationEvidence;
+import com.hartwig.hmftools.patientreporter.report.data.ImmutableAlterationMatch;
 import com.hartwig.hmftools.patientreporter.variants.MicrosatelliteAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,12 +77,57 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static BaseReporterData testBaseReporterData() throws IOException, EmptyFileException {
         final String centerPath = Resources.getResource("center").getPath() + File.separator + "centers.csv";
-        final CpctEcrfModel ecrfModel = new CpctEcrfModel(
-                ImmutableXMLEcrfDatamodel.of(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(),
-                        Lists.newArrayList()), Lists.newArrayList());
+        final List<PatientCancerTypes> patientsCancerTypes = Lists.newArrayList();
         final Lims lims = LimsFactory.empty();
         final CenterModel centerModel = Center.readFromCSV(centerPath);
-
-        return ImmutableBaseReporterData.of(ecrfModel, lims, centerModel, SIGNATURE_PATH);
+        return ImmutableBaseReporterData.of(patientsCancerTypes, lims, centerModel, SIGNATURE_PATH);
     }
+
+    @NotNull
+    public static List<Alteration> mockedAlterations() {
+        return Lists.newArrayList(ImmutableAlteration.of("BRAF",
+                "p.Val600Glu",
+                Lists.newArrayList(ImmutableAlterationEvidence.of("Sensitivity",
+                        "Vemurafenib (B)\nDabrafenib (off-label: B)",
+                        "CIViC",
+                        "https://civic.genome.wustl.edu/events/genes/5/summary/variants/17/summary#variant")),
+                Lists.newArrayList(ImmutableAlterationMatch.of("extended",
+                        "V600",
+                        "7",
+                        "140453136",
+                        "140453137",
+                        "",
+                        "",
+                        "",
+                        "protein_altering_variant",
+                        "",
+                        "https://civic.genome.wustl.edu/events/genes/5/summary/variants/17/summary#variant"))),
+                ImmutableAlteration.of("ERBB2",
+                        "GAIN",
+                        Lists.newArrayList(ImmutableAlterationEvidence.of("Resistance or Non-Response",
+                                "Erlotinib (C)\nGefitinib (C)\nPanitumumab (off-label:B)",
+                                "CIViC",
+                                "https://civic.genome.wustl.edu/events/genes/20/summary/variants/306/summary#variant")),
+                        Lists.newArrayList(ImmutableAlterationMatch.of("manual",
+                                "AMPLIFICATION",
+                                "17",
+                                "37856333",
+                                "37884915",
+                                "",
+                                "",
+                                "",
+                                "transcript_amplification",
+                                "",
+                                "https://civic.genome.wustl.edu/events/genes/20/summary/variants/306/summary#variant"))));
+    }
+
+    @NotNull
+    public static AlterationAnalyzer mockedCivicAnalyzer() {
+        //@formatter:off
+        return (@NotNull final List<VariantReport> reportedVariants, @NotNull final List<GeneCopyNumber> copyNumbers,
+                @NotNull final List<GeneDisruptionData> disruptions, @NotNull final List<GeneFusionData> fusions, @NotNull final GeneModel geneModel,
+                @NotNull final Set<String> tumorDoids) -> mockedAlterations();
+        //@formatter:on
+    }
+
 }

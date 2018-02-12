@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.apiclients.civic.api;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import com.google.gson.Gson;
 import com.hartwig.hmftools.apiclients.civic.data.CivicApiDataGson;
 import com.hartwig.hmftools.apiclients.civic.data.CivicApiMetadata;
-import com.hartwig.hmftools.apiclients.civic.data.CivicEvidenceItem;
 import com.hartwig.hmftools.apiclients.civic.data.CivicGene;
 import com.hartwig.hmftools.apiclients.civic.data.CivicIndexResult;
-import com.hartwig.hmftools.apiclients.civic.data.CivicVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.apiclients.civic.data.CivicVariantWithEvidence;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +22,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CivicApiWrapper {
     private static final String CIVIC_API_ENDPOINT = "https://civic.genome.wustl.edu/api/";
+    private static final Long CIVIC_BATCH_COUNT = 10000L;
     private final CivicApi api;
     private final OkHttpClient httpClient;
 
@@ -47,44 +46,34 @@ public class CivicApiWrapper {
     }
 
     @NotNull
-    public Observable<CivicVariant> getVariantsForGene(final int entrezId) {
+    public Observable<CivicVariantWithEvidence> getVariantsForGene(final int entrezId) {
         return api.getGene(entrezId)
                 .flatMapIterable(CivicGene::variantMetadatas)
                 .flatMap(variantMetadata -> api.getVariant(variantMetadata.id()));
     }
 
     @NotNull
-    public Observable<CivicVariant> getVariantsContaining(final int entrezId, @NotNull final SomaticVariant variant) {
-        return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().containsVariant(variant));
+    public Observable<CivicVariantWithEvidence> getAllWildTypeVariants() {
+        return getAllFromPaginatedEndpoint(api::getVariants).filter(variantMetadata -> {
+            final String type = variantMetadata.type();
+            final String name = variantMetadata.name();
+            return (type != null && type.toLowerCase().equals("wild_type")) || (name != null && (name.toLowerCase().equals("wild type")
+                    || name.toLowerCase().equals("wildtype")));
+        }).flatMap(variantMetadata -> api.getVariant(variantMetadata.id()));
     }
 
     @NotNull
-    public Observable<CivicVariant> getVariantMatches(final int entrezId, @NotNull final SomaticVariant variant) {
-        return getVariantsForGene(entrezId).filter(civicVariant -> civicVariant.coordinates().equals(variant));
-    }
-
-    @NotNull
-    public Observable<CivicVariant> getAllVariants() {
+    public Observable<CivicVariantWithEvidence> getAllVariants() {
         return getAllFromPaginatedEndpoint(api::getVariants).flatMap(variant -> api.getVariant(variant.id()));
     }
 
     @NotNull
-    public Observable<CivicEvidenceItem> getAllEvidenceItems() {
-        return getAllFromPaginatedEndpoint(api::getEvidenceItems);
-    }
-
-    @NotNull
-    public Observable<CivicGene> getAllGenes() {
-        return getAllFromPaginatedEndpoint(api::getGenes);
-    }
-
-    @NotNull
-    private <T> Observable<T> getAllFromPaginatedEndpoint(@NotNull final Function<Long, Observable<CivicIndexResult<T>>> endpoint) {
-        return endpoint.apply(1L).flatMap(indexResult -> {
+    private <T> Observable<T> getAllFromPaginatedEndpoint(@NotNull final BiFunction<Long, Long, Observable<CivicIndexResult<T>>> endpoint) {
+        return endpoint.apply(1L, CIVIC_BATCH_COUNT).flatMap(indexResult -> {
             final CivicApiMetadata metadata = indexResult.meta();
             final Observable<T> firstPageResults = Observable.fromIterable(indexResult.records());
             final Observable<T> nextPagesResults = Observable.range(2, metadata.totalPages() - 1)
-                    .flatMap(page -> endpoint.apply((long) page).flatMapIterable(CivicIndexResult::records));
+                    .flatMap(page -> endpoint.apply((long) page, CIVIC_BATCH_COUNT).flatMapIterable(CivicIndexResult::records));
             return firstPageResults.mergeWith(nextPagesResults);
         });
     }

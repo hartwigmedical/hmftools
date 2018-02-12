@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FIELD_TREATMENT_GIVEN;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentReader.FORM_TREATMENT;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_ASSESSMENT_DATE;
-import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_YN;
+import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FIELD_RESPONSE;
 import static com.hartwig.hmftools.patientdb.readers.BiopsyTreatmentResponseReader.FORM_TUMOR_MEASUREMENT;
 import static com.hartwig.hmftools.patientdb.readers.CpctPatientReader.FIELD_BIRTH_YEAR1;
@@ -345,7 +345,7 @@ public final class PatientValidator {
         final String measurementDone = treatmentResponse.measurementDone();
         final LocalDate assessmentDate = treatmentResponse.assessmentDate();
         if (measurementDone == null) {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_YN, "measurement done field empty",
+            findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_DONE, "measurement done field empty",
                     treatmentResponse.formStatus(), treatmentResponse.formLocked()));
 
         } else if (measurementDone.trim().toLowerCase().equals("yes")) {
@@ -359,17 +359,17 @@ public final class PatientValidator {
             }
         } else if (measurementDone.trim().toLowerCase().equals("no")) {
             if (assessmentDate != null) {
-                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_YN,
+                findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_DONE,
                         "measurement done is no, but assessment date filled in", treatmentResponse.formStatus(),
                         treatmentResponse.formLocked()));
             }
             if (treatmentResponse.response() != null) {
                 findings.add(
-                        ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_YN, "measurement done is no, but response filled in",
+                        ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_DONE, "measurement done is no, but response filled in",
                                 treatmentResponse.formStatus(), treatmentResponse.formLocked()));
             }
         } else {
-            findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_YN, "measurement done is not yes/no",
+            findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, FIELD_MEASUREMENT_DONE, "measurement done is not yes/no",
                     treatmentResponse.formStatus(), treatmentResponse.formLocked()));
         }
         if (treatmentResponse.response() != null && treatmentResponse.assessmentDate() == null) {

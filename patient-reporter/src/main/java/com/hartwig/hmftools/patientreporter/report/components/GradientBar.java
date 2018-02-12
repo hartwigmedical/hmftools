@@ -37,10 +37,7 @@ public abstract class GradientBar {
     abstract Integer value();
 
     @NotNull
-    @Value.Default
-    Optional<Pair<Integer, String>> marker() {
-        return Optional.empty();
-    }
+    abstract Optional<Pair<Integer, String>> marker();
 
     @NotNull
     public static GradientBar of(@NotNull final Color startColor, @NotNull final Color endColor, @NotNull final String startText,

@@ -6,26 +6,28 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.zipper.RegionZipperHandler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class GeneCopyNumberBuilder {
+class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion> {
 
     private final ImmutableGeneCopyNumber.Builder builder;
 
     private double minCopyNumber = Double.MAX_VALUE;
+    private double minMinorAllelePloidy = Double.MAX_VALUE;
     private double maxCopyNumber = -Double.MAX_VALUE;
     private int somaticCount;
     private int homCount;
     private int het2HomCount;
-    private double cumulativeCopyNumber;
 
     @Nullable
     private PurpleCopyNumber previous;
 
     private double previousCopyNumber = -Double.MAX_VALUE;
-    private long totalBases;
     private HmfExonRegion exon;
     private PurpleCopyNumber copyNumber;
 
@@ -36,7 +38,19 @@ class GeneCopyNumberBuilder {
     private SegmentSupport minRegionEndSupport = SegmentSupport.NONE;
     private CopyNumberMethod minRegionMethod = CopyNumberMethod.UNKNOWN;
 
+    private final String gene;
+    private int nonsenseBiallelicCount;
+    private int nonsenseNonBiallelicCount;
+    private double nonsenseNonBiallelicPloidy;
+    private int spliceBiallelicCount;
+    private int spliceNonBiallelicCount;
+    private double spliceNonBiallelicPloidy;
+    private int missenseBiallelicCount;
+    private int missenseNonBiallelicCount;
+    private double missenseNonBiallelicPloidy;
+
     GeneCopyNumberBuilder(@NotNull final HmfGenomeRegion gene) {
+        this.gene = gene.gene();
         builder = ImmutableGeneCopyNumber.builder()
                 .from(gene)
                 .minRegionStart(gene.start())
@@ -46,18 +60,52 @@ class GeneCopyNumberBuilder {
                 .minRegionEndSupport(SegmentSupport.NONE);
     }
 
-    void addExon(@NotNull final HmfExonRegion exon) {
-        totalBases += exon.bases();
+    @Override
+    public void enterChromosome(@NotNull final String chromosome) {
+        // IGNORE
+    }
+
+    @Override
+    public void primary(@NotNull final PurpleCopyNumber copyNumber) {
+        this.copyNumber = copyNumber;
+        if (exon != null) {
+            addOverlap(exon, this.copyNumber);
+        }
+    }
+
+    @Override
+    public void secondary(@NotNull final HmfExonRegion exon) {
         this.exon = exon;
         if (copyNumber != null) {
             addOverlap(this.exon, copyNumber);
         }
     }
 
-    void addCopyNumber(@NotNull final PurpleCopyNumber copyNumber) {
-        this.copyNumber = copyNumber;
-        if (exon != null) {
-            addOverlap(exon, this.copyNumber);
+    public void somatic(@NotNull final PurityAdjustedSomaticVariant variant) {
+        if (variant.gene().equals(gene)) {
+            if (variant.codingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT.toString())) {
+                if (variant.biallelic()) {
+                    nonsenseBiallelicCount++;
+                } else {
+                    nonsenseNonBiallelicCount++;
+                    nonsenseNonBiallelicPloidy += variant.ploidy();
+                }
+            } else if (variant.codingEffect().equals(CodingEffect.SPLICE.toString())) {
+                if (variant.biallelic()) {
+                    spliceBiallelicCount++;
+                } else {
+                    spliceNonBiallelicCount++;
+                    spliceNonBiallelicPloidy += variant.ploidy();
+                }
+            } else if (variant.codingEffect().equals(CodingEffect.MISSENSE.toString())) {
+                if (variant.biallelic()) {
+                    missenseBiallelicCount++;
+                } else {
+                    missenseNonBiallelicCount++;
+                    missenseNonBiallelicPloidy += variant.ploidy();
+                }
+            }
+
         }
     }
 
@@ -67,7 +115,7 @@ class GeneCopyNumberBuilder {
             double currentCopyNumber = copyNumber.averageTumorCopyNumber();
 
             maxCopyNumber = Math.max(maxCopyNumber, currentCopyNumber);
-            cumulativeCopyNumber += overlap * currentCopyNumber;
+            minMinorAllelePloidy = Math.min(minMinorAllelePloidy, copyNumber.minorAllelePloidy());
 
             if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
                 switch (copyNumber.method()) {
@@ -121,11 +169,20 @@ class GeneCopyNumberBuilder {
                 .minRegionStart(minRegionStart)
                 .minRegionEnd(minRegionEnd)
                 .minCopyNumber(minCopyNumber)
-                .meanCopyNumber(cumulativeCopyNumber / totalBases)
                 .somaticRegions(somaticCount)
                 .germlineHomRegions(homCount)
                 .germlineHet2HomRegions(het2HomCount)
                 .minRegions(minRegions)
+                .nonsenseBiallelicCount(nonsenseBiallelicCount)
+                .nonsenseNonBiallelicCount(nonsenseNonBiallelicCount)
+                .nonsenseNonBiallelicPloidy(nonsenseNonBiallelicPloidy)
+                .spliceBiallelicCount(spliceBiallelicCount)
+                .spliceNonBiallelicCount(spliceNonBiallelicCount)
+                .spliceNonBiallelicPloidy(spliceNonBiallelicPloidy)
+                .missenseBiallelicCount(missenseBiallelicCount)
+                .missenseNonBiallelicCount(missenseNonBiallelicCount)
+                .missenseNonBiallelicPloidy(missenseNonBiallelicPloidy)
+                .minMinorAllelePloidy(minMinorAllelePloidy)
                 .build();
     }
 }

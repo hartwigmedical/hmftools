@@ -15,9 +15,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -31,8 +32,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory {
-    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantFactory.class);
-
+    private static final HotspotFilter HOTSPOT_FILTER = new HotspotFilter();
     private static final String DBSNP_IDENTIFIER = "rs";
     private static final String COSMIC_IDENTIFIER = "COSM";
     private static final String ID_SEPARATOR = ";";
@@ -40,7 +40,6 @@ public class SomaticVariantFactory {
 
     @NotNull
     private final CompoundFilter filter;
-    private int mismatchedAnnotations;
 
     public SomaticVariantFactory() {
         this(new VariantContextFilter[0]);
@@ -63,7 +62,6 @@ public class SomaticVariantFactory {
     public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
-        mismatchedAnnotations = 0;
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
 
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -78,10 +76,6 @@ public class SomaticVariantFactory {
             for (final VariantContext context : reader.iterator()) {
                 createVariant(sample, context).ifPresent(variants::add);
             }
-        }
-
-        if (mismatchedAnnotations > 0) {
-            LOGGER.warn("There were {} mismatches in gene annotation.", mismatchedAnnotations);
         }
 
         return variants;
@@ -103,6 +97,7 @@ public class SomaticVariantFactory {
                             .alleleReadCount(frequencyData.alleleReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
                             .totalReadCount(frequencyData.totalReadCount())
+                            .hotspot(HOTSPOT_FILTER.test(context))
                             .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
 
                     attachAnnotations(builder, context);
@@ -120,19 +115,14 @@ public class SomaticVariantFactory {
         final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromContext(context);
         builder.annotations(VariantAnnotationFactory.fromContext(context));
         if (!annotations.isEmpty()) {
-            // MIVO: get the first annotation for now, eventually we will want all
             final VariantAnnotation variantAnnotation = annotations.get(0);
-            for (VariantAnnotation annotation : annotations) {
-                if (!annotation.gene().equals(variantAnnotation.gene())) {
-                    mismatchedAnnotations++;
-                    LOGGER.debug("Annotated gene (" + annotation.gene() + ") does not match gene expected from first annotation ( "
-                            + variantAnnotation.gene() + ") for variant: " + context);
-                }
-            }
             builder.gene(variantAnnotation.gene());
             builder.effect(variantAnnotation.consequenceString());
+            builder.codingEffect(CodingEffect.effect(variantAnnotation.consequences()).toString());
         } else {
-            builder.gene("").effect("");
+            builder.gene("");
+            builder.effect("");
+            builder.codingEffect(CodingEffect.NONE.toString());
         }
     }
 
@@ -146,20 +136,21 @@ public class SomaticVariantFactory {
         }
     }
 
-    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+    @NotNull
+    private static VariantType type(@NotNull VariantContext context) {
         switch (context.getType()) {
             case MNP:
-                builder.type(VariantType.MNP);
-                break;
+                return VariantType.MNP;
             case SNP:
-                builder.type(VariantType.SNP);
-                break;
+                return VariantType.SNP;
             case INDEL:
-                builder.type(VariantType.INDEL);
-                break;
-            default:
-                builder.type(VariantType.UNDEFINED);
+                return VariantType.INDEL;
         }
+        return VariantType.UNDEFINED;
+    }
+
+    private static void attachType(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
+        builder.type(type(context));
     }
 
     private static void attachID(@NotNull SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {

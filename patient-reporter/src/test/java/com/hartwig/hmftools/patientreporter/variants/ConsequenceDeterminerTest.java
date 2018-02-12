@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import static com.hartwig.hmftools.common.variant.VariantAnnotationTest.createVariantAnnotationBuilder;
+import static com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationTest.createVariantAnnotationBuilder;
 
 import static org.junit.Assert.assertEquals;
 
@@ -15,11 +15,11 @@ import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.ImmutableHmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
-import com.hartwig.hmftools.common.variant.ImmutableVariantAnnotation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.common.variant.snpeff.ImmutableVariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

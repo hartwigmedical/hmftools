@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.gene.GeneModel;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

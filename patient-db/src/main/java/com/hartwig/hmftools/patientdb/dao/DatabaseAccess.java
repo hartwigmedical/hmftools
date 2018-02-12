@@ -9,6 +9,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -173,5 +174,10 @@ public class DatabaseAccess {
 
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
         validationFindingsDAO.write(findings);
+    }
+
+    @NotNull
+    public List<PatientCancerTypes> readCancerTypes() {
+        return clinicalDAO.readCancerTypes();
     }
 }

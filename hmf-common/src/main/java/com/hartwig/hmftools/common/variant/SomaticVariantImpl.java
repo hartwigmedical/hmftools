@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -86,6 +88,11 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
         return 0;
     }
 
+    @Override
+    @Value.Default
+    public boolean hotspot() {
+        return false;
+    }
 
     @Override
     @NotNull
@@ -98,6 +105,13 @@ public abstract class SomaticVariantImpl implements SomaticVariant {
     @NotNull
     @Value.Default
     public String effect() {
+        return Strings.EMPTY;
+    }
+
+    @Override
+    @NotNull
+    @Value.Default
+    public String codingEffect() {
         return Strings.EMPTY;
     }
 

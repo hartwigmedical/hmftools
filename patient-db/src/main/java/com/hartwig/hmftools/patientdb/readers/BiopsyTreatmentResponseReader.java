@@ -22,7 +22,8 @@ public final class BiopsyTreatmentResponseReader {
     public static final String FIELD_ASSESSMENT_DATE = "FLD.TUMORMEASUREMENT.ASSDTC";
     private static final String ITEMGROUP_TUMOR_MEASUREMENT = "GRP.TUMORMEASUREMENT.TUMORMEASUREMENT";
     private static final String FIELD_RESPONSE_DATE = "FLD.TUMORMEASUREMENT.RESPONSEDTC";
-    public static final String FIELD_MEASUREMENT_YN = "FLD.TUMORMEASUREMENT.TMYN";
+    private static final String FIELD_BONE_ONLY_DISEASE = "FLD.TUMORMEASUREMENT.BONEYN";
+    public static final String FIELD_MEASUREMENT_DONE = "FLD.TUMORMEASUREMENT.TMYN";
     public static final String FIELD_RESPONSE = "FLD.TUMORMEASUREMENT.BESTRESPON";
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -45,24 +46,34 @@ public final class BiopsyTreatmentResponseReader {
                 }
                 LocalDate responseDate = null;
                 String measurementDone = null;
+                String boneOnlyDisease = null;
                 String response = null;
                 for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT, false)) {
                     final LocalDate date = itemGroup.readItemDate(FIELD_RESPONSE_DATE, 0, DATE_FORMATTER, false);
                     if (date != null) {
                         responseDate = date;
                     }
-                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_YN, 0, false);
-                    if (measurementDoneValue != null) {
-                        measurementDone = measurementDoneValue;
-                    }
                     final String responseValue = itemGroup.readItemString(FIELD_RESPONSE, 0, false);
                     if (responseValue != null) {
                         response = responseValue;
                     }
+                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_DONE, 0, false);
+                    if (measurementDoneValue != null) {
+                        measurementDone = measurementDoneValue;
+                    }
+
+                    final String boneOnlyDiseaseValue = itemGroup.readItemString(FIELD_BONE_ONLY_DISEASE, 0, false);
+                    if (boneOnlyDiseaseValue != null) {
+                        boneOnlyDisease = boneOnlyDiseaseValue;
+                    }
                 }
-                treatmentResponses.add(
-                        ImmutableBiopsyTreatmentResponseData.of(assessmentDate, responseDate, response, measurementDone, form.status(),
-                                form.locked()));
+                treatmentResponses.add(ImmutableBiopsyTreatmentResponseData.of(assessmentDate,
+                        responseDate,
+                        response,
+                        measurementDone,
+                        boneOnlyDisease,
+                        form.status(),
+                        form.locked()));
             }
         }
         return treatmentResponses;

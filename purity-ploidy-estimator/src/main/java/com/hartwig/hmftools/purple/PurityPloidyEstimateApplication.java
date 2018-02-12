@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -56,6 +57,7 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -85,7 +87,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.variantcontext.filter.SnpFilter;
 
 public class PurityPloidyEstimateApplication {
 
@@ -193,11 +194,12 @@ public class PurityPloidyEstimateApplication {
             final List<FittedPurity> bestFitPerPurity = fittedPurityFactory.bestFitPerPurity();
 
             final SomaticConfig somaticConfig = configSupplier.somaticConfig();
-            final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minTotalVariants(),
-                    somaticConfig.minPeakVariants(),
-                    bestFitPerPurity,
-                    somaticVariants);
+            final List<SomaticVariant> snps =
+                    somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
+            final BestFitFactory bestFitFactory =
+                    new BestFitFactory(somaticConfig.minTotalVariants(), somaticConfig.minPeakVariants(), bestFitPerPurity, snps);
             final FittedPurity bestFit = bestFitFactory.bestFit();
+
             final List<FittedRegion> fittedRegions = fittedRegionFactory.fitRegion(bestFit.purity(), bestFit.normFactor(), observedRegions);
 
             final PurityAdjuster purityAdjuster = new PurityAdjuster(amberGender, bestFit.purity(), bestFit.normFactor());
@@ -211,8 +213,6 @@ public class PurityPloidyEstimateApplication {
                     structuralVariants);
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
-            final List<GeneCopyNumber> geneCopyNumbers =
-                    GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumberFactory.copyNumbersWithDeletions());
 
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
@@ -227,6 +227,12 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFitFactory.bestFit(), copyNumbers, amberGender, cobaltGender);
+
+            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(somaticVariants);
+
+            final List<GeneCopyNumber> geneCopyNumbers =
+                    GeneCopyNumberFactory.geneCopyNumbers(genePanel, copyNumbers, germlineDeletions, enrichedSomatics);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -248,9 +254,6 @@ public class PurityPloidyEstimateApplication {
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
             FittedRegionFile.writeCopyNumber(outputDirectory, tumorSample, enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
-
-            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(somaticVariants);
 
             final CircosConfig circosConfig = configSupplier.circosConfig();
             LOGGER.info("Writing plots to: {}", circosConfig.plotDirectory());
@@ -292,8 +295,7 @@ public class PurityPloidyEstimateApplication {
             String filename = config.file().get().toString();
             LOGGER.info("Loading somatic variants from {}", filename);
 
-            SomaticVariantFactory factory =
-                    new SomaticVariantFactory(new PassingVariantFilter(), new SnpFilter(), new NTFilter(), new SGTFilter());
+            SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new NTFilter(), new SGTFilter());
 
             return factory.fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
         } else {

@@ -12,10 +12,11 @@ public class CivicApiDataGson {
                 .registerTypeAdapterFactory(new GsonAdaptersCivicEvidenceItemMetadata())
                 .registerTypeAdapterFactory(new GsonAdaptersCivicEvidenceSource())
                 .registerTypeAdapterFactory(new GsonAdaptersCivicGene())
+                .registerTypeAdapterFactory(new GsonAdaptersCivicGeneVariantMetadata())
                 .registerTypeAdapterFactory(new GsonAdaptersCivicIndexResult())
-                .registerTypeAdapterFactory(new GsonAdaptersCivicVariant())
+                .registerTypeAdapterFactory(new GsonAdaptersCivicVariantWithEvidence())
                 .registerTypeAdapterFactory(new GsonAdaptersCivicVariantCoordinates())
-                .registerTypeAdapterFactory(new GsonAdaptersCivicVariantMetadata())
+                .registerTypeAdapterFactory(new GsonAdaptersCivicVariantData())
                 .registerTypeAdapterFactory(new GsonAdaptersCivicVariantType())
                 .create();
     }
