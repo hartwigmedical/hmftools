@@ -24,8 +24,6 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
-import com.hartwig.hmftools.common.variant.VariantAnnotation;
-import com.hartwig.hmftools.common.variant.VariantAnnotationFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;

@@ -181,7 +181,7 @@ public abstract class PatientReporter {
         LOGGER.info(" Enriching structural variants with purple data.");
         final List<EnrichedStructuralVariant> enrichedStructuralVariants = purpleAnalysis.enrichStructuralVariants(structuralVariants);
         LOGGER.info(" Analysing structural variants...");
-        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants);
+        final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants, false);
         return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, structuralVariantAnalysis);
     }
 }

@@ -29,10 +29,10 @@ class StructuralVariantDAO {
         this.context = context;
     }
 
-    public List<StructuralVariantData> read(@NotNull final String sample) {
+    public final List<StructuralVariantData> read(@NotNull final String sample) {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 
-        Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
+        final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
             structuralVariants.add(ImmutableStructuralVariantData.builder()
