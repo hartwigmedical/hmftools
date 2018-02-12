@@ -18,7 +18,7 @@ public abstract class GeneDisruptionData {
 
     public abstract String chromosome();
 
-    public abstract String karyotypeBand();
+    public abstract String chromosomeBand();
 
     public abstract String gene();
 
@@ -42,7 +42,7 @@ public abstract class GeneDisruptionData {
                 .geneContext(geneContext)
                 .type(gene.variant().type().name())
                 .copies(ploidyToCopiesString(gene.variant().ploidy()))
-                .karyotypeBand(gene.karyotypeBand())
+                .chromosomeBand(gene.karyotypeBand())
                 .build();
     }
 }

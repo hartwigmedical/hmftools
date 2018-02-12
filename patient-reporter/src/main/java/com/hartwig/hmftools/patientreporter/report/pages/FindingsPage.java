@@ -104,7 +104,8 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table =
                 !report.geneCopyNumbers().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())
-                        .columns(col.column("Position", GeneCopyNumberDataSource.POSITION_FIELD),
+                        .columns(col.column("Chromosome", GeneCopyNumberDataSource.CHROMOSOME),
+                                col.column("Chromosome band", GeneCopyNumberDataSource.CHROMOSOME_BAND),
                                 col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
                                 col.column("Type", GeneCopyNumberDataSource.GAIN_OR_LOSS_FIELD),
                                 col.column("Copies", GeneCopyNumberDataSource.COPY_NUMBER_FIELD))
@@ -149,6 +150,7 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
+                        col.column("Chromosome band", GeneDisruptionDataSource.CHROMOSOME_BAND_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
                         col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),
