@@ -36,8 +36,8 @@ public abstract class AlterationEvidencePage {
     private static final int PADDING = 3;
 
     @NotNull
-    public static ComponentBuilder<?, ?> reportComponent(@NotNull final SampleReport sampleReport) {
-        return cmp.verticalList(MainPageTopSection.build("HMF Civic Evidence Supplement", sampleReport),
+    public static ComponentBuilder<?, ?> reportComponent(@NotNull final SampleReport sampleReport, @NotNull final String impliedPurity) {
+        return cmp.verticalList(MainPageTopSection.buildWithImpliedPurity("HMF Civic Evidence Supplement", sampleReport, impliedPurity),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 cmp.text("Knowledgebase drug association of reported genomic alterations").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(10),
