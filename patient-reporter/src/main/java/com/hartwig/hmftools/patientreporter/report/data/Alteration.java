@@ -65,7 +65,7 @@ public abstract class Alteration {
             } else if (AdditionalCivicMatches.lossOfFunctionVariants(variantReport).contains(civicVariant.id())) {
                 exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
                 matchingVariants.add(AlterationMatch.of("manual", civicVariant));
-            } else if (civicVariant.coordinates().containsVariant(variantReport.variant())) {
+            } else if (civicVariant.coordinates().anyCoordinatesContainVariant(variantReport.variant())) {
                 matchingVariants.add(AlterationMatch.of("approx.", civicVariant));
             }
         });
@@ -84,6 +84,20 @@ public abstract class Alteration {
             }
         });
         return ImmutableAlteration.of(copyNumberReport.gene(), copyNumberReport.alteration().name(), exactMatchEvidence, matchingVariants);
+    }
+
+    @NotNull
+    public static Alteration from(@NotNull final GeneFusionData fusion, @NotNull final List<CivicVariantWithEvidence> civicVariants,
+            @NotNull final Set<String> relevantDoids) {
+        final List<AlterationMatch> matchingVariants = Lists.newArrayList();
+        final List<AlterationEvidence> exactMatchEvidence = Lists.newArrayList();
+        civicVariants.forEach(civicVariant -> {
+            if (civicVariant.coordinates().isFusion() && civicVariantContainsBothGenes(civicVariant, fusion)) {
+                exactMatchEvidence.addAll(alterationEvidence(civicVariant.evidenceItems(), civicVariant.summaryUrl(), relevantDoids));
+                matchingVariants.add(AlterationMatch.of("exact", civicVariant));
+            }
+        });
+        return ImmutableAlteration.of(fusion.geneStart() + "-" + fusion.geneEnd(), "FUSION", exactMatchEvidence, matchingVariants);
     }
 
     @NotNull
@@ -200,5 +214,14 @@ public abstract class Alteration {
                 .sorted(Map.Entry.comparingByValue())
                 .map(entry -> entry.getKey() + " " + entry.getValue())
                 .collect(joining("\n"));
+    }
+
+    private static boolean civicVariantContainsBothGenes(@NotNull final CivicVariantWithEvidence variant,
+            @NotNull final GeneFusionData fusion) {
+        final String variantName = variant.name();
+        final String fusionStart = fusion.geneStart().toLowerCase();
+        final String fusionEnd = fusion.geneEnd().toLowerCase();
+        return variantName != null && (variantName.toLowerCase().contains(fusionStart + "-" + fusionEnd) || variantName.toLowerCase()
+                .contains(fusionEnd + "-" + fusionStart));
     }
 }

@@ -43,6 +43,7 @@ public class CivicAnalyzer implements AlterationAnalyzer {
         final List<Alteration> alterations = civicVariantAlterations(reportedVariants, geneRegions, relevantDoids);
         final List<HmfGenomeRegion> nonWildTypeGenes = nonWildTypeGenes(reportedVariants, copyNumbers, disruptions, fusions, geneRegions);
         alterations.addAll(civicCopyNumberAlterations(copyNumbers, geneRegions, relevantDoids));
+        alterations.addAll(civicFusionAlterations(fusions, relevantDoids));
         alterations.addAll(civicWildTypeAlterations(nonWildTypeGenes, relevantDoids));
         return alterations;
     }
@@ -80,7 +81,7 @@ public class CivicAnalyzer implements AlterationAnalyzer {
                     .collect(Collectors.toList());
             if (!reportedVariantsInGene.isEmpty()) {
                 for (final VariantReport variantReport : reportedVariantsInGene) {
-                    alterations.addAll(queryCivicAlteration(region,
+                    alterations.addAll(queryCivicAlteration(region.entrezId(),
                             variantList -> Alteration.from(variantReport, variantList, relevantDoids),
                             "  Failed to get civic variants for variant: " + variantReport.variant().chromosomePosition()));
                 }
@@ -98,11 +99,27 @@ public class CivicAnalyzer implements AlterationAnalyzer {
         for (final GeneCopyNumber copyNumberReport : copyNumbers) {
             for (final HmfGenomeRegion region : geneRegions) {
                 if (region.gene().equals(copyNumberReport.gene())) {
-                    alterations.addAll(queryCivicAlteration(region,
+                    alterations.addAll(queryCivicAlteration(region.entrezId(),
                             variantList -> Alteration.from(copyNumberReport, variantList, relevantDoids),
                             "  Failed to get civic variants for copy number: " + copyNumberReport.gene()));
                 }
             }
+        }
+        return alterations;
+    }
+
+    @NotNull
+    private static List<Alteration> civicFusionAlterations(@NotNull final List<GeneFusionData> fusions,
+            @NotNull final Set<String> relevantDoids) {
+        LOGGER.info("  Fetching civic fusion alterations...");
+        final List<Alteration> alterations = Lists.newArrayList();
+        for (final GeneFusionData fusion : fusions) {
+            alterations.addAll(queryCivicAlteration(fusion.geneStartEntrezIds(),
+                    variantList -> Alteration.from(fusion, variantList, relevantDoids),
+                    "  Failed to get civic variants for fusion: " + fusion.geneStart() + " - " + fusion.geneEnd()));
+            alterations.addAll(queryCivicAlteration(fusion.geneEndEntrezIds(),
+                    variantList -> Alteration.from(fusion, variantList, relevantDoids),
+                    "  Failed to get civic variants for fusion: " + fusion.geneStart() + " - " + fusion.geneEnd()));
         }
         return alterations;
     }
@@ -151,12 +168,12 @@ public class CivicAnalyzer implements AlterationAnalyzer {
     }
 
     @NotNull
-    private static List<Alteration> queryCivicAlteration(@NotNull final HmfGenomeRegion region,
+    private static List<Alteration> queryCivicAlteration(@NotNull final List<Integer> entrezIds,
             io.reactivex.functions.Function<List<CivicVariantWithEvidence>, Alteration> alterationBuilder, @NotNull final String error) {
         final CivicApiWrapper civicApi = new CivicApiWrapper();
         final List<Alteration> result = Lists.newArrayList();
         try {
-            result.addAll(Observable.fromIterable(region.entrezId())
+            result.addAll(Observable.fromIterable(entrezIds)
                     .flatMap(civicApi::getVariantsForGene)
                     .toList()
                     .map(alterationBuilder)
