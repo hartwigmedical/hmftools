@@ -11,13 +11,14 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
-import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep21;
-import org.jooq.Record1;
-import org.jooq.Result;
+import org.jooq.*;
 import org.jooq.types.UInteger;
 
 class StructuralVariantDAO {
@@ -26,6 +27,27 @@ class StructuralVariantDAO {
 
     StructuralVariantDAO(@NotNull final DSLContext context) {
         this.context = context;
+    }
+
+    public List<StructuralVariantData> read(@NotNull final String sample) {
+        List<StructuralVariantData> structuralVariants = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result) {
+            structuralVariants.add(ImmutableStructuralVariantData.builder()
+                    .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
+                    .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
+                    .endChromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
+                    .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
+                    .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
+                    .startOrientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
+                    .endOrientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                    .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .build());
+        }
+
+        return structuralVariants;
     }
 
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {

@@ -24,6 +24,8 @@ import com.hartwig.hmftools.svannotation.annotations.StructuralVariantAnnotation
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,6 +38,8 @@ public class StructuralVariantAnalyzer {
     @NotNull
     private final CosmicFusionModel cosmicFusionModel;
 
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
+
     public StructuralVariantAnalyzer(@NotNull final VariantAnnotator annotator,
             @NotNull final Collection<HmfGenomeRegion> hmfGenePanelRegions, @NotNull final CosmicFusionModel cosmicFusionModel) {
         this.annotator = annotator;
@@ -44,11 +48,25 @@ public class StructuralVariantAnalyzer {
     }
 
     @NotNull
-    public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants) {
+    public StructuralVariantAnalysis run(@NotNull final List<EnrichedStructuralVariant> variants, boolean skipAnnotations) {
+
+        if(skipAnnotations)
+        {
+            final List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
+            final List<GeneFusion> fusions = Lists.newArrayList();
+            final List<GeneDisruption> disruptions = Lists.newArrayList();
+            return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
+        }
+
+        LOGGER.debug("annotating variants");
         final List<StructuralVariantAnnotation> annotations = annotator.annotateVariants(variants);
 
         final List<StructuralVariantAnnotation> copy = Lists.newArrayList(annotations);
+
+        LOGGER.debug("calling process fusions");
         final List<GeneFusion> fusions = processFusions(copy);
+
+        LOGGER.debug("calling process disruptions");
         final List<GeneDisruption> disruptions = processDisruptions(copy);
 
         return ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);

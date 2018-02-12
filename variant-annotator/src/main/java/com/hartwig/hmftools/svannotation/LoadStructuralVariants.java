@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.cosmic.fusions.CosmicFusionModel;
@@ -13,14 +14,10 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.*;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
-import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.analysis.*;
 import com.hartwig.hmftools.svannotation.dao.StructuralVariantAnnotationDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -45,6 +42,10 @@ public class LoadStructuralVariants {
     private static final String VCF_FILE = "vcf_file";
     private static final String ENSEMBL_DB = "ensembl_db";
     private static final String FUSION_CSV = "fusion_csv";
+    private static final String CLUSTER_SVS = "cluster_svs";
+    private static final String SKIP_ANNOTATIONS = "skip_annotations";
+    private static final String LOAD_FROM_DB = "load_from_db";
+    private static final String CLUSTER_BASE_DISTANCE = "cluster_bases";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -55,28 +56,63 @@ public class LoadStructuralVariants {
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        LOGGER.info("Reading VCF File");
-        final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
-
-        LOGGER.info("Enriching structural variants based on purple data.");
+        boolean loadFromDB = cmd.hasOption(LOAD_FROM_DB);
         final String tumorSample = cmd.getOptionValue(SAMPLE);
-        final List<EnrichedStructuralVariant> enrichedVariants = enrichStructuralVariants(variants, dbAccess, tumorSample);
+        boolean runClustering = cmd.hasOption(CLUSTER_SVS);
 
-        LOGGER.info("Analyzing structural variants for impact via disruptions and fusions...");
-        final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
-        final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
+        if(!loadFromDB) {
 
-        final StructuralVariantAnalyzer analyzer =
-                new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
-        final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants);
+            boolean skipAnnotations = cmd.hasOption(SKIP_ANNOTATIONS);
+            LOGGER.info("reading VCF File");
+            final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
 
-        LOGGER.info("Persisting variants and annotations to database...");
-        dbAccess.writeStructuralVariants(tumorSample, enrichedVariants);
+            LOGGER.info("enriching structural variants based on purple data");
+            final List<EnrichedStructuralVariant> enrichedVariants = enrichStructuralVariants(variants, dbAccess, tumorSample);
 
-        final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
-        annotationDAO.write(analysis);
+            LOGGER.info("initialising MqSql annotator");
+            final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
 
-        LOGGER.info("Complete");
+            LOGGER.info("loading Cosmic Fusion data");
+            final CosmicFusionModel cosmicGeneFusions = CosmicFusions.readFromCSV(cmd.getOptionValue(FUSION_CSV));
+
+            final StructuralVariantAnalyzer analyzer = new StructuralVariantAnalyzer(annotator, HmfGenePanelSupplier.hmfPanelGeneList(), cosmicGeneFusions);
+            LOGGER.info("analyzing structural variants for impact via disruptions and fusions");
+            final StructuralVariantAnalysis analysis = analyzer.run(enrichedVariants, skipAnnotations);
+
+            if(runClustering)
+            {
+                LOGGER.info("running clustering logic");
+
+                SvClusteringConfig clusteringConfig = new SvClusteringConfig();
+                clusteringConfig.setOutputCsvFile(tumorSample);
+                clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
+                StructuralVariantClustering svClusterer = new StructuralVariantClustering(clusteringConfig);
+
+                svClusterer.loadFromEnrichedSVs(tumorSample, enrichedVariants);
+                svClusterer.runClustering();
+            }
+
+            LOGGER.info("persisting variants and annotations to database");
+            dbAccess.writeStructuralVariants(tumorSample, enrichedVariants);
+
+            final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
+            annotationDAO.write(analysis);
+        }
+        else
+        {
+            LOGGER.info("running clustering logic");
+
+            SvClusteringConfig clusteringConfig = new SvClusteringConfig();
+            clusteringConfig.setOutputCsvFile(tumorSample);
+            clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
+            StructuralVariantClustering svClusterer = new StructuralVariantClustering(clusteringConfig);
+
+            List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, tumorSample);
+            svClusterer.loadFromDatabase(tumorSample, svClusterData);
+            svClusterer.runClustering();
+        }
+
+        LOGGER.info("run complete");
     }
 
     @NotNull
@@ -108,6 +144,20 @@ public class LoadStructuralVariants {
         return EnrichedStructuralVariantFactory.enrich(variants, purityAdjuster, copyNumbers);
     }
 
+    private static List<SvClusterData> queryStructuralVariantData(DatabaseAccess dbAccess, final String sampleId)
+    {
+        List<SvClusterData> svClusterDataItems = Lists.newArrayList();
+
+        List<StructuralVariantData> svRecords = dbAccess.readStructuralVariants(sampleId);
+
+        for(final StructuralVariantData svRecord : svRecords)
+        {
+            svClusterDataItems.add(SvClusterData.from(svRecord));
+        }
+
+        return svClusterDataItems;
+    }
+
     @NotNull
     private static Options createBasicOptions() {
         final Options options = new Options();
@@ -118,6 +168,10 @@ public class LoadStructuralVariants {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(FUSION_CSV, true, "Path towards a CSV containing white-listed gene fusions.");
         options.addOption(ENSEMBL_DB, true, "Annotate structural variants using this Ensembl DB URI");
+        options.addOption(LOAD_FROM_DB, false, "Use existing SV data, skip loading from VCF");
+        options.addOption(CLUSTER_SVS, false, "Whether to run clustering logic");
+        options.addOption(SKIP_ANNOTATIONS, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
+        options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 1000");
         return options;
     }
 
