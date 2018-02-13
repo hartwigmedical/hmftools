@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfExonRegion;
 import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
@@ -138,7 +139,7 @@ class BachelorEligibility {
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
                         .anyMatch(p -> v.sampleAnnotations()
                                 .stream()
-                                .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && a.effects().stream().anyMatch(effects::contains)));
+                                .anyMatch(a -> a.featureID().equals(p.getEnsembl()) && effects.stream().anyMatch(x -> a.effects().contains(x))));
 
                 panelPredicates.add(panelPredicate);
 
@@ -261,29 +262,29 @@ class BachelorEligibility {
             // found a match, not collect up the details and write them to the output file
             LOGGER.info("match found: program({}) ", programName);
 
-            for (SnpEff snpEff : sampleVariant.sampleAnnotations()) {
+            for (VariantAnnotation snpEff : sampleVariant.sampleAnnotations()) {
                 // re-check that this variant is one that is relevant
-                if (!program.panelTranscripts().contains(snpEff.transcript())) {
-                    LOGGER.debug("uninteresting transcript({})", snpEff.transcript());
+                if (!program.panelTranscripts().contains(snpEff.featureID())) {
+                    LOGGER.debug("uninteresting transcript({})", snpEff.featureID());
                     continue;
                 }
 
                 boolean found = false;
                 for (String requiredEffect : program.requiredEffects()) {
-                    if (snpEff.allEffects().contains(requiredEffect)) {
+                    if (snpEff.effects().contains(requiredEffect)) {
                         found = true;
                         break;
                     }
                 }
 
                 if (!found) {
-                    LOGGER.debug("uninteresting effects({})", snpEff.allEffects());
+                    LOGGER.debug("uninteresting effects({})", snpEff.effects());
                     continue;
                 }
 
                 // now we have the correct allele and transcript ID as required by the XML
                 // so write a complete record to the output file
-                LOGGER.info("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.transcript(), snpEff.allEffects());
+                LOGGER.info("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.featureID(), snpEff.effects());
 
                 EligibilityReport report = ImmutableEligibilityReport.builder()
                         .patient(patient)
@@ -291,12 +292,12 @@ class BachelorEligibility {
                         .program(programName)
                         .id(variant.getID())
                         .genes(snpEff.gene())
-                        .transcriptId(snpEff.transcript())
+                        .transcriptId(snpEff.featureID())
                         .chrom(variant.getContig())
                         .pos(variant.getStart())
                         .ref(variant.getReference().toString())
                         .alts(snpEff.allele())
-                        .effects(snpEff.allEffects())
+                        .effects(snpEff.effects())
                         .build();
 
                 reportList.add(report);

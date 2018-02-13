@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.bachelor;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,10 +16,10 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class VariantModel {
 
     private final VariantContext context;
-    private final List<SnpEff> annotations;
+    private final List<VariantAnnotation> annotations;
     private final Set<String> dbSNP;
 
-    private List<SnpEff> sampleAnnotations;
+    private List<VariantAnnotation> sampleAnnotations;
 
     private static final Logger LOGGER = LogManager.getLogger(VariantModel.class);
 
@@ -27,24 +27,7 @@ public class VariantModel {
 
         context = ctx;
         dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
-        annotations = Arrays.stream(ctx.getAttributeAsString("ANN", "").split(","))
-                .map(s -> Arrays.asList(s.split("\\|")))
-                .map(SnpEff::parseAnnotation)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        
-//        List<String> annotations = Lists.newArrayList(ctx.getAttributeAsString("ANN", "").split(","));
-//
-//        for(String annStr : annotations)
-//        {
-//            List<String> elements = Lists.newArrayList(annStr.split("\\|"));
-//
-//            if(elements.size() >= 6)
-//            {
-//                LOGGER.debug("size({}) e1={} e2={} e3={} e6={}", elements.size(), elements.get(0), elements.get(1), elements.get(2), elements.get(6));
-//            }
-//        }
-
+        annotations = VariantAnnotationFactory.fromContext(ctx);
         sampleAnnotations = Lists.newArrayList();
     }
 
@@ -64,7 +47,7 @@ public class VariantModel {
         return context;
     }
 
-    public List<SnpEff> annotations() {
+    public List<VariantAnnotation> annotations() {
         return annotations;
     }
 
@@ -72,7 +55,7 @@ public class VariantModel {
         return dbSNP;
     }
 
-    public List<SnpEff> sampleAnnotations() {
+    public List<VariantAnnotation> sampleAnnotations() {
         return sampleAnnotations;
     }
 }

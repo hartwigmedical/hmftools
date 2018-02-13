@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.bachelor.predicates;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bachelor.SnpEff;
 import com.hartwig.hmftools.bachelor.VariantModel;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 
 import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 
@@ -29,8 +31,8 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
 
     @Override
     public boolean test(final VariantModel variantModel) {
-        for (final SnpEff annotation : variantModel.annotations()) {
-            final boolean transcriptMatches = transcripts.contains(annotation.transcript());
+        for (final VariantAnnotation annotation : variantModel.annotations()) {
+            final boolean transcriptMatches = transcripts.contains(annotation.featureID());
             if (transcriptMatches) {
                 for (ProgramBlacklist.Exclusion exclusion : blacklist) {
                     if (test(exclusion, variantModel.context(), annotation)) {
@@ -42,15 +44,20 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
         return false;
     }
 
-    private static boolean test(final ProgramBlacklist.Exclusion blacklist, final VariantContext context, final SnpEff annotation) {
-        if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty() && blacklist.getHGVSP().equals(annotation.hgvsProtein())) {
+    private static boolean test(final ProgramBlacklist.Exclusion blacklist, final VariantContext context,
+            final VariantAnnotation annotation) {
+        if (blacklist.getHGVSP() != null && !annotation.hgvsProtein().isEmpty() && blacklist.getHGVSP()
+                .equals(annotation.hgvsProtein().replaceFirst("^p\\.", ""))) {
             return true;
         }
-        if (blacklist.getHGVSC() != null && !annotation.hgvsCoding().isEmpty() && blacklist.getHGVSC().equals(annotation.hgvsCoding())) {
+        if (blacklist.getHGVSC() != null && !annotation.hgvsCoding().isEmpty() && blacklist.getHGVSC()
+                .equals(annotation.hgvsCoding().replaceFirst("^c\\.", ""))) {
             return true;
         }
-        if (blacklist.getMinCodon() != null && !annotation.proteinPosition().isEmpty() // TODO: stronger check here?
-                && blacklist.getMinCodon().intValue() <= annotation.proteinPosition().get(0)) {
+
+        final List<Integer> proteinPositions = proteinPosition(annotation);
+        if (blacklist.getMinCodon() != null && !proteinPositions.isEmpty() // TODO: stronger check here?
+                && blacklist.getMinCodon().intValue() <= proteinPositions.get(0)) {
             return true;
         }
 
@@ -60,6 +67,13 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
     private static boolean atPosition(final VariantContext v, final String position) {
         // TODO: robust enough check?
         return position.equals(v.getContig() + ":" + v.getStart());
+    }
 
+    @NotNull
+    private static List<Integer> proteinPosition(@NotNull final VariantAnnotation annotation) {
+        return Arrays.stream(annotation.aaPosAndLength().split("/"))
+                .filter(s -> !s.isEmpty())
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
     }
 }

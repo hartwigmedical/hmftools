@@ -42,8 +42,8 @@ public class WhitelistPredicate implements Predicate<VariantModel> {
         return variant.sampleAnnotations()
                 .stream()
                 .filter(a -> !a.hgvsProtein().isEmpty())
-                .filter(a -> transcriptProteinWhitelist.containsKey(a.transcript()))
-                .anyMatch(a -> transcriptProteinWhitelist.get(a.transcript()).contains(a.hgvsProtein()));
+                .filter(a -> transcriptProteinWhitelist.containsKey(a.featureID()))
+                .anyMatch(a -> transcriptProteinWhitelist.get(a.featureID()).contains(a.hgvsProtein().replaceFirst("^p\\.", "")));
     }
 
     private boolean inDbSNPWhitelist(final VariantModel variant) {

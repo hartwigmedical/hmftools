@@ -48,6 +48,7 @@ public class VariantAnnotationTest {
                 .aaPosAndLength(Strings.EMPTY)
                 .distance(Strings.EMPTY)
                 .addition(Strings.EMPTY)
+                .effects(Strings.EMPTY)
                 .consequences(Lists.newArrayList(consequences));
     }
 }
