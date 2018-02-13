@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,8 +16,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate;
+import com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate;
 import com.hartwig.hmftools.common.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
@@ -31,9 +31,7 @@ import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
 import nl.hartwigmedicalfoundation.bachelor.OtherEffect;
 import nl.hartwigmedicalfoundation.bachelor.Program;
-import nl.hartwigmedicalfoundation.bachelor.ProgramBlacklist;
 import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
-import nl.hartwigmedicalfoundation.bachelor.ProgramWhitelist;
 import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
 
 import org.apache.logging.log4j.LogManager;
@@ -75,11 +73,6 @@ class BachelorEligibility {
     }
 
     private BachelorEligibility() {
-    }
-
-    private static boolean atPosition(final VariantContext v, final String position) {
-        // TODO: robust enough check?
-        return position.equals(v.getContig() + ":" + v.getStart());
     }
 
     static BachelorEligibility fromMap(final Map<String, Program> input) {
@@ -136,12 +129,13 @@ class BachelorEligibility {
 
                 // take up a collection of the effects to search for
                 requiredEffects = panel.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
-                panelTranscripts = genes.stream().map(g -> g.getEnsembl()).collect(Collectors.toList());
+                panelTranscripts = genes.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
 
                 final List<String> effects = requiredEffects;
 
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
-                        .anyMatch(p -> v.sampleAnnotations().stream()
+                        .anyMatch(p -> v.sampleAnnotations()
+                                .stream()
                                 .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && a.effects().stream().anyMatch(effects::contains)));
 
                 panelPredicates.add(panelPredicate);
@@ -170,48 +164,8 @@ class BachelorEligibility {
 
             final Predicate<VariantModel> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
 
-            // blacklist
-            final List<ProgramBlacklist.Exclusion> blacklist =
-                    program.getBlacklist() != null ? program.getBlacklist().getExclusion() : Lists.newArrayList();
-
-            final Predicate<VariantModel> inBlacklist = v -> blacklist.stream().anyMatch(b -> {
-                for (final SnpEff annotation : v.sampleAnnotations()) {
-                    final boolean transcriptMatches = geneToEnsemblMap.values().contains(annotation.transcript());
-                    if (transcriptMatches) {
-                        if (b.getHGVSP() != null && !annotation.hgvsProtein().isEmpty() && b.getHGVSP().equals(annotation.hgvsProtein())) {
-                            return true;
-                        } else if (b.getHGVSC() != null && !annotation.hgvsCoding().isEmpty() && b.getHGVSC()
-                                .equals(annotation.hgvsCoding())) {
-                            return true;
-                        } else if (b.getMinCodon() != null && !annotation.proteinPosition().isEmpty() // TODO: stronger check here?
-                                && b.getMinCodon().intValue() <= annotation.proteinPosition().get(0)) {
-                            return true;
-                        } else if (b.getPosition() != null && atPosition(v.context(), b.getPosition())) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            });
-
-            // whitelist
-            final Multimap<String, String> whitelist = HashMultimap.create();
-            final Set<String> dbSNP = Sets.newHashSet();
-            if (program.getWhitelist() != null) {
-                for (final Object o : program.getWhitelist().getVariantOrDbSNP()) {
-                    if (o instanceof ProgramWhitelist.Variant) {
-                        final ProgramWhitelist.Variant v = (ProgramWhitelist.Variant) o;
-                        for (final String transcript : geneToEnsemblMap.get(v.getGene().getName())) {
-                            whitelist.put(transcript, v.getHGVSP());
-                        }
-                    } else if (o instanceof String) {
-                        dbSNP.add((String) o);
-                    }
-                }
-            }
-            final Predicate<VariantModel> inWhitelist = v -> v.dbSNP().stream().anyMatch(dbSNP::contains) || v.sampleAnnotations().stream()
-                    .anyMatch(a -> !a.hgvsProtein().isEmpty() && whitelist.get(a.transcript()).contains(a.hgvsProtein()));
-
+            final Predicate<VariantModel> inBlacklist = new BlacklistPredicate(geneToEnsemblMap, program.getBlacklist());
+            final Predicate<VariantModel> inWhitelist = new WhitelistPredicate(geneToEnsemblMap, program.getWhitelist());
             final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
 
             final Predicate<GeneCopyNumber> copyNumberPredicate =

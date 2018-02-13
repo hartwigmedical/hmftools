@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-class VariantModel {
+public class VariantModel {
 
     private final VariantContext context;
     private final List<SnpEff> annotations;
