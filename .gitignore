@@ -16,3 +16,6 @@ hmf-common/src/test/resources/ecrf/example/ecrf.xml
 patient-db/patient-db-logs/*.log
 .DS_Store
 /patient-db/nb-configuration.xml
+
+# Ignore log file in bachelor
+bachelor/bachelor.log
