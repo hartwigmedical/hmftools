@@ -23,7 +23,7 @@ public class VariantModel {
 
     private static final Logger LOGGER = LogManager.getLogger(VariantModel.class);
 
-    private VariantModel(final VariantContext ctx) {
+    public VariantModel(final VariantContext ctx) {
 
         context = ctx;
         dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());

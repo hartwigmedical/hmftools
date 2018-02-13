@@ -166,7 +166,7 @@ class BachelorEligibility {
 
             final Predicate<VariantModel> inPanel = v -> panelPredicates.stream().anyMatch(p -> p.test(v));
 
-            final Predicate<VariantModel> inBlacklist = new BlacklistPredicate(geneToEnsemblMap, program.getBlacklist());
+            final Predicate<VariantModel> inBlacklist = new BlacklistPredicate(geneToEnsemblMap.values(), program.getBlacklist());
             final Predicate<VariantModel> inWhitelist = new WhitelistPredicate(geneToEnsemblMap, program.getWhitelist());
             final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
 

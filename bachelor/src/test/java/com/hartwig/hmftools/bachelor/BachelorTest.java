@@ -1,3 +1,5 @@
+package com.hartwig.hmftools.bachelor;
+
 import static org.junit.Assert.assertNotNull;
 
 import static junit.framework.TestCase.assertNull;
@@ -8,7 +10,6 @@ import java.nio.file.Paths;
 import javax.xml.bind.JAXBException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.bachelor.BachelorSchema;
 
 import nl.hartwigmedicalfoundation.bachelor.Program;
 
