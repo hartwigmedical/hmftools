@@ -391,8 +391,9 @@ public final class PatientValidator {
             final BiopsyTreatmentData lastTreatment = treatments.get(treatments.size() - 1);
             final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
             if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
+                String message = "death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")";
                 findings.add(ValidationFinding.of(ECRF_LEVEL, patientId, fields(FIELD_DEATH_DATE, FORM_TREATMENT),
-                        "death date before end of last treatment", FormStatusState.best(patient.deathStatus(), lastTreatment.formStatus()),
+                        message, FormStatusState.best(patient.deathStatus(), lastTreatment.formStatus()),
                         patient.deathLocked() || lastTreatment.formLocked()));
             }
         }
