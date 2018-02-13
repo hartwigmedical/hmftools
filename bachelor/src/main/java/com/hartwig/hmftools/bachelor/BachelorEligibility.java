@@ -235,7 +235,7 @@ class BachelorEligibility {
         // apply the all relevant tests to see if this program has been matched
         final List<String> matchingPrograms = programs.entrySet()
                 .stream()
-                .filter(program -> program.getValue().vcfProcessor.test(sampleVariant))
+                .filter(program -> program.getValue().vcfProcessor().test(sampleVariant))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
@@ -252,7 +252,7 @@ class BachelorEligibility {
         for (Map.Entry<String, BachelorProgram> entry : programs.entrySet()) {
             BachelorProgram program = entry.getValue();
 
-            if (!program.vcfProcessor.test(sampleVariant)) {
+            if (!program.vcfProcessor().test(sampleVariant)) {
                 continue;
             }
 
@@ -263,13 +263,13 @@ class BachelorEligibility {
 
             for (SnpEff snpEff : sampleVariant.sampleAnnotations()) {
                 // re-check that this variant is one that is relevant
-                if (!program.PanelTranscripts.contains(snpEff.transcript())) {
+                if (!program.panelTranscripts().contains(snpEff.transcript())) {
                     LOGGER.debug("uninteresting transcript({})", snpEff.transcript());
                     continue;
                 }
 
                 boolean found = false;
-                for (String requiredEffect : program.RequiredEffects) {
+                for (String requiredEffect : program.requiredEffects()) {
                     if (snpEff.allEffects().contains(requiredEffect)) {
                         found = true;
                         break;
@@ -361,7 +361,7 @@ class BachelorEligibility {
             final boolean isGermline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
             final List<String> matchingPrograms = programs.entrySet()
                     .stream()
-                    .filter(program -> program.getValue().copyNumberProcessor.test(copyNumber))
+                    .filter(program -> program.getValue().copyNumberProcessor().test(copyNumber))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
 
@@ -420,11 +420,11 @@ class BachelorEligibility {
 
             programs.values()
                     .stream()
-                    .filter(p -> p.disruptionProcessor.test(region))
+                    .filter(p -> p.disruptionProcessor().test(region))
                     .map(p -> ImmutableEligibilityReport.builder()
                             .patient(patient)
                             .source(SOMATIC_DISRUPTION)
-                            .program(p.name)
+                            .program(p.name())
                             .id("")
                             .genes(region.gene())
                             .chrom(region.chromosome())
