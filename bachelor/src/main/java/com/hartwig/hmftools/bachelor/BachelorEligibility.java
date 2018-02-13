@@ -42,7 +42,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -205,21 +204,8 @@ class BachelorEligibility {
         }
 
         // gather up the relevant alleles
-        final List<String> alleleList = genotype.getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
+        VariantModel sampleVariant = new VariantModel(sample, variant);
 
-        for (String allele : alleleList) {
-            LOGGER.debug("checking allele({}):", allele);
-        }
-
-        VariantModel sampleVariant = VariantModel.from(variant);
-
-        // set the matching set of alleles for the variant (eg ignore those from any superfluous samples
-        sampleVariant.setSampleAnnotations(alleleList);
-
-        LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
-                sampleVariant.sampleAnnotations().size(),
-                sampleVariant.annotations().size(),
-                alleleList.size());
 
         //        for(SnpEff snpEff : sampleVariant.SampleAnnotations)
         //        {

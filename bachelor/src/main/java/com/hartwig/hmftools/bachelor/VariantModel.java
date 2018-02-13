@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantModel {
@@ -18,29 +19,29 @@ public class VariantModel {
     private final VariantContext context;
     private final List<VariantAnnotation> annotations;
     private final Set<String> dbSNP;
-
-    private List<VariantAnnotation> sampleAnnotations;
+    private final List<VariantAnnotation> sampleAnnotations;
 
     private static final Logger LOGGER = LogManager.getLogger(VariantModel.class);
 
-    public VariantModel(final VariantContext ctx) {
+    public VariantModel(final String sample, final VariantContext ctx) {
 
         context = ctx;
         dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
         annotations = VariantAnnotationFactory.fromContext(ctx);
-        sampleAnnotations = Lists.newArrayList();
-    }
 
-    static VariantModel from(final VariantContext ctx) {
-        return new VariantModel(ctx);
-    }
-
-    public void setSampleAnnotations(final List<String> alleleList) {
-        sampleAnnotations.clear();
-
+        final List<String> alleleList =
+                ctx.getGenotype(sample).getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
         sampleAnnotations = annotations.stream()
                 .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.allele())))
                 .collect(Collectors.toList());
+
+        for (String allele : alleleList) {
+            LOGGER.debug("checking allele({}):", allele);
+        }
+        LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
+                sampleAnnotations().size(),
+                annotations().size(),
+                alleleList.size());
     }
 
     public VariantContext context() {

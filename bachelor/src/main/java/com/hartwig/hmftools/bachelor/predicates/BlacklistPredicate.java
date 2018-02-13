@@ -31,7 +31,7 @@ public class BlacklistPredicate implements Predicate<VariantModel> {
 
     @Override
     public boolean test(final VariantModel variantModel) {
-        for (final VariantAnnotation annotation : variantModel.annotations()) {
+        for (final VariantAnnotation annotation : variantModel.sampleAnnotations()) {
             final boolean transcriptMatches = transcripts.contains(annotation.featureID());
             if (transcriptMatches) {
                 for (ProgramBlacklist.Exclusion exclusion : blacklist) {

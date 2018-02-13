@@ -35,6 +35,7 @@ public class BlacklistPredicateTest {
     private static final String ANN =
             "ANN=T|intron_variant|MODIFIER|BRCA2|ENSG00000139618|transcript|ENST00000380152|protein_coding|24/26|c.9256+4867C>A|p.Ser430Glx|1307/3444|1288/2043|430/680;";
     private static final String END = "MAPPABILITY=1.000000\tGT:AD:DP\t0/1:98,21:121";
+    private static final String SAMPLE = "sample";
 
     private Predicate<VariantModel> blacklistPredicate;
 
@@ -44,7 +45,7 @@ public class BlacklistPredicateTest {
         final Program program = schema.processXML(Paths.get(BLACKLIST_XML));
         blacklistPredicate = new BlacklistPredicate(Sets.newHashSet("ENST00000380152"), program.getBlacklist());
 
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("SAMPLE"));
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
         codec = new VCFCodec();
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
     }
@@ -76,7 +77,7 @@ public class BlacklistPredicateTest {
     @NotNull
     private VariantModel createModel(@NotNull final String line) {
         VariantContext context = codec.decode(line);
-        return new VariantModel(context);
+        return new VariantModel(SAMPLE, context);
     }
 
 }
