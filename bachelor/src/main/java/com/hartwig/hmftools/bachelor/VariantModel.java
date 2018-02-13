@@ -15,19 +15,19 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 class VariantModel {
 
-    final VariantContext Context;
-    final List<SnpEff> Annotations;
-    final Set<String> dbSNP;
+    private final VariantContext context;
+    private final List<SnpEff> annotations;
+    private final Set<String> dbSNP;
 
-    List<SnpEff> SampleAnnotations;
+    private List<SnpEff> sampleAnnotations;
 
     private static final Logger LOGGER = LogManager.getLogger(VariantModel.class);
 
     private VariantModel(final VariantContext ctx) {
 
-        Context = ctx;
+        context = ctx;
         dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
-        Annotations = Arrays.stream(ctx.getAttributeAsString("ANN", "").split(","))
+        annotations = Arrays.stream(ctx.getAttributeAsString("ANN", "").split(","))
                 .map(s -> Arrays.asList(s.split("\\|")))
                 .map(SnpEff::parseAnnotation)
                 .filter(Objects::nonNull)
@@ -45,7 +45,7 @@ class VariantModel {
 //            }
 //        }
 
-        SampleAnnotations = Lists.newArrayList();
+        sampleAnnotations = Lists.newArrayList();
     }
 
     static VariantModel from(final VariantContext ctx) {
@@ -53,10 +53,26 @@ class VariantModel {
     }
 
     public void setSampleAnnotations(final List<String> alleleList) {
-        SampleAnnotations.clear();
+        sampleAnnotations.clear();
 
-        SampleAnnotations = Annotations.stream()
+        sampleAnnotations = annotations.stream()
                 .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.allele())))
                 .collect(Collectors.toList());
+    }
+
+    public VariantContext context() {
+        return context;
+    }
+
+    public List<SnpEff> annotations() {
+        return annotations;
+    }
+
+    public Set<String> dbSNP() {
+        return dbSNP;
+    }
+
+    public List<SnpEff> sampleAnnotations() {
+        return sampleAnnotations;
     }
 }

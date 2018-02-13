@@ -141,7 +141,7 @@ class BachelorEligibility {
                 final List<String> effects = requiredEffects;
 
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
-                        .anyMatch(p -> v.SampleAnnotations.stream()
+                        .anyMatch(p -> v.sampleAnnotations().stream()
                                 .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && a.effects().stream().anyMatch(effects::contains)));
 
                 panelPredicates.add(panelPredicate);
@@ -175,7 +175,7 @@ class BachelorEligibility {
                     program.getBlacklist() != null ? program.getBlacklist().getExclusion() : Lists.newArrayList();
 
             final Predicate<VariantModel> inBlacklist = v -> blacklist.stream().anyMatch(b -> {
-                for (final SnpEff annotation : v.SampleAnnotations) {
+                for (final SnpEff annotation : v.sampleAnnotations()) {
                     final boolean transcriptMatches = geneToEnsemblMap.values().contains(annotation.transcript());
                     if (transcriptMatches) {
                         if (b.getHGVSP() != null && !annotation.hgvsProtein().isEmpty() && b.getHGVSP().equals(annotation.hgvsProtein())) {
@@ -186,7 +186,7 @@ class BachelorEligibility {
                         } else if (b.getMinCodon() != null && !annotation.proteinPosition().isEmpty() // TODO: stronger check here?
                                 && b.getMinCodon().intValue() <= annotation.proteinPosition().get(0)) {
                             return true;
-                        } else if (b.getPosition() != null && atPosition(v.Context, b.getPosition())) {
+                        } else if (b.getPosition() != null && atPosition(v.context(), b.getPosition())) {
                             return true;
                         }
                     }
@@ -209,7 +209,7 @@ class BachelorEligibility {
                     }
                 }
             }
-            final Predicate<VariantModel> inWhitelist = v -> v.dbSNP.stream().anyMatch(dbSNP::contains) || v.SampleAnnotations.stream()
+            final Predicate<VariantModel> inWhitelist = v -> v.dbSNP().stream().anyMatch(dbSNP::contains) || v.sampleAnnotations().stream()
                     .anyMatch(a -> !a.hgvsProtein().isEmpty() && whitelist.get(a.transcript()).contains(a.hgvsProtein()));
 
             final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
@@ -260,8 +260,8 @@ class BachelorEligibility {
         sampleVariant.setSampleAnnotations(alleleList);
 
         LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
-                sampleVariant.SampleAnnotations.size(),
-                sampleVariant.Annotations.size(),
+                sampleVariant.sampleAnnotations().size(),
+                sampleVariant.annotations().size(),
                 alleleList.size());
 
         //        for(SnpEff snpEff : sampleVariant.SampleAnnotations)
@@ -307,7 +307,7 @@ class BachelorEligibility {
             // found a match, not collect up the details and write them to the output file
             LOGGER.info("match found: program({}) ", programName);
 
-            for (SnpEff snpEff : sampleVariant.SampleAnnotations) {
+            for (SnpEff snpEff : sampleVariant.sampleAnnotations()) {
                 // re-check that this variant is one that is relevant
                 if (!program.PanelTranscripts.contains(snpEff.transcript())) {
                     LOGGER.debug("uninteresting transcript({})", snpEff.transcript());
