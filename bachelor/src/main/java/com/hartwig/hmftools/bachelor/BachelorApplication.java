@@ -118,7 +118,8 @@ public class BachelorApplication {
         final StructuralVariantFactory factory = new StructuralVariantFactory();
         try {
             try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(vcf.getPath(),
-                    new VCFCodec(), false)) {
+                    new VCFCodec(),
+                    false)) {
                 reader.iterator().forEach(factory::addVariantContext);
             }
         } catch (IOException e) {
@@ -133,25 +134,25 @@ public class BachelorApplication {
             final boolean somatic, final boolean copyNumber, final boolean structuralVariants) {
 
         final String patient = run.getPatientID();
-        final boolean doGermline = run.germline != null && germline;
-        final boolean doSomatic = run.somatic != null && somatic;
-        final boolean doCopyNumber = run.copyNumber != null && copyNumber;
-        final boolean doStructuralVariants = run.structuralVariants != null && structuralVariants;
+        final boolean doGermline = run.germline() != null && germline;
+        final boolean doSomatic = run.somatic() != null && somatic;
+        final boolean doCopyNumber = run.copyNumber() != null && copyNumber;
+        final boolean doStructuralVariants = run.structuralVariants() != null && structuralVariants;
 
-        LOGGER.info("processing run for patient({}) from file({})", patient, run.prefix);
+        LOGGER.info("processing run for patient({}) from file({})", patient, run.prefix());
 
         final List<EligibilityReport> result = Lists.newArrayList();
         if (doGermline) {
-            result.addAll(processVCF(patient, true, run.germline, eligibility));
+            result.addAll(processVCF(patient, true, run.germline(), eligibility));
         }
         if (doSomatic) {
-            result.addAll(processVCF(patient, false, run.somatic, eligibility));
+            result.addAll(processVCF(patient, false, run.somatic(), eligibility));
         }
         if (doCopyNumber) {
-            result.addAll(processPurpleCNV(patient, run.copyNumber, eligibility));
+            result.addAll(processPurpleCNV(patient, run.copyNumber(), eligibility));
         }
         if (doStructuralVariants) {
-            result.addAll(processSV(patient, run.structuralVariants, eligibility));
+            result.addAll(processSV(patient, run.structuralVariants(), eligibility));
         }
 
         try {
@@ -162,23 +163,32 @@ public class BachelorApplication {
 
             return file;
         } catch (final IOException e) {
-            LOGGER.error("error with temporary file for {}", run.prefix);
+            LOGGER.error("error with temporary file for {}", run.prefix());
             return null;
         }
     }
 
     private static String fileHeader() {
-        return String.join(",", Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
+        return String.join(",",
+                Arrays.asList("PATIENT", "SOURCE", "PROGRAM", "ID", "GENES", "TRANSCRIPT_ID", "CHROM", "POS", "REF", "ALTS", "EFFECTS"));
     }
 
     private static void outputToFile(final Collection<EligibilityReport> reports, final File outputFile) throws IOException {
         try (final BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath())) {
             for (final EligibilityReport r : reports) {
 
-                writer.write(
-                        String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
-                                r.patient(), r.source().toString(), r.program(), r.id(), r.genes(), r.transcriptId(),
-                                r.chrom(), r.pos(), r.ref(), r.alts(), r.effects()));
+                writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
+                        r.patient(),
+                        r.source().toString(),
+                        r.program(),
+                        r.id(),
+                        r.genes(),
+                        r.transcriptId(),
+                        r.chrom(),
+                        r.pos(),
+                        r.ref(),
+                        r.alts(),
+                        r.effects()));
                 writer.newLine();
 
             }
@@ -224,15 +234,17 @@ public class BachelorApplication {
             final boolean doAll = !(germline || somatic || copyNumber || structuralVariants);
 
             final List<File> filesToMerge;
-            if (cmd.hasOption(BATCH_DIRECTORY))
-            {
+            if (cmd.hasOption(BATCH_DIRECTORY)) {
                 final Path root = Paths.get(cmd.getOptionValue(BATCH_DIRECTORY));
-                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel())
-                {
+                try (final Stream<Path> stream = Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS).parallel()) {
                     filesToMerge = stream.filter(p -> p.toFile().isDirectory())
                             .filter(p -> !p.equals(root))
                             .map(RunDirectory::new)
-                            .map(run -> process(eligibility, run, germline || doAll, somatic || doAll, copyNumber || doAll,
+                            .map(run -> process(eligibility,
+                                    run,
+                                    germline || doAll,
+                                    somatic || doAll,
+                                    copyNumber || doAll,
                                     structuralVariants || doAll))
                             .collect(Collectors.toList());
                 }
@@ -243,9 +255,12 @@ public class BachelorApplication {
                     System.exit(1);
                     return;
                 }
-                filesToMerge = Collections.singletonList(
-                        process(eligibility, new RunDirectory(path), germline || doAll, somatic || doAll, copyNumber || doAll,
-                                structuralVariants || doAll));
+                filesToMerge = Collections.singletonList(process(eligibility,
+                        new RunDirectory(path),
+                        germline || doAll,
+                        somatic || doAll,
+                        copyNumber || doAll,
+                        structuralVariants || doAll));
             } else {
                 LOGGER.error("requires either a batch or single run directory");
                 System.exit(1);
