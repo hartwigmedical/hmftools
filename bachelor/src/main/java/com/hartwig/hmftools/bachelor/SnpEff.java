@@ -8,15 +8,16 @@ import org.jetbrains.annotations.Nullable;
 
 // this class is logically keyed by TranscriptID (aka IsoForm) and Allele
 // there can be many entruies per variant (VCF line) annotated by SnpEff
+@Deprecated
 public class SnpEff {
 
-    final String GeneName;
-    final String Transcript;
-    final List<String> Effects;
-    final String AllEffects;
-    final String HGVSc;
-    final String HGVSp;
-    final List<Integer> ProteinPosition;
+    private final String GeneName;
+    private final String Transcript;
+    private final List<String> Effects;
+    private final String AllEffects;
+    private final String HGVSc;
+    private final String HGVSp;
+    private final List<Integer> ProteinPosition;
 
     private final String allele;
 
@@ -59,6 +60,7 @@ public class SnpEff {
     }
 
     @Nullable
+    @Deprecated
     static SnpEff parseAnnotation(final List<String> annotation) {
         if (annotation.size() < Field.MAX.value) {
             return null;
@@ -87,7 +89,35 @@ public class SnpEff {
         return null;
     }
 
-    public String getAllele() {
+    public String allele() {
         return this.allele;
+    }
+
+    public String gene() {
+        return GeneName;
+    }
+
+    public String transcript() {
+        return Transcript;
+    }
+
+    public List<String> effects() {
+        return Effects;
+    }
+
+    public String allEffects() {
+        return AllEffects;
+    }
+
+    public String hgvsCoding() {
+        return HGVSc;
+    }
+
+    public String hgvsProtein() {
+        return HGVSp;
+    }
+
+    public List<Integer> proteinPosition() {
+        return ProteinPosition;
     }
 }

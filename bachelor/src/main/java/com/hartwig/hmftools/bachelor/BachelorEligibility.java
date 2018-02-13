@@ -41,8 +41,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -81,8 +81,6 @@ class BachelorEligibility {
         // TODO: robust enough check?
         return position.equals(v.getContig() + ":" + v.getStart());
     }
-
-
 
     static BachelorEligibility fromMap(final Map<String, Program> input) {
         final BachelorEligibility result = new BachelorEligibility();
@@ -143,9 +141,8 @@ class BachelorEligibility {
                 final List<String> effects = requiredEffects;
 
                 final Predicate<VariantModel> panelPredicate = v -> genes.stream()
-                                .anyMatch(p -> v.SampleAnnotations.stream()
-                                        .anyMatch(a -> a.Transcript.equals(p.getEnsembl()) && a.Effects.stream()
-                                                .anyMatch(effects::contains)));
+                        .anyMatch(p -> v.SampleAnnotations.stream()
+                                .anyMatch(a -> a.transcript().equals(p.getEnsembl()) && a.effects().stream().anyMatch(effects::contains)));
 
                 panelPredicates.add(panelPredicate);
 
@@ -157,11 +154,12 @@ class BachelorEligibility {
                         if (namedRegion == null) {
 
                             LOGGER.warn("Program {} gene {} non-canonical transcript {} couldn't find region, transcript will be skipped",
-                                    program.getName(), g.getName(), g.getEnsembl());
+                                    program.getName(),
+                                    g.getName(),
+                                    g.getEnsembl());
 
                             // just skip this gene for now
-                        }
-                        else {
+                        } else {
                             result.querySet.put(namedRegion.transcriptID(), namedRegion);
                         }
                     } else {
@@ -178,14 +176,15 @@ class BachelorEligibility {
 
             final Predicate<VariantModel> inBlacklist = v -> blacklist.stream().anyMatch(b -> {
                 for (final SnpEff annotation : v.SampleAnnotations) {
-                    final boolean transcriptMatches = geneToEnsemblMap.values().contains(annotation.Transcript);
+                    final boolean transcriptMatches = geneToEnsemblMap.values().contains(annotation.transcript());
                     if (transcriptMatches) {
-                        if (b.getHGVSP() != null && !annotation.HGVSp.isEmpty() && b.getHGVSP().equals(annotation.HGVSp)) {
+                        if (b.getHGVSP() != null && !annotation.hgvsProtein().isEmpty() && b.getHGVSP().equals(annotation.hgvsProtein())) {
                             return true;
-                        } else if (b.getHGVSC() != null && !annotation.HGVSc.isEmpty() && b.getHGVSC().equals(annotation.HGVSc)) {
+                        } else if (b.getHGVSC() != null && !annotation.hgvsCoding().isEmpty() && b.getHGVSC()
+                                .equals(annotation.hgvsCoding())) {
                             return true;
-                        } else if (b.getMinCodon() != null && !annotation.ProteinPosition.isEmpty() // TODO: stronger check here?
-                                && b.getMinCodon().intValue() <= annotation.ProteinPosition.get(0)) {
+                        } else if (b.getMinCodon() != null && !annotation.proteinPosition().isEmpty() // TODO: stronger check here?
+                                && b.getMinCodon().intValue() <= annotation.proteinPosition().get(0)) {
                             return true;
                         } else if (b.getPosition() != null && atPosition(v.Context, b.getPosition())) {
                             return true;
@@ -211,7 +210,7 @@ class BachelorEligibility {
                 }
             }
             final Predicate<VariantModel> inWhitelist = v -> v.dbSNP.stream().anyMatch(dbSNP::contains) || v.SampleAnnotations.stream()
-                    .anyMatch(a -> !a.HGVSp.isEmpty() && whitelist.get(a.Transcript).contains(a.HGVSp));
+                    .anyMatch(a -> !a.hgvsProtein().isEmpty() && whitelist.get(a.transcript()).contains(a.hgvsProtein()));
 
             final Predicate<VariantModel> snvPredicate = v -> inPanel.test(v) ? !inBlacklist.test(v) : inWhitelist.test(v);
 
@@ -220,8 +219,7 @@ class BachelorEligibility {
             final Predicate<HmfGenomeRegion> disruptionPredicate =
                     disruption -> disruptionPredicates.stream().anyMatch(p -> p.test(disruption));
 
-            BachelorProgram bachelorProgram = new BachelorProgram(
-                    program.getName(),
+            BachelorProgram bachelorProgram = new BachelorProgram(program.getName(),
                     snvPredicate,
                     copyNumberPredicate,
                     disruptionPredicate,
@@ -235,7 +233,8 @@ class BachelorEligibility {
     }
 
     @NotNull
-    private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sample, final EligibilityReport.ReportType type) {
+    private Collection<EligibilityReport> processVariant(final VariantContext variant, final String patient, final String sample,
+            final EligibilityReport.ReportType type) {
 
         if (variant.isFiltered()) {
             return Collections.emptyList();
@@ -249,11 +248,9 @@ class BachelorEligibility {
         }
 
         // gather up the relevant alleles
-        final List<String> alleleList = genotype.getAlleles().stream()
-                .map(Allele::getBaseString)
-                .collect(Collectors.toList());
+        final List<String> alleleList = genotype.getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
 
-        for(String allele : alleleList) {
+        for (String allele : alleleList) {
             LOGGER.debug("checking allele({}):", allele);
         }
 
@@ -263,33 +260,34 @@ class BachelorEligibility {
         sampleVariant.setSampleAnnotations(alleleList);
 
         LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
-                sampleVariant.SampleAnnotations.size(), sampleVariant.Annotations.size(), alleleList.size());
+                sampleVariant.SampleAnnotations.size(),
+                sampleVariant.Annotations.size(),
+                alleleList.size());
 
-//        for(SnpEff snpEff : sampleVariant.SampleAnnotations)
-//        {
-//            if(snpEff.Transcript.contains("ENST00000357654"))
-//            {
-//                LOGGER.debug("matched SAMPLED transcriptId: gene({}) allele({}) effects({})",
-//                        snpEff.GeneName, snpEff.getAllele(), snpEff.AllEffects);
-//
-//                for(String effect : snpEff.Effects)
-//                {
-//                    LOGGER.debug("transcript({}) with effect({})", snpEff.Transcript, effect);
-//                }
-//            }
-//        }
+        //        for(SnpEff snpEff : sampleVariant.SampleAnnotations)
+        //        {
+        //            if(snpEff.Transcript.contains("ENST00000357654"))
+        //            {
+        //                LOGGER.debug("matched SAMPLED transcriptId: gene({}) allele({}) effects({})",
+        //                        snpEff.GeneName, snpEff.getAllele(), snpEff.AllEffects);
+        //
+        //                for(String effect : snpEff.Effects)
+        //                {
+        //                    LOGGER.debug("transcript({}) with effect({})", snpEff.Transcript, effect);
+        //                }
+        //            }
+        //        }
 
         // apply the all relevant tests to see if this program has been matched
         final List<String> matchingPrograms = programs.entrySet()
-            .stream()
-            .filter(program -> program.getValue().vcfProcessor.test(sampleVariant))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toList());
+                .stream()
+                .filter(program -> program.getValue().vcfProcessor.test(sampleVariant))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
 
         List<EligibilityReport> reportList = Lists.newArrayList();
 
-        if(matchingPrograms.size() > 0)
-        {
+        if (matchingPrograms.size() > 0) {
             // found a match, not collect up the details and write them to the output file
             LOGGER.info("program match found, first entry({}) ", matchingPrograms.get(0));
         }
@@ -297,91 +295,85 @@ class BachelorEligibility {
         // search the list of annotations for the correct allele and transcript ID to write to the result file
         // this effectively reapplies the predicate conditions, so a refactor would be to drop the predicates and
         // just apply the search criteria once, and create a report for any full match
-        for(Map.Entry<String, BachelorProgram> entry: programs.entrySet())
-        {
+        for (Map.Entry<String, BachelorProgram> entry : programs.entrySet()) {
             BachelorProgram program = entry.getValue();
 
-            if(!program.vcfProcessor.test(sampleVariant))
+            if (!program.vcfProcessor.test(sampleVariant)) {
                 continue;
+            }
 
             String programName = entry.getKey();
 
             // found a match, not collect up the details and write them to the output file
             LOGGER.info("match found: program({}) ", programName);
 
-            for(SnpEff snpEff : sampleVariant.SampleAnnotations)
-            {
+            for (SnpEff snpEff : sampleVariant.SampleAnnotations) {
                 // re-check that this variant is one that is relevant
-                if(!program.PanelTranscripts.contains(snpEff.Transcript))
-                {
-                    LOGGER.debug("uninteresting transcript({})", snpEff.Transcript);
+                if (!program.PanelTranscripts.contains(snpEff.transcript())) {
+                    LOGGER.debug("uninteresting transcript({})", snpEff.transcript());
                     continue;
                 }
 
                 boolean found = false;
-                for(String requiredEffect : program.RequiredEffects)
-                {
-                    if(snpEff.AllEffects.contains(requiredEffect))
-                    {
+                for (String requiredEffect : program.RequiredEffects) {
+                    if (snpEff.allEffects().contains(requiredEffect)) {
                         found = true;
                         break;
                     }
                 }
 
-                if(!found)
-                {
-                    LOGGER.debug("uninteresting effects({})", snpEff.AllEffects);
+                if (!found) {
+                    LOGGER.debug("uninteresting effects({})", snpEff.allEffects());
                     continue;
                 }
 
                 // now we have the correct allele and transcript ID as required by the XML
                 // so write a complete record to the output file
-                LOGGER.info("matched allele({}) transcriptId({}) effect({})", snpEff.getAllele(), snpEff.Transcript, snpEff.AllEffects);
+                LOGGER.info("matched allele({}) transcriptId({}) effect({})", snpEff.allele(), snpEff.transcript(), snpEff.allEffects());
 
                 EligibilityReport report = ImmutableEligibilityReport.builder()
                         .patient(patient)
                         .source(type)
                         .program(programName)
                         .id(variant.getID())
-                        .genes(snpEff.GeneName)
-                        .transcriptId(snpEff.Transcript)
+                        .genes(snpEff.gene())
+                        .transcriptId(snpEff.transcript())
                         .chrom(variant.getContig())
                         .pos(variant.getStart())
                         .ref(variant.getReference().toString())
-                        .alts(snpEff.getAllele())
-                        .effects(snpEff.AllEffects)
+                        .alts(snpEff.allele())
+                        .effects(snpEff.allEffects())
                         .build();
 
                 reportList.add(report);
             }
         }
 
-        if(!reportList.isEmpty())
-        {
+        if (!reportList.isEmpty()) {
             LOGGER.info("writing {} matched reports", reportList.size());
         }
 
         return reportList;
 
-//        final String alts = variant.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
-//        final String effects = String.join("|", sampleVariant.SampleAnnotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.toSet()));
-//        final String genes = String.join("|", sampleVariant.SampleAnnotations.stream().map(a -> a.GeneName).collect(Collectors.toSet()));
+        //        final String alts = variant.getAlternateAlleles().stream().map(Object::toString).collect(Collectors.joining("|"));
+        //        final String effects = String.join("|", sampleVariant.SampleAnnotations.stream().flatMap(a -> a.Effects.stream()).collect(Collectors.toSet()));
+        //        final String genes = String.join("|", sampleVariant.SampleAnnotations.stream().map(a -> a.GeneName).collect(Collectors.toSet()));
 
-//        return matchingPrograms.stream()
-//                .map(p -> ImmutableEligibilityReport.builder()
-//                        .patient(patient)
-//                        .source(type)
-//                        .program(p)
-//                        .id(variant.getID())
-//                        .genes(genes)
-//                        .transcriptId("TransId")
-//                        .chrom(variant.getContig())
-//                        .pos(variant.getStart())
-//                        .ref(variant.getReference().toString())
-//                        .alts(alts)
-//                        .effects(effects)
-//                        .build())
-//                .collect(Collectors.toList());
+        //        return matchingPrograms.stream()
+        //                .map(p -> ImmutableEligibilityReport.builder()
+        //                        .patient(patient)
+        //                        .source(type)
+        //                        .program(p)
+        //                        .id(variant.getID())
+        //                        .genes(genes)
+        //                        .transcriptId("TransId")
+        //                        .chrom(variant.getContig())
+        //                        .pos(variant.getStart())
+        //                        .ref(variant.getReference().toString())
+        //                        .alts(alts)
+        //                        .effects(effects)
+        //                        .build())
+        //                .collect(Collectors.toList());
     }
 
     @NotNull
@@ -390,14 +382,13 @@ class BachelorEligibility {
 
         final List<EligibilityReport> results = Lists.newArrayList();
 
-        for (final HmfGenomeRegion region : querySet.values())
-        {
+        for (final HmfGenomeRegion region : querySet.values()) {
             LOGGER.debug("chromosome({} start={} end={})", region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
 
-            final CloseableIterator<VariantContext> query = reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
+            final CloseableIterator<VariantContext> query =
+                    reader.query(region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
 
-            while (query.hasNext())
-            {
+            while (query.hasNext()) {
                 final VariantContext variant = query.next();
                 LOGGER.debug("variant({}) patient({}) sample({})", variant, patient, sample);
                 results.addAll(processVariant(variant, patient, sample, type));

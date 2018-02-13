@@ -8,9 +8,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 class VariantModel {
 
@@ -55,7 +56,7 @@ class VariantModel {
         SampleAnnotations.clear();
 
         SampleAnnotations = Annotations.stream()
-                .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.getAllele())))
+                .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.allele())))
                 .collect(Collectors.toList());
     }
 }
