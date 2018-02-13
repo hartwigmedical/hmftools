@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,6 +17,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.bachelor.predicates.BlacklistPredicate;
 import com.hartwig.hmftools.bachelor.predicates.WhitelistPredicate;
@@ -54,7 +56,7 @@ class BachelorEligibility {
     private static final Map<String, HmfGenomeRegion> allTranscriptsMap = makeTranscriptMap();
 
     private final List<BachelorProgram> programs = Lists.newArrayList();
-    private final Map<String, HmfGenomeRegion> querySet = Maps.newHashMap();
+    private final Set<HmfGenomeRegion> variantLocationsToQuery = Sets.newHashSet();
 
     private static Map<String, HmfGenomeRegion> makeGeneNameMap() {
         final Map<String, HmfGenomeRegion> result = Maps.newHashMap();
@@ -154,10 +156,10 @@ class BachelorEligibility {
 
                             // just skip this gene for now
                         } else {
-                            result.querySet.put(namedRegion.transcriptID(), namedRegion);
+                            result.variantLocationsToQuery.add(namedRegion);
                         }
                     } else {
-                        result.querySet.put(region.transcriptID(), region);
+                        result.variantLocationsToQuery.add(region);
                     }
                 }
             }
@@ -334,7 +336,7 @@ class BachelorEligibility {
 
         final List<EligibilityReport> results = Lists.newArrayList();
 
-        for (final HmfGenomeRegion region : querySet.values()) {
+        for (final HmfGenomeRegion region : variantLocationsToQuery) {
             LOGGER.debug("chromosome({} start={} end={})", region.chromosome(), (int) region.geneStart(), (int) region.geneEnd());
 
             final CloseableIterator<VariantContext> query =
