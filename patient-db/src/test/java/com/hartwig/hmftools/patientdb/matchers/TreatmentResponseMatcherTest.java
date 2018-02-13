@@ -14,6 +14,8 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class TreatmentResponseMatcherTest {
@@ -23,29 +25,20 @@ public class TreatmentResponseMatcherTest {
     private final static LocalDate JUL2015 = LocalDate.parse("2015-07-01");
     private final static LocalDate AUG2015 = LocalDate.parse("2015-08-01");
 
-    private final static BiopsyTreatmentData TREATMENT_FEB_JUL2015 =
-            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, JUL2015, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentData TREATMENT_FEB2015_JUL2015 = treatmentWithStartEnd(FEB2015, JUL2015);
+    private final static BiopsyTreatmentData TREATMENT_FEB2015_NULL = treatmentWithStartEnd(FEB2015, null);
 
-    private final static BiopsyTreatmentData TREATMENT_FEB_NULL =
-            ImmutableBiopsyTreatmentData.of("Yes", FEB2015, null, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
-
-    private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 =
-            ImmutableBiopsyTreatmentResponseData.of(JAN2015, JAN2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 =
-            ImmutableBiopsyTreatmentResponseData.of(FEB2015, FEB2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentResponseData RESPONSE_MAR2015 =
-            ImmutableBiopsyTreatmentResponseData.of(MAR2015, MAR2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentResponseData RESPONSE_JUL2015 =
-            ImmutableBiopsyTreatmentResponseData.of(JUL2015, JUL2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentResponseData RESPONSE_AUG2015 =
-            ImmutableBiopsyTreatmentResponseData.of(AUG2015, AUG2015, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
-    private final static BiopsyTreatmentResponseData RESPONSE_NULL =
-            ImmutableBiopsyTreatmentResponseData.of(null, null, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
+    private final static BiopsyTreatmentResponseData RESPONSE_JAN2015 = responseOnDate(JAN2015);
+    private final static BiopsyTreatmentResponseData RESPONSE_FEB2015 = responseOnDate(FEB2015);
+    private final static BiopsyTreatmentResponseData RESPONSE_MAR2015 = responseOnDate(MAR2015);
+    private final static BiopsyTreatmentResponseData RESPONSE_JUL2015 = responseOnDate(JUL2015);
+    private final static BiopsyTreatmentResponseData RESPONSE_AUG2015 = responseOnDate(AUG2015);
+    private final static BiopsyTreatmentResponseData RESPONSE_NULL = responseOnDate(null);
 
     // MIVO:    ---response(jan)-start(feb)-----end(jul)--
     @Test
     public void testResponseBeforeStartFails() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_JAN2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -56,7 +49,7 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start/response(feb)-----end(jul)--
     @Test
     public void testResponseSameDateAsStartFails() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_FEB2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -67,7 +60,7 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start(feb)-response(mar)----end(jul)--
     @Test
     public void testResponseAfterStartBeforeEndSucceeds() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -80,7 +73,7 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start(feb)-----end/response(jul)--
     @Test
     public void testResponseAfterStartSameDateAsEndSucceeds() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_JUL2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -93,7 +86,7 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start(feb)-----end(jul)-response(aug)--
     @Test
     public void testResponseAfterEndFails() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_AUG2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -104,7 +97,7 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start(feb)-response(mar)------end(null)
     @Test
     public void testResponseAfterStartBeforeNullSucceeds() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_NULL);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -117,7 +110,7 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start(feb)-------end/response(null)
     @Test
     public void testResponseNullFails() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_NULL);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_NULL);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -128,7 +121,7 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start(feb)-response(mar)----response(jul)--end(null)
     @Test
     public void testMultipleResponsesMatchTreatment() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_NULL);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015, RESPONSE_JUL2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
@@ -144,11 +137,22 @@ public class TreatmentResponseMatcherTest {
     // MIVO:    ---start1/start2(feb)-response(mar)----end1(jul)--end2(null)
     @Test
     public void testResponseMatchesMultipleFails() {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015, TREATMENT_FEB_NULL);
+        final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015, TREATMENT_FEB2015_NULL);
         final List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         final List<BiopsyTreatmentResponseData> matchedResponses =
                 TreatmentResponseMatcher.matchTreatmentResponsesToTreatments("patient", treatments, responses).values();
         assertTrue(matchedResponses.size() == responses.size());
         assertEquals(null, matchedResponses.get(0).treatmentId());
+    }
+
+
+    @NotNull
+    private static BiopsyTreatmentData treatmentWithStartEnd(@Nullable LocalDate start, @Nullable LocalDate end) {
+        return ImmutableBiopsyTreatmentData.of("Yes", start, end, Lists.newArrayList(), FormStatusState.UNKNOWN, false);
+    }
+
+    @NotNull
+    private static BiopsyTreatmentResponseData responseOnDate(@Nullable LocalDate date) {
+        return ImmutableBiopsyTreatmentResponseData.of(date, date, "NE", "Yes", "No", FormStatusState.UNKNOWN, false);
     }
 }
