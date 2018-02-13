@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -40,6 +41,9 @@ import com.hartwig.hmftools.patientreporter.variants.VariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.VariantReport;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalysis;
 import com.hartwig.hmftools.svannotation.analysis.StructuralVariantAnalyzer;
+import com.hartwig.hmftools.svannotation.annotations.GeneDisruption;
+import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
+import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -79,10 +83,16 @@ public abstract class PatientReporter {
         final VariantAnalysis variantAnalysis = genomeAnalysis.variantAnalysis();
         final PurpleAnalysis purpleAnalysis = genomeAnalysis.purpleAnalysis();
         final StructuralVariantAnalysis structuralVariantAnalysis = genomeAnalysis.structuralVariantAnalysis();
-        final List<GeneFusionData> reportableFusions =
-                structuralVariantAnalysis.reportableFusions().stream().map(GeneFusionData::from).collect(Collectors.toList());
-        final List<GeneDisruptionData> reportableDisruptions =
-                structuralVariantAnalysis.reportableDisruptions().stream().map(GeneDisruptionData::from).collect(Collectors.toList());
+        final List<GeneFusionData> reportableFusions = structuralVariantAnalysis.reportableFusions()
+                .stream()
+                .sorted(fusionComparator())
+                .map(GeneFusionData::from)
+                .collect(Collectors.toList());
+        final List<GeneDisruptionData> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions()
+                .stream()
+                .sorted(disruptionComparator())
+                .map(GeneDisruptionData::from)
+                .collect(Collectors.toList());
 
         final int totalVariantCount = variantAnalysis.allVariants().size();
         final int passedVariantCount = variantAnalysis.passedVariants().size();
@@ -183,5 +193,22 @@ public abstract class PatientReporter {
         LOGGER.info(" Analysing structural variants...");
         final StructuralVariantAnalysis structuralVariantAnalysis = structuralVariantAnalyzer().run(enrichedStructuralVariants, false);
         return ImmutableGenomeAnalysis.of(sample, variantAnalysis, purpleAnalysis, structuralVariantAnalysis);
+    }
+
+    @NotNull
+    private static Comparator<GeneDisruption> disruptionComparator() {
+        return Comparator.comparing(GeneDisruption::linkedAnnotation, transcriptComparator());
+    }
+
+    @NotNull
+    private static Comparator<GeneFusion> fusionComparator() {
+        return Comparator.comparing(GeneFusion::upstreamLinkedAnnotation, transcriptComparator())
+                .thenComparing(GeneFusion::downstreamLinkedAnnotation, transcriptComparator());
+    }
+
+    @NotNull
+    private static Comparator<Transcript> transcriptComparator() {
+        return Comparator.comparing((Transcript transcript) -> transcript.parent().variant().start())
+                .thenComparing((Transcript transcript) -> transcript.parent().variant().end());
     }
 }
