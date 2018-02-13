@@ -53,7 +53,7 @@ class BachelorEligibility {
     private static final Map<String, HmfGenomeRegion> allGenesMap = makeGeneNameMap();
     private static final Map<String, HmfGenomeRegion> allTranscriptsMap = makeTranscriptMap();
 
-    private final Map<String, BachelorProgram> programs = Maps.newHashMap();
+    private final List<BachelorProgram> programs = Lists.newArrayList();
     private final Map<String, HmfGenomeRegion> querySet = Maps.newHashMap();
 
     private static Map<String, HmfGenomeRegion> makeGeneNameMap() {
@@ -180,7 +180,7 @@ class BachelorEligibility {
                     requiredEffects,
                     panelTranscripts);
 
-            result.programs.put(program.getName(), bachelorProgram);
+            result.programs.add(bachelorProgram);
         }
 
         return result;
@@ -233,10 +233,9 @@ class BachelorEligibility {
         //        }
 
         // apply the all relevant tests to see if this program has been matched
-        final List<String> matchingPrograms = programs.entrySet()
-                .stream()
-                .filter(program -> program.getValue().vcfProcessor().test(sampleVariant))
-                .map(Map.Entry::getKey)
+        final List<String> matchingPrograms = programs.stream()
+                .filter(program -> program.vcfProcessor().test(sampleVariant))
+                .map(BachelorProgram::name)
                 .collect(Collectors.toList());
 
         List<EligibilityReport> reportList = Lists.newArrayList();
@@ -249,14 +248,13 @@ class BachelorEligibility {
         // search the list of annotations for the correct allele and transcript ID to write to the result file
         // this effectively reapplies the predicate conditions, so a refactor would be to drop the predicates and
         // just apply the search criteria once, and create a report for any full match
-        for (Map.Entry<String, BachelorProgram> entry : programs.entrySet()) {
-            BachelorProgram program = entry.getValue();
+        for (BachelorProgram program : programs) {
 
             if (!program.vcfProcessor().test(sampleVariant)) {
                 continue;
             }
 
-            String programName = entry.getKey();
+            String programName = program.name();
 
             // found a match, not collect up the details and write them to the output file
             LOGGER.info("match found: program({}) ", programName);
@@ -359,10 +357,9 @@ class BachelorEligibility {
         for (final GeneCopyNumber copyNumber : copyNumbers) {
             // TODO: verify the germline check
             final boolean isGermline = copyNumber.germlineHet2HomRegions() + copyNumber.germlineHomRegions() > 0;
-            final List<String> matchingPrograms = programs.entrySet()
-                    .stream()
-                    .filter(program -> program.getValue().copyNumberProcessor().test(copyNumber))
-                    .map(Map.Entry::getKey)
+            final List<String> matchingPrograms = programs.stream()
+                    .filter(program -> program.copyNumberProcessor().test(copyNumber))
+                    .map(BachelorProgram::name)
                     .collect(Collectors.toList());
 
             final List<EligibilityReport> interimResults = matchingPrograms.stream()
@@ -418,8 +415,7 @@ class BachelorEligibility {
                 }
             }
 
-            programs.values()
-                    .stream()
+            programs.stream()
                     .filter(p -> p.disruptionProcessor().test(region))
                     .map(p -> ImmutableEligibilityReport.builder()
                             .patient(patient)
