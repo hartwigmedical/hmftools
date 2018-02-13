@@ -141,7 +141,7 @@ public class FittedRegionFactoryTest {
     }
 
     private static void assertModelBAF(double expectedBAF, double purity, int ploidy, int betaAllele) {
-        assertEquals(expectedBAF, new BAFUtils(92).modelBAF(purity, ploidy, betaAllele), EPSILON);
+        assertEquals(expectedBAF, BAF_UTILS.modelBAF(purity, ploidy, betaAllele), EPSILON);
     }
 
     private static void assertCNVDeviation(double expectedDeviation, double cnvRatioWeighFactor, double modelCNVRatio, double tumorRatio) {

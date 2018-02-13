@@ -47,7 +47,7 @@ public class FittedRegionFactory {
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double purityAdjustedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
-        double tumorBAF = purityAdjuster.purityAdjustedBAF(observedRegion.chromosome(), purityAdjustedCopyNumber, observedBAF);
+        double tumorBAF = bafUtils.purityAdjustedBAF(purityAdjuster, observedRegion.chromosome(), purityAdjustedCopyNumber, observedBAF);
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                 .from(observedRegion)

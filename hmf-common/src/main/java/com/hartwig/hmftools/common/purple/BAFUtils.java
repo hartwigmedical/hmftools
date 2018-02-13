@@ -4,12 +4,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 
+import org.jetbrains.annotations.NotNull;
+
 public class BAFUtils {
 
-    @Deprecated
-    public static final double NORMAL_BAF = 0.535;
-
-    private static final double AMBIGUOUS_OFFSET = 0.7;
+    private static final double AMBIGUOUS_OFFSET = 0.007;
+    private static final double CLONAL_DISTANCE = 0.25;
     private final double expectedBaf;
 
     public BAFUtils(final double expectedBaf) {
@@ -32,7 +32,7 @@ public class BAFUtils {
         return (int) Math.max(0, Math.round(ploidy / 2d));
     }
 
-    public static double modelBAF(final double tumorPurity, final int ploidy, final int betaAlleleCount) {
+    public double modelBAF(final double tumorPurity, final int ploidy, final int betaAlleleCount) {
         assert (betaAlleleCount >= ploidy / 2d);
         double normalPurity = 1 - tumorPurity;
 
@@ -40,14 +40,14 @@ public class BAFUtils {
         double totalObservations = 2 * normalPurity + ploidy * tumorPurity;
 
         if (Doubles.isZero(totalObservations)) {
-            return NORMAL_BAF;
+            return expectedBaf;
         }
 
-        return Math.max(NORMAL_BAF, betaObservations / totalObservations);
+        return Math.max(expectedBaf, betaObservations / totalObservations);
     }
 
     @VisibleForTesting
-    public static double[] modelBAFToMinimizeDeviation(final double purity, final int ploidy, final double actualBAF) {
+    public double[] modelBAFToMinimizeDeviation(final double purity, final int ploidy, final double actualBAF) {
         double finalBAF = 0;
         double finalDeviation = 0;
         int finalMajorAllele = 0;
@@ -55,7 +55,7 @@ public class BAFUtils {
         int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
         for (int betaAllele = minBetaAllele; betaAllele < ploidy + 1; betaAllele++) {
 
-            double modelBAF = BAFUtils.modelBAF(purity, ploidy, betaAllele);
+            double modelBAF = modelBAF(purity, ploidy, betaAllele);
             double modelDeviation = bafDeviation(modelBAF, actualBAF);
 
             if (betaAllele == minBetaAllele || modelDeviation < finalDeviation) {
@@ -68,7 +68,6 @@ public class BAFUtils {
         return new double[] { finalBAF, finalDeviation, finalMajorAllele };
     }
 
-
     @VisibleForTesting
     public static double bafDeviation(final double modelBAF, final double actualBAF) {
         return Math.abs(modelBAF - actualBAF);
@@ -76,6 +75,37 @@ public class BAFUtils {
 
     private boolean isAmbiguous(final double frequency) {
         return Doubles.lessThan(frequency, ambiguousBAF());
+    }
+
+    public double purityAdjustedBAF(@NotNull PurityAdjuster adjuster, @NotNull final String chromosomeName, final double copyNumber,
+            final double observedFrequency) {
+        int normalCopyNumber = adjuster.typicalCopyNumber(chromosomeName);
+        if (normalCopyNumber == 1 || (Doubles.positive(observedFrequency) && Doubles.lessOrEqual(copyNumber, 1))) {
+            return 1;
+        }
+
+        if (Doubles.isZero(observedFrequency)) {
+            return 0;
+        }
+
+        double typicalFrequency = 0.5;
+        double rawAdjustedBaf = adjuster.purityAdjustedFrequency(copyNumber, observedFrequency, normalCopyNumber, typicalFrequency);
+
+        int ploidy = (int) Math.round(copyNumber);
+        if (isAmbiguous(observedFrequency) && isClonal(copyNumber) && ploidy > 0) {
+            int minBetaAllele = BAFUtils.minAlleleCount(ploidy);
+            double modelBAF = modelBAF(adjuster.purity(), ploidy, minBetaAllele);
+            if (isAmbiguous(modelBAF)) {
+                return (double) minBetaAllele / ploidy;
+            }
+        }
+
+        return rawAdjustedBaf;
+    }
+
+    @VisibleForTesting
+    static boolean isClonal(final double copyNumber) {
+        return Doubles.lessOrEqual(Doubles.distanceFromInteger(copyNumber), CLONAL_DISTANCE);
     }
 
 }
