@@ -422,8 +422,7 @@ public final class PatientValidator {
             @NotNull final BiopsyTreatmentResponseData treatmentResponse) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final String measurementDone = treatmentResponse.measurementDone();
-        final LocalDate assessmentDate = treatmentResponse.assessmentDate();
-        final LocalDate responseDate = treatmentResponse.responseDate();
+        final LocalDate date = treatmentResponse.date();
         if (measurementDone == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
@@ -433,7 +432,7 @@ public final class PatientValidator {
                     treatmentResponse.formLocked()));
 
         } else if (measurementDone.trim().toLowerCase().equals("yes")) {
-            if (assessmentDate == null && responseDate == null) {
+            if (date == null) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE),
@@ -450,7 +449,7 @@ public final class PatientValidator {
                         treatmentResponse.formLocked()));
             }
         } else if (measurementDone.trim().toLowerCase().equals("no")) {
-            if (assessmentDate != null || responseDate != null) {
+            if (date != null) {
                 findings.add(ValidationFinding.of(ECRF_LEVEL,
                         patientId,
                         FIELD_MEASUREMENT_DONE,
@@ -474,7 +473,7 @@ public final class PatientValidator {
                     treatmentResponse.formStatus(),
                     treatmentResponse.formLocked()));
         }
-        if (treatmentResponse.response() != null && treatmentResponse.assessmentDate() == null && treatmentResponse.responseDate() == null) {
+        if (treatmentResponse.response() != null && date == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientId,
                     fields(FIELD_ASSESSMENT_DATE, FIELD_RESPONSE_DATE),
