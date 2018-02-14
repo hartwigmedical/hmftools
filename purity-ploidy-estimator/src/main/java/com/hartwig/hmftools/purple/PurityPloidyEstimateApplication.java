@@ -136,7 +136,8 @@ public class PurityPloidyEstimateApplication {
             final String amberFile = configSupplier.bafConfig().bafFile().toString();
             LOGGER.info("Reading amber bafs from {}", amberFile);
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
-            int averageTumorDepth = (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).average().orElse(90));
+            int averageTumorDepth =
+                    (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(90));
             LOGGER.info("Average amber tumor depth is {} reads", averageTumorDepth);
 
             // JOBA: Load Ratios from COBALT
@@ -175,11 +176,8 @@ public class PurityPloidyEstimateApplication {
             final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(amberGender,
-                    fittingConfig.maxPloidy(),
-                    cnvRatioWeight,
-                    averageTumorDepth,
-                    observedBafExponent);
+            final FittedRegionFactory fittedRegionFactory =
+                    new FittedRegionFactory(amberGender, fittingConfig.maxPloidy(), cnvRatioWeight, averageTumorDepth, observedBafExponent);
 
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     fittingConfig.maxPloidy(),
