@@ -121,13 +121,17 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table =
                 !report.geneFusions().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
-                        .columns(col.column("5' Gene", GeneFusionDataSource.GENE_FIELD),
+                        .columns(col.column("Genes", GeneFusionDataSource.GENES_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.cosmicHyperlink()))
+                                        .setStyle(linkStyle()),
                                 col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
-                                col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
                                 col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
                                 col.column("Copies", GeneFusionDataSource.COPIES_FIELD),
-                                col.column("Cosmic", GeneFusionDataSource.URL_TEXT)
-                                        .setHyperLink(hyperLink(GeneFusionDataSource.cosmicHyperlink()))
+                                col.column("5' Gene Transcript", GeneFusionDataSource.GENE_TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.GENE_TRANSCRIPT_FIELD)))
+                                        .setStyle(linkStyle()),
+                                col.column("3' Gene Transcript", GeneFusionDataSource.PARTNER_TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.PARTNER_TRANSCRIPT_FIELD)))
                                         .setStyle(linkStyle()))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
