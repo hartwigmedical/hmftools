@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientreporter.report.data;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.exonDescription;
 import static com.hartwig.hmftools.patientreporter.util.PatientReportFormat.ploidyToCopiesString;
 
+import java.util.List;
+
 import com.hartwig.hmftools.svannotation.annotations.GeneFusion;
 import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
@@ -15,15 +17,29 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneFusionData {
 
+    @NotNull
     public abstract String geneStart();
 
+    @NotNull
+    public abstract List<Integer> geneStartEntrezIds();
+
+    @NotNull
     public abstract String geneContextStart();
 
+    @NotNull
     public abstract String geneEnd();
 
+    @NotNull
+    public abstract List<Integer> geneEndEntrezIds();
+
+    @NotNull
     public abstract String geneContextEnd();
 
+    @NotNull
     public abstract String copies();
+
+    @NotNull
+    public abstract String cosmicURL();
 
     @NotNull
     public static GeneFusionData from(@NotNull final GeneFusion fusion) {
@@ -32,10 +48,13 @@ public abstract class GeneFusionData {
 
         return ImmutableGeneFusionData.builder()
                 .geneStart(upstream.geneName())
+                .geneStartEntrezIds(upstream.parent().entrezIds())
                 .geneContextStart(exonDescription(upstream))
                 .geneEnd(downstream.geneName())
+                .geneEndEntrezIds(downstream.parent().entrezIds())
                 .geneContextEnd(exonDescription(downstream))
                 .copies(ploidyToCopiesString(fusionPloidy(fusion)))
+                .cosmicURL(fusion.cosmicURL())
                 .build();
     }
 

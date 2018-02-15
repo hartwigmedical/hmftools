@@ -13,7 +13,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.hyperLink;
 import com.hartwig.hmftools.patientreporter.HmfReporterData;
 import com.hartwig.hmftools.patientreporter.SequencedPatientReport;
 import com.hartwig.hmftools.patientreporter.filters.DrupFilter;
-import com.hartwig.hmftools.patientreporter.report.components.COSMICLinkExpression;
 import com.hartwig.hmftools.patientreporter.report.components.DataExpression;
 import com.hartwig.hmftools.patientreporter.report.components.MainPageTopSection;
 import com.hartwig.hmftools.patientreporter.report.components.MicrosatelliteSection;
@@ -77,7 +76,7 @@ public abstract class FindingsPage {
                                 col.column("Depth (VAF)", VariantDataSource.DEPTH_VAF_FIELD),
                                 col.componentColumn("Predicted Effect", predictedEffectColumn()),
                                 col.column("Cosmic", VariantDataSource.COSMIC_FIELD)
-                                        .setHyperLink(hyperLink(new COSMICLinkExpression()))
+                                        .setHyperLink(hyperLink(VariantDataSource.cosmicHyperlink()))
                                         .setStyle(linkStyle()),
                                 col.column("Ploidy (TAF)", VariantDataSource.PLOIDY_TAF_FIELD)))
                         .setDataSource(VariantDataSource.fromVariants(report.variants(), drupFilter))
@@ -104,7 +103,8 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table =
                 !report.geneCopyNumbers().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneCopyNumberDataSource.copyNumberFields())
-                        .columns(col.column("Position", GeneCopyNumberDataSource.POSITION_FIELD),
+                        .columns(col.column("Chromosome", GeneCopyNumberDataSource.CHROMOSOME),
+                                col.column("Chromosome band", GeneCopyNumberDataSource.CHROMOSOME_BAND),
                                 col.column("Gene", GeneCopyNumberDataSource.GENE_FIELD),
                                 col.column("Type", GeneCopyNumberDataSource.GAIN_OR_LOSS_FIELD),
                                 col.column("Copies", GeneCopyNumberDataSource.COPY_NUMBER_FIELD))
@@ -125,7 +125,10 @@ public abstract class FindingsPage {
                                 col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
                                 col.column("3' Gene", GeneFusionDataSource.PARTNER_GENE_FIELD),
                                 col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
-                                col.column("Copies", GeneFusionDataSource.COPIES_FIELD))
+                                col.column("Copies", GeneFusionDataSource.COPIES_FIELD),
+                                col.column("Cosmic", GeneFusionDataSource.URL_TEXT)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.cosmicHyperlink()))
+                                        .setStyle(linkStyle()))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
 
@@ -149,6 +152,7 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table = report.geneDisruptions().size() > 0
                 ? cmp.subreport(monospaceBaseTable().fields(GeneDisruptionDataSource.geneDisruptionFields())
                 .columns(col.column("Chromosome", GeneDisruptionDataSource.CHROMOSOME_FIELD),
+                        col.column("Chromosome band", GeneDisruptionDataSource.CHROMOSOME_BAND_FIELD),
                         col.column("Gene", GeneDisruptionDataSource.GENE_FIELD),
                         col.column("Context", GeneDisruptionDataSource.GENE_CONTEXT_FIELD),
                         col.column("Type", GeneDisruptionDataSource.TYPE_FIELD),

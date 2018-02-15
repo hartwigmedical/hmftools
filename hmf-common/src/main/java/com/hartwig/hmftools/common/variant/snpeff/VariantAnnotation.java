@@ -17,11 +17,7 @@ public abstract class VariantAnnotation {
     public abstract String allele();
 
     @NotNull
-    public abstract List<String> effects();
-
-    public boolean containsEffect(@NotNull final String effect) {
-        return effects().stream().anyMatch(x -> x.equals(effect));
-    }
+    public abstract String effects();
 
     @NotNull
     public abstract List<VariantConsequence> consequences();
@@ -71,7 +67,7 @@ public abstract class VariantAnnotation {
     abstract String cdsPosAndLength();
 
     @NotNull
-    abstract String aaPosAndLength();
+    public abstract String aaPosAndLength();
 
     @NotNull
     abstract String distance();

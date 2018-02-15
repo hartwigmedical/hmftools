@@ -23,15 +23,22 @@ public class GeneAnnotation {
     private final List<Transcript> transcripts = Lists.newArrayList();
     @NotNull
     private final List<String> synonyms;
+    @NotNull
+    private final List<Integer> entrezIds;
+    @NotNull
+    private final String karyotypeBand;
 
     public GeneAnnotation(@NotNull final EnrichedStructuralVariant variant, final boolean isStart, @NotNull final String geneName,
-            @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms) {
+            @NotNull final String stableId, final int strand, @NotNull final List<String> synonyms, @NotNull final List<Integer> entrezIds,
+            @NotNull final String karyotypeBand) {
         this.variant = variant;
         this.isStart = isStart;
         this.geneName = geneName;
         this.stableId = stableId;
         this.strand = strand;
         this.synonyms = synonyms;
+        this.entrezIds = entrezIds;
+        this.karyotypeBand = karyotypeBand;
     }
 
     @NotNull
@@ -74,5 +81,15 @@ public class GeneAnnotation {
     @NotNull
     public List<String> synonyms() {
         return ImmutableList.copyOf(synonyms);
+    }
+
+    @NotNull
+    public List<Integer> entrezIds() {
+        return entrezIds;
+    }
+
+    @NotNull
+    public String karyotypeBand() {
+        return karyotypeBand;
     }
 }

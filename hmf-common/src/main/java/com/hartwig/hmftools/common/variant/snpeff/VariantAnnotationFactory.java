@@ -57,11 +57,10 @@ public final class VariantAnnotationFactory {
 
     @NotNull
     private static VariantAnnotation fromParts(@NotNull final String[] parts) {
-        final List<String> effects = toEffects(parts[1]);
         return ImmutableVariantAnnotation.builder()
                 .allele(parts[0])
-                .effects(effects)
-                .consequences(toConsequences(effects))
+                .effects(parts[1])
+                .consequences(toConsequences(toEffects(parts[1])))
                 .severity(parts[2])
                 .gene(parts[3])
                 .geneID(parts[4])

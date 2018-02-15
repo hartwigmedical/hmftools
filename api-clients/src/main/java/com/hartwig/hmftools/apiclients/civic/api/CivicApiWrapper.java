@@ -63,11 +63,6 @@ public class CivicApiWrapper {
     }
 
     @NotNull
-    public Observable<CivicVariantWithEvidence> getAllVariants() {
-        return getAllFromPaginatedEndpoint(api::getVariants).flatMap(variant -> api.getVariant(variant.id()));
-    }
-
-    @NotNull
     private <T> Observable<T> getAllFromPaginatedEndpoint(@NotNull final BiFunction<Long, Long, Observable<CivicIndexResult<T>>> endpoint) {
         return endpoint.apply(1L, CIVIC_BATCH_COUNT).flatMap(indexResult -> {
             final CivicApiMetadata metadata = indexResult.meta();

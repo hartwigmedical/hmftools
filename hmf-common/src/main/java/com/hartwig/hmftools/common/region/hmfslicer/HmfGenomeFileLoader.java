@@ -36,6 +36,8 @@ public final class HmfGenomeFileLoader {
     private static final int EXON_ID_COLUMN = 11;
     private static final int EXON_START_COLUMN = 12;
     private static final int EXON_END_COLUMN = 13;
+    private static final int CODING_START_COLUMN = 14;
+    private static final int CODING_END_COLUMN = 15;
 
     private HmfGenomeFileLoader() {
     }
@@ -92,6 +94,14 @@ public final class HmfGenomeFileLoader {
         final List<Integer> entrezIds =
                 Arrays.stream(values[ENTREZ_ID_COLUMN].split(",")).map(Integer::parseInt).collect(Collectors.toList());
 
+        long codingStart = 0;
+        long codingEnd = 0;
+        if (values.length > CODING_END_COLUMN) {
+            codingStart = Long.valueOf(values[CODING_START_COLUMN]);
+            codingEnd = Long.valueOf(values[CODING_END_COLUMN]);
+        }
+
+
         return ModifiableHmfGenomeRegion.create()
                 .setChromosome(chromosome)
                 .setStart(transcriptStart)
@@ -103,6 +113,8 @@ public final class HmfGenomeFileLoader {
                 .setGene(gene)
                 .setGeneID(values[GENE_ID_COLUMN])
                 .setGeneStart(Long.valueOf(values[GENE_START_COLUMN]))
-                .setGeneEnd(Long.valueOf(values[GENE_END_COLUMN]));
+                .setGeneEnd(Long.valueOf(values[GENE_END_COLUMN]))
+                .setCodingStart(codingStart)
+                .setCodingEnd(codingEnd);
     }
 }

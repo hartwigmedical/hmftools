@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -62,29 +63,25 @@ public final class EnrichedStructuralVariantFactory {
         return value == null ? null : Math.round(value * 1000d) / 1000d;
     }
 
-    @Nullable
     private static Double adjustedVAF(@NotNull final PurityAdjuster purityAdjuster, @NotNull final StructuralVariantLegPloidy ploidy) {
         final Double adjustedCopyNumber = adjustedCopyNumber(ploidy);
-        return adjustedCopyNumber == null ? null : purityAdjuster.purityAdjustedVAF(ploidy.chromosome(), adjustedCopyNumber, ploidy.vaf());
+        return purityAdjuster.purityAdjustedVAF(ploidy.chromosome(), Math.max(0.001, adjustedCopyNumber), ploidy.vaf());
     }
 
-    @Nullable
-    private static Double adjustedCopyNumber(@NotNull final StructuralVariantLegPloidy ploidy) {
+    @VisibleForTesting
+    static double adjustedCopyNumber(@NotNull final StructuralVariantLegPloidy ploidy) {
         if (ploidy.orientation() == 1) {
-            return ploidy.leftCopyNumber().orElse(null);
+            return ploidy.leftCopyNumber().orElse(0D);
         } else {
-            return ploidy.rightCopyNumber().orElse(null);
+            return ploidy.rightCopyNumber().orElse(0D);
         }
     }
 
-    @Nullable
-    private static Double adjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
-        if (ploidy.leftCopyNumber().isPresent() && ploidy.rightCopyNumber().isPresent()) {
-            return ploidy.orientation() == 1
-                    ? ploidy.leftCopyNumber().get() - ploidy.rightCopyNumber().get()
-                    : ploidy.rightCopyNumber().get() - ploidy.leftCopyNumber().get();
-        }
+    @VisibleForTesting
+    static double adjustedCopyNumberChange(@NotNull final StructuralVariantLegPloidy ploidy) {
+        double leftCopyNumber = ploidy.leftCopyNumber().orElse(0D);
+        double rightCopyNumber = ploidy.rightCopyNumber().orElse(0D);
 
-        return null;
+        return ploidy.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 }

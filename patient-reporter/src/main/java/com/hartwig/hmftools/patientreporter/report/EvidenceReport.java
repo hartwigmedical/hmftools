@@ -27,7 +27,7 @@ final class EvidenceReport {
 
         //MIVO: can't use multiPageList here because it does not pass its data source to child pages
         final ComponentBuilder<?, ?> reportPages = cmp.verticalList()
-                .add(AlterationEvidencePage.reportComponent(report.sampleReport()))
+                .add(AlterationEvidencePage.reportComponent(report.sampleReport(), report.impliedPurityString()))
                 .add(cmp.pageBreak())
                 .add(AlterationDebugPage.reportComponent());
 

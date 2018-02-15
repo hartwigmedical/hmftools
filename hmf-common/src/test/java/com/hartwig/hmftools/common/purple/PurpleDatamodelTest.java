@@ -2,9 +2,12 @@ package com.hartwig.hmftools.common.purple;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.Optional;
+
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
@@ -174,4 +177,22 @@ public class PurpleDatamodelTest {
                 .referenceGCDiploidRatio(1)
                 .tumorGCRatio(ratio);
     }
+
+    @NotNull
+    public static ImmutableStructuralVariantLegPloidy.Builder svLegPloidy(int orientation, @NotNull final Optional<Double> leftCopyNumber,
+            @NotNull final Optional<Double> rightCopyNumber, double ploidy) {
+        return ImmutableStructuralVariantLegPloidy.builder()
+                .chromosome(CHROMOSOME)
+                .position(1)
+                .orientation((byte) orientation)
+                .vaf(0.5)
+                .alleleFrequency(0.5)
+                .homology("")
+                .weight(1)
+                .averageImpliedPloidy(ploidy)
+                .unweightedImpliedPloidy(ploidy)
+                .leftCopyNumber(leftCopyNumber)
+                .rightCopyNumber(rightCopyNumber);
+    }
+
 }

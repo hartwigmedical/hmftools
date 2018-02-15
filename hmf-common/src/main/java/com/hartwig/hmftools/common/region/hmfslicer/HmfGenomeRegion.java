@@ -20,6 +20,10 @@ public abstract class HmfGenomeRegion implements TranscriptRegion {
 
     public abstract long geneEnd();
 
+    public abstract long codingStart();
+
+    public abstract long codingEnd();
+
     @NotNull
     public abstract List<Integer> entrezId();
 

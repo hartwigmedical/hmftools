@@ -48,7 +48,6 @@ public class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeR
 
     @NotNull
     public Optional<R> select(@NotNull final GenomePosition position) {
-
         if (lastPosition != null && position.compareTo(lastPosition) < 0) {
             throw new IllegalArgumentException("Selector only goes forward, never backwards!");
         }
@@ -80,5 +79,4 @@ public class GenomeRegionSelectorImpl<R extends GenomeRegion> implements GenomeR
 
         return 0;
     }
-
 }

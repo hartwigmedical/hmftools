@@ -101,8 +101,6 @@ public class PurityPloidyEstimateApplication {
     private static final String CNV_RATIO_WEIGHT_FACTOR = "cnv_ratio_weight_factor";
     private static final double CNV_RATIO_WEIGHT_FACTOR_DEFAULT = 0.2;
 
-    private static final String PLOIDY_PENALTY_EXPERIMENT = "ploidy_penalty_experiment";
-
     private static final String OBSERVED_BAF_EXPONENT = "observed_baf_exponent";
     private static final double OBSERVED_BAF_EXPONENT_DEFAULT = 1;
 
@@ -135,7 +133,12 @@ public class PurityPloidyEstimateApplication {
             final List<HmfGenomeRegion> genePanel = HmfGenePanelSupplier.allGeneList();
 
             // JOBA: Load BAFs from AMBER
-            final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(configSupplier.bafConfig().bafFile().toString());
+            final String amberFile = configSupplier.bafConfig().bafFile().toString();
+            LOGGER.info("Reading amber bafs from {}", amberFile);
+            final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
+            int averageTumorDepth =
+                    (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(90));
+            LOGGER.info("Average amber tumor depth is {} reads", averageTumorDepth);
 
             // JOBA: Load Ratios from COBALT
             final String ratioFilename = CobaltRatioFile.generateFilename(config.cobaltDirectory(), config.tumorSample());
@@ -172,13 +175,9 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Fitting purity");
             final FittingConfig fittingConfig = configSupplier.fittingConfig();
             final double cnvRatioWeight = defaultValue(cmd, CNV_RATIO_WEIGHT_FACTOR, CNV_RATIO_WEIGHT_FACTOR_DEFAULT);
-            final boolean ploidyPenaltyExperiment = cmd.hasOption(PLOIDY_PENALTY_EXPERIMENT);
             final double observedBafExponent = defaultValue(cmd, OBSERVED_BAF_EXPONENT, OBSERVED_BAF_EXPONENT_DEFAULT);
-            final FittedRegionFactory fittedRegionFactory = new FittedRegionFactory(amberGender,
-                    fittingConfig.maxPloidy(),
-                    cnvRatioWeight,
-                    ploidyPenaltyExperiment,
-                    observedBafExponent);
+            final FittedRegionFactory fittedRegionFactory =
+                    new FittedRegionFactory(amberGender, fittingConfig.maxPloidy(), cnvRatioWeight, averageTumorDepth, observedBafExponent);
 
             final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                     fittingConfig.maxPloidy(),
@@ -320,7 +319,6 @@ public class PurityPloidyEstimateApplication {
         ConfigSupplier.addOptions(options);
 
         options.addOption(OBSERVED_BAF_EXPONENT, true, "Observed baf exponent. Default 1");
-        options.addOption(PLOIDY_PENALTY_EXPERIMENT, false, "Use experimental ploidy penality.");
         options.addOption(CNV_RATIO_WEIGHT_FACTOR, true, "CNV ratio deviation scaling.");
 
         options.addOption(THREADS, true, "Number of threads (default 2)");

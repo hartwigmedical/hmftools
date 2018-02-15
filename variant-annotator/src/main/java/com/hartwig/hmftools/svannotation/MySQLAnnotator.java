@@ -4,15 +4,18 @@ import static org.ensembl.database.homo_sapiens_core.Tables.COORD_SYSTEM;
 import static org.ensembl.database.homo_sapiens_core.Tables.EXON;
 import static org.ensembl.database.homo_sapiens_core.Tables.EXON_TRANSCRIPT;
 import static org.ensembl.database.homo_sapiens_core.Tables.GENE;
+import static org.ensembl.database.homo_sapiens_core.Tables.KARYOTYPE;
 import static org.ensembl.database.homo_sapiens_core.Tables.OBJECT_XREF;
 import static org.ensembl.database.homo_sapiens_core.Tables.SEQ_REGION;
 import static org.ensembl.database.homo_sapiens_core.Tables.TRANSCRIPT;
 import static org.ensembl.database.homo_sapiens_core.Tables.XREF;
 import static org.jooq.impl.DSL.decode;
+import static org.jooq.impl.DSL.groupConcatDistinct;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,8 +27,10 @@ import com.hartwig.hmftools.svannotation.annotations.Transcript;
 
 import org.ensembl.database.homo_sapiens_core.enums.GeneStatus;
 import org.ensembl.database.homo_sapiens_core.enums.ObjectXrefEnsemblObjectType;
+import org.ensembl.database.homo_sapiens_core.tables.Xref;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -34,6 +39,8 @@ import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 
 public class MySQLAnnotator implements VariantAnnotator {
+    private static final String ENTREZ_IDS = "ENTREZ_IDS";
+    private static final String KARYOTYPE_BAND = "KARYOTYPE_BAND";
 
     @NotNull
     private final DSLContext context;
@@ -90,6 +97,9 @@ public class MySQLAnnotator implements VariantAnnotator {
             final String geneStableId = gene.get(GENE.STABLE_ID);
             final UInteger canonicalTranscriptId = gene.get(GENE.CANONICAL_TRANSCRIPT_ID);
             final int geneStrand = gene.get(GENE.SEQ_REGION_STRAND);
+            final List<Integer> entrezIds =
+                    Arrays.stream(gene.get(ENTREZ_IDS, String.class).split(",")).map(Integer::parseInt).collect(Collectors.toList());
+            final String karyotypeBand = gene.get(KARYOTYPE_BAND, String.class);
 
             final List<String> synonyms = context.select(XREF.DBPRIMARY_ACC)
                     .from(XREF)
@@ -102,7 +112,8 @@ public class MySQLAnnotator implements VariantAnnotator {
                     .map(r -> r.get(XREF.DBPRIMARY_ACC))
                     .collect(Collectors.toList());
 
-            final GeneAnnotation geneAnnotation = new GeneAnnotation(variant, isStart, geneName, geneStableId, geneStrand, synonyms);
+            final GeneAnnotation geneAnnotation =
+                    new GeneAnnotation(variant, isStart, geneName, geneStableId, geneStrand, synonyms, entrezIds, karyotypeBand);
 
             final Result<?> transcripts = context.select(TRANSCRIPT.TRANSCRIPT_ID, TRANSCRIPT.STABLE_ID)
                     .from(TRANSCRIPT)
@@ -129,13 +140,27 @@ public class MySQLAnnotator implements VariantAnnotator {
     private Result<?> queryGenesOnChromosomeAndPosition(@NotNull String chromosome, long position) {
         final int promoterDistance = 10000;
         final byte zero = 0;
-
-        return context.select(GENE.GENE_ID, XREF.DISPLAY_LABEL, GENE.STABLE_ID, GENE.CANONICAL_TRANSCRIPT_ID, GENE.SEQ_REGION_STRAND)
+        final Xref ENTREZ_XREF = XREF.as("entrez_xref");
+        return context.select(GENE.GENE_ID,
+                XREF.DISPLAY_LABEL,
+                GENE.STABLE_ID,
+                GENE.CANONICAL_TRANSCRIPT_ID,
+                GENE.SEQ_REGION_STRAND,
+                groupConcatDistinct(ENTREZ_XREF.DBPRIMARY_ACC).separator(",").as(ENTREZ_IDS),
+                groupConcatDistinct(KARYOTYPE.BAND).separator("-").as(KARYOTYPE_BAND))
                 .from(GENE)
                 .innerJoin(SEQ_REGION)
                 .on(GENE.SEQ_REGION_ID.eq(SEQ_REGION.SEQ_REGION_ID))
                 .and(SEQ_REGION.NAME.eq(chromosome))
                 .and(SEQ_REGION.COORD_SYSTEM_ID.eq(coordSystemId))
+                .innerJoin(KARYOTYPE)
+                .on(GENE.SEQ_REGION_ID.eq(KARYOTYPE.SEQ_REGION_ID))
+                .innerJoin(OBJECT_XREF)
+                .on(GENE.GENE_ID.eq(OBJECT_XREF.ENSEMBL_ID))
+                .and(OBJECT_XREF.ENSEMBL_OBJECT_TYPE.eq(ObjectXrefEnsemblObjectType.Gene))
+                .innerJoin(ENTREZ_XREF)
+                .on(OBJECT_XREF.XREF_ID.eq(ENTREZ_XREF.XREF_ID))
+                .and(ENTREZ_XREF.EXTERNAL_DB_ID.eq(UInteger.valueOf(1300)))
                 .innerJoin(XREF)
                 .on(XREF.XREF_ID.eq(GENE.DISPLAY_XREF_ID))
                 .where(GENE.STATUS.eq(GeneStatus.KNOWN))
@@ -147,6 +172,8 @@ public class MySQLAnnotator implements VariantAnnotator {
                 .and(decode().when(GENE.SEQ_REGION_STRAND.lt(zero), GENE.SEQ_REGION_END.add(promoterDistance))
                         .otherwise(GENE.SEQ_REGION_END)
                         .ge(UInteger.valueOf(position)))
+                .and(geneStartInKaryotypeBand().or(geneEndInKaryotypeBand()))
+                .groupBy(GENE.GENE_ID)
                 .fetch();
     }
 
@@ -215,5 +242,15 @@ public class MySQLAnnotator implements VariantAnnotator {
                     exonMax,
                     canonical);
         }
+    }
+
+    @NotNull
+    private static Condition geneStartInKaryotypeBand() {
+        return GENE.SEQ_REGION_START.ge(KARYOTYPE.SEQ_REGION_START).and(GENE.SEQ_REGION_START.le(KARYOTYPE.SEQ_REGION_END));
+    }
+
+    @NotNull
+    private static Condition geneEndInKaryotypeBand() {
+        return GENE.SEQ_REGION_END.ge(KARYOTYPE.SEQ_REGION_START).and(GENE.SEQ_REGION_END.le(KARYOTYPE.SEQ_REGION_END));
     }
 }

@@ -1,61 +1,62 @@
 package com.hartwig.hmftools.bachelor;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
+import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotationFactory;
 
-import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class VariantModel {
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
 
-    final VariantContext Context;
-    final List<SnpEff> Annotations;
-    final Set<String> dbSNP;
+public class VariantModel {
 
-    List<SnpEff> SampleAnnotations;
+    private final VariantContext context;
+    private final List<VariantAnnotation> annotations;
+    private final Set<String> dbSNP;
+    private final List<VariantAnnotation> sampleAnnotations;
 
     private static final Logger LOGGER = LogManager.getLogger(VariantModel.class);
 
-    private VariantModel(final VariantContext ctx) {
+    public VariantModel(final String sample, final VariantContext ctx) {
 
-        Context = ctx;
+        context = ctx;
         dbSNP = Lists.newArrayList(ctx.getID().split(",")).stream().filter(s -> s.startsWith("rs")).collect(Collectors.toSet());
-        Annotations = Arrays.stream(ctx.getAttributeAsString("ANN", "").split(","))
-                .map(s -> Arrays.asList(s.split("\\|")))
-                .map(SnpEff::parseAnnotation)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        
-//        List<String> annotations = Lists.newArrayList(ctx.getAttributeAsString("ANN", "").split(","));
-//
-//        for(String annStr : annotations)
-//        {
-//            List<String> elements = Lists.newArrayList(annStr.split("\\|"));
-//
-//            if(elements.size() >= 6)
-//            {
-//                LOGGER.debug("size({}) e1={} e2={} e3={} e6={}", elements.size(), elements.get(0), elements.get(1), elements.get(2), elements.get(6));
-//            }
-//        }
+        annotations = VariantAnnotationFactory.fromContext(ctx);
 
-        SampleAnnotations = Lists.newArrayList();
+        final List<String> alleleList =
+                ctx.getGenotype(sample).getAlleles().stream().map(Allele::getBaseString).collect(Collectors.toList());
+        sampleAnnotations = annotations.stream()
+                .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.allele())))
+                .collect(Collectors.toList());
+
+        for (String allele : alleleList) {
+            LOGGER.debug("checking allele({}):", allele);
+        }
+        LOGGER.debug("annotation alleleCount(reduced={} orig={}) v listCount({}):",
+                sampleAnnotations().size(),
+                annotations().size(),
+                alleleList.size());
     }
 
-    static VariantModel from(final VariantContext ctx) {
-        return new VariantModel(ctx);
+    public VariantContext context() {
+        return context;
     }
 
-    public void setSampleAnnotations(final List<String> alleleList) {
-        SampleAnnotations.clear();
+    public List<VariantAnnotation> annotations() {
+        return annotations;
+    }
 
-        SampleAnnotations = Annotations.stream()
-                .filter(annotation -> alleleList.stream().anyMatch(allele -> allele.equals(annotation.getAllele())))
-                .collect(Collectors.toList());
+    public Set<String> dbSNP() {
+        return dbSNP;
+    }
+
+    public List<VariantAnnotation> sampleAnnotations() {
+        return sampleAnnotations;
     }
 }

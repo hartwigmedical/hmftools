@@ -125,6 +125,8 @@ public class GeneCopyNumberBuilderTest {
                 .geneID("ID")
                 .geneStart(start)
                 .geneEnd(end)
+                .codingStart(0)
+                .codingEnd(0)
                 .build();
     }
 }
