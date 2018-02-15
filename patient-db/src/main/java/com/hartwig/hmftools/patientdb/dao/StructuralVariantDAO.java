@@ -58,8 +58,8 @@ class StructuralVariantDAO {
     }
 
     @NotNull
-    List<StructuralVariant> read(@NotNull final String sample) {
-        final List<StructuralVariant> regions = Lists.newArrayList();
+    List<EnrichedStructuralVariant> read(@NotNull final String sample) {
+        final List<EnrichedStructuralVariant> regions = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 

@@ -67,7 +67,13 @@ public class LoadStructuralVariants {
             final List<StructuralVariant> variants = readFromVcf(cmd.getOptionValue(VCF_FILE));
 
             LOGGER.info("enriching structural variants based on purple data");
-            final List<EnrichedStructuralVariant> enrichedVariants = enrichStructuralVariants(variants, dbAccess, tumorSample);
+            final List<EnrichedStructuralVariant> enrichedVariantWithoutPrimaryId = enrichStructuralVariants(variants, dbAccess, tumorSample);
+
+            LOGGER.info("persisting variants to database");
+            dbAccess.writeStructuralVariants(tumorSample, enrichedVariantWithoutPrimaryId);
+
+            // NEVA: We read after we write to populate the primaryId field
+            final List<EnrichedStructuralVariant> enrichedVariants = dbAccess.readStructuralVariants(tumorSample);
 
             LOGGER.info("initialising MqSql annotator");
             final VariantAnnotator annotator = MySQLAnnotator.make("jdbc:" + cmd.getOptionValue(ENSEMBL_DB));
@@ -92,9 +98,7 @@ public class LoadStructuralVariants {
                 svClusterer.runClustering();
             }
 
-            LOGGER.info("persisting variants and annotations to database");
-            dbAccess.writeStructuralVariants(tumorSample, enrichedVariants);
-
+            LOGGER.info("persisting annotations to database");
             final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(dbAccess.getContext());
             annotationDAO.write(analysis);
         }

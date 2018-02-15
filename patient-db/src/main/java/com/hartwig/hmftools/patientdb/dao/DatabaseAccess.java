@@ -123,7 +123,7 @@ public class DatabaseAccess {
         return structuralVariantDAO.readData(sample);
     }
 
-    public List<StructuralVariant> readStructuralVariants(@NotNull final String sample) {
+    public List<EnrichedStructuralVariant> readStructuralVariants(@NotNull final String sample) {
         return structuralVariantDAO.read(sample);
     }
 
