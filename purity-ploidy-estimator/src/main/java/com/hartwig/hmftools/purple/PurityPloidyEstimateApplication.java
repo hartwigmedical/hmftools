@@ -137,7 +137,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Reading amber bafs from {}", amberFile);
             final Multimap<String, AmberBAF> bafs = AmberBAFFile.read(amberFile);
             int averageTumorDepth =
-                    (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(90));
+                    (int) Math.round(bafs.values().stream().mapToInt(AmberBAF::tumorDepth).filter(x -> x > 0).average().orElse(100));
             LOGGER.info("Average amber tumor depth is {} reads", averageTumorDepth);
 
             // JOBA: Load Ratios from COBALT
