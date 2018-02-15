@@ -148,7 +148,7 @@ public class LoadStructuralVariants {
     {
         List<SvClusterData> svClusterDataItems = Lists.newArrayList();
 
-        List<StructuralVariantData> svRecords = dbAccess.readStructuralVariants(sampleId);
+        List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
 
         for(final StructuralVariantData svRecord : svRecords)
         {
