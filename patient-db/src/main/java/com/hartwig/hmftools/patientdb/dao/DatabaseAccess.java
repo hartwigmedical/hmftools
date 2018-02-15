@@ -115,6 +115,10 @@ public class DatabaseAccess {
         return structuralVariantDAO.read(sample);
     }
 
+    public List<String> getStructuralVariantSampleList(@NotNull final String sampleSearch) {
+        return structuralVariantDAO.getSamplesList(sampleSearch);
+    }
+
     public void writeGermlineCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeGermlineCopyNumber(sample, copyNumbers);
     }

@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.svannotation.analysis;
 
+import com.hartwig.hmftools.common.centromeres.Centromeres;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.svannotation.analysis.SvClusterData;
+
+import java.util.Map;
 
 import static java.lang.Math.abs;
 
@@ -11,9 +15,30 @@ public class SvUtilities {
 
     private int mClusterBaseDistance;
 
+    private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
+
+    public static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
+    public static String CHROMOSOME_ARM_Q = "Q";
+    public static String CHROMOSOME_ARM_CENTROMERE = "C";
+
     public SvUtilities(int baseDistance)
     {
         mClusterBaseDistance = baseDistance;
+    }
+
+    public final String getChromosomalArm(final String chromosome, final long position)
+    {
+        final GenomeRegion region = CENTROMERES.get(chromosome);
+
+        if(region == null)
+            return "INVALID";
+
+        if(position <= region.start())
+            return CHROMOSOME_ARM_P;
+        if(position >= region.end())
+            return CHROMOSOME_ARM_P;
+        else
+            return CHROMOSOME_ARM_CENTROMERE;
     }
 
     public boolean areVariantsLinked(final SvClusterData v1, final SvClusterData v2)

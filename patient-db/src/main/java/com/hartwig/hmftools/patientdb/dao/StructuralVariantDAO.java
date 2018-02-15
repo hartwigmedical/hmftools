@@ -43,11 +43,35 @@ class StructuralVariantDAO {
                     .endPosition(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
                     .startOrientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
                     .endOrientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                    .startAF(record.getValue(STRUCTURALVARIANT.STARTAF))
+                    .adjustedStartAF(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF))
+                    .adjustedStartCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER))
+                    .adjustedStartCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
+                    .endAF(record.getValue(STRUCTURALVARIANT.ENDAF))
+                    .adjustedEndAF(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
+                    .adjustedEndCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
+                    .adjustedEndCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
+                    .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .build());
         }
 
         return structuralVariants;
+    }
+
+    public final List<String> getSamplesList(@NotNull final String sampleSearch) {
+
+        final Result<Record1<String>> result = sampleSearch.equals("") ?
+                context.select(STRUCTURALVARIANT.SAMPLEID).from(STRUCTURALVARIANT).groupBy(STRUCTURALVARIANT.SAMPLEID).fetch()
+                : context.select(STRUCTURALVARIANT.SAMPLEID).from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.like(sampleSearch)).groupBy(STRUCTURALVARIANT.SAMPLEID).fetch();
+
+        List<String> samplesList = Lists.newArrayList();
+
+        for (Record record : result) {
+            samplesList.add(record.getValue(STRUCTURALVARIANT.SAMPLEID));
+        }
+
+        return samplesList;
     }
 
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {

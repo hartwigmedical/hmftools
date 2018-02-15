@@ -76,10 +76,21 @@ public class StructuralVariantClustering {
 
         LOGGER.debug("loaded {} SVs", mAllVariants.size());
 
+//        if(LOGGER.isDebugEnabled())
 //        for(SvClusterData sv : variants) {
 //            LOGGER.debug("adding SV: id({}) start({}:{}) end({}:{})",
 //                    sv.id(), sv.chromosome(true), sv.position(true), sv.chromosome(false), sv.position(false));
 //        }
+    }
+
+    private void setChromosomalArms()
+    {
+        for (SvClusterData var : mUnassignedVariants)
+        {
+            String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
+            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
+            var.setChromosomalArms(startArm, endArm);
+        }
     }
 
     public void runClustering()
@@ -88,9 +99,15 @@ public class StructuralVariantClustering {
             return;
 
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mUnassignedVariants.size());
-        // original runClusteringByBaseDistance
 
-        runClusteringByLocals();
+        setChromosomalArms();
+
+        runClusteringByBaseDistance();
+
+        //runClusteringByLocals();
+
+        if(mConfig.getOutputCsvPath() != "")
+            writeBaseDistanceOutput();
     }
 
     public void runClusteringByLocals() {
@@ -330,8 +347,7 @@ public class StructuralVariantClustering {
 
         int currentIndex = 0;
 
-        while(currentIndex < mUnassignedVariants.size())
-        {
+        while(currentIndex < mUnassignedVariants.size()) {
             SvClusterData currentVar = mUnassignedVariants.get(currentIndex);
 
             // make a new cluster
@@ -350,9 +366,6 @@ public class StructuralVariantClustering {
 
             LOGGER.debug("clusterCount({}) remainingVariants({})", mClusters.size(), mUnassignedVariants.size());
         }
-
-        if(mConfig.getOutputCsvFile() != "")
-            writeOutputCsvFile();
     }
 
     private int getNextClusterId() { return mNextClusterId++; }
@@ -371,8 +384,7 @@ public class StructuralVariantClustering {
                 // test each possible linkage
                 if (!mClusteringUtils.areVariantsLinked(currentVar, otherVar))
                 {
-                    LOGGER.debug("non-linked SVs: v1({}) and v2({})",
-                            currentVar.posId(), otherVar.posId());
+                    //LOGGER.debug("non-linked SVs: v1({}) and v2({})", currentVar.posId(), otherVar.posId());
                     continue;
                 }
 
@@ -412,29 +424,34 @@ public class StructuralVariantClustering {
         }
     }
 
-    private void writeOutputCsvFile()
+    private void writeBaseDistanceOutput()
     {
-        String outputFileName = mConfig.getOutputCsvFile();
+        String outputFileName = mConfig.getOutputCsvPath();
 
-        Path outputFile = Paths.get(outputFileName + ".csv");
+        if(!outputFileName.endsWith("/"))
+            outputFileName += "/";
+
+        Path outputFile = Paths.get(outputFileName + mSampleId + ".csv");
 
         try (final BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
 
-            writer.write("SAMPLE,CLUSTER_ID,FOOTPRINT_ID,SV_ID,TYPE,CRMS_START,POS_START,ORIENT_START,CRMS_END,POS_END,ORIENT_END\n");
+            writer.write("SAMPLE,CLUSTER_ID,FOOTPRINT_ID,SV_ID,TYPE,PLOIDY,CRMS_START,POS_START,ORIENT_START,ADJ_AF_START,ADJ_START_CN,ADJ_START_CNC,CRMS_END,POS_END,ORIENT_END,ADJ_AF_END,ADJ_END_CN,ADJ_END_CNC,\n");
 
             for(final SvCluster cluster : mClusters)
             {
                 for(SvFootprint footprint : cluster.getFootprints()) {
-                    for (final SvClusterData variant : footprint.getSVs()) {
+                    for (final SvClusterData var : footprint.getSVs()) {
                         writer.write(
-                                String.format("%s,%d,%d,%s,%s,",
-                                        mSampleId, cluster.getClusterId(), footprint.getFootprintId(), variant.id(), variant.type()));
+                                String.format("%s,%d,%d,%s,%s,%.2f,",
+                                        mSampleId, cluster.getClusterId(), footprint.getFootprintId(), var.id(), var.type(), var.getSvData().ploidy()));
 
                         writer.write(
-                                String.format("%s,%d,%d,%s,%d,%d",
-                                        variant.chromosome(true), variant.position(true), variant.orientation(true),
-                                        variant.chromosome(false), variant.position(false), variant.orientation(false)
-                                ));
+                                String.format("%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
+                                        var.chromosome(true), var.position(true), var.orientation(true), var.getStartArm(),
+                                        var.getSvData().adjustedStartAF(), var.getSvData().adjustedStartCopyNumber(), var.getSvData().adjustedStartCopyNumberChange(),
+                                        var.chromosome(false), var.position(false), var.orientation(false), var.getEndArm(),
+                                        var.getSvData().adjustedEndAF(), var.getSvData().adjustedEndCopyNumber(), var.getSvData().adjustedEndCopyNumberChange()
+                                        ));
 
                         writer.newLine();
                     }

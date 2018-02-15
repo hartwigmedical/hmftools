@@ -17,4 +17,16 @@ public abstract class StructuralVariantData {
     public abstract byte startOrientation();
     public abstract byte endOrientation();
     public abstract StructuralVariantType type();
+
+    public abstract Double startAF();
+    public abstract Double adjustedStartAF();
+    public abstract Double adjustedStartCopyNumber();
+    public abstract Double adjustedStartCopyNumberChange();
+    public abstract Double endAF();
+    public abstract Double adjustedEndAF();
+    public abstract Double adjustedEndCopyNumber();
+    public abstract Double adjustedEndCopyNumberChange();
+    public abstract Double ploidy();
+
+
 }

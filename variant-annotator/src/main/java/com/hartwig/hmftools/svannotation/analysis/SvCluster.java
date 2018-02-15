@@ -82,7 +82,7 @@ public class SvCluster
     {
         mClusteredSVs.add(variant);
 
-        // addToFootprint(variant);
+        addToFootprint(variant);
     }
 
     public void addSubCluster(SvCluster subCluster)

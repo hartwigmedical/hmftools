@@ -2,24 +2,22 @@ package com.hartwig.hmftools.svannotation.analysis;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import java.util.List;
 
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
+
 public class SvClusterData
 {
     private final String mId; // sourced from either VCF or DB
 
-    private final String mStartChromosome;
-    private final String mEndChromosome;
-    private final long mStartPosition;
-    private final long mEndPosition;
-
-    // other fields as required
-    private final byte mStartOrientation;
-    private final byte mEndOrientation;
-    private StructuralVariantType mType;
+    // full set of DB fields
+    private final StructuralVariantData mSVData;
+    private String mStartArm;
+    private String mEndArm;
 
     // clustering info
     private List<SvClusterData> mSubSVs; // other SVs wholy contained within this SV
@@ -27,25 +25,12 @@ public class SvClusterData
     private SvCluster mStartCluster;
     private SvCluster mEndCluster;
 
-    public SvClusterData(
-            final String id,
-            final String startChromosome,
-            final String endChromosome,
-            final long startPosition,
-            final long endPosition,
-            final byte startOrientation,
-            final byte endOrientation,
-            final StructuralVariantType type)
+    public SvClusterData(final StructuralVariantData svData)
     {
-        mId = id;
-        mStartChromosome = startChromosome;
-        mEndChromosome = endChromosome;
-        mStartPosition = startPosition;
-        mEndPosition = endPosition;
-
-        mStartOrientation = startOrientation;
-        mEndOrientation = endOrientation;
-        mType = type;
+        mId = svData.id();
+        mSVData = svData;
+        mStartArm = "";
+        mEndArm = "";
 
         mSubSVs = Lists.newArrayList();
         mIsSubSV = false;
@@ -55,31 +40,45 @@ public class SvClusterData
 
     public static SvClusterData from(final EnrichedStructuralVariant enrichedSV)
     {
-        return new SvClusterData(
-                enrichedSV.id(),
-                enrichedSV.chromosome(true),
-                enrichedSV.chromosome(false),
-                enrichedSV.position(true),
-                enrichedSV.position(false),
-                enrichedSV.orientation(true),
-                enrichedSV.orientation(false),
-                enrichedSV.type());
-    }
+        StructuralVariantData svData =
+            ImmutableStructuralVariantData.builder()
+                .id(enrichedSV.id())
+                .startChromosome(enrichedSV.chromosome(true))
+                .endChromosome(enrichedSV.chromosome(false))
+                .startPosition(enrichedSV.position(true))
+                .endPosition(enrichedSV.position(false))
+                .startOrientation(enrichedSV.orientation(true))
+                .endOrientation(enrichedSV.orientation(false))
+                .startAF(enrichedSV.start().alleleFrequency())
+                .adjustedStartAF(enrichedSV.start().adjustedAlleleFrequency())
+                .adjustedStartCopyNumber(enrichedSV.start().adjustedCopyNumber())
+                .adjustedStartCopyNumberChange(enrichedSV.start().adjustedCopyNumberChange())
+                .endAF(enrichedSV.end().alleleFrequency())
+                .adjustedEndAF(enrichedSV.end().adjustedAlleleFrequency())
+                .adjustedEndCopyNumber(enrichedSV.end().adjustedCopyNumber())
+                .adjustedEndCopyNumberChange(enrichedSV.end().adjustedCopyNumberChange())
+                .ploidy(enrichedSV.ploidy())
+                .type(enrichedSV.type())
+                .build();
 
-    public static SvClusterData from(final StructuralVariantData svRecord)
-    {
-        return new SvClusterData(
-                svRecord.id(),
-                svRecord.startChromosome(),
-                svRecord.endChromosome(),
-                svRecord.startPosition(),
-                svRecord.endPosition(),
-                svRecord.startOrientation(),
-                svRecord.endOrientation(),
-                svRecord.type());
+        return new SvClusterData(svData);
     }
 
     public final String id() { return mId; }
+    public final StructuralVariantData getSvData() { return mSVData; }
+
+    // for convenience
+    public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
+    public final StructuralVariantType type() { return mSVData.type(); }
+
+    public final String getStartArm() { return mStartArm; }
+    public final String getEndArm() { return mEndArm; }
+    public void setChromosomalArms(final String start, final String end)
+    {
+        mStartArm = start;
+        mEndArm = end;
+    }
+
 
     public final String posId()
     {
@@ -89,10 +88,8 @@ public class SvClusterData
 
     public boolean equals(final SvClusterData other) { return id().equals(other.id()); }
 
-    public final String chromosome(boolean isStart) { return isStart ? mStartChromosome : mEndChromosome; }
-    public final long position(boolean isStart) { return isStart ? mStartPosition : mEndPosition; }
-    public final byte orientation(boolean isStart) { return isStart ? mStartOrientation: mEndOrientation; }
-    public  StructuralVariantType type() { return mType; }
+    public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
+    public final long position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
 
     public final boolean isLocal()
     {

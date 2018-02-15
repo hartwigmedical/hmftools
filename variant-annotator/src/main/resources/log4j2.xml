@@ -4,14 +4,10 @@
         <Console name="Console" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] [%-5level] %msg%n"/>
         </Console>
-        <File name="File" fileName="variant_annotator.log">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] [%-5level] %msg%n"/>
-        </File>
     </Appenders>
     <Loggers>
-        <Root level="Debug">
-            <AppenderRef ref="Console" level="Info"/>
-            <AppenderRef ref="File"/>
+        <Root level="Info">
+            <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
 </Configuration>

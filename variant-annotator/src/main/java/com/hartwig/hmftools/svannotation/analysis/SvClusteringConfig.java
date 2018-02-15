@@ -6,14 +6,14 @@ import static java.lang.Math.abs;
 public class SvClusteringConfig {
 
     private int mClusterBaseDistance;
-    private String mOutputCsvFile;
+    private String mOutputCsvPath;
 
-    public static final int DEFAULT_BASE_DISTANCE = 1000;
+    public static final int DEFAULT_BASE_DISTANCE = 100000;
 
     public SvClusteringConfig()
     {
         mClusterBaseDistance = DEFAULT_BASE_DISTANCE;
-        mOutputCsvFile = "";
+        mOutputCsvPath = "";
     }
 
     public void setBaseDistance(int distance)
@@ -24,9 +24,8 @@ public class SvClusteringConfig {
             mClusterBaseDistance = distance;
     }
 
-    public void setOutputCsvFile(final String outputFile) { mOutputCsvFile = outputFile; }
-
-    public final String getOutputCsvFile() { return mOutputCsvFile; }
+    public void setOutputCsvPath(final String path) { mOutputCsvPath = path; }
+    public final String getOutputCsvPath() { return mOutputCsvPath; }
     public int getClusterBaseDistance() { return mClusterBaseDistance; }
 
 }
