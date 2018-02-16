@@ -16,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GeneFusionData {
-
     @NotNull
     public abstract String geneStart();
 
@@ -27,6 +26,9 @@ public abstract class GeneFusionData {
     public abstract String geneContextStart();
 
     @NotNull
+    public abstract String geneStartTranscript();
+
+    @NotNull
     public abstract String geneEnd();
 
     @NotNull
@@ -34,6 +36,9 @@ public abstract class GeneFusionData {
 
     @NotNull
     public abstract String geneContextEnd();
+
+    @NotNull
+    public abstract String geneEndTranscript();
 
     @NotNull
     public abstract String copies();
@@ -50,9 +55,11 @@ public abstract class GeneFusionData {
                 .geneStart(upstream.geneName())
                 .geneStartEntrezIds(upstream.parent().entrezIds())
                 .geneContextStart(exonDescription(upstream))
+                .geneStartTranscript(upstream.transcriptId())
                 .geneEnd(downstream.geneName())
                 .geneEndEntrezIds(downstream.parent().entrezIds())
                 .geneContextEnd(exonDescription(downstream))
+                .geneEndTranscript(downstream.transcriptId())
                 .copies(ploidyToCopiesString(fusionPloidy(fusion)))
                 .cosmicURL(fusion.cosmicURL())
                 .build();

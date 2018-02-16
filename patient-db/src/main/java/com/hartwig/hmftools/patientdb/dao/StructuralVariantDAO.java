@@ -14,8 +14,15 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
+import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.*;
@@ -61,9 +68,15 @@ class StructuralVariantDAO {
 
     public final List<String> getSamplesList(@NotNull final String sampleSearch) {
 
-        final Result<Record1<String>> result = sampleSearch.equals("") ?
-                context.select(STRUCTURALVARIANT.SAMPLEID).from(STRUCTURALVARIANT).groupBy(STRUCTURALVARIANT.SAMPLEID).fetch()
-                : context.select(STRUCTURALVARIANT.SAMPLEID).from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.like(sampleSearch)).groupBy(STRUCTURALVARIANT.SAMPLEID).fetch();
+        final Result<Record1<String>> result = sampleSearch.equals("") ? context.select(STRUCTURALVARIANT.SAMPLEID)
+                .from(STRUCTURALVARIANT)
+                .groupBy(STRUCTURALVARIANT.SAMPLEID)
+                .fetch()
+                : context.select(STRUCTURALVARIANT.SAMPLEID)
+                        .from(STRUCTURALVARIANT)
+                        .where(STRUCTURALVARIANT.SAMPLEID.like(sampleSearch))
+                        .groupBy(STRUCTURALVARIANT.SAMPLEID)
+                        .fetch();
 
         List<String> samplesList = Lists.newArrayList();
 
@@ -72,6 +85,51 @@ class StructuralVariantDAO {
         }
 
         return samplesList;
+    }
+
+    @NotNull
+    List<EnrichedStructuralVariant> readEnrichedData(@NotNull final String sample) {
+        final List<EnrichedStructuralVariant> regions = Lists.newArrayList();
+
+        final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result) {
+            final EnrichedStructuralVariantLeg start = ImmutableEnrichedStructuralVariantLeg.builder()
+                    .chromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
+                    .position(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
+                    .orientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
+                    .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
+                    .alleleFrequency(record.getValue(STRUCTURALVARIANT.STARTAF))
+                    .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF))
+                    .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER))
+                    .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE))
+                    .build();
+
+            final EnrichedStructuralVariantLeg end = ImmutableEnrichedStructuralVariantLeg.builder()
+                    .chromosome(record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
+                    .position(record.getValue(STRUCTURALVARIANT.ENDPOSITION))
+                    .orientation(record.getValue(STRUCTURALVARIANT.ENDORIENTATION))
+                    .homology(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
+                    .alleleFrequency(record.getValue(STRUCTURALVARIANT.ENDAF))
+                    .adjustedAlleleFrequency(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF))
+                    .adjustedCopyNumber(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER))
+                    .adjustedCopyNumberChange(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE))
+                    .build();
+
+            final EnrichedStructuralVariant variant = ImmutableEnrichedStructuralVariant.builder()
+                    .primaryKey(record.getValue(STRUCTURALVARIANT.ID))
+                    .id(record.getValue(STRUCTURALVARIANT.ID).toString())
+                    .start(start)
+                    .end(end)
+                    .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
+                    .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .ploidy(record.getValue(STRUCTURALVARIANT.PLOIDY))
+                    .build();
+
+            regions.add(variant);
+        }
+
+        return regions;
     }
 
     void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {

@@ -14,12 +14,12 @@ import net.sf.jasperreports.engine.JRDataSource;
 
 public final class GeneFusionDataSource {
 
-    public static final FieldBuilder<?> GENE_FIELD = field("gene", String.class);
+    public static final FieldBuilder<?> GENES_FIELD = field("genes", String.class);
     public static final FieldBuilder<?> GENE_CONTEXT = field("gene context", String.class);
-    public static final FieldBuilder<?> PARTNER_GENE_FIELD = field("partner_gene", String.class);
+    public static final FieldBuilder<?> GENE_TRANSCRIPT_FIELD = field("gene_transcript", String.class);
     public static final FieldBuilder<?> PARTNER_CONTEXT_FIELD = field("partner_context", String.class);
+    public static final FieldBuilder<?> PARTNER_TRANSCRIPT_FIELD = field("partner_transcript", String.class);
     public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
-    public static final FieldBuilder<?> URL_TEXT = field("url text", String.class);
     private static final FieldBuilder<?> COSMIC_URL = field("cosmic url", String.class);
 
     private GeneFusionDataSource() {
@@ -27,20 +27,20 @@ public final class GeneFusionDataSource {
 
     @NotNull
     public static JRDataSource fromGeneFusions(@NotNull List<GeneFusionData> fusions) {
-        final DRDataSource dataSource = new DRDataSource(GENE_FIELD.getName(),
+        final DRDataSource dataSource = new DRDataSource(GENES_FIELD.getName(),
                 GENE_CONTEXT.getName(),
-                PARTNER_GENE_FIELD.getName(),
+                GENE_TRANSCRIPT_FIELD.getName(),
                 PARTNER_CONTEXT_FIELD.getName(),
+                PARTNER_TRANSCRIPT_FIELD.getName(),
                 COPIES_FIELD.getName(),
-                URL_TEXT.getName(),
                 COSMIC_URL.getName());
 
-        fusions.forEach(fusion -> dataSource.add(fusion.geneStart(),
+        fusions.forEach(fusion -> dataSource.add(fusion.geneStart() + " - " + fusion.geneEnd(),
                 fusion.geneContextStart(),
-                fusion.geneEnd(),
+                fusion.geneStartTranscript(),
                 fusion.geneContextEnd(),
+                fusion.geneEndTranscript(),
                 fusion.copies(),
-                fusionUrlText(fusion),
                 fusion.cosmicURL()));
 
         return dataSource;
@@ -48,8 +48,8 @@ public final class GeneFusionDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { GENE_FIELD, GENE_CONTEXT, PARTNER_GENE_FIELD, PARTNER_CONTEXT_FIELD, COPIES_FIELD, URL_TEXT,
-                COSMIC_URL };
+        return new FieldBuilder<?>[] { GENES_FIELD, GENE_TRANSCRIPT_FIELD, PARTNER_TRANSCRIPT_FIELD, GENE_CONTEXT,/* PARTNER_GENE_FIELD,*/
+                PARTNER_CONTEXT_FIELD, COPIES_FIELD, /*URL_TEXT,*/ COSMIC_URL };
     }
 
     @NotNull
@@ -63,7 +63,12 @@ public final class GeneFusionDataSource {
     }
 
     @NotNull
-    private static String fusionUrlText(@NotNull final GeneFusionData fusion) {
-        return fusion.cosmicURL().isEmpty() ? "" : fusion.geneStart() + "-" + fusion.geneEnd();
+    public static AbstractSimpleExpression<String> transcriptUrl(@NotNull final FieldBuilder<?> transcriptField) {
+        return new AbstractSimpleExpression<String>() {
+            @Override
+            public String evaluate(@NotNull final ReportParameters data) {
+                return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + data.getValue(transcriptField.getName());
+            }
+        };
     }
 }
