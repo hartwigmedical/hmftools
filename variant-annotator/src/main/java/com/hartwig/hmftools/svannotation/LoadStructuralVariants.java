@@ -71,11 +71,12 @@ public class LoadStructuralVariants {
         if(runClustering) {
             LOGGER.info("will run clustering logic");
 
-            Configurator.setRootLevel(Level.DEBUG);
+            //Configurator.setRootLevel(Level.DEBUG);
 
             SvClusteringConfig clusteringConfig = new SvClusteringConfig();
             clusteringConfig.setOutputCsvPath(cmd.getOptionValue(CLUSTERING_OUTPUT_PATH));
             clusteringConfig.setBaseDistance(Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE, "0")));
+            clusteringConfig.setUseCombinedOutputFile(tumorSample == "*");
             svClusterer = new StructuralVariantClustering(clusteringConfig);
         }
 
@@ -130,12 +131,17 @@ public class LoadStructuralVariants {
                 samplesList.add(tumorSample);
             }
 
+            int count = 0;
             for(final String sample : samplesList) {
                 LOGGER.info("clustering for sample({})", sample);
 
                 List<SvClusterData> svClusterData = queryStructuralVariantData(dbAccess, sample);
                 svClusterer.loadFromDatabase(sample, svClusterData);
                 svClusterer.runClustering();
+                ++count;
+
+//                if(count > 10)
+//                    break;
             }
         }
 

@@ -35,8 +35,8 @@ public class SvUtilities {
 
         if(position <= region.start())
             return CHROMOSOME_ARM_P;
-        if(position >= region.end())
-            return CHROMOSOME_ARM_P;
+        else if(position >= region.end())
+            return CHROMOSOME_ARM_Q;
         else
             return CHROMOSOME_ARM_CENTROMERE;
     }

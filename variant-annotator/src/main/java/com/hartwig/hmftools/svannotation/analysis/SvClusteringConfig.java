@@ -7,6 +7,7 @@ public class SvClusteringConfig {
 
     private int mClusterBaseDistance;
     private String mOutputCsvPath;
+    private boolean mUseCombinedOutputFile;
 
     public static final int DEFAULT_BASE_DISTANCE = 100000;
 
@@ -14,6 +15,7 @@ public class SvClusteringConfig {
     {
         mClusterBaseDistance = DEFAULT_BASE_DISTANCE;
         mOutputCsvPath = "";
+        mUseCombinedOutputFile = false;
     }
 
     public void setBaseDistance(int distance)
@@ -27,5 +29,8 @@ public class SvClusteringConfig {
     public void setOutputCsvPath(final String path) { mOutputCsvPath = path; }
     public final String getOutputCsvPath() { return mOutputCsvPath; }
     public int getClusterBaseDistance() { return mClusterBaseDistance; }
+
+    public boolean getUseCombinedOutputFile() { return mUseCombinedOutputFile; }
+    public void setUseCombinedOutputFile(boolean toggle) { mUseCombinedOutputFile = true; }
 
 }

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 public class StructuralVariantClustering {
@@ -28,12 +29,15 @@ public class StructuralVariantClustering {
 
     private List<SvCluster> mClusters;
 
+    BufferedWriter mFileWriter;
+
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnalyzer.class);
 
     public StructuralVariantClustering(final SvClusteringConfig config)
     {
         mConfig = config;
         mClusteringUtils = new SvUtilities(mConfig.getClusterBaseDistance());
+        mFileWriter = null;
         clearState();
     }
 
@@ -88,7 +92,7 @@ public class StructuralVariantClustering {
         for (SvClusterData var : mUnassignedVariants)
         {
             String startArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
-            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(true), var.position(true));
+            String endArm = mClusteringUtils.getChromosomalArm(var.chromosome(false), var.position(false));
             var.setChromosomalArms(startArm, endArm);
         }
     }
@@ -426,16 +430,40 @@ public class StructuralVariantClustering {
 
     private void writeBaseDistanceOutput()
     {
-        String outputFileName = mConfig.getOutputCsvPath();
+        try {
 
-        if(!outputFileName.endsWith("/"))
-            outputFileName += "/";
+            BufferedWriter writer = null;
 
-        Path outputFile = Paths.get(outputFileName + mSampleId + ".csv");
+            if(mConfig.getUseCombinedOutputFile() && mFileWriter != null)
+            {
+                // check if can continue appending to an existing file
+                writer = mFileWriter;
+            }
+            else
+            {
+                String outputFileName = mConfig.getOutputCsvPath();
 
-        try (final BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
+                if(!outputFileName.endsWith("/"))
+                    outputFileName += "/";
 
-            writer.write("SAMPLE,CLUSTER_ID,FOOTPRINT_ID,SV_ID,TYPE,PLOIDY,CRMS_START,POS_START,ORIENT_START,ADJ_AF_START,ADJ_START_CN,ADJ_START_CNC,CRMS_END,POS_END,ORIENT_END,ADJ_AF_END,ADJ_END_CN,ADJ_END_CNC,\n");
+                if(mConfig.getUseCombinedOutputFile())
+                    outputFileName += "CLUSTER.csv";
+                else
+                    outputFileName += mSampleId + ".csv";
+
+                Path outputFile = Paths.get(outputFileName);
+
+                boolean fileExists = Files.exists(outputFile);
+
+                writer = Files.newBufferedWriter(outputFile, fileExists ? StandardOpenOption.APPEND : StandardOpenOption.CREATE_NEW);
+                mFileWriter = writer;
+
+                if(!fileExists) {
+                    writer.write("SampleId,ClusterId,ClusterCount,Id,Type,Ploidy,");
+                    writer.write("ChrStart,PosStart,OrientStart,ArmStart,AdjAFStart,AdjCNStart,AdjCNChgStart,");
+                    writer.write("ChrEnd,PosEnd,OrientEnd,ArmEnd,AdjAFEnd,AdjCNEnd,AdjCNChgEnd\n");
+                }
+            }
 
             for(final SvCluster cluster : mClusters)
             {
@@ -443,7 +471,7 @@ public class StructuralVariantClustering {
                     for (final SvClusterData var : footprint.getSVs()) {
                         writer.write(
                                 String.format("%s,%d,%d,%s,%s,%.2f,",
-                                        mSampleId, cluster.getClusterId(), footprint.getFootprintId(), var.id(), var.type(), var.getSvData().ploidy()));
+                                        mSampleId, cluster.getClusterId(), cluster.getFootprints().size(), var.id(), var.type(), var.getSvData().ploidy()));
 
                         writer.write(
                                 String.format("%s,%d,%d,%s,%.2f,%.2f,%.2f,%s,%d,%d,%s,%.2f,%.2f,%.2f",
@@ -457,10 +485,11 @@ public class StructuralVariantClustering {
                     }
                 }
             }
-            writer.close();
+            // writer.close();
+
         }
         catch (final IOException e) {
-            LOGGER.error("error writing outputFile{}", outputFileName);
+            LOGGER.error("error writing to outputFile");
         }
     }
 
