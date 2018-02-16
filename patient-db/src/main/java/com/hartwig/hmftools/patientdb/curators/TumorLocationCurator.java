@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb.curators;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -19,8 +19,8 @@ import org.jetbrains.annotations.Nullable;
 public class TumorLocationCurator {
     private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
 
-    public TumorLocationCurator(@NotNull final String mappingCsv) throws IOException {
-        final CSVParser parser = CSVParser.parse(new File(mappingCsv), Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+    public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+        final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
             final String location = record.get("primaryTumorLocation");
             final String category = record.get("category");

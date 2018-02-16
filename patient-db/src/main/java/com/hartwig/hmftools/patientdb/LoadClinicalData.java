@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,14 +59,15 @@ public final class LoadClinicalData {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
-    private static final String TUMOR_LOCATION_MAPPING_CSV = "tumor_location_mapping_csv";
     private static final String LIMS_JSON = "lims_json";
     private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates_csv";
     private static final String FORM_STATUS_CSV = "form_status_csv";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
     private static final String CSV_OUT_DIR = "csv_out_dir";
     private static final String CANCER_TYPES_LINK = "cancer_types_symlink";
+    private static final InputStream TREATMENT_MAPPING_RESOURCE = LoadClinicalData.class.getResourceAsStream("/treatment_mapping.csv");
+    private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
+            LoadClinicalData.class.getResourceAsStream("/tumor_location_mapping.csv");
 
     public static void main(@NotNull final String[] args)
             throws ParseException, IOException, InterruptedException, java.text.ParseException, XMLStreamException, SQLException,
@@ -111,21 +113,13 @@ public final class LoadClinicalData {
             @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbAccess)
             throws IOException, XMLStreamException, HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
-        final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_MAPPING_CSV);
-        final String tumorLocationMappingCsv = cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV);
         final String limsJson = cmd.getOptionValue(LIMS_JSON);
         final String preLIMSArrivalDatesCsv = cmd.getOptionValue(PRE_LIMS_ARRIVAL_DATES_CSV);
         final String formStatusCsv = cmd.getOptionValue(FORM_STATUS_CSV);
         final String csvOutputDir = cmd.getOptionValue(CSV_OUT_DIR);
         final Optional<String> cancerTypesLink = Optional.ofNullable(cmd.getOptionValue(CANCER_TYPES_LINK));
 
-        if (Utils.anyNull(ecrfFilePath,
-                treatmentMappingCsv,
-                tumorLocationMappingCsv,
-                limsJson,
-                preLIMSArrivalDatesCsv,
-                formStatusCsv,
-                csvOutputDir)) {
+        if (Utils.anyNull(ecrfFilePath, limsJson, preLIMSArrivalDatesCsv, formStatusCsv, csvOutputDir)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", clinicalOptions);
         } else {
@@ -135,8 +129,8 @@ public final class LoadClinicalData {
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
             final PatientReader patientReader = new PatientReader(model,
-                    new TreatmentCurator(treatmentMappingCsv),
-                    new TumorLocationCurator(tumorLocationMappingCsv),
+                    new TreatmentCurator(TREATMENT_MAPPING_RESOURCE),
+                    new TumorLocationCurator(TUMOR_LOCATION_MAPPING_RESOURCE),
                     lims);
             final Set<String> sequencedCpctPatientIds = Utils.sequencedPatientIds(runContexts)
                     .stream()
@@ -265,10 +259,6 @@ public final class LoadClinicalData {
         final Options options = new Options();
         options.addOption(ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(FORM_STATUS_CSV, true, "Path towards the form status csv file.");
-        options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards the csv file that maps treatment to treatment names and types.");
-        options.addOption(TUMOR_LOCATION_MAPPING_CSV,
-                true,
-                "Path towards the csv file that maps detailed tumor locations to general ones.");
         options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
         options.addOption(CANCER_TYPES_LINK, true, "Name of cancer type csv symlink.");
         return options;
