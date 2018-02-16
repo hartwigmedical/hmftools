@@ -120,6 +120,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>com.hartwig.hmftools.patientdb.LoadClinicalData</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                     <descriptorRefs>
