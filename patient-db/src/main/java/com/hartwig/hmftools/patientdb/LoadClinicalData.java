@@ -8,20 +8,25 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.CpctEcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
+import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerTypes;
 import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.common.exception.HartwigException;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -103,7 +108,7 @@ public final class LoadClinicalData {
     }
 
     private static void writeClinicalData(@NotNull final Options clinicalOptions, @NotNull final CommandLine cmd,
-            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbWriter)
+            @NotNull final List<RunContext> runContexts, @NotNull final DatabaseAccess dbAccess)
             throws IOException, XMLStreamException, HartwigException {
         final String ecrfFilePath = cmd.getOptionValue(ECRF_FILE);
         final String treatmentMappingCsv = cmd.getOptionValue(TREATMENT_MAPPING_CSV);
@@ -125,7 +130,7 @@ public final class LoadClinicalData {
             formatter.printHelp("patient-db", clinicalOptions);
         } else {
             LOGGER.info("Loading ecrf model...");
-            dbWriter.clearClinicalTables();
+            dbAccess.clearClinicalTables();
             final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(formStatusCsv);
             final CpctEcrfModel model = CpctEcrfModel.loadFromXML(ecrfFilePath, formStatusModel);
             final Lims lims = LimsFactory.fromLimsJsonWithPreLIMSArrivalDates(limsJson, preLIMSArrivalDatesCsv);
@@ -133,37 +138,54 @@ public final class LoadClinicalData {
                     new TreatmentCurator(treatmentMappingCsv),
                     new TumorLocationCurator(tumorLocationMappingCsv),
                     lims);
-
-            final Set<String> cpctPatientIds = Utils.sequencedPatientIds(runContexts)
+            final Set<String> sequencedCpctPatientIds = Utils.sequencedPatientIds(runContexts)
                     .stream()
                     .filter(patientId -> patientId.startsWith("CPCT"))
                     .collect(Collectors.toSet());
-            LOGGER.info("Writing CPCT clinical data for " + cpctPatientIds.size() + " patients.");
-            for (final String patientId : cpctPatientIds) {
-                final EcrfPatient patient = model.findPatientById(patientId);
+
+            final Map<String, Patient> readPatients = readEcrfPatients(patientReader, model.patients(), runContexts);
+            LOGGER.info("Read {} patients from ecrf", readPatients.size());
+            writeCancerTypesToCSV(csvOutputDir, cancerTypesLink, readPatients.values());
+
+            LOGGER.info("Writing CPCT clinical data for {} sequenced patients.", sequencedCpctPatientIds.size());
+            for (final String patientId : sequencedCpctPatientIds) {
+                final Patient patient = readPatients.get(patientId);
                 if (patient == null) {
                     LOGGER.error("Could not find patient with id: " + patientId + " in ecrf file.");
                 } else {
-                    final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(patientId, runContexts);
-                    final Patient cpctPatient = patientReader.read(patient, tumorSamplesForPatient);
-                    dbWriter.writeClinicalData(cpctPatient);
-                    final List<ValidationFinding> findings = PatientValidator.validatePatient(cpctPatient);
-                    dbWriter.writeValidationFindings(findings);
-                    dbWriter.writeValidationFindings(cpctPatient.matchFindings());
+                    dbAccess.writeClinicalData(patient);
+                    final List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
+                    dbAccess.writeValidationFindings(findings);
+                    dbAccess.writeValidationFindings(patient.matchFindings());
                 }
             }
-            writeCancerTypesToCSV(csvOutputDir, cancerTypesLink, dbWriter);
             LOGGER.info("Done!");
         }
     }
 
+    @NotNull
+    private static Map<String, Patient> readEcrfPatients(@NotNull final PatientReader reader, @NotNull final Iterable<EcrfPatient> patients,
+            @NotNull final List<RunContext> runContexts) throws IOException {
+        final Map<String, Patient> readPatients = Maps.newHashMap();
+        for (final EcrfPatient ecrfPatient : patients) {
+            final List<String> tumorSamplesForPatient = getTumorSamplesForPatient(ecrfPatient.patientId(), runContexts);
+            final Patient patient = reader.read(ecrfPatient, tumorSamplesForPatient);
+            readPatients.put(patient.patientData().cpctId(), patient);
+        }
+        return readPatients;
+    }
+
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static void writeCancerTypesToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
-            @NotNull final DatabaseAccess dbAccess) throws IOException {
+            @NotNull final Collection<Patient> patients) throws IOException {
         final String fileName = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + "_cancerTypes.csv";
         final String outputFile = csvOutputDir + File.separator + fileName;
         LOGGER.info("Writing cancer types to CSV... ");
-        final List<PatientCancerTypes> cancerTypes = dbAccess.readCancerTypes();
+        final List<PatientCancerTypes> cancerTypes = patients.stream()
+                .map(patient -> ImmutablePatientCancerTypes.of(patient.patientData().cpctId(),
+                        Strings.nullToEmpty(patient.patientData().primaryTumorLocation().category()),
+                        Strings.nullToEmpty(patient.patientData().primaryTumorLocation().subcategory())))
+                .collect(Collectors.toList());
         PatientCancerTypes.writeRecords(outputFile, cancerTypes);
         linkName.ifPresent(link -> updateCancerTypesCSVLink(csvOutputDir + File.separator + link, outputFile));
         LOGGER.info("Written {} records to {}", cancerTypes.size(), outputFile);

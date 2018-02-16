@@ -8,11 +8,6 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
 
-import java.util.List;
-
-import com.google.common.base.Strings;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientCancerTypes;
-import com.hartwig.hmftools.common.ecrf.projections.PatientCancerTypes;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -25,8 +20,6 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.Record3;
-import org.jooq.Result;
 
 class ClinicalDAO {
 
@@ -224,14 +217,5 @@ class ClinicalDAO {
                 FORMSMETADATA.FORM,
                 FORMSMETADATA.STATUS,
                 FORMSMETADATA.LOCKED).values(id, tableName, formName, formStatus, formLocked).execute();
-    }
-
-    @NotNull
-    List<PatientCancerTypes> readCancerTypes() {
-        final Result<Record3<String, String, String>> results =
-                context.select(PATIENT.CPCTID, PATIENT.CANCERTYPE, PATIENT.CANCERSUBTYPE).from(PATIENT).fetch();
-        return results.map(record -> ImmutablePatientCancerTypes.of(Strings.nullToEmpty(record.value1()),
-                Strings.nullToEmpty(record.value2()),
-                Strings.nullToEmpty(record.value3())));
     }
 }
