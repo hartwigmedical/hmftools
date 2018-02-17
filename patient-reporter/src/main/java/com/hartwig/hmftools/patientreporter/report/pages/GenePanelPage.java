@@ -33,7 +33,7 @@ public abstract class GenePanelPage {
 
     public ComponentBuilder<?, ?> reportComponent() {
         return cmp.verticalList(cmp.verticalGap(SECTION_VERTICAL_GAP),
-                cmp.text(Commons.TITLE + " - Gene Panel Information").setStyle(sectionHeaderStyle()),
+                cmp.text(Commons.TITLE + " - Gene Panel").setStyle(sectionHeaderStyle()),
                 cmp.verticalGap(SECTION_VERTICAL_GAP),
                 build(reporterData()));
     }
@@ -51,7 +51,7 @@ public abstract class GenePanelPage {
     @NotNull
     private static ComponentBuilder<?, ?> genePanelTable(@NotNull final HmfReporterData reporterData) {
         // KODU: Overwrite default font size to make the panel fit on one page.
-        final int fontSize = 7;
+        final int fontSize = 6;
         return cmp.subreport(baseTable().setColumnStyle(dataStyle().setFontSize(fontSize))
                 .setPageColumnsPerPage(2)
                 .columns(col.emptyColumn().setFixedWidth(20),
@@ -59,7 +59,7 @@ public abstract class GenePanelPage {
                         col.column("Transcript", GenePanelDataSource.TRANSCRIPT_FIELD)
                                 .setHyperLink(hyperLink(GenePanelDataSource.transcriptUrl()))
                                 .setStyle(linkStyle().setFontSize(fontSize)),
-                        col.column("CosmicGenes Type", GenePanelDataSource.TYPE_FIELD),
+                        col.column("Type", GenePanelDataSource.TYPE_FIELD),
                         col.emptyColumn().setFixedWidth(20))).setDataSource(GenePanelDataSource.fromHmfReporterData(reporterData));
     }
 }
