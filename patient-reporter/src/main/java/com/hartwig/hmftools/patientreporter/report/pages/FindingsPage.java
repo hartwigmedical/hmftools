@@ -121,17 +121,17 @@ public abstract class FindingsPage {
         final ComponentBuilder<?, ?> table =
                 !report.geneFusions().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
-                        .columns(col.column("Genes", GeneFusionDataSource.GENES_FIELD)
+                        .columns(col.column("Fusion", GeneFusionDataSource.FUSION_FIELD)
                                         .setHyperLink(hyperLink(GeneFusionDataSource.cosmicHyperlink()))
                                         .setStyle(linkStyle()),
-                                col.column("5' Gene Context", GeneFusionDataSource.GENE_CONTEXT),
-                                col.column("3' Gene Context", GeneFusionDataSource.PARTNER_CONTEXT_FIELD),
+                                col.column("5' Gene Context", GeneFusionDataSource.FIVE_GENE_CONTEXT_FIELD),
+                                col.column("3' Gene Context", GeneFusionDataSource.THREE_GENE_CONTEXT_FIELD),
                                 col.column("Copies", GeneFusionDataSource.COPIES_FIELD),
-                                col.column("5' Gene Transcript", GeneFusionDataSource.GENE_TRANSCRIPT_FIELD)
-                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.GENE_TRANSCRIPT_FIELD)))
+                                col.column("5' Transcript", GeneFusionDataSource.FIVE_TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.FIVE_TRANSCRIPT_FIELD)))
                                         .setStyle(linkStyle()),
-                                col.column("3' Gene Transcript", GeneFusionDataSource.PARTNER_TRANSCRIPT_FIELD)
-                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.PARTNER_TRANSCRIPT_FIELD)))
+                                col.column("3' Transcript", GeneFusionDataSource.THREE_TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.THREE_TRANSCRIPT_FIELD)))
                                         .setStyle(linkStyle()))
                         .setDataSource(GeneFusionDataSource.fromGeneFusions(report.geneFusions())))
                         : cmp.text("None").setStyle(fontStyle().setHorizontalTextAlignment(HorizontalTextAlignment.CENTER));
