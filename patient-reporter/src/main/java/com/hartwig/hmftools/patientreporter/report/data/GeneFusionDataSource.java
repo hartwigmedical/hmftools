@@ -20,6 +20,7 @@ public final class GeneFusionDataSource {
     public static final FieldBuilder<?> THREE_GENE_CONTEXT_FIELD = field("three_gene_context", String.class);
     public static final FieldBuilder<?> THREE_TRANSCRIPT_FIELD = field("three_transcript", String.class);
     public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
+    public static final FieldBuilder<?> COSMIC_URL_TEXT = field("cosmic url text", String.class);
     private static final FieldBuilder<?> COSMIC_URL = field("cosmic url", String.class);
 
     private GeneFusionDataSource() {
@@ -33,6 +34,7 @@ public final class GeneFusionDataSource {
                 THREE_GENE_CONTEXT_FIELD.getName(),
                 THREE_TRANSCRIPT_FIELD.getName(),
                 COPIES_FIELD.getName(),
+                COSMIC_URL_TEXT.getName(),
                 COSMIC_URL.getName());
 
         fusions.forEach(fusion -> dataSource.add(fusion.geneStart() + " - " + fusion.geneEnd(),
@@ -41,6 +43,7 @@ public final class GeneFusionDataSource {
                 fusion.geneContextEnd(),
                 fusion.geneEndTranscript(),
                 fusion.copies(),
+                fusion.cosmicURL().isEmpty() ? "" : "Link",
                 fusion.cosmicURL()));
 
         return dataSource;
@@ -49,7 +52,7 @@ public final class GeneFusionDataSource {
     @NotNull
     public static FieldBuilder<?>[] geneFusionFields() {
         return new FieldBuilder<?>[] { FUSION_FIELD, FIVE_TRANSCRIPT_FIELD, THREE_TRANSCRIPT_FIELD, FIVE_GENE_CONTEXT_FIELD,
-                THREE_GENE_CONTEXT_FIELD, COPIES_FIELD, COSMIC_URL };
+                THREE_GENE_CONTEXT_FIELD, COPIES_FIELD, COSMIC_URL_TEXT, COSMIC_URL };
     }
 
     @NotNull
