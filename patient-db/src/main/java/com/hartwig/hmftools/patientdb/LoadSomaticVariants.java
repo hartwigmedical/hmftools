@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.exception.HartwigException;
+import com.hartwig.hmftools.common.gene.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
+import com.hartwig.hmftools.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -54,7 +56,7 @@ public class LoadSomaticVariants {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, HartwigException, SQLException {
+    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
@@ -106,7 +108,8 @@ public class LoadSomaticVariants {
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
                 indexedFastaSequenceFile,
-                new ClonalityFactory(purityAdjuster, clonalPloidy));
+                new ClonalityFactory(purityAdjuster, clonalPloidy),
+                CanonicalTranscriptFactory.create(HmfGenePanelSupplier.allGeneList()));
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 
         LOGGER.info("Persisting variants to database");

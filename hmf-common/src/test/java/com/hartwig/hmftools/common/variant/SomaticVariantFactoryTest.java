@@ -43,13 +43,13 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void canLoadSomaticVCFFromBasePathAndFilter() throws IOException, HartwigException {
+    public void canLoadSomaticVCFFromBasePathAndFilter() throws IOException {
         final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", VARIANT_PATH, SOMATIC_EXTENSION);
         assertTestVariants(variants);
     }
 
     @Test
-    public void canLoadSomaticVCFFromFile() throws IOException, HartwigException {
+    public void canLoadSomaticVCFFromFile() throws IOException {
         final String file = VARIANT_PATH + File.separator + SOMATIC_EXTENSION;
         final List<SomaticVariant> variants =  new SomaticVariantFactory().fromVCFFile("sample", file);
         assertTestVariants(variants);

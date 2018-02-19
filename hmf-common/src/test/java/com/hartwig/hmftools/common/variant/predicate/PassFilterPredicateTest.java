@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.snpeff.VariantAnnotation;
 
@@ -21,117 +23,21 @@ public class PassFilterPredicateTest {
 
     @Test
     public void filtersOnFirstPassIdentifier() {
-        assertTrue(predicate.test(new TestVariant(PassFilterPredicate.PASS_IDENTIFIER_1)));
+        assertTrue(predicate.test(create(PassFilterPredicate.PASS_IDENTIFIER_1)));
     }
 
     @Test
     public void filtersOnSecondPassIdentifier() {
-        assertTrue(predicate.test(new TestVariant(PassFilterPredicate.PASS_IDENTIFIER_2)));
+        assertTrue(predicate.test(create(PassFilterPredicate.PASS_IDENTIFIER_2)));
     }
 
     @Test
     public void filterOnNonPassing() {
-        assertFalse(predicate.test(new TestVariant("NotPassing!")));
+        assertFalse(predicate.test(create("NotPassing!")));
     }
 
-    private static class TestVariant implements SomaticVariant {
-
-        @NotNull
-        private final String filter;
-
-        private TestVariant(@NotNull final String filter) {
-            this.filter = filter;
-        }
-
-        @NotNull
-        @Override
-        public String chromosome() {
-            return "1";
-        }
-
-        @Override
-        public long position() {
-            return 0;
-        }
-
-        @NotNull
-        @Override
-        public String ref() {
-            return "A";
-        }
-
-        @NotNull
-        @Override
-        public String alt() {
-            return "T";
-        }
-
-        @NotNull
-        @Override
-        public VariantType type() {
-            return VariantType.SNP;
-        }
-
-        @NotNull
-        @Override
-        public String filter() {
-            return filter;
-        }
-
-        @Nullable
-        @Override
-        public String dbsnpID() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public String cosmicID() {
-            return null;
-        }
-
-        @NotNull
-        @Override
-        public List<VariantAnnotation> annotations() {
-            return Lists.newArrayList();
-        }
-
-        @NotNull
-        @Override
-        public String gene() {
-            return "";
-        }
-
-        @NotNull
-        @Override
-        public String effect() {
-            return "";
-        }
-
-        @NotNull
-        @Override
-        public String codingEffect() {
-            return "";
-        }
-
-        @Override
-        public boolean hotspot() {
-            return false;
-        }
-
-        @Override
-        public double mappability() {
-            return 0;
-        }
-
-        @Override
-        public int totalReadCount() {
-            return 0;
-        }
-
-        @Override
-        public int alleleReadCount() {
-            return 0;
-        }
+    private SomaticVariant create(@NotNull final String filter) {
+        return new SomaticVariantImpl.Builder().filter(filter).build();
     }
+
 }

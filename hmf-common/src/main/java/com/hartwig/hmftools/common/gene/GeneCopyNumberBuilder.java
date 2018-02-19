@@ -83,21 +83,21 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
 
     public void somatic(@NotNull final PurityAdjustedSomaticVariant variant) {
         if (variant.gene().equals(gene)) {
-            if (variant.codingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT.toString())) {
+            if (variant.worstCodingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT.toString())) {
                 if (variant.biallelic()) {
                     nonsenseBiallelicCount++;
                 } else {
                     nonsenseNonBiallelicCount++;
                     nonsenseNonBiallelicPloidy += variant.ploidy();
                 }
-            } else if (variant.codingEffect().equals(CodingEffect.SPLICE.toString())) {
+            } else if (variant.worstCodingEffect().equals(CodingEffect.SPLICE.toString())) {
                 if (variant.biallelic()) {
                     spliceBiallelicCount++;
                 } else {
                     spliceNonBiallelicCount++;
                     spliceNonBiallelicPloidy += variant.ploidy();
                 }
-            } else if (variant.codingEffect().equals(CodingEffect.MISSENSE.toString())) {
+            } else if (variant.worstCodingEffect().equals(CodingEffect.MISSENSE.toString())) {
                 if (variant.biallelic()) {
                     missenseBiallelicCount++;
                 } else {

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.gene;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class CanonicalTranscriptFactory {
 
     @NotNull
-    public static List<CanonicalTranscript> create(@NotNull final List<HmfGenomeRegion> regions) {
+    public static List<CanonicalTranscript> create(@NotNull final Collection<HmfGenomeRegion> regions) {
 
         final List<CanonicalTranscript> transcripts = Lists.newArrayList();
         for (final HmfGenomeRegion region : regions) {
