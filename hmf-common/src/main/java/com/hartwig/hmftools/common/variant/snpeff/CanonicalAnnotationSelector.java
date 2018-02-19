@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.gene.CanonicalTranscript;
 import com.hartwig.hmftools.common.gene.TranscriptRegion;
 
@@ -15,7 +16,12 @@ public class CanonicalAnnotationSelector {
     private final Map<String, String> transcripts;
 
     public CanonicalAnnotationSelector(final List<CanonicalTranscript> transcripts) {
-        this.transcripts = transcripts.stream().collect(Collectors.toMap(TranscriptRegion::gene, TranscriptRegion::transcriptID));
+        this(transcripts.stream().collect(Collectors.toMap(TranscriptRegion::gene, TranscriptRegion::transcriptID)));
+    }
+
+    @VisibleForTesting
+    CanonicalAnnotationSelector(final Map<String, String> geneTranscriptMap) {
+        this.transcripts = geneTranscriptMap;
     }
 
     @NotNull
