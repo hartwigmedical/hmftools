@@ -7,14 +7,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.io.path.PathExtensionFinder;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
@@ -114,11 +112,15 @@ public class SomaticVariantFactory {
     }
 
     private void attachAnnotations(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-        final List<VariantAnnotation> annotations = VariantAnnotationFactory.fromContext(context);
-        final Set<String> effectedGenes = Sets.newHashSet();
-        builder.annotations(VariantAnnotationFactory.fromContext(context));
-        if (!annotations.isEmpty()) {
-            final VariantAnnotation variantAnnotation = annotations.get(0);
+
+        final List<VariantAnnotation> allAnnotations = VariantAnnotationFactory.fromContext(context);
+        builder.annotations(allAnnotations);
+
+        final List<VariantAnnotation> transcriptAnnotations =
+                allAnnotations.stream().filter(x -> x.featureType().equals("transcript")).collect(Collectors.toList());
+
+        if (!transcriptAnnotations.isEmpty()) {
+            final VariantAnnotation variantAnnotation = transcriptAnnotations.get(0);
             builder.gene(variantAnnotation.gene());
             builder.worstEffect(variantAnnotation.consequenceString());
             builder.worstCodingEffect(CodingEffect.effect(variantAnnotation.consequences()).toString());
@@ -130,11 +132,11 @@ public class SomaticVariantFactory {
             builder.worstEffectTranscript("");
         }
 
-        for (VariantAnnotation annotation : annotations) {
-            effectedGenes.add(annotation.gene());
-        }
-
-        builder.genesEffected(effectedGenes.size());
+        builder.genesEffected((int) transcriptAnnotations.stream()
+                .map(VariantAnnotation::gene)
+                .filter(x -> !x.isEmpty())
+                .distinct()
+                .count());
     }
 
     private static void attachFilter(@NotNull final SomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
