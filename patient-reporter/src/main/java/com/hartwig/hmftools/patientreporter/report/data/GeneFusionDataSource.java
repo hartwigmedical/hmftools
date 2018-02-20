@@ -16,10 +16,10 @@ import net.sf.jasperreports.engine.JRDataSource;
 public final class GeneFusionDataSource {
 
     public static final FieldBuilder<?> FUSION_FIELD = field("field", String.class);
-    public static final FieldBuilder<?> FIVE_TRANSCRIPT_FIELD = field("five_transcript", String.class);
-    public static final FieldBuilder<?> FIVE_GENE_CONTEXT_FIELD = field("five_gene context", String.class);
-    public static final FieldBuilder<?> THREE_TRANSCRIPT_FIELD = field("three_transcript", String.class);
-    public static final FieldBuilder<?> THREE_GENE_CONTEXT_FIELD = field("three_gene_context", String.class);
+    public static final FieldBuilder<?> START_TRANSCRIPT_FIELD = field("five_transcript", String.class);
+    public static final FieldBuilder<?> END_TRANSCRIPT_FIELD = field("three_transcript", String.class);
+    public static final FieldBuilder<?> START_CONTEXT_FIELD = field("five_gene context", String.class);
+    public static final FieldBuilder<?> END_CONTEXT_FIELD = field("three_gene_context", String.class);
     public static final FieldBuilder<?> COPIES_FIELD = field("copies", String.class);
     public static final FieldBuilder<?> COSMIC_URL_TEXT = field("cosmic_url_text", String.class);
     private static final FieldBuilder<?> COSMIC_URL = field("cosmic_url", String.class);
@@ -30,10 +30,10 @@ public final class GeneFusionDataSource {
     @NotNull
     public static JRDataSource fromGeneFusions(@NotNull List<GeneFusionData> fusions) {
         final DRDataSource dataSource = new DRDataSource(FUSION_FIELD.getName(),
-                FIVE_TRANSCRIPT_FIELD.getName(),
-                THREE_TRANSCRIPT_FIELD.getName(),
-                FIVE_GENE_CONTEXT_FIELD.getName(),
-                THREE_GENE_CONTEXT_FIELD.getName(),
+                START_TRANSCRIPT_FIELD.getName(),
+                END_TRANSCRIPT_FIELD.getName(),
+                START_CONTEXT_FIELD.getName(),
+                END_CONTEXT_FIELD.getName(),
                 COPIES_FIELD.getName(),
                 COSMIC_URL_TEXT.getName(),
                 COSMIC_URL.getName());
@@ -52,8 +52,8 @@ public final class GeneFusionDataSource {
 
     @NotNull
     public static FieldBuilder<?>[] geneFusionFields() {
-        return new FieldBuilder<?>[] { FUSION_FIELD, FIVE_TRANSCRIPT_FIELD, THREE_TRANSCRIPT_FIELD, FIVE_GENE_CONTEXT_FIELD,
-                THREE_GENE_CONTEXT_FIELD, COPIES_FIELD, COSMIC_URL_TEXT, COSMIC_URL };
+        return new FieldBuilder<?>[] { FUSION_FIELD, START_TRANSCRIPT_FIELD, END_TRANSCRIPT_FIELD, START_CONTEXT_FIELD, END_CONTEXT_FIELD,
+                COPIES_FIELD, COSMIC_URL_TEXT, COSMIC_URL };
     }
 
     @NotNull

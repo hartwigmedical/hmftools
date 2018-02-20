@@ -122,14 +122,14 @@ public abstract class FindingsPage {
                 !report.geneFusions().isEmpty()
                         ? cmp.subreport(monospaceBaseTable().fields(GeneFusionDataSource.geneFusionFields())
                         .columns(col.column("Fusion", GeneFusionDataSource.FUSION_FIELD),
-                                col.column("5' Transcript", GeneFusionDataSource.FIVE_TRANSCRIPT_FIELD)
-                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.FIVE_TRANSCRIPT_FIELD)))
+                                col.column("5' Transcript", GeneFusionDataSource.START_TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.START_TRANSCRIPT_FIELD)))
                                         .setStyle(linkStyle()),
-                                col.column("3' Transcript", GeneFusionDataSource.THREE_TRANSCRIPT_FIELD)
-                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.THREE_TRANSCRIPT_FIELD)))
+                                col.column("3' Transcript", GeneFusionDataSource.END_TRANSCRIPT_FIELD)
+                                        .setHyperLink(hyperLink(GeneFusionDataSource.transcriptUrl(GeneFusionDataSource.END_TRANSCRIPT_FIELD)))
                                         .setStyle(linkStyle()),
-                                col.column("5' Context", GeneFusionDataSource.FIVE_GENE_CONTEXT_FIELD),
-                                col.column("3' Context", GeneFusionDataSource.THREE_GENE_CONTEXT_FIELD),
+                                col.column("5' End", GeneFusionDataSource.START_CONTEXT_FIELD),
+                                col.column("3' Start", GeneFusionDataSource.END_CONTEXT_FIELD),
                                 col.column("Copies", GeneFusionDataSource.COPIES_FIELD),
                                 col.column("Cosmic", GeneFusionDataSource.COSMIC_URL_TEXT)
                                         .setHyperLink(hyperLink(GeneFusionDataSource.cosmicHyperlink()))
