@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
+import com.hartwig.hmftools.common.circos.CircosINDELWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -151,8 +152,8 @@ class GenerateCircosData {
     }
 
     private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
-        final List<PurityAdjustedSomaticVariant> downsampledSomaticVariants = downsample(filter(somaticVariants));
-        CircosSNPWriter.writePositions(baseCircosTumorSample + ".snp.circos", downsampledSomaticVariants);
+        CircosSNPWriter.writePositions(baseCircosTumorSample + ".snp.circos", downsample(snp(somaticVariants)));
+        CircosINDELWriter.writePositions(baseCircosTumorSample + ".indel.circos", downsample(indel(somaticVariants)));
     }
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {
@@ -188,9 +189,17 @@ class GenerateCircosData {
     }
 
     @NotNull
-    private List<PurityAdjustedSomaticVariant> filter(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) {
+    private List<PurityAdjustedSomaticVariant> snp(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.SNP)
+                .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private List<PurityAdjustedSomaticVariant> indel(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) {
+        return somaticVariants.stream()
+                .filter(x -> x.type() == VariantType.INDEL)
                 .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
                 .collect(Collectors.toList());
     }
