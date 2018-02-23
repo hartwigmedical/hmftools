@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.region.hmfslicer.HmfGenomeRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -90,7 +92,7 @@ public abstract class PatientReporter {
                 .collect(Collectors.toList());
         final List<GeneDisruptionData> reportableDisruptions = structuralVariantAnalysis.reportableDisruptions()
                 .stream()
-                .sorted(disruptionComparator())
+                .sorted(disruptionComparator(reporterData().panelGeneModel().transcriptMap()))
                 .map(GeneDisruptionData::from)
                 .collect(Collectors.toList());
 
@@ -196,8 +198,16 @@ public abstract class PatientReporter {
     }
 
     @NotNull
-    private static Comparator<GeneDisruption> disruptionComparator() {
-        return Comparator.comparing(GeneDisruption::linkedAnnotation, transcriptComparator());
+    private static Comparator<GeneDisruption> disruptionComparator(@NotNull final Map<String, HmfGenomeRegion> transcriptMap) {
+        return Comparator.comparing(GeneDisruption::linkedAnnotation, Comparator.comparing((Transcript transcript) -> {
+            final HmfGenomeRegion transcriptRegion = transcriptMap.get(transcript.transcriptId());
+            final long startPosition = transcript.parent().variant().start().position();
+            if (startPosition >= transcriptRegion.geneStart() && startPosition <= transcriptRegion.geneEnd()) {
+                return transcript.parent().variant().start();
+            } else {
+                return transcript.parent().variant().end();
+            }
+        }));
     }
 
     @NotNull
