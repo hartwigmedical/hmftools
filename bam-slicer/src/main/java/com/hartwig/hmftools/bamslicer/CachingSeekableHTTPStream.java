@@ -35,7 +35,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
                 contentLength = -1;
             }
         }
-        LOGGER.info("Caching {} bam chunks from {}", maxBufferSize, url);
+        LOGGER.info("Caching max {} bam chunks from {}", maxBufferSize, url);
         chunkBuffer = new ChunkHttpBuffer(httpClient, url, maxBufferSize, chunks);
         updatePosition(0);
     }
@@ -79,7 +79,7 @@ public class CachingSeekableHTTPStream extends SeekableStream {
     @Override
     public int read(byte[] buffer, int offset, int len) throws IOException {
         if (offset < 0 || len < 0 || (offset + len) > buffer.length) {
-            throw new IndexOutOfBoundsException("Offset=" + offset + ",len=" + len + ",buflen=" + buffer.length);
+            throw new IndexOutOfBoundsException("Offset=" + offset + ",len=" + len + ",bufflen=" + buffer.length);
         }
         if (len == 0 || position == contentLength) {
             return 0;
