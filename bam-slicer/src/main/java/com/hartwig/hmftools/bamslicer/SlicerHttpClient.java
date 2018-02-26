@@ -8,8 +8,8 @@ import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 
-final class SbpS3Client {
-    private SbpS3Client() {
+final class SlicerHttpClient {
+    private SlicerHttpClient() {
     }
 
     @NotNull
