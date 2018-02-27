@@ -154,7 +154,7 @@ public class BamSlicerApplication {
             final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), EXPIRATION_HOURS);
             return Pair.of(indexUrl, bamUrl);
         } catch (Exception e) {
-            LOGGER.error("Could not create S3 URLs. Error: {}", e);
+            LOGGER.error("Could not create S3 URLs. Error: {}", e.toString());
             LOGGER.error("Are you running this with the sbp user?");
             System.exit(1);
         }
