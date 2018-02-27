@@ -149,13 +149,14 @@ public class BamSlicerApplication {
     @NotNull
     private static Pair<URL, URL> generateURLs(@NotNull final CommandLine cmd) {
         try {
+            LOGGER.info("Attempting to generate S3 URLs for endpoint: {} using profile: {}", SBP_ENDPOINT_URL, SBP_PROFILE);
             final S3UrlGenerator urlGenerator = ImmutableS3UrlGenerator.of(SBP_ENDPOINT_URL, SBP_PROFILE);
             final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), EXPIRATION_HOURS);
             final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), EXPIRATION_HOURS);
             return Pair.of(indexUrl, bamUrl);
         } catch (Exception e) {
             LOGGER.error("Could not create S3 URLs. Error: {}", e.toString());
-            LOGGER.error("Are you running this with the sbp user?");
+            LOGGER.error("You must run this with the sbp user or set up aws credentials and the SBP_ENDPOINT_URL environment variable");
             System.exit(1);
         }
         return null;
