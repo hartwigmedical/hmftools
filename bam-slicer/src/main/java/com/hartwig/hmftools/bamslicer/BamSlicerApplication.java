@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +53,9 @@ import okhttp3.OkHttpClient;
 
 public class BamSlicerApplication {
     private static final Logger LOGGER = LogManager.getLogger(BamSlicerApplication.class);
+    private static final String SBP_ENDPOINT_URL = System.getenv("SBP_ENDPOINT_URL");
+    private static final String SBP_PROFILE = "download";
+    private static final int EXPIRATION_HOURS = 2;
 
     private static final String INPUT_MODE_S3 = "s3";
     private static final String INPUT_MODE_URL = "url";
@@ -75,12 +79,13 @@ public class BamSlicerApplication {
             sliceFromVCF(cmd);
         }
         if (cmd.hasOption(INPUT_MODE_S3)) {
-            sliceFromS3(cmd);
+            final Pair<URL, URL> urls = generateURLs(cmd);
+            sliceFromURLs(urls.getKey(), urls.getValue(), cmd);
         }
         if (cmd.hasOption(INPUT_MODE_URL)) {
             final URL bamURL = new URL(cmd.getOptionValue(INPUT));
             final URL indexURL = new URL(cmd.getOptionValue(INDEX));
-            sliceFromURLs(bamURL, indexURL, cmd);
+            sliceFromURLs(indexURL, bamURL, cmd);
         }
         LOGGER.info("Done.");
     }
@@ -141,13 +146,22 @@ public class BamSlicerApplication {
         return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
     }
 
-    private static void sliceFromS3(@NotNull final CommandLine cmd) throws IOException, EmptyFileException {
-        final URL bamUrl = SbpS3UrlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT));
-        final URL indexUrl = SbpS3UrlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX));
-        sliceFromURLs(bamUrl, indexUrl, cmd);
+    @NotNull
+    private static Pair<URL, URL> generateURLs(@NotNull final CommandLine cmd) {
+        try {
+            final S3UrlGenerator urlGenerator = ImmutableS3UrlGenerator.of(SBP_ENDPOINT_URL, SBP_PROFILE);
+            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), EXPIRATION_HOURS);
+            final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), EXPIRATION_HOURS);
+            return Pair.of(indexUrl, bamUrl);
+        } catch (Exception e) {
+            LOGGER.error("Could not create S3 URLs. Error: {}", e);
+            LOGGER.error("Are you running this with the sbp user?");
+            System.exit(1);
+        }
+        return null;
     }
 
-    private static void sliceFromURLs(@NotNull final URL bamUrl, @NotNull final URL indexUrl, @NotNull final CommandLine cmd)
+    private static void sliceFromURLs(@NotNull final URL indexUrl, @NotNull final URL bamUrl, @NotNull final CommandLine cmd)
             throws IOException, EmptyFileException {
         final OkHttpClient httpClient = SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS)));
         final String outputPath = cmd.getOptionValue(OUTPUT);
