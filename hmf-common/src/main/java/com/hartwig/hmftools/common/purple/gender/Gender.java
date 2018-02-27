@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.purple.gender;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -38,12 +38,15 @@ public enum Gender {
     }
 
     @NotNull
-    private static <T> Gender fromRatio(@NotNull final Multimap<String, T> readRatios, @NotNull Function<T, Double> transform) {
-        return Doubles.greaterThan(median(readRatios.get("X"), transform), 0.75) ? Gender.FEMALE : Gender.MALE;
-    }
+    @VisibleForTesting
+    static <T> Gender fromRatio(@NotNull final Multimap<String, T> readRatios, @NotNull Function<T, Double> transform) {
+        final List<Double> ratios =
+                readRatios.get("X").stream().map(transform).filter(x -> !Doubles.equal(x, -1)).collect(Collectors.toList());
+        if (ratios.isEmpty()) {
+            return Gender.MALE;
+        }
 
-    private static <T> double median(@NotNull Collection<T> readRatios, @NotNull Function<T, Double> transform) {
-        return median(readRatios.stream().map(transform).filter(x -> !Doubles.equal(x, -1)).collect(Collectors.toList()));
+        return Doubles.greaterThan(median(ratios), 0.75) ? Gender.FEMALE : Gender.MALE;
     }
 
     private static double median(@NotNull List<Double> ratios) {
