@@ -11,7 +11,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.exception.EmptyFileException;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.slicing.Slicer;
 import com.hartwig.hmftools.common.slicing.SlicerFactory;
@@ -55,7 +54,7 @@ public class BamSlicerApplication {
     private static final Logger LOGGER = LogManager.getLogger(BamSlicerApplication.class);
     private static final String SBP_ENDPOINT_URL = System.getenv("SBP_ENDPOINT_URL");
     private static final String SBP_PROFILE = "download";
-    private static final int EXPIRATION_HOURS = 2;
+    private static final int S3_EXPIRATION_HOURS = 2;
 
     private static final String INPUT_MODE_S3 = "s3";
     private static final String INPUT_MODE_URL = "url";
@@ -68,7 +67,9 @@ public class BamSlicerApplication {
     private static final String VCF = "vcf";
     private static final String BED = "bed";
     private static final String MAX_CHUNKS_IN_MEMORY = "max_chunks";
+    private static final String MAX_CHUNKS_IN_MEMORY_DEFAULT = "2000";
     private static final String MAX_CONCURRENT_REQUESTS = "max_concurrent_requests";
+    private static final String MAX_CONCURRENT_REQUESTS_DEFAULT = "50";
 
     public static void main(final String... args) throws ParseException, IOException {
         final CommandLine cmd = createCommandLine(args);
@@ -151,8 +152,8 @@ public class BamSlicerApplication {
         try {
             LOGGER.info("Attempting to generate S3 URLs for endpoint: {} using profile: {}", SBP_ENDPOINT_URL, SBP_PROFILE);
             final S3UrlGenerator urlGenerator = ImmutableS3UrlGenerator.of(SBP_ENDPOINT_URL, SBP_PROFILE);
-            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), EXPIRATION_HOURS);
-            final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), EXPIRATION_HOURS);
+            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), S3_EXPIRATION_HOURS);
+            final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), S3_EXPIRATION_HOURS);
             return Pair.of(indexUrl, bamUrl);
         } catch (Exception e) {
             LOGGER.error("Could not create S3 URLs. Error: {}", e.toString());
@@ -164,7 +165,8 @@ public class BamSlicerApplication {
 
     private static void sliceFromURLs(@NotNull final URL indexUrl, @NotNull final URL bamUrl, @NotNull final CommandLine cmd)
             throws IOException {
-        final OkHttpClient httpClient = SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS)));
+        final OkHttpClient httpClient =
+                SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS, MAX_CONCURRENT_REQUESTS_DEFAULT)));
         final String outputPath = cmd.getOptionValue(OUTPUT);
         final String bedPath = cmd.getOptionValue(BED);
         final int maxBufferSize = readMaxBufferSize(cmd);
@@ -269,7 +271,7 @@ public class BamSlicerApplication {
     }
 
     private static int readMaxBufferSize(@NotNull final CommandLine cmd) {
-        final String optionValue = cmd.getOptionValue(MAX_CHUNKS_IN_MEMORY);
+        final String optionValue = cmd.getOptionValue(MAX_CHUNKS_IN_MEMORY, MAX_CHUNKS_IN_MEMORY_DEFAULT);
         try {
             final int bufferSize = Integer.parseInt(optionValue);
             if (bufferSize <= 0) {
@@ -295,7 +297,7 @@ public class BamSlicerApplication {
     @NotNull
     private static Options createURLOptions() {
         final Options options = new Options();
-        options.addOption(Option.builder(INPUT_MODE_URL).required().desc("read input BAM from url").build());
+        options.addOption(Option.builder(INPUT_MODE_URL).required().desc("Read input BAM from url").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("url of BAM file (required)").build());
         options.addOption(Option.builder(INDEX).required().hasArg().desc("url of BAM index file(required)").build());
         return addHttpSlicerOptions(options);
@@ -304,7 +306,7 @@ public class BamSlicerApplication {
     @NotNull
     private static Options createS3Options() {
         final Options options = new Options();
-        options.addOption(Option.builder(INPUT_MODE_S3).required().desc("read input BAM from s3").build());
+        options.addOption(Option.builder(INPUT_MODE_S3).required().desc("Read input BAM from s3").build());
         options.addOption(Option.builder(BUCKET).required().hasArg().desc("s3 bucket for BAM and index files (required)").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("s3 BAM file location (required)").build());
         options.addOption(Option.builder(INDEX).required().hasArg().desc("s3 BAM index location (required)").build());
@@ -313,10 +315,16 @@ public class BamSlicerApplication {
 
     @NotNull
     private static Options addHttpSlicerOptions(@NotNull final Options options) {
-        options.addOption(Option.builder(OUTPUT).required().hasArg().desc("the output BAM (required)").build());
+        options.addOption(Option.builder(OUTPUT).required().hasArg().desc("The output BAM (required)").build());
         options.addOption(Option.builder(BED).required().hasArg().desc("BED to slice BAM with (required)").build());
-        options.addOption(Option.builder(MAX_CHUNKS_IN_MEMORY).required().hasArg().desc("Max number of chunks to keep in memory").build());
-        options.addOption(Option.builder(MAX_CONCURRENT_REQUESTS).required().hasArg().desc("Max concurrent http requests").build());
+        options.addOption(Option.builder(MAX_CHUNKS_IN_MEMORY)
+                .hasArg()
+                .desc("Max number of chunks to keep in memory (default: " + MAX_CHUNKS_IN_MEMORY_DEFAULT + ")")
+                .build());
+        options.addOption(Option.builder(MAX_CONCURRENT_REQUESTS)
+                .hasArg()
+                .desc("Max concurrent http requests (default: " + MAX_CONCURRENT_REQUESTS_DEFAULT + ")")
+                .build());
         return options;
     }
 
